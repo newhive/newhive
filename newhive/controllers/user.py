@@ -27,6 +27,32 @@ class User(ModelController):
         auth.handle_logout(self.db, tdata.user, request, response)
         return self.serve_json(response, True)
 
+    def do_password_reset(self, tdata, request, response, owner_name=None, **args):
+        # Check to see if user filled out password recovery form
+        key = request.form.get('key')
+        if key:
+            user_id = request.form.get('user_id', '')
+            user = self.db.User.fetch(user_id)
+            password = request.form.get('new_password', '')
+            password2 = request.form.get('new_password2', '')
+
+            resp = {}
+            if not user:
+                resp.update({ 'error': 'User not found.' })
+            elif key != user.get('password_recovery'):
+                resp.update({ 'error': 'Incorrect or already used key.' })
+            elif password != password2:
+                resp.update({ 'error': 'Passwords must match.' })
+            elif user.check_password(password):
+                resp.update({ 'error': user.check_password(password) })
+            else:
+                user.update(**{'password': password})
+                user.update_cmd({'$unset': {'password_recovery': 1}})
+                auth.new_session(self.db, user, request, response)
+
+            resp.update({"page_data":"must have some data or else 404"})
+            return self.serve_json(response, resp)
+
     # User has requested a new password. Send a reset email
     def password_recover(self, tdata, request, response, **args):
         resp = {}
@@ -296,33 +322,6 @@ class User(ModelController):
             log_error(self.db, request=request)
 
         return self.serve_json(response, True)
-
-    # TODO-hookup & test
-    def password_recovery_1(self, request, response):
-        email = request.form.get('email')
-        user = self.db.User.find({'email': email})
-        if user:
-            key = junkstr(16)
-            recovery_link = abs_url(secure=True) + 'password_recovery?key=' + key + '&user=' + user.id
-            mail.TemporaryPassword(jinja_env=self.jinja_env, db=self.db).send(user, recovery_link)
-            user.update(password_recovery = key)
-            return self.serve_json(response, {'success': True, 'message': ui.password_recovery_success_message})
-        else:
-            return self.serve_json(response, {'success': False, 'message': ui.password_recovery_failure_message})
-    def password_recovery_2(self, request, response):
-        message = ''
-        key = request.args.get('key')
-        user_id = request.args.get('user')
-        user = self.db.User.fetch(user_id)
-        if user.get('password_recovery') != key: return self._password_recovery_failure(request, response)
-        request.requester = user
-        auth.password_change(request, response, force=True)
-        auth.new_session(self.db, user, request, response)
-        user.update_cmd({'$unset': {'password_recovery': 1}})
-        return self.redirect(response, abs_url())
-    def _password_recovery_failure(self, request, response):
-        response.context['msg'] = ui.invalid_password_recovery_link
-        return self.serve_page(response, 'pages/error.html')
 
     # TODO-hookup & test
     def user_referral(self, request, response):
