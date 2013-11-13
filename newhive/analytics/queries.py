@@ -47,7 +47,7 @@ Day = pandas.datetools.Day
 import logging
 logger = logging.getLogger(__name__)
 
-adb = state.db_connect(config.analytics_db_host, config.analytics_db)
+adb = state.db_connect(config.analytics_db)
 min_start_date = datetime.date(2011, 4, 16)
 
 def clear_all_caches():

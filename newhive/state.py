@@ -24,11 +24,11 @@ from newhive.utils import *
 import logging
 logger = logging.getLogger(__name__)
 
-def db_connect(host, db_name):
-    con = pymongo.Connection(host=host, port=config.database_port)
-    mdb = con[db_name or config.database]
-    if config.database_user and config.database_password:
-        mdb.authenticate(config.database_user, password=config.database_password)
+def db_connect(db_config):
+    con = pymongo.Connection(host=db_config['host'])
+    mdb = con[db_config['db']]
+    if 'user' in db_config and 'password' in db_config:
+        mdb.authenticate(db_config['user'], password=db_config['password'])
     return mdb
 
 class Database:
@@ -51,7 +51,7 @@ class Database:
             self.s3_con = S3Connection(config.aws_id, config.aws_secret)
             self.s3_buckets = map(lambda b: self.s3_con.create_bucket(b), config.s3_buckets)
 
-        self.mdb = db_connect(config.database_host, db_name or config.database)
+        self.mdb = db_connect(config.database)
 
         self.collections = map(lambda entity_type: entity_type.Collection(self, entity_type), self.entity_types)
         for col in self.collections:
