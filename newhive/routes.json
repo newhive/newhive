@@ -267,6 +267,11 @@
         "controller": "user",
         "method": "password_reset"
     },
+    "do_password_reset": {
+        "api_route": "/api/user/password_reset/<owner_name>",
+        "controller": "user",
+        "method": "do_password_reset"
+    },
     "send_mail": {
         "api_route": "/api/community/send_mail",
         "controller": "user",
