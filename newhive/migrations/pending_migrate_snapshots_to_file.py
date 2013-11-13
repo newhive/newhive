@@ -9,12 +9,14 @@ import os
 def migrate():
 	return apply_all(migrate_snapshot, db.Expr.search({}))
 
+error = []
+success = []
 def apply_all(func, list):
-	errors = []
 	for e in list:
 		if not func(e):
-			errors.append(e)
-	return errors
+			error.append(e)
+        else:
+            success.append(e)
 
 def migrate_snapshot(expr):
 	if expr.get('snapshot_id'):

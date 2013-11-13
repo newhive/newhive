@@ -83,9 +83,12 @@ def clear_snapshots():
         ] })
     for expr in expressions_to_snapshot:
         expr.pop('snapshot_time')
+        db.File.fetch(expr.get('snapshot_id')).purge()
+        expr.pop('snapshot_id')
         expr.save(updated=False)
 
 expr_limit = 10
+continuous = True
 
 def start_snapshots(proc_tmp_snapshots=False):
     s3_con = S3Connection(config.aws_id, config.aws_secret)
@@ -97,8 +100,10 @@ def start_snapshots(proc_tmp_snapshots=False):
     # existing_snapshots = proccess_snapshots_file() if proc_tmp_snapshots else []
     
     def get_exprs(limit):
-        expressions_to_snapshot = db.Expr.search({"snapshot_time": { "$exists": False }},
-	    limit=limit, sort=[('updated', -1)])
+        expressions_to_snapshot = db.Expr.search({
+            "$or": [{"snapshot_time": { "$exists": False }},
+            {"$where": "this.snapshot_time < this.updated"}]},
+            limit=limit, sort=[('updated', -1)])
         if test:
             expressions_to_snapshot = db.Expr.search({
                 "$and": [
@@ -117,7 +122,7 @@ def start_snapshots(proc_tmp_snapshots=False):
     # if True:
         exprs = list(get_exprs(0))
         print get_exprs(0).count()
-        if len(exprs) == 0: break
+        if len(exprs) == 0 and not continuous: break
         # print exprs
         for expr in exprs:
             # if expr.get('_id') in existing_snapshots:
@@ -136,82 +141,17 @@ def start_snapshots(proc_tmp_snapshots=False):
                 # log sleeps to see if server is being pounded.
                 # log_error(self.db, message = "Too many snapshot threads", critical=False)
                 time.sleep(1)
-        while threading.active_count() > threads:
-            print "waiting for %s threads:" % (threading.active_count() - threads)
+        wait_count = 150
+        while threading.active_count() > threads and wait_count:
+            print "waiting for %s threads or %ss:" % (
+                threading.active_count() - threads, wait_count)
             # log sleeps to see if server is being pounded.
             # log_error(self.db, message = "Too many snapshot threads", critical=False)
             time.sleep(1)
+            wait_count -= 1
 
     # print "need to get %s exprs" % len(expressions_to_snapshot)
     
 def take_snapshot(expr_id):
     snapshots.take_snapshot(expr_id, "temp_big.png", (715, 430))
     snapshots.take_snapshot(expr_id, "temp_small.png", (390, 235))
-    # expr_obj = db.Expr.fetch(expr_id)
-    # setup_x_server(dimensions)
-    # gen_thumb('http://tnh.me/' + str(expr_obj['_id']),dimensions)
-# def upload_snapshot_to_s3(expr_id,thumb_bucket):
-#     # def upload_image(local,remote):
-#     #     k = S3Key(thumb_bucket)
-#     #     k.name = remote
-#     #     k.set_contents_from_filename(local)
-#     #     k.make_public()
-#     #     print "uploaded ",remote
-#     expr_obj = db.Expr.fetch(expr_id)
-#     expr.take_snapshots()
-#     return expr.snapshot("big")
-#     s3_url = Snapshots.s3_url(expr_id)
-
-#     # remote = Snapshots.remote_uri(expr_id)
-#     # upload_image('temp_small.png',remote + '_small')
-#     # upload_image('temp_big.png',remote + '_big')
-#     # expr_obj['snapshot'] = {
-#     #     "timestamp": time.time()
-#     #     # ,"url": s3_url
-#     # }
-#     # # Save the expression, but don't update its "updated" time.
-#     # expr_obj.save(updated=False)
-#     return s3_url
-    
-# def gen_thumb(url,dimensions=(500,300)):
-#     from sys import platform
-#     if platform == 'darwin':
-#         newArgs = ['webkit2png', '-C', '--clipwidth=%s' % dimensions[0], '--clipheight=%s' % dimensions[1], '--filename=out', url]
-#         exec_str = ' '.join(newArgs)
-#         print exec_str
-#         envoy.run(exec_str)
-#     elif platform == 'linux' or platform == 'linux2':        
-#         # server_num = int(os.getpid() + 1e6)
-#         dimensions = (1024,768)
-#         cmd = ' '.join(['webkit2png', '--feature=javascript', '--display=:99', '--geometry=715 430',
-#             '--output=temp_big.png', url])
-#         print cmd
-#         envoy.run(cmd)
-#         envoy.run(' '.join(['webkit2png', '--feature=javascript', '--display=:99', '--geometry=390 235',
-#             '--output=temp_small.png', url]))
-        
-#         # newArgs = ["xvfb-run", "--auto-servernum", "--server-num", str(server_num), "--server-args=-screen 0, %dx%dx24" % dimensions,
-#         #     'webkit2png', url , '--geometry=1000', '500', '--feature=javascript','-oout-clipped.png'] 
-#     # os.execvp(newArgs[0],newArgs[1:])
-# def xvfb_running():
-#     sp = Popen(['xdpyinfo','-display',':99'])
-#     return sp.returncode == 0
-
-# def init_xvfb():
-#     xvfb = Popen(["Xvfb", ":99", "-screen", "scrn" ,"1024x768x24"])
-#     return xvfb
-#  
-# def process_snapshots_file():
-#     lines = open('/tmp/snapshots','r').read().split("\n")
-#     import re
-#     def get_id(line_str):
-#         ret = re.search('s3://dev-1-s0-newhive/expr_snapshot_([0-9a-f]+)_big',line_str)
-#         if ret is None:
-#             return None
-#         if ret:
-#             return ret.group(1)
-#     ids = [get_id(line) for line in lines if get_id(line)]
-#     return ids
-'''
-
-'''
