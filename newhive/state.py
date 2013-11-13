@@ -839,6 +839,11 @@ class User(HasSocial):
         if not isinstance(v, (str, unicode)): return False
         return crypt(v.encode('UTF8'), self['password']) == self['password']
 
+    def check_password(self, password):
+        if len(password) < 4:
+            return 'Passwords must be at least 4 characters long'
+        return False
+
     def get_url(self, path='profile/', relative=False, secure=False):
         base = '/' if relative else abs_url(secure=secure)
         return base + self.get('name', '') + '/' + path
