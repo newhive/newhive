@@ -466,16 +466,18 @@ define([
             // TODO-polish: These functions belong in another module.
             if (page_data.page == 'password_reset') {
                 $('#site').empty().append(password_template(page_data));
-                $('#user_settings_form').on('response',
-                    function(e, json) {
-                        if (json.error) {
-                            $('#user_settings_form .error_msg').showshow().
-                                text(json.error);
-                        } else {
-                            o.controller.open("home", {});
-                            $('#login_form [name=from]').val(window.location.origin);
-                        }
-                    });
+                var show_error = function(d){
+                    if (d.error)
+                        $('#user_settings_form .error_msg').showshow().
+                            text(d.error);
+                };
+                show_error(page_data);
+                $('#user_settings_form').on('response', function(e, json) {
+                    if(json.error)
+                        show_error(json);   
+                    else 
+                        window.location = window.location.origin;
+                });
             }
             else
                 $('#site').empty().append(master_template(page_data));
