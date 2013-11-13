@@ -2491,7 +2491,7 @@ Hive.init = function(exp, page){
         $('#menu_privacy div').removeClass('selected');
         var t = $(e.target);
         t.addClass('selected');
-        $('#privacy span').text(t.text());
+        $('#privacy').text(t.text());
         var v = t.attr('val');
         if(v == 'password') $('#password_ui').showshow();
         else $('#password_ui').hidehide();
