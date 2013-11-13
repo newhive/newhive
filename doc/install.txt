@@ -12,7 +12,7 @@ Git
     git config --global credential.helper cache
     git config --global credential.helper 'cache --timeout=3600'
     # git clone https://github.com/hivedev/newhive.git
-    git clone -b v2-community https://github.com/hivedev/newhive.git
+    git clone -b v2-community https://github.com/hivedev/newhive.git # [new-directory]
 
 Python library dependency dependencies (Ubuntu packages)
     sudo apt-get install python-pip gfortran libblas-dev liblapack-dev python-dev g++

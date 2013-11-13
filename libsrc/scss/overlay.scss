@@ -148,14 +148,16 @@
         &> * > * { vertical-align:bottom; }
     }
     #views_menu {
+        padding: 5px;
         // .text.item {
         //     margin-top: 6px;
         // }
         .menu_item {
             font-family: bebas;
+            margin-bottom: 5px;
         }
         .menu_item + .menu_item {
-            border-top: 2px solid grey;
+            border-top: 1px solid $color_grey_medium;
         }
     }
     .left_pane {
@@ -259,8 +261,10 @@ $action: love comment republish;
         font-size: 16px;
 
         &.comment {
+            &:hover { background-color: inherit; }
             .content {
-                @include calc-width("100% - 54px");
+                // TODO-cleanup: remove calc-width...
+                @include calc-width("100% - 59px");
                 .text {
                     // min-height: 44px;
                     max-height: inherit;
@@ -275,9 +279,15 @@ $action: love comment republish;
                 position: inherit;
             }
             .show_hover {
+                // TODO-polish: understand why this is needed.
+                width: 89px;
                 position: absolute;
                 right: 8px;
                 top: 5px;
+                button {
+                    color: white;
+                    background-color: black;
+                }
             }
             textarea {
                 height: 77px;
@@ -297,7 +307,7 @@ $action: love comment republish;
             width: 44px;
             vertical-align: top;
             float: left;
-            margin-right: 10px;
+            margin-right: 15px;
         }
 
         .action_icon {
@@ -328,13 +338,16 @@ $action: love comment republish;
                 overflow: hidden;
                 max-height: 40px;
                 max-width: 270px;
-                color: $color_grey_medium;
+                // color: $color_grey_medium;
             }
         }
     }
 }
 
+// TODO-cleanup: merge with &.comment above.
 #dia_comments {
+    padding: 23px;
+    .title { margin-bottom: 15px; }
     .activity {
         max-height: 450px;
         overflow-y: auto;
@@ -346,6 +359,8 @@ $action: love comment republish;
         }
 
         .feed_item {
+            padding: 10px 0px;
+            padding-right: 10px;
             // width: 100%;
             // display: inline-block;
             position: relative;
@@ -367,9 +382,6 @@ $action: love comment republish;
         textarea {
             width: 100%;
         }
-    }
-    .submit {
-        padding: 7px;
     }
 }
 
