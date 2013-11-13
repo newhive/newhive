@@ -495,3 +495,24 @@ form.login {
 // #dia_fb_account_duplicate {
 //     width: 640px;
 // }
+
+#dia_save {
+    textarea { 
+        height : 2.5em;
+    }
+    textarea, input {
+        margin: 0px;
+        margin-top: 3px;
+    }
+    .upper.label {
+        margin-top: 14px;
+    }
+    .remix_label {
+        input { margin-right: 10px; }
+        margin-bottom: 15px; 
+        margin-top: 15px;
+    }
+    .note { color: $color_grey_medium }
+}
+#menu_privacy .selected { display : none; }
+

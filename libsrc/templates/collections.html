@@ -1,0 +1,12 @@
+{# UI for collections
+  #}
+
+<div class="dialog add_to_collection"><form>
+  <select name="collection" >
+  	<option value="New..."></option>
+  	{<for user.tagged}
+  	  <option value="{item}"></option>
+  	{>}
+  </select>
+  <input name="new_collection" placeholder="Collection name">
+</form></div>

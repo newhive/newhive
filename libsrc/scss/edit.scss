@@ -166,17 +166,15 @@ textarea.code {
 // .menu label { font-weight: normal; font-size: 15px; }
 
 #btn_save .loading { width: 25px; }
-#menu_save {
-    font-size: .85em;
-    width: 220px;
-    padding : 10px;
-    top : 43px;
-    right : 0px;
+// TODO: we should have a mechanism to set up icons, correctly aligned,
+// correctly sized, with automatic hover.
+#btn_save div.arrow { 
+    background-image: asset_url('skin/nav/small_arrow.png');
+    width: 22px;
+    height: 42px;
+    margin-top: -10px;
 }
-#menu_save textarea { height : 2.5em; }
-#menu_save input, #menu_save textarea { width : 200px; }
-#menu_save .note { color: $color_grey_medium }
-#menu_privacy .selected { display : none; }
+#btn_save:hover div.arrow { background-image: asset_url('skin/nav/small_arrow_hover.png'); }
 #right { position : absolute; right : 0px; top : 0px; }
 #right * { vertical-align : middle }
 

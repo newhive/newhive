@@ -63,9 +63,9 @@ class Community(Controller):
             # New user has no cards; give him the "edit" card
             # TODO: replace thenewhive with a config string
             cards = []
-            instuctional = self.db.Expr.named("newhive","default-instructional")
-            if instuctional:
-                cards.append(instuctional);
+            instructional = self.db.Expr.named("newhive","default-instructional")
+            if instructional:
+                cards.append(instructional);
         profile = owner.client_view(viewer=tdata.user)
         return {
             'cards': cards, 'owner': profile, 'card_type':'expr',
