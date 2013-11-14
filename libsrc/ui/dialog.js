@@ -63,7 +63,8 @@ define([
             if(opts.fade) opts.shield.addClass('fade');
             opts.shield.appendTo(document.body).click(o.close);
 
-            opts.dialog.detach().appendTo(document.body).removeClass('hide').showshow();
+            // opts.dialog.detach().appendTo(document.body).
+            opts.dialog.removeClass('hide').showshow();
             opts.dialog.find("form").unbind('response').on('response', opts.handler);
             // For old browsers which don't support autofocus.
             opts.dialog.find("*[autofocus]").focus();
