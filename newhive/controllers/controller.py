@@ -70,6 +70,8 @@ class Controller(object):
                 inclusion = inclusion | config.user_groups.get(user_list, set([user_list]))
                 # TODO-polish: allow exclusion list
                 # if user_list.begins_with('!'): add_to_exclusion_list(user_list)
+                # TODO-polish: allow setting specific flag values
+                # if user_list.match('value=(.*)'): set_value = $1
             if (add == 'all' or (add == 'logged_in' and user.get('name')) 
                 or user.get('name', 'logged_out') in inclusion):
                 user_flags[flag] = True

@@ -49,8 +49,8 @@ beta_testers = admins + [
 user_groups = { 'logged_in':set([]), 'logged_out':set(['logged_out']), 'all':set([]), 
     'admins':set(admins), 'beta_testers':set(beta_testers) }
 site_flags = { 
-    'v2.1': ['admins']
-    ,'Break_the_site': []
+    'admin': ['admins']
+    ,'merge_recent': ['cara', 'fatsycline']
     ,'newduke': ['newduke']
     ,'either': ['newduke', 'logged_out']
     ,'logged': ['logged_out']
