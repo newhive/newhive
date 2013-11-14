@@ -301,6 +301,10 @@ class Community(Controller):
             kwargs['route_name'] != 'home'):
             return self.redirect(response, "/")
 
+        # "Merged" users see trending
+        if (kwargs['route_name'] == 'home' and tdata.context['flags'].get('merge_recent')
+            and tdata.user.get('name')):
+            return self.redirect(response, '/'+tdata.user['name']+'/profile/recent')
         self.response = response
         # Handle redirects
         if kwargs.get('route_name') == 'my_profile':
