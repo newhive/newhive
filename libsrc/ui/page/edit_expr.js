@@ -12,7 +12,7 @@ define([
     editor,
     expr_page,
     lay,
-    bundles, 
+    bundles,
     edit_template
 ) {
     var o = {};
@@ -31,6 +31,7 @@ define([
             function(){
                 return editor.Apps.length == 0 }
         );
+        $("body").addClass("edit");
     };
     
     o.exit = function(){
@@ -38,6 +39,7 @@ define([
         // TODO: implement autosave
         $('link.edit').remove();
         $('#site').empty();
+        $("body").removeClass("edit");
 
         o.controller.set_exit_warning(false);
     };

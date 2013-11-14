@@ -1,5 +1,6 @@
 @import "common";
 
+body.edit {
 #happs {
     position: absolute;
     left: 0;
@@ -260,4 +261,5 @@ input, textarea { font-size : inherit; }
 .text_content_element {
     min-width: 100%;
     word-wrap: normal;
+}
 }
