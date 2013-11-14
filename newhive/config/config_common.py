@@ -31,20 +31,30 @@ milestones = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000,
 
 beta_testers = admins + [
     'andrew'
-    'darkluna'
-    'philco'
-    'lolo'
-    'roseanna'
-    'anniesarah'
-    'graham'
-    'coo'
-    'ashley'
-    'ece'
-    'sammie'
-    'kaz'
-    'v908'
-    'test'
+    ,'darkluna'
+    ,'philco'
+    ,'lolo'
+    ,'roseanna'
+    ,'anniesarah'
+    ,'graham'
+    ,'coo'
+    ,'ashley'
+    ,'ece'
+    ,'sammie'
+    ,'kaz'
+    ,'v908'
+    ,'test'
 ]
+
+user_groups = { 'logged_in':set([]), 'logged_out':set(['logged_out']), 'all':set([]), 
+    'admins':set(admins), 'beta_testers':set(beta_testers) }
+site_flags = { 
+    'v2.1': ['admins']
+    ,'Break_the_site': []
+    ,'newduke': ['newduke']
+    ,'either': ['newduke', 'logged_out']
+    ,'logged': ['logged_out']
+}
 
 site_user = 'newhive'
 admins.append(site_user)

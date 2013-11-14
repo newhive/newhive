@@ -52,6 +52,29 @@ class Controller(object):
         tdata.context.update(beta_tester=
             config.debug_mode or tdata.user.get('name') in config.beta_testers)
 
+        # Find flags appropriate to current user
+        flags = config.site_flags
+        su = self.db.User.site_user
+        su.setdefault('site_flags', {})
+        su.update(updated=False, site_flags=su['site_flags'])
+        flags.update(su['site_flags'])
+        user_flags = {}
+        user = tdata.user
+        for flag, v in flags.items():
+            add = False
+            inclusion = set([])
+            for user_list in v:
+                if user_list in ['all', 'logged_in']:
+                    add = user_list
+                    break
+                inclusion = inclusion | config.user_groups.get(user_list, set([user_list]))
+                # TODO-polish: allow exclusion list
+                # if user_list.begins_with('!'): add_to_exclusion_list(user_list)
+            if (add == 'all' or (add == 'logged_in' and user.get('name')) 
+                or user.get('name', 'logged_out') in inclusion):
+                user_flags[flag] = True
+        tdata.context.update(flags=user_flags)
+
         return (tdata, response)
     
     def render_template(self, tdata, response, template):
