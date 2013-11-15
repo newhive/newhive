@@ -1264,12 +1264,12 @@ class Expr(HasSocial):
         old_time = self.get('snapshot_time', False)
 
         snapshotter = Snapshots()
-        snapshot_time = int(now())
+        snapshot_time = now()
         dimension_list = [(715, 430, "big"), (390, 235, "small"), (70, 42, 'tiny')]
         upload_list = []
 
         for w, h, size in dimension_list:
-            name = self.snapshot_name_base(size, str(snapshot_time))
+            name = self.snapshot_name_base(size, str(int(snapshot_time)))
             # TODO-cleanup: This would be cleaner with file pipes instead of filesystem.
             local = '/tmp/' + name
             if w == dimension_list[0][0]:
