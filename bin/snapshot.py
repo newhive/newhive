@@ -90,25 +90,25 @@ def clear_snapshots():
 expr_limit = 10
 continuous = True
 
+def get_exprs(limit):
+    expressions_to_snapshot = db.Expr.search({
+        "$or": [{"snapshot_time": { "$exists": False }},
+        {"$where": "this.snapshot_time < this.updated"}]},
+        limit=limit, sort=[('updated', -1)])
+    if test:
+        expressions_to_snapshot = db.Expr.search({
+            "$and": [
+                {"snapshot_time": {
+                    "$exists": False
+                }},
+            {"owner_name": "abram"}
+        ] },limit=limit)
+    return expressions_to_snapshot
+
 def start_snapshots(proc_tmp_snapshots=False):
     s3_con = S3Connection(config.aws_id, config.aws_secret)
     thumb_bucket = s3_con.create_bucket(config.s3_buckets['thumb'])
  
-    def get_exprs(limit):
-        expressions_to_snapshot = db.Expr.search({
-            "$or": [{"snapshot_time": { "$exists": False }},
-            {"$where": "this.snapshot_time < this.updated"}]},
-            limit=limit, sort=[('updated', -1)])
-        if test:
-            expressions_to_snapshot = db.Expr.search({
-                "$and": [
-                    {"snapshot_time": {
-                        "$exists": False
-                    }},
-                {"owner_name": "abram"}
-            ] },limit=limit)
-        return expressions_to_snapshot
-
     count = 0
     total = get_exprs(0).count()
     threads = threading.active_count()
