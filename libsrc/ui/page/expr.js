@@ -145,9 +145,13 @@ define([
                     route_args: { route_name: 'search' }
                 };
             }
-            else
+            else {
                 o.controller.get('expressions_public', {
                     owner_name: page_data.expr.owner.name }, set_cards)
+                context.page_data.cards_route = {
+                    route_args: { route_name: 'expressions_public' }
+                };
+            }
         }
 
         var found = find_card(o.expr.id);
