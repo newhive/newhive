@@ -55,23 +55,30 @@ define([
         o.open = function(){
             if(opts.opened) return;
             opts.opened = true;
+            var this_dia = opts.dialog;
+            
             // Close any previous dialog. 
             // TODO: Allow multiple dialogs?
             $('#dialog_shield').click();
-
             opts.shield = $("<div id='dialog_shield'>");
             if(opts.fade) opts.shield.addClass('fade');
             opts.shield.appendTo(document.body).click(o.close);
 
-            // opts.dialog.detach().appendTo(document.body).
-            opts.dialog.removeClass('hide').showshow();
-            opts.dialog.find("form").unbind('response').on('response', opts.handler);
+            o.attach_point = this_dia.parent();
+            this_dia.detach();
+            // We don't want to create duplicate dialogs, so destroy duplicates
+            $(".dialog[data-handle=" + 
+                opts.dialog.attr("data-handle") + "]").remove();
+            // Add to body to create a new z index stack
+            this_dia.appendTo(document.body);
+            this_dia.removeClass('hide').showshow();
+            this_dia.find("form").unbind('response').on('response', opts.handler);
             // For old browsers which don't support autofocus.
-            opts.dialog.find("*[autofocus]").focus();
-            opts.dialog.find(".error_msg").hidehide();
-            opts.dialog.find(".success_show").hidehide();
-            opts.dialog.find(".success_hide").showshow();
-            opts.dialog.find("*[type=cancel]").unbind('click').click(function(e) {
+            this_dia.find("*[autofocus]").focus();
+            this_dia.find(".error_msg").hidehide();
+            this_dia.find(".success_show").hidehide();
+            this_dia.find(".success_hide").showshow();
+            this_dia.find("*[type=cancel]").unbind('click').click(function(e) {
                 o.close();
                 e.preventDefault(); 
             });
@@ -84,6 +91,7 @@ define([
         o.close = function() {
             if(!opts.opened) return;
             opts.opened = false;
+            opts.dialog.detach().appendTo(o.attach_point);
             opts.shield.remove();
             $(window).off('resize', opts.layout);
             opts.dialog.hidehide();
