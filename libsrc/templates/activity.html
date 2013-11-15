@@ -1,10 +1,10 @@
 {# used by social_overlay #}
 {<if dedupe}
     {<for (unique activity "initiator")}
-        {|templates/feed_card.html}{>}
+        {|templates/feed_card.html}
     {>}
 {>}{<else}
     {<for activity}
-        {|templates/feed_card.html}{>}
+        {|templates/feed_card.html}
     {>}
 {>}
