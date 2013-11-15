@@ -1,4 +1,4 @@
-import controller, community, expr, file, user, cron
+import controller, community, expr, file, user, cron, admin
 
 class Controllers(object):
     """ Convenience class for instantiating all da controllers at once. """
@@ -9,6 +9,7 @@ class Controllers(object):
         expr.Expr,
         file.File,
         user.User,
+        admin.Admin,
     ]
 
     def __init__(self, server_env):

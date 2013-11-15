@@ -419,16 +419,22 @@ define(['browser/js', 'module'],
 		return condition ? '' : block(context);
 	};
 	context_base['for'] = function(context, block, iteratee, var_name){
-		if(!iteratee || iteratee.constructor != Array) return '';
-		return iteratee.map(function(v, i){
+		if(!iteratee || (iteratee.constructor != Array &&
+			typeof(iteratee) != "object")) return '';
+		var res = ""
+		$.each(iteratee, function(i, v) {
 			// If iterating through literals, the value of the literal
 			// is passed in the context as the variable "item"
 			if(typeof(v) != "object") {
 				v = {item: v};
 			}
-			if(var_name) v[var_name] = i;
-			return block(context.concat(v));
-		}).reduce(util.op['+'], '');
+			if(var_name) 
+				v[var_name] = i;
+			else if(iteratee.constructor != Array)
+				v['key'] = i;
+			res += block(context.concat(v));
+		});
+		return res;
 	};
 	context_base['range'] = function(context, block, var_name, start, stop, step){
 		if(typeof stop == 'undefined'){

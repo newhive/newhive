@@ -17,14 +17,22 @@ class Controller(object):
         self.assets = assets
         self.asset = self.assets.url
 
+    def pre_dispatch(self, func, tdata, request, response, **args):
+        return False
+
     # Dispatch calls into controller methods of the form:
     # def method(self, tdata, request, response, **args):
     def dispatch(self, handler, request, **args):
         (tdata, response) = self.pre_process(request)
         # Redirect to home if route requires login but user not logged in
-        if args.get('require_login') and not (tdata.user and tdata.user.id):
+        if (args.get('require_login') and not tdata.user.logged_in and
+            args['route_name'] != 'home'):
             return self.redirect(response, "/")
 
+        res = self.pre_dispatch(getattr(self, handler, None), tdata,
+            request, response, **args)
+        if res:
+            return res
         return getattr(self, handler, None)(tdata, request, response, **args)
 
     def pre_process(self, request):
@@ -53,14 +61,14 @@ class Controller(object):
             config.debug_mode or tdata.user.get('name') in config.beta_testers)
 
         # Find flags appropriate to current user
-        flags = config.site_flags
+        self.flags = config.site_flags
         su = self.db.User.site_user
         su.setdefault('site_flags', {})
         su.update(updated=False, site_flags=su['site_flags'])
-        flags.update(su['site_flags'])
+        self.flags.update(su['site_flags'])
         user_flags = {}
         user = tdata.user
-        for flag, v in flags.items():
+        for flag, v in self.flags.items():
             add = False
             inclusion = set([])
             for user_list in v:
