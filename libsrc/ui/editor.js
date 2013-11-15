@@ -1409,7 +1409,7 @@ Hive.App.has_color = function(o) {
         o.c.color = o.div.find('.button.color');
         o.c.color_drawer = o.div.find('.drawer.color');
 
-        Hive.append_color_picker(o.c.color_drawer, o.app.color_set, o.app.color);
+        Hive.append_color_picker(o.c.color_drawer, o.app.color_set, o.app.color());
         var history_point;
         o.hover_menu(o.c.color, o.c.color_drawer, {
             auto_close: false,
@@ -2728,7 +2728,7 @@ Hive.append_color_picker = function(container, callback, init_color, opts){
         div = color_picker_template(colors),
         bar = div.find('.hue_bar'),
         shades = div.find('.shades'),
-        manual_input = div.find('.shades'),
+        manual_input = div.find('.color_input'),
         pickers = div.find('.color_select');
 
     var to_rgb = function(c) {
