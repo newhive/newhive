@@ -468,9 +468,9 @@ define(['browser/js', 'module'],
 	};
 	context_base['debug'] = function(context, do_debugger){
 		if(typeof do_debugger == "undefined") do_debugger = true;
-		//if(do_debugger) debugger;
-            //throw o.render_error('debug break', context,
-		  	//    get_template(context).render_node);
+		if(do_debugger) debugger;
+        //     throw o.render_error('debug break', context,
+		  	   // get_template(context).render_node);
 		// possibly add rendering context in invisible div
 		return '<div>DEBUG inserted</div><div style="display:none">' + '' + '</div>';
 	};
