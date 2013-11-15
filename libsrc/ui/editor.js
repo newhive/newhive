@@ -2725,11 +2725,11 @@ function remove_all_apps() {
 Hive.append_color_picker = function(container, callback, init_color, opts){
     // opts = $.extend({iframe: false}, opts);
     var o = {}, init_color = init_color || '#000000',
-        e = color_picker_template(colors),
-        bar = e.find('.hue_bar'),
-        shades = e.find('.shades'),
-        manual_input = e.find('.shades'),
-        pickers = e.find('.color_select');
+        div = color_picker_template(colors),
+        bar = div.find('.hue_bar'),
+        shades = div.find('.shades'),
+        manual_input = div.find('.shades'),
+        pickers = div.find('.color_select');
 
     var to_rgb = function(c) {
         return $.map($('<div>').css('color', c).css('color')
@@ -2746,36 +2746,20 @@ Hive.append_color_picker = function(container, callback, init_color, opts){
         el = $(el);
         var c = el.attr('val');
         el.click(function(ev){
-            set_color(c);
+            o.set_color(c);
             manual_input.val(c);
             callback(c, to_rgb(c));
         }).bind('mousedown', function(e){ e.preventDefault()});
     });
 
     var hex_changed = false;
-    var update_hex = o.update_hex = function() {
+    o.update_hex = function() {
         if (!hex_changed) return;
         hex_changed = false;
         var v = manual_input.val();
         var c = $('<div>').css('color', v).css('color');
         callback(c, to_rgb(c));
     };
-
-    // Prevent unwanted nudging of app when moving cursor in manual_input
-    manual_input.bind('mousedown keydown', function(e){
-        hex_changed = true;
-        e.stopPropagation();
-    });
-
-    manual_input.blur(update_hex).keypress(function(e){
-        if (e.keyCode == 13) {
-            if (opts && opts.field_to_focus){
-                opts.field_to_focus.focus();
-            } else {
-                manual_input.blur();
-            }
-        }
-    });
 
     // saturated color picked from color bar
     var hsv = [0, 0, 1];
@@ -2784,17 +2768,12 @@ Hive.append_color_picker = function(container, callback, init_color, opts){
         shades.css('background-color', 'rgb(' + hsvToRgb(hsv[0], 1, 1).join(',') + ')');
         calc_color();
     };
-    bar.click(get_hue).drag(get_hue);
 
-    var set_color = function(c) {
-        var rgb = to_rgb(c);
+    o.set_color = function(color){
+        var rgb = to_rgb(color);
         hsv = rgbToHsv(rgb[0], rgb[1], rgb[2]);
         shades.css('background-color', 'rgb(' + hsvToRgb(hsv[0], 1, 1).join(',') + ')');
-    };
-    set_color(init_color);
-    o.set_color = function(color){
         manual_input.val(to_hex(color));
-        set_color(color);
     };
 
     var get_shade = function(e) {
@@ -2802,7 +2781,6 @@ Hive.append_color_picker = function(container, callback, init_color, opts){
         hsv[1] = bound((e.pageY - shades.offset().top) / 120, 0, 1);
         calc_color();
     };
-    shades.click(get_shade).drag(get_shade);
 
     var calc_color = function() {
         var color = hsvToRgb(hsv[0], hsv[1], hsv[2]);
@@ -2810,10 +2788,6 @@ Hive.append_color_picker = function(container, callback, init_color, opts){
         manual_input.val(hex);
         callback(hex, color);
     }
-
-    // if (opts.iframe){
-    //     Hive.input_frame(manual_input, e, {width: 124});
-    // }
 
     function hsvToRgb(h, s, v){
         var r, g, b;
@@ -2858,7 +2832,32 @@ Hive.append_color_picker = function(container, callback, init_color, opts){
         return [h, s, v];
     }
 
-    container.append(e);
+    shades.click(get_shade).drag(get_shade);
+    bar.click(get_hue).drag(get_hue);
+    o.set_color(init_color);
+
+    // Prevent unwanted nudging of app when moving cursor in manual_input
+    manual_input.bind('mousedown keydown', function(e){
+        hex_changed = true;
+        e.stopPropagation();
+    });
+
+    manual_input.blur(o.update_hex).keypress(function(e){
+        if (e.keyCode == 13) {
+            if (opts && opts.field_to_focus){
+                opts.field_to_focus.focus();
+            } else {
+                manual_input.blur();
+            }
+        }
+    });
+
+    // if (opts.iframe){
+    //     Hive.input_frame(manual_input, div, {width: 124});
+    // }
+
+    container.append(div);
+
     return o;
 };
 

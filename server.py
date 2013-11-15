@@ -31,6 +31,7 @@ if __name__ == '__main__':
     parser.add_option("--plain-only", action="store_true", dest="plain_only", default=False)
     parser.add_option("--debug", action="store_true", dest="debug")
     parser.add_option("--secure", action="store_true", dest="secure", default=False)
+    parser.add_option("--threaded", action="store_true", dest="threaded", default=False)
     (options, args) = parser.parse_args()
 
     config.plain_port = options.port or config.plain_port
@@ -40,6 +41,7 @@ if __name__ == '__main__':
     config.webassets_debug = options.debug or config.webassets_debug
     config.interactive = True
     config.always_secure = options.secure or config.always_secure
+    config.threaded_dev_server = options.threaded or config.threaded_dev_server
 
     ssl_prefix = join(config.src_home, 'lib', 'tmp', 'ssl')
     if not isfile(ssl_prefix + '.key'):
@@ -53,7 +55,7 @@ if __name__ == '__main__':
             '0.0.0.0'
             , port
             , application
-            , threaded = True
+            , threaded = False
             , use_reloader = True
             , use_debugger = config.debug_mode
             , use_evalex = config.debug_unsecure # from werkzeug.debug import DebuggedApplication
