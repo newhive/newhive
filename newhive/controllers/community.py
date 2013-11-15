@@ -294,17 +294,8 @@ class Community(Controller):
             return "?" + query_string
         return ""
 
-    def dispatch(self, handler, request, json=False, **kwargs):
-        (tdata, response) = self.pre_process(request)
-        # Redirect to home if route requires login but user not logged in
-        if (kwargs.get('require_login') and not (tdata.user and tdata.user.id) and
-            kwargs['route_name'] != 'home'):
-            return self.redirect(response, "/")
-
+    def pre_dispatch(self, query, tdata, request, response, json=False, **kwargs):
         # "Merged" users see trending
-        if (kwargs['route_name'] == 'home' and tdata.context['flags'].get('merge_recent')
-            and tdata.user.get('name')):
-            return self.redirect(response, '/'+tdata.user['name']+'/profile/recent')
         self.response = response
         # Handle redirects
         if kwargs.get('route_name') == 'my_profile':
@@ -317,7 +308,6 @@ class Community(Controller):
             u.query.update({'key': kwargs.get('key')})
             return self.redirect(response, str(u))
 
-        query = getattr(self, handler, None)
         if query is None:
             return self.serve_404(tdata, request, response, json=json)
         # Handle pagination
