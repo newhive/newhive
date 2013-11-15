@@ -69,6 +69,7 @@ debug_mode      = False
 debug_unsecure  = False
 webassets_debug = False
 always_secure   = False
+threaded_dev_server = False
 
 interactive = False
 
