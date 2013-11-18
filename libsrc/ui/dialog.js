@@ -5,6 +5,8 @@ define([
     var oo = { dialogs: [] };
 
     oo.create = function(element, options){
+        // #TODO-review
+        // Sloppy, wrong scope.
         oo.generic_dialog_handler = function(event, json){
             if (json.error != undefined) {
                 opts.dialog.find('.error_msg').text(json.error).showshow().hide().fadeIn("slow");
@@ -66,9 +68,6 @@ define([
 
             o.attach_point = this_dia.parent();
             this_dia.detach();
-            // We don't want to create duplicate dialogs, so destroy duplicates
-            $(".dialog[data-handle=" + 
-                opts.dialog.attr("data-handle") + "]").remove();
             // Add to body to create a new z index stack
             this_dia.appendTo(document.body);
             this_dia.removeClass('hide').showshow();
@@ -100,6 +99,10 @@ define([
 
         return o;
     };    
+
+    oo.close_all = function(){
+        oo.dialogs.map(function(o){ o.close() });
+    }
 
     // TODO: make functional
     // opts.expr_dialog(id, opts){
