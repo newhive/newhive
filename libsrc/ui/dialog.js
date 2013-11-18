@@ -5,6 +5,8 @@ define([
     var oo = { dialogs: [] };
 
     oo.create = function(element, options){
+        // #TODO-review
+        // Sloppy, wrong scope.
         oo.generic_dialog_handler = function(event, json){
             if (json.error != undefined) {
                 opts.dialog.find('.error_msg').text(json.error).showshow().hide().fadeIn("slow");
@@ -55,22 +57,37 @@ define([
         o.open = function(){
             if(opts.opened) return;
             opts.opened = true;
+            var this_dia = opts.dialog;
+            
             // Close any previous dialog. 
             // TODO: Allow multiple dialogs?
             $('#dialog_shield').click();
-
             opts.shield = $("<div id='dialog_shield'>");
             if(opts.fade) opts.shield.addClass('fade');
             opts.shield.appendTo(document.body).click(o.close);
 
-            opts.dialog.detach().appendTo(document.body).removeClass('hide').showshow();
-            opts.dialog.find("form").unbind('response').on('response', opts.handler);
+            o.attach_point = this_dia.parent();
+            this_dia.detach();
+            // We don't want to create duplicate dialogs, so destroy duplicates
+            // #TODO-review
+            // Sloppy, this selector is failing in some cases.
+            // Also sloppy because o.open() is not duplicating them, only moving
+            // to different parent. Duplication is caused by dialog being moved to body,
+            // page being exited, then re-entered, re-rendering, then re-creating dialog
+            // while old one still exists in body. Better fixed by adding dialog.close to
+            // page exit
+            // $(".dialog[data-handle=" + 
+            //     opts.dialog.attr("data-handle") + "]").remove();
+            // Add to body to create a new z index stack
+            this_dia.appendTo(document.body);
+            this_dia.removeClass('hide').showshow();
+            this_dia.find("form").unbind('response').on('response', opts.handler);
             // For old browsers which don't support autofocus.
-            opts.dialog.find("*[autofocus]").focus();
-            opts.dialog.find(".error_msg").hidehide();
-            opts.dialog.find(".success_show").hidehide();
-            opts.dialog.find(".success_hide").showshow();
-            opts.dialog.find("*[type=cancel]").unbind('click').click(function(e) {
+            this_dia.find("*[autofocus]").focus();
+            this_dia.find(".error_msg").hidehide();
+            this_dia.find(".success_show").hidehide();
+            this_dia.find(".success_hide").showshow();
+            this_dia.find("*[type=cancel]").unbind('click').click(function(e) {
                 o.close();
                 e.preventDefault(); 
             });
@@ -83,6 +100,7 @@ define([
         o.close = function() {
             if(!opts.opened) return;
             opts.opened = false;
+            opts.dialog.detach().appendTo(o.attach_point);
             opts.shield.remove();
             $(window).off('resize', opts.layout);
             opts.dialog.hidehide();
@@ -91,6 +109,10 @@ define([
 
         return o;
     };    
+
+    oo.close_all = function(){
+        oo.dialogs.map(function(o){ o.close() });
+    }
 
     // TODO: make functional
     // opts.expr_dialog(id, opts){
