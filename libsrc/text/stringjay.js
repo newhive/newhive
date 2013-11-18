@@ -463,8 +463,8 @@ define(['browser/js', 'module'],
 	context_base['debug'] = function(context, do_debugger){
 		if(typeof do_debugger == "undefined") do_debugger = true;
 		//if(do_debugger) debugger;
-            //throw o.render_error('debug break', context,
-		  	//    get_template(context).render_node);
+        //     throw o.render_error('debug break', context,
+		  	   // get_template(context).render_node);
 		// possibly add rendering context in invisible div
 		return '<div>DEBUG inserted</div><div style="display:none">' + '' + '</div>';
 	};
@@ -501,6 +501,22 @@ define(['browser/js', 'module'],
 		return lhs != rhs;
 	};
 	context_base.lower = function(context, s){ return s.toLowerCase(); };
+	// TODO-cleanup: add example cases to all these functions.
+	// {<for (reverse user.activity)}<item>{>}
+	context_base.unique = function(context, l){
+		var field = false;
+		if (arguments.length >= 3)
+			field = arguments[2];
+		return l.reduce(function(p, c) {
+			if (field) {
+	        	if (!p.filter(function(e) {return e[field]==c[field];}
+	        		).length) p.push(c);
+	        }
+	        else if (p.indexOf(c) < 0)
+	        	p.push(c);
+	        return p;
+    	}, []);
+	};
 	context_base.reverse = function(context, l){ return l.concat().reverse(); };
 	context_base.mod = function(context, x, y){ return x % y };
 	context_base.thousands = function(context, n){ 

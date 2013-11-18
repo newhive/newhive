@@ -9,15 +9,18 @@ import os
 def migrate():
 	return apply_all(migrate_snapshot, db.Expr.search({}))
 
-def apply_all(func, list):
-	errors = []
-	for e in list:
-		if not func(e):
-			errors.append(e)
-	return errors
+error = []
+success = []
+def apply_all(func, l):
+    print(len(list(l)))
+    for e in l:
+        if not func(e):
+            error.append(e)
+        else:
+            success.append(e)
 
 def migrate_snapshot(expr):
-	if expr.get('snapshot_id'):
+	if expr.get('snapshot_id') or expr.get('snapshot'):
 		return True
 	dimensions = {"big": (715, 430), "small": (390, 235), 'tiny': (70, 42)}
 	new_files = {}

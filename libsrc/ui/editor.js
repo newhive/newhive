@@ -2399,8 +2399,8 @@ Hive.init = function(exp, page){
         }
     };
 
-    var save_menu = hover_menu('#btn_save', '#menu_save',
-        { auto_close : false, click_persist : '#menu_save' });
+    // var save_menu = hover_menu('#btn_save', '#dia_save',
+    //     { auto_close : false, click_persist : '#dia_save' });
     $('#save_submit').click(function(){
         if( ! $(this).hasClass('disabled') ){
             if(checkUrl()){
@@ -2409,6 +2409,30 @@ Hive.init = function(exp, page){
             }
         }
     });
+    // canonicalize tags field.
+    function tags_input_changed(el) {
+        var tags = el.val().trim();
+        tags = tags.replace(/[#,]/g," ").replace(/[ ]+/g," ").trim();
+        if (tags.length) tags = tags.replace(/([ ]|^)/g,"$1#").trim();
+        // TODO-polish: unique the tags
+        var search_tags = " " + tags + " ";
+        $(".remix_label input").prop("checked", search_tags.indexOf(" #remix ") >= 0);
+        el.val(tags);
+    }
+    $("#tags_input").change(function(e){
+        var el = $(e.target);
+        tags_input_changed(el);
+    });
+    $(".remix_label input").change(function(e) {
+        if ($(e.target).prop("checked")) {
+            $("#tags_input").val("#remix " + $("#tags_input").val());
+        } else {
+            $("#tags_input").val($("#tags_input").val().replace(/[#,]?remix/gi,""));
+            tags_input_changed($("#tags_input"));
+        }
+    });
+    tags_input_changed($("#tags_input"));
+
     var overwrite_dialog = dialog.create('#dia_overwrite');
     $('#cancel_overwrite').click(overwrite_dialog.close);
     $('#save_overwrite').click(function() {
@@ -2444,7 +2468,7 @@ Hive.init = function(exp, page){
     
     // Automatically update url unless it's an already saved
     // expression or the user has modified the url manually
-    $('#menu_save #title').text(context.page_data.expr.title).
+    $('#dia_save #title').text(context.page_data.expr.title).
         bind('keydown keyup', function(){
         if (!(Hive.Exp.home || Hive.Exp.created || $('#url').hasClass('modified') )) {
             $('#url').val($('#title').val().replace(/[^0-9a-zA-Z]/g, "-")
@@ -2456,18 +2480,18 @@ Hive.init = function(exp, page){
         $(this).addClass('modified');
     });
 
-    $('#menu_save #title').blur(function(){
+    $('#dia_save #title').blur(function(){
         $('#title').val($('#title').val().trim());
     }).blur();
 
     $('#url').change(checkUrl);
 
-    hover_menu($('#privacy' ), $('#menu_privacy'), { group: save_menu } );
+    hover_menu($('#privacy' ), $('#menu_privacy')); //todo-delete, { group: save_menu } );
     $('#menu_privacy').click(function(e) {
         $('#menu_privacy div').removeClass('selected');
         var t = $(e.target);
         t.addClass('selected');
-        $('#privacy span').text(t.text());
+        $('#privacy').text(t.text());
         var v = t.attr('val');
         if(v == 'password') $('#password_ui').showshow();
         else $('#password_ui').hidehide();

@@ -839,6 +839,11 @@ class User(HasSocial):
         if not isinstance(v, (str, unicode)): return False
         return crypt(v.encode('UTF8'), self['password']) == self['password']
 
+    def check_password(self, password):
+        if len(password) < 4:
+            return 'Passwords must be at least 4 characters long'
+        return False
+
     def get_url(self, path='profile/', relative=False, secure=False):
         base = '/' if relative else abs_url(secure=secure)
         return base + self.get('name', '') + '/' + path
@@ -1259,12 +1264,12 @@ class Expr(HasSocial):
         old_time = self.get('snapshot_time', False)
 
         snapshotter = Snapshots()
-        snapshot_time = int(now())
+        snapshot_time = now()
         dimension_list = [(715, 430, "big"), (390, 235, "small"), (70, 42, 'tiny')]
         upload_list = []
 
         for w, h, size in dimension_list:
-            name = self.snapshot_name_base(size, str(snapshot_time))
+            name = self.snapshot_name_base(size, str(int(snapshot_time)))
             # TODO-cleanup: This would be cleaner with file pipes instead of filesystem.
             local = '/tmp/' + name
             if w == dimension_list[0][0]:
@@ -1734,13 +1739,12 @@ class File(Entity):
 
     def purge(self):
         self.delete_files()
-        Super(self, File).purge()
+        super(File, self).purge()
 
     def delete_files(self):
         for k in self.thumb_keys + [self.id]:
             if self.get('s3_bucket'):
-                k = self.db.s3_con.get_bucket(self['s3_bucket']).get_key(self.id)
-                if k: k.delete()
+                self.db.s3.delete_file(self['s3_bucket'], self.id)
             elif self.get('fs_path'):
                 try: os.remove(self['fs_path'])
                 except:

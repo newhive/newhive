@@ -82,6 +82,7 @@ define([
         var columns = ($(window).width() >= 980) ? 2 : 1;
         if (o.overlay_columns != columns) {
             o.overlay_columns = columns;
+            $("#popup_content .left_pane").width((columns == 1) ? 508 : 430);
             $("#popup_content > *").css('display', (columns == 1) ? 'block' : 'inline-block');
             $("#popup_content .right_pane").css('text-align', (columns == 1) ? 'left' : 'right').
                 css("max-width", (columns == 1) ? '522px' : '470px');
@@ -144,9 +145,13 @@ define([
                     route_args: { route_name: 'search' }
                 };
             }
-            else
+            else {
                 o.controller.get('expressions_public', {
                     owner_name: page_data.expr.owner.name }, set_cards)
+                context.page_data.cards_route = {
+                    route_args: { route_name: 'expressions_public' }
+                };
+            }
         }
 
         var found = find_card(o.expr.id);
@@ -657,7 +662,7 @@ define([
             context.page_data.expr.activity = json.activity;
             context.page_data.expr.comments = json.comments;
             var comment_box = $('#dia_comments .activity').empty();
-            json.comments.map(function(item){
+            json.comments.reverse().map(function(item){
                 comment_box.append(comment_template(item))});
 
             // update count and highlight state

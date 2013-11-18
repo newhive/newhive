@@ -13,6 +13,7 @@ define([
     'browser/layout',
     'ui/page/pages',
     'sj!templates/password_reset.html',
+    'sj!templates/collections.html',
     'sj!templates/overlay.html',
     'sj!templates/card_master.html',
     'sj!templates/home.html',
@@ -46,6 +47,7 @@ define([
     browser_layout,
     pages,
     password_template,
+    collections_template,
     overlay_template,
     master_template,
     home_template,
@@ -260,8 +262,9 @@ define([
     };
     var local_attach_handlers = function(){
         if (!context.user.logged_in) {
-            $(".needs_login").unbind("click").click(function() {
+            $(".needs_login").unbind("click").click(function(e) {
                 $("#dia_login_or_join").data("dialog").open();
+                e.preventDefault();
             });
         }
         $(".user_action_bar form.follow").unbind('response').on('response', 
@@ -467,16 +470,18 @@ define([
             // TODO-polish: These functions belong in another module.
             if (page_data.page == 'password_reset') {
                 $('#site').empty().append(password_template(page_data));
-                $('#user_settings_form').on('response',
-                    function(e, json) {
-                        if (json.error) {
-                            $('#user_settings_form .error_msg').showshow().
-                                text(json.error);
-                        } else {
-                            o.controller.open("home", {});
-                            $('#login_form [name=from]').val(window.location.origin);
-                        }
-                    });
+                var show_error = function(d){
+                    if (d.error)
+                        $('#user_settings_form .error_msg').showshow().
+                            text(d.error);
+                };
+                show_error(page_data);
+                $('#user_settings_form').on('response', function(e, json) {
+                    if(json.error)
+                        show_error(json);   
+                    else 
+                        window.location = window.location.origin;
+                });
             }
             else
                 $('#site').empty().append(master_template(page_data));

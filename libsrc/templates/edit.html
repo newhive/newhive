@@ -8,8 +8,8 @@
     src='{asset "skin/edit/grid-off.png"}'></div
   ><div class='smpad'></div
   ><div class='center hoverable text text_btn black_active' title="Editor Help" id='btn_help'>?</div
-  ><div id='btn_save' class='save text text_btn hoverable center pad black_active'
-    >Save
+  ><div id='btn_save' class='save upper text text_btn hoverable center pad black_active'
+    >Save <div class='inline arrow'></div>
     <img src='{asset "skin/edit/loading.gif"}' class='hide loading'
   ></div
 ></div>
@@ -17,38 +17,38 @@
 <div class="dialog" id="dia_editor_help" data-handle="#btn_help">
   <iframe src="{config.content_url}{config.site_user}/default-instructional"></iframe>
 </div>
-<div id='menu_save' class='menu drawer top'>
-  <div class='medbold'>Title</div>
+<div id='dia_save' class='standard dialog' data-handle="#btn_save">
+  <div class="heading expr title">Save</div>
+  <div class='upper label medbold'>Title</div>
   <textarea id='title'>{exr.title}</textarea>
-  <div class='spacer'></div>
 
-  <div class='medbold'>URL</div>
+  <div class='upper label medbold'>URL</div>
   <div class=''>newhive.com/{user.name}/</div>
   <div class='note'>Change the URL to "Save As"</div>
   <input id='url' type='text' value='{expr.name|e}'>
-  <div class='spacer'></div>
 
-  <div class='medbold'>Tags</div>
+  <div class='upper label medbold'>#Tags</div>
   <input id='tags_input' type='text' value='{expr.tags|e}'>
   <div class='spacer'></div>
-  <div class='spacer'></div>
 
-  <div id='privacy' style='float : left; padding : 5px' class='medbold dialogue_handle btn rounded'>
-    <span>Private</span>
-  </div>
+  <div class="remix_label"><label>
+    <input type="checkbox">Allow others to remix this expression</label></div>
 
-  <div id='save_submit' style='float: right; padding: 5px'
-    class='save btn black rounded'><span class='label'>Save</span>{#<img
+  <span id='privacy' class='teal_btn upper'>Unlisted
+  </span><div class="inline drop_arrow"></div>
+
+  <div id='save_submit' class='save black_btn upper'>
+    <span class='label'>Save</span>{#<img
     src='{asset "skin/edit/loading.gif"}' class='hide loading'>#}</div>
 
   <div id='password_ui' style='display: none'>
-    <br><br><br>
+    <br>
     <b>Optional password</b><br>
     <input type='password' id='password' value=''>
   </div>
 </div>
 <div id='menu_privacy' class='menu drawer medbold' style='width : 125px;'>
-  <div val='password' class='menu_item'>Private</div>
+  <div val='password' class='menu_item'>Unlisted</div>
   <div val='public' class='menu_item'>Public</div>
 </div>
 

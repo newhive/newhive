@@ -495,3 +495,40 @@ form.login {
 // #dia_fb_account_duplicate {
 //     width: 640px;
 // }
+
+#dia_save {
+    font-family: Gibson;
+    font-size: 17px;
+    textarea { 
+        height : 2.5em;
+    }
+    textarea, input {
+        margin: 0px;
+        margin-top: 3px;
+    }
+    .upper.label {
+        margin-top: 14px;
+    }
+    .remix_label {
+        font-family: Arial;
+        input { margin-right: 10px; }
+        margin-bottom: 30px;
+        margin-top: 15px;
+    }
+    .note { color: $color_grey_medium }
+    div.drop_arrow { 
+        background-image: asset_url('skin/nav/small_arrow.png');
+        width: 22px;
+        height: 42px;
+        margin-top: -10px;
+    }
+    #save_submit {
+        float: right;
+        position: absolute;
+        right: 20px;
+        bottom: 20px;
+    }
+    #password { width:300px; }
+}
+#menu_privacy .selected { display : none; }
+
