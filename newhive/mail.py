@@ -286,22 +286,23 @@ class Mailer(object):
             ))
 
         # write e-mail to file for debugging
-        path = 'lib/email/' + email_id + utils.junkstr(4) + '.html'
-        with open(config.src_home + '/' + path, 'w') as f:
-            f.write('<div><pre>')
-            for key, val in heads.items():
-                s = u"{:<20}{}\n".format(key + u":", val)
-                f.write(s.encode('utf-8'))
-            f.write('</pre></div>')
-            if body.has_key('html'):
-                f.write(body['html'].encode('utf-8'))
-            else:
-                f.write('<pre style="font-family: sans-serif;">')
-                f.write(body['plain'].encode('utf-8'))
-                f.write('</pre>')
-        debug_url = abs_url() + path
-        logger.debug('temporary e-mail path: ' + debug_url)
-        record.update(debug_url=debug_url)
+        if config.debug_mode:
+            path = 'lib/email/' + email_id + utils.junkstr(4) + '.html'
+            with open(config.src_home + '/' + path, 'w') as f:
+                f.write('<div><pre>')
+                for key, val in heads.items():
+                    s = u"{:<20}{}\n".format(key + u":", val)
+                    f.write(s.encode('utf-8'))
+                f.write('</pre></div>')
+                if body.has_key('html'):
+                    f.write(body['html'].encode('utf-8'))
+                else:
+                    f.write('<pre style="font-family: sans-serif;">')
+                    f.write(body['plain'].encode('utf-8'))
+                    f.write('</pre>')
+            debug_url = abs_url() + path
+            logger.debug('temporary e-mail path: ' + debug_url)
+            record.update(debug_url=debug_url)
 
         if subscribed:
             _send_mail(heads, body, self.db, filters=filters, category=self.name, smtp=self.smtp, **kwargs)

@@ -1,5 +1,7 @@
 #! /bin/sh
-# intended to be called from git post-receive hook
 
+# TODO: if running on AWS, remove this server from load balancer
 bin/build_assets.py
 sudo apache2ctl graceful
+# TODO: run automated tests
+# TODO: put this server back into load balancer
