@@ -2,29 +2,30 @@ define([
     'browser/jquery',
     'browser/layout'
 ], function($, layout, dialog_template){
-    var oo = { dialogs: [] };
+    var factory = { dialogs: [] };
 
-    oo.create = function(element, options){
-        oo.generic_dialog_handler = function(event, json){
-            if (json.error != undefined) {
-                opts.dialog.find('.error_msg').text(json.error).showshow().hide().fadeIn("slow");
+    factory.generic_dialog_handler = function(event, json){
+        if (json.error != undefined) {
+            opts.dialog.find('.error_msg').text(json.error).showshow().hide().fadeIn("slow");
+        } else {
+            opts.dialog.find('.error_msg').hidehide();
+            var el_show = opts.dialog.find(".success_show").unbind("click").click(
+                function() { o.close(); });
+            if (el_show.length) {
+                el_show.showshow();
+                opts.dialog.find(".success_hide").hidehide();
             } else {
-                opts.dialog.find('.error_msg').hidehide();
-                var el_show = opts.dialog.find(".success_show").unbind("click").click(
-                    function() { o.close(); });
-                if (el_show.length) {
-                    el_show.showshow();
-                    opts.dialog.find(".success_hide").hidehide();
-                } else {
-                    $('#dialog_shield').click();
-                }
+                $('#dialog_shield').click();
             }
-        };
+        }
+    };
+
+    factory.create = function(element, options){
         var opts = $.extend({
             dialog: $(element),
             opened: false,
             open: function(){},
-            handler: oo.generic_dialog_handler,
+            handler: factory.generic_dialog_handler,
             close: function(){},
             mandatory: false,
             layout: function(){ layout.center(opts.dialog, $(window)) },
@@ -41,7 +42,7 @@ define([
             opts: opts
         }, o);
         opts.dialog.data('dialog', o);
-        oo.dialogs.push(o);
+        factory.dialogs.push(o);
 
         // construct element
         // if(!opts.opts.mandatory){
@@ -55,23 +56,27 @@ define([
         o.open = function(){
             if(opts.opened) return;
             opts.opened = true;
+            var this_dia = opts.dialog;
+            
             // Close any previous dialog. 
             // TODO: Allow multiple dialogs?
             $('#dialog_shield').click();
-
             opts.shield = $("<div id='dialog_shield'>");
             if(opts.fade) opts.shield.addClass('fade');
             opts.shield.appendTo(document.body).click(o.close);
 
-            // opts.dialog.detach().appendTo(document.body).
-            opts.dialog.removeClass('hide').showshow();
-            opts.dialog.find("form").unbind('response').on('response', opts.handler);
+            o.attach_point = this_dia.parent();
+            this_dia.detach();
+            // Add to body to create a new z index stack
+            this_dia.appendTo(document.body);
+            this_dia.removeClass('hide').showshow();
+            this_dia.find("form").unbind('response').on('response', opts.handler);
             // For old browsers which don't support autofocus.
-            opts.dialog.find("*[autofocus]").focus();
-            opts.dialog.find(".error_msg").hidehide();
-            opts.dialog.find(".success_show").hidehide();
-            opts.dialog.find(".success_hide").showshow();
-            opts.dialog.find("*[type=cancel]").unbind('click').click(function(e) {
+            this_dia.find("*[autofocus]").focus();
+            this_dia.find(".error_msg").hidehide();
+            this_dia.find(".success_show").hidehide();
+            this_dia.find(".success_hide").showshow();
+            this_dia.find("*[type=cancel]").unbind('click').click(function(e) {
                 o.close();
                 e.preventDefault(); 
             });
@@ -84,6 +89,7 @@ define([
         o.close = function() {
             if(!opts.opened) return;
             opts.opened = false;
+            opts.dialog.detach().appendTo(o.attach_point);
             opts.shield.remove();
             $(window).off('resize', opts.layout);
             opts.dialog.hidehide();
@@ -92,6 +98,10 @@ define([
 
         return o;
     };    
+
+    factory.close_all = function(){
+        factory.dialogs.map(function(o){ o.close() });
+    }
 
     // TODO: make functional
     // opts.expr_dialog(id, opts){
@@ -105,7 +115,7 @@ define([
     //     return loadDialog(url + '?template=expr_dialog', opts);
     // }
 
-    return oo;
+    return factory;
 });
 
 // function loadDialog(url, opts) {
