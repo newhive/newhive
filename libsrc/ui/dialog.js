@@ -2,31 +2,30 @@ define([
     'browser/jquery',
     'browser/layout'
 ], function($, layout, dialog_template){
-    var oo = { dialogs: [] };
+    var factory = { dialogs: [] };
 
-    oo.create = function(element, options){
-        // #TODO-review
-        // Sloppy, wrong scope.
-        oo.generic_dialog_handler = function(event, json){
-            if (json.error != undefined) {
-                opts.dialog.find('.error_msg').text(json.error).showshow().hide().fadeIn("slow");
+    factory.generic_dialog_handler = function(event, json){
+        if (json.error != undefined) {
+            opts.dialog.find('.error_msg').text(json.error).showshow().hide().fadeIn("slow");
+        } else {
+            opts.dialog.find('.error_msg').hidehide();
+            var el_show = opts.dialog.find(".success_show").unbind("click").click(
+                function() { o.close(); });
+            if (el_show.length) {
+                el_show.showshow();
+                opts.dialog.find(".success_hide").hidehide();
             } else {
-                opts.dialog.find('.error_msg').hidehide();
-                var el_show = opts.dialog.find(".success_show").unbind("click").click(
-                    function() { o.close(); });
-                if (el_show.length) {
-                    el_show.showshow();
-                    opts.dialog.find(".success_hide").hidehide();
-                } else {
-                    $('#dialog_shield').click();
-                }
+                $('#dialog_shield').click();
             }
-        };
+        }
+    };
+
+    factory.create = function(element, options){
         var opts = $.extend({
             dialog: $(element),
             opened: false,
             open: function(){},
-            handler: oo.generic_dialog_handler,
+            handler: factory.generic_dialog_handler,
             close: function(){},
             mandatory: false,
             layout: function(){ layout.center(opts.dialog, $(window)) },
@@ -43,7 +42,7 @@ define([
             opts: opts
         }, o);
         opts.dialog.data('dialog', o);
-        oo.dialogs.push(o);
+        factory.dialogs.push(o);
 
         // construct element
         // if(!opts.opts.mandatory){
@@ -100,8 +99,8 @@ define([
         return o;
     };    
 
-    oo.close_all = function(){
-        oo.dialogs.map(function(o){ o.close() });
+    factory.close_all = function(){
+        factory.dialogs.map(function(o){ o.close() });
     }
 
     // TODO: make functional
@@ -116,7 +115,7 @@ define([
     //     return loadDialog(url + '?template=expr_dialog', opts);
     // }
 
-    return oo;
+    return factory;
 });
 
 // function loadDialog(url, opts) {
