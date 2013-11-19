@@ -91,9 +91,13 @@ expr_limit = 10
 continuous = True
 
 def get_exprs(limit):
-    expressions_to_snapshot = db.Expr.search({
-        "$or": [{"snapshot_time": { "$exists": False }},
-        {"$where": "this.snapshot_time < this.updated"}]},
+    expressions_to_snapshot = db.Expr.search({ '$and': [
+            {'snapshot_fails': {'$lt': 5}},
+            {"$or": [
+                {"snapshot_time": { "$exists": False }},
+                {"$where": "this.snapshot_time < this.updated"}
+            ]}
+        ]},
         limit=limit, sort=[('updated', -1)])
     if test:
         expressions_to_snapshot = db.Expr.search({
@@ -111,9 +115,9 @@ def start_snapshots(proc_tmp_snapshots=False):
  
     count = 0
     total = get_exprs(0).count()
-    threads = threading.active_count()
     while True:
     # if True:
+        threads = threading.active_count()
         exprs = list(get_exprs(0))
         print get_exprs(0).count()
         if len(exprs) == 0 and not continuous: break
