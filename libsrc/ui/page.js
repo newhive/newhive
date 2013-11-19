@@ -215,6 +215,7 @@ define([
         new_page = pages[method];
         expr_page = (method == 'expr');
         page_data.layout = method;
+        dialog.close_all();
         if (context.page != new_page) {
             if (context.page && context.page.exit) 
                 context.page.exit();
