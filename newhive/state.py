@@ -2060,6 +2060,8 @@ class Trash(Entity):
 ## utils
 
 def mk_password(v):
+    if not v:
+        return ''
     salt = "$6$" + junkstr(8)
     return crypt(v.encode('UTF8'), salt)
 
