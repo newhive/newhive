@@ -1744,7 +1744,14 @@ class File(Entity):
     def delete_files(self):
         for k in self.thumb_keys + [self.id]:
             if self.get('s3_bucket'):
-                self.db.s3.delete_file(self['s3_bucket'], self.id)
+                try:
+                    self.db.s3.delete_file(self['s3_bucket'], self.id)
+                except:
+                    # not critical if S3 remove fails, as will happen
+                    # when dev tries to remove live files
+                    # (it can always be cleaned up later)
+                    # TODO: log error
+                    pass
             elif self.get('fs_path'):
                 try: os.remove(self['fs_path'])
                 except:
