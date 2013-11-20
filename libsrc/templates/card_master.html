@@ -36,11 +36,13 @@
 #}
 {<unless page "tag_search"}
   <div class="tag_list main hide" data-link-show=".icon.hash">
+  {<with null "main_view" true}
     {<for tag_list "tagnum"}
       {|templates/tag_card.html}
     {>}</div>
+  {>}
 {>}
-<div id='feed' class='{layout}'>
+<div id='feed' class='{layout}{<unless route.private} public{>}'>
   {|templates/cards.html}
   {# Insert 3-column layout here.  
     When unused, it's 0 height.

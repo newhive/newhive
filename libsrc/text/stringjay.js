@@ -480,6 +480,12 @@ define(['browser/js', 'module'],
 	context_base.json = function(context, data){
 		return JSON.stringify(data);
 	};
+	// Set lhs to the value of rhs
+	// ex: {set "my_var" 3}
+	context_base.set = function(context, lhs, rhs){
+		context[context.length - 1][lhs] = rhs;
+		return '';
+	};
 	context_base.and = function(context){
 		for(var i = 1; i < arguments.length; ++i){
 			if (!arguments[i])

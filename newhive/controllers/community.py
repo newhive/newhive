@@ -73,7 +73,7 @@ class Community(Controller):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         spec = {'owner_name': owner_name}
-        cards = self.db.Expr.page(spec, viewer=tdata.user, auth='public', **args)
+        cards = self.db.Expr.page(spec, viewer=tdata.user, auth='public', at=at, **args)
         return self.expressions_for(tdata, cards, owner)
 
     def expressions_public(self, tdata, request, owner_name=None, at=0, **args):
@@ -81,6 +81,23 @@ class Community(Controller):
         if not owner: return None
         cards = owner.profile(at=at)
         return self.expressions_for(tdata, cards, owner)
+
+    def expressions_tag(self, tdata, request, owner_name=None, tag_name=None, at=0, **args):
+        owner = self.db.User.named(owner_name)
+        if not owner: return None
+        profile = owner.client_view(viewer=tdata.user)
+
+        result, search = self.db.query_echo("@" + owner_name + " #" + tag_name,
+            viewer=tdata.user, at=at, **args)
+
+        data = {
+            "cards": result,
+            "card_type": "expr",
+            "tag_selected": tag_name,
+            'owner': profile,
+            'title': 'Expressions by' + owner['name'],
+        }
+        return data
 
     def expressions_private(self, tdata, request, owner_name=None, **args):
         owner = self.db.User.named(owner_name)
@@ -325,11 +342,14 @@ class Community(Controller):
         for k in ['limit', 'order']:
             if k in pagination_args: pagination_args[k] = int(pagination_args[k])
         # Call controller function with query and pagination args
-        passable_keyword_args = dfilter(kwargs, ['username', 'owner_name', 'expr_name', 'id'])
+        passable_keyword_args = dfilter(kwargs, 
+            ['username', 'owner_name', 'expr_name', 'id', 'tag_name'])
         merged_args = dict(passable_keyword_args.items() + pagination_args.items())
 
         page_data = query(tdata, request, **merged_args)
+        owner = self.db.User.named(kwargs.get('owner_name',''))
         if not page_data:
+            print request
             # TODO-cleanup: make this less hacky
             if kwargs.get('route_name') == 'user_home':
                 return self.redirect(response, abs_url(
@@ -342,20 +362,26 @@ class Community(Controller):
             if page_data.get('special'):
                 del page_data['special']
             page_data['cards'] = [o.client_view(special=special) for o in page_data['cards']]
-            # Collate tags into list by most commonly appearing.
-            cnt = Counter()
-            for card in page_data['cards']:
-                for tag in (card.get('tags', []) if card.get('tags') else []):
-                    cnt[tag] += 1
-            # TODO: we'll have to have another solution with pagination.
-            if type(page_data.get('tag_list')) != list:
-                page_data['tag_list'] = map(lambda x: x[0], cnt.most_common(16))
-            owner = self.db.User.named(kwargs.get('owner_name',''))
-            if owner and kwargs['route_name'] == 'expressions_public_tags':
-                tagged = owner.get('tagged', {}).keys()
-                num_tags = max(len(tagged), 16)
-                tagged.extend(page_data['tag_list'])
-                page_data['tag_list'] = tagged[:num_tags]
+
+            if owner and kwargs.get('include_tags'):
+                # TODO-perf: don't update list on query, update it when it changes!
+                owner.calculate_tags()
+                cnt = owner['unlisted_tags'] if kwargs.get('private') else owner['unlisted_tags']
+                page_data['tag_list'] = [x for x,y in cnt.most_common()] # [:num_tags]
+            else:
+                # Collate tags into list by most commonly appearing.
+                cnt = Counter()
+                for card in page_data['cards']:
+                    for tag in (card.get('tags', []) if card.get('tags') else []):
+                        cnt[tag] += 1
+                # TODO: we'll have to have another solution with pagination.
+                if type(page_data.get('tag_list')) != list:
+                    page_data['tag_list'] = map(lambda x: x[0], cnt.most_common(16))
+                if owner and kwargs['route_name'] == 'expressions_public_tags':
+                    tagged = owner.get('tagged', {}).keys()
+                    num_tags = max(len(tagged), 16)
+                    tagged.extend(page_data['tag_list'])
+                    page_data['tag_list'] = tagged[:num_tags]
             # Fetch feed data
             for card in page_data['cards']:
                 feed = card.get('feed', [])

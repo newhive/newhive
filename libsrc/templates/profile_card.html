@@ -32,7 +32,8 @@
           {# tags #}
           <a class='nav_button inline tags'
             { anchor_attrs "expressions_public_tags" "owner_name" owner.name }>
-            <div class="tags icon{<if route_name "expressions_public_tags"} on{>}"></div></a
+            <div class="tags icon{<if (or (eq route_name "expressions_public_tags")
+              (eq route_name "expressions_tag"))} on{>}"></div></a
           ><div class='spacer inline'></div>
           {# following #}
           <a class='nav_button txt_button inline upper{<if route_name "following"} on{>}' 
