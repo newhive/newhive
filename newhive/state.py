@@ -1088,19 +1088,23 @@ class Expr(HasSocial):
 
         def named(self, username, name): return self.find({'owner_name': username, 'name': name})
 
-        def cards(self, spec, auth=None, viewer=None, **opts):
+        def cards(self, spec, auth=None, viewer=None, override_unlisted=False, **opts):
             filter = {}
             spec2 = spec if type(spec) == dict else filter
+            #!!TODO BUGBUG: Hack for Zach
+            if (spec.has_key('tags_index') 
+                and ['deck2013'] in spec.get('tags_index').values()):
+                override_unlisted = True
             if auth:
                 spec2.update(auth=auth)
             if viewer and viewer.logged_in:
                 if auth == 'password':
                     spec2.update({'owner': viewer.id})
-                else:
+                elif not override_unlisted:
                     spec2.setdefault('$and', [])
                     spec2['$and'].append({'$or': [{'auth': 'public'},
                         {'owner': viewer.id}]})
-            else:
+            elif not override_unlisted:
                 spec2.update({'auth': 'public'})
             opts.setdefault('fields', self.ignore_not_meta)
             return self.search(spec, filter, **opts)
