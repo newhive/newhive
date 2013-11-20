@@ -38,7 +38,7 @@ define([
         return state;
     };
     o.register_state = function(route_info) {
-        // if (!window.history && window.history.pushState) return;
+        if (!window.history && window.history.pushState) return;
         var state = o.page_state(route_info.route_name, route_info, location.search.slice(1));
         history.pushState(state, null, state.page);
     };

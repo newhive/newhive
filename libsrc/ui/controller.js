@@ -33,13 +33,13 @@ define([
         context.route_name = route_name;
         if (route_name == "expr")
             route_name = "view_expr";
-        route = routes[route_name];
+        context.route = routes[route_name];
         var cards = context.page_data.cards;
         var cards_route = context.page_data.cards_route;
         context.page_data = page_data;
         if(!page_data.cards) context.page_data.cards = cards;
         if(!page_data.cards_route) context.page_data.cards_route = cards_route;
-        page.render(route.client_method, context);
+        page.render(context.route.client_method, context);
     };
     o.refresh = function(){
         o.dispatch(route.method, context.page_data);

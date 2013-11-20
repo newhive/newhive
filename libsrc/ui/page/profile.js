@@ -77,11 +77,11 @@ define([
     }
     o.enter = function(){
         o.exit();
-        profile_pages=["expressions_public_tags", "following", "expressions_public", "expressions_private","followers", "loves"];
+        profile_pages=["expressions_tag", "expressions_public_tags", "following", "expressions_public", "expressions_private","followers", "loves"];
         i = profile_pages.indexOf(context.route_name);
         if (i >= 0) {
             $(".network_nav").hidehide();
-            show_tags((i < 2) ? true : false);
+            show_tags((i < 3) ? true : false);
         }
         $("#signup_create").showshow();
         $("#content_btns").showshow();

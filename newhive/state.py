@@ -149,7 +149,7 @@ class Database:
         # q_no_quotes = re.sub(r'"(.*?)"', '', q, flags=re.UNICODE)
         # search['phrases'].extend(q_quotes)
 
-        for pattern in re.findall(r'(\b|\W+)((\w|[/-])+)', q):
+        for pattern in re.findall(r'(\b|\W+)((\w|[:-])+)', q):
             prefix = re.sub( r'[^#@]', '', pattern[0] )
             if prefix == '@': search['user'] = pattern[1].lower()
             elif prefix == '#':
@@ -207,7 +207,7 @@ class Collection(object):
             return res
         return Cursor(self, self._col.find(spec=spec, **opts))
 
-    # Should be overridden to ommit fields not used in list views
+    # Should be overridden to omit fields not used in list views
     # TODO: fix privacy for viewer
     def cards(self, spec, viewer=None, **opts):
         return self.search(spec, **opts)
@@ -549,6 +549,22 @@ class User(HasSocial):
 
     @property
     def broadcast_ids(self): return [i['entity'] for i in self.broadcast]
+
+    def calculate_tags(self):
+        public_cnt = Counter()
+        unlisted_cnt = Counter()
+        for expr in self.expressions:
+            for tag in expr.get('tags_index', []):
+                unlisted_cnt[tag] += 1
+                if expr.get('auth', 'unlisted') == 'public':
+                    public_cnt[tag] += 1
+        for cnt in [public_cnt, unlisted_cnt]:
+            top = cnt.most_common(1)[0][1]
+            #TODO: need to actually differentiate each expression by auth
+            for tag, tagged in self.get('tagged', {}).items():
+                cnt[tag] += top + len(tagged)
+
+        self.update(public_tags = public_cnt, unlisted_tags = unlisted_cnt)
 
     def can_view(self, expr):
         return expr and (
@@ -1095,6 +1111,7 @@ class Expr(HasSocial):
             if (spec2.has_key('tags_index') 
                 and ['deck2013'] in spec2.get('tags_index').values()):
                 override_unlisted = True
+
             if auth:
                 spec2.update(auth=auth)
             if viewer and viewer.logged_in:
@@ -1359,7 +1376,8 @@ class Expr(HasSocial):
             d['password'] = None
         super(Expr, self).update(**d)
         self.owner.get_expr_count(force_update=True)
-        # if d.get('apps') or d.get('background'): self.threaded_snapshot(retry=120)
+        if not config.live_server and (d.get('apps') or d.get('background')):
+            self.threaded_snapshot(retry=120)
         return self
 
     def build_search(self, d):
@@ -1524,6 +1542,10 @@ class Expr(HasSocial):
     def is_featured(self):
         return self.id in self.db.User.get_root()['tagged'].get('Featured', [])
 
+    @property
+    def auth(self):
+        return self.get('auth', 'private')
+
     public = property(lambda self: self.get('auth') == "public")
 
     def client_view(self, viewer=None, special={}, activity=0):
@@ -1542,6 +1564,8 @@ class Expr(HasSocial):
             'url': self.url,
             'title': self.get('title')
         })
+        if self.auth != 'public':
+            expr.update({'auth': self.auth})
         expr['snapshot_big'] = self.snapshot_name("big")
         expr['snapshot_small'] = self.snapshot_name("small")
         if viewer and viewer.is_admin:
