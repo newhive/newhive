@@ -1,8 +1,9 @@
 define([
     'browser/jquery',
     'json!ui/routes.json',
+    // 'history/history',
     'json!server/compiled.config.json'
-], function($, ApiRoutes, config){
+], function($, ApiRoutes, /*history, */config){
     var o = {};
 
     // turns out I don't really need this, but could be useful in the future
@@ -37,7 +38,7 @@ define([
         return state;
     };
     o.register_state = function(route_info) {
-        if (!window.history && window.history.pushState) return;
+        // if (!window.history && window.history.pushState) return;
         var state = o.page_state(route_info.route_name, route_info, location.search.slice(1));
         history.pushState(state, null, state.page);
     };
