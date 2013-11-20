@@ -46,8 +46,6 @@ def sss():
     # snapshots.take_snapshot("50f737d36d902248910accfe", "snap_out.png", (715, 430))
 
 def test_snapshot():
-    # s3_con = S3Connection(config.aws_id, config.aws_secret)
-    # thumb_bucket = s3_con.create_bucket(config.s3_buckets['thumb'])
     # xvfb = init_xvfb()
     # for url in urls:
     #     gen_thumb(url)
@@ -92,7 +90,7 @@ continuous = True
 
 def get_exprs(limit):
     expressions_to_snapshot = db.Expr.search({ '$and': [
-            {'snapshot_fails': {'$lt': 5}},
+            {'snapshot_fails': {'$not': {'$gt': 5}}},
             {"$or": [
                 {"snapshot_time": { "$exists": False }},
                 {"$where": "this.snapshot_time < this.updated"}
@@ -110,11 +108,7 @@ def get_exprs(limit):
     return expressions_to_snapshot
 
 def start_snapshots(proc_tmp_snapshots=False):
-    s3_con = S3Connection(config.aws_id, config.aws_secret)
-    thumb_bucket = s3_con.create_bucket(config.s3_buckets['thumb'])
- 
     count = 0
-    total = get_exprs(0).count()
     while True:
     # if True:
         threads = threading.active_count()
@@ -130,7 +124,7 @@ def start_snapshots(proc_tmp_snapshots=False):
             
             expr_id = expr.get('_id')
             count += 1
-            print "(%s/%s) (%s) snapshotting %s" % (count, total, len(exprs), expr_id)
+            print "(%s/%s) snapshotting %s" % (count, len(exprs), expr_id)
             expr.threaded_snapshot()
             # take_snapshot(expr_id)
             # s3_url = upload_snapshot_to_s3(expr_id, thumb_bucket)    
