@@ -1092,8 +1092,8 @@ class Expr(HasSocial):
             filter = {}
             spec2 = spec if type(spec) == dict else filter
             #!!TODO BUGBUG: Hack for Zach
-            if (spec.has_key('tags_index') 
-                and ['deck2013'] in spec.get('tags_index').values()):
+            if (spec2.has_key('tags_index') 
+                and ['deck2013'] in spec2.get('tags_index').values()):
                 override_unlisted = True
             if auth:
                 spec2.update(auth=auth)
