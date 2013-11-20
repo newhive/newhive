@@ -215,6 +215,7 @@ define([
         new_page = pages[method];
         expr_page = (method == 'expr');
         page_data.layout = method;
+        dialog.close_all();
         if (context.page != new_page) {
             if (context.page && context.page.exit) 
                 context.page.exit();
@@ -424,7 +425,8 @@ define([
             on_file_upload('#profile_bg', '#bg_id_input'));
         // Click-through help text to appropriate handler
         $(".help_bar").on("click", function(e) {
-            console.log("ok" + e);$(this).next().trigger(e); })
+            $(this).next().trigger(e); 
+        });
 
         $('#user_update_form button[name=cancel]').click(function(e) {
             o.controller.open('expressions_public',

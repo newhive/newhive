@@ -1,6 +1,8 @@
 #! /bin/sh
-# intended to be called from git post-receive hook
 
 PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:$PATH"
+# TODO: if running on AWS, remove this server from load balancer
 bin/build_assets.py
 sudo apache2ctl graceful
+# TODO: run automated tests
+# TODO: put this server back into load balancer
