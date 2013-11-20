@@ -73,7 +73,7 @@ class Community(Controller):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         spec = {'owner_name': owner_name}
-        cards = self.db.Expr.page(spec, viewer=tdata.user, auth='public', **args)
+        cards = self.db.Expr.page(spec, viewer=tdata.user, auth='public', at=at, **args)
         return self.expressions_for(tdata, cards, owner)
 
     def expressions_public(self, tdata, request, owner_name=None, at=0, **args):
@@ -88,7 +88,7 @@ class Community(Controller):
         profile = owner.client_view(viewer=tdata.user)
 
         result, search = self.db.query_echo("@" + owner_name + " #" + tag_name,
-            viewer=tdata.user, **args)
+            viewer=tdata.user, at=at, **args)
 
         data = {
             "cards": result,
