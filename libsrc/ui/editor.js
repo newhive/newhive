@@ -2601,8 +2601,8 @@ Hive.save = function() {
         // expr.tags += " #remixed"
     }
 
-    if(expr.name.match(/^profile/)) {
-        alert('The name "profile" is reserved.');
+    if(expr.name.match(/^(profile|tag)$/)) {
+        alert('The name "' + expr.name + '" is reserved.');
         return false;
     }
 
