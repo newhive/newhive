@@ -716,7 +716,7 @@ class User(HasSocial):
         # get iterable for all feed items in your network
         user_action = {
                 'initiator': {'$in': self.starred_user_ids},
-                'class_name': {'$in': ['NewExpr', 'Broadcast', 'Star']}
+                'class_name': {'$in': ['NewExpr', 'Broadcast', 'Star', 'Remix']}
                 }
         own_broadcast = { 'initiator': self.id, 'class_name': 'Broadcast' }
         expression_action = {
@@ -1405,7 +1405,8 @@ class Expr(HasSocial):
         self._collect_files(self)
         self.build_search(self)
         super(Expr, self).create()
-        feed = self.db.NewExpr.create(self.owner, self)
+        if 'remixed' not in self.get('tags_index', []):
+            feed = self.db.NewExpr.create(self.owner, self)
         self.owner.get_expr_count(force_update=True)
         return self
 
@@ -1501,7 +1502,7 @@ class Expr(HasSocial):
             if self.owner.id != get_id(viewer): return []
 
         items = self.db.Feed.page({ 'entity': self.id,
-            'class_name': {'$in': ['Star', 'Comment', 'Broadcast']} }, **opts)
+            'class_name': {'$in': ['Star', 'Comment', 'Broadcast', 'Remix']} }, **opts)
 
         return items
 
@@ -1552,6 +1553,7 @@ class Expr(HasSocial):
             dict.update( expr, comments = self.comment_feed() )
             dict.update( expr, loves = self.loves_feed() )
             dict.update( expr, broadcast = self.broadcast_feed() )
+            # TODO: do we want client view to also include remix family?
             dict.update( expr, activity = self.activity_feed(None, activity) )
             # dict.update( expr, activity =
             #     map(lambda r: r.client_view(),
@@ -1898,8 +1900,10 @@ class Feed(Entity):
         if self['class_name'] == 'Star':
             if self['entity_class'] == 'Expr': r['action'] = 'Love'
             else: r['action'] = 'Follow'
-        if self['class_name'] == 'Broadcast':
+        elif self['class_name'] == 'Broadcast':
             r['action'] = 'Republish'
+        elif self['class_name'] == 'Remix':
+            r['action'] = 'Remix'
 
         return r
 
@@ -1956,6 +1960,17 @@ class Broadcast(Feed):
         if type(self.entity) != Expr: raise "You may only broadcast expressions"
         if self.db.Broadcast.find({ 'initiator': self['initiator'], 'entity': self['entity'] }): return True
         return super(Broadcast, self).create()
+
+@register
+class Remix(Feed):
+    action_name = 'remix'
+
+    def create(self):
+        if self.entity['owner'] == self['initiator']:
+            raise "You mustn't remix your own expression"
+        if type(self.entity) != Expr: raise "You may only remix expressions"
+        if self.db.Remix.find({ 'initiator': self['initiator'], 'entity': self['entity'] }): return True
+        return super(Remix, self).create()
 
 
 @register
