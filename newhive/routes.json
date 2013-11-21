@@ -330,9 +330,10 @@
     "admin_query": {
         "page_route": "/home/admin/query",
         "api_route": "/api/admin/query",
-        "controller": "admin",
-        "method": "query",
-        "client_method": "profile"
+        "controller": "community",
+        "method": "admin_query",
+        "client_method": "profile",
+        "require_login": true
     },
 
 
