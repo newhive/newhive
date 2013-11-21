@@ -88,32 +88,28 @@ def clear_snapshots():
 expr_limit = 10
 continuous = True
 
-def get_exprs(limit):
-    expressions_to_snapshot = db.Expr.search({ '$and': [
-            {'snapshot_fails': {'$not': {'$gt': 5}}},
-            {"$or": [
-                {"snapshot_time": { "$exists": False }},
-                {"$where": "this.snapshot_time < this.updated"}
-            ]}
-        ]},
-        limit=limit, sort=[('updated', -1)])
-    if test:
-        expressions_to_snapshot = db.Expr.search({
-            "$and": [
-                {"snapshot_time": {
-                    "$exists": False
-                }},
-            {"owner_name": "abram"}
-        ] },limit=limit)
+def get_exprs(query_and={}):
+    and_exp = [
+        {'snapshot_fails': {'$not': {'$gt': 5}}},
+        {"$or": [
+            {"snapshot_time": { "$exists": False }},
+            {"$where": "this.snapshot_time < this.updated"}
+        ]}
+    ]
+    if test and (not query_and):
+        and_exp.append({'owner_name': 'abram'})
+    if query_and:
+        and_exp.append(query_and)
+    expressions_to_snapshot = db.Expr.search({'$and': and_exp}, sort=[('updated', -1)])
     return expressions_to_snapshot
 
-def start_snapshots(proc_tmp_snapshots=False):
+def start_snapshots(query_and=False):
     count = 0
     while True:
     # if True:
         threads = threading.active_count()
-        exprs = list(get_exprs(0))
-        print get_exprs(0).count()
+        exprs = list(get_exprs(query_and))
+        print get_exprs(query_and).count()
         if len(exprs) == 0 and not continuous: break
         # print exprs
         for expr in exprs:
