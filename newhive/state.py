@@ -567,7 +567,8 @@ class User(HasSocial):
             top = cnt.most_common(1)[0][1]
             #TODO: need to actually differentiate each expression by auth
             for tag, tagged in self.get('tagged', {}).items():
-                cnt[tag] += top + len(tagged)
+                if len(tagged):
+                    cnt[tag] += top + len(tagged)
         tag_entropy = self.get('tag_entropy', {})
         for tag, x in cnt.most_common():
             tag_entropy.setdefault(tag, junkstr(6))
@@ -1376,12 +1377,32 @@ class Expr(HasSocial):
     owner = property(get_owner)
 
     def update(self, **d):
+        old_tags = set(self['tags_index'])
         if not d.has_key('file_id'): self._collect_files(d)
         self.build_search(d)
         if d.get('auth') == 'public':
             d['password'] = None
         super(Expr, self).update(**d)
         self.owner.get_expr_count(force_update=True)
+        
+        # Update owner's tag list, adding self to appropriate lists
+        tagged = self.owner.get('tagged', {})
+        tagged_keys = set(tagged.keys())
+        old_tags &= tagged_keys
+        new_tags = set(self['tags_index']) & tagged_keys
+        both_tags = old_tags & new_tags
+        new_tags -= both_tags
+        old_tags -= both_tags
+
+        for tag in old_tags:
+            tagged[tag] = filter(lambda e: e.id != self.id, tagged[tag])
+        for tag in new_tags:
+            if self.id not in tagged[tag]:
+                tagged[tag] = [self.id] + tagged[tag]
+        self.owner.update(tagged=tagged, updated=False)
+        # TODO-perf: shouldn't need after a migration.
+        self.owner.calculate_tags()
+
         if not config.live_server and (d.get('apps') or d.get('background')):
             self.threaded_snapshot(retry=120)
         return self
@@ -1435,10 +1456,20 @@ class Expr(HasSocial):
         return self
 
     def delete(self):
-        #TODO-bug: note, this occurs BEFORE the delete action, thus lags.
-        self.owner.get_expr_count(force_update=True)
+        owner = self.owner
+        # Update owner's tag list, adding self to appropriate lists
+        self.owner.calculate_tags()
+        tagged = self.owner.get('tagged', {})
+        tagged_keys = set(tagged.keys())
+        for tag in self['tags_index']:
+            if tag in tagged_keys:
+                tagged[tag] = filter(lambda e: e.id != self.id, tagged[tag])
+        
         for r in self.db.Feed.search({'entity': self.id}): r.delete()
-        return super(Expr, self).delete()
+
+        res = super(Expr, self).delete()
+        owner.get_expr_count(force_update=True)
+        return res
 
     def increment_counter(self, counter):
         assert counter in self.counters, "Invalid counter variable.  Allowed counters are " + str(self.counters)
