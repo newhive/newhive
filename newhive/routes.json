@@ -108,6 +108,15 @@
         "client_method": "grid",
         "include_tags": true
     },
+    "expressions_tag_private": {
+        "page_route": "/<owner_name>/tag/<tag_name>/<entropy>",
+        "api_route": "/api/feed/<owner_name>/tag/<tag_name>/<entropy>",
+        "controller": "community",
+        "method": "expressions_tag",
+        "client_method": "grid",
+        "include_tags": true,
+        "private": true
+    },
     "expressions_private": {
         "page_route": "/<owner_name>/profile/private",
         "api_route": "/api/feed/private/<owner_name>",
