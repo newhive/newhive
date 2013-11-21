@@ -1377,7 +1377,8 @@ class Expr(HasSocial):
     owner = property(get_owner)
 
     def update(self, **d):
-        old_tags = set(self['tags_index'])
+        old_tags = set(self.get('tags_index', []))
+
         if not d.has_key('file_id'): self._collect_files(d)
         self.build_search(d)
         if d.get('auth') == 'public':
@@ -1389,7 +1390,7 @@ class Expr(HasSocial):
         tagged = self.owner.get('tagged', {})
         tagged_keys = set(tagged.keys())
         old_tags &= tagged_keys
-        new_tags = set(self['tags_index']) & tagged_keys
+        new_tags = set(self.get('tags_index', [])) & tagged_keys
         both_tags = old_tags & new_tags
         new_tags -= both_tags
         old_tags -= both_tags
