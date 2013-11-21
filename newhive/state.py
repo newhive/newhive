@@ -356,6 +356,11 @@ class Entity(dict):
         self._col.insert(self, safe=True)
         return self
 
+    def entropy(self, force_update = False):
+        if force_update or (not self.get('entropy')):
+            self['entropy'] = junkstr(8)
+        return self['entropy']
+
     # should be avoided, because it clobbers record. Use update instead
     def save(self, updated=True):
         if updated: self['updated'] = now()
@@ -563,8 +568,11 @@ class User(HasSocial):
             #TODO: need to actually differentiate each expression by auth
             for tag, tagged in self.get('tagged', {}).items():
                 cnt[tag] += top + len(tagged)
-
-        self.update(public_tags = public_cnt, unlisted_tags = unlisted_cnt)
+        tag_entropy = self.get('tag_entropy', {})
+        for tag, x in cnt.most_common():
+            tag_entropy.setdefault(tag, junkstr(6))
+        self.update(public_tags = public_cnt, unlisted_tags = unlisted_cnt,
+            tag_entropy=tag_entropy)
 
     def can_view(self, expr):
         return expr and (
@@ -1112,16 +1120,19 @@ class Expr(HasSocial):
                 and ['deck2013'] in spec2.get('tags_index').values()):
                 override_unlisted = True
 
+            # Set up auth filtering
             if auth:
                 spec2.update(auth=auth)
-            if viewer and viewer.logged_in:
+            if override_unlisted:
+                pass
+            elif viewer and viewer.logged_in:
                 if auth == 'password':
                     spec2.update({'owner': viewer.id})
-                elif not override_unlisted:
+                else:
                     spec2.setdefault('$and', [])
                     spec2['$and'].append({'$or': [{'auth': 'public'},
                         {'owner': viewer.id}]})
-            elif not override_unlisted:
+            else:
                 spec2.update({'auth': 'public'})
             opts.setdefault('fields', self.ignore_not_meta)
             return self.search(spec, filter, **opts)
@@ -1235,11 +1246,6 @@ class Expr(HasSocial):
                 # TODO-perf: could be wise to also kill the thread
                 return False
         return True
-
-    def entropy(self, force_update = False):
-        if force_update or (not self.get('entropy')):
-            self['entropy'] = junkstr(8)
-        return self['entropy']
 
     #TODO-cleanup: remove after snapshot migration
     def snapshot_name_base(self, size, time):

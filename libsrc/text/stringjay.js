@@ -486,6 +486,9 @@ define(['browser/js', 'module'],
 		context[context.length - 1][lhs] = rhs;
 		return '';
 	};
+	context_base.get = function(context, obj, key){
+		return obj[key];
+	};
 	context_base.and = function(context){
 		for(var i = 1; i < arguments.length; ++i){
 			if (!arguments[i])

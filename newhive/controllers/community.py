@@ -82,9 +82,13 @@ class Community(Controller):
         cards = owner.profile(at=at)
         return self.expressions_for(tdata, cards, owner)
 
-    def expressions_tag(self, tdata, request, owner_name=None, tag_name=None, at=0, **args):
+    def expressions_tag(self, tdata, request, owner_name=None, 
+            entropy=None, tag_name=None, at=0, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
+        if entropy and entropy != owner.get('tag_entropy', {}).get(tag_name, ''):
+            return None
+        if entropy: args['override_unlisted'] = True
         profile = owner.client_view(viewer=tdata.user)
 
         result, search = self.db.query_echo("@" + owner_name + " #" + tag_name,
@@ -342,8 +346,8 @@ class Community(Controller):
         for k in ['limit', 'order']:
             if k in pagination_args: pagination_args[k] = int(pagination_args[k])
         # Call controller function with query and pagination args
-        passable_keyword_args = dfilter(kwargs, 
-            ['username', 'owner_name', 'expr_name', 'id', 'tag_name'])
+        passable_keyword_args = dfilter(kwargs, ['username', 'owner_name', 
+            'entropy', 'expr_name', 'id', 'tag_name'])
         merged_args = dict(passable_keyword_args.items() + pagination_args.items())
 
         page_data = query(tdata, request, **merged_args)
@@ -366,8 +370,14 @@ class Community(Controller):
             if owner and kwargs.get('include_tags'):
                 # TODO-perf: don't update list on query, update it when it changes!
                 owner.calculate_tags()
-                cnt = owner['unlisted_tags'] if kwargs.get('private') else owner['unlisted_tags']
+                cnt = owner['unlisted_tags'] if (
+                    tdata.user.id == owner.id and kwargs.get('private')
+                    ) else owner['public_tags']
                 page_data['tag_list'] = [x for x,y in cnt.most_common()] # [:num_tags]
+                if kwargs.get('tag_name') and cnt[kwargs.get('tag_name')] == 0:
+                    page_data['tag_list'] = [kwargs.get('tag_name')] + page_data['tag_list']
+                if kwargs.get('private') and tdata.user.id == owner.id:
+                    page_data['tag_entropy'] = owner.get('tag_entropy', {})
             else:
                 # Collate tags into list by most commonly appearing.
                 cnt = Counter()
