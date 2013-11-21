@@ -314,6 +314,7 @@
         "controller": "file",
         "method": "create"
     },
+
     "empty": "-----------------------------------------",
     "empty": "Admin.",
     "site_flags": {
@@ -330,19 +331,6 @@
         "controller": "cron",
         "method": "cron"
     },
-
-    "empty": "-----------------------------------------",
-    "empty": "Special.",
-    "bugbug": {
-        "api_route": "/api/bugbug",
-        "controller": "user",
-        "method": "bugbug"
-    },
-
-    "empty": "-----------------------------------------",
-    "empty": "Admin tools",
-    "empty": "-----------------------------------------",
-
     "admin_query": {
         "page_route": "/home/admin/query",
         "api_route": "/api/admin/query",
@@ -352,6 +340,13 @@
         "require_login": true
     },
 
+    "empty": "-----------------------------------------",
+    "empty": "Dev tools.",
+    "bugbug": {
+        "api_route": "/api/bugbug",
+        "controller": "user",
+        "method": "bugbug"
+    },
 
     "empty": {
         "page_route": "/home/empty"
