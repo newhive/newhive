@@ -78,7 +78,8 @@ define([
     o.enter = function(){
         o.exit();
         profile_pages=["expressions_tag", "expressions_public_tags", "following",
-            "expressions_tag_private", "expressions_private", "expressions_public", "followers", "loves"];
+            "expressions_tag_private", "expressions_private", "expressions_public", 
+            "expressions_public_grid", "followers", "loves"];
         i = profile_pages.indexOf(context.route_name);
         if (i >= 0) {
             $(".network_nav").hidehide();
