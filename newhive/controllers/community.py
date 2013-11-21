@@ -296,7 +296,7 @@ class Community(Controller):
         return data
 
     def empty(self, tdata, request, **args):
-        return { 'page_data': {} }
+        return {}
 
     @classmethod
     def parse_query(klass, query_string):

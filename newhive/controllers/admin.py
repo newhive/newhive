@@ -1,6 +1,7 @@
+from json import loads
 from itertools import chain
-from newhive.utils import now, lget, dfilter
 
+from newhive.utils import now, lget, dfilter
 import newhive.mail
 from newhive import config
 from newhive.controllers.controller import Controller
@@ -31,3 +32,26 @@ class Admin(Controller):
         tdata.context.update(page_data={'site_flags': flags}, route_args=args)
         return self.serve_loader_page('pages/main.html', tdata, request, response)
 
+    def query(self, tdata, request, response, json=False, **args):
+        """ performs a generic mongo query on expr collection
+            and serves a feed page of results
+        """
+
+        qargs = { 'q': '{}', 'at': '0', 'sort': 'updated', 'order': '-1' }
+        qargs.update(dfilter(request.args, ['q', 'at', 'sort', 'order']))
+        for k in ['at', 'limit', 'order']:
+            if k in qargs: qargs[k] = int(qargs[k])
+        qargs['q'] = loads(qargs['q'])
+
+        res = self.db.Expr.search(qargs['q'], limit=20, skip=qargs['at'],
+            sort=[(qargs['sort'], qargs['order'])])
+        page_data = {
+            'cards': [r.client_view() for r in res],
+            'card_type': 'expr'
+        }
+
+        if json:
+            return self.serve_json(response, page_data)
+        else:
+            tdata.context.update(page_data=page_data, route_args=args)
+            return self.serve_loader_page('pages/main.html', tdata, request, response)

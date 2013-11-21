@@ -311,6 +311,19 @@
         "method": "bugbug"
     },
 
+    "empty": "-----------------------------------------",
+    "empty": "Admin tools",
+    "empty": "-----------------------------------------",
+
+    "admin_query": {
+        "page_route": "/home/admin/query",
+        "api_route": "/api/admin/query",
+        "controller": "admin",
+        "method": "query",
+        "client_method": "profile"
+    },
+
+
     "empty": {
         "page_route": "/home/empty"
     }
