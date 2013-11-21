@@ -14,6 +14,7 @@ define([
     'browser/jquery/jplayer/skin',
     'browser/jquery/rotate.js',
     'js!browser/jquery/event/drag.js',
+    'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js',
     'js!google_closure.js'
 ], function(
     $,
@@ -1852,7 +1853,7 @@ Hive.Selection = function(){
         o.new_selection = [];
         o.dragging = true;
         $('.app_select').remove();
-        o.div = $("<div class='app_select'>");
+        o.div = $("<div class='app_select'>").css('z-index', 3);
         o.select_box = $("<div class='select_box border selected dragbox'>")
             .css({position: 'relative', padding: 0, left: '-5px', top: '-5px'});
         $(document.body).append(o.div);
@@ -1869,7 +1870,8 @@ Hive.Selection = function(){
         if (!o.dragging || $(e.target).hasClass('ehapp')) return;
 
         o.drag_dims = [Math.abs(dd.deltaX), Math.abs(dd.deltaY)];
-        o.drag_pos = [dd.deltaX < 0 ? e.pageX : o.start[0], dd.deltaY < 0 ? e.pageY : o.start[1]];
+        o.drag_pos = [dd.deltaX < 0 ? e.pageX : o.start[0],
+            dd.deltaY < 0 ? e.pageY : o.start[1]];
         o.div.css({ left : o.drag_pos[0], top : o.drag_pos[1],
             width : o.drag_dims[0], height : o.drag_dims[1] });
         o.update_focus(e);
@@ -1878,9 +1880,10 @@ Hive.Selection = function(){
         Hive.drag_end();
 
         if(!o.drag_dims) return;
+        o.select_box.remove();
         o.dragging = false;
-        if (o.pos) { o.update_focus(); }
-        if (o.div) o.div.remove();
+        if(o.pos) o.update_focus();
+        if(o.div) o.div.remove();
         o.update(o.elements);
     }
 
@@ -1957,7 +1960,8 @@ Hive.Selection = function(){
         };
         o.move = function (e, dd, shallow) {
             var delta = [dd.deltaX, dd.deltaY];
-            if(e.shiftKey) delta[ Math.abs(dd.deltaX) > Math.abs(dd.deltaY) ? 1 : 0 ] = 0;
+            if(e.shiftKey)
+                delta[ Math.abs(dd.deltaX) > Math.abs(dd.deltaY) ? 1 : 0 ] = 0;
             o.pos_set([ o.ref_pos[0] + delta[0], o.ref_pos[1] + delta[1] ]);
         };
         o.move_end = function(){
@@ -1968,7 +1972,7 @@ Hive.Selection = function(){
 
         o.padding = 7;
 
-        o.div.drag('start', o.move_start).drag(o.move).drag('end', o.move_end);
+        o.div.drag(o.move).drag('start', o.move_start).drag('end', o.move_end);
     });
 
     $('#grid_guide').drag(o.drag).drag('start', o.drag_start).drag('end', o.drag_end);
