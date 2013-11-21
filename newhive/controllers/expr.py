@@ -73,10 +73,10 @@ class Expr(ModelController):
                 upd['remix_root'] = remix_expr.id
                 remix_owner.setdefault('tagged', {})
                 remix_expr.setdefault('remix_name', remix_expr['name'])
-                remix_name = 'remix/' + remix_expr['remix_name']
+                remix_name = 're:' + remix_expr['remix_name']
                 # include self in remix list
                 remix_owner['tagged'].setdefault(remix_name, [remix_expr.id])
-                upd['tags'] += " #remixed #remix" # + remix_name
+                upd['tags'] += " #remixed" # + remix_name
 
               res = tdata.user.expr_create(upd)
               self.db.ActionLog.create(tdata.user, "new_expression_save", data={'expr_id': res.id})
@@ -87,6 +87,8 @@ class Expr(ModelController):
                 remix_owner['tagged'][remix_name].append(res.id)
                 remix_owner.save(updated=False)
                 remix_expr.save(updated=False)
+                feed_item = self.db.Remix.create(tdata.user, remix_expr)
+
 
               tdata.user.flag('expr_new')
               if tdata.user.get('flags').get('add_invites_on_save'):
@@ -106,7 +108,7 @@ class Expr(ModelController):
                 raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
             # remix: ensure that the remix tag is not deletable
             if res.get('remix_parent_id'):
-                upd['tags'] += " #remixed #remix" # + remix_name
+                upd['tags'] += " #remixed" # + remix_name
             res.update(**upd)
             new_expression = False
 

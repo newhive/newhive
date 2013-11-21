@@ -39,14 +39,6 @@
         "method": "empty"
     },
 
-    "cron": {
-        "page_route": "/home/cron/<path:method_name>",
-        "api_route": "/api/home/cron/<path:method_name>",
-        "controller": "cron",
-        "method": "cron"
-    },
-
- 
     "featured": {
         "page_route": "/home/featured",
         "api_route": "/api/feed/featured",
@@ -105,14 +97,25 @@
         "api_route": "/api/feed/expressions/tags/<owner_name>",
         "controller": "community",
         "method": "expressions_public_tags",
-        "client_method": "grid"
+        "client_method": "grid",
+        "include_tags": true
+    },
+    "expressions_tag": {
+        "page_route": "/<owner_name>/tag/<tag_name>",
+        "api_route": "/api/feed/<owner_name>/tag/<tag_name>",
+        "controller": "community",
+        "method": "expressions_tag",
+        "client_method": "grid",
+        "include_tags": true
     },
     "expressions_private": {
         "page_route": "/<owner_name>/profile/private",
         "api_route": "/api/feed/private/<owner_name>",
         "controller": "community",
         "method": "expressions_private",
-        "client_method": "profile_private"
+        "client_method": "profile_private",
+        "include_tags": true,
+        "private": true
     },
 
     "empty": "-----------------------------------------",
@@ -130,15 +133,6 @@
         "controller": "user",
         "method": "logout"
     },
-    "site_flags": {
-        "page_route": "/home/admin/site_flags",
-        "api_route": "/api/admin/site_flags",
-        "controller": "admin",
-        "method": "site_flags",
-        "client_method": "admin",
-        "require_login": true
-    },
-
     "user_update": {
         "page_route": "/<owner_name>/profile/edit",
         "api_route": "/api/user/update/<owner_name>",
@@ -225,7 +219,7 @@
         "method": "delete"
     },
     "expr_snapshot": {
-        "comment": "TODO-cleanup: Jordan believes this is deprecated",
+        "controller": "TODO-cleanup: Jordan believes this is deprecated",
         "page_route": "/api/expr/snapshot/<expr_id>",
         "api_route": "/api/expr/snapshot/<expr_id>",
         "controller": "expr",
@@ -304,7 +298,25 @@
         "controller": "file",
         "method": "create"
     },
+    "empty": "-----------------------------------------",
+    "empty": "Admin.",
+    "site_flags": {
+        "page_route": "/home/admin/site_flags",
+        "api_route": "/api/admin/site_flags",
+        "controller": "admin",
+        "method": "site_flags",
+        "client_method": "admin",
+        "require_login": true
+    },
+    "cron": {
+        "page_route": "/home/cron/<path:method_name>",
+        "api_route": "/api/home/cron/<path:method_name>",
+        "controller": "cron",
+        "method": "cron"
+    },
 
+    "empty": "-----------------------------------------",
+    "empty": "Special.",
     "bugbug": {
         "api_route": "/api/bugbug",
         "controller": "user",

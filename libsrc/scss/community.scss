@@ -378,6 +378,9 @@
         }
     }
 
+    #feed.public .card.unlisted {
+        opacity: .4;
+    }
     #feed {
         margin: 50px auto 0px auto;
         .card {
@@ -534,6 +537,10 @@
         background-color: black;
     }
 
+    &.tag_unselected {
+        color: black;
+        background-color:$color_light_grey;
+    }
     &.tag_0 { background-color: $color_tag_0; }
     &.tag_1 { background-color: $color_tag_1; }
     &.tag_2 { background-color: $color_tag_2; }

@@ -5,13 +5,15 @@ define([
     'ui/page/pages',
     'server/context',
     'json!ui/routes.json',
+    // 'history/history',
     'ui/routing'
-], function($, util, page, pages, context, routes, routing) {
+], function($, util, page, pages, context, routes/*, history*/, routing) {
     var o = { back: false }, route;
 
     o.init = function(route_args){
         curl.expose('server/context', 'c'); // useful for debugging
         setup_google_analytics();
+        // init_history();
 
         context.server_url = context.config.server_url; // used in many templates
         context.content_url = context.config.content_url = context.is_secure ?
@@ -31,13 +33,13 @@ define([
         context.route_name = route_name;
         if (route_name == "expr")
             route_name = "view_expr";
-        route = routes[route_name];
+        context.route = routes[route_name];
         var cards = context.page_data.cards;
         var cards_route = context.page_data.cards_route;
         context.page_data = page_data;
         if(!page_data.cards) context.page_data.cards = cards;
         if(!page_data.cards_route) context.page_data.cards_route = cards_route;
-        page.render(route.client_method, context);
+        page.render(context.route.client_method, context);
     };
     o.refresh = function(){
         o.dispatch(route.method, context.page_data);
@@ -164,6 +166,16 @@ define([
         var page_state = routing.page_state(route_name, route_args, query);
         history.pushState(page_state, null, page_state.page);
         context.parse_query();
+    };
+
+  
+    var init_history = function() {(function(window,undefined){
+        // Bind to StateChange Event
+        history.Adapter.bind(window,'statechange',function(){ // Note: We are using statechange instead of popstate
+            var State = history.getState(); // Note: We are using History.getState() instead of event.state
+        });
+
+        })(window);
     };
 
     var setup_google_analytics = function() {

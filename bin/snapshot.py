@@ -46,8 +46,6 @@ def sss():
     # snapshots.take_snapshot("50f737d36d902248910accfe", "snap_out.png", (715, 430))
 
 def test_snapshot():
-    # s3_con = S3Connection(config.aws_id, config.aws_secret)
-    # thumb_bucket = s3_con.create_bucket(config.s3_buckets['thumb'])
     # xvfb = init_xvfb()
     # for url in urls:
     #     gen_thumb(url)
@@ -90,32 +88,28 @@ def clear_snapshots():
 expr_limit = 10
 continuous = True
 
-def get_exprs(limit):
-    expressions_to_snapshot = db.Expr.search({
-        "$or": [{"snapshot_time": { "$exists": False }},
-        {"$where": "this.snapshot_time < this.updated"}]},
-        limit=limit, sort=[('updated', -1)])
-    if test:
-        expressions_to_snapshot = db.Expr.search({
-            "$and": [
-                {"snapshot_time": {
-                    "$exists": False
-                }},
-            {"owner_name": "abram"}
-        ] },limit=limit)
+def get_exprs(query_and={}):
+    and_exp = [
+        {'snapshot_fails': {'$not': {'$gt': 5}}},
+        {"$or": [
+            {"snapshot_time": { "$exists": False }},
+            {"$where": "this.snapshot_time < this.updated"}
+        ]}
+    ]
+    if test and (not query_and):
+        and_exp.append({'owner_name': 'abram'})
+    if query_and:
+        and_exp.append(query_and)
+    expressions_to_snapshot = db.Expr.search({'$and': and_exp}, sort=[('updated', -1)])
     return expressions_to_snapshot
 
-def start_snapshots(proc_tmp_snapshots=False):
-    s3_con = S3Connection(config.aws_id, config.aws_secret)
-    thumb_bucket = s3_con.create_bucket(config.s3_buckets['thumb'])
- 
+def start_snapshots(query_and=False):
     count = 0
-    total = get_exprs(0).count()
-    threads = threading.active_count()
     while True:
     # if True:
-        exprs = list(get_exprs(0))
-        print get_exprs(0).count()
+        threads = threading.active_count()
+        exprs = list(get_exprs(query_and))
+        print get_exprs(query_and).count()
         if len(exprs) == 0 and not continuous: break
         # print exprs
         for expr in exprs:
@@ -126,7 +120,7 @@ def start_snapshots(proc_tmp_snapshots=False):
             
             expr_id = expr.get('_id')
             count += 1
-            print "(%s/%s) (%s) snapshotting %s" % (count, total, len(exprs), expr_id)
+            print "(%s/%s) snapshotting %s" % (count, len(exprs), expr_id)
             expr.threaded_snapshot()
             # take_snapshot(expr_id)
             # s3_url = upload_snapshot_to_s3(expr_id, thumb_bucket)    

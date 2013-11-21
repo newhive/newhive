@@ -149,7 +149,7 @@ class Database:
         # q_no_quotes = re.sub(r'"(.*?)"', '', q, flags=re.UNICODE)
         # search['phrases'].extend(q_quotes)
 
-        for pattern in re.findall(r'(\b|\W+)((\w|[/-])+)', q):
+        for pattern in re.findall(r'(\b|\W+)((\w|[:-])+)', q):
             prefix = re.sub( r'[^#@]', '', pattern[0] )
             if prefix == '@': search['user'] = pattern[1].lower()
             elif prefix == '#':
@@ -207,7 +207,7 @@ class Collection(object):
             return res
         return Cursor(self, self._col.find(spec=spec, **opts))
 
-    # Should be overridden to ommit fields not used in list views
+    # Should be overridden to omit fields not used in list views
     # TODO: fix privacy for viewer
     def cards(self, spec, viewer=None, **opts):
         return self.search(spec, **opts)
@@ -550,6 +550,22 @@ class User(HasSocial):
     @property
     def broadcast_ids(self): return [i['entity'] for i in self.broadcast]
 
+    def calculate_tags(self):
+        public_cnt = Counter()
+        unlisted_cnt = Counter()
+        for expr in self.expressions:
+            for tag in expr.get('tags_index', []):
+                unlisted_cnt[tag] += 1
+                if expr.get('auth', 'unlisted') == 'public':
+                    public_cnt[tag] += 1
+        for cnt in [public_cnt, unlisted_cnt]:
+            top = cnt.most_common(1)[0][1]
+            #TODO: need to actually differentiate each expression by auth
+            for tag, tagged in self.get('tagged', {}).items():
+                cnt[tag] += top + len(tagged)
+
+        self.update(public_tags = public_cnt, unlisted_tags = unlisted_cnt)
+
     def can_view(self, expr):
         return expr and (
             (expr.get('auth', 'public') == 'public') or
@@ -716,7 +732,7 @@ class User(HasSocial):
         # get iterable for all feed items in your network
         user_action = {
                 'initiator': {'$in': self.starred_user_ids},
-                'class_name': {'$in': ['NewExpr', 'Broadcast', 'Star']}
+                'class_name': {'$in': ['NewExpr', 'Broadcast', 'Star', 'Remix']}
                 }
         own_broadcast = { 'initiator': self.id, 'class_name': 'Broadcast' }
         expression_action = {
@@ -1088,19 +1104,24 @@ class Expr(HasSocial):
 
         def named(self, username, name): return self.find({'owner_name': username, 'name': name})
 
-        def cards(self, spec, auth=None, viewer=None, **opts):
+        def cards(self, spec, auth=None, viewer=None, override_unlisted=False, **opts):
             filter = {}
             spec2 = spec if type(spec) == dict else filter
+            #!!TODO BUGBUG: Hack for Zach
+            if (spec2.has_key('tags_index') 
+                and ['deck2013'] in spec2.get('tags_index').values()):
+                override_unlisted = True
+
             if auth:
                 spec2.update(auth=auth)
             if viewer and viewer.logged_in:
                 if auth == 'password':
                     spec2.update({'owner': viewer.id})
-                else:
+                elif not override_unlisted:
                     spec2.setdefault('$and', [])
                     spec2['$and'].append({'$or': [{'auth': 'public'},
                         {'owner': viewer.id}]})
-            else:
+            elif not override_unlisted:
                 spec2.update({'auth': 'public'})
             opts.setdefault('fields', self.ignore_not_meta)
             return self.search(spec, filter, **opts)
@@ -1355,7 +1376,8 @@ class Expr(HasSocial):
             d['password'] = None
         super(Expr, self).update(**d)
         self.owner.get_expr_count(force_update=True)
-        # if d.get('apps') or d.get('background'): self.threaded_snapshot(retry=120)
+        if not config.live_server and (d.get('apps') or d.get('background')):
+            self.threaded_snapshot(retry=120)
         return self
 
     def build_search(self, d):
@@ -1401,7 +1423,8 @@ class Expr(HasSocial):
         self._collect_files(self)
         self.build_search(self)
         super(Expr, self).create()
-        feed = self.db.NewExpr.create(self.owner, self)
+        if 'remixed' not in self.get('tags_index', []):
+            feed = self.db.NewExpr.create(self.owner, self)
         self.owner.get_expr_count(force_update=True)
         return self
 
@@ -1497,7 +1520,7 @@ class Expr(HasSocial):
             if self.owner.id != get_id(viewer): return []
 
         items = self.db.Feed.page({ 'entity': self.id,
-            'class_name': {'$in': ['Star', 'Comment', 'Broadcast']} }, **opts)
+            'class_name': {'$in': ['Star', 'Comment', 'Broadcast', 'Remix']} }, **opts)
 
         return items
 
@@ -1519,6 +1542,10 @@ class Expr(HasSocial):
     def is_featured(self):
         return self.id in self.db.User.get_root()['tagged'].get('Featured', [])
 
+    @property
+    def auth(self):
+        return self.get('auth', 'private')
+
     public = property(lambda self: self.get('auth') == "public")
 
     def client_view(self, viewer=None, special={}, activity=0):
@@ -1537,6 +1564,8 @@ class Expr(HasSocial):
             'url': self.url,
             'title': self.get('title')
         })
+        if self.auth != 'public':
+            expr.update({'auth': self.auth})
         expr['snapshot_big'] = self.snapshot_name("big")
         expr['snapshot_small'] = self.snapshot_name("small")
         if viewer and viewer.is_admin:
@@ -1548,6 +1577,7 @@ class Expr(HasSocial):
             dict.update( expr, comments = self.comment_feed() )
             dict.update( expr, loves = self.loves_feed() )
             dict.update( expr, broadcast = self.broadcast_feed() )
+            # TODO: do we want client view to also include remix family?
             dict.update( expr, activity = self.activity_feed(None, activity) )
             # dict.update( expr, activity =
             #     map(lambda r: r.client_view(),
@@ -1744,7 +1774,14 @@ class File(Entity):
     def delete_files(self):
         for k in self.thumb_keys + [self.id]:
             if self.get('s3_bucket'):
-                self.db.s3.delete_file(self['s3_bucket'], self.id)
+                try:
+                    self.db.s3.delete_file(self['s3_bucket'], self.id)
+                except:
+                    # not critical if S3 remove fails, as will happen
+                    # when dev tries to remove live files
+                    # (it can always be cleaned up later)
+                    # TODO: log error
+                    pass
             elif self.get('fs_path'):
                 try: os.remove(self['fs_path'])
                 except:
@@ -1894,8 +1931,10 @@ class Feed(Entity):
         if self['class_name'] == 'Star':
             if self['entity_class'] == 'Expr': r['action'] = 'Love'
             else: r['action'] = 'Follow'
-        if self['class_name'] == 'Broadcast':
+        elif self['class_name'] == 'Broadcast':
             r['action'] = 'Republish'
+        elif self['class_name'] == 'Remix':
+            r['action'] = 'Remix'
 
         return r
 
@@ -1952,6 +1991,17 @@ class Broadcast(Feed):
         if type(self.entity) != Expr: raise "You may only broadcast expressions"
         if self.db.Broadcast.find({ 'initiator': self['initiator'], 'entity': self['entity'] }): return True
         return super(Broadcast, self).create()
+
+@register
+class Remix(Feed):
+    action_name = 'remix'
+
+    def create(self):
+        if self.entity['owner'] == self['initiator']:
+            raise "You mustn't remix your own expression"
+        if type(self.entity) != Expr: raise "You may only remix expressions"
+        if self.db.Remix.find({ 'initiator': self['initiator'], 'entity': self['entity'] }): return True
+        return super(Remix, self).create()
 
 
 @register
