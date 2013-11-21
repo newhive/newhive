@@ -1,8 +1,10 @@
+import json
+from collections import Counter
+
 from newhive import mail
 from newhive.ui_strings import en as ui_str
 from newhive.utils import dfilter, now, abs_url, AbsUrl
 from newhive.controllers.controller import Controller
-from collections import Counter
 
 class Community(Controller):
     def featured(self, tdata, request, **paging_args):
@@ -316,8 +318,20 @@ class Community(Controller):
             data.update({'tags_search': tags, 'page': 'tag_search', 'viewer': profile})
         return data
 
+    def admin_query(self, tdata, request, **args):
+        if not tdata.context['flags'].get('admin'):
+            return {}
+
+        q = json.loads(request.args.get('q', '{}'))
+        res = self.db.Expr.search(q, limit=20, skip=args.get('at', 0),
+            sort=[(args.get('sort', 'updated'), args.get('order', -1))])
+        return {
+            'cards': list(res),
+            'card_type': 'expr'
+        }
+
     def empty(self, tdata, request, **args):
-        return { 'page_data': {} }
+        return {}
 
     @classmethod
     def parse_query(klass, query_string):
@@ -343,7 +357,7 @@ class Community(Controller):
             return self.serve_404(tdata, request, response, json=json)
         # Handle pagination
         pagination_args = dfilter(request.args, ['at', 'by', 'limit', 'sort', 'order'])
-        for k in ['limit', 'order']:
+        for k in ['at', 'order']:
             if k in pagination_args: pagination_args[k] = int(pagination_args[k])
         # Call controller function with query and pagination args
         passable_keyword_args = dfilter(kwargs, ['username', 'owner_name', 

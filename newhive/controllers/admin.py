@@ -1,6 +1,7 @@
+from json import loads
 from itertools import chain
-from newhive.utils import now, lget, dfilter
 
+from newhive.utils import now, lget, dfilter
 import newhive.mail
 from newhive import config
 from newhive.controllers.controller import Controller
@@ -30,4 +31,3 @@ class Admin(Controller):
         flags = { k:','.join(v) for k,v in self.flags.items()}
         tdata.context.update(page_data={'site_flags': flags}, route_args=args)
         return self.serve_loader_page('pages/main.html', tdata, request, response)
-

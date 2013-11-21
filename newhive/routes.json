@@ -332,6 +332,20 @@
         "method": "bugbug"
     },
 
+    "empty": "-----------------------------------------",
+    "empty": "Admin tools",
+    "empty": "-----------------------------------------",
+
+    "admin_query": {
+        "page_route": "/home/admin/query",
+        "api_route": "/api/admin/query",
+        "controller": "community",
+        "method": "admin_query",
+        "client_method": "profile",
+        "require_login": true
+    },
+
+
     "empty": {
         "page_route": "/home/empty"
     }
