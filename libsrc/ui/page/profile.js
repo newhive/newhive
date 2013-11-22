@@ -12,6 +12,7 @@ define([
 ) {
     var o = { name: 'profile' },
             show_tags = true,
+            show_more_tags = false,
             controller;
 
     o.init = function(controller){
@@ -57,9 +58,12 @@ define([
             $(".overlay .login_btn").unbind('click').click(d.open);
         }
         // $(".tags.nav_button").unbind('click').click(show_hide_tags);
+        $(".tag_list .expander").unbind('click').on('click', function(ev) {
+            toggle_more_tags();
+        });
 
         win.unbind('scroll', on_scroll_add_page).scroll(on_scroll_add_page);
-        if (context.route.include_tags
+        if (context.route.include_tags && context.page_data.cards.length > 1
             && context.page_data.owner.id == context.user.id
             && context.page_data.tag_selected != undefined) {
             function reorder () {
@@ -138,6 +142,7 @@ define([
             $(".network_nav").hidehide();
             show_tags((i < 5) ? true : false);
         }
+        if (o.show_more_tags) toggle_more_tags();
         $("#signup_create").showshow();
         $("#content_btns").showshow();
         if (context.user.logged_in) {
@@ -149,6 +154,10 @@ define([
         o.more_cards = (context.page_data.cards &&
             (context.page_data.cards.length == 20));
     };
+    var toggle_more_tags = function() {
+        $(".tag_list.main").toggleClass("expanded");
+        o.show_more_tags = ($(".tag_list.main").hasClass("expanded"));
+    }
     o.exit = function(){
         $(".network_nav").showshow();
         // $(".tag_list.main").showshow();

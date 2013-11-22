@@ -90,7 +90,8 @@ class Community(Controller):
         if not owner: return None
         if entropy and entropy != owner.get('tag_entropy', {}).get(tag_name, ''):
             return None
-        if entropy: args['override_unlisted'] = True
+        if entropy or owner.id == tdata.user.id:
+            args['override_unlisted'] = True
         profile = owner.client_view(viewer=tdata.user)
 
         result, search = self.db.query_echo("@" + owner_name + " #" + tag_name,
@@ -103,6 +104,8 @@ class Community(Controller):
             'owner': profile,
             'title': 'Expressions by' + owner['name'],
         }
+        if owner.id == tdata.user.id:
+            data.update({"tag_entropy": owner.get('tag_entropy', {}).get(tag_name)})
         return data
 
     def expressions_private(self, tdata, request, owner_name=None, **args):

@@ -33,7 +33,12 @@
           ><div class='spacer inline'></div>
           {# tags #}
           <a class='nav_button inline tags'
-            { anchor_attrs "expressions_public_tags" "owner_name" owner.name }>
+              {<if route_name "expressions_tag_private"}
+                { anchor_attrs "expressions_tag" "owner_name" user.name 
+                "tag_name" tag_selected}>
+              {>}{<else}
+                { anchor_attrs "expressions_public_tags" "owner_name" owner.name }>
+              {>}
             <div class="tags icon{<if (or (eq route_name "expressions_public_tags")
               (eq route_name "expressions_tag"))} on{>}"></div></a
           ><div class='spacer inline'></div>
@@ -55,7 +60,12 @@
             ><div class='spacer inline'></div>
             {# private (logged in only) #}
             <a class='nav_button inline private'
-              { anchor_attrs "expressions_private" "owner_name" user.name }>
+              {<if route_name "expressions_tag"}
+                { anchor_attrs "expressions_tag_private" "owner_name" user.name 
+                "tag_name" tag_selected "entropy" tag_entropy}>
+              {>}{<else}
+                { anchor_attrs "expressions_private" "owner_name" user.name }>
+              {>}
               <div class='private icon
                 {<if (or (eq route_name "expressions_private")
                     (eq route_name "expressions_tag_private"))} on{>}'></div></a

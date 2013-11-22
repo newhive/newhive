@@ -143,6 +143,26 @@ define([
         // var all_elements = elements.add(document.body);
 
         // Common site-wide handlers
+        find_all(dom, '*[data-class-toggle]').each(function(i, e) {
+            var click_func = function(klass) {
+                var obj = $(e);
+                return function(el) {
+                    obj.toggleClass(klass);
+                };
+            }
+            var class_toggles = $(e).attr('data-class-toggle');
+            if (class_toggles) {
+                class_toggles = JSON.parse(class_toggles);
+            }
+            // TODO: also be able to set behavior, not just click, but
+            // arbitrary events: mouseenter mouseleave, etc
+            for (var toggle in class_toggles) {
+                var klass = class_toggles[toggle];
+                find_all(dom, toggle).on('click', click_func(klass));
+            }
+        });
+
+        // TODO-cleanup: this is a subcase of class-toggle.
         find_all(elements, '*[data-link-show]').each(function(i, e) {
             var handle = find_all(elements, $(e).attr('data-link-show'));
             if(!handle) throw 'missing handle';
@@ -310,6 +330,8 @@ define([
     o.query = {}; // set by ui.controller
 
     function find_all(elements, selector){
+        // TODO: BUGBUG: This fails to find selectors which match top-level items.
+        // e.g., ".toplevel .foo" will not match anything.
         return elements.filter(selector).add(elements.find(selector));
     }
 
