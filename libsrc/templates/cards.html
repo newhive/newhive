@@ -13,6 +13,10 @@
       {<if layout "profile"}
         {|templates/expr_card_large.html}
       {>}
+      {<if auth}
+        <div class="private icon"></div>
+      {>}
+
     </div>
   {>}
 {>}
