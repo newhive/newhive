@@ -149,6 +149,12 @@
         "controller": "user",
         "method": "logout"
     },
+    "collection_order": {
+        "api_route": "/api/user/tag_reorder",
+        "controller": "user",
+        "method": "collection_order",
+        "require_login": true
+    },
     "user_update": {
         "page_route": "/<owner_name>/profile/edit",
         "api_route": "/api/user/update/<owner_name>",
@@ -158,6 +164,7 @@
         "require_login": true
     },
     "manage_tags": {
+        "page_route": "deprecated?",
         "page_route": "/<owner_name>/profile/manage_tags",
         "client_method": "manage_tags"
     },

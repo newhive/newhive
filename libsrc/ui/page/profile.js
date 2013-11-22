@@ -2,7 +2,8 @@ define([
     'browser/jquery',
     'ui/dialog',
     'server/context',
-    'sj!templates/cards.html'
+    'sj!templates/cards.html',
+    'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js',
 ], function(
     $,
     dialog,
@@ -57,8 +58,53 @@ define([
         }
         // $(".tags.nav_button").unbind('click').click(show_hide_tags);
 
-        // ui_page = require('ui/page');
         win.unbind('scroll', on_scroll_add_page).scroll(on_scroll_add_page);
+        if (context.route.include_tags
+            && context.page_data.owner.id == context.user.id
+            && context.page_data.tag_selected != undefined) {
+            $("form.save_bar").on('before_submit', function(e) {
+                var ordered_cards = [];
+                var columns = $(".ncolumn .column").filter(
+                    function(i,e) { return $(e).width(); }).length;
+                if (columns == 0) {
+                    ordered_cards = $("#feed .card");
+                } else {
+                    var col_array = [];
+                    var card_count = 0;
+                    for (var col = 0; col < columns; col++) {
+                        // Get the cards in a column, then collate the lists
+                        var col_cards = $(".column_" + col + " .card").toArray();
+                        card_count += col_cards.length;
+                        col_array = col_array.concat([col_cards]);
+                    }
+                    for (var i = 0; i < card_count; i++) {
+                        var card = col_array[i % columns][Math.floor(i / columns)];
+                        // Shouldn't happen, but we are seeing column sorting issues.
+                        if (card == undefined) {
+                            // Protect against infinite loop.
+                            // if (i % columns != columns - 1)
+                                card_count++;
+                            continue;
+                        }
+                        ordered_cards = ordered_cards.concat(card);
+                    };
+                }
+                var ordered_ids = ordered_cards.map( function(l, i) 
+                    { return $(l).prop("id").slice(5); }).join(",");
+                $(this).find("input[name=new_order]").val(ordered_ids);
+                $("form.save_bar").hidehide();
+            });
+
+            $("#feed").sortable({
+                items: $("#feed .card"),
+                start: function (e, ui) {
+                    $(".save_bar").showshow();
+                },
+                stop: function (e, ui) {
+                    ui_page.add_grid_borders();
+                },
+        });
+        }
     };
 
     // show_hide_tags = function (){

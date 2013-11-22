@@ -27,6 +27,22 @@ class User(ModelController):
         auth.handle_logout(self.db, tdata.user, request, response)
         return self.serve_json(response, True)
 
+    def collection_order(self, tdata, request, response, **args):
+        new_order = request.form.get('new_order').split(",")
+        tag_name = request.form.get('tag_name')
+        user = tdata.user
+
+        if not user or not user.logged_in or not tag_name:
+            return self.serve_json(response, { 'error': 'error'})
+
+        tagged = user.get('tagged', {})
+        old_order = user.get_tag(tag_name, force_update=True)
+        new_order += old_order[len(new_order):]
+        tagged[tag_name] = new_order
+        user.update(tagged=tagged)
+
+        return self.serve_json(response, True)
+
     def do_password_reset(self, tdata, request, response, owner_name=None, **args):
         # Check to see if user filled out password recovery form
         key = request.form.get('key')

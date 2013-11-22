@@ -103,7 +103,7 @@ class Database:
                     # look for specific ordered list in user record
                     owner = self.User.named(user)
                 if owner and owner.get('tagged', {}).has_key(tags[0]):
-                    results = self.Expr.cards(owner['tagged'][tags[0]], viewer=viewer)
+                    results = self.Expr.cards(owner['tagged'][tags[0]], **args)
                 else:
                     if search.get('tags'):
                         spec['tags_index'] = {'$all': search['tags']}
@@ -574,6 +574,22 @@ class User(HasSocial):
             tag_entropy.setdefault(tag, junkstr(6))
         self.update(public_tags = public_cnt, unlisted_tags = unlisted_cnt,
             tag_entropy=tag_entropy)
+
+    def get_tag(self, tag, limit=0, force_update=False):
+        tagged = self.get('tagged', {})
+        expression_id_list = tagged.get(tag, [])
+
+        if not expression_id_list: 
+            # List missing. calculate it.
+            expression_list = self.db.Expr.search({
+                'owner': self.id, 'tags_index': tag })
+            if expression_list:
+                expression_id_list = map(lambda e: e.id, expression_list)
+                if force_update:
+                    tagged[tag] = expression_id_list
+                    self.update(updated=False, tagged=tagged)
+
+        return expression_id_list if not limit else expression_id_list[:limit]
 
     def can_view(self, expr):
         return expr and (

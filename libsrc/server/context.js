@@ -224,6 +224,7 @@ define([
 
         // make form submission of non-file inputs asynchronous too
         form.on('submit', function(e){
+            form.trigger('before_submit');
             submit();
             form.trigger('after_submit');
             return false;
