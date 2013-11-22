@@ -62,7 +62,7 @@ define([
         if (context.route.include_tags
             && context.page_data.owner.id == context.user.id
             && context.page_data.tag_selected != undefined) {
-            $("form.save_bar").on('before_submit', function(e) {
+            function reorder () {
                 var ordered_cards = [];
                 var columns = $(".ncolumn .column").filter(
                     function(i,e) { return $(e).width(); }).length;
@@ -90,8 +90,14 @@ define([
                     };
                 }
                 var ordered_ids = ordered_cards.map( function(l, i) 
-                    { return $(l).prop("id").slice(5); }).join(",");
-                $(this).find("input[name=new_order]").val(ordered_ids);
+                    { return $(l).prop("id").slice(5); });
+                ui_page.layout_columns(ordered_ids);
+                ui_page.add_grid_borders();
+                return ordered_ids;
+            }
+            $("form.save_bar").on('before_submit', function(e) {
+                var ordered_ids = reorder();
+                $(this).find("input[name=new_order]").val(ordered_ids.join(","));
                 $("form.save_bar").hidehide();
             });
 
@@ -101,7 +107,8 @@ define([
                     $(".save_bar").showshow();
                 },
                 stop: function (e, ui) {
-                    ui_page.add_grid_borders();
+                    // ui_page.add_grid_borders();
+                    reorder();
                 },
         });
         }

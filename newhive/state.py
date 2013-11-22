@@ -1412,7 +1412,7 @@ class Expr(HasSocial):
         old_tags -= both_tags
 
         for tag in old_tags:
-            tagged[tag] = filter(lambda e: e.id != self.id, tagged[tag])
+            tagged[tag] = filter(lambda e_id: e_id != self.id, tagged[tag])
         for tag in new_tags:
             if self.id not in tagged[tag]:
                 tagged[tag] = [self.id] + tagged[tag]
