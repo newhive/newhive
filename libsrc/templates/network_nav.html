@@ -1,20 +1,22 @@
 {# Network navigation menus #}
 {<if user.logged_in}
   <div class='center network_nav'>
-    <a { anchor_attrs "home" }>
-      <div class='text_btn item teal_hover menu_item
-      {<if route_name "home"} black_btn{>}'>Network</div></a>
+    {<if (not flags.merge_recent)}
+      <a { anchor_attrs "home" }>
+        <div class='text_btn item teal_hover menu_item
+        {<if route_name "home"} black_btn{>}'>Network</div></a>
+    {>}
     <a { anchor_attrs "featured"}>
       <div class='text_btn item teal_hover menu_item
       {<if route_name "featured"} black_btn{>}'>The Hive</div></a>
     <a { anchor_attrs "network" }>
       <div class='text_btn item teal_hover menu_item
       {<if route_name "network"} black_btn{>}'>Recent</div></a>
-    {# maybe enable if admin
+    {<if flags.admin}
       <a { anchor_attrs "recent"}>
         <div class='text_btn item teal_hover menu_item
-        {<if route_name "home"} black_btn{>}'>Hive_Recent</div></a> 
-    #}
+        {<if route_name "recent"} black_btn{>}'>Hive_Recent</div></a> 
+    {>}
   </div>
 
 

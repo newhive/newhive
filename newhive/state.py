@@ -1359,7 +1359,7 @@ class Expr(HasSocial):
             d['password'] = None
         super(Expr, self).update(**d)
         self.owner.get_expr_count(force_update=True)
-        if d.get('apps') or d.get('background'): self.threaded_snapshot(retry=120)
+        # if d.get('apps') or d.get('background'): self.threaded_snapshot(retry=120)
         return self
 
     def build_search(self, d):
