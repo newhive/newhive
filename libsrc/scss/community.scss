@@ -332,11 +332,19 @@
 
     .tag_list {
         text-align: center;
+        .expander {
+            color: white;
+            background-color: black;
+        }
         &.main {
             margin: 50px auto;
             width: 600px;
             max-height: 114px;
             overflow: hidden;
+            &.expanded {
+                overflow-y: auto;
+                max-height: 380px;
+            }
         }
     }
     #tag_bar {

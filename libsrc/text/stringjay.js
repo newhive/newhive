@@ -53,7 +53,9 @@ define(['browser/js', 'module'],
 
 	var o = {
 		version: '1.0.0',
-		template_text: /^[^{]+/,
+		template_text: /^((?!([{]|```)).|\s)+/,
+		begin_quote: /^```/,
+		quoted: /.*?```/,
 		tag_open: /^{/,
 		tag_close: /^\s*}/,
 		strip_whitespace: false // not yet implemented
@@ -77,7 +79,7 @@ define(['browser/js', 'module'],
 			var ast = [], parsed;
 			var prev_node = null, next_node = null
 
-			while(parsed = ( template_text() || tag() )) {
+			while(parsed = ( quote() || template_text() || tag() )) {
 				ast.push(parsed);
 				parsed.parent = parent;
 				if (prev_node) prev_node.next_node = parsed;
@@ -87,6 +89,16 @@ define(['browser/js', 'module'],
 			}
 			if (parsed) parsed.next_node = null
 			return ast;
+		}
+
+		function quote(){
+			var matched = match(o.begin_quote);
+			if(!matched) return false;
+			return {
+				type: 'literal',
+				line: line,
+				value: match(o.quoted, true, 'literal').slice(0, -3)
+			};
 		}
 
 		function template_text(){
