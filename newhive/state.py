@@ -864,7 +864,10 @@ class User(HasSocial):
     #     self.db.query('#Trending')
 
     def build_search(self, d):
-        d['text_index'] = normalize( self['name'] + ' ' + self.get('fullname', '') )
+        d['text_index'] = normalize(
+            d.get('name', self.get('name', '')) + ' ' +
+            d.get('fullname', self.get('fullname', ''))
+        )
 
     def new_referral(self, d, decrement=True):
         if self.get('referrals', 0) > 0 or self == self.db.User.root_user or self == self.db.User.site_user:
@@ -1393,13 +1396,21 @@ class Expr(HasSocial):
     owner = property(get_owner)
 
     def update(self, **d):
-        old_tags = set(self.get('tags_index', []))
+        old_tags = self.get('tags_index', [])
 
-        if not d.has_key('file_id'): self._collect_files(d)
+        self._collect_files(d)
         self.build_search(d)
         if d.get('auth') == 'public':
             d['password'] = None
         super(Expr, self).update(**d)
+
+        self.update_owner(old_tags)
+        
+        if not config.live_server and (d.get('apps') or d.get('background')):
+            self.threaded_snapshot(retry=120)
+
+    def update_owner(self, old_tags):
+        old_tags = set(old_tags)
         self.owner.get_expr_count(force_update=True)
         
         # Update owner's tag list, adding self to appropriate lists
@@ -1420,16 +1431,14 @@ class Expr(HasSocial):
         # TODO-perf: shouldn't need after a migration.
         self.owner.calculate_tags()
 
-        if not config.live_server and (d.get('apps') or d.get('background')):
-            self.threaded_snapshot(retry=120)
         return self
 
     def build_search(self, d):
-        tags = d.get('tags')
+        tags = d.get('tags', self.get('tags'))
         tag_list = []
         if tags: tag_list = d['tags_index'] = normalize_tags(tags)
 
-        d['title_index'] = normalize( self.get('title', '') )
+        d['title_index'] = normalize(d.get('title', self.get('title', '')))
 
         text_index = []
         for a in d.get('apps', []):
@@ -1469,7 +1478,7 @@ class Expr(HasSocial):
         super(Expr, self).create()
         if 'remixed' not in self.get('tags_index', []):
             feed = self.db.NewExpr.create(self.owner, self)
-        self.owner.get_expr_count(force_update=True)
+        self.update_owner([])
         return self
 
     def delete(self):
