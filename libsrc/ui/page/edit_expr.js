@@ -60,7 +60,7 @@ define([
 
         if(!page_data.expr) page_data.expr = {};
         editor.init(page_data.expr, o);
-        setTimeout(o.resize, 0);
+        setTimeout(o.resize, 100);
         $('.edit.overlay').showshow();
     };
 

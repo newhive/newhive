@@ -36,11 +36,24 @@
 #}
 {<unless page "tag_search"}
   <div class="tag_list main hide" data-link-show=".icon.hash">
-    {<for tag_list "tagnum"}
-      {|templates/tag_card.html}
-    {>}</div>
+    {#data-class-toggle='```{".tag_list .expander":"expanded"}```'>#}
+    <div class="expander tag_label">...</div>
+    {<with null "main_view" true}
+      {<for tag_list "tagnum"}
+        {|templates/tag_card.html}
+      {>}
+    {>}
+  </div>
 {>}
-<div id='feed' class='{layout}'>
+{<if route.include_tags}
+  <form {form_attrs "collection_order"} method="post"
+    class="centered save_bar hide block">
+    <button type="submit" class="inline black_btn upper">Save</button>
+    <input type="hidden" name="tag_name" value="{tag_selected}">
+    <input type="hidden" name="new_order">
+  </form>
+{>}
+<div id='feed' class='{layout}{<unless route.private} public{>}'>
   {|templates/cards.html}
   {# Insert 3-column layout here.  
     When unused, it's 0 height.

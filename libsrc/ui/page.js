@@ -517,7 +517,12 @@ define([
 
     // Move the expr.card's into the feed layout, shuffling them
     // into the shortest column.  
-    o.layout_columns = function(){
+    o.layout_columns = function(ordered_ids){
+        if (undefined == ordered_ids) {
+            ordered_ids = $.map(context.page_data.cards, function(el) {
+                return el.id;
+            });
+        }
         // Resize the columns
         for (var i = 0; i < 3; ++i){
             var col_width = 0;
@@ -531,9 +536,8 @@ define([
         for (var i = 0; i < o.columns; ++i){
             row_heights = row_heights.concat(0);
         }
-        var cards = context.page_data.cards;
-        for (var i = 0, card; card = cards[i++];) {
-            el_card = $("#card_" + card.id);
+        for (var i = 0, card_id; card_id = ordered_ids[i++];) {
+            el_card = $("#card_" + card_id);
             var min = Math.min.apply(null, row_heights);
             var min_i = row_heights.indexOf(min);
             var el_col = $("#feed .column_" + min_i);

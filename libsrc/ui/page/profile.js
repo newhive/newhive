@@ -2,7 +2,8 @@ define([
     'browser/jquery',
     'ui/dialog',
     'server/context',
-    'sj!templates/cards.html'
+    'sj!templates/cards.html',
+    'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js',
 ], function(
     $,
     dialog,
@@ -11,6 +12,7 @@ define([
 ) {
     var o = { name: 'profile' },
             show_tags = true,
+            show_more_tags = false,
             controller;
 
     o.init = function(controller){
@@ -56,9 +58,64 @@ define([
             $(".overlay .login_btn").unbind('click').click(d.open);
         }
         // $(".tags.nav_button").unbind('click').click(show_hide_tags);
+        $(".tag_list .expander").unbind('click').on('click', function(ev) {
+            toggle_more_tags();
+        });
 
-        // ui_page = require('ui/page');
         win.unbind('scroll', on_scroll_add_page).scroll(on_scroll_add_page);
+        if (context.route.include_tags && context.page_data.cards.length > 1
+            && context.page_data.owner.id == context.user.id
+            && context.page_data.tag_selected != undefined) {
+            function reorder () {
+                var ordered_cards = [];
+                var columns = $(".ncolumn .column").filter(
+                    function(i,e) { return $(e).width(); }).length;
+                if (columns == 0) {
+                    ordered_cards = $("#feed .card");
+                } else {
+                    var col_array = [];
+                    var card_count = 0;
+                    for (var col = 0; col < columns; col++) {
+                        // Get the cards in a column, then collate the lists
+                        var col_cards = $(".column_" + col + " .card").toArray();
+                        card_count += col_cards.length;
+                        col_array = col_array.concat([col_cards]);
+                    }
+                    for (var i = 0; i < card_count; i++) {
+                        var card = col_array[i % columns][Math.floor(i / columns)];
+                        // Shouldn't happen, but we are seeing column sorting issues.
+                        if (card == undefined) {
+                            // Protect against infinite loop.
+                            // if (i % columns != columns - 1)
+                                card_count++;
+                            continue;
+                        }
+                        ordered_cards = ordered_cards.concat(card);
+                    };
+                }
+                var ordered_ids = ordered_cards.map( function(l, i) 
+                    { return $(l).prop("id").slice(5); });
+                ui_page.layout_columns(ordered_ids);
+                ui_page.add_grid_borders();
+                return ordered_ids;
+            }
+            $("form.save_bar").on('before_submit', function(e) {
+                var ordered_ids = reorder();
+                $(this).find("input[name=new_order]").val(ordered_ids.join(","));
+                $("form.save_bar").hidehide();
+            });
+
+            $("#feed").sortable({
+                items: $("#feed .card"),
+                start: function (e, ui) {
+                    $(".save_bar").showshow();
+                },
+                stop: function (e, ui) {
+                    // ui_page.add_grid_borders();
+                    reorder();
+                },
+        });
+        }
     };
 
     // show_hide_tags = function (){
@@ -77,12 +134,15 @@ define([
     }
     o.enter = function(){
         o.exit();
-        profile_pages=["expressions_public_tags", "following", "expressions_public", "expressions_private","followers", "loves"];
+        profile_pages=["expressions_tag", "expressions_public_tags", "following",
+            "expressions_tag_private", "expressions_private", "expressions_public", 
+            "expressions_public_grid", "followers", "loves"];
         i = profile_pages.indexOf(context.route_name);
         if (i >= 0) {
             $(".network_nav").hidehide();
-            show_tags((i < 2) ? true : false);
+            show_tags((i < 5) ? true : false);
         }
+        if (o.show_more_tags) toggle_more_tags();
         $("#signup_create").showshow();
         $("#content_btns").showshow();
         if (context.user.logged_in) {
@@ -94,6 +154,10 @@ define([
         o.more_cards = (context.page_data.cards &&
             (context.page_data.cards.length == 20));
     };
+    var toggle_more_tags = function() {
+        $(".tag_list.main").toggleClass("expanded");
+        o.show_more_tags = ($(".tag_list.main").hasClass("expanded"));
+    }
     o.exit = function(){
         $(".network_nav").showshow();
         // $(".tag_list.main").showshow();

@@ -5,13 +5,18 @@
     </div>
   {>}
   {<if card_type "expr"}
-    <div class='expr activity card hoverable' id='card_{id}' draggable='false'>
+    <div class='expr activity card hoverable
+    {<if auth} unlisted{>}' id='card_{id}' draggable='false'>
       {<if layout "grid"}
         {|templates/expr_card_feed.html}
       {>}
       {<if layout "profile"}
         {|templates/expr_card_large.html}
       {>}
+      {<if auth}
+        <div class="private icon"></div>
+      {>}
+
     </div>
   {>}
 {>}

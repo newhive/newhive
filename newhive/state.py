@@ -103,7 +103,7 @@ class Database:
                     # look for specific ordered list in user record
                     owner = self.User.named(user)
                 if owner and owner.get('tagged', {}).has_key(tags[0]):
-                    results = self.Expr.cards(owner['tagged'][tags[0]], viewer=viewer)
+                    results = self.Expr.cards(owner['tagged'][tags[0]], **args)
                 else:
                     if search.get('tags'):
                         spec['tags_index'] = {'$all': search['tags']}
@@ -149,7 +149,7 @@ class Database:
         # q_no_quotes = re.sub(r'"(.*?)"', '', q, flags=re.UNICODE)
         # search['phrases'].extend(q_quotes)
 
-        for pattern in re.findall(r'(\b|\W+)((\w|[/-])+)', q):
+        for pattern in re.findall(r'(\b|\W+)((\w|[:-])+)', q):
             prefix = re.sub( r'[^#@]', '', pattern[0] )
             if prefix == '@': search['user'] = pattern[1].lower()
             elif prefix == '#':
@@ -207,7 +207,7 @@ class Collection(object):
             return res
         return Cursor(self, self._col.find(spec=spec, **opts))
 
-    # Should be overridden to ommit fields not used in list views
+    # Should be overridden to omit fields not used in list views
     # TODO: fix privacy for viewer
     def cards(self, spec, viewer=None, **opts):
         return self.search(spec, **opts)
@@ -355,6 +355,11 @@ class Entity(dict):
         self['updated'] = now()
         self._col.insert(self, safe=True)
         return self
+
+    def entropy(self, force_update = False):
+        if force_update or (not self.get('entropy')):
+            self['entropy'] = junkstr(8)
+        return self['entropy']
 
     # should be avoided, because it clobbers record. Use update instead
     def save(self, updated=True):
@@ -549,6 +554,42 @@ class User(HasSocial):
 
     @property
     def broadcast_ids(self): return [i['entity'] for i in self.broadcast]
+
+    def calculate_tags(self):
+        public_cnt = Counter()
+        unlisted_cnt = Counter()
+        for expr in self.expressions:
+            for tag in expr.get('tags_index', []):
+                unlisted_cnt[tag] += 1
+                if expr.get('auth', 'unlisted') == 'public':
+                    public_cnt[tag] += 1
+        for cnt in [public_cnt, unlisted_cnt]:
+            top = cnt.most_common(1)[0][1]
+            #TODO: need to actually differentiate each expression by auth
+            for tag, tagged in self.get('tagged', {}).items():
+                if len(tagged):
+                    cnt[tag] += top + len(tagged)
+        tag_entropy = self.get('tag_entropy', {})
+        for tag, x in cnt.most_common():
+            tag_entropy.setdefault(tag, junkstr(6))
+        self.update(public_tags = public_cnt, unlisted_tags = unlisted_cnt,
+            tag_entropy=tag_entropy)
+
+    def get_tag(self, tag, limit=0, force_update=False):
+        tagged = self.get('tagged', {})
+        expression_id_list = tagged.get(tag, [])
+
+        if not expression_id_list: 
+            # List missing. calculate it.
+            expression_list = self.db.Expr.search({
+                'owner': self.id, 'tags_index': tag })
+            if expression_list:
+                expression_id_list = map(lambda e: e.id, expression_list)
+                if force_update:
+                    tagged[tag] = expression_id_list
+                    self.update(updated=False, tagged=tagged)
+
+        return expression_id_list if not limit else expression_id_list[:limit]
 
     def can_view(self, expr):
         return expr and (
@@ -1095,9 +1136,12 @@ class Expr(HasSocial):
             if (spec2.has_key('tags_index') 
                 and ['deck2013'] in spec2.get('tags_index').values()):
                 override_unlisted = True
+            # Set up auth filtering
             if auth:
                 spec2.update(auth=auth)
-            if viewer and viewer.logged_in:
+            if override_unlisted:
+                pass
+            elif viewer and viewer.logged_in:
                 if auth == 'password':
                     spec2.update({'owner': viewer.id})
                 elif not override_unlisted:
@@ -1218,11 +1262,6 @@ class Expr(HasSocial):
                 # TODO-perf: could be wise to also kill the thread
                 return False
         return True
-
-    def entropy(self, force_update = False):
-        if force_update or (not self.get('entropy')):
-            self['entropy'] = junkstr(8)
-        return self['entropy']
 
     #TODO-cleanup: remove after snapshot migration
     def snapshot_name_base(self, size, time):
@@ -1353,13 +1392,35 @@ class Expr(HasSocial):
     owner = property(get_owner)
 
     def update(self, **d):
+        old_tags = set(self.get('tags_index', []))
+
         if not d.has_key('file_id'): self._collect_files(d)
         self.build_search(d)
         if d.get('auth') == 'public':
             d['password'] = None
         super(Expr, self).update(**d)
         self.owner.get_expr_count(force_update=True)
-        if d.get('apps') or d.get('background'): self.threaded_snapshot(retry=120)
+        
+        # Update owner's tag list, adding self to appropriate lists
+        tagged = self.owner.get('tagged', {})
+        tagged_keys = set(tagged.keys())
+        old_tags &= tagged_keys
+        new_tags = set(self.get('tags_index', [])) & tagged_keys
+        both_tags = old_tags & new_tags
+        new_tags -= both_tags
+        old_tags -= both_tags
+
+        for tag in old_tags:
+            tagged[tag] = filter(lambda e_id: e_id != self.id, tagged[tag])
+        for tag in new_tags:
+            if self.id not in tagged[tag]:
+                tagged[tag] = [self.id] + tagged[tag]
+        self.owner.update(tagged=tagged, updated=False)
+        # TODO-perf: shouldn't need after a migration.
+        self.owner.calculate_tags()
+
+        if not config.live_server and (d.get('apps') or d.get('background')):
+            self.threaded_snapshot(retry=120)
         return self
 
     def build_search(self, d):
@@ -1411,10 +1472,20 @@ class Expr(HasSocial):
         return self
 
     def delete(self):
-        #TODO-bug: note, this occurs BEFORE the delete action, thus lags.
-        self.owner.get_expr_count(force_update=True)
+        owner = self.owner
+        # Update owner's tag list, adding self to appropriate lists
+        self.owner.calculate_tags()
+        tagged = self.owner.get('tagged', {})
+        tagged_keys = set(tagged.keys())
+        for tag in self['tags_index']:
+            if tag in tagged_keys:
+                tagged[tag] = filter(lambda e: e.id != self.id, tagged[tag])
+        
         for r in self.db.Feed.search({'entity': self.id}): r.delete()
-        return super(Expr, self).delete()
+
+        res = super(Expr, self).delete()
+        owner.get_expr_count(force_update=True)
+        return res
 
     def increment_counter(self, counter):
         assert counter in self.counters, "Invalid counter variable.  Allowed counters are " + str(self.counters)
@@ -1524,6 +1595,10 @@ class Expr(HasSocial):
     def is_featured(self):
         return self.id in self.db.User.get_root()['tagged'].get('Featured', [])
 
+    @property
+    def auth(self):
+        return self.get('auth', 'private')
+
     public = property(lambda self: self.get('auth') == "public")
 
     def client_view(self, viewer=None, special={}, activity=0):
@@ -1542,6 +1617,8 @@ class Expr(HasSocial):
             'url': self.url,
             'title': self.get('title')
         })
+        if self.auth != 'public':
+            expr.update({'auth': self.auth})
         expr['snapshot_big'] = self.snapshot_name("big")
         expr['snapshot_small'] = self.snapshot_name("small")
         if viewer and viewer.is_admin:
@@ -1750,7 +1827,14 @@ class File(Entity):
     def delete_files(self):
         for k in self.thumb_keys + [self.id]:
             if self.get('s3_bucket'):
-                self.db.s3.delete_file(self['s3_bucket'], self.id)
+                try:
+                    self.db.s3.delete_file(self['s3_bucket'], self.id)
+                except:
+                    # not critical if S3 remove fails, as will happen
+                    # when dev tries to remove live files
+                    # (it can always be cleaned up later)
+                    # TODO: log error
+                    pass
             elif self.get('fs_path'):
                 try: os.remove(self['fs_path'])
                 except:

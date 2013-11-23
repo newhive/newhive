@@ -1,8 +1,9 @@
 define([
     'browser/jquery',
     'json!ui/routes.json',
+    // 'history/history',
     'json!server/compiled.config.json'
-], function($, ApiRoutes, config){
+], function($, ApiRoutes, /*history, */config){
     var o = {};
 
     // turns out I don't really need this, but could be useful in the future

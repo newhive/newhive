@@ -32,6 +32,12 @@ def get_api_endpoints(api):
     for route_name, route_obj in routes.items():
         # Add page routes (for HTTP and HTTPS)
         if route_obj.get('page_route'):
+            defaults=dict(route_obj)
+            if defaults.has_key('page_route'): del defaults['page_route']
+            if defaults.has_key('api_route'): del defaults['api_route']
+            if defaults.has_key('method'): del defaults['method']
+            if defaults.has_key('controller'): del defaults['controller']
+            defaults.update({'route_name': route_name})
             for secure in (False, True):
                 rules.append(Rule(
                     route_obj['page_route'],
@@ -39,20 +45,29 @@ def get_api_endpoints(api):
                         getattr(api, route_obj.get('controller', 'community')),
                         route_obj.get('method', 'empty')
                     ),
-                    defaults={'route_name': route_name, 
-                        'require_login': route_obj.get('require_login')},
+                    defaults=defaults,
+                    # defaults={'route_name': route_name, 
+                    #     'require_login': route_obj.get('require_login')},
                     host=url_host(secure=secure)
                 ))
 
         # And API routes
         if route_obj.get('api_route'):
+            defaults=dict(route_obj)
+            if defaults.has_key('page_route'): del defaults['page_route']
+            if defaults.has_key('api_route'): del defaults['api_route']
+            if defaults.has_key('method'): del defaults['method']
+            if defaults.has_key('controller'): del defaults['controller']
+            defaults.update({'json':True, 'route_name': route_name,
+                'require_login': route_obj.get('require_login')})
             for secure in (False, True):
                 rules.append(Rule(
                     route_obj['api_route'],
                     endpoint=(getattr(api,route_obj['controller']),
                         route_obj['method']),
-                    defaults={'json':True, 'route_name': route_name,
-                        'require_login': route_obj.get('require_login')},
+                    defaults=defaults,
+                    # defaults={'json':True, 'route_name': route_name,
+                    #     'require_login': route_obj.get('require_login')},
                     host=url_host(secure=secure)
                 ))
     return rules
