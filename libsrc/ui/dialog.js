@@ -4,22 +4,6 @@ define([
 ], function($, layout, dialog_template){
     var factory = { dialogs: [] };
 
-    factory.generic_dialog_handler = function(event, json){
-        if (json.error != undefined) {
-            opts.dialog.find('.error_msg').text(json.error).showshow().hide().fadeIn("slow");
-        } else {
-            opts.dialog.find('.error_msg').hidehide();
-            var el_show = opts.dialog.find(".success_show").unbind("click").click(
-                function() { o.close(); });
-            if (el_show.length) {
-                el_show.showshow();
-                opts.dialog.find(".success_hide").hidehide();
-            } else {
-                $('#dialog_shield').click();
-            }
-        }
-    };
-
     factory.create = function(element, options){
         var opts = $.extend({
             dialog: $(element),
@@ -52,6 +36,23 @@ define([
         //     opts.shield.click(manual_close);
         //     if(opts.opts.click_close) dialog.click(manual_close);
         // }
+
+        factory.generic_dialog_handler = function(event, json){
+            if (json.error != undefined) {
+                opts.dialog.find('.error_msg').text(json.error).showshow().
+                    hide().fadeIn("slow");
+            } else {
+                opts.dialog.find('.error_msg').hidehide();
+                var el_show = opts.dialog.find(".success_show").unbind("click").click(
+                    function() { o.close(); });
+                if (el_show.length) {
+                    el_show.showshow();
+                    opts.dialog.find(".success_hide").hidehide();
+                } else {
+                    $('#dialog_shield').click();
+                }
+            }
+        };
 
         o.open = function(){
             if(opts.opened) return;
