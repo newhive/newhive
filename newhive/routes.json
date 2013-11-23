@@ -1,15 +1,11 @@
 {
-    "login": {
-        "api_route": "/api/user/login",
-        "controller": "user",
-        "method": "login",
-        "secure": true
-    },
-    "logout": {
-        "api_route": "/api/user/logout",
-        "controller": "user",
-        "method": "logout"
-    },
+    "empty": "TODO-cleanup: move the functions around to make more sense",
+    "empty": "TODO-cleanup: move client_method inside page_data",
+    "empty": "TODO: allow tags in routes with is_form, supports_flags",
+
+    "empty": "-----------------------------------------",
+    "empty": "These routes are community pages.",
+    "empty": "-----------------------------------------",
 
     "home": {
         "page_route": "/",
@@ -108,8 +104,8 @@
         "page_route": "/<owner_name>/profile/tags",
         "api_route": "/api/feed/expressions/tags/<owner_name>",
         "controller": "community",
-        "method": "expressions_public",
-        "client_method": "profile"
+        "method": "expressions_public_tags",
+        "client_method": "grid"
     },
     "expressions_private": {
         "page_route": "/<owner_name>/profile/private",
@@ -118,6 +114,31 @@
         "method": "expressions_private",
         "client_method": "profile_private"
     },
+
+    "empty": "-----------------------------------------",
+    "empty": "These routes are for forms.",
+    "empty": "-----------------------------------------",
+
+    "login": {
+        "api_route": "/api/user/login",
+        "controller": "user",
+        "method": "login",
+        "secure": true
+    },
+    "logout": {
+        "api_route": "/api/user/logout",
+        "controller": "user",
+        "method": "logout"
+    },
+    "site_flags": {
+        "page_route": "/home/admin/site_flags",
+        "api_route": "/api/admin/site_flags",
+        "controller": "admin",
+        "method": "site_flags",
+        "client_method": "admin",
+        "require_login": true
+    },
+
     "user_update": {
         "page_route": "/<owner_name>/profile/edit",
         "api_route": "/api/user/update/<owner_name>",
