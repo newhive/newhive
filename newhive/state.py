@@ -1405,7 +1405,7 @@ class Expr(HasSocial):
         super(Expr, self).update(**d)
 
         self.update_owner(old_tags)
-        
+
         if not config.live_server and (d.get('apps') or d.get('background')):
             self.threaded_snapshot(retry=120)
 
@@ -1482,19 +1482,14 @@ class Expr(HasSocial):
         return self
 
     def delete(self):
-        owner = self.owner
-        # Update owner's tag list, adding self to appropriate lists
-        self.owner.calculate_tags()
-        tagged = self.owner.get('tagged', {})
-        tagged_keys = set(tagged.keys())
-        for tag in self['tags_index']:
-            if tag in tagged_keys:
-                tagged[tag] = filter(lambda e: e.id != self.id, tagged[tag])
-        
         for r in self.db.Feed.search({'entity': self.id}): r.delete()
 
         res = super(Expr, self).delete()
-        owner.get_expr_count(force_update=True)
+
+        old_tags = self.get('tags_index', [])
+        self['tags_index'] = []
+        self.update_owner(old_tags)
+
         return res
 
     def increment_counter(self, counter):
