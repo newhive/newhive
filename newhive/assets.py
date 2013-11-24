@@ -301,7 +301,7 @@ class HiveAssets(Assets):
             'raphael/g.pie.js',
             'raphael/g.line.js',
             'browser/jquery/tablesorter.min.js',
-            'browser/jquery-ui/jquery-ui-1.8.16.custom.min.js',
+            'browser/jquery-ui/jquery-ui-1.10.3.custom.js',
             'd3/d3.js',
             'd3/d3.time.js',
             output='../lib/admin.js'
@@ -316,7 +316,7 @@ class HiveAssets(Assets):
         self.assets_env.register(
             'admin.css',
             admin_scss,
-            'browser/jquery-ui/jquery-ui-1.8.16.custom.css',
+            'browser/jquery-ui/jquery-ui-1.10.3.custom.css',
             output='../lib/admin.css'
         )
 

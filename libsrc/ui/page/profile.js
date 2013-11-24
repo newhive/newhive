@@ -3,7 +3,7 @@ define([
     'ui/dialog',
     'server/context',
     'sj!templates/cards.html',
-    'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js',
+    'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js'
 ], function(
     $,
     dialog,
