@@ -14,7 +14,7 @@ define([
     'browser/jquery/jplayer/skin',
     'browser/jquery/rotate.js',
     'js!browser/jquery/event/drag.js',
-    'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js',
+    //'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js',
     'js!google_closure.js'
 ], function(
     $,
