@@ -1139,7 +1139,6 @@ class Expr(HasSocial):
             if (spec2.has_key('tags_index') 
                 and ['deck2013'] in spec2.get('tags_index').values()):
                 override_unlisted = True
-
             # Set up auth filtering
             if auth:
                 spec2.update(auth=auth)
@@ -1148,11 +1147,11 @@ class Expr(HasSocial):
             elif viewer and viewer.logged_in:
                 if auth == 'password':
                     spec2.update({'owner': viewer.id})
-                else:
+                elif not override_unlisted:
                     spec2.setdefault('$and', [])
                     spec2['$and'].append({'$or': [{'auth': 'public'},
                         {'owner': viewer.id}]})
-            else:
+            elif not override_unlisted:
                 spec2.update({'auth': 'public'})
             opts.setdefault('fields', self.ignore_not_meta)
             return self.search(spec, filter, **opts)
