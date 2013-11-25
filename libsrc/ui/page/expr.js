@@ -252,7 +252,7 @@ define([
         }
         // Create new content frame
         var contentFrameURL = o.content_url_base + expr_id;
-        contentFrame = $('<iframe class="expr">').attr('src',
+        contentFrame = $('<iframe class="expr" allowfullscreen>').attr('src',
             contentFrameURL + ((current != undefined) ? "" : "?no-embed"))
             .attr('id','expr_' + expr_id);
         // Cache the expr data on the card

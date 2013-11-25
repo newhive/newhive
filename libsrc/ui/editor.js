@@ -2518,17 +2518,22 @@ Hive.init = function(exp, page){
 Hive.embed_code = function(element) {
     var c = $(element).val().trim(), app;
 
-    if(m = c.match(/^https?:\/\/www.youtube.com\/.*?v=(.*)$/i)
-        || (m = c.match(/src="https?:\/\/www.youtube.com\/embed\/(.*?)"/i))
-        || (m = c.match(/http:\/\/youtu.be\/(.*)$/i))
+    if(m = c.match(/^https?:\/\/www.youtube.com\/.*?v=(.*?)(#t=(\d+))?$/i)
+        || (m = c.match(/src="https?:\/\/www.youtube(-nocookie)?.com\/embed\/(.*?)"/i))
+        || (m = c.match(/https?:\/\/youtu.be\/(.*)$/i))
     ) {
-        var url = '//www.youtube.com/v/' + m[1]
-            + '?rel=0&amp;showsearch=0&amp;showinfo=0&amp;fs=1';
+        var args = { 'rel': 0, 'showsearch': 0, 'showinfo': 0 };
+        if(m[3]) args['start'] = m[3];
+        var url = '//www.youtube.com/embed/' + m[1] + '?' + $.param(args);
         app = { type : 'hive.html', content : 
-              '<object type="application/x-shockwave-flash" style="width:100%; height:100%" '
-            + 'data="' + url + '"><param name="movie" value="' + url + '">'
-            + '<param name="allowFullScreen" value="true">'
-            + '<param name="wmode" value="opaque"/></object>' };
+            "<iframe width='100%' height='100%' class='youtube-player'" +
+            "  src='" + url + "' frameborder='0' " +
+            "allowfullscreen></iframe>"
+        };
+            //   '<object type="application/x-shockwave-flash" style="width:100%; height:100%" '
+            // + 'data="' + url + '"><param name="movie" value="' + url + '">'
+            // + '<param name="allowFullScreen" value="true">'
+            // + '<param name="wmode" value="opaque"/></object>' };
     }
 
     else if(m = c.match(/^https?:\/\/(www.)?vimeo.com\/(.*)$/i))
@@ -2539,9 +2544,6 @@ Hive.embed_code = function(element) {
 
     else if(m = c.match(/^https?:\/\/(.*)mp3$/i))
         app = { type : 'hive.audio', content : {url : c, player : minimal} }
-//<object width="100%" height="100%" type="application/x-shockwave-flash" id="cover23798312_2084961807" name="cover23798312_2084961807" class="" data="http://a.vimeocdn.com/p/flash/moogalover/1.1.9/moogalover.swf?v=1.0.0" style="visibility: visible;"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="true"><param name="scalemode" value="noscale"><param name="quality" value="high"><param name="wmode" value="opaque"><param name="bgcolor" value="#000000"><param name="flashvars" value="server=vimeo.com&amp;player_server=player.vimeo.com&amp;cdn_server=a.vimeocdn.com&amp;embed_location=&amp;force_embed=0&amp;force_info=0&amp;moogaloop_type=moogaloop&amp;js_api=1&amp;js_getConfig=player23798312_2084961807.getConfig&amp;js_setConfig=player23798312_2084961807.setConfig&amp;clip_id=23798312&amp;fullscreen=1&amp;js_onLoad=player23798312_2084961807.player.loverLoaded&amp;js_onThumbLoaded=player23798312_2084961807.player.loverThumbLoaded&amp;js_setupMoog=player23798312_2084961807.player.loverInitiated"></object>
-//http://player.vimeo.com/video/                                                   13110687
-//<object width="100%" height="100%" type="application/x-shockwave-flash" id="cover13110687_812701010" name="cover13110687_812701010" data="http://a.vimeocdn.com/p/flash/moogalover/1.1.9/moogalover.swf?v=1.0.0" style="visibility: visible;"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="true"><param name="scalemode" value="noscale"><param name="quality" value="high"><param name="wmode" value="opaque"><param name="bgcolor" value="#000000"><param name="flashvars" value="server=vimeo.com&amp;player_server=player.vimeo.com&amp;cdn_server=a.vimeocdn.com&amp;embed_location=&amp;force_embed=0&amp;force_info=0&amp;moogaloop_type=moogaloop&amp;js_api=1&amp;js_getConfig=player13110687_812701010.getConfig&amp;js_setConfig=player13110687_812701010.setConfig&amp;clip_id=13110687&amp;fullscreen=1&amp;js_onLoad=player13110687_812701010.player.loverLoaded&amp;js_onThumbLoaded=player13110687_812701010.player.loverThumbLoaded&amp;js_setupMoog=player13110687_812701010.player.loverInitiated"></object>
 
     else if(m = c.match(/https?:\/\/.*soundcloud.com/i)) {
         var stuffs = $('<div>');
