@@ -66,6 +66,31 @@ button {
         background-color: black;
     }
 }
+.disabled  {
+    &.teal_btn, &.text_btn, &.black_btn {
+        color: $color_light_grey;
+        // background-color: black !important;
+        &:hover {
+            color: $color_light_grey;
+        }
+    }
+    &.grey_btn {
+        color: white;
+        // background-color: black !important;
+        &:hover {
+            color: white;
+        }
+    }
+    &.teal_btn:hover {
+        background-color: $color_selected;
+    }
+    &.grey_btn:hover {
+        background-color: $color_light_grey;
+    }
+    &.black_btn:hover {
+        background-color: black;
+    }
+}
 .grey_btn {
     background-color: $color_light_grey;
 }

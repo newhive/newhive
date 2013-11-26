@@ -247,6 +247,7 @@ define([
             form.trigger('before_submit');
             submit();
             form.trigger('after_submit');
+            form.find("*[type=submit]").addClass('disabled').prop('disabled','true');
             return false;
         });
 
@@ -290,6 +291,8 @@ define([
                     // if(!file_api) input.trigger('with_files',
                         // [ data.map(function(f){ return f.url }) ]);
                     form.trigger('response', [data]);
+                    form.find("*[type=submit]").
+                        removeClass('disabled').prop('disabled','');
                 },
                 error: function(data){
                     // TODO: open new window with debugger
