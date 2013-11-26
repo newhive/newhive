@@ -183,10 +183,12 @@ define([
                 $('#content_btns .edit_ui').replaceWith(edit_btn_template(page_data));
                 $('#content_btns .edit_ui .icon').showshow();
             }
-            $('#dia_delete_ok').data('dialog').opts.handler = function(e, data){
-                o.controller.open('expressions_public',
-                    {'owner_name': context.user.name });
-            };
+            $('#dia_delete_ok').each(function(i, e){
+                $(e).data('dialog').opts.handler = function(e, data){
+                    o.controller.open('expressions_public',
+                        {'owner_name': context.user.name });
+                }
+            });
         }
     };
 
