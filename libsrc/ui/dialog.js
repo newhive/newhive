@@ -5,7 +5,8 @@ define([
     var factory = { dialogs: [] };
 
     factory.create = function(element, options){
-        var opts;
+        var opts = {};
+
         var generic_dialog_handler = function(event, json){
             if (json.error != undefined) {
                 opts.dialog.find('.error_msg').text(json.error).showshow().
@@ -23,7 +24,7 @@ define([
             }
         };
 
-        opts = $.extend({
+        $.extend(opts, {
             dialog: $(element),
             opened: false,
             open: function(){},
