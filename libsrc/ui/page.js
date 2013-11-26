@@ -317,8 +317,9 @@ define([
                     var speed = (e.shiftKey) ? 2 : 1;
                     context.page.navigate_page((e.keyCode == 39) ? speed : -speed);
                 }
-            } else if ($("#search_box").is(":visible") && !$(":focus").length
+            } else if (/*$("#search_box").is(":visible") && */!$(":focus").length
                 && /[a-zA-Z0-9#@/]/.test(keychar)) {
+                $(".search_bar").showshow();
                 $("#search_box").focus();
             } else {
                 // alert('keyCode: ' + e.keyCode);
