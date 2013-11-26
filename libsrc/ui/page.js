@@ -76,22 +76,17 @@ define([
         // $('#login_form').submit(o.login);
         $('#login_form [name=from]').val(window.location);
         if(!context.user.logged_in){
-            var d = dialog.create('#login_menu',  
+            o.login_dialog = dialog.create('#login_menu',  
                 { open: function(){ $("#login_menu input[name=username]").focus(); },
                   handler: function(e, json) {
                     if (json.error != undefined) {
                         $('#login_form .error_msg').text(json.error).showshow().fadeIn("slow");
                     } else {
-                        d.close();
+                        o.login_dialog.close();
                         o.on_login();
                     } }
                 } );
-            $('.login_btn').click(d.open);
-
-            if(context.error == "login") {
-                d.open();
-                $('#login_form .error_msg').showshow().fadeIn("slow");
-            }
+            $('.login_btn').click(o.login_dialog.open);
 
             // request invite form handlers. This form also appears on home page,
             // so this applies to both, and must be done after the top level render
@@ -215,8 +210,11 @@ define([
         new_page = pages[method];
         expr_page = (method == 'expr');
         page_data.layout = method;
-        if (!context.error)
-            dialog.close_all();
+        dialog.close_all();
+        if(context.error == "login" && o.login_dialog){
+            o.login_dialog.open();
+            $('#login_form .error_msg').showshow().fadeIn("slow");
+        }
         if (context.page != new_page) {
             if (context.page && context.page.exit) 
                 context.page.exit();
