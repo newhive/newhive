@@ -1045,7 +1045,12 @@ class User(HasSocial):
             notification_count = self.notification_count,
         ) )
         if special.has_key("tagged"):
-            dict.update(user, { "tagged": self.get('tagged', {}).keys() })
+            # dict.update(user, { "tagged": self.get('tagged', {}).keys() })
+            #!! TODO-perf: remove after we migrate to run on all users
+            self.calculate_tags()
+            cnt = self.get('unlisted_tags', Counter())
+            tagged = [x for x,y in cnt.most_common()] # [:num_tags]
+            dict.update(user, { "tagged": tagged })
         if special.has_key("mini_expressions") and g_flags['mini_expressions']:
             # exprs = self.db.Expr.cards({'owner': self.id}, limit=3)
             exprs = self.get_top_expressions(g_flags['mini_expressions'])

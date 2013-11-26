@@ -1,7 +1,7 @@
 import re
 from newhive import state
 db = state.Database()
-from newhive.utils import now, time_u
+from newhive.utils import now, time_u, Apply
 
 # A couple handy defaults
 nd = db.User.named('newduke')
@@ -27,12 +27,12 @@ def names(entity_list):
 	return map(name, entity_list)
 
 def exprs_with_embeds():
-    return db.Expr.search({'apps': {'$elemMatch': {
-        'type': 'hive.html', 'content': re.compile(r'<object|<embed', re.I)}}})
+	return db.Expr.search({'apps': {'$elemMatch': {
+		'type': 'hive.html', 'content': re.compile(r'<object|<embed', re.I)}}})
 
 def exprs_with_jplayer():
-    return db.Expr.search({'apps': {'$elemMatch': {
-    	'content': re.compile(r'jplayer', re.I)}}})
+	return db.Expr.search({'apps': {'$elemMatch': {
+		'content': re.compile(r'jplayer', re.I)}}})
 
 def create_user(name):
 	db.User.create({"name": name,
@@ -57,12 +57,5 @@ def insert_tagged(user, tag, ids):
 	user.save(updated=False)
 
 def new_referral(from_user, to_name, to_email):
-    return db.User.named(from_user).new_referral({'name': to_name, 'to': to_email})
-
-def apply_all(func, list):
-	errors = []
-	for e in list:
-		if not func(e):
-			errors.append(e)
-	return errors
+	return db.User.named(from_user).new_referral({'name': to_name, 'to': to_email})
 
