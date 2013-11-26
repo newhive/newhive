@@ -5,11 +5,28 @@ define([
     var factory = { dialogs: [] };
 
     factory.create = function(element, options){
+        var generic_dialog_handler = function(event, json){
+            if (json.error != undefined) {
+                opts.dialog.find('.error_msg').text(json.error).showshow().
+                    hide().fadeIn("slow");
+            } else {
+                opts.dialog.find('.error_msg').hidehide();
+                var el_show = opts.dialog.find(".success_show").unbind("click").click(
+                    function() { o.close(); });
+                if (el_show.length) {
+                    el_show.showshow();
+                    opts.dialog.find(".success_hide").hidehide();
+                } else {
+                    $('#dialog_shield').click();
+                }
+            }
+        };
+
         var opts = $.extend({
             dialog: $(element),
             opened: false,
             open: function(){},
-            handler: factory.generic_dialog_handler,
+            handler: generic_dialog_handler,
             close: function(){},
             mandatory: false,
             layout: function(){ layout.center(opts.dialog, $(window)) },
@@ -36,23 +53,6 @@ define([
         //     opts.shield.click(manual_close);
         //     if(opts.opts.click_close) dialog.click(manual_close);
         // }
-
-        factory.generic_dialog_handler = function(event, json){
-            if (json.error != undefined) {
-                opts.dialog.find('.error_msg').text(json.error).showshow().
-                    hide().fadeIn("slow");
-            } else {
-                opts.dialog.find('.error_msg').hidehide();
-                var el_show = opts.dialog.find(".success_show").unbind("click").click(
-                    function() { o.close(); });
-                if (el_show.length) {
-                    el_show.showshow();
-                    opts.dialog.find(".success_hide").hidehide();
-                } else {
-                    $('#dialog_shield').click();
-                }
-            }
-        };
 
         o.open = function(){
             if(opts.opened) return;
