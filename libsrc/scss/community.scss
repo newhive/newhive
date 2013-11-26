@@ -330,14 +330,23 @@
         text-align: center;
     }
 
+    .tag_list_container {
+        position: relative;
+        margin: 50px auto;
+        .expander {
+            position: absolute;
+            margin-left: -55px;
+            color: white;
+            background-color: black;
+        }
+    }
     .tag_list {
         text-align: center;
-        .expander {
+        .plus_menu {
             color: white;
             background-color: black;
         }
         &.main {
-            margin: 50px auto;
             width: 600px;
             max-height: 114px;
             overflow: hidden;

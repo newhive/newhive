@@ -58,7 +58,7 @@ define([
             $(".overlay .login_btn").unbind('click').click(d.open);
         }
         // $(".tags.nav_button").unbind('click').click(show_hide_tags);
-        $(".tag_list .expander").unbind('click').on('click', function(ev) {
+        $(".tag_list_container .expander").unbind('click').on('click', function(ev) {
             toggle_more_tags();
         });
 
@@ -127,10 +127,10 @@ define([
 
     show_tags = function (show){
         if (show) {
-            $(".tag_list.main").showshow();
+            $(".tag_list_container").showshow();
             // $(".tags.icon").addClass("on");
         } else {
-            $(".tag_list.main").hidehide();
+            $(".tag_list_container").hidehide();
             // $(".tags.icon").removeClass("on");
         }
     }

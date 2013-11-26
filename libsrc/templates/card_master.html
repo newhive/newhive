@@ -35,15 +35,16 @@
 {>}
 #}
 {<unless page "tag_search"}
-  <div class="tag_list main hide" data-link-show=".icon.hash">
-    {#data-class-toggle='```{".tag_list .expander":"expanded"}```'>#}
+  <div class="tag_list_container centered hide" data-link-show=".icon.hash">
     <div class="expander tag_label">...</div>
-    {<with null "main_view" true}
-      {<for tag_list "tagnum"}
-        {|templates/tag_card.html}
+    <div class="tag_list main inline">
+      {#data-class-toggle='```{".tag_list .expander":"expanded"}```'>#}
+      {<with null "main_view" true}
+        {<for tag_list "tagnum"}
+          {|templates/tag_card.html}
+        {>}
       {>}
-    {>}
-  </div>
+  </div></div>
 {>}
 {<if route.include_tags}
   <form {form_attrs "collection_order"} method="post"
