@@ -63,9 +63,11 @@ define([
         });
 
         win.unbind('scroll', on_scroll_add_page).scroll(on_scroll_add_page);
-        if (context.route.include_tags && context.page_data.cards.length > 1
+        if(
+            context.route.include_tags && context.page_data.cards.length > 1
             && context.page_data.owner.id == context.user.id
-            && context.page_data.tag_selected != undefined) {
+            && context.page_data.tag_selected != undefined
+        ){
             function reorder () {
                 var ordered_cards = [];
                 var columns = $(".ncolumn .column").filter(
@@ -114,7 +116,7 @@ define([
                     // ui_page.add_grid_borders();
                     reorder();
                 },
-        });
+            });
         }
     };
 
