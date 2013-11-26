@@ -82,7 +82,7 @@ define([
                     if (json.error != undefined) {
                         $('#login_form .error_msg').text(json.error).showshow().fadeIn("slow");
                     } else {
-                        $('#dialog_shield').click();
+                        d.close();
                         o.on_login();
                     } }
                 } );
@@ -215,7 +215,8 @@ define([
         new_page = pages[method];
         expr_page = (method == 'expr');
         page_data.layout = method;
-        dialog.close_all();
+        if (!context.error)
+            dialog.close_all();
         if (context.page != new_page) {
             if (context.page && context.page.exit) 
                 context.page.exit();
@@ -309,7 +310,7 @@ define([
             keychar = String.fromCharCode(key);
             if (e.keyCode == 27) { // escape
                 // If a dialog is up, kill it.
-                $('#dialog_shield').click();
+                dialog.close_all();
             } else if ((e.keyCode == 39 || e.keyCode == 37) &&
                 !(e.metaKey || e.ctrlKey || e.altKey) &&
                 $(e.target).is("body")) {

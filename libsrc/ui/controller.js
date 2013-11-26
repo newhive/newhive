@@ -121,7 +121,6 @@ define([
             o.scroll_top = $("body").scrollTop();
         }
         o.back = false;
-        $('#dialog_shield').click();
 
         callback = callback ? callback : success;
         if(page_state.api){
