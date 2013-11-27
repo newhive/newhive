@@ -545,7 +545,11 @@ define(['browser/js', 'module'],
     	}, []);
 	};
 	context_base.reverse = function(context, l){ return l.concat().reverse(); };
-	context_base.mod = function(context, x, y){ return x % y };
+	context_base.mod = function(context, x, y){ 
+		if (typeof(x) == "number" && typeof(y) == "number")
+			return x % y;
+		return x;
+	};
 	context_base.thousands = function(context, n){ 
 		for (var i = 0; Math.abs(n) >= 1000 && i < suffix.length - 1; ++i) {
 			if (Math.abs(n) < 10000)

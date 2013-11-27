@@ -43,6 +43,21 @@ class User(ModelController):
 
         return self.serve_json(response, True)
 
+    def add_to_collection(self, tdata, request, response, **args):
+        expr_id = request.form.get('expr_id')
+        expr = self.db.Expr.fetch(expr_id)
+        tag_name = request.form.get('tag_name')
+        user = tdata.user
+
+        if not user or not user.logged_in or not tag_name or not expr:
+            return self.serve_json(response, { 'error': 'error'})
+
+        tagged = user.get('tagged', {})
+        tagged[tag_name] = [expr_id] + user.get_tag(tag_name, force_update=True)
+        user.update(tagged=tagged)
+
+        return self.serve_json(response, True)
+
     def do_password_reset(self, tdata, request, response, owner_name=None, **args):
         # Check to see if user filled out password recovery form
         key = request.form.get('key')

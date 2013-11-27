@@ -532,3 +532,16 @@ form.login {
 }
 #menu_privacy .selected { display : none; }
 
+.dialog.add_to_collection {
+    .tag_list_container {
+        margin: 25px auto;
+        .expander {
+            margin: 0px;
+            position: inherit;
+            float: left;
+        }
+        .tag_list {
+            width: 440px;
+        }
+    }
+}

@@ -302,7 +302,8 @@
         &:hover { color:inherit; }
     }
 }
-#site {
+// TODO: BUGBUG: should really be something like body.main
+body {
     ///
     // background-color:blue;
     //
@@ -566,7 +567,9 @@
 
     &.tag_unselected {
         color: black;
+        background-color:white;
         background-color:$color_light_grey;
+        background-color:#EEE;
     }
     &.tag_0 { background-color: $color_tag_0; }
     &.tag_1 { background-color: $color_tag_1; }

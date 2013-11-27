@@ -30,21 +30,10 @@
     ><input type="submit" value class='hoverable icon go_arrow inline'
   ></form
 >
-{#{<if page "tag_search"}
-  {|templates/tags_page.html} 
-{>}
-#}
 {<unless page "tag_search"}
-  <div class="tag_list_container centered hide" data-link-show=".icon.hash">
-    <div class="expander tag_label">...</div>
-    <div class="tag_list main inline">
-      {#data-class-toggle='```{".tag_list .expander":"expanded"}```'>#}
-      {<with null "main_view" true}
-        {<for tag_list "tagnum"}
-          {|templates/tag_card.html}
-        {>}
-      {>}
-  </div></div>
+  {<with null "expander" route.include_tags "extra_classes" "hide"}
+    {|templates/tags_main.html}
+  {>}
 {>}
 {<if route.include_tags}
   <form {form_attrs "collection_order"} method="post"
