@@ -869,11 +869,9 @@ class User(HasSocial):
             d.get('fullname', self.get('fullname', ''))
         )
 
-    def new_referral(self, d, decrement=True):
-        if self.get('referrals', 0) > 0 or self == self.db.User.root_user or self == self.db.User.site_user:
-            if decrement: self.increment({ 'referrals': -1 })
-            d.update(user = self.id)
-            return self.db.Referral.create(d)
+    def new_referral(self, d):
+        d.update(user = self.id)
+        return self.db.Referral.create(d)
 
     def give_invites(self, count):
         self.increment({'referrals':count})

@@ -22,7 +22,6 @@ define([
     'sj!templates/user_actions.html',
     'sj!templates/tags_page.html',
     'sj!templates/tag_card.html',
-    'sj!templates/tags_main.html',
     'sj!templates/user_activity.html',
     'sj!templates/expr_card_large.html',
     'sj!templates/expr_card_feed.html',
@@ -36,6 +35,7 @@ define([
     'sj!templates/dialog_share.html',
     'sj!templates/network_nav.html',
     'sj!templates/login_form.html', 
+    'sj!templates/tags_main.html',
     'sj!templates/request_invite_form.html',
     'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js',
     'sj!templates/cards.html'
