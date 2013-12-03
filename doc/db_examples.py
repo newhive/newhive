@@ -56,13 +56,11 @@ def insert_tagged(user, tag, ids):
 	user['tagged'][tag] = ids
 	user.save(updated=False)
 
-def new_referral(from_user, to_name, to_email):
-    return db.User.named(from_user).new_referral({'name': to_name, 'to': to_email})
-
-def apply_all(func, list):
-	errors = []
-	for e in list:
-		if not func(e):
-			errors.append(e)
-	return errors
+# Get a referall URL from a particular user
+def new_referral_link(from_user_name, to_email='', reuse=1):
+	return str(new_referral(
+		from_user_name=from_user_name, to_email=to_email, reuse=reuse).url)
+def new_referral(from_user_name, to_email='', reuse=1):
+	return db.User.named(from_user_name).new_referral(
+		{'to': to_email, 'reuse': reuse})
 
