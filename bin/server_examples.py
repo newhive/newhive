@@ -1,10 +1,16 @@
+#!/usr/bin/ipython -i
+
 import re
+
+import newhive
 from newhive import state
-db = state.Database()
 from newhive.utils import now, time_u
+
+db = state.Database()
 
 # A couple handy defaults
 nd = db.User.named('newduke')
+ac = db.User.named('abram')
 e1 = db.Expr.with_url('newduke/index')
 
 def recent_exprs(within_secs):
