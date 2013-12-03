@@ -116,6 +116,7 @@ body.edit {
 
 #app_btns {
     bottom: 20px;
+    min-width: 354px; /* for centering before loading complete */
 
     .insert_btn { cursor: default; }
     .icon {

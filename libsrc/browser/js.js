@@ -104,5 +104,19 @@ o.each = function(o, f){
     for(p in o) f(o[p], p);
 };
 
+o.parse_query = function(url){
+    var d = function(s){
+        return s ? decodeURIComponent(s.replace(/\+/, " ")) : null;
+    }
+    var args = {}, query, qi = url.indexOf('?');
+    if(qi < 0) return {};
+    var query = url.substring(qi+1);
+    $.each(query.split('&'), function(i, v){
+        var pair = v.split('=');
+        args[d(pair[0])] = d(pair[1]);
+    });
+    return args;
+}
+
 return o;
 });

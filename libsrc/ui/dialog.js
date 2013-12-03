@@ -4,28 +4,31 @@ define([
 ], function($, layout, dialog_template){
     var factory = { dialogs: [] };
 
-    factory.generic_dialog_handler = function(event, json){
-        if (json.error != undefined) {
-            opts.dialog.find('.error_msg').text(json.error).showshow().hide().fadeIn("slow");
-        } else {
-            opts.dialog.find('.error_msg').hidehide();
-            var el_show = opts.dialog.find(".success_show").unbind("click").click(
-                function() { o.close(); });
-            if (el_show.length) {
-                el_show.showshow();
-                opts.dialog.find(".success_hide").hidehide();
-            } else {
-                $('#dialog_shield').click();
-            }
-        }
-    };
-
     factory.create = function(element, options){
-        var opts = $.extend({
+        var opts = {};
+
+        var generic_dialog_handler = function(event, json){
+            if (json.error != undefined) {
+                opts.dialog.find('.error_msg').text(json.error).showshow().
+                    hide().fadeIn("slow");
+            } else {
+                opts.dialog.find('.error_msg').hidehide();
+                var el_show = opts.dialog.find(".success_show").unbind("click").click(
+                    function() { o.close(); });
+                if (el_show.length) {
+                    el_show.showshow();
+                    opts.dialog.find(".success_hide").hidehide();
+                } else {
+                    opts.dialog.close();
+                }
+            }
+        };
+
+        $.extend(opts, {
             dialog: $(element),
             opened: false,
             open: function(){},
-            handler: factory.generic_dialog_handler,
+            handler: generic_dialog_handler,
             close: function(){},
             mandatory: false,
             layout: function(){ layout.center(opts.dialog, $(window)) },
@@ -55,12 +58,13 @@ define([
 
         o.open = function(){
             if(opts.opened) return;
+            // TODO: Allow multiple dialogs?
+            // Close any previous dialog. 
+            factory.close_all();
+
             opts.opened = true;
             var this_dia = opts.dialog;
             
-            // Close any previous dialog. 
-            // TODO: Allow multiple dialogs?
-            $('#dialog_shield').click();
             opts.shield = $("<div id='dialog_shield'>");
             if(opts.fade) opts.shield.addClass('fade');
             opts.shield.appendTo(document.body).click(o.close);
@@ -90,7 +94,8 @@ define([
             if(!opts.opened) return;
             opts.opened = false;
             opts.dialog.detach().appendTo(o.attach_point);
-            opts.shield.remove();
+            if (opts.shield)
+                opts.shield.remove();
             $(window).off('resize', opts.layout);
             opts.dialog.hidehide();
             opts.close();

@@ -53,15 +53,16 @@ define([
     o.render = function(page_data){
         bundles['edit.css'].map(function(url){
             $('<link>').attr({rel: 'stylesheet', href: url})
-                .addClass('edit').appendTo('head');
+                .addClass('edit').appendTo('head')
+                .load(function(){
+                    $('.edit.overlay').showshow();
+                    o.resize() });
         });
         $('#site').empty().append(edit_template(page_data)).showshow();
         $('#nav').hidehide();
 
         if(!page_data.expr) page_data.expr = {};
         editor.init(page_data.expr, o);
-        setTimeout(o.resize, 0);
-        $('.edit.overlay').showshow();
     };
 
     o.attach_handlers = function(){

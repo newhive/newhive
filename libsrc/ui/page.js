@@ -76,22 +76,17 @@ define([
         // $('#login_form').submit(o.login);
         $('#login_form [name=from]').val(window.location);
         if(!context.user.logged_in){
-            var d = dialog.create('#login_menu',  
+            o.login_dialog = dialog.create('#login_menu',  
                 { open: function(){ $("#login_menu input[name=username]").focus(); },
                   handler: function(e, json) {
                     if (json.error != undefined) {
                         $('#login_form .error_msg').text(json.error).showshow().fadeIn("slow");
                     } else {
-                        $('#dialog_shield').click();
+                        o.login_dialog.close();
                         o.on_login();
                     } }
                 } );
-            $('.login_btn').click(d.open);
-
-            if(context.error == "login") {
-                d.open();
-                $('#login_form .error_msg').showshow().fadeIn("slow");
-            }
+            $('.login_btn').click(o.login_dialog.open);
 
             // request invite form handlers. This form also appears on home page,
             // so this applies to both, and must be done after the top level render
@@ -216,6 +211,10 @@ define([
         expr_page = (method == 'expr');
         page_data.layout = method;
         dialog.close_all();
+        if(context.error == "login" && o.login_dialog){
+            o.login_dialog.open();
+            $('#login_form .error_msg').showshow().fadeIn("slow");
+        }
         if (context.page != new_page) {
             if (context.page && context.page.exit) 
                 context.page.exit();
@@ -309,7 +308,7 @@ define([
             keychar = String.fromCharCode(key);
             if (e.keyCode == 27) { // escape
                 // If a dialog is up, kill it.
-                $('#dialog_shield').click();
+                dialog.close_all();
             } else if ((e.keyCode == 39 || e.keyCode == 37) &&
                 !(e.metaKey || e.ctrlKey || e.altKey) &&
                 $(e.target).is("body")) {
@@ -517,7 +516,12 @@ define([
 
     // Move the expr.card's into the feed layout, shuffling them
     // into the shortest column.  
-    o.layout_columns = function(){
+    o.layout_columns = function(ordered_ids){
+        if (undefined == ordered_ids) {
+            ordered_ids = $.map(context.page_data.cards, function(el) {
+                return el.id;
+            });
+        }
         // Resize the columns
         for (var i = 0; i < 3; ++i){
             var col_width = 0;
@@ -531,9 +535,8 @@ define([
         for (var i = 0; i < o.columns; ++i){
             row_heights = row_heights.concat(0);
         }
-        var cards = context.page_data.cards;
-        for (var i = 0, card; card = cards[i++];) {
-            el_card = $("#card_" + card.id);
+        for (var i = 0, card_id; card_id = ordered_ids[i++];) {
+            el_card = $("#card_" + card_id);
             var min = Math.min.apply(null, row_heights);
             var min_i = row_heights.indexOf(min);
             var el_col = $("#feed .column_" + min_i);

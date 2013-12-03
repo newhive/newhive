@@ -183,6 +183,12 @@ define([
                 $('#content_btns .edit_ui').replaceWith(edit_btn_template(page_data));
                 $('#content_btns .edit_ui .icon').showshow();
             }
+            $('#dia_delete_ok').each(function(i, e){
+                $(e).data('dialog').opts.handler = function(e, data){
+                    o.controller.open('expressions_public',
+                        {'owner_name': context.user.name });
+                }
+            });
         }
     };
 
@@ -248,7 +254,7 @@ define([
         }
         // Create new content frame
         var contentFrameURL = o.content_url_base + expr_id;
-        contentFrame = $('<iframe class="expr">').attr('src',
+        contentFrame = $('<iframe class="expr" allowfullscreen>').attr('src',
             contentFrameURL + ((current != undefined) ? "" : "?no-embed"))
             .attr('id','expr_' + expr_id);
         // Cache the expr data on the card

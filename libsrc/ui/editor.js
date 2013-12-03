@@ -14,6 +14,7 @@ define([
     'browser/jquery/jplayer/skin',
     'browser/jquery/rotate.js',
     'js!browser/jquery/event/drag.js',
+    //'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js',
     'js!google_closure.js'
 ], function(
     $,
@@ -252,6 +253,7 @@ Hive.App = function(init_state, opts) {
         if(!opts) opts = {};
         if(!opts.offset) opts.offset = [ 0, o.dims()[1] + 20 ];
         var app_state = o.state();
+        delete app_state.id;
         if(opts.z_offset) app_state.z += opts.z_offset;
         var cp = Hive.App(app_state, opts);
         Hive.History.save(cp._remove, cp._unremove, 'copy');
@@ -315,12 +317,15 @@ Hive.App = function(init_state, opts) {
     });
 
     // initialize
-    Hive.Selection();
 
     o.div = $('<div class="ehapp">');
     o.div.drag('start', o.move_start).drag(o.move).drag('end', o.move_end);
-    o.div.click(function(e) { return Hive.Selection.app_click(o, e) });
-    o.move_init = function(e) { return Hive.Selection.app_drag_init(o, e) };
+    o.div.click(function(e){
+        return Hive.Selection.app_click(o, e)
+    });
+    o.move_init = function(e){
+        return Hive.Selection.app_drag_init(o, e)
+    };
     o.div.drag('init', o.move_init)
     $('#happs').append(o.div);
 
@@ -496,7 +501,9 @@ Hive.Controls = function(app, multiselect) {
         o.c.remove.click(function() { o.app.remove(); });
         o.c.copy    = d.find('.copy'   );
         o.c.copy.click(function(){
-            var copy = o.app.copy({ load: function(){ Hive.Selection.select(copy); } });
+            var copy = o.app.copy({ load: function(){
+                Hive.Selection.select(copy);
+            } });
         });
         d.find('.stack_up').click(o.app.stack_top);
         d.find('.stack_down').click(o.app.stack_bottom);
@@ -1846,7 +1853,7 @@ Hive.Selection = function(){
         o.new_selection = [];
         o.dragging = true;
         $('.app_select').remove();
-        o.div = $("<div class='app_select'>");
+        o.div = $("<div class='app_select'>").css('z-index', 3);
         o.select_box = $("<div class='select_box border selected dragbox'>")
             .css({position: 'relative', padding: 0, left: '-5px', top: '-5px'});
         $(document.body).append(o.div);
@@ -1863,7 +1870,8 @@ Hive.Selection = function(){
         if (!o.dragging || $(e.target).hasClass('ehapp')) return;
 
         o.drag_dims = [Math.abs(dd.deltaX), Math.abs(dd.deltaY)];
-        o.drag_pos = [dd.deltaX < 0 ? e.pageX : o.start[0], dd.deltaY < 0 ? e.pageY : o.start[1]];
+        o.drag_pos = [dd.deltaX < 0 ? e.pageX : o.start[0],
+            dd.deltaY < 0 ? e.pageY : o.start[1]];
         o.div.css({ left : o.drag_pos[0], top : o.drag_pos[1],
             width : o.drag_dims[0], height : o.drag_dims[1] });
         o.update_focus(e);
@@ -1872,9 +1880,10 @@ Hive.Selection = function(){
         Hive.drag_end();
 
         if(!o.drag_dims) return;
+        o.select_box.remove();
         o.dragging = false;
-        if (o.pos) { o.update_focus(); }
-        if (o.div) o.div.remove();
+        if(o.pos) o.update_focus();
+        if(o.div) o.div.remove();
         o.update(o.elements);
     }
 
@@ -1951,7 +1960,8 @@ Hive.Selection = function(){
         };
         o.move = function (e, dd, shallow) {
             var delta = [dd.deltaX, dd.deltaY];
-            if(e.shiftKey) delta[ Math.abs(dd.deltaX) > Math.abs(dd.deltaY) ? 1 : 0 ] = 0;
+            if(e.shiftKey)
+                delta[ Math.abs(dd.deltaX) > Math.abs(dd.deltaY) ? 1 : 0 ] = 0;
             o.pos_set([ o.ref_pos[0] + delta[0], o.ref_pos[1] + delta[1] ]);
         };
         o.move_end = function(){
@@ -1962,7 +1972,7 @@ Hive.Selection = function(){
 
         o.padding = 7;
 
-        o.div.drag('start', o.move_start).drag(o.move).drag('end', o.move_end);
+        o.div.drag(o.move).drag('start', o.move_start).drag('end', o.move_end);
     });
 
     $('#grid_guide').drag(o.drag).drag('start', o.drag_start).drag('end', o.drag_end);
@@ -2498,8 +2508,8 @@ Hive.init = function(exp, page){
     });
     if(Hive.Exp.auth) $('#menu_privacy [val=' + Hive.Exp.auth +']').click();
 
+    Hive.Selection();
     Hive.Apps.init(Hive.Exp.apps);
-
     Hive.History.init();
 };
 
@@ -2508,17 +2518,22 @@ Hive.init = function(exp, page){
 Hive.embed_code = function(element) {
     var c = $(element).val().trim(), app;
 
-    if(m = c.match(/^https?:\/\/www.youtube.com\/.*?v=(.*)$/i)
-        || (m = c.match(/src="https?:\/\/www.youtube.com\/embed\/(.*?)"/i))
-        || (m = c.match(/http:\/\/youtu.be\/(.*)$/i))
+    if(m = c.match(/^https?:\/\/www.youtube.com\/.*?v=(.*?)(#t=(\d+))?$/i)
+        || (m = c.match(/src="https?:\/\/www.youtube(-nocookie)?.com\/embed\/(.*?)"/i))
+        || (m = c.match(/https?:\/\/youtu.be\/(.*)$/i))
     ) {
-        var url = '//www.youtube.com/v/' + m[1]
-            + '?rel=0&amp;showsearch=0&amp;showinfo=0&amp;fs=1';
+        var args = { 'rel': 0, 'showsearch': 0, 'showinfo': 0 };
+        if(m[3]) args['start'] = m[3];
+        var url = '//www.youtube.com/embed/' + m[1] + '?' + $.param(args);
         app = { type : 'hive.html', content : 
-              '<object type="application/x-shockwave-flash" style="width:100%; height:100%" '
-            + 'data="' + url + '"><param name="movie" value="' + url + '">'
-            + '<param name="allowFullScreen" value="true">'
-            + '<param name="wmode" value="opaque"/></object>' };
+            "<iframe width='100%' height='100%' class='youtube-player'" +
+            "  src='" + url + "' frameborder='0' " +
+            "allowfullscreen></iframe>"
+        };
+            //   '<object type="application/x-shockwave-flash" style="width:100%; height:100%" '
+            // + 'data="' + url + '"><param name="movie" value="' + url + '">'
+            // + '<param name="allowFullScreen" value="true">'
+            // + '<param name="wmode" value="opaque"/></object>' };
     }
 
     else if(m = c.match(/^https?:\/\/(www.)?vimeo.com\/(.*)$/i))
@@ -2529,9 +2544,6 @@ Hive.embed_code = function(element) {
 
     else if(m = c.match(/^https?:\/\/(.*)mp3$/i))
         app = { type : 'hive.audio', content : {url : c, player : minimal} }
-//<object width="100%" height="100%" type="application/x-shockwave-flash" id="cover23798312_2084961807" name="cover23798312_2084961807" class="" data="http://a.vimeocdn.com/p/flash/moogalover/1.1.9/moogalover.swf?v=1.0.0" style="visibility: visible;"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="true"><param name="scalemode" value="noscale"><param name="quality" value="high"><param name="wmode" value="opaque"><param name="bgcolor" value="#000000"><param name="flashvars" value="server=vimeo.com&amp;player_server=player.vimeo.com&amp;cdn_server=a.vimeocdn.com&amp;embed_location=&amp;force_embed=0&amp;force_info=0&amp;moogaloop_type=moogaloop&amp;js_api=1&amp;js_getConfig=player23798312_2084961807.getConfig&amp;js_setConfig=player23798312_2084961807.setConfig&amp;clip_id=23798312&amp;fullscreen=1&amp;js_onLoad=player23798312_2084961807.player.loverLoaded&amp;js_onThumbLoaded=player23798312_2084961807.player.loverThumbLoaded&amp;js_setupMoog=player23798312_2084961807.player.loverInitiated"></object>
-//http://player.vimeo.com/video/                                                   13110687
-//<object width="100%" height="100%" type="application/x-shockwave-flash" id="cover13110687_812701010" name="cover13110687_812701010" data="http://a.vimeocdn.com/p/flash/moogalover/1.1.9/moogalover.swf?v=1.0.0" style="visibility: visible;"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="true"><param name="scalemode" value="noscale"><param name="quality" value="high"><param name="wmode" value="opaque"><param name="bgcolor" value="#000000"><param name="flashvars" value="server=vimeo.com&amp;player_server=player.vimeo.com&amp;cdn_server=a.vimeocdn.com&amp;embed_location=&amp;force_embed=0&amp;force_info=0&amp;moogaloop_type=moogaloop&amp;js_api=1&amp;js_getConfig=player13110687_812701010.getConfig&amp;js_setConfig=player13110687_812701010.setConfig&amp;clip_id=13110687&amp;fullscreen=1&amp;js_onLoad=player13110687_812701010.player.loverLoaded&amp;js_onThumbLoaded=player13110687_812701010.player.loverThumbLoaded&amp;js_setupMoog=player13110687_812701010.player.loverInitiated"></object>
 
     else if(m = c.match(/https?:\/\/.*soundcloud.com/i)) {
         var stuffs = $('<div>');
@@ -2601,8 +2613,8 @@ Hive.save = function() {
         // expr.tags += " #remixed"
     }
 
-    if(expr.name.match(/^profile/)) {
-        alert('The name "profile" is reserved.');
+    if(expr.name.match(/^(profile|tag)$/)) {
+        alert('The name "' + expr.name + '" is reserved.');
         return false;
     }
 
