@@ -302,7 +302,8 @@
         &:hover { color:inherit; }
     }
 }
-#site {
+// TODO: BUGBUG: should really be something like body.main
+body {
     ///
     // background-color:blue;
     //
@@ -330,14 +331,23 @@
         text-align: center;
     }
 
+    .tag_list_container {
+        position: relative;
+        margin: 50px auto;
+        .expander {
+            position: absolute;
+            margin-left: -55px;
+            color: white;
+            background-color: black;
+        }
+    }
     .tag_list {
         text-align: center;
-        .expander {
+        .plus_menu {
             color: white;
             background-color: black;
         }
         &.main {
-            margin: 50px auto;
             width: 600px;
             max-height: 114px;
             overflow: hidden;
@@ -557,7 +567,9 @@
 
     &.tag_unselected {
         color: black;
+        background-color:white;
         background-color:$color_light_grey;
+        background-color:#EEE;
     }
     &.tag_0 { background-color: $color_tag_0; }
     &.tag_1 { background-color: $color_tag_1; }

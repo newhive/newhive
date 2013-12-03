@@ -127,6 +127,12 @@
     // height: 180px;
     &:hover { background-color: white; }
 
+    .plus_menu {
+        position: absolute;
+        background-color: black;
+        top: 10px;
+        right: 10px;
+    }
     #popup_content {
         //position:absolute;
         //top: 44px;

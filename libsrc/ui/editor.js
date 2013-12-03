@@ -2426,6 +2426,9 @@ Hive.init = function(exp, page){
         if (tags.length) tags = tags.replace(/([ ]|^)/g,"$1#").trim();
         // TODO-polish: unique the tags
         var search_tags = " " + tags + " ";
+        // TODO: remove other keywords from tags.
+        search_tags = search_tags.replace(" #remixed ", " ");
+        tags = search_tags.trim();
         $(".remix_label input").prop("checked", search_tags.indexOf(" #remix ") >= 0);
         el.val(tags);
     }

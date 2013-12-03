@@ -1,0 +1,24 @@
+{# main tag list 
+  expander: let this list be expanded with ... click
+  tag_list: tags to render
+  auto_expander: if nonempty, toggle the expanded state on expander click
+  blank_card: if nonempty, add a dummy tag to beginning of list
+#}
+
+<div class="tag_list_container centered {extra_classes}" data-link-show=".icon.hash">
+  {<if expander}<div class="expander tag_label">...</div>{>}
+  
+  <div class="tag_list main inline" 
+    {<if auto_expander}
+      data-class-toggle='```{".tag_list_container.```{extra_classes}``` .expander":"expanded"}```'
+    {>}>
+    {<with null "main_view" true}
+      {<if blank_tag}{<with null "item" "" "tagnum" "new"}
+        {|templates/tag_card.html}
+      {>}{>}
+      {<for tag_list "tagnum"}
+        {|templates/tag_card.html}
+      {>}
+    {>}
+  </div>
+</div>

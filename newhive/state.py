@@ -564,13 +564,13 @@ class User(HasSocial):
                 if expr.get('auth', 'unlisted') == 'public':
                     public_cnt[tag] += 1
         for cnt in [public_cnt, unlisted_cnt]:
-            top = cnt.most_common(1)[0][1]
+            top = cnt.most_common(1)[0][1] if cnt.keys() else 0
             #TODO: need to actually differentiate each expression by auth
             for tag, tagged in self.get('tagged', {}).items():
                 if len(tagged):
                     cnt[tag] += top + len(tagged)
         tag_entropy = self.get('tag_entropy', {})
-        for tag, x in cnt.most_common():
+        for tag, x in unlisted_cnt.most_common():
             tag_entropy.setdefault(tag, junkstr(6))
         self.update(public_tags = public_cnt, unlisted_tags = unlisted_cnt,
             tag_entropy=tag_entropy)
@@ -585,9 +585,9 @@ class User(HasSocial):
                 'owner': self.id, 'tags_index': tag })
             if expression_list:
                 expression_id_list = map(lambda e: e.id, expression_list)
-                if force_update:
-                    tagged[tag] = expression_id_list
-                    self.update(updated=False, tagged=tagged)
+            if force_update:
+                tagged[tag] = expression_id_list
+                self.update(updated=False, tagged=tagged)
 
         return expression_id_list if not limit else expression_id_list[:limit]
 
@@ -1045,7 +1045,12 @@ class User(HasSocial):
             notification_count = self.notification_count,
         ) )
         if special.has_key("tagged"):
-            dict.update(user, { "tagged": self.get('tagged', {}).keys() })
+            # dict.update(user, { "tagged": self.get('tagged', {}).keys() })
+            #!! TODO-perf: remove after we migrate to run on all users
+            self.calculate_tags()
+            cnt = self.get('unlisted_tags', Counter())
+            tagged = [x for x,y in cnt.most_common()] # [:num_tags]
+            dict.update(user, { "tagged": tagged })
         if special.has_key("mini_expressions") and g_flags['mini_expressions']:
             # exprs = self.db.Expr.cards({'owner': self.id}, limit=3)
             exprs = self.get_top_expressions(g_flags['mini_expressions'])

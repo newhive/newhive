@@ -1,27 +1,27 @@
 {# 
   Render a tag
   main_view: true if main tag list, false if on expr hover
+  suppress_link: true to suppress the natural tag link behavior
+  item: tag name
 #}
-{# TODO-cleanup: branch on something other than route_name #}
-{# {set "tag_route" (or (eq route_name "expressions_public_tags")
-        (eq route_name "expressions_tag"))}
-{set "owner_tag_view" (and main_view tag_route)}
-#}
-<a {<if route.include_tags}
-  {# { search_attrs "@" page_data.owner.name " " "" "#" item } #}
-  {<if route.private}
-    {anchor_attrs "expressions_tag_private" 
-      "entropy" (get tag_entropy item) "owner_name" owner.name "tag_name" item}
+{<unless suppress_link}
+  <a {<if route.include_tags}
+    {# { search_attrs "@" page_data.owner.name " " "" "#" item } #}
+    {<if route.private}
+      {anchor_attrs "expressions_tag_private" 
+        "entropy" (get tag_entropy item) "owner_name" owner.name "tag_name" item}
+    {>}{<else}
+      {anchor_attrs "expressions_tag" "owner_name" owner.name "tag_name" item}
+    {>}
   {>}{<else}
-    {anchor_attrs "expressions_tag" "owner_name" owner.name "tag_name" item}
+    { search_attrs "#" item }
   {>}
-{>}{<else}
-  { search_attrs "#" item }
+  >
 {>}
-><div {# #}
+<div class=
 {<if (and main_view tag_selected (neq tag_selected item))}
-  class="tag_label tag_unselected"
+  "tag_label tag_unselected"
 {>}{<else}
-  class="tag_label tag_{mod tagnum 16}"
+  "tag_label tag_{mod tagnum 16}"
 {>}
->#{item}</div></a>
+>{item}</div></a>

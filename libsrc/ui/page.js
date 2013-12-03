@@ -22,6 +22,7 @@ define([
     'sj!templates/user_actions.html',
     'sj!templates/tags_page.html',
     'sj!templates/tag_card.html',
+    'sj!templates/tags_main.html',
     'sj!templates/user_activity.html',
     'sj!templates/expr_card_large.html',
     'sj!templates/expr_card_feed.html',
@@ -36,6 +37,7 @@ define([
     'sj!templates/network_nav.html',
     'sj!templates/login_form.html', 
     'sj!templates/request_invite_form.html',
+    'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js',
     'sj!templates/cards.html'
 ], function(
     $,
@@ -260,6 +262,61 @@ define([
         o.attach_handlers();
     };
     var local_attach_handlers = function(){
+        // Add expression to collection
+        $(".plus_menu").unbind('click').on('click', function(e) {
+            if (0 == $(".dialog.add_to_collection").length) {
+                $('#site').append(collections_template(context.page_data));
+                o.dia_collections = dialog.create(".dialog.add_to_collection", {});
+                var new_tags_autocomplete = false;
+                if (new_tags_autocomplete) {
+                    var all_tags = context.user.tagged.slice(0); // clone
+                    all_tags.sort();
+                    $(".dialog.add_to_collection .tag_name").autocomplete({
+                        source: all_tags,
+                    });
+                }
+            }
+            o.dia_collections.open();
+            var submit_add_to_collection = function(tag_name) {
+                $(".dialog.add_to_collection input[name=tag_name]").val(tag_name);
+                $(".dialog.add_to_collection form").submit();
+                o.dia_collections.close();
+            };
+            var update_text = function (){
+                var text = $(".dialog.add_to_collection .tag_name");
+                $(text).val( $(text).val().replace(/[^a-z0-9\_]+/i, '') );
+                $(".dialog.add_to_collection .tag_new")
+                    .text($(text).val()).showshow().addClass("tag_15");
+                if ('' == $(text).val())
+                    $(".dialog.add_to_collection .tag_new").hidehide();
+            }
+            $(".dialog.add_to_collection form").on('keypress', function (e) {
+                e = e || event;
+
+                if ((e.keyCode || e.which || e.charCode || 0) == 13) {
+                    submit_add_to_collection($(".dialog.add_to_collection .tag_name").val());
+                    return false;
+                }
+                return true;
+            });
+            $(".dialog.add_to_collection .tag_name").on('keyup', function (e) {
+                update_text();
+            });
+            $(".dialog.add_to_collection .tag_list .tag_label").
+                unbind('click').on('click', function (e) {
+                submit_add_to_collection($(this).text());
+            });
+            var card = $(this).parents().filter(".expr.card");
+            var expr_id = ""
+            // If the plus button is on a card, use its ID info
+            if (card.length) 
+                expr_id = card.prop("id").slice(5);
+            else // otherwise use the data in context
+                expr_id = context.page_data.expr_id;
+            $(".dialog.add_to_collection input[name=expr_id]").val(expr_id);
+            // $(".dialog.add_to_collection .tag_new").text("").hidehide();
+            update_text();
+        });
         if (!context.user.logged_in) {
             $(".needs_login").unbind("click").click(function(e) {
                 $("#dia_login_or_join").data("dialog").open();
@@ -317,8 +374,9 @@ define([
                     var speed = (e.shiftKey) ? 2 : 1;
                     context.page.navigate_page((e.keyCode == 39) ? speed : -speed);
                 }
-            } else if ($("#search_box").is(":visible") && !$(":focus").length
+            } else if (/*$("#search_box").is(":visible") && */!$(":focus").length
                 && /[a-zA-Z0-9#@/]/.test(keychar)) {
+                $(".search_bar").showshow();
                 $("#search_box").focus();
             } else {
                 // alert('keyCode: ' + e.keyCode);

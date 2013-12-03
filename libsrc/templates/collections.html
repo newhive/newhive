@@ -1,7 +1,24 @@
 {# UI for collections
+  requires: logged in
+  TODO: add asserts to sj
   #}
 
-<div class="dialog add_to_collection"><form>
+<div class="standard dialog add_to_collection">
+<form {form_attrs "add_to_collection" "owner_name" user.name} method='post'>
+  <input type="hidden" name="tag_name" />
+  <input type="hidden" name="expr_id" />
+  <div class="title">Add to Collection</div>
+  {<with null "expander" true "tag_list" user.tagged "extra_classes" "dia_tags"
+    "auto_expander" true "suppress_link" true "blank_tag" true
+    "tag_selected" null}
+    {|templates/tags_main.html}
+  {>}
+
+  <div>
+    <label>New collection: </label>
+    <input autofocus type=text class="tag_name" name="tag" placeholder="Collection name"/>
+  </div>
+  {#
   <select name="collection" >
   	<option value="New..."></option>
   	{<for user.tagged}
@@ -9,4 +26,5 @@
   	{>}
   </select>
   <input name="new_collection" placeholder="Collection name">
+  #}
 </form></div>
