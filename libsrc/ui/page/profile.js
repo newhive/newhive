@@ -63,8 +63,7 @@ define([
         });
 
         win.unbind('scroll', on_scroll_add_page).scroll(on_scroll_add_page);
-        if(
-            context.route.include_tags && context.page_data.cards.length > 1
+        if( context.route.include_tags && context.page_data.cards.length > 1
             && context.page_data.owner.id == context.user.id
             && context.page_data.tag_selected != undefined
         ){
@@ -73,7 +72,7 @@ define([
                 var columns = $(".ncolumn .column").filter(
                     function(i,e) { return $(e).width(); }).length;
                 if (columns == 0) {
-                    ordered_cards = $("#feed .card");
+                    ordered_cards = $("#feed .card").toArray();
                 } else {
                     var col_array = [];
                     var card_count = 0;
@@ -97,7 +96,8 @@ define([
                 }
                 var ordered_ids = ordered_cards.map( function(l, i) 
                     { return $(l).prop("id").slice(5); });
-                ui_page.layout_columns(ordered_ids);
+                if (columns > 0)
+                    ui_page.layout_columns(ordered_ids);
                 ui_page.add_grid_borders();
                 return ordered_ids;
             }
