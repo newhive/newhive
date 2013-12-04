@@ -51,8 +51,7 @@ user_groups = { 'logged_in':set([]), 'logged_out':set(['logged_out']), 'all':set
 site_flags = { 
     'admin': ['admins']
     ,'merge_recent': ['cara', 'fatsycline']
-    ,'newduke': ['newduke']
-    ,'either': ['newduke', 'logged_out']
+    ,'show_hive_all': ['newduke']
     ,'logged': ['logged_out']
 }
 
