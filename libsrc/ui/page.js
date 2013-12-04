@@ -403,9 +403,10 @@ define([
     }
 
     o.grid = function(page_data){
-        grid_width = 410;
+        grid_width = 412;
         render_site(page_data);
-        o.column_layout = true;//(context.route == "");
+        // TODO: BUGBUG: should be data driven
+        o.column_layout = (context.route_name == "network");
     }
 
     o.forms = function(page_data){
