@@ -333,6 +333,9 @@ class Community(Controller):
             'card_type': 'expr'
         }
 
+    # TODO-cleanup: currently used for redirects. Remove this, make propper
+    # redirect controller
+    #redirect-cleanup
     def empty(self, tdata, request, **args):
         return {}
 
@@ -345,7 +348,8 @@ class Community(Controller):
     def pre_dispatch(self, query, tdata, request, response, json=False, **kwargs):
         # "Merged" users see trending
         self.response = response
-        # Handle redirects
+
+        # TODO-cleanup: remove this, see #redirect-cleanup Handle redirects
         if kwargs.get('route_name') == 'my_profile':
             return self.redirect(response, abs_url(
                 '/' + tdata.user['name'] + '/profile' +
