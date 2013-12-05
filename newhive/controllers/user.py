@@ -30,6 +30,7 @@ class User(ModelController):
     def collection_order(self, tdata, request, response, **args):
         new_order = request.form.get('new_order').split(",")
         tag_name = request.form.get('tag_name')
+        deletes = int(request.form.get('deletes'))
         user = tdata.user
 
         if not user or not user.logged_in or not tag_name:
@@ -37,7 +38,7 @@ class User(ModelController):
 
         tagged = user.get('tagged', {})
         old_order = user.get_tag(tag_name, force_update=True)
-        new_order += old_order[len(new_order):]
+        new_order += old_order[len(new_order) + deletes:]
         tagged[tag_name] = new_order
         user.update(tagged=tagged)
 

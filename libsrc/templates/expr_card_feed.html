@@ -7,7 +7,7 @@
   {|templates/tag_list.html}
 {>}
 <a { anchor_attrs "view_expr"
-    "id" id  "expr_name" name  "owner_name" owner.name }
+    "id" id  "expr_name" name "owner_name" owner.name }
   ><img class="snapshot" src=
   {<if snapshot_small}
     "{snapshot_small}"
@@ -25,6 +25,7 @@
     </a>
   </div>
 </div>
+<div class="delete icon pointer"></div>
 {<unless suppress_feed}{<for feed}
   {|templates/feed_card.html}
 {>}
