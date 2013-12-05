@@ -22,14 +22,10 @@ class File(ModelController):
             if file.getcode() != 200:
                 return {'error': 'remote url download failed with status %s' % (file.getcode())}
             mime = file.headers.getheader('Content-Type')
-            filename = lget([i[1] for i in [
-                i.split('=') for i in
-                    file.headers.get('content-disposition', '').split(';')]
-                if i[0].strip() == 'filename'], 0)
-            if filename:
-                file.filename = filename + mimetypes.guess_extension(mime)
-            else:
-                file.filename = os.path.basename(urlparse.urlsplit(url).path)
+            name = url.strip('/').split('/')[-1]
+            if mimetypes.guess_type(name)[0] == None:
+                name = name + mimetypes.guess_extension(mime)
+            file.filename = name
             files = [file]
         else:
             request.max_content_length = 100000000 # max size 100MB

@@ -2135,8 +2135,8 @@ Hive.new_file = function(files, opts) {
     // list. Multiple images should be placed in a table, or slide-show
 
     $.map(files, function(file, i){
-        var app = $.extend({ file_name: file.name },
-            js.dfilter(file, ['id', 'meta']), opts);
+        var app = $.extend({ file_name: file.name, file_id: file.id,
+            file_meta: file.meta }, opts);
 
         // TODO: html files should just be saved on s3 and inserted as an <iframe>
         // if(file.mime.match(/text\/html/)){
@@ -2574,7 +2574,7 @@ Hive.embed_code = function(element) {
                     return error(false, data.error);
                 }
             }
-            Hive.new_file(data/*, { load: Hive.upload_finish }*/);
+            Hive.new_file(data);
             $(element).val('');
         }
         // Hive.upload_start();
