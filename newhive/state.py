@@ -847,7 +847,7 @@ class User(HasSocial):
         at=int(at)
         limit=int(limit)
         spec = {'initiator': self.id,
-            'class_name': {'$in': ['Broadcast','UpdatedExpr','NewExpr']}
+            'class_name': {'$in': ['Broadcast','UpdatedExpr','NewExpr','Remix']}
         }
         result = []
         exprs = {}
@@ -1480,6 +1480,9 @@ class Expr(HasSocial):
         super(Expr, self).create()
         if 'remixed' not in self.get('tags_index', []):
             feed = self.db.NewExpr.create(self.owner, self)
+        else:
+            feed = self.db.Remix.create(self.owner, self)
+
         self.update_owner([])
         return self
 
@@ -1995,6 +1998,8 @@ class Feed(Entity):
             r['action'] = 'Republish'
         elif self['class_name'] == 'Remix':
             r['action'] = 'Remix'
+            if (self.title):
+                r['entity_title'] = self.title
 
         return r
 
@@ -2055,13 +2060,16 @@ class Broadcast(Feed):
 @register
 class Remix(Feed):
     action_name = 'remix'
+    title = ''
 
     def create(self):
-        if self.entity['owner'] == self['initiator']:
-            raise "You mustn't remix your own expression"
+        # if self.entity['owner'] == self['initiator']:
+        #     raise "You mustn't remix your own expression"
         if type(self.entity) != Expr: raise "You may only remix expressions"
         if self.db.Remix.find({ 'initiator': self['initiator'], 'entity': self['entity'] }): return True
-        return super(Remix, self).create()
+        res = super(Remix, self).create()
+        self.title = self.db.Expr.fetch(self.entity.get('remix_root','')).get('name')
+        return res
 
 
 @register

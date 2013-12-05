@@ -87,8 +87,6 @@ class Expr(ModelController):
                 remix_owner['tagged'][remix_name].append(res.id)
                 remix_owner.save(updated=False)
                 remix_expr.save(updated=False)
-                feed_item = self.db.Remix.create(tdata.user, remix_expr)
-
 
               tdata.user.flag('expr_new')
               if tdata.user.get('flags').get('add_invites_on_save'):
