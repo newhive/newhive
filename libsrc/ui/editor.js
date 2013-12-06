@@ -2452,32 +2452,6 @@ Hive.init = function(exp, page){
         Hive.Exp.overwrite = true;
         Hive.save();
     });
-
-    // var setThumb = function(app){
-    //     // Set thumb_id property for the server to find the appropriate file object
-    //     // if a default thumb a pseudo file_id, id<10 is chosen. 
-    //     // this should be replaced when default thumbs are handled as file objects -JDT 2012-01-13
-    //     Hive.Exp.thumb_file_id = app.file_id;
-    //     $('#current_thumb').attr('src',
-    //         app.content.replace(/(amazonaws.com\/[0-9a-f]*$)/,'$1_190x190') );
-    // };
-    // var dia_thumbnail;
-    // $('#btn_thumbnail').click(function() {
-    //     dia_thumbnail = showDialog('#dia_thumbnail');
-    //     var user_thumbs = $.map(Hive.Exp.images, function(app){
-    //        if (typeof(app.file_id) != "undefined") { // Non S3 images can't be used for thumbs
-    //            var img = $('<img>').attr('src', app.thumb).attr('data-file-id', app.file_id);
-    //            var e = $("<div class='thumb'>").append(img).get(0);
-    //            return e;
-    //        };
-    //     });
-    //     $('#expr_images').empty().append(user_thumbs);
-    //     $('#dia_thumbnail .thumb img').click(function() {
-    //         setThumb({file_id: $(this).attr('data-file-id'), content: this.src});
-    //         dia_thumbnail.close();
-    //         return false;
-    //     });
-    // });
     
     // Automatically update url unless it's an already saved
     // expression or the user has modified the url manually
