@@ -59,10 +59,6 @@ class Expr(ModelController):
                 ,'file_id' : file_res.id
             })
 
-        # rescale images based on dimensions in expr
-        for app in upd['apps']:
-            if app['type'] != 'hive.image': continue
-            
         if not res or upd['name'] != res['name'] or upd['domain'] != res['domain']:
             try:
               new_expression = True

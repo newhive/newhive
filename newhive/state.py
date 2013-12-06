@@ -1329,7 +1329,7 @@ class Expr(HasSocial):
                     return False
             else:
                 f = open(upload_list[0][0], "r")
-                local = generate_thumb(f, (w, h), "png")
+                local = generate_thumb(f, (w, h), 'jpeg')
             upload_list.append((local,name))
 
         it = 0
@@ -1671,10 +1671,12 @@ class Expr(HasSocial):
         return self['auth'] != 'public'
 
 
-def generate_thumb(file, size, format='jpeg'):
+def generate_thumb(file, size, format=None):
     # resize and crop image to size tuple, preserving aspect ratio, save over original
     file.seek(0)
     imo = Img.open(file)
+    if not format:
+        format = imo.format
     #print "Thumbnail Generation:   initial size: " + str(imo.size),
     t0 = time.time()
     imo = ImageOps.fit(imo, size=size, method=Img.ANTIALIAS, centering=(0.5, 0.5))
@@ -1687,7 +1689,7 @@ def generate_thumb(file, size, format='jpeg'):
     #print "   conversion took " + str(dt*1000) + " ms"
 
     output = os.tmpfile()
-    imo.save(output, format=format, quality=70)
+    imo.save(output, format=format, quality=85)
     return output
 
 
@@ -1731,6 +1733,9 @@ class File(Entity):
             return self.IMAGE
         return self.UNKNOWN
 
+    def resample(self, scale):
+        pass
+
     def set_thumb(self, w, h, file=False, mime='image/jpeg', autogen=True):
         name = str(w) + 'x' + str(h)
         thumbs = self.get('thumbs', {})
@@ -1738,7 +1743,7 @@ class File(Entity):
 
         if not file: file = self.file
         if autogen:
-            try: thumb_file = generate_thumb(file, (w,h))
+            try: thumb_file = generate_thumb(file, (w,h), format='jpeg')
             except:
                 print 'failed to generate thumb for file: ' + self.id
                 return False # thumb generation is non-critical so we eat exception
