@@ -13,6 +13,7 @@ define([
     var o = { name: 'profile' },
             show_tags = true,
             show_more_tags = false,
+            card_deletes = 0,
             controller;
 
     o.init = function(controller){
@@ -45,6 +46,12 @@ define([
         loading = false;
     };
 
+    var allow_reorder = function() {
+        return context.route.include_tags && context.page_data.cards.length > 1
+                && context.page_data.owner.id == context.user.id
+                && context.page_data.tag_selected != undefined
+    };
+
     o.attach_handlers = function(){
         $('#feed .expr.card').on('mouseenter', function(event){
             card_animate($(this), "in");
@@ -63,10 +70,7 @@ define([
         });
 
         win.unbind('scroll', on_scroll_add_page).scroll(on_scroll_add_page);
-        if( context.route.include_tags && context.page_data.cards.length > 1
-            && context.page_data.owner.id == context.user.id
-            && context.page_data.tag_selected != undefined
-        ){
+        if( allow_reorder() ){
             function reorder () {
                 var ordered_cards = [];
                 var columns = $(".ncolumn .column").filter(
@@ -104,6 +108,7 @@ define([
             $("form.save_bar").on('before_submit', function(e) {
                 var ordered_ids = reorder();
                 $(this).find("input[name=new_order]").val(ordered_ids.join(","));
+                $(this).find("input[name=deletes]").val(card_deletes);
                 $("form.save_bar").hidehide();
             });
 
@@ -175,6 +180,21 @@ define([
         var duration = 350;
         var el = card.find(".tag_list");
         do_animate(el, dir, prop, goal, duration);
+        var delete_pending = function (ev) {
+            // goal;prop;el;card;
+            $(".save_bar").showshow();
+            card_deletes++;
+            var i = card.index();
+            if (context.page_data.cards)
+                context.page_data.cards.splice(i, 1);
+            ui_page.add_grid_borders();
+            card.remove();
+        };
+        if (allow_reorder()) {
+            el = card.find(".delete");
+            do_animate(el, dir, prop, goal, duration);
+            el.unbind('click').on('click', delete_pending);
+        }
     };
 
     // TODO: move to util

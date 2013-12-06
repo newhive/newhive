@@ -10,6 +10,15 @@ define([
         return "Not-found:" + name;
     };
 
+    o.val = function(x) {
+        if (typeof(x) == "number")
+            return x;
+        else if (typeof(x) == "string")
+            return parseFloat(x);
+        else
+            return 0;
+    }
+
     // Can extend jquery functions with custom behavior.
     o.extend_jquery = function() {
         (function($){
