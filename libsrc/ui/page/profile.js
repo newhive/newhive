@@ -76,7 +76,7 @@ define([
                 var columns = $(".ncolumn .column").filter(
                     function(i,e) { return $(e).width(); }).length;
                 if (columns == 0) {
-                    ordered_cards = $("#feed .card").toArray();
+                    ordered_cards = $("#feed .card");
                 } else {
                     var col_array = [];
                     var card_count = 0;
@@ -98,8 +98,8 @@ define([
                         ordered_cards = ordered_cards.concat(card);
                     };
                 }
-                var ordered_ids = ordered_cards.map( function(l, i) 
-                    { return $(l).prop("id").slice(5); });
+                var ordered_ids = $.map(ordered_cards, function(l, i) {
+                    return $(l).prop("id").slice(5); });
                 if (columns > 0)
                     ui_page.layout_columns(ordered_ids);
                 ui_page.add_grid_borders();
@@ -139,15 +139,27 @@ define([
             // $(".tags.icon").removeClass("on");
         }
     }
+    o.preprocess_page_data = function (page_data){
+        page_data.ordered_tags = 
+            page_data.tag_list.slice(0, page_data.ordered_count);
+        if (0 <= $.inArray(context.route_name,
+            ["expressions_public_tags","expressions_private",
+            "expressions_tag", "expressions_tag_private"])) {
+            page_data.extra_tags = 
+                page_data.tag_list.slice(page_data.ordered_count);
+        }
+        page_data.tag_list = page_data.ordered_tags;
+    };
+
     o.enter = function(){
         o.exit();
         profile_pages=["expressions_tag", "expressions_public_tags", "following",
-            "expressions_tag_private", "expressions_private", "expressions_public", 
-            "expressions_public_grid", "followers", "loves"];
-        i = profile_pages.indexOf(context.route_name);
+            "expressions_tag_private", "expressions_private",
+            "expressions_public_grid", "expressions_public", "followers", "loves"];
+        i = $.inArray(context.route_name, profile_pages);
         if (i >= 0) {
             $(".network_nav").hidehide();
-            show_tags((i < 5) ? true : false);
+            show_tags((i < 6) ? true : false);
         }
         if (o.show_more_tags) toggle_more_tags();
         $("#signup_create").showshow();

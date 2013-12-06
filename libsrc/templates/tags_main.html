@@ -1,14 +1,19 @@
 {# main tag list 
   expander: let this list be expanded with ... click
-  tag_list: tags to render
+  expanded: start expanded
   auto_expander: if nonempty, toggle the expanded state on expander click
+
+  tag_list: tags to render
+  extra_tags: tags to render "below the fold"
   blank_card: if nonempty, add a dummy tag to beginning of list
 #}
+
+{set "expanded" (or expanded extra_tags)}
 
 <div class="tag_list_container centered {extra_classes}" data-link-show=".icon.hash">
   {<if expander}<div class="expander tag_label">...</div>{>}
   
-  <div class="tag_list main inline" 
+  <div class="tag_list main inline{<if expanded} expanded{>}" 
     {<if auto_expander}
       data-class-toggle='```{".tag_list_container.```{extra_classes}``` .expander":"expanded"}```'
     {>}>
@@ -18,6 +23,12 @@
       {>}{>}
       {<for tag_list "tagnum"}
         {|templates/tag_card.html}
+      {>}
+      {<if extra_tags}
+        <hr>
+        {<for extra_tags "tagnum"}
+          {|templates/tag_card.html}
+        {>}
       {>}
     {>}
   </div>

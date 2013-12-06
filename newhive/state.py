@@ -575,6 +575,20 @@ class User(HasSocial):
         self.update(public_tags = public_cnt, unlisted_tags = unlisted_cnt,
             tag_entropy=tag_entropy)
 
+    def get_tags(self, privacy, remove_singletons=True):
+        cnt = self.get('unlisted_tags' if privacy else 'public_tags', Counter())
+        # remove single-expression tags
+        if remove_singletons:
+            single_count = set(cnt.keys())
+            cnt -= Counter(single_count)
+        # sort reordered tags to front of list
+        ordered_tags = self.get('ordered_tags', [])
+        for key in ordered_tags:
+            del cnt[key]
+        # concat the lists and possibly the empty tag_name
+        all_tags = ordered_tags + [x for x,y in cnt.most_common()]
+        return (len(ordered_tags), all_tags)
+
     def get_tag(self, tag, limit=0, force_update=False):
         tagged = self.get('tagged', {})
         expression_id_list = tagged.get(tag, [])

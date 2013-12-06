@@ -1,4 +1,4 @@
-import httplib2, urllib
+import httplib2, urllib, re
 from newhive import auth, config, mail
 from newhive.controllers.controller import ModelController
 from newhive.utils import log_error, dfilter, lget, abs_url, junkstr
@@ -39,6 +39,13 @@ class User(ModelController):
         tagged = user.get('tagged', {})
         old_order = user.get_tag(tag_name, force_update=True)
         new_order += old_order[len(new_order) + deletes:]
+        removed = set(old_order) - set(new_order)
+        # remove the tag on owned expression
+        for expr_id in removed:
+            expr = self.db.Expr.fetch(expr_id)
+            if expr and expr.owner.id == user.id:
+                expr.update(updated=False, tags=re.sub(
+                    ' ?#?' + tag_name + ' ?',' ',expr.get('tags','')).strip())
         tagged[tag_name] = new_order
         user.update(tagged=tagged)
 
@@ -55,6 +62,10 @@ class User(ModelController):
 
         tagged = user.get('tagged', {})
         tagged[tag_name] = [expr_id] + user.get_tag(tag_name, force_update=True)
+
+        # add the tag on owned expression
+        if expr.owner.id == user.id:
+            expr.update(updated=False, tags=(expr.get('tags','') + ' #' + tag_name).strip())
         user.update(tagged=tagged)
 
         return self.serve_json(response, True)

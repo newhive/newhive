@@ -221,6 +221,8 @@ define([
             if (context.page && context.page.exit) 
                 context.page.exit();
         }
+        if (new_page && new_page.preprocess_page_data) 
+            pages[method].preprocess_page_data(page_data);
         if (new_page) {
             context.page = new_page;
             if (new_page.set_page) 
@@ -359,10 +361,10 @@ define([
         // global keypress handler
         $("body").unbind('keydown').keydown(function(e) {
             if (window.event)
-               key = window.event.keyCode;
+               var key = window.event.keyCode;
             else if (e)
-               key = e.which;
-            keychar = String.fromCharCode(key);
+               var key = e.which;
+            var keychar = String.fromCharCode(key);
             if (e.keyCode == 27) { // escape
                 // If a dialog is up, kill it.
                 dialog.close_all();
@@ -375,7 +377,10 @@ define([
                     context.page.navigate_page((e.keyCode == 39) ? speed : -speed);
                 }
             } else if (/*$("#search_box").is(":visible") && */!$(":focus").length
-                && /[a-zA-Z0-9#@/]/.test(keychar)) {
+                && (( /[A-Z0-9]/.test(keychar) && ! e.shiftKey) ||
+                (/[A-Z23]/.test(keychar) && e.shiftKey))) {
+                // Wow that was complicated. keychar will be the *unmodified* state,
+                // so to check for @, #, it's 2,3 with shift held.
                 $(".search_bar").showshow();
                 $("#search_box").focus();
             } else {
@@ -606,10 +611,11 @@ define([
 
     // Set up the grid borders
     o.add_grid_borders = function(columns){
+        var columns = o.columns;
         if(context.page_data.layout != 'grid') return;
         var expr_cards = $('#feed .card');
         // Count of cards which fit to even multiple of columns
-        var card_count = expr_cards.length - (expr_cards.length % columns);
+        var card_count = expr_cards.length - columns;// - (expr_cards.length % columns);
         expr_cards.each(function(i) {
             if (o.column_layout) {
                 if (! $(this).parent().hasClass("column_0"))
