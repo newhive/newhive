@@ -39,13 +39,15 @@ class User(ModelController):
         tagged = user.get('tagged', {})
         old_order = user.get_tag(tag_name, force_update=True)
         new_order += old_order[len(new_order) + deletes:]
-        removed = set(old_order) - set(new_order)
+
         # remove the tag on owned expression
-        for expr_id in removed:
-            expr = self.db.Expr.fetch(expr_id)
-            if expr and expr.owner.id == user.id:
-                expr.update(updated=False, tags=re.sub(
-                    ' ?#?' + tag_name + ' ?',' ',expr.get('tags','')).strip())
+        if tag_name not in ['remixed']:
+            removed = set(old_order) - set(new_order)
+            for expr_id in removed:
+                expr = self.db.Expr.fetch(expr_id)
+                if expr and expr.owner.id == user.id:
+                    expr.update(updated=False, tags=re.sub(
+                        ' ?#?' + tag_name + ' ?',' ',expr.get('tags','')).strip())
         tagged[tag_name] = new_order
         user.update(tagged=tagged)
 

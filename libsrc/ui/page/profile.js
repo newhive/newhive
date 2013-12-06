@@ -10,6 +10,9 @@ define([
     context,
     cards_template
 ) {
+    save_immediately = true;
+    anim_duration = 400;
+
     var o = { name: 'profile' },
             show_tags = true,
             show_more_tags = false,
@@ -115,11 +118,15 @@ define([
             $("#feed").sortable({
                 items: $("#feed .card"),
                 start: function (e, ui) {
-                    $(".save_bar").showshow();
+                    if (! save_immediately)
+                        $(".save_bar").showshow();
                 },
                 stop: function (e, ui) {
                     // ui_page.add_grid_borders();
-                    reorder();
+                    if (! save_immediately)
+                        reorder();
+                    else
+                        $("form.save_bar").submit();
                 },
             });
         }
@@ -194,15 +201,21 @@ define([
         do_animate(el, dir, prop, goal, duration);
         var delete_pending = function (ev) {
             // goal;prop;el;card;
-            $(".save_bar").showshow();
+            if (! save_immediately)
+                $(".save_bar").showshow();
             card_deletes++;
             var i = card.index();
-            if (context.page_data.cards)
-                context.page_data.cards.splice(i, 1);
-            ui_page.add_grid_borders();
-            card.remove();
+            card.animate({opacity: 0},
+                { duration: anim_duration, complete: function() {
+                    if (context.page_data.cards)
+                        context.page_data.cards.splice(i, 1);
+                    ui_page.add_grid_borders();
+                    card.remove();
+                    if (save_immediately)
+                        $("form.save_bar").submit();
+                } });
         };
-        if (allow_reorder()) {
+        if (allow_reorder() && context.page_data.tag_selected != "remixed") {
             el = card.find(".delete");
             do_animate(el, dir, prop, goal, duration);
             el.unbind('click').on('click', delete_pending);
