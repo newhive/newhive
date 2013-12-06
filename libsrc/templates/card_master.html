@@ -31,7 +31,7 @@
   ></form
 >
 {<unless page "tag_search"}
-  {<with null "expander" route.include_tags "extra_classes" "hide"}
+  {<with null "extra_classes" "hide"} {# "expander" route.include_tags #}
     {|templates/tags_main.html}
   {>}
 {>}

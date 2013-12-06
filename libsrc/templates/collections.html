@@ -7,24 +7,18 @@
 <form {form_attrs "add_to_collection" "owner_name" user.name} method='post'>
   <input type="hidden" name="tag_name" />
   <input type="hidden" name="expr_id" />
+
   <div class="title">Add to Collection</div>
-  {<with null "expander" true "tag_list" user.tagged "extra_classes" "dia_tags"
-    "auto_expander" true "suppress_link" true "blank_tag" true
-    "tag_selected" null}
+
+  <div>
+    {# <label>New collection: </label> #}
+    <input autofocus type=text class="tag_name" name="tag" placeholder="Collection name"/>
+  </div>
+
+  {# Tag list #}
+  {<with null "tag_list" user.tagged "extra_classes" "dia_tags" "expanded" true
+    "suppress_link" true "blank_tag" true "tag_selected" null}
     {|templates/tags_main.html}
   {>}
 
-  <div>
-    <label>New collection: </label>
-    <input autofocus type=text class="tag_name" name="tag" placeholder="Collection name"/>
-  </div>
-  {#
-  <select name="collection" >
-  	<option value="New..."></option>
-  	{<for user.tagged}
-  	  <option value="{item}"></option>
-  	{>}
-  </select>
-  <input name="new_collection" placeholder="Collection name">
-  #}
 </form></div>

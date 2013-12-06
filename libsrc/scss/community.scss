@@ -302,6 +302,19 @@
         &:hover { color:inherit; }
     }
 }
+
+.icon.plus_menu {
+    background-image: asset_url('skin/nav/plus.png');
+    // display:inline-block;
+    float: left;
+    width: 44px;
+    height: 44px;
+    // background-color: transparent;
+    background-color: white;
+    vertical-align: middle;
+    margin: -14px 5px 0px -16px;
+}
+
 // TODO: BUGBUG: should really be something like body.main
 body {
     ///
@@ -343,10 +356,6 @@ body {
     }
     .tag_list {
         text-align: center;
-        .plus_menu {
-            color: white;
-            background-color: black;
-        }
         &.main {
             width: 600px;
             max-height: 114px;
@@ -414,8 +423,8 @@ body {
             width: 44px;
             height: 44px;
             position: absolute;
-            right: 5px;
-            top: 5px;
+            right: -5px;
+            top: -5px;
             opacity: 0;
         }
 

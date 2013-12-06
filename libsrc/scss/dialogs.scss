@@ -533,8 +533,9 @@ form.login {
 #menu_privacy .selected { display : none; }
 
 .dialog.add_to_collection {
+    .title { margin-bottom: 10px; }
     .tag_list_container {
-        margin: 25px auto;
+        margin: 1px auto;
         .expander {
             margin: 0px;
             position: inherit;

@@ -3,7 +3,7 @@
   more_menu: true to have the "..." tag with associated menu
 #}
 <div class="tag_list {extra_classes}">
-  {<if plus_menu}<div class="tag_label plus_menu needs_login">+</div>{>}
+  {<if plus_menu}<div class="icon plus_menu needs_login pointer"></div>{>}
   {<for tags "tagnum"}
     {|templates/tag_card.html}
   {>}

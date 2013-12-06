@@ -10,6 +10,9 @@ define([
     context,
     cards_template
 ) {
+    save_immediately = true;
+    anim_duration = 400;
+
     var o = { name: 'profile' },
             show_tags = true,
             show_more_tags = false,
@@ -76,7 +79,7 @@ define([
                 var columns = $(".ncolumn .column").filter(
                     function(i,e) { return $(e).width(); }).length;
                 if (columns == 0) {
-                    ordered_cards = $("#feed .card").toArray();
+                    ordered_cards = $("#feed .card");
                 } else {
                     var col_array = [];
                     var card_count = 0;
@@ -98,8 +101,8 @@ define([
                         ordered_cards = ordered_cards.concat(card);
                     };
                 }
-                var ordered_ids = ordered_cards.map( function(l, i) 
-                    { return $(l).prop("id").slice(5); });
+                var ordered_ids = $.map(ordered_cards, function(l, i) {
+                    return $(l).prop("id").slice(5); });
                 if (columns > 0)
                     ui_page.layout_columns(ordered_ids);
                 ui_page.add_grid_borders();
@@ -115,11 +118,15 @@ define([
             $("#feed").sortable({
                 items: $("#feed .card"),
                 start: function (e, ui) {
-                    $(".save_bar").showshow();
+                    if (! save_immediately)
+                        $(".save_bar").showshow();
                 },
                 stop: function (e, ui) {
                     // ui_page.add_grid_borders();
-                    reorder();
+                    if (! save_immediately)
+                        reorder();
+                    else
+                        $("form.save_bar").submit();
                 },
             });
         }
@@ -139,15 +146,27 @@ define([
             // $(".tags.icon").removeClass("on");
         }
     }
+    o.preprocess_page_data = function (page_data){
+        page_data.ordered_tags = 
+            page_data.tag_list.slice(0, page_data.ordered_count);
+        if (0 <= $.inArray(context.route_name,
+            ["expressions_public_tags","expressions_private",
+            "expressions_tag", "expressions_tag_private"])) {
+            page_data.extra_tags = 
+                page_data.tag_list.slice(page_data.ordered_count);
+        }
+        page_data.tag_list = page_data.ordered_tags;
+    };
+
     o.enter = function(){
         o.exit();
         profile_pages=["expressions_tag", "expressions_public_tags", "following",
-            "expressions_tag_private", "expressions_private", "expressions_public", 
-            "expressions_public_grid", "followers", "loves"];
-        i = profile_pages.indexOf(context.route_name);
+            "expressions_tag_private", "expressions_private",
+            "expressions_public_grid", "expressions_public", "followers", "loves"];
+        i = $.inArray(context.route_name, profile_pages);
         if (i >= 0) {
             $(".network_nav").hidehide();
-            show_tags((i < 5) ? true : false);
+            show_tags((i < 6) ? true : false);
         }
         if (o.show_more_tags) toggle_more_tags();
         $("#signup_create").showshow();
@@ -182,15 +201,21 @@ define([
         do_animate(el, dir, prop, goal, duration);
         var delete_pending = function (ev) {
             // goal;prop;el;card;
-            $(".save_bar").showshow();
+            if (! save_immediately)
+                $(".save_bar").showshow();
             card_deletes++;
             var i = card.index();
-            if (context.page_data.cards)
-                context.page_data.cards.splice(i, 1);
-            ui_page.add_grid_borders();
-            card.remove();
+            card.animate({opacity: 0},
+                { duration: anim_duration, complete: function() {
+                    if (context.page_data.cards)
+                        context.page_data.cards.splice(i, 1);
+                    ui_page.add_grid_borders();
+                    card.remove();
+                    if (save_immediately)
+                        $("form.save_bar").submit();
+                } });
         };
-        if (allow_reorder()) {
+        if (allow_reorder() && context.page_data.tag_selected != "remixed") {
             el = card.find(".delete");
             do_animate(el, dir, prop, goal, duration);
             el.unbind('click').on('click', delete_pending);

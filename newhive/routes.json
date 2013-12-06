@@ -105,7 +105,8 @@
         "api_route": "/api/feed/expressions/grid/<owner_name>",
         "controller": "community",
         "method": "expressions_public_tags",
-        "client_method": "grid"
+        "client_method": "grid",
+        "include_tags": true
     },
     "expressions_public_tags": {
         "page_route": "/<owner_name>/profile/tags",

@@ -631,7 +631,10 @@ define([
         var popup = $('#social_overlay');
         // TODO: animate
         if (popup.css('display') == 'none') {
-            popup.showshow();
+            popup.showshow()
+            // .css("height", 0).animate(
+            //     {height:"181px"}, 
+            //     {duration:o.anim_duration});
             fixup_tags_list();
         } else {
             popup.hidehide();
