@@ -8,6 +8,8 @@
   blank_card: if nonempty, add a dummy tag to beginning of list
 #}
 
+{# Scope the below variables #}
+{<with null .}
 {set "expanded" (or expanded extra_tags)}
 {<if (and (not blank_tag) (eq user.id owner.id))}
   {set "editable" " editable"}
@@ -58,3 +60,4 @@
     {>}
   </div>
 </div>
+{>}
