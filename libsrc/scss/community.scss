@@ -368,9 +368,18 @@ body {
                 border-bottom: 1px solid black;
                 padding-bottom: 7px;
                 &.editable {
+                    position: relative;
+                    z-index: 0;
                     border: 4px dashed $color_selected;
                     min-height: 39px;
                     // background-color: #DDD;
+                }
+                .layered {
+                    position:absolute;
+                    top:0; bottom:0; right:0; left:0;
+                    z-index: -1;
+                    background-color: $color_light_blue;
+                    div { padding: 10px; }
                 }
             }
         }

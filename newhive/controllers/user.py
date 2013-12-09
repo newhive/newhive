@@ -28,9 +28,8 @@ class User(ModelController):
         return self.serve_json(response, True)
 
     def tag_order(self, tdata, request, response, **args):
-        tag_order = [t for t in request.form.get('tag_order').split(",")
-            if t != '']
-        if tag_order[0] == '': tag_order = []
+        tag_order = request.form.get('tag_order').split(",")
+        tag_order = [t for t in tag_order if t != '']
         user = tdata.user
 
         if not user or not user.logged_in:
@@ -44,8 +43,8 @@ class User(ModelController):
         return self.serve_json(response, update)
 
     def collection_order(self, tdata, request, response, **args):
-        new_order = [t for t in request.form.get('new_order').split(",")
-            if t != '']
+        new_order = request.form.get('new_order').split(",")
+        new_order = [t for t in new_order if t != '']
         tag_name = request.form.get('tag_name')
         deletes = int(request.form.get('deletes'))
         user = tdata.user

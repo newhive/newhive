@@ -501,6 +501,9 @@ define(['browser/js', 'module'],
 	context_base.get = function(context, obj, key){
 		return obj[key];
 	};
+	context_base.len = function(context, obj){
+		return obj.length;
+	};
 	context_base.and = function(context){
 		for(var i = 1; i < arguments.length; ++i){
 			if (!arguments[i])
@@ -545,6 +548,20 @@ define(['browser/js', 'module'],
     	}, []);
 	};
 	context_base.reverse = function(context, l){ return l.concat().reverse(); };
+
+	// TODO: write as accumulate
+	// {set "k" (plus 2 2 2)}
+	context_base.plus = function(context){
+		var sum = 0;
+		for(var i = 1; i < arguments.length; ++i){
+			if (typeof(arguments[i]) == "number")
+				return sum += arguments[i];
+			else
+				return 0;
+		}
+		return sum;
+	};
+	// {mod 6 3}  {mod "verbatim"}
 	context_base.mod = function(context, x, y){ 
 		if (typeof(x) == "number" && typeof(y) == "number")
 			return x % y;
