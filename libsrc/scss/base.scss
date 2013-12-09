@@ -49,6 +49,15 @@
         overflow: hidden;
     }
 }
+.place_holder {
+    display: inline-block;
+    background-color: #CCC;
+    height: 31px;
+    width: 100px;
+    vertical-align: top;
+    margin-top: 7px;
+    margin-right: 7px;
+}
 
 button {
     border: none;

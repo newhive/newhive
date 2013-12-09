@@ -364,6 +364,15 @@ body {
                 overflow-y: auto;
                 max-height: 380px;
             }
+            .drop_box {
+                border-bottom: 1px solid black;
+                padding-bottom: 7px;
+                &.editable {
+                    border: 4px dashed $color_selected;
+                    min-height: 39px;
+                    // background-color: #DDD;
+                }
+            }
         }
     }
     #tag_bar {

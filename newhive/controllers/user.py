@@ -27,8 +27,25 @@ class User(ModelController):
         auth.handle_logout(self.db, tdata.user, request, response)
         return self.serve_json(response, True)
 
+    def tag_order(self, tdata, request, response, **args):
+        tag_order = [t for t in request.form.get('tag_order').split(",")
+            if t != '']
+        if tag_order[0] == '': tag_order = []
+        user = tdata.user
+
+        if not user or not user.logged_in:
+            return self.serve_json(response, { 'error': 'error'})
+
+        user.update(ordered_tags=tag_order)
+
+        update = {}
+        (update['tagged_ordered'], update['tagged']) = user.get_tags(True)
+
+        return self.serve_json(response, update)
+
     def collection_order(self, tdata, request, response, **args):
-        new_order = request.form.get('new_order').split(",")
+        new_order = [t for t in request.form.get('new_order').split(",")
+            if t != '']
         tag_name = request.form.get('tag_name')
         deletes = int(request.form.get('deletes'))
         user = tdata.user
@@ -48,7 +65,10 @@ class User(ModelController):
                 if expr and expr.owner.id == user.id:
                     expr.update(updated=False, tags=re.sub(
                         ' ?#?' + tag_name + ' ?',' ',expr.get('tags','')).strip())
-        tagged[tag_name] = new_order
+        if len(new_order):
+            tagged[tag_name] = new_order
+        else:
+            del tagged[tag_name]
         user.update(tagged=tagged)
 
         return self.serve_json(response, True)

@@ -185,9 +185,15 @@
     },
 
     "collection_order": {
-        "api_route": "/api/user/tag_reorder",
+        "api_route": "/api/user/collection_order",
         "controller": "user",
         "method": "collection_order",
+        "require_login": true
+    },
+    "tag_order": {
+        "api_route": "/api/user/tag_order",
+        "controller": "user",
+        "method": "tag_order",
         "require_login": true
     },
     "user_update": {
