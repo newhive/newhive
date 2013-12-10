@@ -1351,7 +1351,7 @@ class Expr(HasSocial):
 
     #TODO-cleanup: remove after snapshot migration
     def snapshot_name_base(self, size, time):
-        return '_'.join([self.id, time, self.entropy(), size]) + (".jpg" if (size == "full") else ".png")
+        return '_'.join([self.id, time, self.entropy(), size]) + '.jpg' #(".jpg" if (size == "full") else ".png")
 
     # size is "big" or "small".
     # will return 'snapshot_placeholder.png' if no available snapshot
@@ -1415,7 +1415,7 @@ class Expr(HasSocial):
         for local, name in upload_list:
             file_data = {'owner': self.owner.id,
                 'tmp_file': (local if it else open(local, 'r')),
-                'name': 'snapshot.png', 'mime': 'image/png',
+                'name': 'snapshot.jpg', 'mime': 'image/jpeg',
                 'generated_from': self.id, 'generated_from_type': 'Expr'}
             if not it:
                 file_record = self.db.File.create(file_data)
@@ -1424,7 +1424,7 @@ class Expr(HasSocial):
             else:
                 file_record.set_thumb(
                     dimension_list[it][0], dimension_list[it][1], file=local,
-                    mime='image/png', autogen=False)
+                    mime='image/jpeg', autogen=False)
             it += 1
         file_record.save()
 
@@ -1757,7 +1757,8 @@ class Expr(HasSocial):
 
 
 def generate_thumb(file, size, format=None):
-    # resize and crop image to size tuple, preserving aspect ratio, save over original
+    # resize and crop image to size tuple, preserving aspect ratio
+
     file.seek(0)
     imo = Img.open(file)
     if not format:
@@ -1774,7 +1775,7 @@ def generate_thumb(file, size, format=None):
     #print "   conversion took " + str(dt*1000) + " ms"
 
     output = os.tmpfile()
-    imo.save(output, format=format, quality=85)
+    imo.save(output, format=format, quality=90)
     return output
 
 
@@ -1798,6 +1799,7 @@ class File(Entity):
     def file(self):
         if not self._file:
             self.download()
+        self._file.seek(0)
         return self._file
 
     def download(self):
@@ -1818,8 +1820,38 @@ class File(Entity):
             return self.IMAGE
         return self.UNKNOWN
 
-    def resample(self, scale):
-        pass
+    def set_resamples(self):
+        imo = Img.open(self.file)
+        format = imo.format
+        (w, h) = imo.size
+        factor = 2 ** .5
+        resamples = []
+        while (w >= 100) or (h >= 100):
+            w /= factor
+            h /= factor
+            size = (int(w), int(h))
+            imo = imo.resize(size, resample=Img.ANTIALIAS)
+            resample_file = os.tmpfile()
+            imo.save(resample_file, quality=90, format=format)
+            resamples.append(size)
+            self.db.s3.upload_file(resample_file, 'media',
+                self._resample_name(size[0]), self._resample_name(size[0]),
+                self['mime'])
+        resamples.reverse()
+        self.update(resamples=resamples)
+
+    def get_resample(self, w=None, h=None):
+        resamples = self.get('resamples', [])
+        for size in resamples:
+            if (w and size[0] > w) or (h and size[1] > h):
+                return self.get('url') + '_' + str(int(size[0]))
+        return self.get('url')
+
+    def _resample_name(self, w):
+        return self.id + '_' + str(int(w))
+    @property
+    def _resample_names(self):
+        return [self._resample_name(s[0]) for s in self.get('resamples', [])]
 
     def set_thumb(self, w, h, file=False, mime='image/jpeg', autogen=True):
         name = str(w) + 'x' + str(h)
@@ -1856,15 +1888,16 @@ class File(Entity):
     default_thumb = property(get_default_thumb)
 
     @property
-    def thumb_keys(self):
+    def _thumb_keys(self):
         return [ self.id + '_' + n for n in self.get('thumbs', {}) ]
 
     def store(self):
         if self.db.config.aws_id:
-            self['protocol'] = 's3'
-            self['s3_bucket'] = self.db.s3.buckets['media'].name
-            return self.db.s3.upload_file(self._file, 'media', self.id,
-                self['name'], self['mime'])
+            self.update(protocol='s3',
+                s3_bucket=self.db.s3.buckets['media'].name,
+                url=self.db.s3.upload_file(self._file, 'media', self.id,
+                    self['name'], self['mime'])
+            )
         else:
             self['protocol'] = 'file'
             owner = self.db.User.fetch(self['owner'])
@@ -1908,25 +1941,22 @@ class File(Entity):
         self._file.seek(0); self['md5'] = md5(self._file.read()).hexdigest()
         self['size'] = os.fstat(self._file.fileno()).st_size
         super(File, self).create()
-        self['url'] = self.store()
-        self.update(url=self['url'])
+        self.store()
         return self
 
     # download file from source and reupload
     def reset_file(self, file=None):
         self.pop('s3_bucket', None)
         self.pop('fs_path', None)
-        if not file: file = self.file
-        self['url'] = self.store()
-        if self._file: self._file.close()
-        self.update(**self)
+        if file: self._file = file
+        self.store()
 
     def purge(self):
         self.delete_files()
         super(File, self).purge()
 
     def delete_files(self):
-        for k in self.thumb_keys + [self.id]:
+        for k in self._thumb_keys + [self.id] + self._resample_names:
             if self.get('s3_bucket'):
                 try:
                     self.db.s3.delete_file(self['s3_bucket'], self.id)
