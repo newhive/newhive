@@ -169,6 +169,29 @@ class Database:
 
         return search
 
+    ####################################################################
+    # Misc database utility functions
+    ####################################################################
+
+    # Add or promote an item in the featured list
+    def add_featured(self, expr_id):
+        return self.User.root_user.add_promote_tagged(expr_id, "Featured")
+
+    # pop one item off the queue and push it onto the featured list
+    def pop_featured_queue(self):
+        ru = self.User.root_user
+        tagged = ru.tagged
+        featured_queue = tagged.get('_Featured', [])
+        if len(featured_queue) == 0: 
+            return
+
+        expr_id = featured_queue[0]
+        self.add_featured(expr_id)
+        ru.reload()
+        tagged = ru.tagged
+        tagged['_Featured'] = featured_queue[1:]
+        ru.update(updated=False, tagged=tagged)
+
 class Collection(object):
     trashable = True
 
@@ -554,6 +577,48 @@ class User(HasSocial):
 
     @property
     def broadcast_ids(self): return [i['entity'] for i in self.broadcast]
+
+    @property
+    def tagged(self):
+        return self.get('tagged', {})
+
+    def add_to_collection(self, expr_id, tag_name, add_to_back=False):
+        expr = self.db.Expr.fetch(expr_id)
+        if not expr:
+            return False
+
+        tagged = self.tagged
+        collection = self.get_tag(tag_name, force_update=True)
+        if add_to_back:
+            collection = collection + [expr_id]
+        else:
+            collection = [expr_id] + collection
+        tagged[tag_name] = collection
+
+        # add the tag on owned expression
+        if expr.owner.id == self.id:
+            expr.update(updated=False, 
+                tags=(expr.get('tags','') + ' #' + tag_name).strip())
+        self.update(tagged=tagged)
+        return True
+
+    # Add or promote an item in a tagged list
+    def add_promote_tagged(self, expr_id, tag_name):
+        if not self.db.Expr.fetch(expr_id):
+            return False
+
+        collection = self.get_tag(tag_name, force_update=True)
+        # Filter the given id out of the list (so it can be promoted)
+        if expr_id in collection:
+            collection.remove(expr_id)
+            self.tagged[tag_name] = [expr_id] + collection
+            self.update(tagged=self.tagged)
+            return True
+
+        # New expression handled in default manner
+        self.add_to_collection(expr_id, tag_name)
+
+        return True
 
     def calculate_tags(self):
         public_cnt = Counter()

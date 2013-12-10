@@ -24,6 +24,15 @@ def name(entity):
 		return names(entity)
 	if type(entity) == state.Cursor:
 		return names(list(entity))
+	if type(entity) in [str, unicode]:
+		e = db.Expr.fetch(entity)
+		if e:
+			return name(e)
+		e = db.User.fetch(entity)
+		if e:
+			return name(e)
+		return False
+
 	res = ''
 	if entity.has_key('owner_name'):
 		res = entity['owner_name'] + '/'

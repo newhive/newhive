@@ -81,14 +81,7 @@ class User(ModelController):
         if not user or not user.logged_in or not tag_name or not expr:
             return self.serve_json(response, { 'error': 'error'})
 
-        tagged = user.get('tagged', {})
-        tagged[tag_name] = [expr_id] + user.get_tag(tag_name, force_update=True)
-
-        # add the tag on owned expression
-        if expr.owner.id == user.id:
-            expr.update(updated=False, tags=(expr.get('tags','') + ' #' + tag_name).strip())
-        user.update(tagged=tagged)
-
+        user.add_to_collection(expr_id, tag_name)
         return self.serve_json(response, True)
 
     def do_password_reset(self, tdata, request, response, owner_name=None, **args):
