@@ -128,7 +128,7 @@
             img { width: 222px; }
             // width: 222px; height: 222px;
             vertical-align: top;
-            margin: 10px;
+            margin: 10px 10px 0px 10px ;
             display: inline-block;
         }
         .info {
@@ -136,7 +136,7 @@
             width: 533px; height: 222px;
             font-family: Gibson;
             // letter-spacing: -1px;
-            margin: 10px;
+            margin: 10px 10px 0px 10px ;
             .title_bar { margin-top: 10px; }
             .user_action_bar { float:right; }
             .full_name {
@@ -163,6 +163,8 @@
                 }
             }
             .nav_bar {
+                position: absolute;
+                bottom: 0px;
                 * { vertical-align: middle; }
                 .spacer {
                     border-left: 1px solid red;
@@ -379,6 +381,7 @@ body {
                 &.editable {
                     position: relative;
                     z-index: 0;
+                    padding: 7px;
                     border: 4px dashed $color_selected;
                     min-height: 39px;
                     margin-bottom: 10px;
@@ -596,7 +599,7 @@ body {
     font-family: Gibson;
 
     padding: 6px 10px;
-    margin: 7px 7px 0px 0px;
+    margin: 3px 7px 4px 0px;
     &:hover {
         color: white;
         background-color: black;

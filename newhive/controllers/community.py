@@ -74,6 +74,8 @@ class Community(Controller):
     def expressions_public_tags(self, tdata, request, owner_name=None, at=0, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
+        if args.get('tag_name'): return self.expressions_tag(
+            tdata, request, owner_name=owner_name, **args)
         spec = {'owner_name': owner_name}
         cards = self.db.Expr.page(spec, viewer=tdata.user, auth='public', at=at, **args)
         return self.expressions_for(tdata, cards, owner)

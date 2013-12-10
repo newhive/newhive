@@ -212,11 +212,12 @@ define([
         o.exit();
         profile_pages=["expressions_tag", "expressions_public_tags", "following",
             "expressions_tag_private", "expressions_private",
-            "expressions_public_grid", "expressions_public", "followers", "loves"];
+            "expressions_public_grid", "expressions_public_grid_tags", 
+            "expressions_public", "followers", "loves"];
         i = $.inArray(context.route_name, profile_pages);
         if (i >= 0) {
             $(".network_nav").hidehide();
-            show_tags((i < 6) ? true : false);
+            show_tags((i < 7) ? true : false);
         }
         if (o.show_more_tags) toggle_more_tags();
         $("#signup_create").showshow();
