@@ -20,7 +20,15 @@
       {>}
     {>}
   {>}{<else}
-    { search_attrs "#" item }
+    {<if (and
+      (or (eq item "remix") (eq item "remixed")) 
+      (or remix_root_tag expr.remix_root_tag)) }
+      {anchor_attrs "expressions_tag" "owner_name" 
+        (or expr.remix_root_owner remix_root_owner)
+        "tag_name" (or remix_root_tag expr.remix_root_tag)}
+    {>}{<else}
+      { search_attrs "#" item }
+    {>}
   {>}
   >
 {>}

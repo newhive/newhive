@@ -73,6 +73,7 @@ class Expr(ModelController):
                 upd['remix_root'] = remix_expr.id
                 remix_owner.setdefault('tagged', {})
                 remix_expr.setdefault('remix_name', remix_expr['name'])
+                remix_expr.setdefault('remix_root', remix_expr.id)
                 remix_name = 're:' + remix_expr['remix_name']
                 # include self in remix list
                 remix_owner['tagged'].setdefault(remix_name, [remix_expr.id])

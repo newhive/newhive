@@ -517,7 +517,7 @@ define(['browser/js', 'module'],
 			return true;
 		for(var i = 1; i < arguments.length; ++i){
 			if (arguments[i])
-				return true;
+				return arguments[i];
 		}
 		return false;
 	};

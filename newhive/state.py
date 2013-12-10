@@ -1642,6 +1642,12 @@ class Expr(HasSocial):
             'url': self.url,
             'title': self.get('title')
         })
+        if self.get('remix_root'):
+            remix_root = self.db.Expr.fetch(self.get('remix_root'))
+            if remix_root:
+                dict.update(expr, { 'remix_root_owner': remix_root.owner['name'],
+                    'remix_root_tag': 're:' + (remix_root.get('remix_name') 
+                        or remix_root['name']) })
         if self.auth != 'public':
             expr.update({'auth': self.auth})
         expr['snapshot_big'] = self.snapshot_name("big")
