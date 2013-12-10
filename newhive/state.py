@@ -1823,9 +1823,10 @@ class File(Entity):
     def store(self):
         if self.db.config.aws_id:
             self.update(protocol='s3',
-                s3_bucket=self.db.s3.buckets['media'].name)
-            return self.db.s3.upload_file(self._file, 'media', self.id,
-                self['name'], self['mime'])
+                s3_bucket=self.db.s3.buckets['media'].name,
+                url=self.db.s3.upload_file(self._file, 'media', self.id,
+                    self['name'], self['mime'])
+            )
         else:
             self['protocol'] = 'file'
             owner = self.db.User.fetch(self['owner'])
@@ -1869,8 +1870,7 @@ class File(Entity):
         self._file.seek(0); self['md5'] = md5(self._file.read()).hexdigest()
         self['size'] = os.fstat(self._file.fileno()).st_size
         super(File, self).create()
-        self['url'] = self.store()
-        self.update(url=self['url'])
+        self.store()
         return self
 
     # download file from source and reupload
