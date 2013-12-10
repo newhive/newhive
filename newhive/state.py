@@ -1776,7 +1776,7 @@ class File(Entity):
         self.update(resamples=resamples)
 
     def get_resample(self, w=None, h=None):
-        resamples = self.get('resamples')
+        resamples = self.get('resamples', [])
         for size in resamples:
             if (w and size[0] > w) or (h and size[1] > h):
                 return self.get('url') + '_' + str(int(size[0]))
