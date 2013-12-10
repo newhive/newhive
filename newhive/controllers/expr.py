@@ -130,7 +130,9 @@ class Expr(ModelController):
 
         return self.serve_404(tdata, request, response)
 
-    def fetch_naked(self, tdata, request, response, expr_id=None, owner_name=None, expr_name=None):
+    def fetch_naked(self, tdata, request, response, expr_id=None,
+        owner_name=None, expr_name=None
+    ):
         # Request must come from content_domain, as this serves untrusted content
         snapshot_mode = request.args.get('snapshot') is not None
         if expr_id:
@@ -143,17 +145,26 @@ class Expr(ModelController):
             request.form.get('password')): 
             expr_obj = { 'auth': 'password' }
         # TODO: consider allowing analytics for content frame.
+        viewport = [int(x) for x in
+            request.args.get('viewport', '1000x750').split('x')]
         tdata.context.update(
-            html = self.expr_to_html(expr_obj, snapshot_mode=snapshot_mode)
-            , expr = expr_obj
-            , use_ga = False
-            )
+            html = self.expr_to_html(expr_obj, snapshot_mode=snapshot_mode,
+                viewport=viewport),
+            expr = expr_obj,
+            use_ga = False,
+        )
         return self.serve_page(tdata, response, 'pages/expr.html')
         
-    def expr_to_html(self, exp, snapshot_mode=False):
+    def expr_to_html(self, exp, snapshot_mode=False, viewport=(1000, 750)):
         """Converts JSON object representing an expression to HTML"""
-        if not exp: return ''
 
+        if not exp: return ''
+        expr_dims = exp.get('dimensions', [1000, 750])
+        # TODO-feature-expr-orientation (use y)
+        expr_scale = float(viewport[0]) / expr_dims[0]
+
+        # TODO-bug fix resizing after loading by sending pre-scaled expr
+        # Requires client layout_apps() to use scaled expr_dimensions
         def css_for_app(app):
             css = {
                     'left': app['position'][0]
@@ -177,6 +188,10 @@ class Expr(ModelController):
             type = app.get('type')
             id = app.get('id', app['z'])
             if type == 'hive.image':
+                media = self.db.File.fetch(app.get('file_id'))
+                if media: content = media.get_resample(
+                    app.get('dimensions', [100,100])[0] * expr_scale
+                )
                 html = "<img src='%s'>" % content
                 link = app.get('href')
                 if link: html = "<a href='%s'>%s</a>" % (link, html)

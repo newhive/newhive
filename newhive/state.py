@@ -1760,13 +1760,13 @@ class File(Entity):
         format = imo.format
         (w, h) = imo.size
         factor = 2 ** .5
-        resample_file = self.file
         resamples = []
         while (w >= 100) or (h >= 100):
             w /= factor
             h /= factor
             size = (int(w), int(h))
             imo = imo.resize(size, resample=Img.ANTIALIAS)
+            resample_file = os.tmpfile()
             imo.save(resample_file, quality=90, format=format)
             resamples.append(size)
             self.db.s3.upload_file(resample_file, 'media',

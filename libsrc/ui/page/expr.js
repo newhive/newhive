@@ -256,7 +256,7 @@ define([
         // Create new content frame
         var args = {};
         if(current == undefined) args['no-embed'] = true;
-        args['dims'] = $(window).width() +'x'+ $(window).height();
+        args['viewport'] = $(window).width() +'x'+ $(window).height();
         var contentFrameURL = o.content_url_base + expr_id +
             '?' + $.param(args);
         contentFrame = $('<iframe class="expr" allowfullscreen>')
