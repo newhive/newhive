@@ -10,14 +10,14 @@ define([
     context,
     cards_template
 ) {
-    save_immediately = true;
-    anim_duration = 400;
 
     var o = { name: 'profile' },
-            show_tags = true,
-            show_more_tags = false,
-            card_deletes = 0,
-            controller;
+        save_immediately = true,
+        anim_duration = 400,
+        show_tags = true,
+        show_more_tags = false,
+        card_deletes = 0,
+        controller;
 
     o.init = function(controller){
         o.controller = controller;
@@ -44,6 +44,7 @@ define([
         if(data.cards.length < 20)
             o.more_cards = false;
         cards_template(data).insertBefore('#feed .footer');
+        o.attach_handlers();
         ui_page.layout_columns();
         ui_page.add_grid_borders();
         loading = false;
@@ -53,6 +54,19 @@ define([
         return context.route.include_tags && context.page_data.cards.length > 1
                 && context.page_data.owner.id == context.user.id
                 && context.page_data.tag_selected != undefined
+    };
+
+    var allow_tag_reorder = function() {
+        return context.route.include_tags
+                && $(".drop_box").length
+                && context.page_data.owner.id == context.user.id
+    };
+
+    var allow_delete = function() {
+        return context.route.include_tags
+                && context.page_data.tag_selected != "remixed"
+                && context.page_data.tag_selected != undefined
+                && context.page_data.owner.id == context.user.id
     };
 
     o.attach_handlers = function(){
@@ -73,48 +87,48 @@ define([
         });
 
         win.unbind('scroll', on_scroll_add_page).scroll(on_scroll_add_page);
-        if( allow_reorder() ){
-            function reorder () {
-                var ordered_cards = [];
-                var columns = $(".ncolumn .column").filter(
-                    function(i,e) { return $(e).width(); }).length;
-                if (columns == 0) {
-                    ordered_cards = $("#feed .card");
-                } else {
-                    var col_array = [];
-                    var card_count = 0;
-                    for (var col = 0; col < columns; col++) {
-                        // Get the cards in a column, then collate the lists
-                        var col_cards = $(".column_" + col + " .card").toArray();
-                        card_count += col_cards.length;
-                        col_array = col_array.concat([col_cards]);
-                    }
-                    for (var i = 0; i < card_count; i++) {
-                        var card = col_array[i % columns][Math.floor(i / columns)];
-                        // Shouldn't happen, but we are seeing column sorting issues.
-                        if (card == undefined) {
-                            // Protect against infinite loop.
-                            // if (i % columns != columns - 1)
-                                card_count++;
-                            continue;
-                        }
-                        ordered_cards = ordered_cards.concat(card);
-                    };
+        function reorder () {
+            var ordered_cards = [];
+            var columns = $(".ncolumn .column").filter(
+                function(i,e) { return $(e).width(); }).length;
+            if (columns == 0) {
+                ordered_cards = $("#feed .card");
+            } else {
+                var col_array = [];
+                var card_count = 0;
+                for (var col = 0; col < columns; col++) {
+                    // Get the cards in a column, then collate the lists
+                    var col_cards = $(".column_" + col + " .card").toArray();
+                    card_count += col_cards.length;
+                    col_array = col_array.concat([col_cards]);
                 }
-                var ordered_ids = $.map(ordered_cards, function(l, i) {
-                    return $(l).prop("id").slice(5); });
-                if (columns > 0)
-                    ui_page.layout_columns(ordered_ids);
-                ui_page.add_grid_borders();
-                return ordered_ids;
+                for (var i = 0; i < card_count; i++) {
+                    var card = col_array[i % columns][Math.floor(i / columns)];
+                    // Shouldn't happen, but we are seeing column sorting issues.
+                    if (card == undefined) {
+                        // Protect against infinite loop.
+                        // if (i % columns != columns - 1)
+                            card_count++;
+                        continue;
+                    }
+                    ordered_cards = ordered_cards.concat(card);
+                };
             }
-            $("form.save_bar").on('before_submit', function(e) {
-                var ordered_ids = reorder();
-                $(this).find("input[name=new_order]").val(ordered_ids.join(","));
-                $(this).find("input[name=deletes]").val(card_deletes);
-                $("form.save_bar").hidehide();
-            });
+            var ordered_ids = $.map(ordered_cards, function(l, i) {
+                return $(l).prop("id").slice(5); });
+            if (columns > 0)
+                ui_page.layout_columns(ordered_ids);
+            ui_page.add_grid_borders();
+            return ordered_ids;
+        }
+        $("form.save_bar").on('before_submit', function(e) {
+            var ordered_ids = reorder();
+            $(this).find("input[name=new_order]").val(ordered_ids.join(","));
+            $(this).find("input[name=deletes]").val(card_deletes);
+            $("form.save_bar").hidehide();
+        });
 
+        if( allow_reorder() ){
             $("#feed").sortable({
                 items: $("#feed .card"),
                 start: function (e, ui) {
@@ -129,13 +143,50 @@ define([
                         $("form.save_bar").submit();
                 },
             });
+            // $("#site .drop_box").sortable({
+            //     connectWith: '#site .tag_list.main',
+            //     items: $("#site .drop_box .tag_label"),
+            // });
+        }
+        if( allow_tag_reorder() ){
+            $("#site .tag_list.main, #site .drop_box").sortable({
+                connectWith: '#site .drop_box, #site .tag_list.main',
+                tolerance: 'pointer',
+                placeholder: 'place_holder',
+                items: $("#site .tag_list.main .tag_label"),
+                // start: function (e, ui) {
+                //     from_main = (ui.item.parent().hasClass("main"));
+                // },
+
+                // sort: function (e, ui) {
+                    // (ui.sender ? $(ui.sender) : $(this)).sortable('cancel');
+                    // true;
+                // },
+                beforeStop: function (e, ui) {
+                    // if (ui.item.parent().hasClass("main"))
+                    //     (ui.sender ? $(ui.sender) : $(this)).sortable('cancel');
+                },
+                stop: function (e, ui) {
+                    // $("form .tag_order .tags").val();
+                    var tags = 
+                        $(".tag_list.main .drop_box.editable .tag_label").map(
+                            function(i,el){ return $(el).text(); });
+                    $("form.tag_order input[name=tag_order]").
+                        val(tags.toArray().join(","));
+                    $("form.tag_order").submit().unbind("response").
+                        on("response", function(e, json) {
+                            context.page_data.ordered_count = json.tagged_ordered;
+                            context.page_data.tag_list = json.tagged;
+                            o.preprocess_page_data(context.page_data);
+                            $.extend(context.user, json);
+                            ui_page.preprocess_context();
+                            ui_page.render_main_tags();
+                            o.attach_handlers();
+                        });
+                },
+            });
         }
     };
-
-    // show_hide_tags = function (){
-    //     o.show_tags = ! o.show_tags;
-    //     show_tags(o.show_tags);
-    // }
 
     show_tags = function (show){
         if (show) {
@@ -162,11 +213,12 @@ define([
         o.exit();
         profile_pages=["expressions_tag", "expressions_public_tags", "following",
             "expressions_tag_private", "expressions_private",
-            "expressions_public_grid", "expressions_public", "followers", "loves"];
+            "expressions_public_grid", "expressions_public_grid_tags", 
+            "expressions_public", "followers", "loves"];
         i = $.inArray(context.route_name, profile_pages);
         if (i >= 0) {
             $(".network_nav").hidehide();
-            show_tags((i < 6) ? true : false);
+            show_tags((i < 7) ? true : false);
         }
         if (o.show_more_tags) toggle_more_tags();
         $("#signup_create").showshow();
@@ -186,7 +238,6 @@ define([
     }
     o.exit = function(){
         $(".network_nav").showshow();
-        // $(".tag_list.main").showshow();
         $("#signup_create").hidehide();
         $("#content_btns").hidehide();
         $("#signup_create .signup").addClass("hide");
@@ -200,7 +251,6 @@ define([
         var el = card.find(".tag_list");
         do_animate(el, dir, prop, goal, duration);
         var delete_pending = function (ev) {
-            // goal;prop;el;card;
             if (! save_immediately)
                 $(".save_bar").showshow();
             card_deletes++;
@@ -215,7 +265,7 @@ define([
                         $("form.save_bar").submit();
                 } });
         };
-        if (allow_reorder() && context.page_data.tag_selected != "remixed") {
+        if (allow_delete()) {
             el = card.find(".delete");
             do_animate(el, dir, prop, goal, duration);
             el.unbind('click').on('click', delete_pending);

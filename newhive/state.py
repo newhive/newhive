@@ -576,7 +576,7 @@ class User(HasSocial):
             tag_entropy=tag_entropy)
 
     def get_tags(self, privacy, remove_singletons=True):
-        cnt = self.get('unlisted_tags' if privacy else 'public_tags', Counter())
+        cnt = Counter(self.get('unlisted_tags' if privacy else 'public_tags', {}))
         # remove single-expression tags
         if remove_singletons:
             single_count = set(cnt.keys())
@@ -1060,9 +1060,9 @@ class User(HasSocial):
             # dict.update(user, { "tagged": self.get('tagged', {}).keys() })
             #!! TODO-perf: remove after we migrate to run on all users
             self.calculate_tags()
-            cnt = self.get('unlisted_tags', Counter())
-            tagged = [x for x,y in cnt.most_common()] # [:num_tags]
-            dict.update(user, { "tagged": tagged })
+            update = {}
+            (update['tagged_ordered'], update['tagged']) = self.get_tags(True)
+            dict.update(user, update)
         if special.has_key("mini_expressions") and g_flags['mini_expressions']:
             # exprs = self.db.Expr.cards({'owner': self.id}, limit=3)
             exprs = self.get_top_expressions(g_flags['mini_expressions'])
@@ -1642,6 +1642,12 @@ class Expr(HasSocial):
             'url': self.url,
             'title': self.get('title')
         })
+        if self.get('remix_root'):
+            remix_root = self.db.Expr.fetch(self.get('remix_root'))
+            if remix_root:
+                dict.update(expr, { 'remix_root_owner': remix_root.owner['name'],
+                    'remix_root_tag': 're:' + (remix_root.get('remix_name') 
+                        or remix_root['name']) })
         if self.auth != 'public':
             expr.update({'auth': self.auth})
         expr['snapshot_big'] = self.snapshot_name("big")

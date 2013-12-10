@@ -11,10 +11,24 @@
       {anchor_attrs "expressions_tag_private" 
         "entropy" (get tag_entropy item) "owner_name" owner.name "tag_name" item}
     {>}{<else}
-      {anchor_attrs "expressions_tag" "owner_name" owner.name "tag_name" item}
+      {<if (or (eq route_name "expressions_tag") 
+        (eq route_name "expressions_public_tags"))}
+        {anchor_attrs "expressions_tag" "owner_name" owner.name "tag_name" item}
+      {>}{<else}
+        {anchor_attrs "expressions_public_grid_tags" "owner_name" 
+          owner.name "tag_name" item}
+      {>}
     {>}
   {>}{<else}
-    { search_attrs "#" item }
+    {<if (and
+      (or (eq item "remix") (eq item "remixed")) 
+      (or remix_root_tag expr.remix_root_tag)) }
+      {anchor_attrs "expressions_tag" "owner_name" 
+        (or expr.remix_root_owner remix_root_owner)
+        "tag_name" (or remix_root_tag expr.remix_root_tag)}
+    {>}{<else}
+      { search_attrs "#" item }
+    {>}
   {>}
   >
 {>}

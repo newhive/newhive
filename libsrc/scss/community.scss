@@ -128,7 +128,7 @@
             img { width: 222px; }
             // width: 222px; height: 222px;
             vertical-align: top;
-            margin: 10px;
+            margin: 10px 10px 0px 10px ;
             display: inline-block;
         }
         .info {
@@ -136,7 +136,7 @@
             width: 533px; height: 222px;
             font-family: Gibson;
             // letter-spacing: -1px;
-            margin: 10px;
+            margin: 10px 10px 0px 10px ;
             .title_bar { margin-top: 10px; }
             .user_action_bar { float:right; }
             .full_name {
@@ -163,6 +163,8 @@
                 }
             }
             .nav_bar {
+                position: absolute;
+                bottom: 0px;
                 * { vertical-align: middle; }
                 .spacer {
                     border-left: 1px solid red;
@@ -303,17 +305,26 @@
     }
 }
 
-.icon.plus_menu {
-    background-image: asset_url('skin/nav/plus.png');
+.icon.plus_menu, .icon.delete {
     // display:inline-block;
-    float: left;
     width: 44px;
     height: 44px;
     // background-color: transparent;
     background-color: white;
     vertical-align: middle;
-    margin: -14px 5px 0px -16px;
+    margin: -12px 5px 0px -16px;
 }
+.icon.plus_menu {
+    background-image: asset_url('skin/nav/plus.png');
+    float: left;
+}
+.icon.delete {
+    background-image: asset_url('skin/nav/delete.png');
+    opacity: 0;
+    float: right;
+    margin-right: -8px;
+}
+
 
 // TODO: BUGBUG: should really be something like body.main
 body {
@@ -363,6 +374,27 @@ body {
             &.expanded {
                 overflow-y: auto;
                 max-height: 380px;
+            }
+            .drop_box {
+                border-bottom: 1px solid black;
+                padding-bottom: 7px;
+                margin-bottom: 5px;
+                &.editable {
+                    position: relative;
+                    z-index: 0;
+                    padding: 7px;
+                    border: 4px dashed $color_selected;
+                    min-height: 39px;
+                    margin-bottom: 10px;
+                    // background-color: #DDD;
+                }
+                .layered {
+                    position:absolute;
+                    top:0; bottom:0; right:0; left:0;
+                    z-index: -1;
+                    // background-color: $color_light_blue;
+                    div { padding: 10px; }
+                }
             }
         }
     }
@@ -418,16 +450,6 @@ body {
             bottom: 5px;
         }
 
-        .icon.delete {
-            background-image: asset_url('skin/nav/delete.png');
-            width: 44px;
-            height: 44px;
-            position: absolute;
-            right: -5px;
-            top: -5px;
-            opacity: 0;
-        }
-
         margin: 50px auto 0px auto;
         .card {
             // box-shadow: 0px 0px 5px #CCC;
@@ -440,7 +462,7 @@ body {
                 top: 0px;
                 left: 0px;
                 right: 0px;
-                max-height: 108px;
+                max-height: 104px;
                 overflow: hidden;
             }
             &:hover {
@@ -578,7 +600,7 @@ body {
     font-family: Gibson;
 
     padding: 6px 10px;
-    margin: 7px 7px 0px 0px;
+    margin: 3px 3px 4px 4px;
     &:hover {
         color: white;
         background-color: black;

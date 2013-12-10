@@ -16,6 +16,7 @@ define([
     'sj!templates/collections.html',
     'sj!templates/overlay.html',
     'sj!templates/card_master.html',
+    'sj!templates/tags_main.html',
     'sj!templates/home.html',
     'sj!templates/profile_edit.html',
     'sj!templates/settings.html',
@@ -35,7 +36,6 @@ define([
     'sj!templates/dialog_share.html',
     'sj!templates/network_nav.html',
     'sj!templates/login_form.html', 
-    'sj!templates/tags_main.html',
     'sj!templates/request_invite_form.html',
     'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js',
     'sj!templates/cards.html'
@@ -52,6 +52,7 @@ define([
     collections_template,
     overlay_template,
     master_template,
+    tags_main_template,
     home_template,
     profile_edit_template,
     settings_template,
@@ -201,6 +202,14 @@ define([
     };
     ///////////////////////////////
 
+    o.preprocess_context = function(){
+        var user = context.user;
+        user.extra_tags = 
+            user.tagged.slice(user.tagged_ordered);
+        user.tag_list = 
+            user.tagged.slice(0, user.tagged_ordered);
+    };
+
     o.render = function(method, data){
         // console.log(method);
         var page_data = data.page_data;
@@ -221,6 +230,7 @@ define([
             if (context.page && context.page.exit) 
                 context.page.exit();
         }
+        o.preprocess_context();
         if (new_page && new_page.preprocess_page_data) 
             pages[method].preprocess_page_data(page_data);
         if (new_page) {
@@ -425,6 +435,10 @@ define([
         }
     };
 
+    o.render_main_tags = function(){
+        $("#site>.tag_list_container").replaceWith(
+            tags_main_template(context.page_data));
+    }
     o.render_tag_page = function(){
         $('#tag_bar').remove();
         $('#feed').prepend(tags_page_template(context.page_data));
