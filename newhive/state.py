@@ -1286,7 +1286,7 @@ class Expr(HasSocial):
 
     #TODO-cleanup: remove after snapshot migration
     def snapshot_name_base(self, size, time):
-        return '_'.join([self.id, time, self.entropy(), size]) + (".jpg" if (size == "full") else ".png")
+        return '_'.join([self.id, time, self.entropy(), size]) + '.jpg' #(".jpg" if (size == "full") else ".png")
 
     # size is "big" or "small".
     # will return 'snapshot_placeholder.png' if no available snapshot
@@ -1350,7 +1350,7 @@ class Expr(HasSocial):
         for local, name in upload_list:
             file_data = {'owner': self.owner.id,
                 'tmp_file': (local if it else open(local, 'r')),
-                'name': 'snapshot.png', 'mime': 'image/png',
+                'name': 'snapshot.jpg', 'mime': 'image/jpeg',
                 'generated_from': self.id, 'generated_from_type': 'Expr'}
             if not it:
                 file_record = self.db.File.create(file_data)
@@ -1359,7 +1359,7 @@ class Expr(HasSocial):
             else:
                 file_record.set_thumb(
                     dimension_list[it][0], dimension_list[it][1], file=local,
-                    mime='image/png', autogen=False)
+                    mime='image/jpeg', autogen=False)
             it += 1
         file_record.save()
 
