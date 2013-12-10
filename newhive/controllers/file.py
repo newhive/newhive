@@ -57,9 +57,7 @@ class File(ModelController):
                 'application': _handle_link,
                 'text': _handle_link,
             }
-
-            handler = supported_mimes.get(mime)
-            if not handler: handler = supported_mimes.get(mime, _handle_link)
+            handler = supported_mimes.get(mime, _handle_link)
 
             print 'mime is ' + mime
             with os.tmpfile() as local_file:
@@ -93,8 +91,7 @@ def _handle_audio(file_record, args):
 
 def _handle_image(file_record, args):
     # resample image by powers of root 2, save if file size reduces by x2
-    
-
+    file_record.set_resamples()
     if args.get('thumb'):
         thumb_file = file_record.set_thumb(222, 222)
         file_record.set_thumb(70, 70, file=thumb_file)
