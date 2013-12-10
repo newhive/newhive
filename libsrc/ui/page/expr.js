@@ -490,7 +490,8 @@ define([
                     o.edit_comment($(el));
                 });
             }
-            $(el).find('form').on('response', function(event, data) {
+            $(el).find('form').unbind('response').
+                on('response', function(event, data) {
                 o.edit_comment_response($(el), data);
             });
         });
