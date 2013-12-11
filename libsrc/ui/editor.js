@@ -268,8 +268,8 @@ Hive.App = function(init_state, opts) {
     };
 
     o.state_relative = function(env){ return {
-          position: [ _pos[0] / env.scale, _pos[1] / env.scale ]
-        , dimensions: [ _dims[0] / env.scale, _dims[1] / env.scale ]
+          position: [ o.pos()[0] / env.scale, o.pos()[1] / env.scale ]
+        , dimensions: [ o.dims()[0] / env.scale, o.dims()[1] / env.scale ]
     }};
     o.state_relative_set = function(env, s){
         o.pos_set([ Math.round(s.position[0] * env.scale),
