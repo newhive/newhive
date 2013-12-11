@@ -296,7 +296,9 @@ class Community(Controller):
 
     def edit_expr(self, tdata, request, id=None):
         expr = self.db.Expr.fetch(id)
-        if not expr or not tdata.user.can_view(expr): return None
+        if not expr or (
+            (not tdata.user.can_view(expr)) and expr.get('password')
+        ): return None
         # For others' expressions, require the #remix tag
         if (tdata.user.id != expr['owner'] and
             "remix" not in expr.get('tags_index', [])):
