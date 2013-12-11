@@ -201,7 +201,7 @@ Hive.App = function(init_state, opts) {
         o.div.css('z-index', n);
     };
     
-    var _pos;
+    var _pos = [-999, -999];
     o.pos = function(){ return [ _pos[0], _pos[1] ]; };
     o.pos_set = function(pos){
         _pos = [ Math.round(pos[0]), Math.round(pos[1]) ];
@@ -231,7 +231,7 @@ Hive.App = function(init_state, opts) {
         history_point.save()
     };
 
-    var _dims;
+    var _dims = [-1,-1];
     o.dims = function() { return [ _dims[0], _dims[1] ]; };
     o.dims_set = function(dims){
         _dims = [ Math.round(dims[0]), Math.round(dims[1]) ];
