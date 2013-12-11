@@ -86,6 +86,10 @@ class Controller(object):
         tdata.context.update(flags=user_flags)
 
         return (tdata, response)
+
+    def empty(self, tdata, request, response, **args):
+        tdata.context.update(page_data={}, route_args=args)
+        return self.serve_loader_page('pages/main.html', tdata, request, response)
     
     def render_template(self, tdata, response, template):
         context = tdata.context

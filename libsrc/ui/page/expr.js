@@ -252,11 +252,16 @@ define([
             debug("caching frame, already loaded: " + find_card(expr_id));
             return contentFrame;
         }
+
         // Create new content frame
-        var contentFrameURL = o.content_url_base + expr_id;
-        contentFrame = $('<iframe class="expr" allowfullscreen>').attr('src',
-            contentFrameURL + ((current != undefined) ? "" : "?no-embed"))
-            .attr('id','expr_' + expr_id);
+        var args = {};
+        if(current == undefined) args['no-embed'] = true;
+        args['viewport'] = $(window).width() +'x'+ $(window).height();
+        var contentFrameURL = o.content_url_base + expr_id +
+            '?' + $.param(args);
+        contentFrame = $('<iframe class="expr" allowfullscreen>')
+            .attr('src', contentFrameURL).attr('id', 'expr_' + expr_id);
+
         // Cache the expr data on the card
         var page_data = context.page_data;
         if (page_data.cards != undefined) {
@@ -275,6 +280,7 @@ define([
             }
         }
         debug("caching frame: " + found);
+
         // Remember all the frames that are loading.
         loading_frame_list = loading_frame_list.concat(contentFrame.eq(0));
         contentFrame.load(function () {
@@ -294,6 +300,7 @@ define([
             // alert("loaded frame.  Others remaining:" + loading_frame_list);
         });
         $('#exprs').append(contentFrame);
+
         // Remove all but 2 loading frames
         var max_loading_frames = 2;
         var removed_frames = loading_frame_list.splice(0, Math.max(0, loading_frame_list.length - max_loading_frames));
@@ -490,7 +497,8 @@ define([
                     o.edit_comment($(el));
                 });
             }
-            $(el).find('form').on('response', function(event, data) {
+            $(el).find('form').unbind('response').
+                on('response', function(event, data) {
                 o.edit_comment_response($(el), data);
             });
         });
@@ -631,7 +639,10 @@ define([
         var popup = $('#social_overlay');
         // TODO: animate
         if (popup.css('display') == 'none') {
-            popup.showshow();
+            popup.showshow()
+            // .css("height", 0).animate(
+            //     {height:"181px"}, 
+            //     {duration:o.anim_duration});
             fixup_tags_list();
         } else {
             popup.hidehide();

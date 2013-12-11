@@ -12,6 +12,14 @@
       {>}
     </div>
     <div class="right_pane">
+      {# plus menu (Add to collection) #}
+      <div class="icon plus_menu needs_login pointer"></div>
+      {<if flags.admin}
+        <form {form_attrs "add_featured_queue"} method="POST">
+          <input type="hidden" name="expr_id" value="{id}">
+          <button type="submit" class="icon add_queue pointer"></button>
+        </form>
+      {>}
       {# tags #}
       <div class="vcenter_spacer"><div class="spacer">
         {<with null "more_menu" true}

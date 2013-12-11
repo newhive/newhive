@@ -169,6 +169,29 @@ class Database:
 
         return search
 
+    ####################################################################
+    # Misc database utility functions
+    ####################################################################
+
+    # Add or promote an item in the featured list
+    def add_featured(self, expr_id):
+        return self.User.root_user.add_promote_tagged(expr_id, "Featured")
+
+    # pop one item off the queue and push it onto the featured list
+    def pop_featured_queue(self):
+        ru = self.User.root_user
+        tagged = ru.tagged
+        featured_queue = tagged.get('_Featured', [])
+        if len(featured_queue) == 0: 
+            return
+
+        expr_id = featured_queue[0]
+        self.add_featured(expr_id)
+        ru.reload()
+        tagged = ru.tagged
+        tagged['_Featured'] = featured_queue[1:]
+        ru.update(updated=False, tagged=tagged)
+
 class Collection(object):
     trashable = True
 
@@ -555,6 +578,48 @@ class User(HasSocial):
     @property
     def broadcast_ids(self): return [i['entity'] for i in self.broadcast]
 
+    @property
+    def tagged(self):
+        return self.get('tagged', {})
+
+    def add_to_collection(self, expr_id, tag_name, add_to_back=False):
+        expr = self.db.Expr.fetch(expr_id)
+        if not expr:
+            return False
+
+        tagged = self.tagged
+        collection = self.get_tag(tag_name, force_update=True)
+        if add_to_back:
+            collection = collection + [expr_id]
+        else:
+            collection = [expr_id] + collection
+        tagged[tag_name] = collection
+
+        # add the tag on owned expression
+        if expr.owner.id == self.id:
+            expr.update(updated=False, 
+                tags=(expr.get('tags','') + ' #' + tag_name).strip())
+        self.update(tagged=tagged)
+        return True
+
+    # Add or promote an item in a tagged list
+    def add_promote_tagged(self, expr_id, tag_name):
+        if not self.db.Expr.fetch(expr_id):
+            return False
+
+        collection = self.get_tag(tag_name, force_update=True)
+        # Filter the given id out of the list (so it can be promoted)
+        if expr_id in collection:
+            collection.remove(expr_id)
+            self.tagged[tag_name] = [expr_id] + collection
+            self.update(tagged=self.tagged)
+            return True
+
+        # New expression handled in default manner
+        self.add_to_collection(expr_id, tag_name)
+
+        return True
+
     def calculate_tags(self):
         public_cnt = Counter()
         unlisted_cnt = Counter()
@@ -564,16 +629,30 @@ class User(HasSocial):
                 if expr.get('auth', 'unlisted') == 'public':
                     public_cnt[tag] += 1
         for cnt in [public_cnt, unlisted_cnt]:
-            top = cnt.most_common(1)[0][1]
+            top = cnt.most_common(1)[0][1] if cnt.keys() else 0
             #TODO: need to actually differentiate each expression by auth
             for tag, tagged in self.get('tagged', {}).items():
                 if len(tagged):
                     cnt[tag] += top + len(tagged)
         tag_entropy = self.get('tag_entropy', {})
-        for tag, x in cnt.most_common():
+        for tag, x in unlisted_cnt.most_common():
             tag_entropy.setdefault(tag, junkstr(6))
         self.update(public_tags = public_cnt, unlisted_tags = unlisted_cnt,
             tag_entropy=tag_entropy)
+
+    def get_tags(self, privacy, remove_singletons=True):
+        cnt = Counter(self.get('unlisted_tags' if privacy else 'public_tags', {}))
+        # remove single-expression tags
+        if remove_singletons:
+            single_count = set(cnt.keys())
+            cnt -= Counter(single_count)
+        # sort reordered tags to front of list
+        ordered_tags = self.get('ordered_tags', [])
+        for key in ordered_tags:
+            del cnt[key]
+        # concat the lists and possibly the empty tag_name
+        all_tags = ordered_tags + [x for x,y in cnt.most_common()]
+        return (len(ordered_tags), all_tags)
 
     def get_tag(self, tag, limit=0, force_update=False):
         tagged = self.get('tagged', {})
@@ -585,9 +664,9 @@ class User(HasSocial):
                 'owner': self.id, 'tags_index': tag })
             if expression_list:
                 expression_id_list = map(lambda e: e.id, expression_list)
-                if force_update:
-                    tagged[tag] = expression_id_list
-                    self.update(updated=False, tagged=tagged)
+            if force_update:
+                tagged[tag] = expression_id_list
+                self.update(updated=False, tagged=tagged)
 
         return expression_id_list if not limit else expression_id_list[:limit]
 
@@ -847,7 +926,7 @@ class User(HasSocial):
         at=int(at)
         limit=int(limit)
         spec = {'initiator': self.id,
-            'class_name': {'$in': ['Broadcast','UpdatedExpr','NewExpr']}
+            'class_name': {'$in': ['Broadcast','UpdatedExpr','NewExpr','Remix']}
         }
         result = []
         exprs = {}
@@ -1043,7 +1122,12 @@ class User(HasSocial):
             notification_count = self.notification_count,
         ) )
         if special.has_key("tagged"):
-            dict.update(user, { "tagged": self.get('tagged', {}).keys() })
+            # dict.update(user, { "tagged": self.get('tagged', {}).keys() })
+            #!! TODO-perf: remove after we migrate to run on all users
+            self.calculate_tags()
+            update = {}
+            (update['tagged_ordered'], update['tagged']) = self.get_tags(True)
+            dict.update(user, update)
         if special.has_key("mini_expressions") and g_flags['mini_expressions']:
             # exprs = self.db.Expr.cards({'owner': self.id}, limit=3)
             exprs = self.get_top_expressions(g_flags['mini_expressions'])
@@ -1133,10 +1217,11 @@ class Expr(HasSocial):
         def cards(self, spec, auth=None, viewer=None, override_unlisted=False, **opts):
             filter = {}
             spec2 = spec if type(spec) == dict else filter
-            #!!TODO BUGBUG: Hack for Zach
+            # Hack for Zach. TODO-cleanup: verify with Zach that this link
+            # isn't needed anymore and remove
             if (spec2.has_key('tags_index') 
                 and ['deck2013'] in spec2.get('tags_index').values()):
-                override_unlisted = True
+                    override_unlisted = True
             # Set up auth filtering
             if auth:
                 spec2.update(auth=auth)
@@ -1266,7 +1351,7 @@ class Expr(HasSocial):
 
     #TODO-cleanup: remove after snapshot migration
     def snapshot_name_base(self, size, time):
-        return '_'.join([self.id, time, self.entropy(), size]) + (".jpg" if (size == "full") else ".png")
+        return '_'.join([self.id, time, self.entropy(), size]) + '.jpg' #(".jpg" if (size == "full") else ".png")
 
     # size is "big" or "small".
     # will return 'snapshot_placeholder.png' if no available snapshot
@@ -1323,14 +1408,14 @@ class Expr(HasSocial):
                     return False
             else:
                 f = open(upload_list[0][0], "r")
-                local = generate_thumb(f, (w, h), "png")
+                local = generate_thumb(f, (w, h), 'jpeg')
             upload_list.append((local,name))
 
         it = 0
         for local, name in upload_list:
             file_data = {'owner': self.owner.id,
                 'tmp_file': (local if it else open(local, 'r')),
-                'name': 'snapshot.png', 'mime': 'image/png',
+                'name': 'snapshot.jpg', 'mime': 'image/jpeg',
                 'generated_from': self.id, 'generated_from_type': 'Expr'}
             if not it:
                 file_record = self.db.File.create(file_data)
@@ -1339,7 +1424,7 @@ class Expr(HasSocial):
             else:
                 file_record.set_thumb(
                     dimension_list[it][0], dimension_list[it][1], file=local,
-                    mime='image/png', autogen=False)
+                    mime='image/jpeg', autogen=False)
             it += 1
         file_record.save()
 
@@ -1475,6 +1560,9 @@ class Expr(HasSocial):
         super(Expr, self).create()
         if 'remixed' not in self.get('tags_index', []):
             feed = self.db.NewExpr.create(self.owner, self)
+        else:
+            feed = self.db.Remix.create(self.owner, self)
+
         self.update_owner([])
         return self
 
@@ -1619,6 +1707,12 @@ class Expr(HasSocial):
             'url': self.url,
             'title': self.get('title')
         })
+        if self.get('remix_root'):
+            remix_root = self.db.Expr.fetch(self.get('remix_root'))
+            if remix_root:
+                dict.update(expr, { 'remix_root_owner': remix_root.owner['name'],
+                    'remix_root_tag': 're:' + (remix_root.get('remix_name') 
+                        or remix_root['name']) })
         if self.auth != 'public':
             expr.update({'auth': self.auth})
         expr['snapshot_big'] = self.snapshot_name("big")
@@ -1662,10 +1756,13 @@ class Expr(HasSocial):
         return self['auth'] != 'public'
 
 
-def generate_thumb(file, size, format='jpeg'):
-    # resize and crop image to size tuple, preserving aspect ratio, save over original
+def generate_thumb(file, size, format=None):
+    # resize and crop image to size tuple, preserving aspect ratio
+
     file.seek(0)
     imo = Img.open(file)
+    if not format:
+        format = imo.format
     #print "Thumbnail Generation:   initial size: " + str(imo.size),
     t0 = time.time()
     imo = ImageOps.fit(imo, size=size, method=Img.ANTIALIAS, centering=(0.5, 0.5))
@@ -1678,7 +1775,7 @@ def generate_thumb(file, size, format='jpeg'):
     #print "   conversion took " + str(dt*1000) + " ms"
 
     output = os.tmpfile()
-    imo.save(output, format=format, quality=70)
+    imo.save(output, format=format, quality=90)
     return output
 
 
@@ -1702,6 +1799,7 @@ class File(Entity):
     def file(self):
         if not self._file:
             self.download()
+        self._file.seek(0)
         return self._file
 
     def download(self):
@@ -1722,6 +1820,39 @@ class File(Entity):
             return self.IMAGE
         return self.UNKNOWN
 
+    def set_resamples(self):
+        imo = Img.open(self.file)
+        format = imo.format
+        (w, h) = imo.size
+        factor = 2 ** .5
+        resamples = []
+        while (w >= 100) or (h >= 100):
+            w /= factor
+            h /= factor
+            size = (int(w), int(h))
+            imo = imo.resize(size, resample=Img.ANTIALIAS)
+            resample_file = os.tmpfile()
+            imo.save(resample_file, quality=90, format=format)
+            resamples.append(size)
+            self.db.s3.upload_file(resample_file, 'media',
+                self._resample_name(size[0]), self._resample_name(size[0]),
+                self['mime'])
+        resamples.reverse()
+        self.update(resamples=resamples)
+
+    def get_resample(self, w=None, h=None):
+        resamples = self.get('resamples', [])
+        for size in resamples:
+            if (w and size[0] > w) or (h and size[1] > h):
+                return self.get('url') + '_' + str(int(size[0]))
+        return self.get('url')
+
+    def _resample_name(self, w):
+        return self.id + '_' + str(int(w))
+    @property
+    def _resample_names(self):
+        return [self._resample_name(s[0]) for s in self.get('resamples', [])]
+
     def set_thumb(self, w, h, file=False, mime='image/jpeg', autogen=True):
         name = str(w) + 'x' + str(h)
         thumbs = self.get('thumbs', {})
@@ -1729,7 +1860,7 @@ class File(Entity):
 
         if not file: file = self.file
         if autogen:
-            try: thumb_file = generate_thumb(file, (w,h))
+            try: thumb_file = generate_thumb(file, (w,h), format='jpeg')
             except:
                 print 'failed to generate thumb for file: ' + self.id
                 return False # thumb generation is non-critical so we eat exception
@@ -1757,15 +1888,16 @@ class File(Entity):
     default_thumb = property(get_default_thumb)
 
     @property
-    def thumb_keys(self):
+    def _thumb_keys(self):
         return [ self.id + '_' + n for n in self.get('thumbs', {}) ]
 
     def store(self):
         if self.db.config.aws_id:
-            self['protocol'] = 's3'
-            self['s3_bucket'] = self.db.s3.buckets['media'].name
-            return self.db.s3.upload_file(self._file, 'media', self.id,
-                self['name'], self['mime'])
+            self.update(protocol='s3',
+                s3_bucket=self.db.s3.buckets['media'].name,
+                url=self.db.s3.upload_file(self._file, 'media', self.id,
+                    self['name'], self['mime'])
+            )
         else:
             self['protocol'] = 'file'
             owner = self.db.User.fetch(self['owner'])
@@ -1809,25 +1941,22 @@ class File(Entity):
         self._file.seek(0); self['md5'] = md5(self._file.read()).hexdigest()
         self['size'] = os.fstat(self._file.fileno()).st_size
         super(File, self).create()
-        self['url'] = self.store()
-        self.update(url=self['url'])
+        self.store()
         return self
 
     # download file from source and reupload
     def reset_file(self, file=None):
         self.pop('s3_bucket', None)
         self.pop('fs_path', None)
-        if not file: file = self.file
-        self['url'] = self.store()
-        if self._file: self._file.close()
-        self.update(**self)
+        if file: self._file = file
+        self.store()
 
     def purge(self):
         self.delete_files()
         super(File, self).purge()
 
     def delete_files(self):
-        for k in self.thumb_keys + [self.id]:
+        for k in self._thumb_keys + [self.id] + self._resample_names:
             if self.get('s3_bucket'):
                 try:
                     self.db.s3.delete_file(self['s3_bucket'], self.id)
@@ -1990,6 +2119,8 @@ class Feed(Entity):
             r['action'] = 'Republish'
         elif self['class_name'] == 'Remix':
             r['action'] = 'Remix'
+            if (self.title):
+                r['entity_title'] = self.title
 
         return r
 
@@ -2050,13 +2181,16 @@ class Broadcast(Feed):
 @register
 class Remix(Feed):
     action_name = 'remix'
+    title = ''
 
     def create(self):
-        if self.entity['owner'] == self['initiator']:
-            raise "You mustn't remix your own expression"
+        # if self.entity['owner'] == self['initiator']:
+        #     raise "You mustn't remix your own expression"
         if type(self.entity) != Expr: raise "You may only remix expressions"
         if self.db.Remix.find({ 'initiator': self['initiator'], 'entity': self['entity'] }): return True
-        return super(Remix, self).create()
+        res = super(Remix, self).create()
+        self.title = self.db.Expr.fetch(self.entity.get('remix_root','')).get('name')
+        return res
 
 
 @register

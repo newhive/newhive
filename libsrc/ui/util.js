@@ -10,6 +10,15 @@ define([
         return "Not-found:" + name;
     };
 
+    o.val = function(x) {
+        if (typeof(x) == "number")
+            return x;
+        else if (typeof(x) == "string")
+            return parseFloat(x);
+        else
+            return 0;
+    }
+
     // Can extend jquery functions with custom behavior.
     o.extend_jquery = function() {
         (function($){
@@ -42,6 +51,8 @@ define([
                     elem.hidehide();
             };
         }(jQuery));
+        // TODO-cleanup: make this take in named functions only and unbind
+        // them by name.
         (function($){
             $.fn.bind_once = function( event_name, func ) {
                 return $(this).unbind(event_name).on(event_name, func);

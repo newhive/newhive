@@ -74,6 +74,8 @@ class Community(Controller):
     def expressions_public_tags(self, tdata, request, owner_name=None, at=0, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
+        if args.get('tag_name'): return self.expressions_tag(
+            tdata, request, owner_name=owner_name, **args)
         spec = {'owner_name': owner_name}
         cards = self.db.Expr.page(spec, viewer=tdata.user, auth='public', at=at, **args)
         return self.expressions_for(tdata, cards, owner)
@@ -333,6 +335,9 @@ class Community(Controller):
             'card_type': 'expr'
         }
 
+    # TODO-cleanup: currently used for redirects. Remove this, make propper
+    # redirect controller
+    #redirect-cleanup
     def empty(self, tdata, request, **args):
         return {}
 
@@ -345,7 +350,8 @@ class Community(Controller):
     def pre_dispatch(self, query, tdata, request, response, json=False, **kwargs):
         # "Merged" users see trending
         self.response = response
-        # Handle redirects
+
+        # TODO-cleanup: remove this, see #redirect-cleanup Handle redirects
         if kwargs.get('route_name') == 'my_profile':
             return self.redirect(response, abs_url(
                 '/' + tdata.user['name'] + '/profile' +
@@ -387,12 +393,13 @@ class Community(Controller):
             if owner and kwargs.get('include_tags'):
                 # TODO-perf: don't update list on query, update it when it changes!
                 owner.calculate_tags()
-                cnt = owner['unlisted_tags'] if (
-                    tdata.user.id == owner.id and kwargs.get('private')
-                    ) else owner['public_tags']
-                page_data['tag_list'] = [x for x,y in cnt.most_common()] # [:num_tags]
-                if kwargs.get('tag_name') and cnt[kwargs.get('tag_name')] == 0:
-                    page_data['tag_list'] = [kwargs.get('tag_name')] + page_data['tag_list']
+                (ordered_count, all_tags) = owner.get_tags(
+                    tdata.user.id == owner.id and kwargs.get('private'))
+                tag_name = kwargs.get('tag_name')
+                if tag_name and tag_name not in all_tags:
+                    all_tags = all_tags[:ordered_count] + [tag_name] + all_tags[ordered_count:]
+                page_data['tag_list'] = all_tags # [:num_tags]
+                page_data['ordered_count'] = ordered_count
                 if kwargs.get('private') and tdata.user.id == owner.id:
                     page_data['tag_entropy'] = owner.get('tag_entropy', {})
             else:

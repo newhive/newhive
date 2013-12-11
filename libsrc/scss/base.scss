@@ -49,6 +49,15 @@
         overflow: hidden;
     }
 }
+.place_holder {
+    display: inline-block;
+    background-color: #CCC;
+    height: 31px;
+    width: 100px;
+    vertical-align: top;
+    margin-top: 7px;
+    margin-right: 7px;
+}
 
 button {
     border: none;
@@ -111,7 +120,7 @@ button {
         // margin-right: -3px;
         // display: inline-block;
         vertical-align: top;
-        width: 33.33%;
+        width: 0px;
         // float: left;
         display: inline-block;
 

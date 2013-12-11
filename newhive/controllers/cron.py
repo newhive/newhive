@@ -6,7 +6,7 @@ from newhive.utils import now, lget, dfilter
 from newhive.analytics.analytics import user_expression_summary
 import newhive.analytics.queries
 import newhive.mail
-from newhive import config
+from newhive import state, config
 from newhive.controllers.controller import Controller
 
 class Cron(Controller):
@@ -33,6 +33,9 @@ class Cron(Controller):
         status.update({'timestamp': now(), 'args': opts})
         return self.serve_json(response, status)
 
+    def pop_featured_queue(self):
+        self.db.pop_featured_queue()
+        return {}
 
     def email_star_broadcast(self, delay=0, span=600):
         spec = {'send_email': True, 'created': {"$gt": now() - delay - span, "$lt": now() - delay } }

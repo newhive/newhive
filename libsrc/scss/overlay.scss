@@ -127,6 +127,14 @@
     // height: 180px;
     &:hover { background-color: white; }
 
+    .plus_menu, .icon.add_queue {
+        position: absolute;
+        // background-color: black;
+        top: 18px;
+        right: 27px;
+        margin: 0px;
+    }
+    .icon.add_queue { right: 77px; }
     #popup_content {
         //position:absolute;
         //top: 44px;
@@ -134,7 +142,7 @@
         overflow-x: auto;
         margin: auto;
         padding: 20px 0px 0px 10px;
-        position: relative;
+        // position: relative;
         //height: 306px;
         //overflow: auto;
         // Direct descendents

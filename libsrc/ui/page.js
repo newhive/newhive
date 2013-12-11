@@ -16,6 +16,7 @@ define([
     'sj!templates/collections.html',
     'sj!templates/overlay.html',
     'sj!templates/card_master.html',
+    'sj!templates/tags_main.html',
     'sj!templates/home.html',
     'sj!templates/profile_edit.html',
     'sj!templates/settings.html',
@@ -36,6 +37,7 @@ define([
     'sj!templates/network_nav.html',
     'sj!templates/login_form.html', 
     'sj!templates/request_invite_form.html',
+    'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js',
     'sj!templates/cards.html'
 ], function(
     $,
@@ -50,6 +52,7 @@ define([
     collections_template,
     overlay_template,
     master_template,
+    tags_main_template,
     home_template,
     profile_edit_template,
     settings_template,
@@ -199,6 +202,14 @@ define([
     };
     ///////////////////////////////
 
+    o.preprocess_context = function(){
+        var user = context.user;
+        user.extra_tags = 
+            user.tagged.slice(user.tagged_ordered);
+        user.tag_list = 
+            user.tagged.slice(0, user.tagged_ordered);
+    };
+
     o.render = function(method, data){
         // console.log(method);
         var page_data = data.page_data;
@@ -219,6 +230,9 @@ define([
             if (context.page && context.page.exit) 
                 context.page.exit();
         }
+        o.preprocess_context();
+        if (new_page && new_page.preprocess_page_data) 
+            pages[method].preprocess_page_data(page_data);
         if (new_page) {
             context.page = new_page;
             if (new_page.set_page) 
@@ -260,6 +274,61 @@ define([
         o.attach_handlers();
     };
     var local_attach_handlers = function(){
+        // Add expression to collection
+        $(".plus_menu").unbind('click').on('click', function(e) {
+            if (0 == $(".dialog.add_to_collection").length) {
+                $('#site').append(collections_template(context.page_data));
+                o.dia_collections = dialog.create(".dialog.add_to_collection", {});
+                var new_tags_autocomplete = false;
+                if (new_tags_autocomplete) {
+                    var all_tags = context.user.tagged.slice(0); // clone
+                    all_tags.sort();
+                    $(".dialog.add_to_collection .tag_name").autocomplete({
+                        source: all_tags,
+                    });
+                }
+            }
+            o.dia_collections.open();
+            var submit_add_to_collection = function(tag_name) {
+                $(".dialog.add_to_collection input[name=tag_name]").val(tag_name);
+                $(".dialog.add_to_collection form").submit();
+                o.dia_collections.close();
+            };
+            var update_text = function (){
+                var text = $(".dialog.add_to_collection .tag_name");
+                $(text).val( $(text).val().replace(/[^a-z0-9\_]+/i, '') );
+                $(".dialog.add_to_collection .tag_new")
+                    .text($(text).val()).showshow().addClass("tag_15");
+                if ('' == $(text).val())
+                    $(".dialog.add_to_collection .tag_new").hidehide();
+            }
+            $(".dialog.add_to_collection form").on('keypress', function (e) {
+                e = e || event;
+
+                if ((e.keyCode || e.which || e.charCode || 0) == 13) {
+                    submit_add_to_collection($(".dialog.add_to_collection .tag_name").val());
+                    return false;
+                }
+                return true;
+            });
+            $(".dialog.add_to_collection .tag_name").on('keyup', function (e) {
+                update_text();
+            });
+            $(".dialog.add_to_collection .tag_list .tag_label").
+                unbind('click').on('click', function (e) {
+                submit_add_to_collection($(this).text());
+            });
+            var card = $(this).parents().filter(".expr.card");
+            var expr_id = ""
+            // If the plus button is on a card, use its ID info
+            if (card.length) 
+                expr_id = card.prop("id").slice(5);
+            else // otherwise use the data in context
+                expr_id = context.page_data.expr_id;
+            $(".dialog.add_to_collection input[name=expr_id]").val(expr_id);
+            // $(".dialog.add_to_collection .tag_new").text("").hidehide();
+            update_text();
+        });
         if (!context.user.logged_in) {
             $(".needs_login").unbind("click").click(function(e) {
                 $("#dia_login_or_join").data("dialog").open();
@@ -302,10 +371,10 @@ define([
         // global keypress handler
         $("body").unbind('keydown').keydown(function(e) {
             if (window.event)
-               key = window.event.keyCode;
+               var key = window.event.keyCode;
             else if (e)
-               key = e.which;
-            keychar = String.fromCharCode(key);
+               var key = e.which;
+            var keychar = String.fromCharCode(key);
             if (e.keyCode == 27) { // escape
                 // If a dialog is up, kill it.
                 dialog.close_all();
@@ -317,8 +386,12 @@ define([
                     var speed = (e.shiftKey) ? 2 : 1;
                     context.page.navigate_page((e.keyCode == 39) ? speed : -speed);
                 }
-            } else if ($("#search_box").is(":visible") && !$(":focus").length
-                && /[a-zA-Z0-9#@/]/.test(keychar)) {
+            } else if (/*$("#search_box").is(":visible") && */!$(":focus").length
+                && (( /[A-Z0-9]/.test(keychar) && ! e.shiftKey) ||
+                (/[A-Z23]/.test(keychar) && e.shiftKey))) {
+                // Wow that was complicated. keychar will be the *unmodified* state,
+                // so to check for @, #, it's 2,3 with shift held.
+                $(".search_bar").showshow();
                 $("#search_box").focus();
             } else {
                 // alert('keyCode: ' + e.keyCode);
@@ -345,9 +418,10 @@ define([
     }
 
     o.grid = function(page_data){
-        grid_width = 410;
+        grid_width = 412;
         render_site(page_data);
-        o.column_layout = true;//(context.route == "");
+        // TODO: BUGBUG: should be data driven
+        o.column_layout = (context.route_name == "network");
     }
 
     o.forms = function(page_data){
@@ -361,6 +435,10 @@ define([
         }
     };
 
+    o.render_main_tags = function(){
+        $("#site>.tag_list_container").replaceWith(
+            tags_main_template(context.page_data));
+    }
     o.render_tag_page = function(){
         $('#tag_bar').remove();
         $('#feed').prepend(tags_page_template(context.page_data));
@@ -547,10 +625,11 @@ define([
 
     // Set up the grid borders
     o.add_grid_borders = function(columns){
+        var columns = o.columns;
         if(context.page_data.layout != 'grid') return;
         var expr_cards = $('#feed .card');
         // Count of cards which fit to even multiple of columns
-        var card_count = expr_cards.length - (expr_cards.length % columns);
+        var card_count = expr_cards.length - columns;// - (expr_cards.length % columns);
         expr_cards.each(function(i) {
             if (o.column_layout) {
                 if (! $(this).parent().hasClass("column_0"))

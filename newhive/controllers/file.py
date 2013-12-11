@@ -22,14 +22,10 @@ class File(ModelController):
             if file.getcode() != 200:
                 return {'error': 'remote url download failed with status %s' % (file.getcode())}
             mime = file.headers.getheader('Content-Type')
-            filename = lget([i[1] for i in [
-                i.split('=') for i in
-                    file.headers.get('content-disposition', '').split(';')]
-                if i[0].strip() == 'filename'], 0)
-            if filename:
-                file.filename = filename + mimetypes.guess_extension(mime)
-            else:
-                file.filename = os.path.basename(urlparse.urlsplit(url).path)
+            name = url.strip('/').split('/')[-1]
+            if mimetypes.guess_type(name)[0] == None:
+                name = name + mimetypes.guess_extension(mime)
+            file.filename = name
             files = [file]
         else:
             request.max_content_length = 100000000 # max size 100MB
@@ -61,9 +57,7 @@ class File(ModelController):
                 'application': _handle_link,
                 'text': _handle_link,
             }
-
-            handler = supported_mimes.get(mime)
-            if not handler: handler = supported_mimes.get(mime, _handle_link)
+            handler = supported_mimes.get(mime, _handle_link)
 
             print 'mime is ' + mime
             with os.tmpfile() as local_file:
@@ -96,6 +90,8 @@ def _handle_audio(file_record, args):
     return {'meta': data}
 
 def _handle_image(file_record, args):
+    # resample image by powers of root 2, save if file size reduces by x2
+    file_record.set_resamples()
     if args.get('thumb'):
         thumb_file = file_record.set_thumb(222, 222)
         file_record.set_thumb(70, 70, file=thumb_file)

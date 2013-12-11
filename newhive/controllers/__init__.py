@@ -1,3 +1,4 @@
+from controller import * # for tab completion
 import controller, community, expr, file, user, cron, admin
 
 class Controllers(object):
