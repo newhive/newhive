@@ -3,7 +3,15 @@
   more_menu: true to have the "..." tag with associated menu
 #}
 <div class="tag_list {extra_classes}">
-  {<if plus_menu}<div class="icon plus_menu needs_login pointer"></div>{>}
+  {<if plus_menu}
+    <div class="icon plus_menu needs_login pointer"></div>
+    {<if flags.admin}
+      <form {form_attrs "add_featured_queue"} method="POST">
+        <input type="hidden" name="expr_id" value="{id}">
+        <button type="submit" class="icon add_queue pointer"></button>
+      </form>
+    {>}
+  {>}
   <div class="delete icon pointer"></div>
   {<for tags "tagnum"}
     {|templates/tag_card.html}

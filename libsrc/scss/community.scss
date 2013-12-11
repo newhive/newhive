@@ -305,7 +305,7 @@
     }
 }
 
-.icon.plus_menu, .icon.delete {
+.icon.plus_menu, .icon.delete, .icon.add_queue {
     // display:inline-block;
     width: 44px;
     height: 44px;
@@ -316,6 +316,11 @@
 }
 .icon.plus_menu {
     background-image: asset_url('skin/nav/plus.png');
+    float: left;
+}
+.icon.add_queue {
+    background-image: asset_url('skin/nav/plus.png');
+    background-color: purple;
     float: left;
 }
 .icon.delete {

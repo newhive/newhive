@@ -359,6 +359,11 @@
         "client_method": "admin",
         "require_login": true
     },
+    "add_featured_queue": {
+        "api_route": "/api/admin/add_featured_queue",
+        "controller": "admin",
+        "method": "add_featured_queue"
+    },
     "cron": {
         "page_route": "/home/cron/<path:method_name>",
         "api_route": "/api/home/cron/<path:method_name>",

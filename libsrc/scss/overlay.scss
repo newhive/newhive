@@ -127,13 +127,14 @@
     // height: 180px;
     &:hover { background-color: white; }
 
-    .plus_menu {
+    .plus_menu, .icon.add_queue {
         position: absolute;
         // background-color: black;
         top: 18px;
         right: 27px;
         margin: 0px;
     }
+    .icon.add_queue { right: 77px; }
     #popup_content {
         //position:absolute;
         //top: 44px;
