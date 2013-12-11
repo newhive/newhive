@@ -149,7 +149,7 @@ class Database:
         # q_no_quotes = re.sub(r'"(.*?)"', '', q, flags=re.UNICODE)
         # search['phrases'].extend(q_quotes)
 
-        for pattern in re.findall(r'(\b|\W+)((\w|[:-])+)', q):
+        for pattern in re.findall(r'(\b|\W+)((\w|[:-_])+)', q):
             prefix = re.sub( r'[^#@]', '', pattern[0] )
             if prefix == '@': search['user'] = pattern[1].lower()
             elif prefix == '#':
@@ -181,7 +181,7 @@ class Database:
     def pop_featured_queue(self):
         ru = self.User.root_user
         tagged = ru.tagged
-        featured_queue = tagged.get('_Featured', [])
+        featured_queue = tagged.get('_featured', [])
         if len(featured_queue) == 0: 
             return
 
@@ -189,7 +189,7 @@ class Database:
         self.add_featured(expr_id)
         ru.reload()
         tagged = ru.tagged
-        tagged['_Featured'] = featured_queue[1:]
+        tagged['_featured'] = featured_queue[1:]
         ru.update(updated=False, tagged=tagged)
 
 class Collection(object):
