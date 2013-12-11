@@ -322,7 +322,7 @@ define([
                 o.error = d(pair[1]);
             }
         });
-        window.location.hash = window.location.hash.replace(/#error[^#]*/,"")
+        // window.location.hash = window.location.hash.replace(/#error[^#]*/,"")
     };
     o.query = {}; // set by ui.controller
 
