@@ -41,5 +41,5 @@ class Admin(Controller):
         resp = {}
         expr_id = request.form.get('expr_id')
 
-        self.db.User.root_user.add_to_collection(expr_id, "_Featured", add_to_back=True)
+        self.db.User.root_user.add_to_collection(expr_id, "_featured", add_to_back=True)
         return self.serve_json(response, resp)
