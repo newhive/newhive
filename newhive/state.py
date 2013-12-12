@@ -1353,11 +1353,10 @@ class Expr(HasSocial):
     def snapshot_name_base(self, size, time):
         return '_'.join([self.id, time, self.entropy(), size]) + '.jpg' #(".jpg" if (size == "full") else ".png")
 
-    # size is "big" or "small".
-    # will return 'snapshot_placeholder.png' if no available snapshot
+    # size is 'big', 'small', or 'tiny'.
     def snapshot_name(self, size):
         if not self.get('snapshot_time'): return False
-        if self.get('snapshot_id') or self.get('snapshot'):
+        if self.get('snapshot_id'):
             dimensions = {"big": (715, 430), "small": (390, 235), 'tiny': (70, 42)}
             snapshot = self.db.File.fetch(self.get('snapshot') or self['snapshot_id'])
             if not snapshot: return ''
@@ -1367,8 +1366,9 @@ class Expr(HasSocial):
             else: filename = snapshot.get_thumb(dimension[0], dimension[1])
             return filename
 
+        # TODO-cleanup: remove after all snapshots have been migrated to files
         filename = self.snapshot_name_base(size, str(self.get('snapshot_time')))
-        return 'https://%s.s3.amazonaws.com/%s' % (self.db.config.s3_buckets['thumb'], filename)
+        return bucket_url('thumb') + filename
 
     def take_full_shot(self):
         snapshotter = Snapshots()
@@ -1487,9 +1487,6 @@ class Expr(HasSocial):
         super(Expr, self).update(**d)
 
         self.update_owner(old_tags)
-
-        if not config.live_server and (d.get('apps') or d.get('background')):
-            self.threaded_snapshot(retry=120)
 
     def update_owner(self, old_tags):
         old_tags = set(old_tags)
@@ -1844,7 +1841,8 @@ class File(Entity):
         resamples = self.get('resamples', [])
         for size in resamples:
             if (w and size[0] > w) or (h and size[1] > h):
-                return self.get('url') + '_' + str(int(size[0]))
+                return ( self.db.s3.bucket_url('media') + self.id + '_' +
+                    str(int(size[0])) )
         return self.get('url')
 
     def _resample_name(self, w):
