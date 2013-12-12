@@ -149,8 +149,9 @@ class Database:
         # q_no_quotes = re.sub(r'"(.*?)"', '', q, flags=re.UNICODE)
         # search['phrases'].extend(q_quotes)
 
-        for pattern in re.findall(r'(\b|\W+)((\w|[:-_])+)', q):
-            prefix = re.sub( r'[^#@]', '', pattern[0] )
+        for pattern in re.findall(r'(\b\w+)|(\@|\#)((\w|[-:])+)', q):
+            prefix = pattern[1]
+            if prefix != '': pattern = pattern[1:]
             if prefix == '@': search['user'] = pattern[1].lower()
             elif prefix == '#':
                 if pattern[1] == 'Public': search['auth'] = 'public'
@@ -1561,7 +1562,9 @@ class Expr(HasSocial):
         if 'remixed' not in self.get('tags_index', []):
             feed = self.db.NewExpr.create(self.owner, self)
         else:
-            feed = self.db.Remix.create(self.owner, self)
+            remixed_expr = self.db.Expr.fetch(self['remix_parent_id'])
+            feed = self.db.Remix.create(self.owner, remixed_expr, 
+                data={'new_expr':self})
 
         self.update_owner([])
         return self
@@ -2119,8 +2122,12 @@ class Feed(Entity):
             r['action'] = 'Republish'
         elif self['class_name'] == 'Remix':
             r['action'] = 'Remix'
-            if (self.title):
-                r['entity_title'] = self.title
+            if r.get('entity_other_id'):
+                new_expr = self.db.Expr.fetch(r['entity_other_id'])
+                if new_expr:
+                    r['other_owner_name'] = new_expr.owner['name']
+                    r['other_entity_name'] = new_expr['name']
+                    r['entity_url'] = new_expr.url
 
         return r
 
@@ -2181,15 +2188,16 @@ class Broadcast(Feed):
 @register
 class Remix(Feed):
     action_name = 'remix'
-    title = ''
 
     def create(self):
         # if self.entity['owner'] == self['initiator']:
         #     raise "You mustn't remix your own expression"
         if type(self.entity) != Expr: raise "You may only remix expressions"
-        if self.db.Remix.find({ 'initiator': self['initiator'], 'entity': self['entity'] }): return True
+        # if self.db.Remix.find({ 'initiator': self['initiator'], 'entity': self['entity'] }): return True
+        new_expr = self.get('new_expr')
+        if new_expr:
+            self['entity_other_id'] = new_expr.id
         res = super(Remix, self).create()
-        self.title = self.db.Expr.fetch(self.entity.get('remix_root','')).get('name')
         return res
 
 
