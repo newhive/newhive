@@ -2391,7 +2391,7 @@ Hive.init = function(exp, page){
         //$('#save_submit .label').hidehide(); // can't get to look nice
     }).ajaxStop(function(){
         busy_e.hidehide();
-        $('#save_submit').removeClass('disabled');;
+        $('#save_submit').removeClass('disabled');
         //$('#save_submit .label').showshow();
     }).ajaxError(function(ev, jqXHR, ajaxOptions){
         // TODO-polish upload_error: show some warning, and somehow indicate

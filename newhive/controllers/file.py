@@ -11,22 +11,20 @@ class File(ModelController):
     @auth_required
     def create(self, tdata, request, response, **args):
         """ Saves a file uploaded from the expression editor, responds
-        with a Hive.App JSON object.
+        with a JSON list of Hive.App objects.
         """
+
         url = request.form.get('url')
         if url:
             try:
-                file = urllib.urlopen(url)
+                file = fetch_url(url)
             except:
                 return {'error': 'remote url download failed'}
             if file.getcode() != 200:
-                return {'error': 'remote url download failed with status %s' % (file.getcode())}
-            mime = file.headers.getheader('Content-Type')
-            name = url.strip('/').split('/')[-1]
-            if mimetypes.guess_type(name)[0] == None:
-                name = name + mimetypes.guess_extension(mime)
-            file.filename = name
+                return { 'error': 'remote url download failed with status %s'
+                    % file.getcode() }
             files = [file]
+            mime = file.mime
         else:
             request.max_content_length = 100000000 # max size 100MB
             files = itertools.chain.from_iterable(request.files.iterlistvalues())
@@ -39,36 +37,12 @@ class File(ModelController):
                 mime = parse_options_header(file.headers.getheader('Content-Type'))[0]
             else:
                 mime = mimetypes.guess_type(file.filename)[0]
-
             if not mime: mime = 'application/octet-stream'
-            # media, subtype = mime.split('/')
+            file.mime = mime
 
-            # Supported mime types.  First try to find exact match to full mime
-            # type (e.g. text/html), then default to generic type (e.g. text).
-            # If that doesn't exist either, treat as binary to link to
-            supported_mimes = {
-                'audio/mpeg': _handle_audio,
-                'audio/mp4': _handle_audio,
-                'image/gif': _handle_image,
-                'image/jpeg': _handle_image,
-                'image/png': _handle_image,
-                'text/html': _handle_html,
-                'application/javascript': _handle_js,
-                'application': _handle_link,
-                'text': _handle_link,
-            }
-            handler = supported_mimes.get(mime, _handle_link)
+            file_record = create_file(tdata.user, file, url=url, args=request.form)
+            rv.append(file_record.client_view())
 
-            print 'mime is ' + mime
-            with os.tmpfile() as local_file:
-                local_file.write(file.read())
-
-                file_data = {'owner': tdata.user.id,
-                    'tmp_file': local_file, 'name': file.filename, 'mime': mime}
-                if url: file_data['source_url'] = url
-                file_record = self.db.File.create(file_data)
-                file_record.update(**handler(file_record, request.form))
-                rv.append(file_record.client_view())
         return self.serve_json(response, rv)
 
     def resize(self, request, response, **args):
@@ -80,6 +54,42 @@ class File(ModelController):
         res = self.db.File.fetch(request.form.get('id'))
         if res: res.delete()
         return True
+
+def create_file(owner, file, url=None, args={}):
+    # Supported mime types.  First try to find exact match to full mime
+    # type (e.g. text/html), then default to generic type (e.g. text).
+    # If that doesn't exist either, treat as binary to link to
+    supported_mimes = {
+        'audio/mpeg': _handle_audio,
+        'audio/mp4': _handle_audio,
+        'image/gif': _handle_image,
+        'image/jpeg': _handle_image,
+        'image/png': _handle_image,
+        'text/html': _handle_html,
+        'application/javascript': _handle_js,
+        'application': _handle_link,
+        'text': _handle_link,
+    }
+    handler = supported_mimes.get(file.mime, _handle_link)
+
+    with os.tmpfile() as local_file:
+        local_file.write(file.read())
+        file_data = { 'owner': owner.id, 'tmp_file': local_file,
+            'name': file.filename, 'mime': file.mime }
+        if url: file_data['source_url'] = url
+        file_record = owner.db.File.create(file_data)
+        file_record.update(**handler(file_record, args))
+        return file_record
+
+# download URL, return file object with mime property
+def fetch_url(url):
+    file = urllib.urlopen(url)
+    file.mime = file.headers.getheader('Content-Type')
+    name = url.strip('/').split('/')[-1]
+    if mimetypes.guess_type(name)[0] == None:
+        name = name + mimetypes.guess_extension(file.mime)
+    file.filename = name
+    return file
 
 def _handle_audio(file_record, args):
     track = hsaudiotag.auto.File(file_record.file)

@@ -46,3 +46,8 @@ class S3Interface(object):
         k.make_public()
         return k.generate_url(0, query_auth=False)
 
+    def bucket_url(self, bucket='media'):
+        return ('https://%s.s3.amazonaws.com/' %
+            self.config.s3_buckets[bucket])
+
+
