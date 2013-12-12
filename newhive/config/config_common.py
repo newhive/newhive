@@ -23,7 +23,7 @@ s3_buckets = {
     'assets': None,
 }
 
-admins          = ['abram', 'cara', 'zach', 'newduke', 'fatsycline']
+admins          = ['abram', 'cara', 'zach', 'newduke', 'fatsycline','root','newhive']
 
 default_email_subscriptions = ['love', 'listen', 'share_expr', 'comment', 'broadcast', 'featured', 'milestone']
 milestones = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000,
