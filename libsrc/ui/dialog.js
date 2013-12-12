@@ -19,7 +19,7 @@ define([
                     el_show.showshow();
                     opts.dialog.find(".success_hide").hidehide();
                 } else {
-                    opts.close();
+                    o.close();
                 }
             }
         };
