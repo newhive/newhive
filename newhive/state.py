@@ -1361,20 +1361,18 @@ class Expr(HasSocial):
 
     # size is 'big', 'small', or 'tiny'.
     def snapshot_name(self, size):
-        if not self.get('snapshot_time'): return False
-        if self.get('snapshot_id'):
-            dimensions = {"big": (715, 430), "small": (390, 235), 'tiny': (70, 42)}
-            snapshot = self.db.File.fetch(self.get('snapshot') or self['snapshot_id'])
-            if not snapshot: return ''
-            dimension = dimensions.get(size, False)
-            if size == "big" or not dimension:
-                filename = snapshot['url']
-            else: filename = snapshot.get_thumb(dimension[0], dimension[1])
-            return filename
+        if not self.get('snapshot_time') or self.get('snapshot_id'):
+            return False
 
-        # TODO-cleanup: remove after all snapshots have been migrated to files
-        filename = self.snapshot_name_base(size, str(self.get('snapshot_time')))
-        return bucket_url('thumb') + filename
+        dimensions = {"big": (715, 430), "small": (390, 235), 'tiny': (70, 42)}
+        snapshot = self.db.File.fetch(self.get('snapshot') or self['snapshot_id'])
+        if not snapshot:
+            return False
+        dimension = dimensions.get(size, False)
+        if size == "big" or not dimension:
+            filename = snapshot['url']
+        else: filename = snapshot.get_thumb(dimension[0], dimension[1])
+        return filename
 
     def take_full_shot(self):
         snapshotter = Snapshots()
@@ -1417,21 +1415,21 @@ class Expr(HasSocial):
                 local = generate_thumb(f, (w, h), 'jpeg')
             upload_list.append((local,name))
 
-        it = 0
+        it = True
         for local, name in upload_list:
             file_data = {'owner': self.owner.id,
                 'tmp_file': (local if it else open(local, 'r')),
                 'name': 'snapshot.jpg', 'mime': 'image/jpeg',
                 'generated_from': self.id, 'generated_from_type': 'Expr'}
-            if not it:
+            if it:
                 file_record = self.db.File.create(file_data)
                 file_record['dimensions'] = ( 
                     dimension_list[it][0], dimension_list[it][1])
+                it = False
             else:
                 file_record.set_thumb(
                     dimension_list[it][0], dimension_list[it][1], file=local,
                     mime='image/jpeg', autogen=False)
-            it += 1
         file_record.save()
 
         # clean up local files, upload them atomically to s3 (on success)
@@ -1442,11 +1440,6 @@ class Expr(HasSocial):
 
         # Delete old snapshot
         if old_time:
-            # TODO-cleanup: remove this after snapshot migration
-            for w, h, size in dimension_list:
-                name = self.snapshot_name_base(size, str(old_time))
-                self.db.s3.delete_file('thumb', name)
-            # delete to here
             if self.get('snapshot_id'):
                 self.db.File.fetch(self.get('snapshot_id')).purge()
             if self.get('snapshot'):
@@ -1803,7 +1796,9 @@ class File(Entity):
     @property
     def file(self):
         if not self._file:
-            self.download()
+            download = self.download()
+            if not self._file:
+                return False
         self._file.seek(0)
         return self._file
 
@@ -1866,10 +1861,7 @@ class File(Entity):
 
         if not file: file = self.file
         if autogen:
-            try: thumb_file = generate_thumb(file, (w,h), format='jpeg')
-            except:
-                print 'failed to generate thumb for file: ' + self.id
-                return False # thumb generation is non-critical so we eat exception
+            thumb_file = generate_thumb(file, (w,h), format='jpeg')
         else:
             thumb_file = file
         url = self.db.s3.upload_file(thumb_file, 'media', self._thumb_name(w, h),
@@ -1901,7 +1893,7 @@ class File(Entity):
         if self.db.config.aws_id:
             self.update(protocol='s3',
                 s3_bucket=self.db.s3.buckets['media'].name,
-                url=self.db.s3.upload_file(self._file, 'media', self.id,
+                url=self.db.s3.upload_file(self.file, 'media', self.id,
                     self['name'], self['mime'])
             )
         else:
