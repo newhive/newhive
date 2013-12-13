@@ -162,7 +162,7 @@ class Database:
                 ]:
                     search['feed'] = pattern[1].lower()
                 else: search['tags'].append( pattern[1].lower() )
-            else: search['text'].append( pattern[1].lower() )
+            else: search['text'].append( pattern[0].lower() )
 
         for k in ['text', 'tags', 'phrases', 'feed']:
             if len(search[k]) == 0:
