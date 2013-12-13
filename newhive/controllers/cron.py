@@ -34,7 +34,17 @@ class Cron(Controller):
         return self.serve_json(response, status)
 
     def pop_featured_queue(self):
+        ru = self.db.User.root_user
+        old_featured = set(ru.tagged['Featured'])
+
         self.db.pop_featured_queue()
+
+        ru.reload()
+        new_featured = set(ru.tagged['Featured']) - old_featured
+        mailer = newhive.mail.Featured(db=self.db, jinja_env=self.jinja_env)
+        for expr_id in new_featured:
+            mailer.send(self.db.Expr.fetch(expr_id))
+
         return {}
 
     def email_star_broadcast(self, delay=0, span=600):

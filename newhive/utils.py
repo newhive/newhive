@@ -31,16 +31,21 @@ class Apply(object):
         Apply.success = []
 
     @staticmethod
-    def apply_all(func, l):
-        total = len(list(l))
+    def apply_all(func, l, print_frequency=100):
+        l = list(l)
+        total = len(l)
         initial_success = len(Apply.success)
         print "Running on %s items." % total
+        i = 0
         for e in l:
             if not func(e):
                 Apply.error.append(e)
             else:
                 Apply.success.append(e)
-        print "success (%s of %s)" % (len(Apply.success) - initial_success, total)
+            i = i + 1
+            if (i % print_frequency == 0):
+                print "(%d of %d) items processed... " % (i, total)
+        print "success (%d of %d)" % (len(Apply.success) - initial_success, total)
 
 def lset(l, i, e, *default):
     default = default[0] if default else [None]
