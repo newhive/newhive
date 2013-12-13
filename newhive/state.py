@@ -933,10 +933,15 @@ class User(HasSocial):
         exprs = {}
         for r in self.db.Feed.search(spec, order='created'):
             if len(result) >= (limit + at): break
-            if exprs.get(r['entity']): continue
-            exprs[r['entity']] = True
-            if r.entity and r.entity.get('auth') == 'public':
-                result.append(r.entity)
+            expr_id = r['entity']
+            expr = r.entity
+            if r.get('entity_other_id'):
+                expr_id = r.get('entity_other_id')
+                expr = self.db.Expr.fetch(expr_id)
+            if exprs.get(expr_id): continue
+            exprs[expr_id] = True
+            if expr and expr.get('auth') == 'public':
+                result.append(expr)
         return result[at:]
 
     # # wrapper around db.query('#Trending') to add recent feed items
