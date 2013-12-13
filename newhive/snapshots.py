@@ -23,16 +23,7 @@ def snapshot_test():
     snapshots.take_snapshot("50f737d36d902248910accfe", "snap_out.png", (640,480))
 
 class Snapshots(object):
-
-    @staticmethod
-    def remote_uri(expr_id):
-        return 'expr_snapshot_' + str(expr_id)
-
-    @staticmethod
-    def s3_url(expr_id):
-        return ( "https://%s.s3.amazonaws.com/%s" % 
-            (config.s3_buckets['thumb'], Snapshots.remote_uri(expr_id)) )
-
+    # TODO-cleanup (everything about this)
     def take_snapshot(self,expr_id,out_filename,dimensions=(1024,768),full_page=False):
         host = utils.url_host(on_main_domain=False,secure=False)
         # host = "localhost:3737"
