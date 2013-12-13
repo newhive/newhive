@@ -2191,8 +2191,8 @@ class Remix(Feed):
         # if self.db.Remix.find({ 'initiator': self['initiator'], 'entity': self['entity'] }): return True
         new_expr = self.get('new_expr')
         if new_expr:
-            del self['new_expr']
             self['entity_other_id'] = new_expr.id
+            del self['new_expr']
         res = super(Remix, self).create()
         return res
 
