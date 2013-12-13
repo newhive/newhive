@@ -1,6 +1,8 @@
 from bs4 import BeautifulSoup
 import os, json, cgi, base64
 from pymongo.errors import DuplicateKeyError
+from functools import partial
+
 from newhive import utils
 from newhive.utils import dfilter
 from newhive.controllers.controller import ModelController
@@ -167,90 +169,91 @@ class Expr(ModelController):
         # TODO-feature-expr-orientation (use y)
         expr_scale = float(viewport[0]) / expr_dims[0]
 
-        # TODO-bug fix resizing after loading by sending pre-scaled expr
-        # Requires client layout_apps() to use scaled expr_dimensions
-        def css_for_app(app):
-            css = {
-                    'left': app['position'][0]
-                    , 'top': app['position'][1]
-                    , 'z-index': app['z']
-                    , 'width': app['dimensions'][0]
-                    , 'height': app['dimensions'][1]
-                    , 'opacity': app.get('opacity', 1)
-                    , 'font-size': app.get('scale')
-                    }
-            rv = "left: {left}px; top: {top}px; z-index: {z-index}; opacity: {opacity};".format(**css)
-            if not app.get('type') == 'hive.raw_html':
-                rv += "width: {width}px; height: {height}px; ".format(**css)
-            if app.get('scale'):
-                rv += "font-size: {font-size}em;".format(**css)
-            return rv
-
-        def html_for_app(app):
-            content = app.get('content', '')
-            more_css = ''
-            type = app.get('type')
-            id = app.get('id', app['z'])
-            if type == 'hive.image':
-                media = self.db.File.fetch(app.get('file_id'))
-                if media: content = media.get_resample(
-                    app.get('dimensions', [100,100])[0] * expr_scale
-                )
-                html = "<img src='%s'>" % content
-                link = app.get('href')
-                if link: html = "<a href='%s'>%s</a>" % (link, html)
-            elif type == 'hive.sketch':
-                html = "<img src='%s'>" % content.get('src')
-            elif type == 'hive.rectangle':
-                c = app.get('content', {})
-                more_css = ';'.join([p + ':' + str(c[p]) for p in c])
-                html = ''
-            elif type == 'hive.html':
-                html_original = '%s' % (app.get('content',''))
-                # print 'found hive.html'
-                if snapshot_mode:
-                    def get_embed_img_html(url):
-                        ret_html = ''
-                        oembed = utils.get_embedly_oembed(url)
-                        if oembed and oembed.get('thumbnail_url'):
-                            ret_html += '<img src="%s"/>' % oembed['thumbnail_url']
-                        return ret_html
-                    html = ''
-                    error = False
-                    # Turn embeds in hive.html blocks to static images
-                    hivehtml = BeautifulSoup(app.get('content',''))
-                    # Youtube embeds are <object>, and not <iframe>. We handle this
-                    # special case here.
-                    for object_tags in hivehtml.find_all('object'):
-                        param_tags = object_tags.find_all('param')
-                        for param in param_tags:
-                            if param.get('name') == 'movie':
-                                html += get_embed_img_html(param.get('value'))
-                                more_css += ";overflow:hidden"
-                                # print 'found Youtube.'
-                    if not html:
-                        # print 'found iframe'
-                        for iframe in hivehtml.find_all('iframe'):
-                            html = get_embed_img_html(iframe.get('src'))
-                            if not html:
-                                error = True
-                                # print 'error.'
-                        if error:
-                            html = html_original
-                else:
-                    encoded_content = cgi.escape(app.get('content',''), quote=True)
-                    html = '%s' % (app.get('content',''))
-            else:
-                html = content
-            data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
-            data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
-            return "<div class='happ %s' id='app%s' style='%s'%s>%s</div>" %\
-                (type.replace('.', '_'), id, css_for_app(app) + more_css, data, html)
-
-        app_html = map( html_for_app, exp.get('apps', []) )
+        html_for_app = partial(self.html_for_app, scale=expr_scale,
+            snapshot_mode=snapshot_mode)
+        app_html = map(html_for_app, exp.get('apps', []))
         if exp.has_key('dimensions'):
             app_html.append("<div id='expr_spacer' class='happ' style='top: {}px;'></div>".format(exp['dimensions'][1]))
-        if exp.has_key('fixed_width'):
-            app_html = ['<div class="expr_container" style="width: {}px">'.format(exp['fixed_width'])] + \
-                app_html + ['</div>']
         return ''.join(app_html)
+
+    def html_for_app(self, app, scale=1, snapshot_mode=False):
+        content = app.get('content', '')
+        more_css = ''
+        type = app.get('type')
+        if type == 'hive.image':
+            media = self.db.File.fetch(app.get('file_id'))
+            if media: content = media.get_resample(
+                app.get('dimensions', [100,100])[0] * scale
+            )
+            html = "<img src='%s'>" % content
+            link = app.get('href')
+            if link: html = "<a href='%s'>%s</a>" % (link, html)
+        elif type == 'hive.sketch':
+            html = "<img src='%s'>" % content.get('src')
+        elif type == 'hive.rectangle':
+            c = app.get('content', {})
+            more_css = ';'.join([p + ':' + str(c[p]) for p in c])
+            html = ''
+        elif type == 'hive.html':
+            html_original = '%s' % (app.get('content',''))
+            # print 'found hive.html'
+            if snapshot_mode:
+                def get_embed_img_html(url):
+                    ret_html = ''
+                    oembed = utils.get_embedly_oembed(url)
+                    if oembed and oembed.get('thumbnail_url'):
+                        ret_html += '<img src="%s"/>' % oembed['thumbnail_url']
+                    return ret_html
+                html = ''
+                error = False
+                # Turn embeds in hive.html blocks to static images
+                hivehtml = BeautifulSoup(app.get('content',''))
+                # Youtube embeds are <object>, and not <iframe>. We handle this
+                # special case here.
+                for object_tags in hivehtml.find_all('object'):
+                    param_tags = object_tags.find_all('param')
+                    for param in param_tags:
+                        if param.get('name') == 'movie':
+                            html += get_embed_img_html(param.get('value'))
+                            more_css += ";overflow:hidden"
+                            # print 'found Youtube.'
+                if not html:
+                    # print 'found iframe'
+                    for iframe in hivehtml.find_all('iframe'):
+                        html = get_embed_img_html(iframe.get('src'))
+                        if not html:
+                            error = True
+                            # print 'error.'
+                    if error:
+                        html = html_original
+            else:
+                encoded_content = cgi.escape(app.get('content',''), quote=True)
+                html = '%s' % (app.get('content',''))
+        else:
+            html = content
+
+        data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
+        data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
+        app_id = app.get('id', app['z'])
+        return "<div class='happ %s' id='app%s' style='%s'%s>%s</div>" %\
+            (type.replace('.', '_'), app_id, css_for_app(app) + more_css, data, html)
+
+# TODO-bug fix resizing after loading by sending pre-scaled expr
+# Requires client layout_apps() to use scaled expr dimensions
+def css_for_app(app):
+    css = {
+            'left': app['position'][0]
+            , 'top': app['position'][1]
+            , 'z-index': app['z']
+            , 'width': app['dimensions'][0]
+            , 'height': app['dimensions'][1]
+            , 'opacity': app.get('opacity', 1)
+            , 'font-size': app.get('scale')
+            }
+    rv = "left: {left}px; top: {top}px; z-index: {z-index}; opacity: {opacity};".format(**css)
+    if not app.get('type') == 'hive.raw_html':
+        rv += "width: {width}px; height: {height}px; ".format(**css)
+    if app.get('scale'):
+        rv += "font-size: {font-size}em;".format(**css)
+    return rv
+

@@ -5,8 +5,7 @@ import re
 import newhive
 from newhive import state
 from newhive.utils import now, time_u, Apply
-
-db = state.Database()
+from newhive.server_session import db
 
 # A couple handy defaults
 nd = db.User.named('newduke')

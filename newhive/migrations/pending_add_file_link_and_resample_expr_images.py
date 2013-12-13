@@ -2,10 +2,9 @@ import re
 import urllib
 import os
 
-from newhive import state
-db = state.Database()
 from newhive.utils import now, time_u, Apply
 from newhive.controllers.file import fetch_url, create_file
+from newhive.server_session import db
 
 # expr, app index, file id
 missing_file = []

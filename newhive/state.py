@@ -1541,8 +1541,8 @@ class Expr(HasSocial):
         return ids
 
     def _match_id(self, s):
-        if not isinstance(s, (str, unicode)): return []
-        return map(lambda m: m[0], re.findall(r'/([0-9a-f]{24})(\b|_)', s))
+        if not isinstance(s, basestring): return []
+        return map(lambda m: m[0], re.findall(r'/\b([0-9a-f]{24})(\b|_)', s))
 
     def create(self):
         assert map(self.has_key, ['owner', 'domain', 'name'])
