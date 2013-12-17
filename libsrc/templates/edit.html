@@ -77,9 +77,10 @@
     data-menu-opts='"layout_x":"submenu"'
   >
     <form id='embed_image_form'>
-      <input type='text' id='image_embed_code'>&nbsp;&nbsp;<input
+      <input type='text' id='image_embed_code' placeholder='Paste URL here...'> {# #}
+      &nbsp;&nbsp;<input
         id='image_embed_done' type='submit'
-        class='btn black rounded embed_button' value='Enter'>
+        class='black_btn upper embed_button' value='Enter'>
     </form>
   </div>
 </div>
@@ -91,12 +92,12 @@
 
 <div id='menu_embed' class='menu drawer embed'>
   <span class='medbold'>Embed</span><br>
-  <div class='spacer'></div>
   <div class='description'>{# TODO: ui.embed_code_description #}</div>
     <textarea id='embed_code' class='embed_box'
-      {#placeholder='{ui.embed_code_textarea}'#}></textarea>
+      placeholder='<Paste your YouTube or Vimeo URL or other embed code here.>'>{# #}
+    </textarea>
     <div style='text-align : center'><input id='embed_done' type='submit'
-      class='btn black rounded embed_button' value='Enter'></div>
+      class='black_btn upper embed_button' value='Enter'></div>
 </div>
 
 <div id='menu_shape' class='menu drawer medbold'>

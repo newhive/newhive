@@ -149,11 +149,11 @@ var snap_helper = function(my_tuple, exclude_ids,
     var tuple = [[],[]], new_pos = pos.concat();
     // TODO-perf: save this array only after drag/drop
     // And keep it sorted
-    for (var i = Hive.Apps.length - 1; i >= 0; i--) {
-        var app = Hive.Apps[i];
-        if (app.id in exclude_ids || app.deleted) {
-            continue;
-        }
+    var apps = Hive.Apps.all().filter(function(app) {
+        return !(app.id in exclude_ids);
+    });
+    for (var i = 0; i < apps.length; i++) {
+        var app = apps[i];
         var curr_ = [app.min_pos(), app.cent_pos(), app.max_pos()];
         var curr = [[],[]];
         $.map(curr_, function(pair) {
@@ -2441,7 +2441,8 @@ Hive.init = function(exp, page){
     hover_menu('#insert_audio', '#menu_audio');
 
     var embed_menu = hover_menu('#insert_embed', '#menu_embed', {
-        open: function(){ $('#embed_code').get(0).focus() } });
+        open: function(){ $('#embed_code').get(0).focus() },
+        layout_x: 'center' });
     $('#embed_done').click(function() { Hive.embed_code('#embed_code'); embed_menu.close(); });
 
     hover_menu('#insert_shape', '#menu_shape');
