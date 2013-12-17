@@ -140,6 +140,7 @@ Hive.layout_apps = function(){
 var snap_helper = function(my_tuple, exclude_ids,
     snap_strength, snap_radius, padding
 ) {
+    var s = Hive.env().scale;
     if (snap_radius == undefined) snap_radius = 10;
     if (snap_strength == undefined) snap_strength = 0.0;
     if (padding == undefined) padding = 5;
@@ -193,10 +194,11 @@ var snap_helper = function(my_tuple, exclude_ids,
                         if (total > best.strength) {
                             best.strength = total;
                             best.goal = goal;
-                            var try_start = [my_tuple[0][type1], my_tuple[1][type1]];
-                            var try_end = [tuple[0][app_i][type2], 
-                                tuple[1][app_i][type2]];
-                            try_start[coord] = coord2 + 2 - added_padding;
+                            var try_start = [my_tuple[0][type1]*s,
+                                my_tuple[1][type1]*s];
+                            var try_end = [tuple[0][app_i][type2]*s, 
+                                tuple[1][app_i][type2]*s];
+                            try_start[coord] = (coord2 - added_padding)*s + 2;
                             var len = Math.abs(try_start[1 - coord] -
                                 try_end[1 - coord]);
                             var old_len = Math.abs(best.start[1 - coord] -
