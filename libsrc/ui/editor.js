@@ -133,24 +133,24 @@ Hive.layout_apps = function(){
     var new_env = Hive.env();
     if(old_env.scale == new_env.scale) return;
 
-    $.map(Hive.Apps, function(a) {
-        a.state_relative_set(new_env, a.state_relative(old_env));
-    });
+    $.map(Hive.Apps, function(a){ a.layout() });
     if(Hive.Selection.controls) Hive.Selection.controls.layout();
 };
 
-var snap_helper = function(my_tuple, exclude_ids, 
-    snap_strength, snap_radius, padding) {
+var snap_helper = function(my_tuple, exclude_ids,
+    snap_strength, snap_radius, padding
+) {
     if (snap_radius == undefined) snap_radius = 10;
     if (snap_strength == undefined) snap_strength = 0.0;
     if (padding == undefined) padding = 5;
     pos = [my_tuple[0][0], my_tuple[1][0]];
+    // return pos;
     var tuple = [[],[]], new_pos = pos.concat();
     // TODO-perf: save this array only after drag/drop
     // And keep it sorted
     for (var i = Hive.Apps.length - 1; i >= 0; i--) {
         var app = Hive.Apps[i];
-        if (app.id in exclude_ids) {
+        if (app.id in exclude_ids || app.deleted) {
             continue;
         }
         var curr_ = [app.pos(), app.cent_pos(), app.max_pos()];
@@ -315,7 +315,7 @@ Hive.App = function(init_state, opts) {
         o.div.css('z-index', n);
     };
 
-    // return [[x-min, x-center, x-max], [x-min, x-center, x-max]]
+    // return [[x-min, x-center, x-max], [y-min, y-center, y-max]]
     // if o were moved to pos
     o.tuple = function(pos) {
         var curr_ = [o.pos(), o.cent_pos(), o.max_pos()];
@@ -333,7 +333,10 @@ Hive.App = function(init_state, opts) {
         return [curr[0].concat(), curr[1].concat()];
     }
     var _pos = [-999, -999];
-    o.pos = function(){ return [ _pos[0], _pos[1] ]; };
+    o.pos = function(){
+        var s = Hive.env().scale;
+        return [ _pos[0] * s, _pos[1] * s ];
+    };
     o.max_pos = function() {return [ _pos[0] + _dims[0], _pos[1] + _dims[1] ]; };
     o.cent_pos = function() {return [ _pos[0] + _dims[0]/2, _pos[1] + _dims[1]/2 ]; };
     o.pos_set = function(pos, snap_strength, snap_radius){
@@ -342,9 +345,18 @@ Hive.App = function(init_state, opts) {
             excludes[o.id] = true;
             pos = snap_helper(o.tuple(pos), excludes, snap_strength, snap_radius);
         }
-        _pos = [ Math.round(pos[0]), Math.round(pos[1]) ];
-        o.div.css({ 'left' : _pos[0], 'top' : _pos[1] });
-        if(o.controls) o.controls.pos_set([ _pos[0], _pos[1] ]);
+        var s = Hive.env().scale;
+        _pos = [ pos[0] / s, pos[1] / s ];
+        o.layout();
+    };
+    o.layout = function(){
+        var pos = o.pos(), dims = o.dims();
+        o.div.css({ 'left' : pos[0], 'top' : pos[1] });
+        o.div.width(dims[0]).height(dims[1]);
+        if(o.controls){
+            o.controls.pos_set([ pos[0], pos[1] ]);
+            o.controls.layout();
+        }
     };
     o.pos_center = function() {
         var dims = o.dims();
@@ -370,15 +382,18 @@ Hive.App = function(init_state, opts) {
         $(".ruler").hidehide();
     };
 
-    var _dims = [-1,-1];
-    o.dims = function() { return [ _dims[0], _dims[1] ]; };
-    o.dims_set = function(dims){
-        _dims = [ Math.round(dims[0]), Math.round(dims[1]) ];
-        o.div.width(_dims[0]).height(_dims[1]);
-        if(o.controls) o.controls.layout();
+    var _dims = [-1, -1];
+    o.dims = function() {
+        var s = Hive.env().scale;
+        return [ _dims[0] * s, _dims[1] * s ];
     };
-    o.width = function(){ return _dims[0] };
-    o.height = function(){ return _dims[1] };
+    o.dims_set = function(dims){
+        var s = Hive.env().scale;
+        o.dims_relative_set([ dims[0] / s, dims[1] / s ]);
+        o.layout();
+    };
+    o.width = function(){ return o.dims()[0] };
+    o.height = function(){ return o.dims()[1] };
 
     o.center = function(offset) {
         var win = $(window),
@@ -407,14 +422,13 @@ Hive.App = function(init_state, opts) {
     };
 
     o.state_relative = function(env){ return {
-          position: [ o.pos()[0] / env.scale, o.pos()[1] / env.scale ]
-        , dimensions: [ o.dims()[0] / env.scale, o.dims()[1] / env.scale ]
+          position: _pos.concat()
+        , dimensions: _dims.concat()
     }};
     o.state_relative_set = function(env, s){
-        o.pos_set([ Math.round(s.position[0] * env.scale),
-            Math.round(s.position[1] * env.scale) ]);
-        o.dims_set([ Math.round(s.dimensions[0] * env.scale),
-            Math.round(s.dimensions[1] * env.scale) ]);
+        o._pos = s.position.concat();
+        o._dims = s.dimensions.concat();
+        o.layout();
     };
 
     o.state = function(){
