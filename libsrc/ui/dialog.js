@@ -84,8 +84,11 @@ define([
                 e.preventDefault(); 
             });
             $(window).resize(opts.layout);
+            // Layout before *and* after.  Before so the window doesn't scroll viewport.
+            // After so that it has guaranteed dimension for layout.
             opts.layout();
             this_dia.removeClass('hide').showshow();
+            opts.layout();
 
             opts.open();
         };

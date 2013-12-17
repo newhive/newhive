@@ -1,6 +1,11 @@
 @import "common";
 
 body.edit {
+.ruler {
+    z-index: 1337;
+    position: absolute;
+    background-color: $color_selected;
+}
 #happs {
     position: absolute;
     left: 0;

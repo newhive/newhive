@@ -92,6 +92,8 @@ o.Funcs = function(fn, filter) {
     var callback = function() {
         if (!filter || filter()){
             for(var i in o) o[i].apply(this, arguments);
+            // for(var i = 0; i < o.length; ++i)
+            //     o[i].apply(this, arguments);
         }
     };
     callback.handlers = o;
