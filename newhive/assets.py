@@ -215,7 +215,7 @@ class HiveAssets(Assets):
             "scss/dialogs.scss", "scss/community.scss",
             "scss/settings.scss", "scss/signup_flow.scss", "scss/menu.scss",
             "scss/jplayer.scss", "scss/forms.scss", "scss/overlay.scss",
-            "scss/skin.scss",
+            "scss/skin.scss", "scss/edit.scss",
             filters=scss_filter,
             output='compiled.app.css',
             debug=False
@@ -228,20 +228,20 @@ class HiveAssets(Assets):
         )
         self.final_bundles.append('app.css')
 
-        edit_scss = webassets.Bundle(
-            'scss/edit.scss',
-            'scss/codemirror.css',
-            filters=scss_filter,
-            output='compiled.edit.css',
-            debug=False
-        )
-        self.assets_env.register(
-            'edit.css',
-            edit_scss,
-            filters='yui_css',
-            output='../lib/edit.css'
-        )
-        self.final_bundles.append('edit.css')
+        # edit_scss = webassets.Bundle(
+        #     'scss/edit.scss',
+        #     'scss/codemirror.css',
+        #     filters=scss_filter,
+        #     output='compiled.edit.css',
+        #     debug=False
+        # )
+        # self.assets_env.register(
+        #     'edit.css',
+        #     edit_scss,
+        #     filters='yui_css',
+        #     output='../lib/edit.css'
+        # )
+        # self.final_bundles.append('edit.css')
 
         self.assets_env.register('curl.js', 'curl.js',
             filters = 'yui_js',
