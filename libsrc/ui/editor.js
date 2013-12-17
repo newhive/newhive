@@ -121,9 +121,22 @@ Hive.Apps = (function(){
     return o;
 })();
 
+Hive.env_set = function(){
+    Hive._scale = $(window).width() / 1000;
+};
 Hive.env = function(){
-    scale = Hive.Exp.fixed_width ? 1 : $(window).width() / 1000;
-    return {scale: scale};
+    return { scale: Hive._scale };
+};
+Hive.layout_apps = function(){
+    var old_env = Hive.env();
+    Hive.env_set();
+    var new_env = Hive.env();
+    if(old_env.scale == new_env.scale) return;
+
+    $.map(Hive.Apps, function(a) {
+        a.state_relative_set(new_env, a.state_relative(old_env));
+    });
+    if(Hive.Selection.controls) Hive.Selection.controls.layout();
 };
 
 // Creates generic initial object for all App types.
@@ -227,8 +240,8 @@ Hive.App = function(init_state, opts) {
         o.pos_set([ o.ref_pos[0] + delta[0], o.ref_pos[1] + delta[1] ]);
     };
     o.move_end = function(){
-        Hive.drag_end();
         history_point.save()
+        Hive.drag_end();
     };
 
     var _dims = [-1,-1];
@@ -314,6 +327,7 @@ Hive.App = function(init_state, opts) {
         o.state_relative_set( Hive.env(), o.init_state );
         o.opacity_set(opacity);
         if(opts.load) opts.load(o);
+        Hive.layout_apps();
     });
 
     // initialize
@@ -908,7 +922,7 @@ Hive.App.Text = function(o) {
         o.color_menu = o.hover_menu(
             d.find('.button.color'),
             d.find('.drawer.color'),
-            { 
+            {
                 auto_close : false,
                 open: function(){
                     // Update current color. Range should usually exist, but
@@ -1877,14 +1891,14 @@ Hive.Selection = function(){
         o.update_focus(e);
     };
     o.drag_end = function (e, dd) {
-        Hive.drag_end();
-
         if(!o.drag_dims) return;
         o.select_box.remove();
         o.dragging = false;
         if(o.pos) o.update_focus();
         if(o.div) o.div.remove();
         o.update(o.elements);
+
+        Hive.drag_end();
     }
 
     o.copy = function(){
@@ -1936,6 +1950,8 @@ Hive.Selection = function(){
     o.resize_end = function(){
         o.each(function(i, el){ el.history_point.save() });
         Hive.History.group('resize group');
+
+        Hive.drag_end();
     };
 
     o.get_stack = function(){
@@ -2174,6 +2190,7 @@ Hive.init = function(exp, page){
     Hive.Exp = exp;
     Hive.edit_page = page;
     if(!exp.auth) exp.auth = 'public';
+    Hive.env_set();
 
     //setInterval(Hive.set_draft, 5000);
     //try { Hive.set_draft(); }
@@ -2186,20 +2203,7 @@ Hive.init = function(exp, page){
         showDialog('#editor_browsers');
     }
 
-    var old_env = Hive.env();
-    $(window).resize(function(e) {
-        var new_env = Hive.env();
-        $.map(Hive.Apps, function(a) {
-            a.state_relative_set(new_env, a.state_relative(old_env));
-        });
-        if(Hive.Selection.controls) Hive.Selection.controls.layout();
-        old_env = new_env;
-    });
-    $(window).resize();
-
-    if (Hive.Exp.fixed_width){
-        Hive.make_fixed(Hive.Exp.fixed_width);
-    }
+    $(window).on('resize', Hive.layout_apps);
 
     $('#text_default').click(function(e) {
         Hive.new_app({ type : 'hive.text', content : '' });
@@ -2208,7 +2212,6 @@ Hive.init = function(exp, page){
         Hive.new_app({ type: 'hive.text', content: '<span style="font-weight:bold">&nbsp;</span>',
             scale : 3 });
     });
-
 
     if(!Hive.Exp.background) Hive.Exp.background = { };
     if(!Hive.Exp.background.color) Hive.Exp.background.color = '#FFFFFF';
@@ -2576,7 +2579,10 @@ Hive.embed_code = function(element) {
 } 
 
 Hive.drag_start = noop; // function(){ hovers_active(false) };
-Hive.drag_end = noop; // function(){ hovers_active(true) };
+Hive.drag_end = function(){
+    // hovers_active(true)
+    Hive.layout_apps();
+};
 
 Hive.save = function() {
     var expr = Hive.state();
@@ -2685,25 +2691,6 @@ Hive.bg_change = function(s){
         function(){ return $.extend(true, {}, Hive.Exp.background) },
         Hive.bg_set, 'change background'
     ).exec(s);
-};
-
-Hive.make_fixed = function(width){
-    if (width === false){
-        delete Hive.Exp.fixed_width;
-        $('#happs, #controls').attr('style', '');
-    } else {
-        Hive.Exp.fixed_width = width;
-        $('#happs, #controls').css({
-            width: Hive.Exp.fixed_width, 
-            margin: '0 auto', 
-            position: 'relative', 
-        });
-        $('#happs').css({
-            'border-left': '1px dashed rgba(127,127,127,0.5)', 
-            'border-right': '1px dashed rgba(127,127,127,0.5)', 
-            height: '100%'
-        });
-    }
 };
 
 function remove_all_apps() {
@@ -2915,6 +2902,21 @@ function array_sum( a, b ){
     }
     return rv
 }
+
+Hive.rect_test = function(w, h){
+    if(!w) w = 20;
+    if(!h) h = 20;
+    js.range(w).map(function(x){
+        js.range(h).map(function(y){
+            Hive.App({
+                position: [x*50, y*50],
+                dimensions: [48, 48],
+                type: 'hive.rectangle',
+                content: {color:colors[(x+y)%36]}
+            })
+        })
+    });
+};
 
 return Hive;
 
