@@ -153,7 +153,7 @@ var snap_helper = function(my_tuple, exclude_ids,
         if (app.id in exclude_ids || app.deleted) {
             continue;
         }
-        var curr_ = [app.pos(), app.cent_pos(), app.max_pos()];
+        var curr_ = [app.min_pos(), app.cent_pos(), app.max_pos()];
         var curr = [[],[]];
         $.map(curr_, function(pair) {
             curr[0] = curr[0].concat(pair[0]);
@@ -318,7 +318,7 @@ Hive.App = function(init_state, opts) {
     // return [[x-min, x-center, x-max], [y-min, y-center, y-max]]
     // if o were moved to pos
     o.tuple = function(pos) {
-        var curr_ = [o.pos(), o.cent_pos(), o.max_pos()];
+        var curr_ = [o.min_pos(), o.cent_pos(), o.max_pos()];
         var curr = [[],[]];
         $.map(curr_, function(pair) {
             curr[0] = curr[0].concat(pair[0] + pos[0] - _pos[0]);
@@ -337,16 +337,18 @@ Hive.App = function(init_state, opts) {
         var s = Hive.env().scale;
         return [ _pos[0] * s, _pos[1] * s ];
     };
+    o.min_pos = function(){ return _pos.concat(); };
     o.max_pos = function() {return [ _pos[0] + _dims[0], _pos[1] + _dims[1] ]; };
     o.cent_pos = function() {return [ _pos[0] + _dims[0]/2, _pos[1] + _dims[1]/2 ]; };
     o.pos_set = function(pos, snap_strength, snap_radius){
+        var s = Hive.env().scale;
+        _pos = [ pos[0] / s, pos[1] / s ];
         if (snap_strength > 0) {
             var excludes = {};
             excludes[o.id] = true;
-            pos = snap_helper(o.tuple(pos), excludes, snap_strength, snap_radius);
+            _pos = snap_helper(o.tuple(_pos), excludes, snap_strength,
+                snap_radius);
         }
-        var s = Hive.env().scale;
-        _pos = [ pos[0] / s, pos[1] / s ];
         o.layout();
     };
     o.layout = function(){
@@ -373,7 +375,8 @@ Hive.App = function(init_state, opts) {
     o.move = function (e, dd, shallow) {
         if(!o.ref_pos) return;
         var delta = [dd.deltaX, dd.deltaY];
-        if(e.shiftKey) delta[ Math.abs(dd.deltaX) > Math.abs(dd.deltaY) ? 1 : 0 ] = 0;
+        if(e.shiftKey)
+            delta[ Math.abs(dd.deltaX) > Math.abs(dd.deltaY) ? 1 : 0 ] = 0;
         o.pos_set([ o.ref_pos[0] + delta[0], o.ref_pos[1] + delta[1] ], .05, 18);
     };
     o.move_end = function(){
@@ -389,7 +392,7 @@ Hive.App = function(init_state, opts) {
     };
     o.dims_set = function(dims){
         var s = Hive.env().scale;
-        o.dims_relative_set([ dims[0] / s, dims[1] / s ]);
+        _dims = [ dims[0] / s, dims[1] / s ];
         o.layout();
     };
     o.width = function(){ return o.dims()[0] };
@@ -422,12 +425,12 @@ Hive.App = function(init_state, opts) {
     };
 
     o.state_relative = function(env){ return {
-          position: _pos.concat()
-        , dimensions: _dims.concat()
+        position: _pos.concat(),
+        dimensions: _dims.concat()
     }};
     o.state_relative_set = function(env, s){
-        o._pos = s.position.concat();
-        o._dims = s.dimensions.concat();
+        _pos = s.position.concat();
+        _dims = s.dimensions.concat();
         o.layout();
     };
 
