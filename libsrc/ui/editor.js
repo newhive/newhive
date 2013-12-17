@@ -126,6 +126,107 @@ Hive.env = function(){
     return {scale: scale};
 };
 
+var snap_helper = function(my_tuple, exclude_ids, 
+    snap_strength, snap_radius, padding) {
+    if (snap_radius == undefined) snap_radius = 10;
+    if (snap_strength == undefined) snap_strength = 0.0;
+    if (padding == undefined) padding = 5;
+    pos = [my_tuple[0][0], my_tuple[1][0]];
+    var tuple = [[],[]], new_pos = pos.concat();
+    // TODO-perf: save this array only after drag/drop
+    // And keep it sorted
+    for (var i = Hive.Apps.length - 1; i >= 0; i--) {
+        var app = Hive.Apps[i];
+        if (app.id in exclude_ids) {
+            continue;
+        }
+        var curr_ = [app.pos(), app.cent_pos(), app.max_pos()];
+        var curr = [[],[]];
+        $.map(curr_, function(pair) {
+            curr[0] = curr[0].concat(pair[0]);
+            curr[1] = curr[1].concat(pair[1]);
+        });
+        tuple[0] = tuple[0].concat([curr[0].concat()]);
+        tuple[1] = tuple[1].concat([curr[1].concat()]);
+    };
+    var bests = [];
+    for (var coord = 0; coord <= 1; ++coord) {
+        var best_snaps = {};
+        var best = { goal:0, strength:0, start:[0,0], end:[0,0] };
+        for (var app_i = 0; app_i < tuple[coord].length; ++app_i) {
+            for (var type1 = 0; type1 < 3; ++type1) {
+                coord1 = my_tuple[coord][type1];
+                for (var type2 = 0; type2 < 3; ++type2) {
+                    coord2 = tuple[coord][app_i][type2];
+                    // Add padding
+                    var added_padding = 0;
+                    if (((type2 - type1) % 2) == 0) {
+                        added_padding = padding*(type2 - type1);
+                        coord2 += added_padding;
+                    }
+                    var snap_dist = Math.abs(coord2 - coord1);
+                    if (snap_dist < snap_radius) {
+                        var strength = 1.0;
+                        var dist = snap_dist*5 + Math.abs(my_tuple[1 - coord][1] 
+                            - tuple[1 - coord][app_i][type1]);
+                        if (dist > 200) strength /= 
+                            Math.exp((Math.min(dist, 1000) - 200)/500);
+                        if ((type1 == 1) ^ (type2 == 1)) strength *= .4;
+                        var goal = coord2 + my_tuple[coord][0] - coord1;
+                        goal = Math.round(goal);
+                        var total = best_snaps[goal.toString()] || 0;
+                        total += strength;
+                        best_snaps[goal.toString()] = total;
+                        if (total > best.strength) {
+                            best.strength = total;
+                            best.goal = goal;
+                            var try_start = [my_tuple[0][type1], my_tuple[1][type1]];
+                            var try_end = [tuple[0][app_i][type2], 
+                                tuple[1][app_i][type2]];
+                            try_start[coord] = coord2 + 2 - added_padding;
+                            var len = Math.abs(try_start[1 - coord] -
+                                try_end[1 - coord]);
+                            var old_len = Math.abs(best.start[1 - coord] -
+                                best.end[1 - coord]);
+                            if (1 || old_len == 0 || (len > 0 && len < old_len)) {
+                                best.start = try_start;
+                                best.end = try_end;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (best.strength > snap_strength) {
+            new_pos[coord] = best.goal;
+            bests[coord] = best;
+        }
+        var besty = (besty || []).concat(best[strength]);
+        // console.log(best_snaps);
+    }
+    $(".ruler").hidehide();
+    for (var coord = 0; coord < 2; ++coord) {
+        if (bests[coord]) {
+            var best = bests[coord];
+            var klass = ".ruler.ruler" + coord;
+            var rule = $(klass);
+            if (0 == rule.length) {
+                rule = $('<div class="ruler ruler' + coord + '">');
+                rule.appendTo($("body"));
+            }
+            rule.showshow();
+            best.start[1 - coord] += new_pos[1 - coord] - pos[1 - coord];
+            rule.css({left: Math.min(best.start[0], best.end[0]),
+                top: Math.min(best.start[1], best.end[1]),
+                width: Math.abs(best.start[0] - best.end[0]),
+                height: Math.abs(best.start[1] - best.end[1]) });
+        }
+    }
+    // console.log(besty);
+    // console.log(pos);
+    return new_pos;
+}
+
 // Creates generic initial object for all App types.
 Hive.App = function(init_state, opts) {
     var o = {};
@@ -200,10 +301,34 @@ Hive.App = function(init_state, opts) {
         layer = n;
         o.div.css('z-index', n);
     };
-    
+
+    // return [[x-min, x-center, x-max], [x-min, x-center, x-max]]
+    // if o were moved to pos
+    o.tuple = function(pos) {
+        var curr_ = [o.pos(), o.cent_pos(), o.max_pos()];
+        var curr = [[],[]];
+        $.map(curr_, function(pair) {
+            curr[0] = curr[0].concat(pair[0] + pos[0] - _pos[0]);
+            curr[1] = curr[1].concat(pair[1] + pos[1] - _pos[1]);
+        });
+        // for (var j = 0; j < 2; ++j) {
+        //     var delta = pos[j] - _pos[j];
+        //     curr[j] = $.map(curr[j], function(n, it) {
+        //         return n + delta;
+        //     });
+        // }
+        return [curr[0].concat(), curr[1].concat()];
+    }
     var _pos = [-999, -999];
     o.pos = function(){ return [ _pos[0], _pos[1] ]; };
-    o.pos_set = function(pos){
+    o.max_pos = function() {return [ _pos[0] + _dims[0], _pos[1] + _dims[1] ]; };
+    o.cent_pos = function() {return [ _pos[0] + _dims[0]/2, _pos[1] + _dims[1]/2 ]; };
+    o.pos_set = function(pos, snap_strength, snap_radius){
+        if (snap_strength > 0) {
+            var excludes = {};
+            excludes[o.id] = true;
+            pos = snap_helper(o.tuple(pos), excludes, snap_strength, snap_radius);
+        }
         _pos = [ Math.round(pos[0]), Math.round(pos[1]) ];
         o.div.css({ 'left' : _pos[0], 'top' : _pos[1] });
         if(o.controls) o.controls.pos_set([ _pos[0], _pos[1] ]);
@@ -224,11 +349,12 @@ Hive.App = function(init_state, opts) {
         if(!o.ref_pos) return;
         var delta = [dd.deltaX, dd.deltaY];
         if(e.shiftKey) delta[ Math.abs(dd.deltaX) > Math.abs(dd.deltaY) ? 1 : 0 ] = 0;
-        o.pos_set([ o.ref_pos[0] + delta[0], o.ref_pos[1] + delta[1] ]);
+        o.pos_set([ o.ref_pos[0] + delta[0], o.ref_pos[1] + delta[1] ], .05, 18);
     };
     o.move_end = function(){
         Hive.drag_end();
-        history_point.save()
+        history_point.save();
+        $(".ruler").hidehide();
     };
 
     var _dims = [-1,-1];
