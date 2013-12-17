@@ -177,7 +177,7 @@ textarea.code {
     margin-right: -11px;
     padding-left: 8px;
     padding-right: 10px;
-    .loading { width: 25px; }
+    .loading { width: 25px; vertical-align: middle; }
     // TODO: we should have a mechanism to set up icons, correctly aligned,
     // correctly sized, with automatic hover.
     div.arrow { 
