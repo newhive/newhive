@@ -157,7 +157,7 @@ var snap_helper = function(my_tuple, exclude_ids,
     // TODO-perf: save this array only after drag/drop
     // And keep it sorted
     var apps = Hive.Apps.all().filter(function(app) {
-        return !(app.id in exclude_ids);
+        return !(app.id in exclude_ids || Hive.Selection.selected(app));
     });
     // TODO: this 'root' app belongs as a permanent feature of Apps.
     // var app = Hive.App({
@@ -200,9 +200,10 @@ var snap_helper = function(my_tuple, exclude_ids,
                     continue;
                 for (var type2 = 0; type2 < 3; ++type2) {
                     coord2 = tuple[coord][app_i][type2];
-                    // Add padding
+                    // Add padding if aligning a right edge to a left
                     var added_padding = 0;
-                    if (((type2 - type1) % 2) == 0) {
+                    if (Math.max(type2, type1) == 2 && 
+                        (type1 == 0 || type2 == 0)) {
                         added_padding = padding*(type2 - type1);
                         coord2 += added_padding;
                     }
@@ -215,7 +216,7 @@ var snap_helper = function(my_tuple, exclude_ids,
                             Math.exp((Math.min(dist, 1000) - 200)/500);
                         if ((type1 == 1) ^ (type2 == 1)) strength *= .4;
                         var goal = coord2 + pos[coord] - coord1;
-                        goal = Math.round(goal);
+                        goal = Math.round(goal*2)/2;
                         var total = best_snaps[goal.toString()] || 0;
                         total += strength;
                         best_snaps[goal.toString()] = total;
@@ -425,6 +426,9 @@ Hive.App = function(init_state, opts) {
         _dims = [ dims[0] / s, dims[1] / s ];
         o.layout();
     };
+    o.dims_relative = function(){
+        return _dims.concat();
+    }
     o.dims_relative_set = function(dims){
         _dims = [ dims[0], dims[1] ];
         o.layout();
@@ -476,6 +480,9 @@ Hive.App = function(init_state, opts) {
             content: o.content(),
             id: o.id
         });
+        if (o.full_bleed_coord != undefined) {
+            s = $.extend(s, {full_bleed_coord: o.full_bleed_coord});
+        }
         if(opacity != 1) s.opacity = opacity;
         return s;
     };
@@ -504,6 +511,8 @@ Hive.App = function(init_state, opts) {
         o.state_relative_set( Hive.env(), o.init_state );
         if (o.content_element)
             o.opacity_set(opacity);
+        if (o.init_state.full_bleed_coord != undefined)
+            Hive.App.has_full_bleed(o, o.init_state.full_bleed_coord);
         if(opts.load) opts.load(o);
         Hive.layout_apps();
     });
@@ -765,6 +774,75 @@ Hive.App.has_shield = function(o, opts) {
             o.div.find('.drag').drag('start', start).drag('end', end);
         });
     }
+};
+
+// coord = 0 ==> full in x dimension (y scrolling)
+// coord = 1 ==> full in y dimension (x scrolling)
+Hive.App.has_full_bleed = function(o, coord){
+    if (!coord) coord = 0;  // default is vertical scrolling
+    o.full_bleed_coord = coord;
+    var dims = o.dims_relative();
+    dims[coord] = 1000;
+    o.dims_relative_set(dims);
+
+    o.orig_pos_set = o.pos_set;
+    o.orig_move_start = o.move_start;
+
+    o.move_start = function() {
+        o.orig_move_start();
+        o.move_setup();
+    };
+    o.move_setup = function() {
+        o.padding = 10; // Scale into screen space?
+        o.size = o.size || 200;
+        o.start_pos = o.pos()[1 - o.full_bleed_coord] - o.padding;
+        o.apps = Hive.Apps.all().filter(function(app) {
+            return !(app.id == o.id || Hive.Selection.selected(app));
+        });
+        var apps = o.apps;
+        for (var i = 0; i < apps.length; ++i) {
+            var app = apps[i];
+            app.old_start = app.pos()[1 - o.full_bleed_coord];
+            app.move_start();
+            if (app.old_start >= o.start_pos)
+                app.old_start -= o.size + 2 * o.padding;
+        }
+    };
+    o.pos_set = function(pos) {
+        pos[o.full_bleed_coord] = 0;
+        var coord = 1 - o.full_bleed_coord; // Work in y
+        o.start_pos = pos[coord] - o.padding;
+        o.stop_pos = o.start_pos + o.size + o.padding;
+
+        if (o.apps) {
+
+            var push_start = 0, push_size = 0, apps = o.apps;
+            for (var i = 0; i < apps.length; ++i) {
+                var app = apps[i];
+                var start = app.old_start;
+                var stop = start + app.dims()[coord];
+                if (start < o.stop_pos && stop > o.start_pos) {
+                    var push_try = o.stop_pos - start;
+                    push_size = Math.max(push_size, push_try);
+                }
+            }
+            for (var i = 0; i < apps.length; ++i) {
+                var app = apps[i];
+                var start = app.old_start;
+                var stop = start + app.dims()[coord];
+                var new_pos = app.pos();
+                if (stop > o.start_pos) start += push_size;
+                new_pos[coord] = start;
+                var setter = app.orig_pos_set || app.pos_set;
+                setter(new_pos);
+            }
+        }
+        o.orig_pos_set(pos);
+    };
+
+    o.div.drag('start', o.move_start);
+    // o.move_setup();
+    // o.pos_set(o.pos());
 };
 
 Hive.App.has_resize = function(o) {
@@ -3123,6 +3201,20 @@ Hive.rect_test = function(w, h){
             })
         })
     });
+};
+
+// Rejigger the selected elements into their "best"
+// snapped positions (and sizes TBD)
+Hive.im_feeling_lucky = function(){
+    var apps = Hive.Selection.elements.concat();
+    Hive.Selection.elements = [];
+    $.map([100, 60, 40, 30, 20, 10], function(j) {
+        $.map(apps, function(app, i){
+            app.pos_set(app.pos(), .3, j);
+            // app.resize
+        });
+    });
+    Hive.Selection.elements = apps;
 };
 
 return Hive;
