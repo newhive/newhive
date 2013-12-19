@@ -1,0 +1,48 @@
+Helvetica
+Quicksand
+Questrial
+Oswald
+Abel
+Josefin Sans
+Monteserrat
+Oxygen
+Raleway
+Nunito
+BenchNine
+Trebuchet
+Lato
+Archivo Narrow
+Open Sans
+--
+Museo
+St Ryde
+Nixie One
+Coustard
+Chunk Five
+Josefin Slab
+Arvo
+Courier New
+Libre Baskerille
+Flamenco
+Podkova
+Rokkitt
+Times
+Lusitana
+Cutive
+--
+Lobster
+BEBAS
+Bpscript
+Clicker Script
+Miniver
+CODYSTAR
+Cookie
+Cherry Swash
+Petit Formal Script
+Novocento
+Code
+Special Elite
+Komika Title
+League Gothic
+Pacifico
+--
