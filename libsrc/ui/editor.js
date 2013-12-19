@@ -475,14 +475,12 @@ Hive.App = function(init_state, opts) {
     o.state = function(){
         var s = $.extend({}, o.init_state, o.state_relative(Hive.env()), {
             z: o.layer(),
+            full_bleed_coord: o.full_bleed_coord,
             // TODO-cleanup: flatten state and use o.state() and
             // o.state_update to simplify behavior around shared attributes
             content: o.content(),
             id: o.id
         });
-        if (o.full_bleed_coord != undefined) {
-            s = $.extend(s, {full_bleed_coord: o.full_bleed_coord});
-        }
         if(opacity != 1) s.opacity = opacity;
         return s;
     };
@@ -803,7 +801,7 @@ Hive.App.has_full_bleed = function(o, coord){
         for (var i = 0; i < apps.length; ++i) {
             var app = apps[i];
             app.old_start = app.pos()[1 - o.full_bleed_coord];
-            app.move_start();
+            (app.orig_move_start || app.move_start)();
             if (app.old_start >= o.start_pos)
                 app.old_start -= o.size + 2 * o.padding;
         }
