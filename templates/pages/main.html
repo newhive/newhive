@@ -8,9 +8,21 @@ NewHive is your radically simple, DIY self publishing tool." %}
     <meta name="description" content="{{meta_description}}" />
     <meta property="og:image" content=
       '{{ img_url if img_url else 'skin/1/logo_medium.png'|asset_url }}' />
+    <meta name="twitter:image" content=
+      '{{ img_url if img_url else 'skin/1/logo_medium.png'|asset_url }}' />
     <meta property="og:url" content='{{meta_url}}' />
     <meta property="og:title" content='{{meta_title}}' />
+    <meta name="twitter:title" content='{{meta_title}}'>
     <meta property="og:description" content='{{meta_description}}' />
+    
+    {#
+    <meta name="twitter:card" content="photo">
+    <meta name="twitter:site" content="@examplephotosite">
+    <meta name="twitter:creator" content="@sippey">
+    <meta name="twitter:image" content="http://example.com/photo/a/image.jpg">
+    <meta name="twitter:image:width" content="610">
+    <meta name="twitter:image:height" content="610">  
+    #}
   {% endblock meta %}
 {% endif %}
 
