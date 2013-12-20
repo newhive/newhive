@@ -785,14 +785,26 @@ Hive.App.has_full_bleed = function(o, coord){
 
     o.orig_pos_set = o.pos_set;
     o.orig_move_start = o.move_start;
+    o.orig_move_end = o.move_end;
 
     o.move_start = function() {
         o.orig_move_start();
         o.move_setup();
     };
+    o.move_end = function() {
+        o.orig_move_end();
+        var apps = o.apps;
+        for (var i = 0; i < apps.length; ++i) {
+            var app = apps[i];
+            (app.orig_move_end || app.move_end)();
+        }
+        Hive.History.group('full-bleed move');
+    };
     o.move_setup = function() {
+        Hive.History.begin();
+
         o.padding = 10; // Scale into screen space?
-        o.size = o.size || 200;
+        o.size = o.dims()[1 - o.full_bleed_coord];//o.size || 200;
         o.start_pos = o.pos()[1 - o.full_bleed_coord] - o.padding;
         o.apps = Hive.Apps.all().filter(function(app) {
             return !(app.id == o.id || Hive.Selection.selected(app));
@@ -810,10 +822,9 @@ Hive.App.has_full_bleed = function(o, coord){
         pos[o.full_bleed_coord] = 0;
         var coord = 1 - o.full_bleed_coord; // Work in y
         o.start_pos = pos[coord] - o.padding;
-        o.stop_pos = o.start_pos + o.size + o.padding;
+        o.stop_pos = o.start_pos + o.size + 2 * o.padding;
 
         if (o.apps) {
-
             var push_start = 0, push_size = 0, apps = o.apps;
             for (var i = 0; i < apps.length; ++i) {
                 var app = apps[i];
@@ -831,14 +842,13 @@ Hive.App.has_full_bleed = function(o, coord){
                 var new_pos = app.pos();
                 if (stop > o.start_pos) start += push_size;
                 new_pos[coord] = start;
-                var setter = app.orig_pos_set || app.pos_set;
-                setter(new_pos);
+                (app.orig_pos_set || app.pos_set)(new_pos);
             }
         }
         o.orig_pos_set(pos);
     };
 
-    o.div.drag('start', o.move_start);
+    o.div.drag('start', o.move_start).drag('end', o.move_end);
     // o.move_setup();
     // o.pos_set(o.pos());
 };
