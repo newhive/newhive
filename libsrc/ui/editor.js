@@ -33,6 +33,45 @@ var Hive = {}, debug_mode = context.config.debug_mode, bound = js.bound,
     noop = function(){}, Funcs = js.Funcs, asset = ui_util.asset;
 Hive.asset = asset;
 
+_apply = function(func, scale) {
+    if (typeof(scale) == "number") {
+        return function(l) {
+            return $.map(l, function(x) { return func(x, scale); });
+        }
+    } else {
+        // TODO: error handling?
+        return function(l) {
+            return $.map(l, function(x, i) { return func(x, scale[i]); });
+        }
+    }
+};
+
+_add = function(scale) {
+    if (typeof(scale) == "number") {
+        return function(l) {
+            return $.map(l, function(x) { return x + scale; });
+        }
+    } else {
+        // TODO: error handling?
+        return function(l) {
+            return $.map(l, function(x, i) { return x + scale[i]; });
+        }
+    }
+};
+
+_mul = function(scale) {
+    if (typeof(scale) == "number") {
+        return function(l) {
+            return $.map(l, function(x) { return x*scale; });
+        }
+    } else {
+        // TODO: error handling?
+        return function(l) {
+            return $.map(l, function(x, i) { return x*scale[i]; });
+        }
+    }
+};
+
 var hover_menu = function(handle, drawer, opts){
     return Menu(handle, drawer, $.extend({ auto_height: false }, opts));
 };
@@ -1878,8 +1917,19 @@ Hive.App.Rectangle = function(o) {
             break; // can only handle 1 file
         }
         var load = function(app) {
-            app.pos_set(o.pos());
-            app.dims_set(o.dims());
+            var dims = o.dims(), pos = o.pos();
+            var scaled = app.dims();
+            var aspect = scaled[1] / scaled[0];
+            var into_aspect = dims[1] / dims[0];
+            var fit_coord = (aspect < into_aspect) ? 0 : 1;
+            if (zoom)
+                fit_coord = 1 - fit_coord;
+            scaled = _mul(dims[fit_coord] / scaled[fit_coord])(scaled);
+            pos[1 - fit_coord] += 
+                (dims[1 - fit_coord] - scaled[1 - fit_coord]) / 2;
+
+            app.pos_set(pos);
+            app.dims_set(scaled);
         };
         var app = Hive.new_file(files, {}, {load:load})[0];
         return false;
@@ -1888,7 +1938,6 @@ Hive.App.Rectangle = function(o) {
     return o;
 };
 Hive.registerApp(Hive.App.Rectangle, 'hive.rectangle');
-
 
 Hive.App.Sketch = function(o) {
     Hive.App.has_resize(o);
