@@ -201,40 +201,45 @@ var snap_helper = function(my_tuple, exclude_ids,
                 for (var type2 = 0; type2 < 3; ++type2) {
                     coord2 = tuple[coord][app_i][type2];
                     // Add padding if aligning a right edge to a left
-                    var added_padding = 0;
+                    var padding_factor = 0, added_padding = 0;
+                    var padding_steps = 1;
                     if (Math.max(type2, type1) == 2 && 
                         (type1 == 0 || type2 == 0)) {
-                        added_padding = padding*(type2 - type1);
-                        coord2 += added_padding;
+                        padding_factor = padding*(type2 - type1);
+                        padding_steps = 2;
                     }
-                    var snap_dist = Math.abs(coord2 - coord1);
-                    if (snap_dist < snap_radius) {
-                        var strength = 1.0;
-                        var dist = snap_dist*5 + Math.abs(dist_cent[1 - coord] 
-                            - tuple[1 - coord][app_i][type1]);
-                        if (dist > 200) strength /= 
-                            Math.exp((Math.min(dist, 1000) - 200)/500);
-                        if ((type1 == 1) ^ (type2 == 1)) strength *= .4;
-                        var goal = coord2 + pos[coord] - coord1;
-                        goal = Math.round(goal*2)/2;
-                        var total = best_snaps[goal.toString()] || 0;
-                        total += strength;
-                        best_snaps[goal.toString()] = total;
-                        if (total > best.strength) {
-                            best.strength = total;
-                            best.goal = goal;
-                            var try_start = [my_tuple[0][type1]*s,
-                                my_tuple[1][type1]*s];
-                            var try_end = [tuple[0][app_i][type2]*s, 
-                                tuple[1][app_i][type2]*s];
-                            try_start[coord] = (coord2 - added_padding)*s + 2;
-                            var len = Math.abs(try_start[1 - coord] -
-                                try_end[1 - coord]);
-                            var old_len = Math.abs(best.start[1 - coord] -
-                                best.end[1 - coord]);
-                            if (1 || old_len == 0 || (len > 0 && len < old_len)) {
-                                best.start = try_start;
-                                best.end = try_end;
+                    for (var j = 0; j < padding_steps; 
+                        ++j, coord2 += padding_factor, 
+                        added_padding += padding_factor) {
+                        var snap_dist = Math.abs(coord2 - coord1);
+                        if (snap_dist < snap_radius) {
+                            var strength = 1.0;
+                            var dist = snap_dist*5 + Math.abs(dist_cent[1 - coord] 
+                                - tuple[1 - coord][app_i][type1]);
+                            if (dist > 200) strength /= 
+                                Math.exp((Math.min(dist, 1000) - 200)/500);
+                            if ((type1 == 1) ^ (type2 == 1)) strength *= .4;
+                            var goal = coord2 + pos[coord] - coord1;
+                            goal = Math.round(goal*2)/2;
+                            var total = best_snaps[goal.toString()] || 0;
+                            total += strength;
+                            best_snaps[goal.toString()] = total;
+                            if (total > best.strength) {
+                                best.strength = total;
+                                best.goal = goal;
+                                var try_start = [my_tuple[0][type1]*s,
+                                    my_tuple[1][type1]*s];
+                                var try_end = [tuple[0][app_i][type2]*s, 
+                                    tuple[1][app_i][type2]*s];
+                                try_start[coord] = (coord2 - added_padding)*s + 2;
+                                var len = Math.abs(try_start[1 - coord] -
+                                    try_end[1 - coord]);
+                                var old_len = Math.abs(best.start[1 - coord] -
+                                    best.end[1 - coord]);
+                                if (1 || old_len == 0 || (len > 0 && len < old_len)) {
+                                    best.start = try_start;
+                                    best.end = try_end;
+                                }
                             }
                         }
                     }
@@ -788,21 +793,9 @@ Hive.App.has_full_bleed = function(o, coord){
     o.orig_move_end = o.move_end;
 
     o.move_start = function() {
-        o.orig_move_start();
-        o.move_setup();
-    };
-    o.move_end = function() {
-        o.orig_move_end();
-        var apps = o.apps;
-        for (var i = 0; i < apps.length; ++i) {
-            var app = apps[i];
-            (app.orig_move_end || app.move_end)();
-        }
-        Hive.History.group('full-bleed move');
-    };
-    o.move_setup = function() {
         Hive.History.begin();
 
+        o.orig_move_start();
         o.padding = 10; // Scale into screen space?
         o.size = o.dims()[1 - o.full_bleed_coord];//o.size || 200;
         o.start_pos = o.pos()[1 - o.full_bleed_coord] - o.padding;
@@ -817,6 +810,15 @@ Hive.App.has_full_bleed = function(o, coord){
             if (app.old_start >= o.start_pos)
                 app.old_start -= o.size + 2 * o.padding;
         }
+    };
+    o.move_end = function() {
+        o.orig_move_end();
+        var apps = o.apps;
+        for (var i = 0; i < apps.length; ++i) {
+            var app = apps[i];
+            (app.orig_move_end || app.move_end)();
+        }
+        Hive.History.group('full-bleed move');
     };
     o.pos_set = function(pos) {
         pos[o.full_bleed_coord] = 0;
@@ -1783,8 +1785,8 @@ Hive.App.Image = function(o) {
             }
             o.init_state.dimensions = [ iw, ih ];
         }
-        o.img.css('width', '100%');
         o.load();
+        o.img.css('width', o.dims()[0] + 'px');
     };
 
     o.resize = function(delta) {
@@ -1792,11 +1794,12 @@ Hive.App.Image = function(o) {
         if(!dims[0] || !dims[1]) return;
         var newWidth = dims[1] * o.aspect;
         var dims = newWidth < dims[0] ? [newWidth, dims[1]] : [dims[0], dims[0] / o.aspect];
+        o.img.css('width', dims[0] + 'px');
         o.dims_set(dims);
     }
 
     o.pixel_size = function(){
-        return [img.naturalWidth, img.naturalHeight]
+        return [o.img.naturalWidth, o.img.naturalHeight]
     };
 
     function controls(o) {
@@ -1857,6 +1860,30 @@ Hive.App.Rectangle = function(o) {
     o.content_element = $("<div class='content rectangle drag'>").appendTo(o.div);
     o.set_css(o.init_state.content);
     setTimeout(function(){ o.load() }, 1);
+
+    o.content_element.on('dragenter dragover', function(ev){
+        ev.preventDefault();
+    })
+    .on('drop', function(e){
+        var dt = e.originalEvent.dataTransfer;
+        file_list = dt.files;
+        var files = [];
+        for(var i = 0; i < file_list.length; i++){
+            var f = file_list.item(i), file = {
+                url: URL.createObjectURL(f),
+                name: f.name,
+                mime: f.type
+            };
+            files.push(file);
+            break; // can only handle 1 file
+        }
+        var load = function(app) {
+            app.pos_set(o.pos());
+            app.dims_set(o.dims());
+        };
+        var app = Hive.new_file(files, {}, {load:load})[0];
+        return false;
+    });
 
     return o;
 };
@@ -2430,19 +2457,19 @@ Hive.new_app = function(s, opts) {
         a.center(opts.offset);
         a.dims_set(a.dims());
         Hive.Selection.select(a);
-        if(load) load();
+        if(load) load(a);
     };
     var app = Hive.App(s, opts);
     Hive.History.save(app._remove, app._unremove, 'create');
     return app;
 };
 
-Hive.new_file = function(files, opts) {
+Hive.new_file = function(files, opts, app_opts) {
     // TODO-feature: depending on type and number of files, create grouping of
     // media objects. Multiple audio files should be assembled into a play
     // list. Multiple images should be placed in a table, or slide-show
 
-    $.map(files, function(file, i){
+    return $.map(files, function(file, i){
         var app = $.extend({ file_name: file.name, file_id: file.id,
             file_meta: file.meta }, opts);
 
@@ -2472,7 +2499,7 @@ Hive.new_file = function(files, opts) {
         }
         app.url = file.url;
 
-        Hive.new_app(app, { offset: [20*i, 20*i] } );
+        return Hive.new_app(app, $.extend({ offset: [20*i, 20*i] }, app_opts) );
     });
 
     return false;
