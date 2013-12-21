@@ -422,14 +422,14 @@ Hive.App = function(init_state, opts) {
     };
     o.pos_set = function(pos, snap_strength, snap_radius){
         var s = Hive.env().scale;
-        _pos = [ pos[0] / s, pos[1] / s ];
+        var pos = [ pos[0] / s, pos[1] / s ];
         if (snap_strength > 0) {
             var excludes = {};
             excludes[o.id] = true;
-            _pos = snap_helper(o.tuple(_pos), excludes, snap_strength,
+            pos = snap_helper(o.tuple(pos), excludes, snap_strength,
                 snap_radius);
         }
-        o.layout();
+        o.pos_relative_set(pos);
     };
     o.pos_relative = function(){
         return _pos.concat();
@@ -479,14 +479,13 @@ Hive.App = function(init_state, opts) {
     };
     o.dims_set = function(dims){
         var s = Hive.env().scale;
-        _dims = [ dims[0] / s, dims[1] / s ];
-        o.layout();
+        o.dims_relative_set([ dims[0] / s, dims[1] / s ]);
     };
     o.dims_relative = function(){
         return _dims.concat();
     }
     o.dims_relative_set = function(dims){
-        _dims = [ dims[0], dims[1] ];
+        _dims = dims.concat();
         o.layout();
     };
     o.width = function(){ return o.dims()[0] };
@@ -934,9 +933,14 @@ Hive.App.has_resize = function(o) {
     o.resize = function(delta){ 
         var s = Hive.env().scale;
         delta = o.resize_to(delta);
-        var snap_strength = .5, snap_radius = 10;  //!!
-        var _pos = o.min_pos();
+        var _pos = o.pos_relative();
         var pos = [ _pos[0] + delta[0] / s, _pos[1] + delta[1] / s ];
+        o.resize_to_pos(pos);
+    };
+
+    o.resize_to_pos = function(pos, doit) {
+        var _pos = o.pos_relative();
+        var snap_strength = .5, snap_radius = 10;  //!!
         // TODO: allow snapping to aspect ratio (keyboard?)
         if (snap_strength > 0) {
             var excludes = {};
@@ -951,7 +955,9 @@ Hive.App.has_resize = function(o) {
         _dims[1] = pos[1] - _pos[1];
         if (o.full_bleed_coord != undefined)
             _dims[o.full_bleed_coord] = 1000;
-        o.dims_relative_set(_dims);
+        if (doit || doit == undefined)
+            o.dims_relative_set(_dims);
+        return _dims;
     };
     o.resize_end = function(){ 
         history_point.save();
@@ -1838,8 +1844,8 @@ Hive.App.Image = function(o) {
         o.img.load(function(){setTimeout(o.img_load, 1)});
     };
     o.img_load = function() {
-        o.imageWidth  = o.img.width();
-        o.imageHeight = o.img.height();
+        o.imageWidth  = o.img.width() || o.img.prop('naturalWidth');
+        o.imageHeight = o.img.height() || o.img.prop('naturalHeight');
         o.aspect = o.imageWidth / o.imageHeight;
         if( ! o.init_state.dimensions ){
             var ww = $(window).width(), wh = $(window).height(), iw, ih, wa = ww / wh;
@@ -1869,6 +1875,8 @@ Hive.App.Image = function(o) {
             if (opts.fit == 2) {
                 o.init_state.scale_x = new_layout.dims[0] / opts.dims[0];
                 o.init_state.offset = _add(new_layout.pos)(_mul(-1)(opts.pos));
+                o.init_state.offset = 
+                    _mul(1/o.init_state.scale_x/opts.dims[0])(o.init_state.offset);
                 // o.pos_set(opts.pos);
                 o.dims_set(opts.dims);
             }
@@ -1879,22 +1887,46 @@ Hive.App.Image = function(o) {
             o.content_element = $('<div class="crop_box">');
             o.img.appendTo(o.content_element);
             o.content_element.appendTo(happ);
-            o.img.css('width', 
-                o.dims()[0] * o.init_state.scale_x + 'px');
-            if (o.init_state.offset) {
-                o.img.css({ "margin-left": o.init_state.offset[0],
-                    "margin-top": o.init_state.offset[1] });
-            }
+            o.div_aspect = o.dims()[0] / o.dims()[1];
+            o.layout();
         }
     };
+
+    var _layout = o.layout;
+    o.layout = function() {
+        _layout();
+        var dims = o.dims(), scale_x = o.init_state.scale_x || 1;
+        scale_x *= dims[0];
+        o.img.css('width', scale_x + 'px');
+        if (o.init_state.offset) {
+            o.img.css({ 
+                "margin-left": o.init_state.offset[0] * scale_x,
+                "margin-top": o.init_state.offset[1] * scale_x
+            });
+        }
+    }
 
     o.resize = function(delta) {
         var dims = o.resize_to(delta);
         if(!dims[0] || !dims[1]) return;
-        var newWidth = dims[1] * o.aspect;
-        var dims = newWidth < dims[0] ? [newWidth, dims[1]] : [dims[0], dims[0] / o.aspect];
-        o.img.css('width', dims[0] + 'px');
-        o.dims_set(dims);
+        var aspect = o.div_aspect || o.aspect;
+        var newWidth = dims[1] * aspect;
+        dims = (newWidth < dims[0]) ? [newWidth, dims[1]] : 
+            [dims[0], dims[0] / aspect];
+        var s = Hive.env().scale;
+        dims = _mul(1/s)(dims);
+
+        // snap
+        var _pos = o.pos_relative();
+        var pos = [ _pos[0] + dims[0], _pos[1] + dims[1] ];
+        var snap_dims = o.resize_to_pos(pos);
+        var snap_dist = _apply(function(x,y) {return Math.abs(x-y);}, 
+            dims)(snap_dims);
+
+        dims = (snap_dist[0] < snap_dist[1]) ? [snap_dims[1] * aspect, snap_dims[1]] :
+            [snap_dims[0], snap_dims[0] / aspect];
+
+        o.dims_relative_set(dims);
     }
 
     o.pixel_size = function(){
