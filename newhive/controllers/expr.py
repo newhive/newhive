@@ -188,9 +188,9 @@ class Expr(ModelController):
             html = "<img src='%s'>" % content
             scale_x = app.get('scale_x')
             if scale_x:
-                scale_x *= app.get('dimensions', 1)[0]
-                css = 'width:%fpx' % scale_x
+                css = 'width:%f%%' % (100*scale_x)
                 if app.get('offset'):
+                    scale_x *= app.get('dimensions', 1)[0]
                     offset = [x * scale_x for x in app.get('offset')]
                     css = '%s;margin-left:%spx;margin-top:%spx' % (
                         css, offset[0], offset[1] )
