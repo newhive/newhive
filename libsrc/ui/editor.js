@@ -412,9 +412,14 @@ Hive.App = function(init_state, opts) {
         var s = Hive.env().scale;
         return [ _pos[0] * s, _pos[1] * s ];
     };
+    // TODO: make these reflect axis aligned bounding box (when rotated, etc)
     o.min_pos = function(){ return _pos.concat(); };
-    o.max_pos = function() {return [ _pos[0] + _dims[0], _pos[1] + _dims[1] ]; };
-    o.cent_pos = function() {return [ _pos[0] + _dims[0]/2, _pos[1] + _dims[1]/2 ]; };
+    o.max_pos = function(){ return [ _pos[0] + _dims[0], _pos[1] + _dims[1] ]; };
+    o.cent_pos = function(){
+        var min = o.min_pos();
+        var max = o.max_pos();
+        return [ (min[0] + max[0]) / 2, (min[1] + max[1]) / 2 ]; 
+    };
     o.pos_set = function(pos, snap_strength, snap_radius){
         var s = Hive.env().scale;
         _pos = [ pos[0] / s, pos[1] / s ];
@@ -425,6 +430,13 @@ Hive.App = function(init_state, opts) {
                 snap_radius);
         }
         o.layout();
+    };
+    o.pos_relative = function(){
+        return _pos.concat();
+    };
+    o.pos_relative_set = function(pos){
+        _pos = pos.concat();
+        o.layout()
     };
     o.layout = function(){
         var pos = o.pos(), dims = o.dims();
@@ -506,6 +518,25 @@ Hive.App = function(init_state, opts) {
         o.content_element.css('opacity', s);
     };
 
+    o.fit_to = function(opts){
+        if (opts.doit == undefined) opts.doit = true;
+        var dims = opts.dims.concat(), pos = opts.pos.concat();
+        var scaled = o.dims();
+        var aspect = scaled[1] / scaled[0];
+        var into_aspect = dims[1] / dims[0];
+        var fit_coord = (aspect < into_aspect) ? 0 : 1;
+        if (opts.zoom || opts.fit == 2)
+            fit_coord = 1 - fit_coord;
+        scaled = _mul(dims[fit_coord] / scaled[fit_coord])(scaled);
+        pos[1 - fit_coord] += 
+            (dims[1 - fit_coord] - scaled[1 - fit_coord]) / 2;
+
+        if (opts.doit) {
+            o.pos_set(pos);
+            o.dims_set(scaled);
+        }
+        return { pos: pos, dims: scaled };
+    }
     o.state_relative = function(env){ return {
         position: _pos.concat(),
         dimensions: _dims.concat()
@@ -906,6 +937,7 @@ Hive.App.has_resize = function(o) {
         var snap_strength = .5, snap_radius = 10;  //!!
         var _pos = o.min_pos();
         var pos = [ _pos[0] + delta[0] / s, _pos[1] + delta[1] / s ];
+        // TODO: allow snapping to aspect ratio (keyboard?)
         if (snap_strength > 0) {
             var excludes = {};
             excludes[o.id] = true;
@@ -917,8 +949,9 @@ Hive.App.has_resize = function(o) {
         var _dims = [];
         _dims[0] = pos[0] - _pos[0];
         _dims[1] = pos[1] - _pos[1];
+        if (o.full_bleed_coord != undefined)
+            _dims[o.full_bleed_coord] = 1000;
         o.dims_relative_set(_dims);
-        // o.dims_set(o.resize_to(delta)); 
     };
     o.resize_end = function(){ 
         history_point.save();
@@ -1826,6 +1859,33 @@ Hive.App.Image = function(o) {
         }
         o.load();
         o.img.css('width', o.dims()[0] + 'px');
+        // fit and crop as needed
+        if (o.init_state.fit) {
+            var dims = o.dims();
+            o.dims_set([o.imageWidth, o.imageHeight]);
+            var opts = { dims:dims, pos:o.pos(), fit:o.init_state.fit, 
+                doit: (o.init_state.fit != 2) };
+            var new_layout = o.fit_to(opts);
+            if (opts.fit == 2) {
+                o.init_state.scale_x = new_layout.dims[0] / opts.dims[0];
+                o.init_state.offset = _add(new_layout.pos)(_mul(-1)(opts.pos));
+                // o.pos_set(opts.pos);
+                o.dims_set(opts.dims);
+            }
+            o.init_state.fit = undefined;
+        }
+        if (o.init_state.scale_x != undefined) {
+            var happ = o.content_element.parent();
+            o.content_element = $('<div class="crop_box">');
+            o.img.appendTo(o.content_element);
+            o.content_element.appendTo(happ);
+            o.img.css('width', 
+                o.dims()[0] * o.init_state.scale_x + 'px');
+            if (o.init_state.offset) {
+                o.img.css({ "margin-left": o.init_state.offset[0],
+                    "margin-top": o.init_state.offset[1] });
+            }
+        }
     };
 
     o.resize = function(delta) {
@@ -1917,21 +1977,12 @@ Hive.App.Rectangle = function(o) {
             break; // can only handle 1 file
         }
         var load = function(app) {
-            var dims = o.dims(), pos = o.pos();
-            var scaled = app.dims();
-            var aspect = scaled[1] / scaled[0];
-            var into_aspect = dims[1] / dims[0];
-            var fit_coord = (aspect < into_aspect) ? 0 : 1;
-            if (zoom)
-                fit_coord = 1 - fit_coord;
-            scaled = _mul(dims[fit_coord] / scaled[fit_coord])(scaled);
-            pos[1 - fit_coord] += 
-                (dims[1 - fit_coord] - scaled[1 - fit_coord]) / 2;
-
-            app.pos_set(pos);
-            app.dims_set(scaled);
+            // app.fit_to({dims: o.dims(), pos: o.pos(), zoom: false});
         };
-        var app = Hive.new_file(files, {}, {load:load})[0];
+        var app = Hive.new_file(files, 
+            { position: o.pos_relative(), dimensions: o.dims_relative(),
+                fit: 2 },
+            { load:load, position: true })[0];
         return false;
     });
 
@@ -2503,7 +2554,8 @@ Hive.new_app = function(s, opts) {
     var load = opts.load;
     opts.load = function(a) {
         // Hive.upload_finish();
-        a.center(opts.offset);
+        if (! opts.position)
+            a.center(opts.offset);
         a.dims_set(a.dims());
         Hive.Selection.select(a);
         if(load) load(a);
