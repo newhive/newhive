@@ -74,11 +74,6 @@ define([
         browser_layout.center($('#page_next'), undefined, {'h': false});
 
         var wide = ($(window).width() >= 1180) ? true : false;
-        if (o.wide_overlay != wide) {
-            o.wide_overlay = wide;
-            $("#popup_content").css("max-width", (wide) ? 980+600-430 : 980);
-            $("#popup_content .left_pane").width((wide) ? 600 : 430);
-        }
         var columns = ($(window).width() >= 980) ? 2 : 1;
         if (o.overlay_columns != columns) {
             o.overlay_columns = columns;
@@ -90,6 +85,11 @@ define([
                 $("#popup_content .empty").showshow();
             else
                 $("#popup_content .empty").hidehide();
+        }
+        if (o.wide_overlay != wide) {
+            o.wide_overlay = wide;
+            $("#popup_content").css("max-width", (wide) ? 980+600-430 : 980);
+            $("#popup_content .left_pane").width((wide) ? 600 : 430);
         }
     };
     var resize_icon = function(el) {
@@ -118,7 +118,6 @@ define([
         });
         // Reset scroll to top
         $("body").scrollTop(0);
-        o.resize();
         
         var embed_url = 'https://' + window.location.host + window.location.pathname + '?template=embed';
         $('#dia_embed .copy.embed_code').val("<iframe src='" + embed_url + 

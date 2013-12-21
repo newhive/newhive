@@ -7,6 +7,10 @@ define([
     // list of handlers (_handlers) in order.
     // All handlers must have an integer handler_type property,
     // which specifies bubble order
+
+    // TODO-minor-bugbug: implement a concept of a default handler (maybe
+    // reverse order of handler_type and make 0 default), so, for example,
+    // hover states can be disabled between all dragstart and dragend events
 	var o = {};
 
 	var _handlers = [];
@@ -43,6 +47,7 @@ define([
 	o.on = function(element, event_name, handler, handler_type){
 		$(element).on(event_name,
 			event_bubbler(event_name, handler, handler_type));
+		return o;
 	};
 
 	return o;

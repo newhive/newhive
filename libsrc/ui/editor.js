@@ -35,6 +35,45 @@ var Hive = {}, debug_mode = context.config.debug_mode, bound = js.bound,
     noop = function(){}, Funcs = js.Funcs, asset = ui_util.asset;
 Hive.asset = asset;
 
+_apply = function(func, scale) {
+    if (typeof(scale) == "number") {
+        return function(l) {
+            return $.map(l, function(x) { return func(x, scale); });
+        }
+    } else {
+        // TODO: error handling?
+        return function(l) {
+            return $.map(l, function(x, i) { return func(x, scale[i]); });
+        }
+    }
+};
+
+_add = function(scale) {
+    if (typeof(scale) == "number") {
+        return function(l) {
+            return $.map(l, function(x) { return x + scale; });
+        }
+    } else {
+        // TODO: error handling?
+        return function(l) {
+            return $.map(l, function(x, i) { return x + scale[i]; });
+        }
+    }
+};
+
+_mul = function(scale) {
+    if (typeof(scale) == "number") {
+        return function(l) {
+            return $.map(l, function(x) { return x*scale; });
+        }
+    } else {
+        // TODO: error handling?
+        return function(l) {
+            return $.map(l, function(x, i) { return x*scale[i]; });
+        }
+    }
+};
+
 var hover_menu = function(handle, drawer, opts){
     return Menu(handle, drawer, $.extend({ auto_height: false }, opts));
 };
@@ -159,7 +198,7 @@ var snap_helper = function(my_tuple, exclude_ids,
     // TODO-perf: save this array only after drag/drop
     // And keep it sorted
     var apps = Hive.Apps.all().filter(function(app) {
-        return !(app.id in exclude_ids);
+        return !(app.id in exclude_ids || Hive.Selection.selected(app));
     });
     // TODO: this 'root' app belongs as a permanent feature of Apps.
     // var app = Hive.App({
@@ -202,40 +241,46 @@ var snap_helper = function(my_tuple, exclude_ids,
                     continue;
                 for (var type2 = 0; type2 < 3; ++type2) {
                     coord2 = tuple[coord][app_i][type2];
-                    // Add padding
-                    var added_padding = 0;
-                    if (((type2 - type1) % 2) == 0) {
-                        added_padding = padding*(type2 - type1);
-                        coord2 += added_padding;
+                    // Add padding if aligning a right edge to a left
+                    var padding_factor = 0, added_padding = 0;
+                    var padding_steps = 1;
+                    if (Math.max(type2, type1) == 2 && 
+                        (type1 == 0 || type2 == 0)) {
+                        padding_factor = padding*(type2 - type1);
+                        padding_steps = 2;
                     }
-                    var snap_dist = Math.abs(coord2 - coord1);
-                    if (snap_dist < snap_radius) {
-                        var strength = 1.0;
-                        var dist = snap_dist*5 + Math.abs(dist_cent[1 - coord] 
-                            - tuple[1 - coord][app_i][type1]);
-                        if (dist > 200) strength /= 
-                            Math.exp((Math.min(dist, 1000) - 200)/500);
-                        if ((type1 == 1) ^ (type2 == 1)) strength *= .4;
-                        var goal = coord2 + pos[coord] - coord1;
-                        goal = Math.round(goal);
-                        var total = best_snaps[goal.toString()] || 0;
-                        total += strength;
-                        best_snaps[goal.toString()] = total;
-                        if (total > best.strength) {
-                            best.strength = total;
-                            best.goal = goal;
-                            var try_start = [my_tuple[0][type1]*s,
-                                my_tuple[1][type1]*s];
-                            var try_end = [tuple[0][app_i][type2]*s, 
-                                tuple[1][app_i][type2]*s];
-                            try_start[coord] = (coord2 - added_padding)*s + 2;
-                            var len = Math.abs(try_start[1 - coord] -
-                                try_end[1 - coord]);
-                            var old_len = Math.abs(best.start[1 - coord] -
-                                best.end[1 - coord]);
-                            if (1 || old_len == 0 || (len > 0 && len < old_len)) {
-                                best.start = try_start;
-                                best.end = try_end;
+                    for (var j = 0; j < padding_steps; 
+                        ++j, coord2 += padding_factor, 
+                        added_padding += padding_factor) {
+                        var snap_dist = Math.abs(coord2 - coord1);
+                        if (snap_dist < snap_radius) {
+                            var strength = 1.0;
+                            var dist = snap_dist*5 + Math.abs(dist_cent[1 - coord] 
+                                - tuple[1 - coord][app_i][type1]);
+                            if (dist > 200) strength /= 
+                                Math.exp((Math.min(dist, 1000) - 200)/500);
+                            if ((type1 == 1) ^ (type2 == 1)) strength *= .4;
+                            var goal = coord2 + pos[coord] - coord1;
+                            goal = Math.round(goal*2)/2;
+                            var total = best_snaps[goal.toString()] || 0;
+                            total += strength;
+                            best_snaps[goal.toString()] = total;
+                            if (total > best.strength) {
+                                best.strength = total;
+                                best.goal = goal;
+                                var try_start = [my_tuple[0][type1]*s,
+                                    my_tuple[1][type1]*s];
+                                var try_end = [tuple[0][app_i][type2]*s, 
+                                    tuple[1][app_i][type2]*s];
+                                try_start[coord] = (coord2 - added_padding)*s + 2;
+                                var len = Math.abs(try_start[1 - coord] -
+                                    try_end[1 - coord]);
+                                var old_len = Math.abs(best.start[1 - coord] -
+                                    best.end[1 - coord]);
+                                if (1 || old_len == 0 || (len > 0 && len < old_len)) {
+                                    best.start = try_start;
+                                    best.end = try_end;
+                                }
                             }
                         }
                     }
@@ -364,9 +409,14 @@ Hive.App = function(init_state, opts) {
         var s = Hive.env().scale;
         return [ _pos[0] * s, _pos[1] * s ];
     };
+    // TODO: make these reflect axis aligned bounding box (when rotated, etc)
     o.min_pos = function(){ return _pos.slice(); };
-    o.max_pos = function() {return [ _pos[0] + _dims[0], _pos[1] + _dims[1] ]; };
-    o.cent_pos = function() {return [ _pos[0] + _dims[0]/2, _pos[1] + _dims[1]/2 ]; };
+    o.max_pos = function(){ return [ _pos[0] + _dims[0], _pos[1] + _dims[1] ]; };
+    o.cent_pos = function(){
+        var min = o.min_pos();
+        var max = o.max_pos();
+        return [ (min[0] + max[0]) / 2, (min[1] + max[1]) / 2 ]; 
+    };
     o.pos_set = function(pos, snap_strength, snap_radius){
         var s = Hive.env().scale;
         _pos = [ pos[0] / s, pos[1] / s ];
@@ -377,6 +427,13 @@ Hive.App = function(init_state, opts) {
                 snap_radius);
         }
         o.layout();
+    };
+    o.pos_relative = function(){
+        return _pos.concat();
+    };
+    o.pos_relative_set = function(pos){
+        _pos = pos.concat();
+        o.layout()
     };
     o.layout = function(){
         var pos = o.pos(), dims = o.dims();
@@ -420,6 +477,9 @@ Hive.App = function(init_state, opts) {
         _dims = [ dims[0] / s, dims[1] / s ];
         o.layout();
     };
+    o.dims_relative = function(){
+        return _dims.concat();
+    }
     o.dims_relative_set = function(dims){
         _dims = [ dims[0], dims[1] ];
         o.layout();
@@ -446,6 +506,26 @@ Hive.App = function(init_state, opts) {
         return cp;
     };
 
+    o.fit_to = function(opts){
+        if (opts.doit == undefined) opts.doit = true;
+        var dims = opts.dims.concat(), pos = opts.pos.concat();
+        var scaled = o.dims();
+        var aspect = scaled[1] / scaled[0];
+        var into_aspect = dims[1] / dims[0];
+        var fit_coord = (aspect < into_aspect) ? 0 : 1;
+        if (opts.zoom || opts.fit == 2)
+            fit_coord = 1 - fit_coord;
+        scaled = _mul(dims[fit_coord] / scaled[fit_coord])(scaled);
+        pos[1 - fit_coord] += 
+            (dims[1 - fit_coord] - scaled[1 - fit_coord]) / 2;
+
+        if (opts.doit) {
+            o.pos_set(pos);
+            o.dims_set(scaled);
+        }
+        return { pos: pos, dims: scaled };
+    }
+
     o.state_relative = function(env){ return {
         position: _pos.slice(),
         dimensions: _dims.slice()
@@ -459,6 +539,7 @@ Hive.App = function(init_state, opts) {
     o.state = function(){
         var s = $.extend({}, o.init_state, o.state_relative(Hive.env()), {
             z: o.layer(),
+            full_bleed_coord: o.full_bleed_coord,
             // TODO-cleanup: flatten state and use o.state() and
             // o.state_update to simplify behavior around shared attributes
             content: o.content(),
@@ -489,6 +570,8 @@ Hive.App = function(init_state, opts) {
         if( ! o.init_state.dimensions ) o.init_state.dimensions = [ 300, 200 ];
         if( opts.offset ) o.init_state.position = array_sum(o.init_state.position, opts.offset);
         o.state_relative_set( Hive.env(), o.init_state );
+        if (o.init_state.full_bleed_coord != undefined)
+            Hive.App.has_full_bleed(o, o.init_state.full_bleed_coord);
         if(opts.load) opts.load(o);
         Hive.layout_apps();
     });
@@ -740,6 +823,10 @@ Hive.keydown = function(ev){
 
 
 Hive.App.has_nudge = function(o){
+    // TODO: implement undo/redo of this. Because nudge is naturally called
+    // repeatedly, this should create a special collapsable history point that
+    // automatically merges into the next history point if it's the same type,
+    // similar to History.begin, and History.group
     o.keydown.add(function(ev){
         var nudge = function(dx,dy){
             return function(){
@@ -808,6 +895,82 @@ Hive.App.has_shield = function(o, opts) {
     }
 };
 
+// coord = 0 ==> full in x dimension (y scrolling)
+// coord = 1 ==> full in y dimension (x scrolling)
+Hive.App.has_full_bleed = function(o, coord){
+    if (!coord) coord = 0;  // default is vertical scrolling
+    o.full_bleed_coord = coord;
+    var dims = o.dims_relative();
+    dims[coord] = 1000;
+    o.dims_relative_set(dims);
+
+    o.orig_pos_set = o.pos_set;
+    o.orig_move_start = o.move_start;
+    o.orig_move_end = o.move_end;
+
+    o.move_start = function() {
+        Hive.History.begin();
+
+        o.orig_move_start();
+        o.padding = 10; // Scale into screen space?
+        o.size = o.dims()[1 - o.full_bleed_coord];//o.size || 200;
+        o.start_pos = o.pos()[1 - o.full_bleed_coord] - o.padding;
+        o.apps = Hive.Apps.all().filter(function(app) {
+            return !(app.id == o.id || Hive.Selection.selected(app));
+        });
+        var apps = o.apps;
+        for (var i = 0; i < apps.length; ++i) {
+            var app = apps[i];
+            app.old_start = app.pos()[1 - o.full_bleed_coord];
+            (app.orig_move_start || app.move_start)();
+            if (app.old_start >= o.start_pos)
+                app.old_start -= o.size + 2 * o.padding;
+        }
+    };
+    o.move_end = function() {
+        o.orig_move_end();
+        var apps = o.apps;
+        for (var i = 0; i < apps.length; ++i) {
+            var app = apps[i];
+            (app.orig_move_end || app.move_end)();
+        }
+        Hive.History.group('full-bleed move');
+    };
+    o.pos_set = function(pos) {
+        pos[o.full_bleed_coord] = 0;
+        var coord = 1 - o.full_bleed_coord; // Work in y
+        o.start_pos = pos[coord] - o.padding;
+        o.stop_pos = o.start_pos + o.size + 2 * o.padding;
+
+        if (o.apps) {
+            var push_start = 0, push_size = 0, apps = o.apps;
+            for (var i = 0; i < apps.length; ++i) {
+                var app = apps[i];
+                var start = app.old_start;
+                var stop = start + app.dims()[coord];
+                if (start < o.stop_pos && stop > o.start_pos) {
+                    var push_try = o.stop_pos - start;
+                    push_size = Math.max(push_size, push_try);
+                }
+            }
+            for (var i = 0; i < apps.length; ++i) {
+                var app = apps[i];
+                var start = app.old_start;
+                var stop = start + app.dims()[coord];
+                var new_pos = app.pos();
+                if (stop > o.start_pos) start += push_size;
+                new_pos[coord] = start;
+                (app.orig_pos_set || app.pos_set)(new_pos);
+            }
+        }
+        o.orig_pos_set(pos);
+    };
+
+    o.div.drag('start', o.move_start).drag('end', o.move_end);
+    // o.move_setup();
+    // o.pos_set(o.pos());
+};
+
 Hive.App.has_resize = function(o) {
     var dims_ref, history_point;
     o.resize_start = function(){
@@ -820,6 +983,7 @@ Hive.App.has_resize = function(o) {
         var snap_strength = .5, snap_radius = 10;  //!!
         var _pos = o.min_pos();
         var pos = [ _pos[0] + delta[0] / s, _pos[1] + delta[1] / s ];
+        // TODO: allow snapping to aspect ratio (keyboard?)
         if (snap_strength > 0) {
             var excludes = {};
             excludes[o.id] = true;
@@ -831,8 +995,9 @@ Hive.App.has_resize = function(o) {
         var _dims = [];
         _dims[0] = pos[0] - _pos[0];
         _dims[1] = pos[1] - _pos[1];
+        if (o.full_bleed_coord != undefined)
+            _dims[o.full_bleed_coord] = 1000;
         o.dims_relative_set(_dims);
-        // o.dims_set(o.resize_to(delta)); 
     };
     o.resize_end = function(){ 
         history_point.save();
@@ -1758,8 +1923,35 @@ Hive.App.Image = function(o) {
             }
             o.init_state.dimensions = [ iw, ih ];
         }
-        o.img.css('width', '100%');
         o.load();
+        o.img.css('width', o.dims()[0] + 'px');
+        // fit and crop as needed
+        if (o.init_state.fit) {
+            var dims = o.dims();
+            o.dims_set([o.imageWidth, o.imageHeight]);
+            var opts = { dims:dims, pos:o.pos(), fit:o.init_state.fit, 
+                doit: (o.init_state.fit != 2) };
+            var new_layout = o.fit_to(opts);
+            if (opts.fit == 2) {
+                o.init_state.scale_x = new_layout.dims[0] / opts.dims[0];
+                o.init_state.offset = _add(new_layout.pos)(_mul(-1)(opts.pos));
+                // o.pos_set(opts.pos);
+                o.dims_set(opts.dims);
+            }
+            o.init_state.fit = undefined;
+        }
+        if (o.init_state.scale_x != undefined) {
+            var happ = o.content_element.parent();
+            o.content_element = $('<div class="crop_box">');
+            o.img.appendTo(o.content_element);
+            o.content_element.appendTo(happ);
+            o.img.css('width', 
+                o.dims()[0] * o.init_state.scale_x + 'px');
+            if (o.init_state.offset) {
+                o.img.css({ "margin-left": o.init_state.offset[0],
+                    "margin-top": o.init_state.offset[1] });
+            }
+        }
     };
 
     o.resize = function(delta) {
@@ -1767,11 +1959,12 @@ Hive.App.Image = function(o) {
         if(!dims[0] || !dims[1]) return;
         var newWidth = dims[1] * o.aspect;
         var dims = newWidth < dims[0] ? [newWidth, dims[1]] : [dims[0], dims[0] / o.aspect];
+        o.img.css('width', dims[0] + 'px');
         o.dims_set(dims);
     }
 
     o.pixel_size = function(){
-        return [img.naturalWidth, img.naturalHeight]
+        return [o.img.naturalWidth, o.img.naturalHeight]
     };
 
     function controls(o) {
@@ -1832,6 +2025,32 @@ Hive.App.Rectangle = function(o) {
     o.content_element = $("<div class='content rectangle drag'>").appendTo(o.div);
     o.set_css(o.init_state.content);
     setTimeout(function(){ o.load() }, 1);
+
+    o.content_element.on('dragenter dragover', function(ev){
+        ev.preventDefault();
+    })
+    .on('drop', function(e){
+        var dt = e.originalEvent.dataTransfer;
+        file_list = dt.files;
+        var files = [];
+        for(var i = 0; i < file_list.length; i++){
+            var f = file_list.item(i), file = {
+                url: URL.createObjectURL(f),
+                name: f.name,
+                mime: f.type
+            };
+            files.push(file);
+            break; // can only handle 1 file
+        }
+        var load = function(app) {
+            // app.fit_to({dims: o.dims(), pos: o.pos(), zoom: false});
+        };
+        var app = Hive.new_file(files, 
+            { position: o.pos_relative(), dimensions: o.dims_relative(),
+                fit: 2 },
+            { load:load, position: true })[0];
+        return false;
+    });
 
     return o;
 };
@@ -2439,22 +2658,23 @@ Hive.new_app = function(s, opts) {
     var load = opts.load;
     opts.load = function(a) {
         // Hive.upload_finish();
-        a.center(opts.offset);
+        if (! opts.position)
+            a.center(opts.offset);
         a.dims_set(a.dims());
         Hive.Selection.select(a);
-        if(load) load();
+        if(load) load(a);
     };
     var app = Hive.App(s, opts);
     Hive.History.save(app._remove, app._unremove, 'create');
     return app;
 };
 
-Hive.new_file = function(files, opts) {
+Hive.new_file = function(files, opts, app_opts) {
     // TODO-feature: depending on type and number of files, create grouping of
     // media objects. Multiple audio files should be assembled into a play
     // list. Multiple images should be placed in a table, or slide-show
 
-    $.map(files, function(file, i){
+    return $.map(files, function(file, i){
         var app = $.extend({ file_name: file.name, file_id: file.id,
             file_meta: file.meta }, opts);
 
@@ -2484,7 +2704,7 @@ Hive.new_file = function(files, opts) {
         }
         app.url = file.url;
 
-        Hive.new_app(app, { offset: [20*i, 20*i] } );
+        return Hive.new_app(app, $.extend({ offset: [20*i, 20*i] }, app_opts) );
     });
 
     return false;
@@ -3176,6 +3396,20 @@ Hive.rect_test = function(w, h){
             })
         })
     });
+};
+
+// Rejigger the selected elements into their "best"
+// snapped positions (and sizes TBD)
+Hive.im_feeling_lucky = function(){
+    var apps = Hive.Selection.elements.concat();
+    Hive.Selection.elements = [];
+    $.map([100, 60, 40, 30, 20, 10], function(j) {
+        $.map(apps, function(app, i){
+            app.pos_set(app.pos(), .3, j);
+            // app.resize
+        });
+    });
+    Hive.Selection.elements = apps;
 };
 
 return Hive;

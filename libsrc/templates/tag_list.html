@@ -12,12 +12,14 @@
       </form>
     {>}
   {>}
-  <div class="delete icon pointer"></div>
+  {<unless no_delete}
+    <div class="delete icon pointer"></div>
+  {>}
   {<for tags "tagnum"}
     {|templates/tag_card.html}
   {>}
   {<if more_menu}
-  	<div id="tag_more" class="tag_label tag_0 hide">...</div>
-  	<div id="tags_menu" class="menu drawer icon_set" data-handle='#tag_more' ></div>
+    <div id="tag_more" class="tag_label tag_0 hide">...</div>
+    <div id="tags_menu" class="menu drawer icon_set" data-handle='#tag_more' ></div>
   {>}
 </div>

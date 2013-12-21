@@ -275,6 +275,7 @@ class Community(Controller):
             self.db.Expr.named(owner_name, expr_name) )
         if not expr: return None
 
+        meta = {}
         resp = {
             'expr_id': expr.id,
             'expr': expr.client_view(viewer=tdata.user, activity=10)
@@ -287,11 +288,13 @@ class Community(Controller):
             resp['expr']['title'] = '[password required]'
             resp['error'] = 'password'
         else:
+            meta['img_url'] = expr.snapshot_name('big')
             expr_owner = expr.get_owner()
             if expr_owner and expr_owner['analytics'].get('views_by'):
                 expr_owner.increment({'analytics.views_by': 1})
             if not expr.get('views'): expr['views'] = 0
             if expr_owner.id != tdata.user.id: expr.increment({'views': 1})
+        resp['meta'] = meta
         return resp
 
     def edit_expr(self, tdata, request, id=None):
@@ -426,4 +429,11 @@ class Community(Controller):
             return self.serve_json(response, page_data)
         else:
             tdata.context.update(page_data=page_data, route_args=kwargs)
+            if page_data.get('meta'):
+                tdata.context.update(page_data['meta'])
+                del page_data['meta']
+            if page_data.get('expr'):
+                tdata.context.update(meta_title=page_data.get('expr').get('title'))
+            tdata.context.update(meta_url=request.url)
+
             return self.serve_loader_page('pages/main.html', tdata, request, response)

@@ -1361,7 +1361,7 @@ class Expr(HasSocial):
 
     # size is 'big', 'small', or 'tiny'.
     def snapshot_name(self, size):
-        if not self.get('snapshot_time') or self.get('snapshot_id'):
+        if not self.get('snapshot_time') or not self.get('snapshot_id'):
             return False
 
         dimensions = {"big": (715, 430), "small": (390, 235), 'tiny': (70, 42)}
@@ -1415,21 +1415,21 @@ class Expr(HasSocial):
                 local = generate_thumb(f, (w, h), 'jpeg')
             upload_list.append((local,name))
 
-        it = True
+        it = 0
         for local, name in upload_list:
             file_data = {'owner': self.owner.id,
                 'tmp_file': (local if it else open(local, 'r')),
                 'name': 'snapshot.jpg', 'mime': 'image/jpeg',
                 'generated_from': self.id, 'generated_from_type': 'Expr'}
-            if it:
+            if not it:
                 file_record = self.db.File.create(file_data)
                 file_record['dimensions'] = ( 
                     dimension_list[it][0], dimension_list[it][1])
-                it = False
             else:
                 file_record.set_thumb(
                     dimension_list[it][0], dimension_list[it][1], file=local,
                     mime='image/jpeg', autogen=False)
+            it += 1
         file_record.save()
 
         # clean up local files, upload them atomically to s3 (on success)
@@ -1507,6 +1507,7 @@ class Expr(HasSocial):
                 tagged[tag] = [self.id] + tagged[tag]
         self.owner.update(tagged=tagged, updated=False)
         # TODO-perf: shouldn't need after a migration.
+        # Probably easier to leave it in than to update counts here.
         self.owner.calculate_tags()
 
         return self
