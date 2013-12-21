@@ -2463,6 +2463,7 @@ Hive.Selection = function(){
         o.layout();
     };
     o.resize_end = function(){
+        o.update_relative_coords();
         // TODO-refactor: fix history for bulk operations
         // o.each(function(i, el){ el.history_point.save() });
         // Hive.History.group('resize group');
