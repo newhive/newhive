@@ -74,6 +74,13 @@ _mul = function(scale) {
     }
 };
 
+interval_dist = function(a, b) {
+    c = [a[1] - b[0], a[0] - b[1]];
+    if (c[0] * c[1] <= 0)
+        return 0;
+    return Math.min(Math.abs(c[0]), Math.abs(c[1]));
+}
+
 var hover_menu = function(handle, drawer, opts){
     return Menu(handle, drawer, $.extend({ auto_height: false }, opts));
 };
@@ -233,6 +240,11 @@ var snap_helper = function(my_tuple, exclude_ids,
         var dist_cent = pos.slice();
     for (var coord = 0; coord <= 1; ++coord) {
         var best_snaps = {};
+        var my_interval = [my_tuple[coord][0], my_tuple[coord][2]];
+        if (my_interval[0] == undefined || my_interval[1] == undefined) {
+            my_interval = dist_cent.slice()[coord];
+            my_interval = [my_interval, my_interval];
+        }
         var best = { goal:0, strength:0, start:[0,0], end:[0,0] };
         for (var app_i = 0; app_i < tuple[coord].length; ++app_i) {
             for (var type1 = 0; type1 < 3; ++type1) {
@@ -255,8 +267,12 @@ var snap_helper = function(my_tuple, exclude_ids,
                         var snap_dist = Math.abs(coord2 - coord1);
                         if (snap_dist < snap_radius) {
                             var strength = 1.0;
-                            var dist = snap_dist*5 + Math.abs(dist_cent[1 - coord] 
-                                - tuple[1 - coord][app_i][type1]);
+                            var dist = interval_dist(my_interval, 
+                                [tuple[1 - coord][app_i][0],tuple[1 - coord][app_i][2]]);
+                            // Math.abs(dist_cent[1 - coord] 
+                            //     - tuple[1 - coord][app_i][type1]);
+                            // TODO: power fall-off w/ decay when user jiggles mouse
+                            dist += snap_dist * 5;
                             if (dist > 200) strength /= 
                                 Math.exp((Math.min(dist, 1000) - 200)/500);
                             if ((type1 == 1) ^ (type2 == 1)) strength *= .4;
