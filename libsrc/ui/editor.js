@@ -2423,6 +2423,13 @@ Hive.Selection = function(){
         return drag_items;
     };
     o.app_click = function (app, e) {
+        if (e.shiftKey) {
+            if (e.ctrlKey)
+                app.stack_bottom();
+            else
+                app.stack_top();
+            return;
+        }
         if(o.is_multi(e)){
             if(o.selected(app)) o.unfocus(app);
             else o.push(app);
