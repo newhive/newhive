@@ -269,8 +269,6 @@ var snap_helper = function(my_tuple, exclude_ids,
                             var strength = 1.0;
                             var dist = interval_dist(my_interval, 
                                 [tuple[1 - coord][app_i][0],tuple[1 - coord][app_i][2]]);
-                            // Math.abs(dist_cent[1 - coord] 
-                            //     - tuple[1 - coord][app_i][type1]);
                             // TODO: power fall-off w/ decay when user jiggles mouse
                             dist += snap_dist * 5;
                             if (dist > 200) strength /= 
@@ -329,7 +327,6 @@ var snap_helper = function(my_tuple, exclude_ids,
         }
     }
     // console.log(besty);
-    // console.log(pos);
     return new_pos;
 }
 
@@ -412,12 +409,6 @@ Hive.App = function(init_state, opts) {
             curr[0] = curr[0].concat(pair[0] + pos[0] - _pos[0]);
             curr[1] = curr[1].concat(pair[1] + pos[1] - _pos[1]);
         });
-        // for (var j = 0; j < 2; ++j) {
-        //     var delta = pos[j] - _pos[j];
-        //     curr[j] = $.map(curr[j], function(n, it) {
-        //         return n + delta;
-        //     });
-        // }
         return [curr[0].slice(), curr[1].slice()];
     }
     var _pos = [-999, -999];
@@ -599,12 +590,35 @@ Hive.App = function(init_state, opts) {
     o.move_init = function(e){
         return Hive.Selection.app_drag_init(o, e);
     };
+    o.cancel_long_hold = function(e, fire_release) {
+        if (o.long_hold_timer) {
+            clearTimeout(o.long_hold_timer);
+            o.long_hold_timer = undefined;
+            if (fire_release && o.long_hold_release) {
+                o.long_hold_release();
+            }
+        }
+        o.long_hold_fired = false;
+    };
     o.div = $('<div class="ehapp">')
         .drag('init', o.move_init)
         .drag('start', o.move_start).drag(o.move).drag('end', o.move_end)
         .on('click', function(e){
             e.stopPropagation();
             return Hive.Selection.app_click(o, e)
+        })
+        .on('mousedown', function(e){
+            function long_hold() {
+                if (o.long_hold) o.long_hold();
+                o.long_hold_fired = true;
+            }
+            o.long_hold_timer = setTimeout(long_hold, 500);
+        })
+        .on('mouseup', function(e){
+            o.cancel_long_hold(e, o.long_hold_fired);
+        })
+        .on('mousemove', function(e){
+            o.cancel_long_hold(e, false);
         })
         .appendTo('#happs')
     ;
@@ -1974,19 +1988,77 @@ Hive.App.Image = function(o) {
         }
     };
 
+    // screen coordinates
+    o.offset = function() {
+        if (!o.init_state.scale_x)
+            return undefined;
+        return _mul(o.init_state.scale_x * o.dims()[0])(o.init_state.offset);
+    }
+    o.offset_set = function(offset) {
+        if (!offset) o.init_state.offset = undefined;
+        else
+            o.init_state.offset = _mul(1 / o.init_state.scale_x / o.dims()[0])(offset);
+        o.layout();
+    };
+
+    o.long_hold = function() {
+        if (!o.init_state.scale_x )
+            return;
+        o.drag_hold = true;
+        // show new img w/ opacity
+        o.fake_img = o.img.clone().appendTo(o.div).css('opacity', .5)
+            .css('z-index', 0);
+        o.img = o.img.add(o.fake_img);
+    }
+    o.long_hold_release = function() {
+        o.drag_hold = false;
+        o.img = o.img.not(o.fake_img);
+        o.fake_img.remove();
+    }
+    o._move_start = o.move_start;
+    o.move_start = function(){
+        if (!o.drag_hold)
+            return o._move_start();
+        o.ref_offset = o.offset();
+        o.fixed_coord = (o.ref_offset[0] == 0) ? 0 : 1;
+        history_point = Hive.History.saver(o.offset, o.offset_set, 'move crop');
+    };
+    o._move = o.move;
+    o.move = function (e, dd, shallow) {
+        if (!o.drag_hold)
+            return o._move(e, dd, shallow);
+        if(!o.ref_offset) return;
+        var delta = [dd.deltaX, dd.deltaY];
+        if(e.shiftKey)
+            delta[ Math.abs(dd.deltaX) > Math.abs(dd.deltaY) & 1 ] = 0;
+        // constrain delta for now to the "free" dimension
+        // TODO: snap to edge/center
+        delta[o.fixed_coord] = 0;
+        delta = _add(delta)(o.ref_offset);
+        o.offset_set(delta);
+        o.layout();
+    };
+    o._move_end = o.move_end;
+    o.move_end = function () {
+        if (!o.drag_hold) 
+            return o._move_end();
+        history_point.save();
+        o.long_hold_release();
+    }
+    o.div.unbind('dragstart', o._move_start).unbind('drag',o._move)
+        .unbind('dragend', o._move_end);
+    o.div.drag('start', o.move_start).drag(o.move).drag('end', o.move_end);
+
     var _layout = o.layout;
     o.layout = function() {
         _layout();
         var dims = o.dims(), scale_x = o.init_state.scale_x || 1;
-        scale_x *= dims[0];
-        o.img.css('width', scale_x + 'px');
-        if (o.init_state.offset) {
-            o.img.css({ 
-                "margin-left": o.init_state.offset[0] * scale_x,
-                "margin-top": o.init_state.offset[1] * scale_x
-            });
+        o.img.css('width', scale_x * dims[0] + 'px');
+        var offset = o.offset();
+        if (offset) {
+            o.img.css({"margin-left": offset[0], "margin-top": offset[1]});
         }
-    }
+    };
 
     o.resize = function(delta) {
         var dims = o.resize_to(delta);
