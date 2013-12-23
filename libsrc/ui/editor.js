@@ -2485,9 +2485,9 @@ Hive.Selection = function(){
             var pos = _add(ref_pos)(delta), snap_strength = .05,
                 snap_radius = 18;
             // TODO-feature-snap: check key shortcut to turn off snapping
-            if (snap_strength > 0) {
+            if(snap_strength > 0){
                 var excludes = {};
-                if(o.id) excludes[o.id] = true;
+                if(drag_target.id) excludes[drag_target.id] = true;
                 pos = snap_helper(drag_target.bounds_tuple_relative(pos),
                     excludes, snap_strength, snap_radius);
             }
