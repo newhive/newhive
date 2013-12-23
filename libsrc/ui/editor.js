@@ -585,9 +585,6 @@ Hive.App = function(init_state, opts) {
         Hive.layout_apps();
     });
 
-    o.keydown = Funcs()
-    Hive.App.has_nudge(o);
-
     // initialize
 
     o.div = $('<div class="ehapp">').appendTo('#happs');
@@ -687,7 +684,7 @@ Hive.Controls = function(app, multiselect) {
             close_on_delay();
         });
         input.keypress(function(e) {
-            if(is_escape(e)) {
+            if(e.keyCode == 13) {
                 close_on_delay();
             }
         });
@@ -793,7 +790,7 @@ Hive.registerApp = function(app, name) {
 }
 
 var is_escape = function(ev){
-    return ev.keyCode == 13;
+    return ev.keyCode == 27;
 }
 
 // Most general event handlers
@@ -1825,7 +1822,7 @@ Hive.App.has_slider_menu = function(o, handle, set, init, start, end) {
             close: function(){ if(changed) end() }
         });
         input.keyup(function(e) {
-            if(is_escape(e)) { input.blur(); m.close(); }
+            if(e.keyCode == 13) { input.blur(); m.close(); }
             var v = parseFloat(input.val());
             if(v != init()) {
                 changed = true;
@@ -2723,6 +2720,10 @@ Hive.Selection = function(){
             o.unfocus();
             return false;
         }
+        else if(ev.keyCode == 46){
+            o.remove();
+            return false;
+        }
 
         // TODO: improve efficiency by using o.controls.pos_set like drag handler
         // or improving o.bounds
@@ -3476,7 +3477,7 @@ Hive.append_color_picker = function(container, callback, init_color, opts){
     });
 
     manual_input.blur(o.update_hex).keypress(function(e){
-        if (is_escape(e)) {
+        if(e.keyCode == 13) {
             if (opts && opts.field_to_focus){
                 opts.field_to_focus.focus();
             } else {
