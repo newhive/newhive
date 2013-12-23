@@ -457,14 +457,8 @@ Hive.App = function(init_state, opts) {
     };
 
     o.pos_relative = function(){ return _pos.slice(); };
-    o.pos_relative_set = function(pos, snap_strength, snap_radius){
+    o.pos_relative_set = function(pos){
         _pos = pos.slice();
-        if (snap_strength > 0) {
-            var excludes = {};
-            excludes[o.id] = true;
-            _pos = snap_helper(o.tuple(_pos), excludes, snap_strength,
-                snap_radius);
-        }
         o.layout()
     };
     o.dims_relative = function(){
@@ -484,7 +478,7 @@ Hive.App = function(init_state, opts) {
     o.max_pos = function(){ return [ _pos[0] + _dims[0], _pos[1] + _dims[1] ]; };
     // return [[x-min, x-center, x-max], [y-min, y-center, y-max]]
     // if o were moved to pos
-    o.tuple = function(pos) {
+    o.bounds_tuple_relative = function(pos) {
         var curr_ = [o.min_pos(), o.pos_center(), o.max_pos()];
         var curr = [[],[]];
         $.map(curr_, function(pair) {
@@ -498,7 +492,7 @@ Hive.App = function(init_state, opts) {
         //     });
         // }
         return [curr[0].slice(), curr[1].slice()];
-    }
+    };
 
     // END-coords
 
@@ -2489,19 +2483,28 @@ Hive.Selection = function(){
         if(axis_lock)
             delta[ Math.abs(delta[0]) > Math.abs(delta[1]) ? 1 : 0 ] = 0;
         // if there's no selection or one app selected, regular snap
-        if(drag_target != o || elements.length == 1)
-            drag_target.pos_relative_set(_add(ref_pos)(delta), .05, 18);
+        if(drag_target != o || elements.length == 1){
+            var pos = _add(ref_pos)(delta), snap_strength = .05,
+                snap_radius = 18;
+            // TODO-feature-snap: check key shortcut to turn off snapping
+            if (snap_strength > 0) {
+                var excludes = {};
+                if(o.id) excludes[o.id] = true;
+                pos = snap_helper(drag_target.bounds_tuple_relative(pos),
+                    excludes, snap_strength, snap_radius);
+            }
+            drag_target.pos_relative_set(pos, .05, 18);
+        }
         else
-            // TODO-feature: figure out reasonable snapping behavior
-            // for group selection.
+            // TODO-feature-snap-group: figure out reasonable snapping
+            // behavior for group selection.
             // Proposal: every object in selection snaps to everything
             // outside selection
             o.pos_relative_set(_add(ref_pos)(delta));
         o.layout();
     };
+
     o.move_handler = function(ev, dd){
-        // TODO-feature: revive snapping. Think about how snapping applies to
-        // selections
         var delta = _mul(1 / Hive.env().scale)([dd.deltaX, dd.deltaY]);
         o.move_relative(delta, ev.shiftKey);
     };
@@ -2619,9 +2622,13 @@ Hive.Selection = function(){
         return _mul(Hive.env().scale)(_dims);
     };
 
+    o.bounds_tuple_relative = function(pos){
+        // TODO-feature-snap-group: do something more sophisticated
+        return elements[0].bounds_tuple_relative(pos);
+    };
     o.pos_relative = function(){ return _pos.slice(); };
     o.dims_relative = function(){ return _dims.slice(); };
-    o.pos_relative_set = function(pos, snap_strength, snap_radius){
+    o.pos_relative_set = function(pos){
         o.each(function(i, a){
             a.pos_relative_set(_add(pos)(_positions[i]));
         });
