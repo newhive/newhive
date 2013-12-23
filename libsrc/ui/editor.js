@@ -825,13 +825,14 @@ Hive.App.has_nudge = function(o){
     // TODO-bugbug: implement undo/redo of this. Because nudge is naturally
     // called repeatedly, this should create a special collapsable history
     // point that automatically merges into the next history point if it's the
-    // same type, similar to History.begin, and History.group
+    // same type, similar to History.begin + History.group
     o.keydown.add(function(ev){
-        var nudge = function(dx,dy){
+        var nudge = function(dx, dy){
             return function(){
-                var refPos = o.pos();
-                if (ev.shiftKey) {dx = 10*dx; dy = 10*dy;}
-                o.pos_set([refPos[0] + dx, refPos[1] + dy]);
+                var s = Hive.env().scale, delta = _mul(1/s)([dx, dy]);
+                if(ev.shiftKey)
+                    delta = _mul(10)(delta);
+                o.pos_relative_set(_add(o.pos_relative())(delta));
             }
         }
         var handlers = {
