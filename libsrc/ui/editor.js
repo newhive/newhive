@@ -227,7 +227,7 @@ var snap_helper = function(my_tuple, exclude_ids,
     // apps = apps.concat([app]);
     for (var i = 0; i < apps.length; i++) {
         var app = apps[i];
-        var curr_ = [app.min_pos(), app.pos_center(), app.max_pos()];
+        var curr_ = [app.min_pos(), app.pos_center_relative(), app.max_pos()];
         var curr = [[],[]];
         $.map(curr_, function(pair) {
             curr[0] = curr[0].concat(pair[0]);
@@ -293,11 +293,11 @@ var snap_helper = function(my_tuple, exclude_ids,
                             if (total > best.strength) {
                                 best.strength = total;
                                 best.goal = goal;
-                                var try_start = [my_tuple[0][type1]*s,
-                                    my_tuple[1][type1]*s];
-                                var try_end = [tuple[0][app_i][type2]*s, 
-                                    tuple[1][app_i][type2]*s];
-                                try_start[coord] = (coord2 - added_padding)*s + 2;
+                                var try_start = [my_tuple[0][type1],
+                                    my_tuple[1][type1]];
+                                var try_end = [tuple[0][app_i][type2], 
+                                    tuple[1][app_i][type2]];
+                                try_start[coord] = (coord2 - added_padding) + 2;
                                 var len = Math.abs(try_start[1 - coord] -
                                     try_end[1 - coord]);
                                 var old_len = Math.abs(best.start[1 - coord] -
@@ -331,10 +331,12 @@ var snap_helper = function(my_tuple, exclude_ids,
             }
             rule.showshow();
             best.start[1 - coord] += new_pos[1 - coord] - pos[1 - coord];
-            rule.css({left: Math.min(best.start[0], best.end[0]),
-                top: Math.min(best.start[1], best.end[1]),
-                width: Math.abs(best.start[0] - best.end[0]),
-                height: Math.abs(best.start[1] - best.end[1]) });
+            rule.css({
+                left: Math.min(best.start[0], best.end[0]) / s,
+                top: Math.min(best.start[1], best.end[1]) / s,
+                width: Math.abs(best.start[0] - best.end[0]) / s,
+                height: Math.abs(best.start[1] - best.end[1]) / s
+            });
         }
     }
     // console.log(besty);
@@ -422,15 +424,9 @@ Hive.App = function(init_state, opts) {
         var s = Hive.env().scale;
         return [ _pos[0] * s, _pos[1] * s ];
     };
-    o.pos_set = function(pos, snap_strength, snap_radius){
+    o.pos_set = function(pos){
         var s = Hive.env().scale;
         _pos = [ pos[0] / s, pos[1] / s ];
-        if (snap_strength > 0) {
-            var excludes = {};
-            excludes[o.id] = true;
-            _pos = snap_helper(o.tuple(_pos), excludes, snap_strength,
-                snap_radius);
-        }
         o.layout();
     };
     o.dims = function() {
@@ -461,8 +457,14 @@ Hive.App = function(init_state, opts) {
     };
 
     o.pos_relative = function(){ return _pos.slice(); };
-    o.pos_relative_set = function(pos){
+    o.pos_relative_set = function(pos, snap_strength, snap_radius){
         _pos = pos.slice();
+        if (snap_strength > 0) {
+            var excludes = {};
+            excludes[o.id] = true;
+            _pos = snap_helper(o.tuple(_pos), excludes, snap_strength,
+                snap_radius);
+        }
         o.layout()
     };
     o.dims_relative = function(){
@@ -471,6 +473,11 @@ Hive.App = function(init_state, opts) {
     o.dims_relative_set = function(dims){
         _dims = dims.slice();
         o.layout();
+    };
+    o.pos_center_relative = function(){
+        var dims = o.dims_relative();
+        var pos = o.pos_relative();
+        return [ pos[0] + dims[0] / 2, pos[1] + dims[1] / 2 ];
     };
     // TODO: make these two reflect axis aligned bounding box (when rotated, etc)
     o.min_pos = function(){ return _pos.slice(); };
@@ -1007,6 +1014,27 @@ Hive.App.has_resize = function(o) {
     o.resize_to = function(delta){
         return [ Math.max(1, dims_ref[0] + delta[0]), 
             Math.max(1, dims_ref[1] + delta[1]) ];
+    };
+    o.resize_to_pos = function(pos, doit) {
+        var _pos = o.pos_relative();
+        var snap_strength = .5, snap_radius = 10;  //!!
+        // TODO: allow snapping to aspect ratio (keyboard?)
+        if (snap_strength > 0) {
+            var excludes = {};
+            excludes[o.id] = true;
+            var tuple = [];
+            tuple[0] = [undefined, undefined, pos[0]];
+            tuple[1] = [undefined, undefined, pos[1]];
+            pos = snap_helper(tuple, excludes, snap_strength, snap_radius);
+        }
+        var _dims = [];
+        _dims[0] = pos[0] - _pos[0];
+        _dims[1] = pos[1] - _pos[1];
+        if (o.full_bleed_coord != undefined)
+            _dims[o.full_bleed_coord] = 1000;
+        if (doit || doit == undefined)
+            o.dims_relative_set(_dims);
+        return _dims;
     };
 
     function controls(o) {
@@ -1904,9 +1932,9 @@ Hive.App.Image = function(o) {
         o.div.append(o.img);
         o.img.load(function(){setTimeout(o.img_load, 1)});
     };
-    o.img_load = function() {
-        o.imageWidth  = o.img.width();
-        o.imageHeight = o.img.height();
+    o.img_load = function(){
+        o.imageWidth  = o.img.width() || o.img.prop('naturalWidth');
+        o.imageHeight = o.img.height() || o.img.prop('naturalHeight');
         o.aspect = o.imageWidth / o.imageHeight;
         if( ! o.init_state.dimensions ){
             var ww = $(window).width(), wh = $(window).height(), iw, ih, wa = ww / wh;
@@ -1936,6 +1964,8 @@ Hive.App.Image = function(o) {
             if (opts.fit == 2) {
                 o.init_state.scale_x = new_layout.dims[0] / opts.dims[0];
                 o.init_state.offset = _add(new_layout.pos)(_mul(-1)(opts.pos));
+                o.init_state.offset = _mul( 1 * opts.dims[0] /
+                    o.init_state.scale_x)(o.init_state.offset);
                 // o.pos_set(opts.pos);
                 o.dims_set(opts.dims);
             }
@@ -1955,11 +1985,45 @@ Hive.App.Image = function(o) {
         }
     };
 
+    var _layout = o.layout;
+    o.layout = function() {
+        _layout();
+        var dims = o.dims(), scale_x = o.init_state.scale_x || 1;
+        scale_x *= dims[0];
+        o.img.css('width', scale_x + 'px');
+        if (o.init_state.offset) {
+            o.img.css({ 
+                "margin-left": o.init_state.offset[0] * scale_x,
+                "margin-top": o.init_state.offset[1] * scale_x
+            });
+        }
+    }
+
     o.resize = function(delta) {
         var dims = o.resize_to(delta);
         if(!dims[0] || !dims[1]) return;
+        var aspect = o.div_aspect || o.aspect;
+        var newWidth = dims[1] * aspect;
+        dims = (newWidth < dims[0]) ? [newWidth, dims[1]] : 
+            [dims[0], dims[0] / aspect];
+        var s = Hive.env().scale;
+        dims = _mul(1/s)(dims);
+
+        // snap
+        var _pos = o.pos_relative();
+        var pos = [ _pos[0] + dims[0], _pos[1] + dims[1] ];
+        var snap_dims = o.resize_to_pos(pos);
+        var snap_dist = _apply(function(x,y) {return Math.abs(x-y);}, 
+            dims)(snap_dims);
+
+        dims = (snap_dist[0] < snap_dist[1]) ?
+            [snap_dims[1] * aspect, snap_dims[1]] :
+            [snap_dims[0], snap_dims[0] / aspect];
+
+        o.dims_relative_set(dims);
         var newWidth = dims[1] * o.aspect;
-        var dims = newWidth < dims[0] ? [newWidth, dims[1]] : [dims[0], dims[0] / o.aspect];
+        var dims = (newWidth < dims[0] ? [newWidth, dims[1]]
+            : [dims[0], dims[0] / o.aspect]);
         o.img.css('width', dims[0] + 'px');
         o.dims_set(dims);
     }
@@ -2335,14 +2399,17 @@ Hive.Selection = function(){
         }
     };
 
-    var dragging = false;
+    var dragging = false, drag_target;
     o.dragstart = function(ev, dd){
         o.dragging = true;
 
         var app = ev.target_object;
         if(app){
-            // TODO-bugbug: drag operation should apply to what's dragged, not
-            // what's selected. This will fix dragging unselected apps
+            // If target is in selection, drag whole selection
+            if(elements.indexOf(ev.target_object) >= 0)
+                drag_target = o;
+            else
+                drag_target = ev.target_object;
             o.move_start();
             return;
         }
@@ -2413,7 +2480,7 @@ Hive.Selection = function(){
 
     var history_point, ref_pos;
     o.move_start = function(){
-        ref_pos = o.pos_relative();
+        ref_pos = drag_target.pos_relative();
         // TODO-refactor: fix history for bulk operations
         // history_point = o.history_helper_relative('move');
     };
@@ -2421,7 +2488,15 @@ Hive.Selection = function(){
         if(!ref_pos) return;
         if(axis_lock)
             delta[ Math.abs(delta[0]) > Math.abs(delta[1]) ? 1 : 0 ] = 0;
-        o.pos_relative_set(_add(ref_pos)(delta));
+        // if there's no selection or one app selected, regular snap
+        if(drag_target != o || elements.length == 1)
+            drag_target.pos_relative_set(_add(ref_pos)(delta), .05, 18);
+        else
+            // TODO-feature: figure out reasonable snapping behavior
+            // for group selection.
+            // Proposal: every object in selection snaps to everything
+            // outside selection
+            o.pos_relative_set(_add(ref_pos)(delta));
         o.layout();
     };
     o.move_handler = function(ev, dd){
