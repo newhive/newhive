@@ -26,10 +26,12 @@ define([
     // _handlers in order, optionally starting at the given handler first and
     // bubbling to the handlers in _handlers after handler.handler_type.
     // Bubbling halts when a handler returns a defined falsey value
-    var event_bubbler = function(event_name, handler){
+    var event_bubbler = function(event_name, data){
     	var handlers = _handlers;
         return (function(ev){
-            ev.target_object = handler;
+            // TODO-cleanup: make this a general purpose data attribute like
+            // Jquery
+            ev.data = data;
 
             // patch native event with hacked stopPropagation that encompasses
             // our custom bubbling. Consider renaming to "stopCustomPropagation"
@@ -51,10 +53,47 @@ define([
         });
     };
 
-	o.on = function(element, event_name, handler){
-		$(element).on(event_name, event_bubbler(event_name, handler));
+	o.on = function(element, event_name, data){
+		$(element).on(event_name, event_bubbler(event_name, data));
 		return o;
 	};
+
+    (function(o){
+        // long hold event binding
+
+        var timer, fired
+        o.long_hold = function(element, data){
+            var bubble_hold = event_bubbler('long_hold', data),
+                bubble_release = event_bubbler('long_hold_release', data);
+
+            var cancel = function(e, fire_release){
+                if(timer){
+                    clearTimeout(timer);
+                    timer = undefined;
+                    if(fire_release)
+                        bubble_release();
+                }
+                fired = false;
+            };
+
+            element
+                .on('mousedown', function(ev){
+                    function long_hold(){
+                        fired = true;
+                        bubble_hold(ev);
+                    }
+                    timer = setTimeout(long_hold, 500);
+                })
+                .on('mouseup', function(ev){
+                    cancel(ev, fired);
+                })
+                .on('mousemove', function(ev){
+                    cancel(ev, false);
+                });
+
+            return o;
+        };
+    })(o);
 
 	return o;
 });

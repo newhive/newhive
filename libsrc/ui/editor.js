@@ -578,36 +578,9 @@ Hive.App = function(init_state, opts) {
 
     // initialize
 
-    // o.move_init = function(e){
-    //     return Hive.Selection.app_drag_init(o, e);
-    // };
-    o.cancel_long_hold = function(e, fire_release) {
-        if (o.long_hold_timer) {
-            clearTimeout(o.long_hold_timer);
-            o.long_hold_timer = undefined;
-            if (fire_release && o.long_hold_release) {
-                o.long_hold_release();
-            }
-        }
-        o.long_hold_fired = false;
-    };
     o.div = $('<div class="ehapp">').appendTo('#happs');
     evs.on(o.div, 'dragstart', o).on(o.div, 'drag', o).on(o.div, 'dragend', o)
-        .on(o.div, 'click', o);
-    o.div
-        .on('mousedown', function(e){
-            function long_hold() {
-                if (o.long_hold) o.long_hold();
-                o.long_hold_fired = true;
-            }
-            o.long_hold_timer = setTimeout(long_hold, 500);
-        })
-        .on('mouseup', function(e){
-            o.cancel_long_hold(e, o.long_hold_fired);
-        })
-        .on('mousemove', function(e){
-            o.cancel_long_hold(e, false);
-        });
+        .on(o.div, 'click', o).long_hold(o.div, o);
  
     o.type(o); // add type-specific properties
     o.apps.add(o); // add to apps collection
@@ -2008,54 +1981,6 @@ Hive.App.Image = function(o) {
         o.layout();
     };
 
-    o.long_hold = function() {
-        if (!o.init_state.scale_x )
-            return;
-        o.drag_hold = true;
-        // show new img w/ opacity
-        o.fake_img = o.img.clone().appendTo(o.div).css('opacity', .5)
-            .css('z-index', 0);
-        o.img = o.img.add(o.fake_img);
-    }
-    o.long_hold_release = function() {
-        o.drag_hold = false;
-        o.img = o.img.not(o.fake_img);
-        o.fake_img.remove();
-    }
-    o._move_start = o.move_start;
-    o.move_start = function(){
-        if (!o.drag_hold)
-            return o._move_start();
-        o.ref_offset = o.offset();
-        o.fixed_coord = (o.ref_offset[0] == 0) ? 0 : 1;
-        history_point = Hive.History.saver(o.offset, o.offset_set, 'move crop');
-    };
-    o._move = o.move;
-    o.move = function (e, dd, shallow) {
-        if (!o.drag_hold)
-            return o._move(e, dd, shallow);
-        if(!o.ref_offset) return;
-        var delta = [dd.deltaX, dd.deltaY];
-        if(e.shiftKey)
-            delta[ Math.abs(dd.deltaX) > Math.abs(dd.deltaY) & 1 ] = 0;
-        // constrain delta for now to the "free" dimension
-        // TODO: snap to edge/center
-        delta[o.fixed_coord] = 0;
-        delta = _add(delta)(o.ref_offset);
-        o.offset_set(delta);
-        o.layout();
-    };
-    o._move_end = o.move_end;
-    o.move_end = function () {
-        if (!o.drag_hold) 
-            return o._move_end();
-        history_point.save();
-        o.long_hold_release();
-    }
-    o.div.unbind('dragstart', o._move_start).unbind('drag',o._move)
-        .unbind('dragend', o._move_end);
-    o.div.drag('start', o.move_start).drag(o.move).drag('end', o.move_end);
-
     var _layout = o.layout;
     o.layout = function() {
         _layout();
@@ -2441,7 +2366,7 @@ Hive.Selection = function(){
     // from app div prevents deselecting everything else at the start of a
     // group drag operation
     o.click = o.mousedown = function(ev){
-        var app = ev.target_object;
+        var app = ev.data;
         if(app){
             if(o.is_multi(ev)){
                 if(o.selected(app)) o.unfocus(app);
@@ -2471,13 +2396,13 @@ Hive.Selection = function(){
     o.dragstart = function(ev, dd){
         o.dragging = true;
 
-        var app = ev.target_object;
+        var app = ev.data;
         if(app){
             // If target is in selection, drag whole selection
-            if(elements.indexOf(ev.target_object) >= 0)
+            if(elements.indexOf(ev.data) >= 0)
                 drag_target = o;
             else
-                drag_target = ev.target_object;
+                drag_target = ev.data;
             o.move_start();
             return;
         }
@@ -2509,7 +2434,7 @@ Hive.Selection = function(){
     o.drag = function(ev, dd){
         if (!o.dragging) return;
 
-        var app = ev.target_object;
+        var app = ev.data;
         if(app){
             o.move_handler(ev, dd);
             return;
@@ -2525,7 +2450,7 @@ Hive.Selection = function(){
     o.dragend = function (ev, dd) {
         o.dragging = false;
 
-        var app = ev.target_object;
+        var app = ev.data;
         if(app){
             o.move_end();
             return;
@@ -2584,7 +2509,6 @@ Hive.Selection = function(){
             o.pos_relative_set(_add(ref_pos)(delta));
         o.layout();
     };
-
     o.move_handler = function(ev, dd){
         var delta = _mul(1 / Hive.env().scale)([dd.deltaX, dd.deltaY]);
         o.move_relative(delta, ev.shiftKey);
@@ -2594,6 +2518,60 @@ Hive.Selection = function(){
         // history_point.save();
         $(".ruler").hidehide();
     };
+
+    (function(){
+        // UI for setting .offset of apps on drag after long_hold
+        o.long_hold = function(ev){
+            var target = ev.data;
+            // TODO: what does this do?
+            if (!target.init_state.scale_x )
+                return;
+            o.drag_hold = true;
+
+            // TODO-feature-offset: somehow move back into image object
+            // show new img w/ opacity
+            // o.fake_img = o.img.clone().appendTo(o.div).css('opacity', .5)
+            //     .css('z-index', 0);
+            // o.img = o.img.add(o.fake_img);
+        };
+
+        // TODO-feature-offset: merge these methods from Hive.App.Image into here
+        // o.long_hold_release = function() {
+        //     o.drag_hold = false;
+        //     o.img = o.img.not(o.fake_img);
+        //     o.fake_img.remove();
+        // }
+        // o._move_start = o.move_start;
+        // o.move_start = function(){
+        //     if (!o.drag_hold)
+        //         return o._move_start();
+        //     o.ref_offset = o.offset();
+        //     o.fixed_coord = (o.ref_offset[0] == 0) ? 0 : 1;
+        //     history_point = Hive.History.saver(o.offset, o.offset_set, 'move crop');
+        // };
+        // o._move = o.move;
+        // o.move = function (e, dd, shallow) {
+        //     if (!o.drag_hold)
+        //         return o._move(e, dd, shallow);
+        //     if(!o.ref_offset) return;
+        //     var delta = [dd.deltaX, dd.deltaY];
+        //     if(e.shiftKey)
+        //         delta[ Math.abs(dd.deltaX) > Math.abs(dd.deltaY) & 1 ] = 0;
+        //     // constrain delta for now to the "free" dimension
+        //     // TODO: snap to edge/center
+        //     delta[o.fixed_coord] = 0;
+        //     delta = _add(delta)(o.ref_offset);
+        //     o.offset_set(delta);
+        //     o.layout();
+        // };
+        // o._move_end = o.move_end;
+        // o.move_end = function(){
+        //     if (!o.drag_hold) 
+        //         return o._move_end();
+        //     history_point.save();
+        //     o.long_hold_release();
+        // }
+    })();
 
     var ref_dims;
     o.resize_start = function(){
