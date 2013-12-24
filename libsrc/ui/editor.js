@@ -35,6 +35,7 @@ var Hive = {}, debug_mode = context.config.debug_mode, bound = js.bound,
     noop = function(){}, Funcs = js.Funcs, asset = ui_util.asset;
 Hive.asset = asset;
 
+// TODO-refactor: move into util
 _apply = function(func, scale) {
     if (typeof(scale) == "number") {
         return function(l) {
@@ -82,13 +83,20 @@ _inv = function(l){
     return l.map(function(x){ return 1/x });
 };
 
-
+// Returns the nonnegative (nonoverlapping) distance btw two intervals.
 interval_dist = function(a, b) {
     c = [a[1] - b[0], a[0] - b[1]];
     if (c[0] * c[1] <= 0)
         return 0;
     return Math.min(Math.abs(c[0]), Math.abs(c[1]));
-}
+};
+
+interval_size = function(i) { return Math.abs(i[1] - i[0]); };
+// Returns the least interval containing both inputs
+interval_bounds = function(a, b) {
+    return [Math.min(a[0], b[0]), Math.max(a[1], b[1])];
+};
+////////
 
 var hover_menu = function(handle, drawer, opts){
     return Menu(handle, drawer, $.extend({ auto_height: false }, opts));
@@ -209,7 +217,6 @@ var snap_helper = function(my_tuple, exclude_ids,
             break;
         }
     }
-    // return pos;
     var tuple = [[],[]], new_pos = pos.slice();
     // TODO-perf: save this array only after drag/drop
     // And keep it sorted
@@ -249,7 +256,8 @@ var snap_helper = function(my_tuple, exclude_ids,
         var dist_cent = pos.slice();
     for (var coord = 0; coord <= 1; ++coord) {
         var best_snaps = {};
-        var my_interval = [my_tuple[coord][0], my_tuple[coord][2]];
+        var best_guides = {};
+        var my_interval = [my_tuple[1 - coord][0], my_tuple[1 - coord][2]];
         if (my_interval[0] == undefined || my_interval[1] == undefined) {
             my_interval = dist_cent.slice()[coord];
             my_interval = [my_interval, my_interval];
@@ -276,8 +284,10 @@ var snap_helper = function(my_tuple, exclude_ids,
                         var snap_dist = Math.abs(coord2 - coord1);
                         if (snap_dist < snap_radius) {
                             var strength = 1.0;
-                            var dist = interval_dist(my_interval, 
-                                [tuple[1 - coord][app_i][0],tuple[1 - coord][app_i][2]]);
+                            var other_interval =
+                                [tuple[1 - coord][app_i][0],tuple[1 - coord][app_i][2]];
+                            var dist = interval_dist(my_interval, other_interval);
+                            var guide = interval_bounds(my_interval, other_interval);
                             // TODO: power fall-off w/ decay when user jiggles mouse
                             dist += snap_dist * 5;
                             if (dist > 200) strength /= 
@@ -287,23 +297,17 @@ var snap_helper = function(my_tuple, exclude_ids,
                             goal = Math.round(goal*2)/2;
                             var total = best_snaps[goal.toString()] || 0;
                             total += strength;
-                            best_snaps[goal.toString()] = total;
+                            goal_memo = goal.toString();
+                            best_snaps[goal_memo] = total;
+                            best_guides[goal_memo] = best_guides[goal_memo] || {};
+                            // NOTE: We were showing the ruler at coord2 - added_padding
+                            best_guides[goal_memo][coord2] =
+                                interval_bounds(
+                                best_guides[goal_memo][coord2] || [99999,-99999],
+                                guide);
                             if (total > best.strength) {
                                 best.strength = total;
                                 best.goal = goal;
-                                var try_start = [my_tuple[0][type1],
-                                    my_tuple[1][type1]];
-                                var try_end = [tuple[0][app_i][type2], 
-                                    tuple[1][app_i][type2]];
-                                try_start[coord] = (coord2 - added_padding) + 2;
-                                var len = Math.abs(try_start[1 - coord] -
-                                    try_end[1 - coord]);
-                                var old_len = Math.abs(best.start[1 - coord] -
-                                    best.end[1 - coord]);
-                                if (1 || old_len == 0 || (len > 0 && len < old_len)) {
-                                    best.start = try_start;
-                                    best.end = try_end;
-                                }
                             }
                         }
                     }
@@ -312,15 +316,21 @@ var snap_helper = function(my_tuple, exclude_ids,
         }
         if (best.strength > snap_strength) {
             new_pos[coord] = best.goal;
-            bests[coord] = best;
+            var obj = best_guides[best.goal.toString()];
+            for (var first in obj)
+                if (obj.hasOwnProperty(first)) break;
+            bests[coord] = obj[first].concat([parseFloat(first)]);
         }
-        var besty = (besty || []).concat(best[strength]);
-        // console.log(best_snaps);
     }
     $(".ruler").hidehide();
     for (var coord = 0; coord < 2; ++coord) {
         if (bests[coord]) {
-            var best = bests[coord];
+            var best_interval = bests[coord];
+            var best = {start:[], end:[]};
+            best.start[1 - coord] = best_interval[0];
+            best.end[1 - coord] = best_interval[1];
+            best.start[coord] = best_interval[2] - 1/s;
+            best.end[coord] = best_interval[2] + 1/s;
             var klass = ".ruler.ruler" + coord;
             var rule = $(klass);
             if (0 == rule.length) {
@@ -337,7 +347,6 @@ var snap_helper = function(my_tuple, exclude_ids,
             });
         }
     }
-    // console.log(besty);
     return new_pos;
 }
 
