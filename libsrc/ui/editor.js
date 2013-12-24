@@ -245,9 +245,12 @@ var snap_helper = function(my_tuple, exclude_ids,
     };
     // Add in the root element. 
     // TODO: should be in apps
-    tuple[0] = tuple[0].concat([[0, 500, 1000]]);
-    var max_height = $("body")[0].scrollHeight / s;
-    tuple[1] = tuple[1].concat([[0, max_height / 2, max_height]]);
+    var scroll_coord = 1;
+    var max_height = $("body")[0].scrollWidth / s;
+    if (scroll_coord)
+        max_height = $("body")[0].scrollHeight / s;
+    tuple[scroll_coord] = tuple[scroll_coord].concat([[0, max_height / 2, max_height]]);
+    tuple[1 - scroll_coord] = tuple[1 - scroll_coord].concat([[0, 500, 1000]]);
 
     var bests = [];
     if (my_tuple[0][1])
@@ -264,6 +267,8 @@ var snap_helper = function(my_tuple, exclude_ids,
         }
         var best = { goal:0, strength:0, start:[0,0], end:[0,0] };
         for (var app_i = 0; app_i < tuple[coord].length; ++app_i) {
+            if (coord == scroll_coord && app_i == tuple[coord].length - 1)
+                break;
             for (var type1 = 0; type1 < 3; ++type1) {
                 coord1 = my_tuple[coord][type1];
                 if (!coord1)
