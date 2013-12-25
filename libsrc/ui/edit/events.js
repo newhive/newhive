@@ -66,12 +66,12 @@ define([
             var bubble_hold = event_bubbler('long_hold', data),
                 bubble_release = event_bubbler('long_hold_release', data);
 
-            var cancel = function(e, fire_release){
+            var cancel = function(ev, fire_release){
                 if(timer){
                     clearTimeout(timer);
                     timer = undefined;
                     if(fire_release)
-                        bubble_release();
+                        bubble_release(ev);
                 }
                 fired = false;
             };

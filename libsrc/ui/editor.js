@@ -396,8 +396,10 @@ Hive.App = function(init_state, opts) {
         if(from == to) return;
         Hive.History.saver(o.layer, stack_to, 'change layer').exec(to);
     };
-    o.stack_bottom = function(){ o.stack_to(0) };
-    o.stack_top = function(){ o.stack_to(o.apps.length -1) };
+    o.stack_bottom = function(){
+        o.stack_to(0) };
+    o.stack_top = function(){
+        o.stack_to(o.apps.length -1) };
     
     o.make_controls = [];
 
@@ -544,7 +546,7 @@ Hive.App = function(init_state, opts) {
         position: _pos.slice(),
         dimensions: _dims.slice()
     }};
-    o.state_relative_set = function(env, s){
+    o.state_relative_set = function(s){
         _pos = s.position.slice();
         _dims = s.dimensions.slice();
         o.layout();
@@ -567,12 +569,12 @@ Hive.App = function(init_state, opts) {
 
     o.history_helper_relative = function(name){
         var o2 = { name: name };
-        o2.old_state = o.state_relative(Hive.env());
+        o2.old_state = o.state_relative();
         o2.save = function(){
-            o2.new_state = o.state_relative(Hive.env());
+            o2.new_state = o.state_relative();
             Hive.History.save(
-                function(){ o.state_relative_set(Hive.env(), o2.old_state) },
-                function(){ o.state_relative_set(Hive.env(), o2.new_state) },
+                function(){ o.state_relative_set(o2.old_state) },
+                function(){ o.state_relative_set(o2.new_state) },
                 o2.name
             );
         };
@@ -583,7 +585,7 @@ Hive.App = function(init_state, opts) {
         if( ! o.init_state.position ) o.init_state.position = [ 100, 100 ];
         if( ! o.init_state.dimensions ) o.init_state.dimensions = [ 300, 200 ];
         if( opts.offset ) o.init_state.position = array_sum(o.init_state.position, opts.offset);
-        o.state_relative_set( Hive.env(), o.init_state );
+        o.state_relative_set(o.init_state);
         if (o.init_state.full_bleed_coord != undefined)
             Hive.App.has_full_bleed(o, o.init_state.full_bleed_coord);
         if(opts.load) opts.load(o);
@@ -1113,8 +1115,8 @@ Hive.has_scale = function(o){
     o.state_relative = function(env){
         return $.extend(_state_relative(env), { 'scale': scale / env.scale });
     };
-    o.state_relative_set = function(env, s){
-        _state_relative_set(env, s);
+    o.state_relative_set = function(s){
+        _state_relative_set(s);
         if(s.scale) o.scale_set(s.scale * env.scale);
     };
 };
@@ -2476,7 +2478,6 @@ Hive.Selection = function(){
         if(o.div) o.div.remove();
         o.update(elements);
     }
-
     o.update_focus = function(event){
         var select = { top: o.drag_pos[1], right: o.drag_pos[0] + o.drag_dims[0],
             bottom: o.drag_pos[1] + o.drag_dims[1], left: o.drag_pos[0] };
@@ -2492,11 +2493,28 @@ Hive.Selection = function(){
         }
     };
 
+    var old_states;
+    var get_targets = function(){
+        return (drag_target == o ? elements : [drag_target]); };
+    var get_states = function(){
+        return get_targets().map(function(a){ return a.state_relative(); }) };
+    var change_start = function(){ old_states = get_states(); };
+    var change_end = function(name){
+        var apps = get_targets().slice(), new_states = get_states(),
+            start_states = old_states.slice();
+        Hive.History.save(
+            function(){ $.each(apps, function(i, a){
+                a.state_relative_set(start_states[i]) }) },
+            function(){ $.each(apps, function(i, a){
+                a.state_relative_set(new_states[i]) }) },
+            name
+        );
+    };
+
     var history_point, ref_pos;
     o.move_start = function(){
         ref_pos = drag_target.pos_relative();
-        // TODO-refactor: fix history for bulk operations
-        // history_point = o.history_helper_relative('move');
+        change_start();
     };
     o.move_relative = function(delta, axis_lock){
         if(!ref_pos) return;
@@ -2528,8 +2546,7 @@ Hive.Selection = function(){
         o.move_relative(delta, ev.shiftKey);
     };
     o.move_end = function(){
-        // TODO-refactor: fix history for bulk operations
-        // history_point.save();
+        change_end('move');
         $(".ruler").hidehide();
     };
 
@@ -2590,8 +2607,7 @@ Hive.Selection = function(){
     var ref_dims;
     o.resize_start = function(){
         ref_dims = o.dims_relative();
-        // TODO-refactor: fix history for bulk operations
-        // Hive.History.begin();
+        change_start();
     };
     o.resize = function(delta){
         o.resize_relative(_mul(1 / Hive.env().scale)(delta));
@@ -2615,9 +2631,7 @@ Hive.Selection = function(){
     };
     o.resize_end = function(){
         o.update_relative_coords();
-        // TODO-refactor: fix history for bulk operations
-        // o.each(function(i, el){ el.history_point.save() });
-        // Hive.History.group('resize group');
+        change_end('resize');
     };
 
     // END-event-handlers
