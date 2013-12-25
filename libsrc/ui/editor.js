@@ -395,8 +395,10 @@ Hive.App = function(init_state, opts) {
         if(from == to) return;
         Hive.History.saver(o.layer, stack_to, 'change layer').exec(to);
     };
-    o.stack_bottom = function(){ o.stack_to(0) };
-    o.stack_top = function(){ o.stack_to(o.apps.length -1) };
+    o.stack_bottom = function(){
+        o.stack_to(0) };
+    o.stack_top = function(){
+        o.stack_to(o.apps.length -1) };
     
     o.make_controls = [];
 
@@ -404,15 +406,10 @@ Hive.App = function(init_state, opts) {
     o.focused = function() { return focused };
     o.focus = Funcs(function() {
         if(focused) return;
-        evs.handler_set(o);
-        // TODO-feature for sketch and geometry apps: evs.handler_set(o.type)
-        // depends on defining app specific but instance unspecific creation
-        // handlers on app type constructors
         focused = true;
     }, function(){ return !o.focused()} );
     o.unfocus = Funcs(function() {
         if(!focused) return;
-        evs.handler_del(o);
         focused = false;
     }, o.focused);
 
@@ -537,13 +534,13 @@ Hive.App = function(init_state, opts) {
             o.dims_set(scaled);
         }
         return { pos: pos, dims: scaled };
-    }
+    };
 
     o.state_relative = function(env){ return {
         position: _pos.slice(),
         dimensions: _dims.slice()
     }};
-    o.state_relative_set = function(env, s){
+    o.state_relative_set = function(s){
         _pos = s.position.slice();
         _dims = s.dimensions.slice();
         o.layout();
@@ -566,12 +563,12 @@ Hive.App = function(init_state, opts) {
 
     o.history_helper_relative = function(name){
         var o2 = { name: name };
-        o2.old_state = o.state_relative(Hive.env());
+        o2.old_state = o.state_relative();
         o2.save = function(){
-            o2.new_state = o.state_relative(Hive.env());
+            o2.new_state = o.state_relative();
             Hive.History.save(
-                function(){ o.state_relative_set(Hive.env(), o2.old_state) },
-                function(){ o.state_relative_set(Hive.env(), o2.new_state) },
+                function(){ o.state_relative_set(o2.old_state) },
+                function(){ o.state_relative_set(o2.new_state) },
                 o2.name
             );
         };
@@ -582,7 +579,7 @@ Hive.App = function(init_state, opts) {
         if( ! o.init_state.position ) o.init_state.position = [ 100, 100 ];
         if( ! o.init_state.dimensions ) o.init_state.dimensions = [ 300, 200 ];
         if( opts.offset ) o.init_state.position = array_sum(o.init_state.position, opts.offset);
-        o.state_relative_set( Hive.env(), o.init_state );
+        o.state_relative_set(o.init_state);
         if (o.init_state.full_bleed_coord != undefined)
             Hive.App.has_full_bleed(o, o.init_state.full_bleed_coord);
         if(opts.load) opts.load(o);
@@ -1112,8 +1109,8 @@ Hive.has_scale = function(o){
     o.state_relative = function(env){
         return $.extend(_state_relative(env), { 'scale': scale / env.scale });
     };
-    o.state_relative_set = function(env, s){
-        _state_relative_set(env, s);
+    o.state_relative_set = function(s){
+        _state_relative_set(s);
         if(s.scale) o.scale_set(s.scale * env.scale);
     };
 };
@@ -1981,6 +1978,57 @@ Hive.App.Image = function(o) {
         }
     };
 
+    (function(){
+        var drag_hold, fake_img;
+
+        // UI for setting .offset of apps on drag after long_hold
+        o.long_hold = function(ev){
+            if(!o.init_state.scale_x) return;
+            ev.stopPropagation();
+            drag_hold = true;
+
+            // show new img w/ opacity
+            fake_img = o.img.clone().appendTo(o.div).css('opacity', .5)
+                .css('z-index', 0);
+            o.img = o.img.add(fake_img);
+            return false;
+        };
+        o.long_hold_release = function(ev){
+            if(drag_hold) ev.stopPropagation();
+        };
+
+        var ref_offset;
+        o.dragstart = function(ev){
+            if (!drag_hold) return;
+            ev.stopPropagation();
+            ref_offset = o.offset();
+            o.fixed_coord = (ref_offset[0] == 0) ? 0 : 1;
+            history_point = Hive.History.saver(o.offset, o.offset_set, 'move crop');
+            ev.stopPropagation();
+        };
+        o.drag = function (ev, dd, shallow) {
+            if(!drag_hold || !ref_offset) return;
+            ev.stopPropagation();
+            var delta = [dd.deltaX, dd.deltaY];
+            if(ev.shiftKey)
+                delta[ Math.abs(dd.deltaX) > Math.abs(dd.deltaY) & 1 ] = 0;
+            // constrain delta for now to the "free" dimension
+            // TODO: snap to edge/center
+            delta[o.fixed_coord] = 0;
+            delta = _add(delta)(ref_offset);
+            o.offset_set(delta);
+            o.layout();
+        };
+        o.dragend = function(ev){
+            if(!drag_hold) return;
+            drag_hold = false;
+            ev.stopPropagation();
+            o.img = o.img.not(fake_img);
+            fake_img.remove();
+            history_point.save();
+        };
+    })();
+
     // screen coordinates
     o.offset = function() {
         if (!o.init_state.scale_x)
@@ -2099,8 +2147,7 @@ Hive.App.Rectangle = function(o) {
 
     o.content_element.on('dragenter dragover', function(ev){
         ev.preventDefault();
-    })
-    .on('drop', function(e){
+    }).on('drop', function(e){
         var dt = e.originalEvent.dataTransfer;
         file_list = dt.files;
         var files = [];
@@ -2475,7 +2522,6 @@ Hive.Selection = function(){
         if(o.div) o.div.remove();
         o.update(elements);
     }
-
     o.update_focus = function(event){
         var select = { top: o.drag_pos[1], right: o.drag_pos[0] + o.drag_dims[0],
             bottom: o.drag_pos[1] + o.drag_dims[1], left: o.drag_pos[0] };
@@ -2491,11 +2537,28 @@ Hive.Selection = function(){
         }
     };
 
+    var old_states;
+    var get_targets = function(){
+        return (drag_target == o ? elements : [drag_target]); };
+    var get_states = function(){
+        return get_targets().map(function(a){ return a.state_relative(); }) };
+    var change_start = function(){ old_states = get_states(); };
+    var change_end = function(name){
+        var apps = get_targets().slice(), new_states = get_states(),
+            start_states = old_states.slice();
+        Hive.History.save(
+            function(){ $.each(apps, function(i, a){
+                a.state_relative_set(start_states[i]) }) },
+            function(){ $.each(apps, function(i, a){
+                a.state_relative_set(new_states[i]) }) },
+            name
+        );
+    };
+
     var history_point, ref_pos;
     o.move_start = function(){
         ref_pos = drag_target.pos_relative();
-        // TODO-refactor: fix history for bulk operations
-        // history_point = o.history_helper_relative('move');
+        change_start();
     };
     o.move_relative = function(delta, axis_lock){
         if(!ref_pos) return;
@@ -2527,70 +2590,14 @@ Hive.Selection = function(){
         o.move_relative(delta, ev.shiftKey);
     };
     o.move_end = function(){
-        // TODO-refactor: fix history for bulk operations
-        // history_point.save();
+        change_end('move');
         $(".ruler").hidehide();
     };
-
-    (function(){
-        // UI for setting .offset of apps on drag after long_hold
-        o.long_hold = function(ev){
-            var target = ev.data;
-            // TODO: what does this do?
-            if (!target.init_state.scale_x )
-                return;
-            o.drag_hold = true;
-
-            // TODO-feature-offset: somehow move back into image object
-            // show new img w/ opacity
-            // o.fake_img = o.img.clone().appendTo(o.div).css('opacity', .5)
-            //     .css('z-index', 0);
-            // o.img = o.img.add(o.fake_img);
-        };
-
-        // TODO-feature-offset: merge these methods from Hive.App.Image into here
-        // o.long_hold_release = function() {
-        //     o.drag_hold = false;
-        //     o.img = o.img.not(o.fake_img);
-        //     o.fake_img.remove();
-        // }
-        // o._move_start = o.move_start;
-        // o.move_start = function(){
-        //     if (!o.drag_hold)
-        //         return o._move_start();
-        //     o.ref_offset = o.offset();
-        //     o.fixed_coord = (o.ref_offset[0] == 0) ? 0 : 1;
-        //     history_point = Hive.History.saver(o.offset, o.offset_set, 'move crop');
-        // };
-        // o._move = o.move;
-        // o.move = function (e, dd, shallow) {
-        //     if (!o.drag_hold)
-        //         return o._move(e, dd, shallow);
-        //     if(!o.ref_offset) return;
-        //     var delta = [dd.deltaX, dd.deltaY];
-        //     if(e.shiftKey)
-        //         delta[ Math.abs(dd.deltaX) > Math.abs(dd.deltaY) & 1 ] = 0;
-        //     // constrain delta for now to the "free" dimension
-        //     // TODO: snap to edge/center
-        //     delta[o.fixed_coord] = 0;
-        //     delta = _add(delta)(o.ref_offset);
-        //     o.offset_set(delta);
-        //     o.layout();
-        // };
-        // o._move_end = o.move_end;
-        // o.move_end = function(){
-        //     if (!o.drag_hold) 
-        //         return o._move_end();
-        //     history_point.save();
-        //     o.long_hold_release();
-        // }
-    })();
 
     var ref_dims;
     o.resize_start = function(){
         ref_dims = o.dims_relative();
-        // TODO-refactor: fix history for bulk operations
-        // Hive.History.begin();
+        change_start();
     };
     o.resize = function(delta){
         o.resize_relative(_mul(1 / Hive.env().scale)(delta));
@@ -2614,16 +2621,23 @@ Hive.Selection = function(){
     };
     o.resize_end = function(){
         o.update_relative_coords();
-        // TODO-refactor: fix history for bulk operations
-        // o.each(function(i, el){ el.history_point.save() });
-        // Hive.History.group('resize group');
+        change_end('resize');
     };
 
     // END-event-handlers
 
     o.app_select = function(app, multi) {
-        if(multi) app.unfocus();
-        else app.focus();
+        if(multi){
+            app.unfocus();
+            evs.handler_del(app);
+        }
+        else{
+            app.focus();
+            evs.handler_set(app);
+            // TODO-feature for sketch and geometry apps: evs.handler_set(o.type)
+            // depends on defining app specific but instance unspecific creation
+            // handlers on app type constructors
+        }
         Hive.Controls(app, multi);
     };
     o.app_unselect = function(app, multi) {
@@ -2651,7 +2665,10 @@ Hive.Selection = function(){
             Hive.Controls(o, false);
             o.controls.layout();
         }
-        if(apps.length <= 1 && o.controls) o.controls.remove();
+        if(apps.length <= 1 && o.controls)
+            o.controls.remove();
+        if(apps.length == 0)
+            evs.handler_del({handler_type: 0}); 
     };
 
     o.unfocus = function(app){
@@ -2791,12 +2808,15 @@ Hive.Selection = function(){
             o.select( ev.shiftKey ? [] : Hive.Apps.all() );
             return false;
         }
-        else if(is_escape(ev)){
-            o.unfocus();
-            return false;
+
+        var handlers = {
+            27: function(){ o.unfocus() },
+            46: function(){ o.remove() },
+            66: function(){ o.stack_bottom() },
+            84: function(){ o.stack_top() },
         }
-        else if(ev.keyCode == 46){
-            o.remove();
+        if(handlers[ev.keyCode]){
+            handlers[ev.keyCode]();
             return false;
         }
 
