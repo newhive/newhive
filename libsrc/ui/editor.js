@@ -981,24 +981,9 @@ Hive.App.has_resize = function(o) {
     o.resize = function(delta){ 
         var s = Hive.env().scale;
         delta = o.resize_to(delta);
-        var snap_strength = .5, snap_radius = 10;  //!!
-        var _pos = o.min_pos();
+        var _pos = o.pos_relative();
         var pos = [ _pos[0] + delta[0] / s, _pos[1] + delta[1] / s ];
-        // TODO: allow snapping to aspect ratio (keyboard?)
-        if (snap_strength > 0) {
-            var excludes = {};
-            excludes[o.id] = true;
-            var tuple = [];
-            tuple[0] = [undefined, undefined, pos[0]];
-            tuple[1] = [undefined, undefined, pos[1]];
-            pos = snap_helper(tuple, excludes, snap_strength, snap_radius);
-        }
-        var _dims = [];
-        _dims[0] = pos[0] - _pos[0];
-        _dims[1] = pos[1] - _pos[1];
-        if (o.full_bleed_coord != undefined)
-            _dims[o.full_bleed_coord] = 1000;
-        o.dims_relative_set(_dims);
+        o.resize_to_pos(pos);
     };
     o.resize_end = function(){ 
         history_point.save();
@@ -1969,12 +1954,8 @@ Hive.App.Image = function(o) {
             o.content_element = $('<div class="crop_box">');
             o.img.appendTo(o.content_element);
             o.content_element.appendTo(happ);
-            o.img.css('width', 
-                o.dims()[0] * o.init_state.scale_x + 'px');
-            if (o.init_state.offset) {
-                o.img.css({ "margin-left": o.init_state.offset[0],
-                    "margin-top": o.init_state.offset[1] });
-            }
+            o.div_aspect = o.dims()[0] / o.dims()[1];
+            o.layout();
         }
     };
 
@@ -2056,12 +2037,12 @@ Hive.App.Image = function(o) {
     o.resize = function(delta) {
         var dims = o.resize_to(delta);
         if(!dims[0] || !dims[1]) return;
+        dims = _mul(1 / Hive.env().scale)(dims);
+        // everything past this point is in editor space.
         var aspect = o.div_aspect || o.aspect;
         var newWidth = dims[1] * aspect;
         dims = (newWidth < dims[0]) ? [newWidth, dims[1]] : 
             [dims[0], dims[0] / aspect];
-        var s = Hive.env().scale;
-        dims = _mul(1/s)(dims);
 
         // snap
         var _pos = o.pos_relative();
@@ -2074,12 +2055,10 @@ Hive.App.Image = function(o) {
             [snap_dims[1] * aspect, snap_dims[1]] :
             [snap_dims[0], snap_dims[0] / aspect];
 
-        o.dims_relative_set(dims);
-        var newWidth = dims[1] * o.aspect;
+        var newWidth = dims[1] * aspect;
         var dims = (newWidth < dims[0] ? [newWidth, dims[1]]
-            : [dims[0], dims[0] / o.aspect]);
-        o.img.css('width', dims[0] + 'px');
-        o.dims_set(dims);
+            : [dims[0], dims[0] / aspect]);
+        o.dims_relative_set(dims);
     }
 
     o.pixel_size = function(){
