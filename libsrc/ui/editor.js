@@ -343,7 +343,6 @@ var snap_helper = function(my_tuple, exclude_ids,
                 rule.appendTo($("body"));
             }
             rule.showshow();
-            best.start[1 - coord] += new_pos[1 - coord] - pos[1 - coord];
             rule.css({
                 left: Math.min(best.start[0], best.end[0]) * s,
                 top: Math.min(best.start[1], best.end[1]) * s,
@@ -537,7 +536,7 @@ Hive.App = function(init_state, opts) {
         return { pos: pos, dims: scaled };
     };
 
-    o.state_relative = function(env){ return {
+    o.state_relative = function(){ return {
         position: _pos.slice(),
         dimensions: _dims.slice()
     }};
@@ -548,7 +547,7 @@ Hive.App = function(init_state, opts) {
     };
 
     o.state = function(){
-        var s = $.extend({}, o.init_state, o.state_relative(Hive.env()), {
+        var s = $.extend({}, o.init_state, o.state_relative(), {
             z: o.layer(),
             full_bleed_coord: o.full_bleed_coord,
             // TODO-cleanup: flatten state and use o.state() and
@@ -982,24 +981,9 @@ Hive.App.has_resize = function(o) {
     o.resize = function(delta){ 
         var s = Hive.env().scale;
         delta = o.resize_to(delta);
-        var snap_strength = .5, snap_radius = 10;  //!!
-        var _pos = o.min_pos();
+        var _pos = o.pos_relative();
         var pos = [ _pos[0] + delta[0] / s, _pos[1] + delta[1] / s ];
-        // TODO: allow snapping to aspect ratio (keyboard?)
-        if (snap_strength > 0) {
-            var excludes = {};
-            excludes[o.id] = true;
-            var tuple = [];
-            tuple[0] = [undefined, undefined, pos[0]];
-            tuple[1] = [undefined, undefined, pos[1]];
-            pos = snap_helper(tuple, excludes, snap_strength, snap_radius);
-        }
-        var _dims = [];
-        _dims[0] = pos[0] - _pos[0];
-        _dims[1] = pos[1] - _pos[1];
-        if (o.full_bleed_coord != undefined)
-            _dims[o.full_bleed_coord] = 1000;
-        o.dims_relative_set(_dims);
+        o.resize_to_pos(pos);
     };
     o.resize_end = function(){ 
         history_point.save();
@@ -1107,12 +1091,12 @@ Hive.has_scale = function(o){
     o.scale_set = function(s){ scale = s; };
 
     var _state_relative = o.state_relative, _state_relative_set = o.state_relative_set;
-    o.state_relative = function(env){
-        return $.extend(_state_relative(env), { 'scale': scale / env.scale });
+    o.state_relative = function(){
+        return $.extend(_state_relative(), { 'scale': scale });
     };
     o.state_relative_set = function(s){
         _state_relative_set(s);
-        if(s.scale) o.scale_set(s.scale * env.scale);
+        if(s.scale) o.scale_set(s.scale);
     };
 };
 
@@ -1970,12 +1954,8 @@ Hive.App.Image = function(o) {
             o.content_element = $('<div class="crop_box">');
             o.img.appendTo(o.content_element);
             o.content_element.appendTo(happ);
-            o.img.css('width', 
-                o.dims()[0] * o.init_state.scale_x + 'px');
-            if (o.init_state.offset) {
-                o.img.css({ "margin-left": o.init_state.offset[0],
-                    "margin-top": o.init_state.offset[1] });
-            }
+            o.div_aspect = o.dims()[0] / o.dims()[1];
+            o.layout();
         }
     };
 
@@ -1995,7 +1975,11 @@ Hive.App.Image = function(o) {
             return false;
         };
         o.long_hold_release = function(ev){
-            if(drag_hold) ev.stopPropagation();
+            if(!drag_hold) return;
+            ev.stopPropagation();
+            drag_hold = false;
+            o.img = o.img.not(fake_img);
+            fake_img.remove();
         };
 
         var ref_offset;
@@ -2022,11 +2006,8 @@ Hive.App.Image = function(o) {
         };
         o.dragend = function(ev){
             if(!drag_hold) return;
-            drag_hold = false;
-            ev.stopPropagation();
-            o.img = o.img.not(fake_img);
-            fake_img.remove();
             history_point.save();
+            o.long_hold_release(ev);
         };
     })();
 
@@ -2057,12 +2038,12 @@ Hive.App.Image = function(o) {
     o.resize = function(delta) {
         var dims = o.resize_to(delta);
         if(!dims[0] || !dims[1]) return;
+        dims = _mul(1 / Hive.env().scale)(dims);
+        // everything past this point is in editor space.
         var aspect = o.div_aspect || o.aspect;
         var newWidth = dims[1] * aspect;
         dims = (newWidth < dims[0]) ? [newWidth, dims[1]] : 
             [dims[0], dims[0] / aspect];
-        var s = Hive.env().scale;
-        dims = _mul(1/s)(dims);
 
         // snap
         var _pos = o.pos_relative();
@@ -2075,12 +2056,10 @@ Hive.App.Image = function(o) {
             [snap_dims[1] * aspect, snap_dims[1]] :
             [snap_dims[0], snap_dims[0] / aspect];
 
-        o.dims_relative_set(dims);
-        var newWidth = dims[1] * o.aspect;
+        var newWidth = dims[1] * aspect;
         var dims = (newWidth < dims[0] ? [newWidth, dims[1]]
-            : [dims[0], dims[0] / o.aspect]);
-        o.img.css('width', dims[0] + 'px');
-        o.dims_set(dims);
+            : [dims[0], dims[0] / aspect]);
+        o.dims_relative_set(dims);
     }
 
     o.pixel_size = function(){
@@ -2429,6 +2408,13 @@ Hive.Selection = function(){
     o.click = o.mousedown = function(ev){
         var app = ev.data;
         if(app){
+            if (ev.shiftKey) {
+                if (ev.ctrlKey)
+                    app.stack_bottom();
+                else
+                    app.stack_top();
+                return;
+            }
             if(o.is_multi(ev)){
                 if(o.selected(app)) o.unfocus(app);
                 else o.push(app);
@@ -2478,13 +2464,6 @@ Hive.Selection = function(){
         $(document.body).append(o.div);
         o.div.append(o.select_box);
         o.start = [ev.pageX, ev.pageY];
-        if (ev.shiftKey) {
-            if (e.ctrlKey)
-                app.stack_bottom();
-            else
-                app.stack_top();
-            return;
-        }
         if (ev.shiftKey || ev.ctrlKey){
             o.initial_elements = elements.slice();
         } else {
