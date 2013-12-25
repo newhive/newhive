@@ -536,7 +536,7 @@ Hive.App = function(init_state, opts) {
         return { pos: pos, dims: scaled };
     };
 
-    o.state_relative = function(env){ return {
+    o.state_relative = function(){ return {
         position: _pos.slice(),
         dimensions: _dims.slice()
     }};
@@ -547,7 +547,7 @@ Hive.App = function(init_state, opts) {
     };
 
     o.state = function(){
-        var s = $.extend({}, o.init_state, o.state_relative(Hive.env()), {
+        var s = $.extend({}, o.init_state, o.state_relative(), {
             z: o.layer(),
             full_bleed_coord: o.full_bleed_coord,
             // TODO-cleanup: flatten state and use o.state() and
@@ -1106,12 +1106,12 @@ Hive.has_scale = function(o){
     o.scale_set = function(s){ scale = s; };
 
     var _state_relative = o.state_relative, _state_relative_set = o.state_relative_set;
-    o.state_relative = function(env){
-        return $.extend(_state_relative(env), { 'scale': scale / env.scale });
+    o.state_relative = function(){
+        return $.extend(_state_relative(), { 'scale': scale });
     };
     o.state_relative_set = function(s){
         _state_relative_set(s);
-        if(s.scale) o.scale_set(s.scale * env.scale);
+        if(s.scale) o.scale_set(s.scale);
     };
 };
 
@@ -2428,6 +2428,13 @@ Hive.Selection = function(){
     o.click = o.mousedown = function(ev){
         var app = ev.data;
         if(app){
+            if (ev.shiftKey) {
+                if (ev.ctrlKey)
+                    app.stack_bottom();
+                else
+                    app.stack_top();
+                return;
+            }
             if(o.is_multi(ev)){
                 if(o.selected(app)) o.unfocus(app);
                 else o.push(app);
@@ -2477,13 +2484,6 @@ Hive.Selection = function(){
         $(document.body).append(o.div);
         o.div.append(o.select_box);
         o.start = [ev.pageX, ev.pageY];
-        if (ev.shiftKey) {
-            if (ev.ctrlKey)
-                app.stack_bottom();
-            else
-                app.stack_top();
-            return;
-        }
         if (ev.shiftKey || ev.ctrlKey){
             o.initial_elements = elements.slice();
         } else {
