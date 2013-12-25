@@ -343,7 +343,6 @@ var snap_helper = function(my_tuple, exclude_ids,
                 rule.appendTo($("body"));
             }
             rule.showshow();
-            best.start[1 - coord] += new_pos[1 - coord] - pos[1 - coord];
             rule.css({
                 left: Math.min(best.start[0], best.end[0]) * s,
                 top: Math.min(best.start[1], best.end[1]) * s,
@@ -2432,7 +2431,7 @@ Hive.Selection = function(){
         o.div.append(o.select_box);
         o.start = [ev.pageX, ev.pageY];
         if (ev.shiftKey) {
-            if (e.ctrlKey)
+            if (ev.ctrlKey)
                 app.stack_bottom();
             else
                 app.stack_top();
