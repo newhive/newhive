@@ -265,4 +265,3 @@ def css_for_app(app):
     if app.get('scale'):
         rv += "font-size: {font-size}em;".format(**css)
     return rv
-
