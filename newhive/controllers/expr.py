@@ -111,7 +111,7 @@ class Expr(ModelController):
             if res.get('remix_parent_id'):
                 upd['tags'] += " #remixed" # + remix_name
             res.update(**upd)
-            if not config.live_server and (upd.get('apps') or upd.get('background')):
+            if not self.config.live_server and (upd.get('apps') or upd.get('background')):
                 res.threaded_snapshot(retry=120)
             new_expression = False
 
