@@ -1975,7 +1975,11 @@ Hive.App.Image = function(o) {
             return false;
         };
         o.long_hold_release = function(ev){
-            if(drag_hold) ev.stopPropagation();
+            if(!drag_hold) return;
+            ev.stopPropagation();
+            drag_hold = false;
+            o.img = o.img.not(fake_img);
+            fake_img.remove();
         };
 
         var ref_offset;
@@ -2002,11 +2006,8 @@ Hive.App.Image = function(o) {
         };
         o.dragend = function(ev){
             if(!drag_hold) return;
-            drag_hold = false;
-            ev.stopPropagation();
-            o.img = o.img.not(fake_img);
-            fake_img.remove();
             history_point.save();
+            o.long_hold_release(ev);
         };
     })();
 
