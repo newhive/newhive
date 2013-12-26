@@ -332,6 +332,15 @@ var snap_helper = function(my_tuple, exclude_ids,
         if (bests[coord]) {
             var best_interval = bests[coord];
             var best = {start:[], end:[]};
+            var orig_pos = [pos[1 - coord], my_tuple[1 - coord][2]];
+            for (var i = 0; i < 2; i++) {
+                if (orig_pos[i]) {
+                    for (var j = 0; j < 2; j++) {
+                        if (best_interval[j] == orig_pos[i])
+                            best_interval[j] += new_pos[1 - coord] - pos[1 - coord];
+                    }
+                }
+            }
             best.start[1 - coord] = best_interval[0];
             best.end[1 - coord] = best_interval[1];
             best.start[coord] = best_interval[2] - 1/s;
