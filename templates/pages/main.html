@@ -6,6 +6,8 @@
     "We believe that your life is a blank canvas + you decide what goes on it. 
 NewHive is your radically simple, DIY self publishing tool." %}
     <meta name="description" content="{{meta_description}}" />
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@newhive">
     <meta property="og:image" content=
       '{{ img_url if img_url else 'skin/1/logo_medium.png'|asset_url }}' />
     <meta name="twitter:image" content=
@@ -14,6 +16,7 @@ NewHive is your radically simple, DIY self publishing tool." %}
     <meta property="og:title" content='{{meta_title}}' />
     <meta name="twitter:title" content='{{meta_title}}'>
     <meta property="og:description" content='{{meta_description}}' />
+    <meta property="twitter:description" content='{{meta_description}}' />
     
     {#
     <meta name="twitter:card" content="photo">
