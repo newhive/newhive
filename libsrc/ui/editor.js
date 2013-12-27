@@ -228,7 +228,6 @@ var snap_helper = function(my_tuple, exclude_ids,
     //     position: [0, 0],
     //     dimensions: [1000, $("body")[0].scrollHeight / s],
     //     type: 'hive.root',
-    //     // content: {color:colors[(x+y)%36]}
     // });
     // app.load();
     // apps = apps.concat([app]);
@@ -252,7 +251,7 @@ var snap_helper = function(my_tuple, exclude_ids,
     tuple[scroll_coord] = tuple[scroll_coord].concat([[0, max_height / 2, max_height]]);
     tuple[1 - scroll_coord] = tuple[1 - scroll_coord].concat([[0, 500, 1000]]);
 
-    var bests = [];
+    var best_intervals = [];
     if (my_tuple[0][1])
         dist_cent = [my_tuple[0][1], my_tuple[1][1]];
     else
@@ -306,8 +305,7 @@ var snap_helper = function(my_tuple, exclude_ids,
                             best_snaps[goal_memo] = total;
                             best_guides[goal_memo] = best_guides[goal_memo] || {};
                             // NOTE: We were showing the ruler at coord2 - added_padding
-                            best_guides[goal_memo][coord2] =
-                                interval_bounds(
+                            best_guides[goal_memo][coord2] = interval_bounds(
                                 best_guides[goal_memo][coord2] || [99999,-99999],
                                 guide);
                             if (total > best.strength) {
@@ -322,16 +320,20 @@ var snap_helper = function(my_tuple, exclude_ids,
         if (best.strength > snap_strength) {
             new_pos[coord] = best.goal;
             var obj = best_guides[best.goal.toString()];
+            // Just pick the first available guide matching the goal.
+            // TODO-polish: pick on a more sensible criterion
             for (var first in obj)
                 if (obj.hasOwnProperty(first)) break;
-            bests[coord] = obj[first].concat([parseFloat(first)]);
+            best_intervals[coord] = obj[first].concat([parseFloat(first)]);
         }
     }
     $(".ruler").hidehide();
     for (var coord = 0; coord < 2; ++coord) {
-        if (bests[coord]) {
-            var best_interval = bests[coord];
+        if (best_intervals[coord]) {
+            var best_interval = best_intervals[coord];
             var best = {start:[], end:[]};
+            // Correct an interval which includes the original point pre-snap.
+            // Fix it to the post-snap position.
             var orig_pos = [pos[1 - coord], my_tuple[1 - coord][2]];
             for (var i = 0; i < 2; i++) {
                 if (orig_pos[i]) {
@@ -527,8 +529,8 @@ Hive.App = function(init_state, opts) {
 
     o.fit_to = function(opts){
         if (opts.doit == undefined) opts.doit = true;
-        var dims = opts.dims.concat(), pos = opts.pos.concat();
-        var scaled = o.dims();
+        var dims = opts.dims.slice(), pos = opts.pos.slice();
+        var scaled = (opts.scaled) ? opts.scaled.slice() : o.dims();
         var aspect = scaled[1] / scaled[0];
         var into_aspect = dims[1] / dims[0];
         var fit_coord = (aspect < into_aspect) ? 0 : 1;
@@ -1943,18 +1945,15 @@ Hive.App.Image = function(o) {
         o.img.css('width', o.dims()[0] + 'px');
         // fit and crop as needed
         if (o.init_state.fit) {
-            var dims = o.dims();
-            o.dims_set([o.imageWidth, o.imageHeight]);
-            var opts = { dims:dims, pos:o.pos(), fit:o.init_state.fit, 
-                doit: (o.init_state.fit != 2) };
+            var opts = { dims:o.dims(), pos:o.pos(), fit:o.init_state.fit, 
+                doit: (o.init_state.fit != 2), // Cropping needed, wait on execution
+                scaled: [o.imageWidth, o.imageHeight] };
             var new_layout = o.fit_to(opts);
             if (opts.fit == 2) {
                 o.init_state.scale_x = new_layout.dims[0] / opts.dims[0];
                 o.init_state.offset = _add(new_layout.pos)(_mul(-1)(opts.pos));
-                o.init_state.offset = _mul( 1 * opts.dims[0] /
+                o.init_state.offset = _mul( 1 / opts.dims[0] /
                     o.init_state.scale_x)(o.init_state.offset);
-                // o.pos_set(opts.pos);
-                o.dims_set(opts.dims);
             }
             o.init_state.fit = undefined;
         }

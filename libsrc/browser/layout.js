@@ -1,6 +1,9 @@
 define(['browser/jquery'], function($) {
     var o = {};
 
+    o.on_scroll = function(ev) {
+
+    }
     o.place_apps = function() {
         var win_width = $(window).width();
         $('.happfill').each(function(i, div) {
