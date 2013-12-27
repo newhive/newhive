@@ -252,7 +252,8 @@ define([
             // FileList is not a list at all, has no map :'(
             for(var i = 0; i < file_list.length; i++){
                 var f = file_list.item(i), file = {
-                    url: URL.createObjectURL(f),
+                    var urlCreator = window.URL || window.webkitURL;
+                    url: urlCreator.createObjectURL(f),
                     name: f.name,
                     mime: f.type
                 };
