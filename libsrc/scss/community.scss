@@ -94,11 +94,12 @@
                 margin-bottom: 10px;
             }
         }
-        .teal_btn {
+        .submit_hover {
             position: absolute;
-            margin-left: -40px;
-            margin-top: 10px;
-            &:hover { background-color: $color_bright_red; }
+            bottom: -20px;
+            left: 0;
+            width: 100%;
+            .teal_btn:hover { background-color: $color_bright_red; }
         }
     }
     .request_sent {
