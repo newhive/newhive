@@ -112,7 +112,8 @@ body.edit {
 .bstyle .border { background-color : #54D3AC; border-color : #0A2655; border-width : 3px; width : 20px; height : 15px; margin-bottom : 10px; }
 .bstyle .border.none { width : 26px; height : 18px; }
 .drawer.fontname { width : 453px; }
-.drawer.fontname .option { margin-bottom : 5px; display : float; float : left; width : 8em; height : 1em; }
+.drawer.fontname .option { margin-bottom : 5px; display : float; float : left; width : 146px; height : 1em; 
+    &.longish { margin-top: 2px; font-size:15px; } }
 .align .option.small { margin : 5px; }
 .drawer.link { background-color : transparent; }
 .drawer.link img { vertical-align : middle; }
