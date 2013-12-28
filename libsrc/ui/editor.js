@@ -3612,20 +3612,6 @@ Hive.sel = function(n) {
 
 Hive.foc = function(n){ Hive.Selection.update([Hive.Apps[n]]) };
 
-$(function(){
-    $(window).keydown(function(e){
-        if(e.shiftKey && e.keyCode == 120){ // F9
-            // debugger;
-            console.log(sel().content_element.find('.hive_selection'));
-        }
-    });
-});
-
-Hive.print_stack = function(){
-    //try { thiswillthrowanerror^2 }
-    //catch(e) { console.log(e.stack) }
-}
-
 function array_delete(arr, e) {
     for(var n = 0; n < arr.length; n++) {
         if(arr[n] == e) {
