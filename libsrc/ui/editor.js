@@ -2992,7 +2992,7 @@ Hive.new_file = function(files, opts, app_opts) {
 }
 
 Hive.common_setup = function(){
-    $('title').text("Editor - " + Hive.Exp.title);
+    $('title').text("Editor - " + (Hive.Exp.title || "[Untitled]"));
 };
 
 Hive.init = function(exp, page){
