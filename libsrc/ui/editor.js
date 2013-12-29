@@ -96,6 +96,8 @@ interval_size = function(i) { return Math.abs(i[1] - i[0]); };
 interval_bounds = function(a, b) {
     return [Math.min(a[0], b[0]), Math.max(a[1], b[1])];
 };
+var null_interval = [Infinity, -Infinity];
+var all_interval = [-Infinity, Infinity];
 ////////
 
 var hover_menu = function(handle, drawer, opts){
@@ -306,7 +308,7 @@ var snap_helper = function(my_tuple, exclude_ids,
                             best_guides[goal_memo] = best_guides[goal_memo] || {};
                             // NOTE: We were showing the ruler at coord2 - added_padding
                             best_guides[goal_memo][coord2] = interval_bounds(
-                                best_guides[goal_memo][coord2] || [99999,-99999],
+                                best_guides[goal_memo][coord2] || null_interval,
                                 guide);
                             if (total > best.strength) {
                                 best.strength = total;
@@ -1099,7 +1101,7 @@ Hive.App.has_resize_h = function(o) {
 Hive.has_scale = function(o){
     var scale = o.init_state.scale ? o.init_state.scale * Hive.env().scale : 1;
     o.scale = function(){ return scale; };
-    o.scale_set = function(s){ scale = s; };
+    o.scale_set = function(s){ scale = s; o.layout(); };
 
     var _state_relative = o.state_relative, _state_relative_set = o.state_relative_set;
     o.state_relative = function(){
@@ -1284,10 +1286,10 @@ Hive.App.Text = function(o) {
     };
 
     Hive.has_scale(o);
-    var _scale_set = o.scale_set;
-    o.scale_set = function(s){
-        _scale_set(s);
-        o.div.css('font-size', s + 'em');
+    var _layout = o.layout;
+    o.layout = function(){
+        _layout();
+        o.div.css('font-size', (Hive.env().scale * o.scale()) + 'em');
     };
 
     // New scaling code
@@ -2321,13 +2323,13 @@ Hive.App.Audio = function(o) {
     };
 
     Hive.has_scale(o);
-    var _scale_set = o.scale_set;
-    o.scale_set = function(s) {
-        _scale_set(s);
-        o.div.css('font-size', s + 'em');
+    var _layout = o.layout;
+    o.layout = function() {
+        _layout();
+        o.div.css('font-size', (Hive.env().scale * o.scale()) + 'em');
         var height = o.div.find('.jp-interface').height();
         o.div.find('.jp-button').width(height).height(height);
-    };
+    }
 
     var _load = o.load;
     o.load = function(){
