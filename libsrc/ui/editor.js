@@ -3185,6 +3185,9 @@ Hive.init = function(exp, page){
         }
     });
     tags_input_changed($("#tags_input"));
+    var save_dialog = $('#dia_save').data('dialog');
+    save_dialog.opts.open = Hive.edit_pause;
+    save_dialog.opts.close = Hive.edit_start;
 
     var overwrite_dialog = dialog.create('#dia_overwrite');
     $('#cancel_overwrite').click(overwrite_dialog.close);
@@ -3227,8 +3230,6 @@ Hive.init = function(exp, page){
 
     Hive.Selection();
 
-    evs.handler_set(Hive.Selection);
-    evs.handler_set(Hive);
     evs.on(document, 'keydown');
     evs.on('body', 'mousemove');
     evs.on('body', 'mousedown');
@@ -3237,9 +3238,19 @@ Hive.init = function(exp, page){
     evs.on(drag_base, 'dragstart');
     evs.on(drag_base, 'drag');
     evs.on(drag_base, 'dragend');
+    Hive.edit_start();
 
     Hive.Apps.init(Hive.Exp.apps);
     Hive.History.init();
+};
+
+Hive.edit_start = function(){
+    evs.handler_set(Hive.Selection);
+    evs.handler_set(Hive);
+};
+Hive.edit_pause = function(){
+    evs.handler_del(Hive.Selection);
+    evs.handler_del(Hive);
 };
 
 // Matches youtube and vimeo URLs, any URL pointing to an image, and
