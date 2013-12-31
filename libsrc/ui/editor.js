@@ -76,11 +76,24 @@ _mul = function(scale) {
 };
 
 _div = function(scale) {
-    return _apply(function(x, y){ return x / y }, scale);
+    return _apply(function(x, y){ return x / y; }, scale);
 };
-
+_sub = function(scale) {
+    return _apply(function(a, b) { return a - b; }, scale);
+};
 _inv = function(l){
-    return l.map(function(x){ return 1/x });
+    return l.map(function(x){ return 1/x; });
+};
+// Return a value that is alpha (scalar) of the way between old_val
+// and new_val.  The values can be numbers or equal-length vectors.
+_lerp = function(alpha, old_val, new_val) {
+    if (typeof(old_val) == "number") {
+        return alpha * new_val + (1 - alpha) * old_val;
+    } else {
+        return _apply(function(old_val, new_val) {
+            return alpha * new_val + (1 - alpha) * old_val;
+        }, old_val)(new_val);
+    }
 };
 
 // Returns the nonnegative (nonoverlapping) distance btw two intervals.
@@ -96,6 +109,7 @@ interval_size = function(i) { return Math.abs(i[1] - i[0]); };
 interval_bounds = function(a, b) {
     return [Math.min(a[0], b[0]), Math.max(a[1], b[1])];
 };
+// Useful for default values when using interval_bounds
 var null_interval = [Infinity, -Infinity];
 var all_interval = [-Infinity, Infinity];
 ////////
@@ -205,15 +219,16 @@ Hive.layout_apps = function(){
 };
 
 var snap_helper = function(my_tuple, exclude_ids,
-    snap_strength, snap_radius, padding
+    snap_strength, snap_radius, sensitivity, padding
 ) {
     var s = Hive.env().scale;
     if (snap_radius == undefined) snap_radius = 10;
     if (snap_strength == undefined) snap_strength = 0.0;
     if (padding == undefined) padding = 10;
+    if (sensitivity == undefined) sensitivity = 0;
     padding = padding * .5;
     var pos;
-    for (var j = 0; j < 3;j++){
+    for (var j = 0; j < my_tuple[0].length; j++){
         if (my_tuple[0][j]) {
             pos = [my_tuple[0][j], my_tuple[1][j]];
             break;
@@ -295,8 +310,9 @@ var snap_helper = function(my_tuple, exclude_ids,
                                 [tuple[1 - coord][app_i][0],tuple[1 - coord][app_i][2]];
                             var dist = interval_dist(my_interval, other_interval);
                             var guide = interval_bounds(my_interval, other_interval);
-                            // TODO: power fall-off w/ decay when user jiggles mouse
-                            dist += snap_dist * 5;
+                            // power fall-off w/ decay when user jiggles mouse
+                            var snap_dist_scaled = 1 - snap_dist / snap_radius;
+                            strength *= Math.pow(snap_dist_scaled, sensitivity);
                             if (dist > 200) strength /= 
                                 Math.exp((Math.min(dist, 1000) - 200)/500);
                             if ((type1 == 1) ^ (type2 == 1)) strength *= .4;
@@ -2546,36 +2562,49 @@ Hive.Selection = function(){
         );
     };
 
-    var history_point, ref_pos;
+    var history_point, ref_pos, delta_latched, move_speed, delta_ave;
     o.move_start = function(){
         // ref_pos = drag_target.pos_relative();
         moved_obj = drag_target || o;
         ref_pos = moved_obj.pos_relative();
         change_start();
+        delta_latched = delta_ave = [0, 0];
+        move_speed = 1;
     };
     o.move_relative = function(delta, axis_lock){
         if(!ref_pos) return;
         if(axis_lock)
             delta[ Math.abs(delta[0]) > Math.abs(delta[1]) ? 1 : 0 ] = 0;
-        // if there's no selection or one app selected, regular snap
-        if(1 || drag_target != o || elements.length == 1){
-            var pos = _add(ref_pos)(delta), snap_strength = .05,
-                snap_radius = 18;
-            // TODO-feature-snap: check key shortcut to turn off snapping
-            if(snap_strength > 0){
-                var excludes = {};
-                if(drag_target.id) excludes[drag_target.id] = true;
-                pos = snap_helper(drag_target.bounds_tuple_relative(pos),
-                    excludes, snap_strength, snap_radius);
-            }
-            drag_target.pos_relative_set(pos);
+        var pos = _add(ref_pos)(delta), snap_strength = .05,
+            snap_radius = 18;
+        // TODO-feature-snap: check key shortcut to turn off snapping
+        // Calculate sensitivity
+        // TODO-feature-snap: check timestamp and bump sensitivity if longish
+        // gap between user inputs.
+        var move_dist = _sub(delta)(delta_latched);
+        // Max is better than other distance metric because user will
+        // commonly move in both axes accidentally.
+        var speed = Math.max(Math.abs(move_dist[0]), Math.abs(move_dist[1]));
+        speed = move_speed = _lerp(.1, move_speed, speed);
+        // Experiment with using distance to "average position"
+        // delta_ave = _lerp(.1, delta_ave, delta);
+        // var move_dist = _sub(delta)(delta_ave);
+        // var speed = Math.abs(move_dist[0]) + Math.abs(move_dist[1]);
+        // console.log(speed);
+        var sensitivity = 1/(speed - 1);
+        // TODO: flags like this should live on the root app.
+        if (Hive.show_move_sensitivity)
+            drag_target.content_element.find("span")
+                .text(Math.round(100*sensitivity)/100);
+
+        delta_latched = delta.slice();
+        if(snap_strength > 0){
+            var excludes = {};
+            if(drag_target.id) excludes[drag_target.id] = true;
+            pos = snap_helper(drag_target.bounds_tuple_relative(pos),
+                excludes, snap_strength, snap_radius, sensitivity);
         }
-        else
-            // TODO-feature-snap-group: figure out reasonable snapping
-            // behavior for group selection.
-            // Proposal: every object in selection snaps to everything
-            // outside selection
-            o.pos_relative_set(_add(ref_pos)(delta));
+        drag_target.pos_relative_set(pos);
         o.layout();
     };
     o.move_handler = function(ev, dd){
