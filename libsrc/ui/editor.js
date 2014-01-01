@@ -2564,8 +2564,7 @@ Hive.Selection = function(){
 
     var history_point, ref_pos, delta_latched, move_speed, delta_ave;
     o.move_start = function(){
-        // ref_pos = drag_target.pos_relative();
-        moved_obj = drag_target || o;
+        var moved_obj = drag_target || o;
         ref_pos = moved_obj.pos_relative();
         change_start();
         delta_latched = delta_ave = [0, 0];
