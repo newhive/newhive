@@ -2578,6 +2578,7 @@ Hive.Selection = function(){
         var pos = _add(ref_pos)(delta), snap_strength = .05,
             snap_radius = 18;
         // TODO-feature-snap: check key shortcut to turn off snapping
+
         // Calculate sensitivity
         // TODO-feature-snap: check timestamp and bump sensitivity if longish
         // gap between user inputs.
@@ -2590,7 +2591,6 @@ Hive.Selection = function(){
         // delta_ave = _lerp(.1, delta_ave, delta);
         // var move_dist = _sub(delta)(delta_ave);
         // var speed = Math.abs(move_dist[0]) + Math.abs(move_dist[1]);
-        // console.log(speed);
         var sensitivity = 1/(speed - 1);
         // TODO: flags like this should live on the root app.
         if (Hive.show_move_sensitivity)
