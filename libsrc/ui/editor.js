@@ -1002,6 +1002,86 @@ Hive.App.has_full_bleed = function(o, coord){
     // o.pos_set(o.pos());
 };
 
+// Let users drag images onto this app
+// NOTE: this adds handlers to o.content_element, so if
+// content_element changes, this modifier needs to be called again.
+Hive.App.has_image_drop = function(o) {
+    o.content_element.on('dragenter dragover', function(ev){
+        // TODO-dnd: handle drop highlighting
+        if (o.highlight)
+            o.highlight();
+
+        ev.preventDefault();
+    }).on('drop', function(ev){
+        var dt = ev.originalEvent.dataTransfer;
+        file_list = dt.files;
+        var files = [];
+        var urlCreator = window.URL || window.webkitURL;
+        for(var i = 0; i < file_list.length; i++){
+            var f = file_list.item(i), file = {
+                url: urlCreator.createObjectURL(f),
+                name: f.name,
+                mime: f.type
+            };
+            files.push(file);
+            break; // can only handle 1 file
+        }
+        var url = dt.getData("URL");
+        if (files.length == 0 && url.length) {
+            var file_name = url.split("/").slice(-1)[0];
+            var i = file_name.lastIndexOf(".");
+            if (i > 0) {
+                var name = file_name.slice(0, i);
+                var ext = file_name.slice(i + 1);
+                // TODO-cleanup: have this live somewhere global
+                // TODO-dnd: handle audio
+                var image_mimes = {
+                    "jpg": "image/jpeg",
+                    "jpeg": "image/jpeg",
+                    "gif": "image/gif",
+                    "png": "image/png"
+                };
+                var mime = image_mimes[ext];
+                if (mime) {
+                    files.push({
+                        url: url,
+                        name: name,
+                        mime: mime
+                    });
+                }
+            }
+        }
+        if (files.length == 0)
+            return false;
+        var load = function(app) {
+            // app.fit_to({dims: o.dims(), pos: o.pos(), zoom: false});
+        };
+        // TODO-dnd: Insert ajax to turn into proper file (from blob URL)
+        var file = files[0];
+        var init_state = { 
+            position: o.pos_relative(), 
+            dimensions: o.dims_relative(),
+            fit: 2 };
+        if (o.is_image) {
+            // o.set_from_file(file);
+            o.init_state.file_name = file.name;
+            o.init_state.url = o.init_state.content = file.url;
+            o.init_state = $.extend(o.init_state, init_state);
+            // TODO-dnd: have undo state
+            o.url_set(file.url);
+            var app = o;
+        } else {
+            // TODO-dnd: have fit depend on where the object was dropped relative
+            // to image center
+            app = Hive.new_file(files, init_state,
+                { load:load, position: true })[0];
+        }
+        return app;
+    });
+
+    return o;
+};
+
 Hive.App.has_resize = function(o) {
     var dims_ref, history_point;
     o.resize_start = function(){
@@ -1914,6 +1994,7 @@ Hive.App.has_color = function(o) {
 
 
 Hive.App.Image = function(o) {
+    o.is_image = true;
     Hive.App.has_resize(o);
     o.content = function(content) {
         if(typeof(content) != 'undefined') o.url_set(content);
@@ -1939,6 +2020,8 @@ Hive.App.Image = function(o) {
         o.img.attr('src', src);
         o.div.append(o.img);
         o.img.load(function(){setTimeout(o.img_load, 1)});
+        // We recreated the content_element, so reapply its handlers.
+        Hive.App.has_image_drop(o);
     };
     o.img_load = function(){
         o.imageWidth  = o.img.width() || o.img.prop('naturalWidth');
@@ -2106,6 +2189,7 @@ Hive.App.Image = function(o) {
 
     o.state_update(o.init_state);
     o.url_set(o.init_state.url);
+    Hive.App.has_image_drop(o);
     return o;
 }
 Hive.registerApp(Hive.App.Image, 'hive.image');
@@ -2152,31 +2236,7 @@ Hive.App.Rectangle = function(o) {
     o.set_css(o.init_state.content);
     setTimeout(function(){ o.load() }, 1);
 
-    o.content_element.on('dragenter dragover', function(ev){
-        ev.preventDefault();
-    }).on('drop', function(e){
-        var dt = e.originalEvent.dataTransfer;
-        file_list = dt.files;
-        var files = [];
-        for(var i = 0; i < file_list.length; i++){
-            var f = file_list.item(i), file = {
-                url: URL.createObjectURL(f),
-                name: f.name,
-                mime: f.type
-            };
-            files.push(file);
-            break; // can only handle 1 file
-        }
-        var load = function(app) {
-            // app.fit_to({dims: o.dims(), pos: o.pos(), zoom: false});
-        };
-        var app = Hive.new_file(files, 
-            { position: o.pos_relative(), dimensions: o.dims_relative(),
-                fit: 2 },
-            { load:load, position: true })[0];
-        return false;
-    });
-
+    Hive.App.has_image_drop(o);
     return o;
 };
 Hive.registerApp(Hive.App.Rectangle, 'hive.rectangle');
@@ -3021,6 +3081,7 @@ Hive.new_file = function(files, opts, app_opts) {
     return false;
 }
 
+// Called on load() and save()
 Hive.common_setup = function(){
     $('title').text("Editor - " + (Hive.Exp.title || "[Untitled]"));
 };
