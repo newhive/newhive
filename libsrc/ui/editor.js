@@ -33,6 +33,8 @@ define([
 
 var Hive = {}, debug_mode = context.config.debug_mode, bound = js.bound,
     noop = function(){}, Funcs = js.Funcs, asset = ui_util.asset;
+Hive.shift_does_raise = false;
+Hive.show_move_sensitivity = false;
 Hive.asset = asset;
 
 // TODO-refactor: move into util
@@ -2418,7 +2420,7 @@ Hive.Selection = function(){
     o.click = o.mousedown = function(ev){
         var app = ev.data;
         if(app){
-            if (ev.shiftKey) {
+            if (Hive.shift_does_raise && ev.shiftKey) {
                 if (ev.ctrlKey)
                     app.stack_bottom();
                 else
