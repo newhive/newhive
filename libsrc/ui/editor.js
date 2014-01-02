@@ -46,37 +46,21 @@ _apply = function(func, scale) {
     } else {
         // TODO: error handling?
         return function(l) {
-            return $.map(l, function(x, i) { return func(scale[i], x); });
-        }
-    }
-};
-
-_add = function(scale) {
-    if (typeof(scale) == "number") {
-        return function(l) {
-            return $.map(l, function(x) { return x + scale; });
-        }
-    } else {
-        // TODO: error handling?
-        return function(l) {
-            return $.map(l, function(x, i) { return x + scale[i]; });
+            if (typeof(l) == "number") {
+                return $.map(scale, function(x, i) { return func(x, l); });
+            } else {
+                return $.map(l, function(x, i) { return func(scale[i], x); });
+            }
         }
     }
 };
 
 _mul = function(scale) {
-    if (typeof(scale) == "number") {
-        return function(l) {
-            return $.map(l, function(x) { return x*scale; });
-        }
-    } else {
-        // TODO: error handling?
-        return function(l) {
-            return $.map(l, function(x, i) { return x*scale[i]; });
-        }
-    }
+    return _apply(function(x, y){ return x * y; }, scale);
 };
-
+_add = function(scale) {
+    return _apply(function(x, y){ return x + y; }, scale);
+};
 _div = function(scale) {
     return _apply(function(x, y){ return x / y; }, scale);
 };
@@ -1083,20 +1067,45 @@ Hive.App.has_image_drop = function(o) {
 
     return o;
 };
-
 Hive.App.has_resize = function(o) {
     var dims_ref, history_point;
     o.resize_start = function(){
         dims_ref = o.dims();
         history_point = o.history_helper_relative('resize');
     };
-    o.resize = function(delta){ 
-        var s = Hive.env().scale;
-        delta = o.resize_to(delta);
+    o.resize = function(delta) {
+        var dims = o.resize_to(delta);
+        if(!dims[0] || !dims[1]) return;
+        dims = _div(dims)(Hive.env().scale);
+        // everything past this point is in editor space.
+        var aspect = o.get_aspect ? o.get_aspect() : false;
+
+        if (aspect) {
+            var newWidth = dims[1] * aspect;
+            dims = (newWidth < dims[0]) ? [newWidth, dims[1]] : 
+                [dims[0], dims[0] / aspect];
+        }
+
+        // snap
         var _pos = o.pos_relative();
-        var pos = [ _pos[0] + delta[0] / s, _pos[1] + delta[1] / s ];
-        o.resize_to_pos(pos);
-    };
+        var pos = [ _pos[0] + dims[0], _pos[1] + dims[1] ];
+        var snap_dims = o.resize_to_pos(pos, !aspect);
+
+        if (!aspect)
+            return;
+
+        var snap_dist = _apply(function(x,y) {return Math.abs(x-y);}, 
+            dims)(snap_dims);
+        dims = (snap_dist[0] < snap_dist[1]) ?
+            [snap_dims[1] * aspect, snap_dims[1]] :
+            [snap_dims[0], snap_dims[0] / aspect];
+
+        newWidth = dims[1] * aspect;
+        dims = (newWidth < dims[0] ? [newWidth, dims[1]]
+            : [dims[0], dims[0] / aspect]);
+        o.dims_relative_set(dims);
+    }
+
     o.resize_end = function(){ 
         history_point.save();
         $(".ruler").hidehide();
@@ -1320,6 +1329,10 @@ Hive.App.Text = function(o) {
     Hive.App.has_resize_h(o);
     Hive.App.has_shield(o, {auto: false});
 
+    o.get_aspect = function() {
+        var dims = o.dims();
+        return dims[0] / dims[1];
+    };
     var content = o.init_state.content;
     o.content = function(content) {
         if(typeof(content) != 'undefined') {
@@ -1392,20 +1405,19 @@ Hive.App.Text = function(o) {
     };
 
     // New scaling code
-    var scale_ref, dims_ref, history_point;
+    var scale_ref, dims_ref, history_point, 
+        _resize_start = o.resize_start, _resize = o.resize;
     o.resize_start = function(){
+        _resize_start();
         scale_ref = o.scale();
         dims_ref = o.dims();
         history_point = o.history_helper_relative('resize');
     };
     o.resize = function(delta) {
-        var scale_by = Math.min( (dims_ref[0] + delta[0]) / dims_ref[0],
-            (dims_ref[1] + delta[1]) / dims_ref[1] );
-        var dims = [ Math.max(1, dims_ref[0] * scale_by), Math.max(1, dims_ref[1] * scale_by) ];
+        _resize(delta);
+        var scale_by = o.dims()[0] / dims_ref[0];
         o.scale_set(scale_ref * scale_by);
-        o.dims_set(dims);
     };
-    o.resize_end = function(){ history_point.save() };
     
     var _load = o.load;
     o.load = function() {
@@ -1998,6 +2010,9 @@ Hive.App.has_color = function(o) {
 Hive.App.Image = function(o) {
     o.is_image = true;
     Hive.App.has_resize(o);
+    o.get_aspect = function() {
+        return o.div_aspect || o.aspect;
+    };
     o.content = function(content) {
         if(typeof(content) != 'undefined') o.url_set(content);
         return o.init_state.url;
@@ -2146,33 +2161,6 @@ Hive.App.Image = function(o) {
             o.img.css({"margin-left": offset[0], "margin-top": offset[1]});
         }
     };
-
-    o.resize = function(delta) {
-        var dims = o.resize_to(delta);
-        if(!dims[0] || !dims[1]) return;
-        dims = _mul(1 / Hive.env().scale)(dims);
-        // everything past this point is in editor space.
-        var aspect = o.div_aspect || o.aspect;
-        var newWidth = dims[1] * aspect;
-        dims = (newWidth < dims[0]) ? [newWidth, dims[1]] : 
-            [dims[0], dims[0] / aspect];
-
-        // snap
-        var _pos = o.pos_relative();
-        var pos = [ _pos[0] + dims[0], _pos[1] + dims[1] ];
-        var snap_dims = o.resize_to_pos(pos);
-        var snap_dist = _apply(function(x,y) {return Math.abs(x-y);}, 
-            dims)(snap_dims);
-
-        dims = (snap_dist[0] < snap_dist[1]) ?
-            [snap_dims[1] * aspect, snap_dims[1]] :
-            [snap_dims[0], snap_dims[0] / aspect];
-
-        var newWidth = dims[1] * aspect;
-        var dims = (newWidth < dims[0] ? [newWidth, dims[1]]
-            : [dims[0], dims[0] / aspect]);
-        o.dims_relative_set(dims);
-    }
 
     o.pixel_size = function(){
         return [o.img.naturalWidth, o.img.naturalHeight]
@@ -2624,7 +2612,7 @@ Hive.Selection = function(){
         );
     };
 
-    var history_point, ref_pos, delta_latched, move_speed, delta_ave;
+    var history_point, ref_pos;
     o.move_start = function(){
         var moved_obj = drag_target || o;
         ref_pos = moved_obj.pos_relative();
@@ -2639,7 +2627,18 @@ Hive.Selection = function(){
         var pos = _add(ref_pos)(delta), snap_strength = .05,
             snap_radius = 18;
         // TODO-feature-snap: check key shortcut to turn off snapping
-
+        if(snap_strength > 0){
+            var excludes = {};
+            if(drag_target.id) excludes[drag_target.id] = true;
+            pos = snap_helper(drag_target.bounds_tuple_relative(pos),
+                excludes, snap_strength, snap_radius, sensitivity);
+        }
+        drag_target.pos_relative_set(pos);
+        o.layout();
+    };
+    var delta_latched, move_speed, delta_ave, sensitivity;
+    o.move_handler = function(ev, dd){
+        var delta = [dd.deltaX, dd.deltaY];
         // Calculate sensitivity
         // TODO-feature-snap: check timestamp and bump sensitivity if longish
         // gap between user inputs.
@@ -2652,24 +2651,15 @@ Hive.Selection = function(){
         // delta_ave = _lerp(.1, delta_ave, delta);
         // var move_dist = _sub(delta)(delta_ave);
         // var speed = Math.abs(move_dist[0]) + Math.abs(move_dist[1]);
-        var sensitivity = 1/(speed - 1);
+        sensitivity = 1 / (speed - 1);
         // TODO: flags like this should live on the root app.
         if (Hive.show_move_sensitivity)
             drag_target.content_element.find("span")
                 .text(Math.round(100*sensitivity)/100);
 
         delta_latched = delta.slice();
-        if(snap_strength > 0){
-            var excludes = {};
-            if(drag_target.id) excludes[drag_target.id] = true;
-            pos = snap_helper(drag_target.bounds_tuple_relative(pos),
-                excludes, snap_strength, snap_radius, sensitivity);
-        }
-        drag_target.pos_relative_set(pos);
-        o.layout();
-    };
-    o.move_handler = function(ev, dd){
-        var delta = _mul(1 / Hive.env().scale)([dd.deltaX, dd.deltaY]);
+        delta = _div(delta)(Hive.env().scale);
+
         o.move_relative(delta, ev.shiftKey);
     };
     o.move_end = function(){
@@ -2683,8 +2673,12 @@ Hive.Selection = function(){
         change_start();
     };
     o.resize = function(delta){
-        o.resize_relative(_mul(1 / Hive.env().scale)(delta));
-    }
+        o.resize_relative(_div(delta)(Hive.env().scale));
+    };
+    o.get_aspect = function() {
+        var dims = o.dims();
+        return dims[1] / dims[0];
+    };
     o.resize_relative = function(delta){
         if(!ref_dims) return;
 
