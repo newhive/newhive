@@ -2652,7 +2652,7 @@ Hive.Selection = function(){
         // delta_ave = _lerp(.1, delta_ave, delta);
         // var move_dist = _sub(delta)(delta_ave);
         // var speed = Math.abs(move_dist[0]) + Math.abs(move_dist[1]);
-        sensitivity = 1 / (speed - 1);
+        sensitivity = 1 / (speed - .98);
         // TODO: flags like this should live on the root app.
         if (Hive.show_move_sensitivity)
             drag_target.content_element.find("span")
