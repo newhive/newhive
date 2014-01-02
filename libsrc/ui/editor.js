@@ -86,6 +86,7 @@ _sub = function(scale) {
 _inv = function(l){
     return l.map(function(x){ return 1/x; });
 };
+// Linear interpolation
 // Return a value that is alpha (scalar) of the way between old_val
 // and new_val.  The values can be numbers or equal-length vectors.
 _lerp = function(alpha, old_val, new_val) {
