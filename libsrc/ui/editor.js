@@ -728,7 +728,7 @@ Hive.Controls = function(app, multiselect) {
             bw = o.border_width, outer_l = -cx -bw - p,
             outer_width = w + bw*2 + p*2, outer_height = h + p * 2 + 1;
 
-        o.div.css({ left: x, top: y });
+        o.div.css({ left: x, top: y, width: w, height: h });
 
         o.select_box.css({ left: cx, top: cy });
         o.select_borders.eq(0).css({ left: outer_l, top: -cy -bw -p, width: outer_width, height: bw }); // top
