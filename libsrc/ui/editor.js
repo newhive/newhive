@@ -473,10 +473,8 @@ Hive.App = function(init_state, opts) {
         var pos = o.pos(), dims = o.dims();
         o.div.css({ 'left' : pos[0], 'top' : pos[1] });
         o.div.width(dims[0]).height(dims[1]);
-        if(o.controls){
-            o.controls.pos_set([ pos[0], pos[1] ]);
+        if(o.controls)
             o.controls.layout();
-        }
     };
 
     o.pos_relative = function(){ return _pos.slice(); };
@@ -634,18 +632,6 @@ Hive.Controls = function(app, multiselect) {
         o.app.controls = false;
     };
 
-    o.pos_set = function(pos){ o.div.css({ 'left' : pos[0], 'top' : pos[1] }); };
-    o.pos_update = function(){
-        var p = o.app.pos();
-        o.div.css({ 'left': p[0], 'top': p[1] });
-    };
-    o.dims = function() {
-        var dims = o.app.dims();
-        if(dims[0] < 135) dims[0] = 135;
-        if(dims[1] < 40) dims[1] = 40;
-        return dims;
-    };
-
     o.append_link_picker = function(d, opts) {
         opts = $.extend({ open: noop, close: noop }, opts);
         var e = $("<div class='control drawer link'>");
@@ -725,12 +711,24 @@ Hive.Controls = function(app, multiselect) {
     o.hover_menu = function(h, d, opts) {
         return hover_menu(h, d, $.extend({offset_y : o.padding + 1}, opts)) };
 
+    o.dims = function() {
+        var dims = o.app.dims();
+        if(dims[0] < 135) dims[0] = 135;
+        if(dims[1] < 40) dims[1] = 40;
+        return dims;
+    };
+
     o.layout = function() {
-        o.pos_update();
-        var dims = o.dims(), p = o.padding, ad = o.app.dims(),
-            cx = Math.round(ad[0] / 2), cy = Math.round(ad[1] / 2),
+        var ap = o.app.pos(), pad = 50,
+            x = Math.max(pad, ap[0]), y = Math.max(pad, ap[1]),
+            win = $(window), wdims = [win.width(), win.height()],
+            ad = o.app.dims(), p = o.padding,
+            w = ap[0] - x + ad[0], h = ap[1] - y + ad[1],
+            cx = w / 2, cy = h / 2,
             bw = o.border_width, outer_l = -cx -bw - p,
-            outer_width = ad[0] + bw*2 + p*2, outer_height = ad[1] + p * 2 + 1;
+            outer_width = w + bw*2 + p*2, outer_height = h + p * 2 + 1;
+
+        o.div.css({ left: x, top: y });
 
         o.select_box.css({ left: cx, top: cy });
         o.select_borders.eq(0).css({ left: outer_l, top: -cy -bw -p, width: outer_width, height: bw }); // top
@@ -740,10 +738,10 @@ Hive.Controls = function(app, multiselect) {
         if(o.multiselect) return;
 
         //o.c.undo   .css({ top   : -38 - p, right  :  61 - p });
-        o.c.copy   .css({ left  : dims[0] - 45 + p, top   : -38 - p });
-        o.c.remove .css({ left  : dims[0] - 14 + p, top   : -38 - p });
-        o.c.stack  .css({ left  : dims[0] - 78 + p, top   : dims[1] + 8 + p });
-        o.c.buttons.css({ left  :  -bw - p, top : dims[1] + p + 10, width : dims[0] - 60 });
+        o.c.copy   .css({ left  : w - 45 + p, top   : -38 - p });
+        o.c.remove .css({ left  : w - 14 + p, top   : -38 - p });
+        o.c.stack  .css({ left  : w - 78 + p, top   : y + 8 + p });
+        o.c.buttons.css({ left  :  -bw - p, top : y + p + 10, width : y - 60 });
     };
 
     o.div = $('<div>').addClass('controls');
@@ -1183,8 +1181,8 @@ Hive.App.has_resize_h = function(o) {
             common.layout()
             var p = o.padding;
             var dims = o.dims();
-            o.c.resize_h.css({ left: dims[0] -18 + o.padding, top: Math.min(dims[1] / 2 - 18,
-                dims[1] - 54) });
+            o.c.resize_h.css({ left: dims[0] -18 + o.padding,
+                top: Math.min(dims[1] / 2 - 18, dims[1] - 54) });
         }
 
         // Dragging behavior
@@ -2918,7 +2916,8 @@ Hive.Selection = function(){
 
         // TODO: improve efficiency by using o.controls.pos_set like drag handler
         // or improving o.bounds
-        if(o.controls) o.controls.pos_update();
+        if(o.controls)
+            o.controls.layout();
     });
     Hive.App.has_nudge(o);
 
