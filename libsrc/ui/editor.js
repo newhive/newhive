@@ -711,37 +711,50 @@ Hive.Controls = function(app, multiselect) {
     o.hover_menu = function(h, d, opts) {
         return hover_menu(h, d, $.extend({offset_y : o.padding + 1}, opts)) };
 
-    o.dims = function() {
-        var dims = o.app.dims();
-        if(dims[0] < 135) dims[0] = 135;
-        if(dims[1] < 40) dims[1] = 40;
-        return dims;
+    var pad_ul = [45, 45], pad_br = [45, 110], min_d = [135, 40];
+    var pos_dims = function(){
+        var ap = o.app.pos(),
+            win = $(window), wdims = [win.width(), win.height()],
+            pos = [ Math.max(pad_ul[0], ap[0]), Math.max(pad_ul[1], ap[1]) ],
+            ad = o.app.dims(),
+            cd = [ Math.max(min_d[0], ad[0]), Math.max(min_d[1], ad[1]) ],
+            dims = [ ap[0] - pos[0] + cd[0], ap[1] - pos[1] + cd[1] ];
+        if(dims[0] + pos[0] > wdims[0] - pad_br[0])
+            dims[0] = Math.max(min_d[0], wdims[0] - pad_br[0] - pos[0]);
+        if(dims[1] + pos[1] > wdims[1] - pad_br[1])
+            dims[1] = Math.max(min_d[1], wdims[1] - pad_br[1] - pos[1]);
+        pos = [ Math.min(pos[0], wdims[0] - pad_ul[0]) - (cd[0] - ad[0]),
+            Math.min(pos[1], wdims[1] - pad_ul[1]) - (cd[1] - ad[1]) ];
+        return { pos: pos, dims: dims };
     };
+    o.pos = function(){ return pos_dims().pos };
+    o.dims = function(){ return pos_dims().dims };
 
     o.layout = function() {
-        var ap = o.app.pos(), pad = 50,
-            x = Math.max(pad, ap[0]), y = Math.max(pad, ap[1]),
-            win = $(window), wdims = [win.width(), win.height()],
-            ad = o.app.dims(), p = o.padding,
-            w = ap[0] - x + ad[0], h = ap[1] - y + ad[1],
-            cx = w / 2, cy = h / 2,
+        var pos = o.pos(), dims = o.dims(),
+            cx = dims[0] / 2, cy = dims[1] / 2, p = o.padding,
             bw = o.border_width, outer_l = -cx -bw - p,
-            outer_width = w + bw*2 + p*2, outer_height = h + p * 2 + 1;
+            outer_width = dims[0] + bw*2 + p*2, outer_height = dims[1] + p * 2 + 1;
 
-        o.div.css({ left: x, top: y, width: w, height: h });
+        o.div.css({ left: pos[0], top: pos[1] });
 
         o.select_box.css({ left: cx, top: cy });
-        o.select_borders.eq(0).css({ left: outer_l, top: -cy -bw -p, width: outer_width, height: bw }); // top
-        o.select_borders.eq(1).css({ left: cx + p, top: -cy -p - bw + 1, height: outer_height + bw * 2 -2, width: bw }); // right
-        o.select_borders.eq(2).css({ left: outer_l, top: cy + p, width: outer_width, height: bw }); // bottom
-        o.select_borders.eq(3).css({ left: outer_l, top: -cy -p - bw + 1, height: outer_height + bw * 2 -2, width: bw }); // left
+        o.select_borders.eq(0).css({ left: outer_l,
+            top: -cy -bw -p, width: outer_width, height: bw }); // top
+        o.select_borders.eq(1).css({ left: cx + p,
+            top: -cy -p - bw + 1, height: outer_height + bw * 2 -2, width: bw }); // right
+        o.select_borders.eq(2).css({ left: outer_l,
+            top: cy + p, width: outer_width, height: bw }); // bottom
+        o.select_borders.eq(3).css({ left: outer_l,
+            top: -cy -p - bw + 1, height: outer_height + bw * 2 -2, width: bw }); // left
         if(o.multiselect) return;
 
         //o.c.undo   .css({ top   : -38 - p, right  :  61 - p });
-        o.c.copy   .css({ left  : w - 45 + p, top   : -38 - p });
-        o.c.remove .css({ left  : w - 14 + p, top   : -38 - p });
-        o.c.stack  .css({ left  : w - 78 + p, top   : y + 8 + p });
-        o.c.buttons.css({ left  :  -bw - p, top : y + p + 10, width : y - 60 });
+        o.c.copy   .css({ left: dims[0] - 45 + p, top: -38 - p });
+        o.c.remove .css({ left: dims[0] - 14 + p, top: -38 - p });
+        o.c.stack  .css({ left: dims[0] - 78 + p, top: dims[1] + 8 + p });
+        o.c.buttons.css({ left: -bw - p, top: dims[1] + p + 10,
+            width: dims[0] - 60 });
     };
 
     o.div = $('<div>').addClass('controls');
