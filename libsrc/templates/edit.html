@@ -315,6 +315,11 @@ blah blah
   class='hide'></div>
 <div id='happs'></div>
 
+<form {form_attrs "file_create"} method='POST' class='hide' id='app_drop_target'>
+  <input type='file' id='app_drop_input' name='files'
+    data-drop-area='.drop_target' multiple>
+</form>
+
 <form {form_attrs "file_create"} method='POST' class='hide' id='media_upload'>
   <input type='file' id='media_input' name='files'
     data-drop-area='#grid_guide' multiple>

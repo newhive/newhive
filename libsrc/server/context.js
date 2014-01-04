@@ -143,13 +143,13 @@ define([
         // var all_elements = elements.add(document.body);
 
         // Common site-wide handlers
-        find_all(dom, '*[data-class-toggle]').each(function(i, e) {
+        find_all(dom, '*[data-class-toggle]').each(function(i, ev) {
             var click_func = function(klass) {
                 return function(el) {
-                    $(e).toggleClass(klass);
+                    $(ev).toggleClass(klass);
                 };
             }
-            var class_toggles = $(e).attr('data-class-toggle');
+            var class_toggles = $(ev).attr('data-class-toggle');
             if (class_toggles) {
                 class_toggles = JSON.parse(class_toggles);
             }
@@ -162,38 +162,38 @@ define([
         });
 
         // TODO-cleanup: this is a subcase of class-toggle.
-        find_all(elements, '*[data-link-show]').each(function(i, e) {
-            var handle = find_all(elements, $(e).attr('data-link-show'));
+        find_all(elements, '*[data-link-show]').each(function(i, ev) {
+            var handle = find_all(elements, $(ev).attr('data-link-show'));
             if(!handle) throw 'missing handle';
             handle.on('click', function(el) { 
-                $(e).toggleshow();
+                $(ev).toggleshow();
             });
         });
         find_all(elements, 'form[data-route-name]').each(
-            function(i, e){ form_handler(e, elements) });
-        find_all(elements, '.menu.drawer[data-handle]').each(function(i, e){
-            var handle = find_all(elements, $(e).attr('data-handle'));
+            function(i, ev){ form_handler(ev, elements) });
+        find_all(elements, '.menu.drawer[data-handle]').each(function(i, ev){
+            var handle = find_all(elements, $(ev).attr('data-handle'));
             if(!handle) throw 'missing handle';
-            var parent = find_all(elements, $(e).attr('data-parent'));
+            var parent = find_all(elements, $(ev).attr('data-parent'));
             var opts = {};
             if (parent.length && parent.data('menu')) {
                 opts['group'] = parent.data('menu');
                 opts['layout_x'] = 'submenu';
                 // opts['layout'] =  'center_y';
             }
-            menu(handle, e, opts);
+            menu(handle, ev, opts);
         });
-        find_all(elements, '.dialog[data-handle]').each(function(i, e){
-            var handle = find_all(elements, $(e).attr('data-handle'));
+        find_all(elements, '.dialog[data-handle]').each(function(i, ev){
+            var handle = find_all(elements, $(ev).attr('data-handle'));
             if(!handle) throw 'missing handle';
-            var d = dialog.create(e);
+            var d = dialog.create(ev);
             handle.click(d.open);
         });
-        find_all(elements, '.hoverable').each(function(i, e){
-            ui_util.hoverable($(e)) });
+        find_all(elements, '.hoverable').each(function(i, ev){
+            ui_util.hoverable($(ev)) });
 
         js.each(o._after_render_handlers, function(handler, selector){
-            find_all(elements, selector).each(function(i,e){ handler($(e)) });
+            find_all(elements, selector).each(function(i,ev){ handler($(ev)) });
         });
 
         return elements;
@@ -203,48 +203,15 @@ define([
     };
 
     function form_handler(form, all){
-        var form = $(form),
-            file_api = FileList && Blob,
-            inputs = form.find('[type=file]');
-
-        // TODO-test: test support for multiple files
+        // TODO-cleanup-drop-handlers: separate D&D handlers, so each one
+        //     does not need a form
         // TODO-polish: handle erros from file uploads
         // TODO-compat: port <iframe> hack from old code and finish
         //     support for browsers without file API (file_api boolean)
 
-        inputs.each(function(i, e){
-            var input = $(e);
-
-            input.on('change', function(){
-                with_files(e.files);
-                submit();
-                input.val('');
-            });
-
-            var input_id = input.attr('id'),
-                drop_selector = input.attr('data-drop-area');
-                drop_areas = find_all(all, 'label[for=' + input_id + ']')
-                    .add(drop_selector).add(find_all(all, drop_selector));
-            drop_areas.on('dragenter dragover', function(ev){
-                    ev.preventDefault();
-                })
-                .on('drop', function(e){
-                    var dt = e.originalEvent.dataTransfer;
-                    if(!dt || !dt.files || !dt.files.length) return;
-                    with_files(dt.files);
-                    submit(dt.files);
-                    return false;
-                });
-        });
-
-        // make form submission of non-file inputs asynchronous too
-        form.on('submit', function(e){
-            form.trigger('before_submit');
-            submit();
-            form.trigger('after_submit');
-            form.find("*[type=submit]").addClass('disabled').prop('disabled','true');
-            return false;
-        });
+        var form = $(form),
+            file_api = FileList && Blob,
+            inputs = form.find('[type=file]');
 
         var with_files = function(file_list){
             if(!file_api) return;
@@ -261,6 +228,72 @@ define([
             };
             form.trigger('with_files', [files]);
         };
+
+        var on_drop = function(ev){
+            var dt = ev.originalEvent.dataTransfer;
+            if(!dt || !dt.files || !dt.files.length) return;
+            submit(dt.files);
+            return false;
+
+            var dt = ev.originalEvent.dataTransfer,
+                files = [];
+                file_list = dt.files,
+                url = dt.getData("URL");
+            if (file_list.length == 0 && url.length) {
+                var file_name = url.split("/").slice(-1)[0];
+                var i = file_name.lastIndexOf(".");
+                if (i > 0) {
+                    var name = file_name.slice(0, i);
+                    var ext = file_name.slice(i + 1);
+                    // TODO-cleanup: have this live somewhere global
+                    // TODO-dnd: handle audio
+                    var image_mimes = {
+                        "jpg": "image/jpeg",
+                        "jpeg": "image/jpeg",
+                        "gif": "image/gif",
+                        "png": "image/png"
+                    };
+                    var mime = image_mimes[ext];
+                    if (mime) {
+                        files.push({
+                            url: url,
+                            name: name,
+                            mime: mime
+                        });
+                    }
+                    form.trigger('with_files', [files]);
+                }
+            } else{
+                with_files(file_list);
+            }
+        };
+
+        inputs.each(function(i, ev){
+            var input = $(ev);
+
+            input.on('change', function(){
+                with_files(ev.files);
+                submit();
+                input.val('');
+            });
+
+            var input_id = input.attr('id'),
+                drop_selector = input.attr('data-drop-area');
+                drop_areas = find_all(all, 'label[for=' + input_id + ']')
+                    .add(drop_selector).add(find_all(all, drop_selector));
+            drop_areas.on('dragenter dragover', function(ev){
+                    ev.preventDefault();
+                }).on('drop', on_drop);
+        });
+
+        // make form submission of non-file inputs asynchronous too
+        form.on('submit', function(ev){
+            form.trigger('before_submit');
+            submit();
+            form.trigger('after_submit');
+            form.find("*[type=submit]").addClass('disabled').prop('disabled','true');
+            return false;
+        });
 
         var submit = function(files){
             var form_data = new FormData(form[0]);
