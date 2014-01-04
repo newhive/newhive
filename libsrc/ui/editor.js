@@ -1025,6 +1025,7 @@ Hive.App.has_resize = function(o) {
         _dims[1] = pos[1] - _pos[1];
         if (o.full_bleed_coord != undefined)
             _dims[o.full_bleed_coord] = 1000;
+        _dims = [ Math.max(1, _dims[0]), Math.max(1, _dims[1]) ];
         if (doit || doit == undefined)
             o.dims_relative_set(_dims);
         return _dims;
@@ -3113,14 +3114,23 @@ Hive.init = function(exp, page){
         // after file is uploaded, save meta data and id from server by
         // matching up file name
         var find_apps = function(name){
-            return Hive.Apps.all().filter(function(a){
+            // TODO-cleanup: background should be root app
+            var apps = Hive.Apps.all().filter(function(a){
                 return (a.init_state.file_name == name) });
+            if (Hive.Exp.background.file_name == name)
+                apps = apps.concat(Hive.Exp.background);
+            return apps;
         };
         files.map(function(f){
             find_apps(f.name).map(function(a){
                 var upd = { file_id: f.id, url: f.url };
                 if(f.meta) upd.file_meta = f.meta;
-                a.state_update(upd);
+                if(a.state_update) {
+                    a.state_update(upd);
+                } else {
+                    a.content = a.url = f.url;
+                    a.file_name = f.id;
+                }
             });
         });
     });
