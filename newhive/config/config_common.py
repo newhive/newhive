@@ -53,6 +53,7 @@ site_flags = {
     ,'merge_recent': ['cara', 'fatsycline']
     ,'show_hive_all': ['newduke']
     ,'logged': ['logged_out']
+    ,'rect_drag_drop': ['admins']
 }
 
 site_user = 'newhive'

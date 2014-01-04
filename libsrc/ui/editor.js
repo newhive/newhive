@@ -992,6 +992,8 @@ Hive.App.has_full_bleed = function(o, coord){
 // NOTE: this adds handlers to o.content_element, so if
 // content_element changes, this modifier needs to be called again.
 Hive.App.has_image_drop = function(o) {
+    if (!context.flags.rect_drag_drop)
+        return o;
     o.content_element.on('dragenter dragover', function(ev){
         // TODO-dnd: handle drop highlighting
         if (o.highlight)
