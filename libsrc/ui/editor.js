@@ -46,43 +46,40 @@ _apply = function(func, scale) {
     } else {
         // TODO: error handling?
         return function(l) {
-            return $.map(l, function(x, i) { return func(scale[i], x); });
-        }
-    }
-};
-
-_add = function(scale) {
-    if (typeof(scale) == "number") {
-        return function(l) {
-            return $.map(l, function(x) { return x + scale; });
-        }
-    } else {
-        // TODO: error handling?
-        return function(l) {
-            return $.map(l, function(x, i) { return x + scale[i]; });
+            if (typeof(l) == "number") {
+                return $.map(scale, function(x, i) { return func(x, l); });
+            } else {
+                return $.map(l, function(x, i) { return func(scale[i], x); });
+            }
         }
     }
 };
 
 _mul = function(scale) {
-    if (typeof(scale) == "number") {
-        return function(l) {
-            return $.map(l, function(x) { return x*scale; });
-        }
-    } else {
-        // TODO: error handling?
-        return function(l) {
-            return $.map(l, function(x, i) { return x*scale[i]; });
-        }
-    }
+    return _apply(function(x, y){ return x * y; }, scale);
 };
-
+_add = function(scale) {
+    return _apply(function(x, y){ return x + y; }, scale);
+};
 _div = function(scale) {
-    return _apply(function(x, y){ return x / y }, scale);
+    return _apply(function(x, y){ return x / y; }, scale);
 };
-
+_sub = function(scale) {
+    return _apply(function(a, b) { return a - b; }, scale);
+};
 _inv = function(l){
-    return l.map(function(x){ return 1/x });
+    return l.map(function(x){ return 1/x; });
+};
+// Return a value that is alpha (scalar) of the way between old_val
+// and new_val.  The values can be numbers or equal-length vectors.
+_lerp = function(alpha, old_val, new_val) {
+    if (typeof(old_val) == "number") {
+        return alpha * new_val + (1 - alpha) * old_val;
+    } else {
+        return _apply(function(old_val, new_val) {
+            return alpha * new_val + (1 - alpha) * old_val;
+        }, old_val)(new_val);
+    }
 };
 
 // Returns the nonnegative (nonoverlapping) distance btw two intervals.
@@ -98,6 +95,7 @@ interval_size = function(i) { return Math.abs(i[1] - i[0]); };
 interval_bounds = function(a, b) {
     return [Math.min(a[0], b[0]), Math.max(a[1], b[1])];
 };
+// Useful for default values when using interval_bounds
 var null_interval = [Infinity, -Infinity];
 var all_interval = [-Infinity, Infinity];
 ////////
@@ -207,15 +205,16 @@ Hive.layout_apps = function(){
 };
 
 var snap_helper = function(my_tuple, exclude_ids,
-    snap_strength, snap_radius, padding
+    snap_strength, snap_radius, sensitivity, padding
 ) {
     var s = Hive.env().scale;
     if (snap_radius == undefined) snap_radius = 10;
     if (snap_strength == undefined) snap_strength = 0.0;
     if (padding == undefined) padding = 10;
+    if (sensitivity == undefined) sensitivity = 0;
     padding = padding * .5;
     var pos;
-    for (var j = 0; j < 3;j++){
+    for (var j = 0; j < my_tuple[0].length; j++){
         if (my_tuple[0][j]) {
             pos = [my_tuple[0][j], my_tuple[1][j]];
             break;
@@ -270,13 +269,14 @@ var snap_helper = function(my_tuple, exclude_ids,
         }
         var best = { goal:0, strength:0, start:[0,0], end:[0,0] };
         for (var app_i = 0; app_i < tuple[coord].length; ++app_i) {
-            if (coord == scroll_coord && app_i == tuple[coord].length - 1)
-                break;
             for (var type1 = 0; type1 < 3; ++type1) {
                 coord1 = my_tuple[coord][type1];
                 if (!coord1)
                     continue;
                 for (var type2 = 0; type2 < 3; ++type2) {
+                    if (coord == scroll_coord && app_i == tuple[coord].length - 1
+                        && type2 > 0)
+                        break;
                     coord2 = tuple[coord][app_i][type2];
                     // Add padding if aligning a right edge to a left
                     var padding_factor = 0, added_padding = 0;
@@ -296,8 +296,9 @@ var snap_helper = function(my_tuple, exclude_ids,
                                 [tuple[1 - coord][app_i][0],tuple[1 - coord][app_i][2]];
                             var dist = interval_dist(my_interval, other_interval);
                             var guide = interval_bounds(my_interval, other_interval);
-                            // TODO: power fall-off w/ decay when user jiggles mouse
-                            dist += snap_dist * 5;
+                            // power fall-off w/ decay when user jiggles mouse
+                            var snap_dist_scaled = 1 - snap_dist / snap_radius;
+                            strength *= Math.pow(snap_dist_scaled, sensitivity);
                             if (dist > 200) strength /= 
                                 Math.exp((Math.min(dist, 1000) - 200)/500);
                             if ((type1 == 1) ^ (type2 == 1)) strength *= .4;
@@ -987,19 +988,124 @@ Hive.App.has_full_bleed = function(o, coord){
     // o.pos_set(o.pos());
 };
 
+// Let users drag images onto this app
+// NOTE: this adds handlers to o.content_element, so if
+// content_element changes, this modifier needs to be called again.
+Hive.App.has_image_drop = function(o) {
+    o.content_element.on('dragenter dragover', function(ev){
+        // TODO-dnd: handle drop highlighting
+        if (o.highlight)
+            o.highlight();
+
+        ev.preventDefault();
+    }).on('drop', function(ev){
+        var dt = ev.originalEvent.dataTransfer;
+        file_list = dt.files;
+        var files = [];
+        var urlCreator = window.URL || window.webkitURL;
+        for(var i = 0; i < file_list.length; i++){
+            var f = file_list.item(i), file = {
+                url: urlCreator.createObjectURL(f),
+                name: f.name,
+                mime: f.type
+            };
+            files.push(file);
+            break; // can only handle 1 file
+        }
+        var url = dt.getData("URL");
+        if (files.length == 0 && url.length) {
+            var file_name = url.split("/").slice(-1)[0];
+            var i = file_name.lastIndexOf(".");
+            if (i > 0) {
+                var name = file_name.slice(0, i);
+                var ext = file_name.slice(i + 1);
+                // TODO-cleanup: have this live somewhere global
+                // TODO-dnd: handle audio
+                var image_mimes = {
+                    "jpg": "image/jpeg",
+                    "jpeg": "image/jpeg",
+                    "gif": "image/gif",
+                    "png": "image/png"
+                };
+                var mime = image_mimes[ext];
+                if (mime) {
+                    files.push({
+                        url: url,
+                        name: name,
+                        mime: mime
+                    });
+                }
+            }
+        }
+        if (files.length == 0)
+            return false;
+        var load = function(app) {
+            // app.fit_to({dims: o.dims(), pos: o.pos(), zoom: false});
+        };
+        // TODO-dnd: Insert ajax to turn into proper file (from blob URL)
+        var file = files[0];
+        var init_state = { 
+            position: o.pos_relative(), 
+            dimensions: o.dims_relative(),
+            fit: 2 };
+        if (o.is_image) {
+            // o.set_from_file(file);
+            o.init_state.file_name = file.name;
+            o.init_state.url = o.init_state.content = file.url;
+            o.init_state = $.extend(o.init_state, init_state);
+            // TODO-dnd: have undo state
+            o.url_set(file.url);
+            var app = o;
+        } else {
+            // TODO-dnd: have fit depend on where the object was dropped relative
+            // to image center
+            app = Hive.new_file(files, init_state,
+                { load:load, position: true })[0];
+        }
+        return app;
+    });
+
+    return o;
+};
 Hive.App.has_resize = function(o) {
     var dims_ref, history_point;
     o.resize_start = function(){
         dims_ref = o.dims();
         history_point = o.history_helper_relative('resize');
     };
-    o.resize = function(delta){ 
-        var s = Hive.env().scale;
-        delta = o.resize_to(delta);
+    o.resize = function(delta) {
+        var dims = o.resize_to(delta);
+        if(!dims[0] || !dims[1]) return;
+        dims = _div(dims)(Hive.env().scale);
+        // everything past this point is in editor space.
+        var aspect = o.get_aspect ? o.get_aspect() : false;
+
+        if (aspect) {
+            var newWidth = dims[1] * aspect;
+            dims = (newWidth < dims[0]) ? [newWidth, dims[1]] : 
+                [dims[0], dims[0] / aspect];
+        }
+
+        // snap
         var _pos = o.pos_relative();
-        var pos = [ _pos[0] + delta[0] / s, _pos[1] + delta[1] / s ];
-        o.resize_to_pos(pos);
-    };
+        var pos = [ _pos[0] + dims[0], _pos[1] + dims[1] ];
+        var snap_dims = o.resize_to_pos(pos, !aspect);
+
+        if (!aspect)
+            return;
+
+        var snap_dist = _apply(function(x,y) {return Math.abs(x-y);}, 
+            dims)(snap_dims);
+        dims = (snap_dist[0] < snap_dist[1]) ?
+            [snap_dims[1] * aspect, snap_dims[1]] :
+            [snap_dims[0], snap_dims[0] / aspect];
+
+        newWidth = dims[1] * aspect;
+        dims = (newWidth < dims[0] ? [newWidth, dims[1]]
+            : [dims[0], dims[0] / aspect]);
+        o.dims_relative_set(dims);
+    }
+
     o.resize_end = function(){ 
         history_point.save();
         $(".ruler").hidehide();
@@ -1224,6 +1330,10 @@ Hive.App.Text = function(o) {
     Hive.App.has_resize_h(o);
     Hive.App.has_shield(o, {auto: false});
 
+    o.get_aspect = function() {
+        var dims = o.dims();
+        return dims[0] / dims[1];
+    };
     var content = o.init_state.content;
     o.content = function(content) {
         if(typeof(content) != 'undefined') {
@@ -1296,20 +1406,19 @@ Hive.App.Text = function(o) {
     };
 
     // New scaling code
-    var scale_ref, dims_ref, history_point;
+    var scale_ref, dims_ref, history_point, 
+        _resize_start = o.resize_start, _resize = o.resize;
     o.resize_start = function(){
+        _resize_start();
         scale_ref = o.scale();
         dims_ref = o.dims();
         history_point = o.history_helper_relative('resize');
     };
     o.resize = function(delta) {
-        var scale_by = Math.min( (dims_ref[0] + delta[0]) / dims_ref[0],
-            (dims_ref[1] + delta[1]) / dims_ref[1] );
-        var dims = [ Math.max(1, dims_ref[0] * scale_by), Math.max(1, dims_ref[1] * scale_by) ];
+        _resize(delta);
+        var scale_by = o.dims()[0] / dims_ref[0];
         o.scale_set(scale_ref * scale_by);
-        o.dims_set(dims);
     };
-    o.resize_end = function(){ history_point.save() };
     
     var _load = o.load;
     o.load = function() {
@@ -1900,7 +2009,11 @@ Hive.App.has_color = function(o) {
 
 
 Hive.App.Image = function(o) {
+    o.is_image = true;
     Hive.App.has_resize(o);
+    o.get_aspect = function() {
+        return o.div_aspect || o.aspect;
+    };
     o.content = function(content) {
         if(typeof(content) != 'undefined') o.url_set(content);
         return o.init_state.url;
@@ -1925,6 +2038,8 @@ Hive.App.Image = function(o) {
         o.img.attr('src', src);
         o.div.append(o.img);
         o.img.load(function(){setTimeout(o.img_load, 1)});
+        // We recreated the content_element, so reapply its handlers.
+        Hive.App.has_image_drop(o);
     };
     o.img_load = function(){
         o.imageWidth  = o.img.width() || o.img.prop('naturalWidth');
@@ -2048,33 +2163,6 @@ Hive.App.Image = function(o) {
         }
     };
 
-    o.resize = function(delta) {
-        var dims = o.resize_to(delta);
-        if(!dims[0] || !dims[1]) return;
-        dims = _mul(1 / Hive.env().scale)(dims);
-        // everything past this point is in editor space.
-        var aspect = o.div_aspect || o.aspect;
-        var newWidth = dims[1] * aspect;
-        dims = (newWidth < dims[0]) ? [newWidth, dims[1]] : 
-            [dims[0], dims[0] / aspect];
-
-        // snap
-        var _pos = o.pos_relative();
-        var pos = [ _pos[0] + dims[0], _pos[1] + dims[1] ];
-        var snap_dims = o.resize_to_pos(pos);
-        var snap_dist = _apply(function(x,y) {return Math.abs(x-y);}, 
-            dims)(snap_dims);
-
-        dims = (snap_dist[0] < snap_dist[1]) ?
-            [snap_dims[1] * aspect, snap_dims[1]] :
-            [snap_dims[0], snap_dims[0] / aspect];
-
-        var newWidth = dims[1] * aspect;
-        var dims = (newWidth < dims[0] ? [newWidth, dims[1]]
-            : [dims[0], dims[0] / aspect]);
-        o.dims_relative_set(dims);
-    }
-
     o.pixel_size = function(){
         return [o.img.naturalWidth, o.img.naturalHeight]
     };
@@ -2092,6 +2180,7 @@ Hive.App.Image = function(o) {
 
     o.state_update(o.init_state);
     o.url_set(o.init_state.url);
+    Hive.App.has_image_drop(o);
     return o;
 }
 Hive.registerApp(Hive.App.Image, 'hive.image');
@@ -2138,31 +2227,7 @@ Hive.App.Rectangle = function(o) {
     o.set_css(o.init_state.content);
     setTimeout(function(){ o.load() }, 1);
 
-    o.content_element.on('dragenter dragover', function(ev){
-        ev.preventDefault();
-    }).on('drop', function(e){
-        var dt = e.originalEvent.dataTransfer;
-        file_list = dt.files;
-        var files = [];
-        for(var i = 0; i < file_list.length; i++){
-            var f = file_list.item(i), file = {
-                url: URL.createObjectURL(f),
-                name: f.name,
-                mime: f.type
-            };
-            files.push(file);
-            break; // can only handle 1 file
-        }
-        var load = function(app) {
-            // app.fit_to({dims: o.dims(), pos: o.pos(), zoom: false});
-        };
-        var app = Hive.new_file(files, 
-            { position: o.pos_relative(), dimensions: o.dims_relative(),
-                fit: 2 },
-            { load:load, position: true })[0];
-        return false;
-    });
-
+    Hive.App.has_image_drop(o);
     return o;
 };
 Hive.registerApp(Hive.App.Rectangle, 'hive.rectangle');
@@ -2550,36 +2615,52 @@ Hive.Selection = function(){
 
     var history_point, ref_pos;
     o.move_start = function(){
-        ref_pos = drag_target.pos_relative();
+        var moved_obj = drag_target || o;
+        ref_pos = moved_obj.pos_relative();
         change_start();
+        delta_latched = delta_ave = [0, 0];
+        move_speed = 1;
     };
     o.move_relative = function(delta, axis_lock){
         if(!ref_pos) return;
         if(axis_lock)
             delta[ Math.abs(delta[0]) > Math.abs(delta[1]) ? 1 : 0 ] = 0;
-        // if there's no selection or one app selected, regular snap
-        if(drag_target != o || elements.length == 1){
-            var pos = _add(ref_pos)(delta), snap_strength = .05,
-                snap_radius = 18;
-            // TODO-feature-snap: check key shortcut to turn off snapping
-            if(snap_strength > 0){
-                var excludes = {};
-                if(drag_target.id) excludes[drag_target.id] = true;
-                pos = snap_helper(drag_target.bounds_tuple_relative(pos),
-                    excludes, snap_strength, snap_radius);
-            }
-            drag_target.pos_relative_set(pos, .05, 18);
+        var pos = _add(ref_pos)(delta), snap_strength = .05,
+            snap_radius = 18;
+        // TODO-feature-snap: check key shortcut to turn off snapping
+        if(snap_strength > 0){
+            var excludes = {};
+            if(drag_target.id) excludes[drag_target.id] = true;
+            pos = snap_helper(drag_target.bounds_tuple_relative(pos),
+                excludes, snap_strength, snap_radius, sensitivity);
         }
-        else
-            // TODO-feature-snap-group: figure out reasonable snapping
-            // behavior for group selection.
-            // Proposal: every object in selection snaps to everything
-            // outside selection
-            o.pos_relative_set(_add(ref_pos)(delta));
+        drag_target.pos_relative_set(pos);
         o.layout();
     };
+    var delta_latched, move_speed, delta_ave, sensitivity;
     o.move_handler = function(ev, dd){
-        var delta = _mul(1 / Hive.env().scale)([dd.deltaX, dd.deltaY]);
+        var delta = [dd.deltaX, dd.deltaY];
+        // Calculate sensitivity
+        // TODO-feature-snap: check timestamp and bump sensitivity if longish
+        // gap between user inputs.
+        var move_dist = _sub(delta)(delta_latched);
+        // Max is better than other distance metric because user will
+        // commonly move in both axes accidentally.
+        var speed = Math.max(Math.abs(move_dist[0]), Math.abs(move_dist[1]));
+        speed = move_speed = _lerp(.1, move_speed, speed);
+        // Experiment with using distance to "average position"
+        // delta_ave = _lerp(.1, delta_ave, delta);
+        // var move_dist = _sub(delta)(delta_ave);
+        // var speed = Math.abs(move_dist[0]) + Math.abs(move_dist[1]);
+        sensitivity = 1 / (speed - .98);
+        // TODO: flags like this should live on the root app.
+        if (Hive.show_move_sensitivity)
+            drag_target.content_element.find("span")
+                .text(Math.round(100*sensitivity)/100);
+
+        delta_latched = delta.slice();
+        delta = _div(delta)(Hive.env().scale);
+
         o.move_relative(delta, ev.shiftKey);
     };
     o.move_end = function(){
@@ -2593,8 +2674,12 @@ Hive.Selection = function(){
         change_start();
     };
     o.resize = function(delta){
-        o.resize_relative(_mul(1 / Hive.env().scale)(delta));
-    }
+        o.resize_relative(_div(delta)(Hive.env().scale));
+    };
+    o.get_aspect = function() {
+        var dims = o.dims();
+        return dims[1] / dims[0];
+    };
     o.resize_relative = function(delta){
         if(!ref_dims) return;
 
@@ -2704,10 +2789,28 @@ Hive.Selection = function(){
         return _mul(Hive.env().scale)(_dims);
     };
 
-    o.bounds_tuple_relative = function(pos){
-        // TODO-feature-snap-group: do something more sophisticated
-        return elements[0].bounds_tuple_relative(pos);
+    o.min_pos = function() {
+        var bounds = o.bounds();
+        return [bounds.left, bounds.top];
     };
+    o.max_pos = function() {
+        var bounds = o.bounds();
+        return [bounds.right, bounds.bottom];
+    };
+    // TODO-cleanup: these functions live in app.  Can we share them?
+    // Can selection inherit app?
+    o.cent_pos = function() { return _mul(.5)(_add(o.min_pos())(o.max_pos())); };
+    // return [[x-min, x-center, x-max], [y-min, y-center, y-max]]
+    // if o were moved to pos
+    o.bounds_tuple_relative = function(pos) {
+        var curr_ = [o.min_pos(), o.cent_pos(), o.max_pos()];
+        var curr = [[],[]];
+        $.map(curr_, function(pair) {
+            curr[0] = curr[0].concat(pair[0] + pos[0] - _pos[0]);
+            curr[1] = curr[1].concat(pair[1] + pos[1] - _pos[1]);
+        });
+        return [curr[0].slice(), curr[1].slice()];
+    }
     o.pos_relative = function(){ return _pos.slice(); };
     o.dims_relative = function(){ return _dims.slice(); };
     o.pos_relative_set = function(pos){
@@ -2975,6 +3078,10 @@ Hive.new_file = function(files, opts, app_opts) {
     return false;
 }
 
+// Called on load() and save()
+Hive.common_setup = function(){
+    $('title').text("Editor - " + (Hive.Exp.title || "[Untitled]"));
+};
 
 Hive.init = function(exp, page){
     Hive.Exp = exp;
@@ -3254,6 +3361,7 @@ Hive.init = function(exp, page){
 
     Hive.Apps.init(Hive.Exp.apps);
     Hive.History.init();
+    Hive.common_setup();
 };
 
 Hive.edit_start = function(){
@@ -3388,6 +3496,7 @@ Hive.save = function() {
     $('#expr_save .expr').val(JSON.stringify(expr));
     $('#expr_save').on('response', on_response)
         .on('error', on_error).submit();
+    Hive.common_setup();
 };
 Hive.get_draft = function() {
     return localStorage.expr_draft ? JSON.parse(localStorage.expr_draft) : null }
@@ -3637,20 +3746,6 @@ Hive.sel = function(n) {
 
 Hive.foc = function(n){ Hive.Selection.update([Hive.Apps[n]]) };
 
-$(function(){
-    $(window).keydown(function(e){
-        if(e.shiftKey && e.keyCode == 120){ // F9
-            // debugger;
-            console.log(sel().content_element.find('.hive_selection'));
-        }
-    });
-});
-
-Hive.print_stack = function(){
-    //try { thiswillthrowanerror^2 }
-    //catch(e) { console.log(e.stack) }
-}
-
 function array_delete(arr, e) {
     for(var n = 0; n < arr.length; n++) {
         if(arr[n] == e) {
@@ -3662,11 +3757,11 @@ function array_delete(arr, e) {
 }
 function array_sum( a, b ){
     if (a.length != b.length) { throw "Arrays must be equal length" };
-    rv = []
+    rv = [];
     for (i=0; i< a.length; i++){
         rv[i] = a[i] + b[i]
     }
-    return rv
+    return rv;
 }
 
 Hive.rect_test = function(w, h){
@@ -3688,12 +3783,29 @@ Hive.rect_test = function(w, h){
 // snapped positions (and sizes TBD)
 Hive.im_feeling_lucky = function(){
     var apps = Hive.Selection.elements();
+    Hive.Selection.unfocus();
     $.map([100, 60, 40, 30, 20, 10], function(j) {
+        // Randomize a bit
         $.map(apps, function(app, i){
-            app.pos_set(app.pos(), .3, j);
+            var pos = app.pos_relative();
+            var rnd = [Math.random()*j/10-j/20, Math.random()*j/10-j/20];
+            pos = _add(rnd)(pos);
+            app.pos_relative_set(pos);
+        });
+        $.map(apps, function(app, i){
+            var pos = app.pos_relative();
+            // var rnd = [Math.random()*6-3, Math.random()*6-3];
+            // pos = _add(rnd)(pos);
+            var snap_strength = 0.05, snap_radius = j;
+            var excludes = {};
+            if(app.id) excludes[app.id] = true;
+            pos = snap_helper(app.bounds_tuple_relative(pos),
+                excludes, snap_strength, snap_radius);
+            app.pos_relative_set(pos);
             // app.resize
         });
     });
+    Hive.Selection.update(apps);
 };
 
 return Hive;
