@@ -350,8 +350,8 @@ var snap_helper = function(my_tuple, exclude_ids,
             }
             best.start[1 - coord] = best_interval[0];
             best.end[1 - coord] = best_interval[1];
-            best.start[coord] = best_interval[2] - 1/s;
-            best.end[coord] = best_interval[2] + 1/s;
+            best.start[coord] = best_interval[2] - 2/s;
+            best.end[coord] = best_interval[2];
             var klass = ".ruler.ruler" + coord;
             var rule = $(klass);
             if (0 == rule.length) {
@@ -1072,6 +1072,7 @@ Hive.App.has_image_drop = function(o) {
 Hive.App.has_resize = function(o) {
     var dims_ref, history_point;
     o.resize_start = function(){
+        $("#controls").hidehide();
         dims_ref = o.dims();
         history_point = o.history_helper_relative('resize');
     };
@@ -1109,6 +1110,7 @@ Hive.App.has_resize = function(o) {
     }
 
     o.resize_end = function(){ 
+        $("#controls").showshow();
         history_point.save();
         $(".ruler").hidehide();
     };
@@ -2522,6 +2524,7 @@ Hive.Selection = function(){
     var dragging = false, drag_target;
     o.dragstart = function(ev, dd){
         o.dragging = true;
+        $("#controls").hidehide();
 
         var app = ev.data;
         if(app){
@@ -2569,6 +2572,7 @@ Hive.Selection = function(){
     };
     o.dragend = function (ev, dd) {
         o.dragging = false;
+        $("#controls").showshow();
 
         var app = ev.data;
         if(app){
@@ -2672,6 +2676,7 @@ Hive.Selection = function(){
 
     var ref_dims;
     o.resize_start = function(){
+        $("#controls").hidehide();
         ref_dims = o.dims_relative();
         change_start();
     };
@@ -2700,6 +2705,7 @@ Hive.Selection = function(){
         o.layout();
     };
     o.resize_end = function(){
+        $("#controls").showshow();
         o.update_relative_coords();
         change_end('resize');
     };
