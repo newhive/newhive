@@ -35,6 +35,8 @@ var Hive = {}, debug_mode = context.config.debug_mode, bound = js.bound,
     noop = function(){}, Funcs = js.Funcs, asset = ui_util.asset;
 Hive.shift_does_raise = false;
 Hive.show_move_sensitivity = false;
+Hive.snap_crop = false;
+Hive.no_snap = false;
 Hive.asset = asset;
 
 // TODO-refactor: move into util
@@ -101,6 +103,16 @@ interval_size = function(i) { return Math.abs(i[1] - i[0]); };
 interval_bounds = function(a, b) {
     return [Math.min(a[0], b[0]), Math.max(a[1], b[1])];
 };
+// Force x into the interval [a, b]
+// a can also be passed as an interval and b left undefined
+interval_constrain = function(x, a, b) {
+    if (b == undefined) {
+        b = a[a.length - 1];
+        a = a[0];
+    }
+    return Math.min(b, Math.max(a, x));
+};
+
 // Useful for default values when using interval_bounds
 var null_interval = [Infinity, -Infinity];
 var all_interval = [-Infinity, Infinity];
@@ -214,7 +226,7 @@ var snap_helper = function(my_tuple, opts) {
     var precision = function(goal) { return (Math.round(goal * 2) / 2).toString(); }
     opts = $.extend({
         exclude_ids: {},
-        snap_strength: 0,
+        snap_strength: 0.35,
         snap_radius: 10,
         sensitivity: 0,
         padding: 10,
@@ -246,25 +258,29 @@ var snap_helper = function(my_tuple, opts) {
     // });
     // app.load();
     // apps = apps.concat([app]);
-    for (var i = 0; i < apps.length; i++) {
-        var app = apps[i];
-        var curr_ = [app.min_pos(), app.cent_pos(), app.max_pos()];
-        var curr = [[],[]];
-        $.map(curr_, function(pair) {
-            curr[0] = curr[0].concat(pair[0]);
-            curr[1] = curr[1].concat(pair[1]);
-        });
-        tuple[0] = tuple[0].concat([curr[0].slice()]);
-        tuple[1] = tuple[1].concat([curr[1].slice()]);
-    };
-    // Add in the root element. 
-    // TODO: should be in apps
-    var scroll_coord = 1;
-    var max_height = $("body")[0].scrollWidth / s;
-    if (scroll_coord)
-        max_height = $("body")[0].scrollHeight / s;
-    tuple[scroll_coord] = tuple[scroll_coord].concat([[0, max_height / 2, max_height]]);
-    tuple[1 - scroll_coord] = tuple[1 - scroll_coord].concat([[0, 500, 1000]]);
+    if (opts.tuple) {
+        tuple = opts.tuple;
+    } else {
+        for (var i = 0; i < apps.length; i++) {
+            var app = apps[i];
+            var curr_ = [app.min_pos(), app.cent_pos(), app.max_pos()];
+            var curr = [[],[]];
+            $.map(curr_, function(pair) {
+                curr[0] = curr[0].concat(pair[0]);
+                curr[1] = curr[1].concat(pair[1]);
+            });
+            tuple[0] = tuple[0].concat([curr[0].slice()]);
+            tuple[1] = tuple[1].concat([curr[1].slice()]);
+        };
+        // Add in the root element. 
+        // TODO: should be in apps
+        var scroll_coord = 1;
+        var max_height = $("body")[0].scrollWidth / s;
+        if (scroll_coord)
+            max_height = $("body")[0].scrollHeight / s;
+        tuple[scroll_coord] = tuple[scroll_coord].concat([[0, max_height / 2, max_height]]);
+        tuple[1 - scroll_coord] = tuple[1 - scroll_coord].concat([[0, 500, 1000]]);
+    }
 
     var best_intervals = [];
     if (my_tuple[0][1])
@@ -294,7 +310,7 @@ var snap_helper = function(my_tuple, opts) {
                     var padding_factor = 0, added_padding = 0;
                     var padding_steps = 1;
                     if (Math.max(type2, type1) == 2 && 
-                        Math.min(type1, type2) == 0)) {
+                        Math.min(type1, type2) == 0) {
                         padding_factor = padding * _sign(type2 - type1);
                         padding_steps = 2;
                     }
@@ -1134,7 +1150,7 @@ Hive.App.has_resize = function(o) {
         var _pos = o.pos_relative();
         // TODO: allow snapping to aspect ratio (keyboard?)
         // TODO: set snap parameters be set by user
-        if (snap_strength > 0) {
+        if(!Hive.no_snap){
             var tuple = [];
             tuple[0] = [undefined, undefined, pos[0]];
             tuple[1] = [undefined, undefined, pos[1]];
@@ -2163,14 +2179,21 @@ Hive.App.Image = function(o) {
             // constrain delta for now to the "free" dimension
             if (o.fixed_coord >= 0)
                 delta[o.fixed_coord] = 0;
-            // TODO: snap to edge/center
             delta = _add(delta)(ref_offset);
             var dims = o.dims();
             // constrain the crop to within the bounds of app
-            delta[0] = Math.min(0, Math.max(delta[0],
-                dims[0]*(1 - o.init_state.scale_x)));
-            delta[1] = Math.min(0, Math.max(delta[1],
-                dims[1] - dims[0] / o.aspect * o.init_state.scale_x));
+            var tuple = [];
+            tuple[0] = [dims[0]*(1 - o.init_state.scale_x), 0, 0];
+            tuple[1] = [dims[1] - dims[0] / o.aspect * o.init_state.scale_x, 0, 0];
+            for (var j = 0; j < 2; ++j) {
+                tuple[j][1] = .5 * (tuple[j][0] + tuple[j][2]);
+                delta[j] = interval_constrain(delta[j], tuple[j]);
+            }
+            // snap to edge/center
+            if (Hive.snap_crop) {
+                var my_tuple = [ [ delta[0] ], [ delta[1] ] ];
+                delta = snap_helper(my_tuple, { tuple: [ [tuple[0]], [tuple[1]] ] });
+            }
             o.offset_set(delta);
             o.layout();
         };
