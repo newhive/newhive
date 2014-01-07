@@ -12,6 +12,7 @@ define([
     'ui/colors',
     './edit/events',
     'sj!templates/color_picker.html',
+    'browser/upload',
     'browser/jquery/jplayer/skin',
     'browser/jquery/rotate.js',
     'js!browser/jquery/event/drag.js',
@@ -28,7 +29,8 @@ define([
     context,
     colors,
     evs,
-    color_picker_template
+    color_picker_template,
+    upload
 ){
 
 var Hive = {}, debug_mode = context.config.debug_mode, bound = js.bound,
@@ -76,6 +78,7 @@ _sub = function(scale) {
 _inv = function(l){
     return l.map(function(x){ return 1/x; });
 };
+// Linear interpolation
 // Return a value that is alpha (scalar) of the way between old_val
 // and new_val.  The values can be numbers or equal-length vectors.
 _lerp = function(alpha, old_val, new_val) {
@@ -498,10 +501,8 @@ Hive.App = function(init_state, opts) {
         var pos = o.pos(), dims = o.dims();
         o.div.css({ 'left' : pos[0], 'top' : pos[1] });
         o.div.width(dims[0]).height(dims[1]);
-        if(o.controls){
-            o.controls.pos_set([ pos[0], pos[1] ]);
+        if(o.controls)
             o.controls.layout();
-        }
     };
 
     o.pos_relative = function(){ return _pos.slice(); };
@@ -659,18 +660,6 @@ Hive.Controls = function(app, multiselect) {
         o.app.controls = false;
     };
 
-    o.pos_set = function(pos){ o.div.css({ 'left' : pos[0], 'top' : pos[1] }); };
-    o.pos_update = function(){
-        var p = o.app.pos();
-        o.div.css({ 'left': p[0], 'top': p[1] });
-    };
-    o.dims = function() {
-        var dims = o.app.dims();
-        if(dims[0] < 135) dims[0] = 135;
-        if(dims[1] < 40) dims[1] = 40;
-        return dims;
-    };
-
     o.append_link_picker = function(d, opts) {
         opts = $.extend({ open: noop, close: noop }, opts);
         var e = $("<div class='control drawer link'>");
@@ -750,25 +739,50 @@ Hive.Controls = function(app, multiselect) {
     o.hover_menu = function(h, d, opts) {
         return hover_menu(h, d, $.extend({offset_y : o.padding + 1}, opts)) };
 
+    var pad_ul = [45, 45], pad_br = [45, 110], min_d = [135, 40];
+    var pos_dims = function(){
+        var ap = o.app.pos(),
+            win = $(window), wdims = [win.width(), win.height()],
+            pos = [ Math.max(pad_ul[0], ap[0]), Math.max(pad_ul[1], ap[1]) ],
+            ad = o.app.dims(),
+            cd = [ Math.max(min_d[0], ad[0]), Math.max(min_d[1], ad[1]) ],
+            dims = [ ap[0] - pos[0] + cd[0], ap[1] - pos[1] + cd[1] ];
+        if(dims[0] + pos[0] > wdims[0] - pad_br[0])
+            dims[0] = Math.max(min_d[0], wdims[0] - pad_br[0] - pos[0]);
+        if(dims[1] + pos[1] > wdims[1] - pad_br[1])
+            dims[1] = Math.max(min_d[1], wdims[1] - pad_br[1] - pos[1]);
+        pos = [ Math.min(pos[0], wdims[0] - pad_ul[0]) - (cd[0] - ad[0]),
+            Math.min(pos[1], wdims[1] - pad_ul[1]) - (cd[1] - ad[1]) ];
+        return { pos: pos, dims: dims };
+    };
+    o.pos = function(){ return pos_dims().pos };
+    o.dims = function(){ return pos_dims().dims };
+
     o.layout = function() {
-        o.pos_update();
-        var dims = o.dims(), p = o.padding, ad = o.app.dims(),
-            cx = Math.round(ad[0] / 2), cy = Math.round(ad[1] / 2),
+        var pos = o.pos(), dims = o.dims(),
+            cx = dims[0] / 2, cy = dims[1] / 2, p = o.padding,
             bw = o.border_width, outer_l = -cx -bw - p,
-            outer_width = ad[0] + bw*2 + p*2, outer_height = ad[1] + p * 2 + 1;
+            outer_width = dims[0] + bw*2 + p*2, outer_height = dims[1] + p * 2 + 1;
+
+        o.div.css({ left: pos[0], top: pos[1] });
 
         o.select_box.css({ left: cx, top: cy });
-        o.select_borders.eq(0).css({ left: outer_l, top: -cy -bw -p, width: outer_width, height: bw }); // top
-        o.select_borders.eq(1).css({ left: cx + p, top: -cy -p - bw + 1, height: outer_height + bw * 2 -2, width: bw }); // right
-        o.select_borders.eq(2).css({ left: outer_l, top: cy + p, width: outer_width, height: bw }); // bottom
-        o.select_borders.eq(3).css({ left: outer_l, top: -cy -p - bw + 1, height: outer_height + bw * 2 -2, width: bw }); // left
+        o.select_borders.eq(0).css({ left: outer_l,
+            top: -cy -bw -p, width: outer_width, height: bw }); // top
+        o.select_borders.eq(1).css({ left: cx + p,
+            top: -cy -p - bw + 1, height: outer_height + bw * 2 -2, width: bw }); // right
+        o.select_borders.eq(2).css({ left: outer_l,
+            top: cy + p, width: outer_width, height: bw }); // bottom
+        o.select_borders.eq(3).css({ left: outer_l,
+            top: -cy -p - bw + 1, height: outer_height + bw * 2 -2, width: bw }); // left
         if(o.multiselect) return;
 
         //o.c.undo   .css({ top   : -38 - p, right  :  61 - p });
-        o.c.copy   .css({ left  : dims[0] - 45 + p, top   : -38 - p });
-        o.c.remove .css({ left  : dims[0] - 14 + p, top   : -38 - p });
-        o.c.stack  .css({ left  : dims[0] - 78 + p, top   : dims[1] + 8 + p });
-        o.c.buttons.css({ left  :  -bw - p, top : dims[1] + p + 10, width : dims[0] - 60 });
+        o.c.copy   .css({ left: dims[0] - 45 + p, top: -38 - p });
+        o.c.remove .css({ left: dims[0] - 14 + p, top: -38 - p });
+        o.c.stack  .css({ left: dims[0] - 78 + p, top: dims[1] + 8 + p });
+        o.c.buttons.css({ left: -bw - p, top: dims[1] + p + 10,
+            width: dims[0] - 60 });
     };
 
     o.div = $('<div>').addClass('controls');
@@ -1024,47 +1038,10 @@ Hive.App.has_image_drop = function(o) {
         // TODO-dnd: handle drop highlighting
         if (o.highlight)
             o.highlight();
-
         ev.preventDefault();
-    }).on('drop', function(ev){
-        var dt = ev.originalEvent.dataTransfer;
-        file_list = dt.files;
-        var files = [];
-        var urlCreator = window.URL || window.webkitURL;
-        for(var i = 0; i < file_list.length; i++){
-            var f = file_list.item(i), file = {
-                url: urlCreator.createObjectURL(f),
-                name: f.name,
-                mime: f.type
-            };
-            files.push(file);
-            break; // can only handle 1 file
-        }
-        var url = dt.getData("URL");
-        if (files.length == 0 && url.length) {
-            var file_name = url.split("/").slice(-1)[0];
-            var i = file_name.lastIndexOf(".");
-            if (i > 0) {
-                var name = file_name.slice(0, i);
-                var ext = file_name.slice(i + 1);
-                // TODO-cleanup: have this live somewhere global
-                // TODO-dnd: handle audio
-                var image_mimes = {
-                    "jpg": "image/jpeg",
-                    "jpeg": "image/jpeg",
-                    "gif": "image/gif",
-                    "png": "image/png"
-                };
-                var mime = image_mimes[ext];
-                if (mime) {
-                    files.push({
-                        url: url,
-                        name: name,
-                        mime: mime
-                    });
-                }
-            }
-        }
+    });
+
+    var on_files = function(files){
         if (files.length == 0)
             return false;
         var load = function(app) {
@@ -1090,11 +1067,12 @@ Hive.App.has_image_drop = function(o) {
             app = Hive.new_file(files, init_state,
                 { load:load, position: true })[0];
         }
-        return app;
-    });
+    };
+    upload.drop_target(o.content_element, on_files, Hive.on_media_upload);
 
     return o;
 };
+
 Hive.App.has_resize = function(o) {
     var dims_ref, history_point;
     o.resize_start = function(){
@@ -1220,8 +1198,8 @@ Hive.App.has_resize_h = function(o) {
             common.layout()
             var p = o.padding;
             var dims = o.dims();
-            o.c.resize_h.css({ left: dims[0] -18 + o.padding, top: Math.min(dims[1] / 2 - 18,
-                dims[1] - 54) });
+            o.c.resize_h.css({ left: dims[0] -18 + o.padding,
+                top: Math.min(dims[1] / 2 - 18, dims[1] - 54) });
         }
 
         // Dragging behavior
@@ -3022,7 +3000,8 @@ Hive.Selection = function(){
 
         // TODO: improve efficiency by using o.controls.pos_set like drag handler
         // or improving o.bounds
-        if(o.controls) o.controls.pos_update();
+        if(o.controls)
+            o.controls.layout();
     });
     Hive.App.has_nudge(o);
 
@@ -3187,6 +3166,31 @@ Hive.common_setup = function(){
     $('title').text("Editor - " + (Hive.Exp.title || "[Untitled]"));
 };
 
+Hive.on_media_upload = function(files){
+    // after file is uploaded, save meta data and id from server by
+    // matching up file name
+    var find_apps = function(name){
+        // TODO-cleanup: background should be root app
+        var apps = Hive.Apps.all().filter(function(a){
+            return (a.init_state.file_name == name) });
+        if (Hive.Exp.background.file_name == name)
+            apps = apps.concat(Hive.Exp.background);
+        return apps;
+    };
+    files.map(function(f){
+        find_apps(f.name).map(function(a){
+            var upd = { file_id: f.id, url: f.url };
+            if(f.meta) upd.file_meta = f.meta;
+            if(a.state_update) {
+                a.state_update(upd);
+            } else {
+                a.content = a.url = f.url;
+                a.file_name = f.id;
+            }
+        });
+    });
+};
+
 Hive.init = function(exp, page){
     Hive.Exp = exp;
     Hive.edit_page = page;
@@ -3321,30 +3325,7 @@ Hive.init = function(exp, page){
     $('#media_upload').on('with_files', function(ev, files){
         // media files are available immediately upon selection
         Hive.new_file(files);
-    }).on('response', function(ev, files){
-        // after file is uploaded, save meta data and id from server by
-        // matching up file name
-        var find_apps = function(name){
-            // TODO-cleanup: background should be root app
-            var apps = Hive.Apps.all().filter(function(a){
-                return (a.init_state.file_name == name) });
-            if (Hive.Exp.background.file_name == name)
-                apps = apps.concat(Hive.Exp.background);
-            return apps;
-        };
-        files.map(function(f){
-            find_apps(f.name).map(function(a){
-                var upd = { file_id: f.id, url: f.url };
-                if(f.meta) upd.file_meta = f.meta;
-                if(a.state_update) {
-                    a.state_update(upd);
-                } else {
-                    a.content = a.url = f.url;
-                    a.file_name = f.id;
-                }
-            });
-        });
-    });
+    }).on('response', function(ev, files){ Hive.on_media_upload(files) });
 
     var busy_e = $('.save .loading');
     $(document).ajaxStart(function(){
@@ -3560,7 +3541,7 @@ Hive.embed_code = function(element) {
 
     Hive.new_app(app);
     $(element).val('');
-} 
+}; 
 
 Hive.save = function() {
     var expr = Hive.state();
@@ -3911,6 +3892,10 @@ Hive.im_feeling_lucky = function(){
         });
     });
     Hive.Selection.update(apps);
+};
+
+Hive.debug = function(a){
+    1; // break
 };
 
 return Hive;
