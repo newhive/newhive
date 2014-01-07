@@ -5,67 +5,52 @@ define([
 ){
     var o = {};
 
-    var _submit = function(form, files){
-        var form_data = new FormData(form[0]);
-        if(files){
-            for(var i = 0; i < files.length; i++){
-                var f = files.item(i);
-                form_data.append('files', f.slice(0, f.size), f.name);
-            }
-        }
-
-        // TODO-polish: add busy indicator while uploading
-        $.ajax({
-            url: form.attr('action'),
+    o.submit = function(files, opts){
+        opts = $.extend({
+            url: '/api/file/create',
+            data: new FormData(),
             type: 'POST',
+
+            // beforeSend: beforeSendHandler,
             // xhr: function() {  // custom xhr
             //     var myXhr = $.ajaxSettings.xhr();
             //     if(myXhr.upload) myXhr.upload.addEventListener(
             //         'progress', on_progress, false);
             //     return myXhr;
             // },
-            //Ajax events
-            // beforeSend: beforeSendHandler,
-            success: function(data){
-                // if(!file_api) input.trigger('with_files',
-                    // [ data.map(function(f){ return f.url }) ]);
-                form.trigger('response', [data]);
-                form.find("*[type=submit]").
-                    removeClass('disabled').prop('disabled','');
-            },
-            error: function(data){
-                // TODO: open new window with debugger
-                console.error("Server error post request: " + form.attr('action')
-                    + '\n(remove form handlers to see error) $("form").unbind("submit")');
-                form.trigger('error', [data]);
-            },
-            data: form_data,
 
             cache: false,
             contentType: false,
             processData: false
-        });
+        }, opts);
+
+        if(files){
+            for(var i = 0; i < files.length; i++){
+                var f = files.item(i);
+                opts.data.append('files', f.slice(0, f.size), f.name);
+            }
+        }
+
+        $.ajax(opts);
     };
 
-    o.submit = function(form){ _submit(form); };
+    o.unwrap_file_list = function(file_list){
+        // if(!file_api) return;
+        var files = [];
+        var urlCreator = window.URL || window.webkitURL;
+        // FileList is not a list at all, has no map :'(
+        for(var i = 0; i < file_list.length; i++){
+            var f = file_list.item(i), file = {
+                url: urlCreator.createObjectURL(f),
+                name: f.name,
+                mime: f.type
+            };
+            files.push(file);
+        };
+        return files;
+    };
 
     o.drop_target = function(el, on_files, on_response){
-        var with_files = function(file_list){
-            if(!file_api) return;
-            var files = [];
-            var urlCreator = window.URL || window.webkitURL;
-            // FileList is not a list at all, has no map :'(
-            for(var i = 0; i < file_list.length; i++){
-                var f = file_list.item(i), file = {
-                    url: urlCreator.createObjectURL(f),
-                    name: f.name,
-                    mime: f.type
-                };
-                files.push(file);
-            };
-            on_files(files);
-        };
-
         var on_drop = function(ev){
             var dt = ev.originalEvent.dataTransfer;
             if(!dt || !dt.files || !dt.files.length) return;
@@ -99,10 +84,12 @@ define([
                     on_files(files);
                 }
             } else{
-                with_files(file_list);
+                on_files(o.unwrap_file_list(file_list));
             }
 
-            _submit(dt.files);
+            o.submit(dt.files, { success: on_response });
+
+            return false;
         };
 
         el.on('dragenter dragover', function(ev){

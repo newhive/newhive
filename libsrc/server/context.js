@@ -4,11 +4,11 @@ define([
     'json!server/compiled.config.json',
     'ui/routing',
     'browser/js',
-    'browser/files',
+    'browser/upload',
     'ui/menu',
     'ui/dialog',
     'ui/util'
-], function(api_routes, config, routing, js, files, menu, dialog, ui_util){
+], function(api_routes, config, routing, js, upload, menu, dialog, ui_util){
     var o = { config: config };
 
     o.asset = function(context, name){
@@ -206,22 +206,43 @@ define([
         o._after_render_handlers[selector] = handler;
     };
 
+    var submit_form = function(form){
+        var opts = {};
+        opts.url = form.attr('action');
+        opts.data = new FormData($(form)[0]);
+        opts.success = function(data){
+            // if(!file_api) input.trigger('with_files',
+                // [ data.map(function(f){ return f.url }) ]);
+            form.trigger('response', [data]);
+            form.find("*[type=submit]").
+                removeClass('disabled').prop('disabled','');
+        };
+        opts.error = function(data){
+            // TODO: open new window with debugger
+            console.error("Server error post request: " + form.attr('action')
+                + '\n(remove form handlers to see error) $("form").unbind("submit")');
+            form.trigger('error', [data]);
+        };
+        form.trigger('before_submit');
+        upload.submit(false, opts);
+        form.trigger('after_submit');
+        form.find("*[type=submit]").addClass('disabled').prop('disabled','true');
+    };
+
     function form_handler(form, all){
-        // TODO-cleanup-drop-handlers: separate D&D handlers, so each one
-        //     does not need a form
         // TODO-polish: handle erros from file uploads
         // TODO-compat: port <iframe> hack from old code and finish
         //     support for browsers without file API (file_api boolean)
 
         var form = $(form),
-            file_api = FileList && Blob,
+            file_api = FileList && Blob;
 
         form.find('[type=file]').each(function(i, el){
             var input = $(el)
 
             input.on('change', function(){
-                files.with_files(el.files);
-                files.submit(form);
+                form.trigger('with_files', [upload.unwrap_file_list(el.files)]);
+                submit_form(form);
                 input.val('');
             });
 
@@ -229,21 +250,19 @@ define([
                 drop_selector = input.attr('data-drop-area');
                 drop_areas = find_all(all, 'label[for=' + input_id + ']')
                     .add(drop_selector).add(find_all(all, drop_selector));
-                files.drop_target(drop_areas,
+                upload.drop_target(drop_areas,
                     function(files){
                         form.trigger('with_files', [files]); },
-                    function(){
+                    function(file_records){
+                        form.trigger('response', [file_records]); }
+                );
         });
 
         // make form submission of non-file inputs asynchronous too
         form.on('submit', function(ev){
-            form.trigger('before_submit');
-            files.submit(form);
-            form.trigger('after_submit');
-            form.find("*[type=submit]").addClass('disabled').prop('disabled','true');
+            submit_form(form);
             return false;
         });
-
     }
 
     o.parse_query = function(){

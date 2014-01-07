@@ -12,6 +12,7 @@ define([
     'ui/colors',
     './edit/events',
     'sj!templates/color_picker.html',
+    'browser/upload',
     'browser/jquery/jplayer/skin',
     'browser/jquery/rotate.js',
     'js!browser/jquery/event/drag.js',
@@ -28,7 +29,8 @@ define([
     context,
     colors,
     evs,
-    color_picker_template
+    color_picker_template,
+    upload
 ){
 
 var Hive = {}, debug_mode = context.config.debug_mode, bound = js.bound,
@@ -1004,13 +1006,41 @@ Hive.App.has_full_bleed = function(o, coord){
 // NOTE: this adds handlers to o.content_element, so if
 // content_element changes, this modifier needs to be called again.
 Hive.App.has_image_drop = function(o) {
-    o.content_element.addClass('drop_target');
     o.content_element.on('dragenter dragover', function(ev){
         // TODO-dnd: handle drop highlighting
         if (o.highlight)
             o.highlight();
         ev.preventDefault();
     });
+
+    var on_files = function(files){
+        if (files.length == 0)
+            return false;
+        var load = function(app) {
+            // app.fit_to({dims: o.dims(), pos: o.pos(), zoom: false});
+        };
+        // TODO-dnd: Insert ajax to turn into proper file (from blob URL)
+        var file = files[0];
+        var init_state = { 
+            position: o.pos_relative(), 
+            dimensions: o.dims_relative(),
+            fit: 2 };
+        if (o.is_image) {
+            // o.set_from_file(file);
+            o.init_state.file_name = file.name;
+            o.init_state.url = o.init_state.content = file.url;
+            o.init_state = $.extend(o.init_state, init_state);
+            // TODO-dnd: have undo state
+            o.url_set(file.url);
+            var app = o;
+        } else {
+            // TODO-dnd: have fit depend on where the object was dropped relative
+            // to image center
+            app = Hive.new_file(files, init_state,
+                { load:load, position: true })[0];
+        }
+    };
+    upload.drop_target(o.content_element, on_files, Hive.on_media_upload);
 
     return o;
 };
@@ -3031,6 +3061,22 @@ Hive.common_setup = function(){
     $('title').text("Editor - " + (Hive.Exp.title || "[Untitled]"));
 };
 
+Hive.on_media_upload = function(files){
+    // after file is uploaded, save meta data and id from server by
+    // matching up file name
+    var find_apps = function(name){
+        return Hive.Apps.all().filter(function(a){
+            return (a.init_state.file_name == name) });
+    };
+    files.map(function(f){
+        find_apps(f.name).map(function(a){
+            var upd = { file_id: f.id, url: f.url };
+            if(f.meta) upd.file_meta = f.meta;
+            a.state_update(upd);
+        });
+    });
+};
+
 Hive.init = function(exp, page){
     Hive.Exp = exp;
     Hive.edit_page = page;
@@ -3162,56 +3208,10 @@ Hive.init = function(exp, page){
 
     $('#btn_grid').click(Hive.toggle_grid);
 
-    var on_media_upload = function(ev, files){
-        // after file is uploaded, save meta data and id from server by
-        // matching up file name
-        var find_apps = function(name){
-            return Hive.Apps.all().filter(function(a){
-                return (a.init_state.file_name == name) });
-        };
-        files.map(function(f){
-            find_apps(f.name).map(function(a){
-                var upd = { file_id: f.id, url: f.url };
-                if(f.meta) upd.file_meta = f.meta;
-                a.state_update(upd);
-            });
-        });
-    };
-
     $('#media_upload').on('with_files', function(ev, files){
         // media files are available immediately upon selection
         Hive.new_file(files);
-    }).on('response', on_media_upload);
-
-    // TODO-cleanup-drop-handlers: move back to has_image_drop
-    $('#app_drop_input').on('with_files', function(ev, files){
-        if (files.length == 0)
-            return false;
-        var load = function(app) {
-            // app.fit_to({dims: o.dims(), pos: o.pos(), zoom: false});
-        };
-        // TODO-dnd: Insert ajax to turn into proper file (from blob URL)
-        var file = files[0];
-        var init_state = { 
-            position: o.pos_relative(), 
-            dimensions: o.dims_relative(),
-            fit: 2 };
-        if (o.is_image) {
-            // o.set_from_file(file);
-            o.init_state.file_name = file.name;
-            o.init_state.url = o.init_state.content = file.url;
-            o.init_state = $.extend(o.init_state, init_state);
-            // TODO-dnd: have undo state
-            o.url_set(file.url);
-            var app = o;
-        } else {
-            // TODO-dnd: have fit depend on where the object was dropped relative
-            // to image center
-            app = Hive.new_file(files, init_state,
-                { load:load, position: true })[0];
-        }
-        return app;
-    }).on('response', on_media_upload);
+    }).on('response', function(ev, files){ Hive.on_media_upload(files) });
 
     var busy_e = $('.save .loading');
     $(document).ajaxStart(function(){
@@ -3427,7 +3427,7 @@ Hive.embed_code = function(element) {
 
     Hive.new_app(app);
     $(element).val('');
-} 
+}; 
 
 Hive.save = function() {
     var expr = Hive.state();
