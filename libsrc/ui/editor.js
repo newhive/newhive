@@ -33,9 +33,7 @@ define([
 
 var Hive = {}, debug_mode = context.config.debug_mode, bound = js.bound,
     noop = function(){}, Funcs = js.Funcs, asset = ui_util.asset;
-Hive.shift_does_raise = false;
 Hive.show_move_sensitivity = false;
-Hive.snap_crop = false;
 Hive.no_snap = false;
 Hive.asset = asset;
 
@@ -2190,7 +2188,7 @@ Hive.App.Image = function(o) {
                 delta[j] = interval_constrain(delta[j], tuple[j]);
             }
             // snap to edge/center
-            if (Hive.snap_crop) {
+            if (context.flags.snap_crop) {
                 var my_tuple = [ [ delta[0] ], [ delta[1] ] ];
                 delta = snap_helper(my_tuple, { tuple: [ [tuple[0]], [tuple[1]] ] });
             }
@@ -2586,7 +2584,7 @@ Hive.Selection = function(){
     o.click = o.mousedown = function(ev){
         var app = ev.data;
         if(app){
-            if (Hive.shift_does_raise && ev.shiftKey) {
+            if (context.flags.shift_does_raise && ev.shiftKey) {
                 if (ev.ctrlKey)
                     app.stack_bottom();
                 else
