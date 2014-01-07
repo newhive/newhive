@@ -215,7 +215,7 @@ var snap_helper = function(my_tuple, exclude_ids,
     padding = padding * .5;
     var pos;
     for (var j = 0; j < my_tuple[0].length; j++){
-        if (my_tuple[0][j]) {
+        if (my_tuple[0][j] != undefined) {
             pos = [my_tuple[0][j], my_tuple[1][j]];
             break;
         }
@@ -2151,6 +2151,7 @@ Hive.App.Image = function(o) {
             // TODO: snap to edge/center
             delta = _add(delta)(ref_offset);
             var dims = o.dims();
+            // constrain the crop to within the bounds of app
             delta[0] = Math.min(0, Math.max(delta[0],
                 dims[0]*(1 - o.init_state.scale_x)));
             delta[1] = Math.min(0, Math.max(delta[1],
