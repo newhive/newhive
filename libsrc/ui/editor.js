@@ -1143,6 +1143,7 @@ Hive.App.has_resize = function(o) {
 
     function controls(o) {
         var common = $.extend({}, o);
+        o.resize_control = true;
 
         o.addControl($('#controls_misc .resize'));
         o.c.resize = o.div.find('.resize');
@@ -1152,7 +1153,7 @@ Hive.App.has_resize = function(o) {
             var p = o.padding;
             var dims = o.dims();
             o.c.resize.css({ left: dims[0] -18 + p, top: dims[1] - 18 + p });
-        }
+        };
 
         o.c.resize.drag('start', function(e, dd) {
                 o.drag_target = e.target;
@@ -1164,6 +1165,9 @@ Hive.App.has_resize = function(o) {
                 o.drag_target.busy = false;
                 o.app.resize_end();
             });
+        // TODO-cleanup: move to has_crop
+        // if (o.is_cropped) 
+        evs.long_hold(o.c.resize, o.app);
 
         return o;
     }
@@ -1256,7 +1260,15 @@ Hive.App.Html = function(o) {
 };
 Hive.registerApp(Hive.App.Html, 'hive.html');
 
+// TODO: root, selection, app inherits pseudoApp
+// TODO-perf: ? For all inheritance, use prototype.
 
+// PseudoApp cannot be added to selection
+// It has no (server) state.
+Hive.App.PseudoApp = function(o) {
+
+};
+Hive.registerApp(Hive.App.PseudoApp, 'hive.pseudo');
 Hive.App.Root = function(o) {
     // Automatic top level app for layout and template logic
 
@@ -2082,6 +2094,8 @@ Hive.App.Image = function(o) {
             o.init_state.fit = undefined;
         }
         if (o.init_state.scale_x != undefined) {
+            // TODO-cleanup: move to has_crop
+            // o.is_cropped = true;
             var happ = o.content_element.parent();
             o.content_element = $('<div class="crop_box">');
             o.img.appendTo(o.content_element);
@@ -2091,12 +2105,14 @@ Hive.App.Image = function(o) {
         }
     };
 
+    // TODO-cleanup: move to has_crop
     (function(){
-        var drag_hold, fake_img;
+        var drag_hold, fake_img, ref_offset, ref_dims, ref_scale_x;
 
         // UI for setting .offset of apps on drag after long_hold
         o.long_hold = function(ev){
-            if(!o.init_state.scale_x) return;
+            if(!o.init_state.scale_x || o != ev.data) return;
+            $("#controls").hidehide();
             ev.stopPropagation();
             drag_hold = true;
 
@@ -2106,22 +2122,22 @@ Hive.App.Image = function(o) {
             o.img = o.img.add(fake_img);
             return false;
         };
-        o.long_hold_release = function(ev){
+        o.long_hold_cancel = function(ev){
             if(!drag_hold) return;
-            ev.stopPropagation();
+            $("#controls").showshow();
+            if (ev)
+                ev.stopPropagation();
             drag_hold = false;
             o.img = o.img.not(fake_img);
             fake_img.remove();
         };
 
-        var ref_offset;
         o.dragstart = function(ev){
             if (!drag_hold) return;
             ev.stopPropagation();
             ref_offset = o.offset();
-            o.fixed_coord = (ref_offset[0] == 0) ? 0 : 1;
+            // o.fixed_coord = (ref_offset[0] == 0) ? 0 : ((ref_offset[1] == 0) ? 1 : -1);
             history_point = Hive.History.saver(o.offset, o.offset_set, 'move crop');
-            ev.stopPropagation();
         };
         o.drag = function (ev, dd, shallow) {
             if(!drag_hold || !ref_offset) return;
@@ -2130,31 +2146,72 @@ Hive.App.Image = function(o) {
             if(ev.shiftKey)
                 delta[ Math.abs(dd.deltaX) > Math.abs(dd.deltaY) & 1 ] = 0;
             // constrain delta for now to the "free" dimension
+            if (o.fixed_coord >= 0)
+                delta[o.fixed_coord] = 0;
             // TODO: snap to edge/center
-            delta[o.fixed_coord] = 0;
             delta = _add(delta)(ref_offset);
+            var dims = o.dims();
+            delta[0] = Math.min(0, Math.max(delta[0],
+                dims[0]*(1 - o.init_state.scale_x)));
+            delta[1] = Math.min(0, Math.max(delta[1],
+                dims[1] - dims[0] / o.aspect * o.init_state.scale_x));
             o.offset_set(delta);
             o.layout();
         };
         o.dragend = function(ev){
             if(!drag_hold) return;
             history_point.save();
-            o.long_hold_release(ev);
+            o.long_hold_cancel(ev);
         };
-    })();
 
-    // screen coordinates
-    o.offset = function() {
-        if (!o.init_state.scale_x)
-            return undefined;
-        return _mul(o.init_state.scale_x * o.dims()[0])(o.init_state.offset);
-    }
-    o.offset_set = function(offset) {
-        if (!offset) o.init_state.offset = undefined;
-        else
-            o.init_state.offset = _mul(1 / o.init_state.scale_x / o.dims()[0])(offset);
-        o.layout();
-    };
+        var _resize = o.resize, _resize_end = o.resize_end, 
+            _resize_start = o.resize_start;
+        o.resize_start = function() {
+            _resize_start();
+            if (!drag_hold) return;
+            ref_dims = o.dims_relative();
+            ref_scale_x = o.init_state.scale_x;
+            history_point = Hive.History.saver(
+                o.image_scale, o.image_scale_set, 'move crop');
+        };
+        o.resize = function(delta) {
+            if(!drag_hold)
+                return _resize(delta);
+            delta = _div(delta)(Hive.env().scale);
+            var dims = _add(ref_dims)(delta);
+            dims[0] = Math.max(1, Math.min(dims[0],
+                ref_scale_x*ref_dims[0]*(1 + o.init_state.offset[0])));
+            dims[1] = Math.max(1, Math.min(dims[1],
+                ref_scale_x*ref_dims[0]*(1 / o.aspect + o.init_state.offset[1])));
+            var scaled = dims[0] / ref_dims[0];
+            o.init_state.scale_x = ref_scale_x / scaled;
+            o.div_aspect = dims[0] / dims[1];
+            o.dims_relative_set(dims);
+        };
+        o.resize_end = function() {
+            _resize_end();
+            if(!drag_hold) return;
+            history_point.save();
+            o.long_hold_cancel();
+        };
+
+        o.image_scale = function() { return o.init_state.scale_x; };
+        o.image_scale_set = function(scale) { o.init_state.scale_x = scale; };
+        // screen coordinates
+        o.offset = function() {
+            if (!o.init_state.scale_x)
+                return undefined;
+            return _mul(o.init_state.scale_x * o.dims()[0])(o.init_state.offset);
+        }
+        o.offset_set = function(offset) {
+            if (!offset) o.init_state.offset = undefined;
+            else
+                o.init_state.offset = _mul(1 / o.init_state.scale_x / o.dims()[0])(offset);
+            o.layout();
+        };
+
+
+    })();
 
     var _layout = o.layout;
     o.layout = function() {
