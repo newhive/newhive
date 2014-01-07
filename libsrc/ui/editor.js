@@ -40,6 +40,12 @@ Hive.show_move_sensitivity = false;
 Hive.asset = asset;
 
 // TODO-refactor: move into util
+
+// Return -1 if x < 0, 1 if x > 0, or 0 if x == 0.
+_sign = function(x) {
+    return typeof x === 'number' ? x ? x < 0 ? -1 : 1 : x === x ? 0 : NaN : NaN;
+}
+
 _apply = function(func, scale) {
     if (typeof(scale) == "number") {
         return function(l) {
@@ -207,18 +213,24 @@ Hive.layout_apps = function(){
     if(Hive.Selection.controls) Hive.Selection.controls.layout();
 };
 
-var snap_helper = function(my_tuple, exclude_ids,
-    snap_strength, snap_radius, sensitivity, padding
-) {
+var snap_helper = function(my_tuple, opts) {
+    var precision = function(goal) { return (Math.round(goal * 2) / 2).toString(); }
+    opts = $.extend({
+        exclude_ids: {},
+        snap_strength: 0,
+        snap_radius: 10,
+        sensitivity: 0,
+        padding: 10,
+    }, opts );
     var s = Hive.env().scale;
-    if (snap_radius == undefined) snap_radius = 10;
-    if (snap_strength == undefined) snap_strength = 0.0;
-    if (padding == undefined) padding = 10;
-    if (sensitivity == undefined) sensitivity = 0;
-    padding = padding * .5;
+    var exclude_ids = opts.exclude_ids;
+    var snap_strength = opts.snap_strength;
+    var snap_radius = opts.snap_radius;
+    var sensitivity = opts.sensitivity;
+    var padding = opts.padding;
     var pos;
     for (var j = 0; j < my_tuple[0].length; j++){
-        if (my_tuple[0][j]) {
+        if (my_tuple[0][j] != undefined) {
             pos = [my_tuple[0][j], my_tuple[1][j]];
             break;
         }
@@ -285,8 +297,8 @@ var snap_helper = function(my_tuple, exclude_ids,
                     var padding_factor = 0, added_padding = 0;
                     var padding_steps = 1;
                     if (Math.max(type2, type1) == 2 && 
-                        (type1 == 0 || type2 == 0)) {
-                        padding_factor = padding*(type2 - type1);
+                        Math.min(type1, type2) == 0)) {
+                        padding_factor = padding * _sign(type2 - type1);
                         padding_steps = 2;
                     }
                     for (var j = 0; j < padding_steps; 
@@ -306,10 +318,10 @@ var snap_helper = function(my_tuple, exclude_ids,
                                 Math.exp((Math.min(dist, 1000) - 200)/500);
                             if ((type1 == 1) ^ (type2 == 1)) strength *= .4;
                             var goal = coord2 + pos[coord] - coord1;
-                            goal = Math.round(goal*2)/2;
-                            var total = best_snaps[goal.toString()] || 0;
+                            // goal = Math.round(goal*2)/2;
+                            goal_memo = precision(goal);
+                            var total = best_snaps[goal_memo] || 0;
                             total += strength;
-                            goal_memo = goal.toString();
                             best_snaps[goal_memo] = total;
                             best_guides[goal_memo] = best_guides[goal_memo] || {};
                             // NOTE: We were showing the ruler at coord2 - added_padding
@@ -327,7 +339,7 @@ var snap_helper = function(my_tuple, exclude_ids,
         }
         if (best.strength > snap_strength) {
             new_pos[coord] = best.goal;
-            var obj = best_guides[best.goal.toString()];
+            var obj = best_guides[precision(best.goal)];
             // Just pick the first available guide matching the goal.
             // TODO-polish: pick on a more sensible criterion
             for (var first in obj)
@@ -353,8 +365,8 @@ var snap_helper = function(my_tuple, exclude_ids,
             }
             best.start[1 - coord] = best_interval[0];
             best.end[1 - coord] = best_interval[1];
-            best.start[coord] = best_interval[2] - 1/s;
-            best.end[coord] = best_interval[2] + 1/s;
+            best.start[coord] = best_interval[2] - 2/s;
+            best.end[coord] = best_interval[2];
             var klass = ".ruler.ruler" + coord;
             var rule = $(klass);
             if (0 == rule.length) {
@@ -1006,6 +1018,8 @@ Hive.App.has_full_bleed = function(o, coord){
 // NOTE: this adds handlers to o.content_element, so if
 // content_element changes, this modifier needs to be called again.
 Hive.App.has_image_drop = function(o) {
+    if (!context.flags.rect_drag_drop)
+        return o;
     o.content_element.on('dragenter dragover', function(ev){
         // TODO-dnd: handle drop highlighting
         if (o.highlight)
@@ -1048,6 +1062,7 @@ Hive.App.has_image_drop = function(o) {
 Hive.App.has_resize = function(o) {
     var dims_ref, history_point;
     o.resize_start = function(){
+        $("#controls").hidehide();
         dims_ref = o.dims();
         history_point = o.history_helper_relative('resize');
     };
@@ -1085,6 +1100,7 @@ Hive.App.has_resize = function(o) {
     }
 
     o.resize_end = function(){ 
+        $("#controls").showshow();
         history_point.save();
         $(".ruler").hidehide();
     };
@@ -1094,21 +1110,25 @@ Hive.App.has_resize = function(o) {
     };
     o.resize_to_pos = function(pos, doit) {
         var _pos = o.pos_relative();
-        var snap_strength = .5, snap_radius = 10;  //!!
         // TODO: allow snapping to aspect ratio (keyboard?)
+        // TODO: set snap parameters be set by user
         if (snap_strength > 0) {
-            var excludes = {};
-            excludes[o.id] = true;
             var tuple = [];
             tuple[0] = [undefined, undefined, pos[0]];
             tuple[1] = [undefined, undefined, pos[1]];
-            pos = snap_helper(tuple, excludes, snap_strength, snap_radius);
+            excludes = {};
+            excludes[o.id] = true;
+            pos = snap_helper(tuple, {
+                exclude_ids: excludes,
+                snap_strength: .5,
+                snap_radius: 10, });
         }
         var _dims = [];
         _dims[0] = pos[0] - _pos[0];
         _dims[1] = pos[1] - _pos[1];
         if (o.full_bleed_coord != undefined)
             _dims[o.full_bleed_coord] = 1000;
+        _dims = [ Math.max(1, _dims[0]), Math.max(1, _dims[1]) ];
         if (doit || doit == undefined)
             o.dims_relative_set(_dims);
         return _dims;
@@ -1116,6 +1136,7 @@ Hive.App.has_resize = function(o) {
 
     function controls(o) {
         var common = $.extend({}, o);
+        o.resize_control = true;
 
         o.addControl($('#controls_misc .resize'));
         o.c.resize = o.div.find('.resize');
@@ -1125,7 +1146,7 @@ Hive.App.has_resize = function(o) {
             var p = o.padding;
             var dims = o.dims();
             o.c.resize.css({ left: dims[0] -18 + p, top: dims[1] - 18 + p });
-        }
+        };
 
         o.c.resize.drag('start', function(e, dd) {
                 o.drag_target = e.target;
@@ -1137,6 +1158,9 @@ Hive.App.has_resize = function(o) {
                 o.drag_target.busy = false;
                 o.app.resize_end();
             });
+        // TODO-cleanup: move to has_crop
+        // if (o.is_cropped) 
+        evs.long_hold(o.c.resize, o.app);
 
         return o;
     }
@@ -1229,7 +1253,15 @@ Hive.App.Html = function(o) {
 };
 Hive.registerApp(Hive.App.Html, 'hive.html');
 
+// TODO: root, selection, app inherits pseudoApp
+// TODO-perf: ? For all inheritance, use prototype.
 
+// PseudoApp cannot be added to selection
+// It has no (server) state.
+Hive.App.PseudoApp = function(o) {
+
+};
+Hive.registerApp(Hive.App.PseudoApp, 'hive.pseudo');
 Hive.App.Root = function(o) {
     // Automatic top level app for layout and template logic
 
@@ -2055,6 +2087,8 @@ Hive.App.Image = function(o) {
             o.init_state.fit = undefined;
         }
         if (o.init_state.scale_x != undefined) {
+            // TODO-cleanup: move to has_crop
+            // o.is_cropped = true;
             var happ = o.content_element.parent();
             o.content_element = $('<div class="crop_box">');
             o.img.appendTo(o.content_element);
@@ -2064,12 +2098,14 @@ Hive.App.Image = function(o) {
         }
     };
 
+    // TODO-cleanup: move to has_crop
     (function(){
-        var drag_hold, fake_img;
+        var drag_hold, fake_img, ref_offset, ref_dims, ref_scale_x;
 
         // UI for setting .offset of apps on drag after long_hold
         o.long_hold = function(ev){
-            if(!o.init_state.scale_x) return;
+            if(!o.init_state.scale_x || o != ev.data) return;
+            $("#controls").hidehide();
             ev.stopPropagation();
             drag_hold = true;
 
@@ -2079,22 +2115,22 @@ Hive.App.Image = function(o) {
             o.img = o.img.add(fake_img);
             return false;
         };
-        o.long_hold_release = function(ev){
+        o.long_hold_cancel = function(ev){
             if(!drag_hold) return;
-            ev.stopPropagation();
+            $("#controls").showshow();
+            if (ev)
+                ev.stopPropagation();
             drag_hold = false;
             o.img = o.img.not(fake_img);
             fake_img.remove();
         };
 
-        var ref_offset;
         o.dragstart = function(ev){
             if (!drag_hold) return;
             ev.stopPropagation();
             ref_offset = o.offset();
-            o.fixed_coord = (ref_offset[0] == 0) ? 0 : 1;
+            // o.fixed_coord = (ref_offset[0] == 0) ? 0 : ((ref_offset[1] == 0) ? 1 : -1);
             history_point = Hive.History.saver(o.offset, o.offset_set, 'move crop');
-            ev.stopPropagation();
         };
         o.drag = function (ev, dd, shallow) {
             if(!drag_hold || !ref_offset) return;
@@ -2103,31 +2139,73 @@ Hive.App.Image = function(o) {
             if(ev.shiftKey)
                 delta[ Math.abs(dd.deltaX) > Math.abs(dd.deltaY) & 1 ] = 0;
             // constrain delta for now to the "free" dimension
+            if (o.fixed_coord >= 0)
+                delta[o.fixed_coord] = 0;
             // TODO: snap to edge/center
-            delta[o.fixed_coord] = 0;
             delta = _add(delta)(ref_offset);
+            var dims = o.dims();
+            // constrain the crop to within the bounds of app
+            delta[0] = Math.min(0, Math.max(delta[0],
+                dims[0]*(1 - o.init_state.scale_x)));
+            delta[1] = Math.min(0, Math.max(delta[1],
+                dims[1] - dims[0] / o.aspect * o.init_state.scale_x));
             o.offset_set(delta);
             o.layout();
         };
         o.dragend = function(ev){
             if(!drag_hold) return;
             history_point.save();
-            o.long_hold_release(ev);
+            o.long_hold_cancel(ev);
         };
-    })();
 
-    // screen coordinates
-    o.offset = function() {
-        if (!o.init_state.scale_x)
-            return undefined;
-        return _mul(o.init_state.scale_x * o.dims()[0])(o.init_state.offset);
-    }
-    o.offset_set = function(offset) {
-        if (!offset) o.init_state.offset = undefined;
-        else
-            o.init_state.offset = _mul(1 / o.init_state.scale_x / o.dims()[0])(offset);
-        o.layout();
-    };
+        var _resize = o.resize, _resize_end = o.resize_end, 
+            _resize_start = o.resize_start;
+        o.resize_start = function() {
+            _resize_start();
+            if (!drag_hold) return;
+            ref_dims = o.dims_relative();
+            ref_scale_x = o.init_state.scale_x;
+            history_point = Hive.History.saver(
+                o.image_scale, o.image_scale_set, 'move crop');
+        };
+        o.resize = function(delta) {
+            if(!drag_hold)
+                return _resize(delta);
+            delta = _div(delta)(Hive.env().scale);
+            var dims = _add(ref_dims)(delta);
+            dims[0] = Math.max(1, Math.min(dims[0],
+                ref_scale_x*ref_dims[0]*(1 + o.init_state.offset[0])));
+            dims[1] = Math.max(1, Math.min(dims[1],
+                ref_scale_x*ref_dims[0]*(1 / o.aspect + o.init_state.offset[1])));
+            var scaled = dims[0] / ref_dims[0];
+            o.init_state.scale_x = ref_scale_x / scaled;
+            o.div_aspect = dims[0] / dims[1];
+            o.dims_relative_set(dims);
+        };
+        o.resize_end = function() {
+            _resize_end();
+            if(!drag_hold) return;
+            history_point.save();
+            o.long_hold_cancel();
+        };
+
+        o.image_scale = function() { return o.init_state.scale_x; };
+        o.image_scale_set = function(scale) { o.init_state.scale_x = scale; };
+        // screen coordinates
+        o.offset = function() {
+            if (!o.init_state.scale_x)
+                return undefined;
+            return _mul(o.init_state.scale_x * o.dims()[0])(o.init_state.offset);
+        }
+        o.offset_set = function(offset) {
+            if (!offset) o.init_state.offset = undefined;
+            else
+                o.init_state.offset = _mul(1 / o.init_state.scale_x / o.dims()[0])(offset);
+            o.layout();
+        };
+
+
+    })();
 
     var _layout = o.layout;
     o.layout = function() {
@@ -2497,6 +2575,7 @@ Hive.Selection = function(){
     var dragging = false, drag_target;
     o.dragstart = function(ev, dd){
         o.dragging = true;
+        $("#controls").hidehide();
 
         var app = ev.data;
         if(app){
@@ -2544,6 +2623,7 @@ Hive.Selection = function(){
     };
     o.dragend = function (ev, dd) {
         o.dragging = false;
+        $("#controls").showshow();
 
         var app = ev.data;
         if(app){
@@ -2602,14 +2682,16 @@ Hive.Selection = function(){
         if(!ref_pos) return;
         if(axis_lock)
             delta[ Math.abs(delta[0]) > Math.abs(delta[1]) ? 1 : 0 ] = 0;
-        var pos = _add(ref_pos)(delta), snap_strength = .05,
-            snap_radius = 18;
+        var pos = _add(ref_pos)(delta);
         // TODO-feature-snap: check key shortcut to turn off snapping
-        if(snap_strength > 0){
+        if(!Hive.no_snap){
             var excludes = {};
             if(drag_target.id) excludes[drag_target.id] = true;
-            pos = snap_helper(drag_target.bounds_tuple_relative(pos),
-                excludes, snap_strength, snap_radius, sensitivity);
+            pos = snap_helper(drag_target.bounds_tuple_relative(pos), {
+                exclude_ids: excludes,
+                snap_strength: .05,
+                snap_radius: 18,
+                sensitivity: sensitivity, });
         }
         drag_target.pos_relative_set(pos);
         o.layout();
@@ -2647,6 +2729,7 @@ Hive.Selection = function(){
 
     var ref_dims;
     o.resize_start = function(){
+        $("#controls").hidehide();
         ref_dims = o.dims_relative();
         change_start();
     };
@@ -2675,6 +2758,7 @@ Hive.Selection = function(){
         o.layout();
     };
     o.resize_end = function(){
+        $("#controls").showshow();
         o.update_relative_coords();
         change_end('resize');
     };
@@ -3065,14 +3149,23 @@ Hive.on_media_upload = function(files){
     // after file is uploaded, save meta data and id from server by
     // matching up file name
     var find_apps = function(name){
-        return Hive.Apps.all().filter(function(a){
+        // TODO-cleanup: background should be root app
+        var apps = Hive.Apps.all().filter(function(a){
             return (a.init_state.file_name == name) });
+        if (Hive.Exp.background.file_name == name)
+            apps = apps.concat(Hive.Exp.background);
+        return apps;
     };
     files.map(function(f){
         find_apps(f.name).map(function(a){
             var upd = { file_id: f.id, url: f.url };
             if(f.meta) upd.file_meta = f.meta;
-            a.state_update(upd);
+            if(a.state_update) {
+                a.state_update(upd);
+            } else {
+                a.content = a.url = f.url;
+                a.file_name = f.id;
+            }
         });
     });
 };
@@ -3767,11 +3860,12 @@ Hive.im_feeling_lucky = function(){
             var pos = app.pos_relative();
             // var rnd = [Math.random()*6-3, Math.random()*6-3];
             // pos = _add(rnd)(pos);
-            var snap_strength = 0.05, snap_radius = j;
             var excludes = {};
             if(app.id) excludes[app.id] = true;
-            pos = snap_helper(app.bounds_tuple_relative(pos),
-                excludes, snap_strength, snap_radius);
+            pos = snap_helper(app.bounds_tuple_relative(pos), {
+                exclude_ids: excludes,
+                snap_strength: .05,
+                snap_radius: j, });
             app.pos_relative_set(pos);
             // app.resize
         });
