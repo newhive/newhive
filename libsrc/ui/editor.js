@@ -38,6 +38,12 @@ Hive.show_move_sensitivity = false;
 Hive.asset = asset;
 
 // TODO-refactor: move into util
+
+// Return -1 if x < 0, 1 if x > 0, or 0 if x == 0.
+_sign = function(x) {
+    return typeof x === 'number' ? x ? x < 0 ? -1 : 1 : x === x ? 0 : NaN : NaN;
+}
+
 _apply = function(func, scale) {
     if (typeof(scale) == "number") {
         return function(l) {
@@ -204,15 +210,21 @@ Hive.layout_apps = function(){
     if(Hive.Selection.controls) Hive.Selection.controls.layout();
 };
 
-var snap_helper = function(my_tuple, exclude_ids,
-    snap_strength, snap_radius, sensitivity, padding
-) {
+var snap_helper = function(my_tuple, opts) {
+    var precision = function(goal) { return (Math.round(goal * 2) / 2).toString(); }
+    opts = $.extend({
+        exclude_ids: {},
+        snap_strength: 0,
+        snap_radius: 10,
+        sensitivity: 0,
+        padding: 10,
+    }, opts );
     var s = Hive.env().scale;
-    if (snap_radius == undefined) snap_radius = 10;
-    if (snap_strength == undefined) snap_strength = 0.0;
-    if (padding == undefined) padding = 10;
-    if (sensitivity == undefined) sensitivity = 0;
-    padding = padding * .5;
+    var exclude_ids = opts.exclude_ids;
+    var snap_strength = opts.snap_strength;
+    var snap_radius = opts.snap_radius;
+    var sensitivity = opts.sensitivity;
+    var padding = opts.padding;
     var pos;
     for (var j = 0; j < my_tuple[0].length; j++){
         if (my_tuple[0][j] != undefined) {
@@ -282,8 +294,8 @@ var snap_helper = function(my_tuple, exclude_ids,
                     var padding_factor = 0, added_padding = 0;
                     var padding_steps = 1;
                     if (Math.max(type2, type1) == 2 && 
-                        (type1 == 0 || type2 == 0)) {
-                        padding_factor = padding*(type2 - type1);
+                        Math.min(type1, type2) == 0)) {
+                        padding_factor = padding * _sign(type2 - type1);
                         padding_steps = 2;
                     }
                     for (var j = 0; j < padding_steps; 
@@ -303,10 +315,10 @@ var snap_helper = function(my_tuple, exclude_ids,
                                 Math.exp((Math.min(dist, 1000) - 200)/500);
                             if ((type1 == 1) ^ (type2 == 1)) strength *= .4;
                             var goal = coord2 + pos[coord] - coord1;
-                            goal = Math.round(goal*2)/2;
-                            var total = best_snaps[goal.toString()] || 0;
+                            // goal = Math.round(goal*2)/2;
+                            goal_memo = precision(goal);
+                            var total = best_snaps[goal_memo] || 0;
                             total += strength;
-                            goal_memo = goal.toString();
                             best_snaps[goal_memo] = total;
                             best_guides[goal_memo] = best_guides[goal_memo] || {};
                             // NOTE: We were showing the ruler at coord2 - added_padding
@@ -324,7 +336,7 @@ var snap_helper = function(my_tuple, exclude_ids,
         }
         if (best.strength > snap_strength) {
             new_pos[coord] = best.goal;
-            var obj = best_guides[best.goal.toString()];
+            var obj = best_guides[precision(best.goal)];
             // Just pick the first available guide matching the goal.
             // TODO-polish: pick on a more sensible criterion
             for (var first in obj)
@@ -1120,15 +1132,18 @@ Hive.App.has_resize = function(o) {
     };
     o.resize_to_pos = function(pos, doit) {
         var _pos = o.pos_relative();
-        var snap_strength = .5, snap_radius = 10;  //!!
         // TODO: allow snapping to aspect ratio (keyboard?)
+        // TODO: set snap parameters be set by user
         if (snap_strength > 0) {
-            var excludes = {};
-            excludes[o.id] = true;
             var tuple = [];
             tuple[0] = [undefined, undefined, pos[0]];
             tuple[1] = [undefined, undefined, pos[1]];
-            pos = snap_helper(tuple, excludes, snap_strength, snap_radius);
+            excludes = {};
+            excludes[o.id] = true;
+            pos = snap_helper(tuple, {
+                exclude_ids: excludes,
+                snap_strength: .5,
+                snap_radius: 10, });
         }
         var _dims = [];
         _dims[0] = pos[0] - _pos[0];
@@ -2689,14 +2704,16 @@ Hive.Selection = function(){
         if(!ref_pos) return;
         if(axis_lock)
             delta[ Math.abs(delta[0]) > Math.abs(delta[1]) ? 1 : 0 ] = 0;
-        var pos = _add(ref_pos)(delta), snap_strength = .05,
-            snap_radius = 18;
+        var pos = _add(ref_pos)(delta);
         // TODO-feature-snap: check key shortcut to turn off snapping
-        if(snap_strength > 0){
+        if(!Hive.no_snap){
             var excludes = {};
             if(drag_target.id) excludes[drag_target.id] = true;
-            pos = snap_helper(drag_target.bounds_tuple_relative(pos),
-                excludes, snap_strength, snap_radius, sensitivity);
+            pos = snap_helper(drag_target.bounds_tuple_relative(pos), {
+                exclude_ids: excludes,
+                snap_strength: .05,
+                snap_radius: 18,
+                sensitivity: sensitivity, });
         }
         drag_target.pos_relative_set(pos);
         o.layout();
@@ -3862,11 +3879,12 @@ Hive.im_feeling_lucky = function(){
             var pos = app.pos_relative();
             // var rnd = [Math.random()*6-3, Math.random()*6-3];
             // pos = _add(rnd)(pos);
-            var snap_strength = 0.05, snap_radius = j;
             var excludes = {};
             if(app.id) excludes[app.id] = true;
-            pos = snap_helper(app.bounds_tuple_relative(pos),
-                excludes, snap_strength, snap_radius);
+            pos = snap_helper(app.bounds_tuple_relative(pos), {
+                exclude_ids: excludes,
+                snap_strength: .05,
+                snap_radius: j, });
             app.pos_relative_set(pos);
             // app.resize
         });
