@@ -3779,6 +3779,10 @@ Hive.im_feeling_lucky = function(){
     Hive.Selection.update(apps);
 };
 
+Hive.debug = function(a){
+    1; // break
+};
+
 return Hive;
 
 });
