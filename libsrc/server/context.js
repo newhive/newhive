@@ -4,10 +4,11 @@ define([
     'json!server/compiled.config.json',
     'ui/routing',
     'browser/js',
+    'browser/files',
     'ui/menu',
     'ui/dialog',
     'ui/util'
-], function(api_routes, config, routing, js, menu, dialog, ui_util){
+], function(api_routes, config, routing, js, files, menu, dialog, ui_util){
     var o = { config: config };
 
     o.asset = function(context, name){
@@ -160,7 +161,6 @@ define([
                 find_all(dom, toggle).on('click', click_func(klass));
             }
         });
-
         // TODO-cleanup: this is a subcase of class-toggle.
         find_all(elements, '*[data-link-show]').each(function(i, ev) {
             var handle = find_all(elements, $(ev).attr('data-link-show'));
@@ -169,8 +169,10 @@ define([
                 $(ev).toggleshow();
             });
         });
+
         find_all(elements, 'form[data-route-name]').each(
             function(i, ev){ form_handler(ev, elements) });
+
         find_all(elements, '.menu.drawer[data-handle]').each(function(i, ev){
             var handle = find_all(elements, $(ev).attr('data-handle'));
             if(!handle) throw 'missing handle';
@@ -183,12 +185,14 @@ define([
             }
             menu(handle, ev, opts);
         });
+
         find_all(elements, '.dialog[data-handle]').each(function(i, ev){
             var handle = find_all(elements, $(ev).attr('data-handle'));
             if(!handle) throw 'missing handle';
             var d = dialog.create(ev);
             handle.click(d.open);
         });
+
         find_all(elements, '.hoverable').each(function(i, ev){
             ui_util.hoverable($(ev)) });
 
@@ -211,69 +215,13 @@ define([
 
         var form = $(form),
             file_api = FileList && Blob,
-            inputs = form.find('[type=file]');
 
-        var with_files = function(file_list){
-            if(!file_api) return;
-            var files = [];
-            var urlCreator = window.URL || window.webkitURL;
-            // FileList is not a list at all, has no map :'(
-            for(var i = 0; i < file_list.length; i++){
-                var f = file_list.item(i), file = {
-                    url: urlCreator.createObjectURL(f),
-                    name: f.name,
-                    mime: f.type
-                };
-                files.push(file);
-            };
-            form.trigger('with_files', [files]);
-        };
-
-        var on_drop = function(ev){
-            var dt = ev.originalEvent.dataTransfer;
-            if(!dt || !dt.files || !dt.files.length) return;
-            submit(dt.files);
-            return false;
-
-            var dt = ev.originalEvent.dataTransfer,
-                files = [];
-                file_list = dt.files,
-                url = dt.getData("URL");
-            if (file_list.length == 0 && url.length) {
-                var file_name = url.split("/").slice(-1)[0];
-                var i = file_name.lastIndexOf(".");
-                if (i > 0) {
-                    var name = file_name.slice(0, i);
-                    var ext = file_name.slice(i + 1);
-                    // TODO-cleanup: have this live somewhere global
-                    // TODO-dnd: handle audio
-                    var image_mimes = {
-                        "jpg": "image/jpeg",
-                        "jpeg": "image/jpeg",
-                        "gif": "image/gif",
-                        "png": "image/png"
-                    };
-                    var mime = image_mimes[ext];
-                    if (mime) {
-                        files.push({
-                            url: url,
-                            name: name,
-                            mime: mime
-                        });
-                    }
-                    form.trigger('with_files', [files]);
-                }
-            } else{
-                with_files(file_list);
-            }
-        };
-
-        inputs.each(function(i, ev){
-            var input = $(ev);
+        form.find('[type=file]').each(function(i, el){
+            var input = $(el)
 
             input.on('change', function(){
-                with_files(ev.files);
-                submit();
+                files.with_files(el.files);
+                files.submit(form);
                 input.val('');
             });
 
@@ -281,64 +229,21 @@ define([
                 drop_selector = input.attr('data-drop-area');
                 drop_areas = find_all(all, 'label[for=' + input_id + ']')
                     .add(drop_selector).add(find_all(all, drop_selector));
-            drop_areas.on('dragenter dragover', function(ev){
-                    ev.preventDefault();
-                }).on('drop', on_drop);
+                files.drop_target(drop_areas,
+                    function(files){
+                        form.trigger('with_files', [files]); },
+                    function(){
         });
 
         // make form submission of non-file inputs asynchronous too
         form.on('submit', function(ev){
             form.trigger('before_submit');
-            submit();
+            files.submit(form);
             form.trigger('after_submit');
             form.find("*[type=submit]").addClass('disabled').prop('disabled','true');
             return false;
         });
 
-        var submit = function(files){
-            var form_data = new FormData(form[0]);
-            if(files){
-                for(var i = 0; i < files.length; i++){
-                    var f = files.item(i);
-                    form_data.append('files', f.slice(0, f.size), f.name);
-                }
-            }
-
-            // TODO-polish: add busy indicator while uploading
-            $.ajax({
-                url: form.attr('action'),
-                type: 'POST',
-                // xhr: function() {  // custom xhr
-                //     var myXhr = $.ajaxSettings.xhr();
-                //     if(myXhr.upload) myXhr.upload.addEventListener(
-                //         'progress', on_progress, false);
-                //     return myXhr;
-                // },
-                //Ajax events
-                // beforeSend: beforeSendHandler,
-                success: function(data){
-                    // if(!file_api) input.trigger('with_files',
-                        // [ data.map(function(f){ return f.url }) ]);
-                    form.trigger('response', [data]);
-                    form.find("*[type=submit]").
-                        removeClass('disabled').prop('disabled','');
-                },
-                error: function(data){
-                    // TODO: open new window with debugger
-                    console.error("Server error post request: " + form.attr('action')
-                        + '\n(remove form handlers to see error) $("form").unbind("submit")');
-                    form.trigger('error', [data]);
-                },
-                // Form data
-                data: form_data,
-
-                // Options to tell JQuery not to process data or
-                // worry about content-type
-                cache: false,
-                contentType: false,
-                processData: false
-            });
-        };
     }
 
     o.parse_query = function(){
