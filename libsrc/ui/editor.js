@@ -3252,7 +3252,6 @@ Hive.init = function(exp, page){
 
     Hive.Apps.init(Hive.Exp.apps);
     Hive.History.init();
-    Hive.common_setup();
 };
 
 Hive.exit = function(){
