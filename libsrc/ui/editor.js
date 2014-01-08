@@ -743,17 +743,20 @@ Hive.Controls = function(app, multiselect) {
     var pos_dims = function(){
         var ap = o.app.pos(),
             win = $(window), wdims = [win.width(), win.height()],
-            pos = [ Math.max(pad_ul[0], ap[0]), Math.max(pad_ul[1], ap[1]) ],
+            pos = [ Math.max(pad_ul[0] + window.scrollX,
+                ap[0]), Math.max(pad_ul[1] + window.scrollY, ap[1]) ],
             ad = o.app.dims(),
-            cd = [ Math.max(min_d[0], ad[0]), Math.max(min_d[1], ad[1]) ],
-            dims = [ ap[0] - pos[0] + cd[0], ap[1] - pos[1] + cd[1] ];
-        if(dims[0] + pos[0] > wdims[0] - pad_br[0])
-            dims[0] = Math.max(min_d[0], wdims[0] - pad_br[0] - pos[0]);
-        if(dims[1] + pos[1] > wdims[1] - pad_br[1])
-            dims[1] = Math.max(min_d[1], wdims[1] - pad_br[1] - pos[1]);
-        pos = [ Math.min(pos[0], wdims[0] - pad_ul[0]) - (cd[0] - ad[0]),
-            Math.min(pos[1], wdims[1] - pad_ul[1]) - (cd[1] - ad[1]) ];
-        return { pos: pos, dims: dims };
+            dims = [ ap[0] - pos[0] + ad[0], ap[1] - pos[1] + ad[1] ];
+        if(dims[0] + pos[0] > wdims[0] + window.scrollX - pad_br[0])
+            dims[0] = wdims[0] + window.scrollX - pad_br[0] - pos[0];
+        if(dims[1] + pos[1] > wdims[1] + window.scrollY - pad_br[1])
+            dims[1] = wdims[1] + window.scrollY - pad_br[1] - pos[1];
+        // TODO-bug: make pos adjust in the correct dimension depending on
+        // which edge app overlaps
+        // var minned_dims = [ Math.max(min_d[0], dims[0]),
+        //     Math.max(min_d[1], dims[1]) ];
+        // pos = _sub(pos)( _sub(minned_dims)(dims) );
+        return { pos: pos, dims: minned_dims };
     };
     o.pos = function(){ return pos_dims().pos };
     o.dims = function(){ return pos_dims().dims };
