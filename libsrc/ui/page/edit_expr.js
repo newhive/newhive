@@ -40,8 +40,8 @@ define([
         $('link.edit').remove();
         $('#site').empty();
         $("body").removeClass("edit");
-
         o.controller.set_exit_warning(false);
+        editor.exit();
     };
 
     o.resize = function(){

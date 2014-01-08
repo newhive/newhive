@@ -2511,6 +2511,21 @@ Hive.init = function(exp, page){
     Hive.Selection();
     Hive.Apps.init(Hive.Exp.apps);
     Hive.History.init();
+    Hive.common_setup();
+};
+
+Hive.exit = function(){
+    $(document).off('keydown');
+    $('body').off('mousemove mousedown');
+};
+
+Hive.edit_start = function(){
+    evs.handler_set(Hive.Selection);
+    evs.handler_set(Hive);
+};
+Hive.edit_pause = function(){
+    evs.handler_del(Hive.Selection);
+    evs.handler_del(Hive);
 };
 
 // Matches youtube and vimeo URLs, any URL pointing to an image, and
