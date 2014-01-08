@@ -3364,6 +3364,11 @@ Hive.init = function(exp, page){
     Hive.common_setup();
 };
 
+Hive.exit = function(){
+    $(document).off('keydown');
+    $('body').off('mousemove mousedown');
+};
+
 Hive.edit_start = function(){
     evs.handler_set(Hive.Selection);
     evs.handler_set(Hive);
