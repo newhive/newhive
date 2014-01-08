@@ -159,6 +159,8 @@ class Expr(ModelController):
             expr = expr_obj,
             use_ga = False,
         )
+        if snapshot_mode:
+            tdata.context['css'] = "body { overflow-x: hidden; }"
         return self.serve_page(tdata, response, 'pages/expr.html')
         
     def expr_to_html(self, exp, snapshot_mode=False, viewport=(1000, 750)):
