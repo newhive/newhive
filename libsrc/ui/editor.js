@@ -1677,12 +1677,10 @@ Hive.App.Audio = function(o) {
         o.div.find('.jp-button').width(height).height(height);
     };
 
-    var _load = o.load;
-    o.load = function(){
-        _load();
+    o.load.add(function(){
         o.dims_set(o.dims());
         o.scale_set(o.dims()[1] / 35);
-    };
+    });
 
     o.set_shield = function() { return true; }
 
