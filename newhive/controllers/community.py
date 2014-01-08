@@ -74,6 +74,8 @@ class Community(Controller):
     def expressions_public_tags(self, tdata, request, owner_name=None, at=0, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
+        if args.get('tag_name'): return self.expressions_tag(
+            tdata, request, owner_name=owner_name, **args)
         spec = {'owner_name': owner_name}
         cards = self.db.Expr.page(spec, viewer=tdata.user, auth='public', at=at, **args)
         return self.expressions_for(tdata, cards, owner)
@@ -273,6 +275,7 @@ class Community(Controller):
             self.db.Expr.named(owner_name, expr_name) )
         if not expr: return None
 
+        meta = {}
         resp = {
             'expr_id': expr.id,
             'expr': expr.client_view(viewer=tdata.user, activity=10)
@@ -285,16 +288,20 @@ class Community(Controller):
             resp['expr']['title'] = '[password required]'
             resp['error'] = 'password'
         else:
+            meta['img_url'] = expr.snapshot_name('big')
             expr_owner = expr.get_owner()
             if expr_owner and expr_owner['analytics'].get('views_by'):
                 expr_owner.increment({'analytics.views_by': 1})
             if not expr.get('views'): expr['views'] = 0
             if expr_owner.id != tdata.user.id: expr.increment({'views': 1})
+        resp['meta'] = meta
         return resp
 
     def edit_expr(self, tdata, request, id=None):
         expr = self.db.Expr.fetch(id)
-        if not expr or not tdata.user.can_view(expr): return None
+        if not expr or (
+            (not tdata.user.can_view(expr)) and expr.get('password')
+        ): return None
         # For others' expressions, require the #remix tag
         if (tdata.user.id != expr['owner'] and
             "remix" not in expr.get('tags_index', [])):
@@ -333,6 +340,9 @@ class Community(Controller):
             'card_type': 'expr'
         }
 
+    # TODO-cleanup: currently used for redirects. Remove this, make propper
+    # redirect controller
+    #redirect-cleanup
     def empty(self, tdata, request, **args):
         return {}
 
@@ -345,7 +355,8 @@ class Community(Controller):
     def pre_dispatch(self, query, tdata, request, response, json=False, **kwargs):
         # "Merged" users see trending
         self.response = response
-        # Handle redirects
+
+        # TODO-cleanup: remove this, see #redirect-cleanup Handle redirects
         if kwargs.get('route_name') == 'my_profile':
             return self.redirect(response, abs_url(
                 '/' + tdata.user['name'] + '/profile' +
@@ -387,12 +398,13 @@ class Community(Controller):
             if owner and kwargs.get('include_tags'):
                 # TODO-perf: don't update list on query, update it when it changes!
                 owner.calculate_tags()
-                cnt = owner['unlisted_tags'] if (
-                    tdata.user.id == owner.id and kwargs.get('private')
-                    ) else owner['public_tags']
-                page_data['tag_list'] = [x for x,y in cnt.most_common()] # [:num_tags]
-                if kwargs.get('tag_name') and cnt[kwargs.get('tag_name')] == 0:
-                    page_data['tag_list'] = [kwargs.get('tag_name')] + page_data['tag_list']
+                (ordered_count, all_tags) = owner.get_tags(
+                    tdata.user.id == owner.id and kwargs.get('private'))
+                tag_name = kwargs.get('tag_name')
+                if tag_name and tag_name not in all_tags:
+                    all_tags = all_tags[:ordered_count] + [tag_name] + all_tags[ordered_count:]
+                page_data['tag_list'] = all_tags # [:num_tags]
+                page_data['ordered_count'] = ordered_count
                 if kwargs.get('private') and tdata.user.id == owner.id:
                     page_data['tag_entropy'] = owner.get('tag_entropy', {})
             else:
@@ -417,4 +429,11 @@ class Community(Controller):
             return self.serve_json(response, page_data)
         else:
             tdata.context.update(page_data=page_data, route_args=kwargs)
+            if page_data.get('meta'):
+                tdata.context.update(page_data['meta'])
+                del page_data['meta']
+            if page_data.get('expr'):
+                tdata.context.update(meta_title=page_data.get('expr').get('title'))
+            tdata.context.update(meta_url=request.url)
+
             return self.serve_loader_page('pages/main.html', tdata, request, response)

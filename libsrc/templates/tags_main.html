@@ -1,0 +1,63 @@
+{# main tag list 
+  expander: let this list be expanded with ... click
+  expanded: start expanded
+  auto_expander: if nonempty, toggle the expanded state on expander click
+
+  tag_list: tags to render
+  extra_tags: tags to render "below the fold"
+  blank_card: if nonempty, add a dummy tag to beginning of list
+#}
+
+{# Scope the below variables #}
+{<with null .}
+{set "expanded" (or expanded extra_tags)}
+{<if (and (not blank_tag) (eq user.id owner.id))}
+  {set "editable" " editable"}
+{>}
+
+<div class="tag_list_container centered {extra_classes}" data-link-show=".icon.hash">
+  {<if expander}<div class="expander tag_label">...</div>{>}
+  
+  <div class="tag_list main inline{<if expanded} expanded{>}" 
+    {<if auto_expander}
+      data-class-toggle='```{".tag_list_container.```{extra_classes}``` .expander":"expanded"}```'
+    {>}>
+    {<with null "main_view" true}
+      {<if extra_tags}
+        <div class="drop_box{editable}">
+          {<if editable}
+            <form class="tag_order" {form_attrs "tag_order"} method="POST">
+              <input name="tag_order" type="hidden" value="" />
+              {<unless (len tag_list)}
+                <div class="centered layered">
+                  {<if (len extra_tags)}
+                    <div class="centered">Drag and drop tags into this box to display them on your profile.</div>
+                  {>}{<else}
+                    <div class="centered">Tag your Expressions to start creating collections.</div>
+                  {>}
+                </div>
+              {>}
+            </form>
+          {>}
+          {<for tag_list "tagnum"}
+            {|templates/tag_card.html}
+          {>}
+        </div>
+        {<if blank_tag}{<with null "item" "" "tagnum" "new"}
+          {|templates/tag_card.html}
+        {>}{>}
+        {<for extra_tags "tagnum"}
+          {|templates/tag_card.html}
+        {>}
+      {>}{<else}
+        {<if blank_tag}{<with null "item" "" "tagnum" "new"}
+          {|templates/tag_card.html}
+        {>}{>}
+        {<for tag_list "tagnum"}
+          {|templates/tag_card.html}
+        {>}
+      {>}
+    {>}
+  </div>
+</div>
+{>}

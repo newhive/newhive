@@ -10,6 +10,7 @@ define([
     'browser/layout',
     'server/context',
     'ui/colors',
+    './edit/events',
     'sj!templates/color_picker.html',
     'browser/jquery/jplayer/skin',
     'browser/jquery/rotate.js',
@@ -26,12 +27,80 @@ define([
     layout,
     context,
     colors,
+    evs,
     color_picker_template
 ){
 
 var Hive = {}, debug_mode = context.config.debug_mode, bound = js.bound,
     noop = function(){}, Funcs = js.Funcs, asset = ui_util.asset;
+Hive.shift_does_raise = false;
+Hive.show_move_sensitivity = false;
 Hive.asset = asset;
+
+// TODO-refactor: move into util
+_apply = function(func, scale) {
+    if (typeof(scale) == "number") {
+        return function(l) {
+            return $.map(l, function(x) { return func(scale, x); });
+        }
+    } else {
+        // TODO: error handling?
+        return function(l) {
+            return $.map(l, function(x, i) { return func(scale[i], x); });
+        }
+    }
+};
+
+_add = function(scale) {
+    if (typeof(scale) == "number") {
+        return function(l) {
+            return $.map(l, function(x) { return x + scale; });
+        }
+    } else {
+        // TODO: error handling?
+        return function(l) {
+            return $.map(l, function(x, i) { return x + scale[i]; });
+        }
+    }
+};
+
+_mul = function(scale) {
+    if (typeof(scale) == "number") {
+        return function(l) {
+            return $.map(l, function(x) { return x*scale; });
+        }
+    } else {
+        // TODO: error handling?
+        return function(l) {
+            return $.map(l, function(x, i) { return x*scale[i]; });
+        }
+    }
+};
+
+_div = function(scale) {
+    return _apply(function(x, y){ return x / y }, scale);
+};
+
+_inv = function(l){
+    return l.map(function(x){ return 1/x });
+};
+
+// Returns the nonnegative (nonoverlapping) distance btw two intervals.
+interval_dist = function(a, b) {
+    c = [a[1] - b[0], a[0] - b[1]];
+    if (c[0] * c[1] <= 0)
+        return 0;
+    return Math.min(Math.abs(c[0]), Math.abs(c[1]));
+};
+
+interval_size = function(i) { return Math.abs(i[1] - i[0]); };
+// Returns the least interval containing both inputs
+interval_bounds = function(a, b) {
+    return [Math.min(a[0], b[0]), Math.max(a[1], b[1])];
+};
+var null_interval = [Infinity, -Infinity];
+var all_interval = [-Infinity, Infinity];
+////////
 
 var hover_menu = function(handle, drawer, opts){
     return Menu(handle, drawer, $.extend({ auto_height: false }, opts));
@@ -93,7 +162,7 @@ Hive.Apps = (function(){
         for(var i = 0; i < o.length; i++) if( o[i].id == id ) return o[i];
     };
     o.all = function(){ return $.grep(o, function(e){ return ! e.deleted; }); };
-    
+
     o.init = function(initial_state, load){
         var query = location.search.slice(1);
         if (query.length) {
@@ -121,10 +190,184 @@ Hive.Apps = (function(){
     return o;
 })();
 
-Hive.env = function(){
-    scale = Hive.Exp.fixed_width ? 1 : $(window).width() / 1000;
-    return {scale: scale};
+Hive.env_set = function(){
+    Hive._scale = $(window).width() / 1000;
 };
+Hive.env = function(){
+    return { scale: Hive._scale };
+};
+Hive.layout_apps = function(){
+    var old_env = Hive.env();
+    Hive.env_set();
+    var new_env = Hive.env();
+    if(old_env.scale == new_env.scale) return;
+
+    $.map(Hive.Apps, function(a){ a.layout() });
+    if(Hive.Selection.controls) Hive.Selection.controls.layout();
+};
+
+var snap_helper = function(my_tuple, exclude_ids,
+    snap_strength, snap_radius, padding
+) {
+    var s = Hive.env().scale;
+    if (snap_radius == undefined) snap_radius = 10;
+    if (snap_strength == undefined) snap_strength = 0.0;
+    if (padding == undefined) padding = 10;
+    padding = padding * .5;
+    var pos;
+    for (var j = 0; j < 3;j++){
+        if (my_tuple[0][j]) {
+            pos = [my_tuple[0][j], my_tuple[1][j]];
+            break;
+        }
+    }
+    var tuple = [[],[]], new_pos = pos.slice();
+    // TODO-perf: save this array only after drag/drop
+    // And keep it sorted
+    var apps = Hive.Apps.all().filter(function(app) {
+        return !(app.id in exclude_ids || Hive.Selection.selected(app));
+    });
+    // TODO: this 'root' app belongs as a permanent feature of Apps.
+    // var app = Hive.App({
+    //     position: [0, 0],
+    //     dimensions: [1000, $("body")[0].scrollHeight / s],
+    //     type: 'hive.root',
+    // });
+    // app.load();
+    // apps = apps.concat([app]);
+    for (var i = 0; i < apps.length; i++) {
+        var app = apps[i];
+        var curr_ = [app.min_pos(), app.cent_pos(), app.max_pos()];
+        var curr = [[],[]];
+        $.map(curr_, function(pair) {
+            curr[0] = curr[0].concat(pair[0]);
+            curr[1] = curr[1].concat(pair[1]);
+        });
+        tuple[0] = tuple[0].concat([curr[0].slice()]);
+        tuple[1] = tuple[1].concat([curr[1].slice()]);
+    };
+    // Add in the root element. 
+    // TODO: should be in apps
+    var scroll_coord = 1;
+    var max_height = $("body")[0].scrollWidth / s;
+    if (scroll_coord)
+        max_height = $("body")[0].scrollHeight / s;
+    tuple[scroll_coord] = tuple[scroll_coord].concat([[0, max_height / 2, max_height]]);
+    tuple[1 - scroll_coord] = tuple[1 - scroll_coord].concat([[0, 500, 1000]]);
+
+    var best_intervals = [];
+    if (my_tuple[0][1])
+        dist_cent = [my_tuple[0][1], my_tuple[1][1]];
+    else
+        var dist_cent = pos.slice();
+    for (var coord = 0; coord <= 1; ++coord) {
+        var best_snaps = {};
+        var best_guides = {};
+        var my_interval = [my_tuple[1 - coord][0], my_tuple[1 - coord][2]];
+        if (my_interval[0] == undefined || my_interval[1] == undefined) {
+            my_interval = dist_cent.slice()[coord];
+            my_interval = [my_interval, my_interval];
+        }
+        var best = { goal:0, strength:0, start:[0,0], end:[0,0] };
+        for (var app_i = 0; app_i < tuple[coord].length; ++app_i) {
+            if (coord == scroll_coord && app_i == tuple[coord].length - 1)
+                break;
+            for (var type1 = 0; type1 < 3; ++type1) {
+                coord1 = my_tuple[coord][type1];
+                if (!coord1)
+                    continue;
+                for (var type2 = 0; type2 < 3; ++type2) {
+                    coord2 = tuple[coord][app_i][type2];
+                    // Add padding if aligning a right edge to a left
+                    var padding_factor = 0, added_padding = 0;
+                    var padding_steps = 1;
+                    if (Math.max(type2, type1) == 2 && 
+                        (type1 == 0 || type2 == 0)) {
+                        padding_factor = padding*(type2 - type1);
+                        padding_steps = 2;
+                    }
+                    for (var j = 0; j < padding_steps; 
+                        ++j, coord2 += padding_factor, 
+                        added_padding += padding_factor) {
+                        var snap_dist = Math.abs(coord2 - coord1);
+                        if (snap_dist < snap_radius) {
+                            var strength = 1.0;
+                            var other_interval =
+                                [tuple[1 - coord][app_i][0],tuple[1 - coord][app_i][2]];
+                            var dist = interval_dist(my_interval, other_interval);
+                            var guide = interval_bounds(my_interval, other_interval);
+                            // TODO: power fall-off w/ decay when user jiggles mouse
+                            dist += snap_dist * 5;
+                            if (dist > 200) strength /= 
+                                Math.exp((Math.min(dist, 1000) - 200)/500);
+                            if ((type1 == 1) ^ (type2 == 1)) strength *= .4;
+                            var goal = coord2 + pos[coord] - coord1;
+                            goal = Math.round(goal*2)/2;
+                            var total = best_snaps[goal.toString()] || 0;
+                            total += strength;
+                            goal_memo = goal.toString();
+                            best_snaps[goal_memo] = total;
+                            best_guides[goal_memo] = best_guides[goal_memo] || {};
+                            // NOTE: We were showing the ruler at coord2 - added_padding
+                            best_guides[goal_memo][coord2] = interval_bounds(
+                                best_guides[goal_memo][coord2] || null_interval,
+                                guide);
+                            if (total > best.strength) {
+                                best.strength = total;
+                                best.goal = goal;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (best.strength > snap_strength) {
+            new_pos[coord] = best.goal;
+            var obj = best_guides[best.goal.toString()];
+            // Just pick the first available guide matching the goal.
+            // TODO-polish: pick on a more sensible criterion
+            for (var first in obj)
+                if (obj.hasOwnProperty(first)) break;
+            best_intervals[coord] = obj[first].concat([parseFloat(first)]);
+        }
+    }
+    $(".ruler").hidehide();
+    for (var coord = 0; coord < 2; ++coord) {
+        if (best_intervals[coord]) {
+            var best_interval = best_intervals[coord];
+            var best = {start:[], end:[]};
+            // Correct an interval which includes the original point pre-snap.
+            // Fix it to the post-snap position.
+            var orig_pos = [pos[1 - coord], my_tuple[1 - coord][2]];
+            for (var i = 0; i < 2; i++) {
+                if (orig_pos[i]) {
+                    for (var j = 0; j < 2; j++) {
+                        if (best_interval[j] == orig_pos[i])
+                            best_interval[j] += new_pos[1 - coord] - pos[1 - coord];
+                    }
+                }
+            }
+            best.start[1 - coord] = best_interval[0];
+            best.end[1 - coord] = best_interval[1];
+            best.start[coord] = best_interval[2] - 1/s;
+            best.end[coord] = best_interval[2] + 1/s;
+            var klass = ".ruler.ruler" + coord;
+            var rule = $(klass);
+            if (0 == rule.length) {
+                rule = $('<div class="ruler ruler' + coord + '">');
+                rule.appendTo($("body"));
+            }
+            rule.showshow();
+            rule.css({
+                left: Math.min(best.start[0], best.end[0]) * s,
+                top: Math.min(best.start[1], best.end[1]) * s,
+                width: Math.abs(best.start[0] - best.end[0]) * s,
+                height: Math.abs(best.start[1] - best.end[1]) * s
+            });
+        }
+    }
+    return new_pos;
+}
 
 // Creates generic initial object for all App types.
 Hive.App = function(init_state, opts) {
@@ -136,6 +379,15 @@ Hive.App = function(init_state, opts) {
     $.extend(o.init_state, init_state);
     o.type = Hive.appTypes[init_state.type];
     o.id = init_state.id || Hive.random_str();
+    o.handler_type = 0;
+
+    o.add_to = function(method, more_method){
+        // Add functionality to methods, used by behavior and child constructors
+        var old_method = o[method];
+        o[method] = function(){
+            return more_method(old_method());
+        };
+    };
 
     o._remove = function(){
         o.unfocus();
@@ -158,8 +410,10 @@ Hive.App = function(init_state, opts) {
         if(from == to) return;
         Hive.History.saver(o.layer, stack_to, 'change layer').exec(to);
     };
-    o.stack_bottom = function(){ o.stack_to(0) };
-    o.stack_top = function(){ o.stack_to(o.apps.length -1) };
+    o.stack_bottom = function(){
+        o.stack_to(0) };
+    o.stack_top = function(){
+        o.stack_to(o.apps.length -1) };
     
     o.make_controls = [];
 
@@ -174,25 +428,6 @@ Hive.App = function(init_state, opts) {
         focused = false;
     }, o.focused);
 
-    o.keyPress = function(e){
-        var nudge = function(dx,dy){
-            return function(){
-                var refPos = o.pos();
-                if (e.shiftKey) {dx = 10*dx; dy = 10*dy;}
-                o.pos_set([refPos[0] + dx, refPos[1] + dy]);
-                e.preventDefault();
-            }
-        }
-
-        var handlers = {
-            37: nudge(-1,0)   // Left
-            , 38: nudge(0,-1) // Up
-            , 39: nudge(1,0)  // Right
-            , 40: nudge(0,1)  // Down
-        }
-        handlers[e.keyCode] && handlers[e.keyCode]();
-    };
-
     // stacking order of aps
     var layer = init_state.z;
     o.layer = function(){ return layer; };
@@ -200,46 +435,82 @@ Hive.App = function(init_state, opts) {
         layer = n;
         o.div.css('z-index', n);
     };
-    
-    var _pos;
-    o.pos = function(){ return [ _pos[0], _pos[1] ]; };
-    o.pos_set = function(pos){
-        _pos = [ Math.round(pos[0]), Math.round(pos[1]) ];
-        o.div.css({ 'left' : _pos[0], 'top' : _pos[1] });
-        if(o.controls) o.controls.pos_set([ _pos[0], _pos[1] ]);
+
+    // BEGIN-coords: client space and editor space (called relative)
+    // position and dimension methods
+
+    var _pos = [-999, -999], _dims = [-1, -1];
+
+    o.pos = function(){
+        var s = Hive.env().scale;
+        return [ _pos[0] * s, _pos[1] * s ];
     };
+    o.pos_set = function(pos){
+        var s = Hive.env().scale;
+        _pos = [ pos[0] / s, pos[1] / s ];
+        o.layout();
+    };
+    o.dims = function() {
+        var s = Hive.env().scale;
+        return [ _dims[0] * s, _dims[1] * s ];
+    };
+    o.dims_set = function(dims){
+        var s = Hive.env().scale;
+        _dims = [ dims[0] / s, dims[1] / s ];
+        o.layout();
+    };
+    o.width = function(){ return o.dims()[0] };
+    o.height = function(){ return o.dims()[1] };
     o.pos_center = function() {
         var dims = o.dims();
         var pos = o.pos();
         return [ pos[0] + dims[0] / 2, pos[1] + dims[1] / 2 ];
     };
 
-    var history_point;
-    o.move_start = function(){
-        Hive.drag_start();
-        o.ref_pos = o.pos();
-        history_point = o.history_helper_relative('move');
-    };
-    o.move = function (e, dd, shallow) {
-        if(!o.ref_pos) return;
-        var delta = [dd.deltaX, dd.deltaY];
-        if(e.shiftKey) delta[ Math.abs(dd.deltaX) > Math.abs(dd.deltaY) ? 1 : 0 ] = 0;
-        o.pos_set([ o.ref_pos[0] + delta[0], o.ref_pos[1] + delta[1] ]);
-    };
-    o.move_end = function(){
-        Hive.drag_end();
-        history_point.save()
+    o.layout = function(){
+        var pos = o.pos(), dims = o.dims();
+        o.div.css({ 'left' : pos[0], 'top' : pos[1] });
+        o.div.width(dims[0]).height(dims[1]);
+        if(o.controls){
+            o.controls.pos_set([ pos[0], pos[1] ]);
+            o.controls.layout();
+        }
     };
 
-    var _dims;
-    o.dims = function() { return [ _dims[0], _dims[1] ]; };
-    o.dims_set = function(dims){
-        _dims = [ Math.round(dims[0]), Math.round(dims[1]) ];
-        o.div.width(_dims[0]).height(_dims[1]);
-        if(o.controls) o.controls.layout();
+    o.pos_relative = function(){ return _pos.slice(); };
+    o.pos_relative_set = function(pos){
+        _pos = pos.slice();
+        o.layout()
     };
-    o.width = function(){ return _dims[0] };
-    o.height = function(){ return _dims[1] };
+    o.dims_relative = function(){
+        return _dims.slice();
+    }
+    o.dims_relative_set = function(dims){
+        _dims = dims.slice();
+        o.layout();
+    };
+    o.pos_center_relative = function(){
+        var dims = o.dims_relative();
+        var pos = o.pos_relative();
+        return [ pos[0] + dims[0] / 2, pos[1] + dims[1] / 2 ];
+    };
+    // TODO: make these two reflect axis aligned bounding box (when rotated, etc)
+    o.min_pos = function(){ return _pos.slice(); };
+    o.max_pos = function(){ return [ _pos[0] + _dims[0], _pos[1] + _dims[1] ]; };
+    o.cent_pos = function() { return _mul(.5)(_add(o.min_pos())(o.max_pos())); };
+    // return [[x-min, x-center, x-max], [y-min, y-center, y-max]]
+    // if o were moved to pos
+    o.bounds_tuple_relative = function(pos) {
+        var curr_ = [o.min_pos(), o.cent_pos(), o.max_pos()];
+        var curr = [[],[]];
+        $.map(curr_, function(pair) {
+            curr[0] = curr[0].concat(pair[0] + pos[0] - _pos[0]);
+            curr[1] = curr[1].concat(pair[1] + pos[1] - _pos[1]);
+        });
+        return [curr[0].slice(), curr[1].slice()];
+    }
+
+    // END-coords
 
     o.center = function(offset) {
         var win = $(window),
@@ -260,33 +531,45 @@ Hive.App = function(init_state, opts) {
         return cp;
     };
 
-    var opacity = o.init_state.opacity === undefined ? 1 : o.init_state.opacity;
-    o.opacity = function(){ return opacity; };
-    o.opacity_set = function(s){
-        opacity = s;
-        o.content_element.css('opacity', s);
+    o.fit_to = function(opts){
+        if (opts.doit == undefined) opts.doit = true;
+        var dims = opts.dims.slice(), pos = opts.pos.slice();
+        var scaled = (opts.scaled) ? opts.scaled.slice() : o.dims();
+        var aspect = scaled[1] / scaled[0];
+        var into_aspect = dims[1] / dims[0];
+        var fit_coord = (aspect < into_aspect) ? 0 : 1;
+        if (opts.zoom || opts.fit == 2)
+            fit_coord = 1 - fit_coord;
+        scaled = _mul(dims[fit_coord] / scaled[fit_coord])(scaled);
+        pos[1 - fit_coord] += 
+            (dims[1 - fit_coord] - scaled[1 - fit_coord]) / 2;
+
+        if (opts.doit) {
+            o.pos_set(pos);
+            o.dims_set(scaled);
+        }
+        return { pos: pos, dims: scaled };
     };
 
-    o.state_relative = function(env){ return {
-          position: [ _pos[0] / env.scale, _pos[1] / env.scale ]
-        , dimensions: [ _dims[0] / env.scale, _dims[1] / env.scale ]
+    o.state_relative = function(){ return {
+        position: _pos.slice(),
+        dimensions: _dims.slice()
     }};
-    o.state_relative_set = function(env, s){
-        o.pos_set([ Math.round(s.position[0] * env.scale),
-            Math.round(s.position[1] * env.scale) ]);
-        o.dims_set([ Math.round(s.dimensions[0] * env.scale),
-            Math.round(s.dimensions[1] * env.scale) ]);
+    o.state_relative_set = function(s){
+        _pos = s.position.slice();
+        _dims = s.dimensions.slice();
+        o.layout();
     };
 
     o.state = function(){
-        var s = $.extend({}, o.init_state, o.state_relative(Hive.env()), {
+        var s = $.extend({}, o.init_state, o.state_relative(), {
             z: o.layer(),
+            full_bleed_coord: o.full_bleed_coord,
             // TODO-cleanup: flatten state and use o.state() and
             // o.state_update to simplify behavior around shared attributes
             content: o.content(),
             id: o.id
         });
-        if(opacity != 1) s.opacity = opacity;
         return s;
     };
     o.state_update = function(s){
@@ -295,12 +578,12 @@ Hive.App = function(init_state, opts) {
 
     o.history_helper_relative = function(name){
         var o2 = { name: name };
-        o2.old_state = o.state_relative(Hive.env());
+        o2.old_state = o.state_relative();
         o2.save = function(){
-            o2.new_state = o.state_relative(Hive.env());
+            o2.new_state = o.state_relative();
             Hive.History.save(
-                function(){ o.state_relative_set(Hive.env(), o2.old_state) },
-                function(){ o.state_relative_set(Hive.env(), o2.new_state) },
+                function(){ o.state_relative_set(o2.old_state) },
+                function(){ o.state_relative_set(o2.new_state) },
                 o2.name
             );
         };
@@ -311,24 +594,19 @@ Hive.App = function(init_state, opts) {
         if( ! o.init_state.position ) o.init_state.position = [ 100, 100 ];
         if( ! o.init_state.dimensions ) o.init_state.dimensions = [ 300, 200 ];
         if( opts.offset ) o.init_state.position = array_sum(o.init_state.position, opts.offset);
-        o.state_relative_set( Hive.env(), o.init_state );
-        o.opacity_set(opacity);
+        o.state_relative_set(o.init_state);
+        if (o.init_state.full_bleed_coord != undefined)
+            Hive.App.has_full_bleed(o, o.init_state.full_bleed_coord);
         if(opts.load) opts.load(o);
+        Hive.layout_apps();
     });
 
     // initialize
 
-    o.div = $('<div class="ehapp">');
-    o.div.drag('start', o.move_start).drag(o.move).drag('end', o.move_end);
-    o.div.click(function(e){
-        return Hive.Selection.app_click(o, e)
-    });
-    o.move_init = function(e){
-        return Hive.Selection.app_drag_init(o, e)
-    };
-    o.div.drag('init', o.move_init)
-    $('#happs').append(o.div);
-
+    o.div = $('<div class="ehapp">').appendTo('#happs');
+    evs.on(o.div, 'dragstart', o).on(o.div, 'drag', o).on(o.div, 'dragend', o)
+        .on(o.div, 'click', o).long_hold(o.div, o);
+ 
     o.type(o); // add type-specific properties
     o.apps.add(o); // add to apps collection
 
@@ -364,27 +642,6 @@ Hive.Controls = function(app, multiselect) {
         if(dims[0] < 135) dims[0] = 135;
         if(dims[1] < 40) dims[1] = 40;
         return dims;
-    };
-
-    o.layout = function() {
-        o.pos_update();
-        var dims = o.dims(), p = o.padding, ad = o.app.dims(),
-            cx = Math.round(ad[0] / 2), cy = Math.round(ad[1] / 2), rf = ad[0] % 2,
-            bw = o.border_width, outer_l = -cx -bw - p,
-            outer_width = ad[0] + bw*2 + p*2, outer_height = ad[1] + p * 2 + 1;
-
-        o.select_box.css({ left: cx, top: cy });
-        o.select_borders.eq(0).css({ left: outer_l, top: -cy -bw -p, width: outer_width, height: bw }); // top
-        o.select_borders.eq(1).css({ left: cx + p -rf, top: -cy -p - bw + 1, height: outer_height + bw * 2 -2, width: bw }); // right
-        o.select_borders.eq(2).css({ left: outer_l, top: cy + p, width: outer_width, height: bw }); // bottom
-        o.select_borders.eq(3).css({ left: outer_l, top: -cy -p - bw + 1, height: outer_height + bw * 2 -2, width: bw }); // left
-        if(o.multiselect) return;
-
-        //o.c.undo   .css({ top   : -38 - p, right  :  61 - p });
-        o.c.copy   .css({ left  : dims[0] - 45 + p, top   : -38 - p });
-        o.c.remove .css({ left  : dims[0] - 14 + p, top   : -38 - p });
-        o.c.stack  .css({ left  : dims[0] - 78 + p, top   : dims[1] + 8 + p });
-        o.c.buttons.css({ left  :  -bw - p, top : dims[1] + p + 10, width : dims[0] - 60 });
     };
 
     o.append_link_picker = function(d, opts) {
@@ -466,6 +723,27 @@ Hive.Controls = function(app, multiselect) {
     o.hover_menu = function(h, d, opts) {
         return hover_menu(h, d, $.extend({offset_y : o.padding + 1}, opts)) };
 
+    o.layout = function() {
+        o.pos_update();
+        var dims = o.dims(), p = o.padding, ad = o.app.dims(),
+            cx = Math.round(ad[0] / 2), cy = Math.round(ad[1] / 2),
+            bw = o.border_width, outer_l = -cx -bw - p,
+            outer_width = ad[0] + bw*2 + p*2, outer_height = ad[1] + p * 2 + 1;
+
+        o.select_box.css({ left: cx, top: cy });
+        o.select_borders.eq(0).css({ left: outer_l, top: -cy -bw -p, width: outer_width, height: bw }); // top
+        o.select_borders.eq(1).css({ left: cx + p, top: -cy -p - bw + 1, height: outer_height + bw * 2 -2, width: bw }); // right
+        o.select_borders.eq(2).css({ left: outer_l, top: cy + p, width: outer_width, height: bw }); // bottom
+        o.select_borders.eq(3).css({ left: outer_l, top: -cy -p - bw + 1, height: outer_height + bw * 2 -2, width: bw }); // left
+        if(o.multiselect) return;
+
+        //o.c.undo   .css({ top   : -38 - p, right  :  61 - p });
+        o.c.copy   .css({ left  : dims[0] - 45 + p, top   : -38 - p });
+        o.c.remove .css({ left  : dims[0] - 14 + p, top   : -38 - p });
+        o.c.stack  .css({ left  : dims[0] - 78 + p, top   : dims[1] + 8 + p });
+        o.c.buttons.css({ left  :  -bw - p, top : dims[1] + p + 10, width : dims[0] - 60 });
+    };
+
     o.div = $('<div>').addClass('controls');
     $('#controls').append(o.div);
 
@@ -475,9 +753,11 @@ Hive.Controls = function(app, multiselect) {
     o.select_borders = border.add(border.clone().addClass('right'))
         .add(border.clone().addClass('bottom'))
         .add(border.clone().addClass('left'));
-    border.eq(0).addClass('top'); // add 'left' class after the others were cloned
-    o.select_borders.drag('init', function(e) { return Hive.Selection.app_drag_init(o.app, e) })
-        .drag('start', o.app.move_start).drag(o.app.move).drag('end', o.move_end);
+    border.eq(0).addClass('top'); // add 'top' class after the others were cloned
+    // TODO-refactor replace with evs.on
+    evs.on(o.select_borders, 'dragstart', o.app)
+        .on(o.select_borders, 'drag', o.app)
+        .on(o.select_borders, 'dragend', o.app);
     o.div.append(o.select_box.append(o.select_borders));
     o.select_box.click(function( e ){
         e.stopPropagation();
@@ -514,12 +794,9 @@ Hive.Controls = function(app, multiselect) {
         d.find('.hoverable').each(function(i, el){ ui_util.hoverable($(el)) });
     }
 
-    // disable hover handlers while dragging
-    o.div.find('.drag').drag('start', Hive.drag_start).drag('end', Hive.drag_end);
-
     o.layout();
     return o;
-}
+};
 
 
 Hive.appTypes = { };
@@ -527,6 +804,65 @@ Hive.registerApp = function(app, name) {
     app.tname = name;
     Hive.appTypes[name] = app;
 }
+
+var is_escape = function(ev){
+    return ev.keyCode == 27;
+}
+
+// Most general event handlers
+Hive.handler_type = 3;
+Hive.dragstart = noop; // function(){ hovers_active(false) };
+Hive.dragend = function(){
+    // TODO-usability: fix disabling hover states in ui/util.hoverable
+    // hovers_active(true)
+    // In case scrollbar has been toggled:
+    Hive.layout_apps(); 
+};
+Hive.mouse_pos = [0, 0];
+Hive.mousemove = function(ev){
+    Hive.mouse_pos = [ev.clientX, ev.clientY];
+};
+Hive.keydown = function(ev){
+    // TODO-feature-editor-prompts #706: if key pressed is a word character,
+    // create hive.text app with content of the character pressed
+
+    if(ev.ctrlKey && ev.keyCode == 90){
+        Hive.History.undo();
+        return false;
+    }
+    else if(ev.ctrlKey && ev.keyCode == 89){
+        Hive.History.redo();
+        return false;
+    }
+};
+
+
+Hive.App.has_nudge = function(o){
+    // TODO-bugbug: implement undo/redo of this. Because nudge is naturally
+    // called repeatedly, this should create a special collapsable history
+    // point that automatically merges into the next history point if it's the
+    // same type, similar to History.begin + History.group
+    o.keydown.add(function(ev){
+        var nudge = function(dx, dy){
+            return function(){
+                var s = Hive.env().scale, delta = _mul(1/s)([dx, dy]);
+                if(ev.shiftKey)
+                    delta = _mul(10)(delta);
+                o.pos_relative_set(_add(o.pos_relative())(delta));
+            }
+        }
+        var handlers = {
+            37: nudge(-1,0)   // Left
+            , 38: nudge(0,-1) // Up
+            , 39: nudge(1,0)  // Right
+            , 40: nudge(0,1)  // Down
+        }
+        if(handlers[ev.keyCode]){
+            handlers[ev.keyCode]();
+            return false;
+        }
+    });
+};
 
 /* Hack to prevent iframe or object in an App from capturing mouse events
  * @param {Hive.App} o The app to add shielding to
@@ -575,16 +911,124 @@ Hive.App.has_shield = function(o, opts) {
     }
 };
 
+// coord = 0 ==> full in x dimension (y scrolling)
+// coord = 1 ==> full in y dimension (x scrolling)
+Hive.App.has_full_bleed = function(o, coord){
+    if (!coord) coord = 0;  // default is vertical scrolling
+    o.full_bleed_coord = coord;
+    var dims = o.dims_relative();
+    dims[coord] = 1000;
+    o.dims_relative_set(dims);
+
+    o.orig_pos_set = o.pos_set;
+    o.orig_move_start = o.move_start;
+    o.orig_move_end = o.move_end;
+
+    o.move_start = function() {
+        Hive.History.begin();
+
+        o.orig_move_start();
+        o.padding = 10; // Scale into screen space?
+        o.size = o.dims()[1 - o.full_bleed_coord];//o.size || 200;
+        o.start_pos = o.pos()[1 - o.full_bleed_coord] - o.padding;
+        o.apps = Hive.Apps.all().filter(function(app) {
+            return !(app.id == o.id || Hive.Selection.selected(app));
+        });
+        var apps = o.apps;
+        for (var i = 0; i < apps.length; ++i) {
+            var app = apps[i];
+            app.old_start = app.pos()[1 - o.full_bleed_coord];
+            (app.orig_move_start || app.move_start)();
+            if (app.old_start >= o.start_pos)
+                app.old_start -= o.size + 2 * o.padding;
+        }
+    };
+    o.move_end = function() {
+        o.orig_move_end();
+        var apps = o.apps;
+        for (var i = 0; i < apps.length; ++i) {
+            var app = apps[i];
+            (app.orig_move_end || app.move_end)();
+        }
+        Hive.History.group('full-bleed move');
+    };
+    o.pos_set = function(pos) {
+        pos[o.full_bleed_coord] = 0;
+        var coord = 1 - o.full_bleed_coord; // Work in y
+        o.start_pos = pos[coord] - o.padding;
+        o.stop_pos = o.start_pos + o.size + 2 * o.padding;
+
+        if (o.apps) {
+            var push_start = 0, push_size = 0, apps = o.apps;
+            for (var i = 0; i < apps.length; ++i) {
+                var app = apps[i];
+                var start = app.old_start;
+                var stop = start + app.dims()[coord];
+                if (start < o.stop_pos && stop > o.start_pos) {
+                    var push_try = o.stop_pos - start;
+                    push_size = Math.max(push_size, push_try);
+                }
+            }
+            for (var i = 0; i < apps.length; ++i) {
+                var app = apps[i];
+                var start = app.old_start;
+                var stop = start + app.dims()[coord];
+                var new_pos = app.pos();
+                if (stop > o.start_pos) start += push_size;
+                new_pos[coord] = start;
+                (app.orig_pos_set || app.pos_set)(new_pos);
+            }
+        }
+        o.orig_pos_set(pos);
+    };
+
+    o.div.drag('start', o.move_start).drag('end', o.move_end);
+    // o.move_setup();
+    // o.pos_set(o.pos());
+};
+
 Hive.App.has_resize = function(o) {
     var dims_ref, history_point;
     o.resize_start = function(){
         dims_ref = o.dims();
         history_point = o.history_helper_relative('resize');
     };
-    o.resize = function(delta){ o.dims_set(o.resize_to(delta)); };
-    o.resize_end = function(){ history_point.save() };
+    o.resize = function(delta){ 
+        var s = Hive.env().scale;
+        delta = o.resize_to(delta);
+        var _pos = o.pos_relative();
+        var pos = [ _pos[0] + delta[0] / s, _pos[1] + delta[1] / s ];
+        o.resize_to_pos(pos);
+    };
+    o.resize_end = function(){ 
+        history_point.save();
+        $(".ruler").hidehide();
+    };
     o.resize_to = function(delta){
-        return [ Math.max(1, dims_ref[0] + delta[0]), Math.max(1, dims_ref[1] + delta[1]) ];
+        return [ Math.max(1, dims_ref[0] + delta[0]), 
+            Math.max(1, dims_ref[1] + delta[1]) ];
+    };
+    o.resize_to_pos = function(pos, doit) {
+        var _pos = o.pos_relative();
+        var snap_strength = .5, snap_radius = 10;  //!!
+        // TODO: allow snapping to aspect ratio (keyboard?)
+        if (snap_strength > 0) {
+            var excludes = {};
+            excludes[o.id] = true;
+            var tuple = [];
+            tuple[0] = [undefined, undefined, pos[0]];
+            tuple[1] = [undefined, undefined, pos[1]];
+            pos = snap_helper(tuple, excludes, snap_strength, snap_radius);
+        }
+        var _dims = [];
+        _dims[0] = pos[0] - _pos[0];
+        _dims[1] = pos[1] - _pos[1];
+        if (o.full_bleed_coord != undefined)
+            _dims[o.full_bleed_coord] = 1000;
+        _dims = [ Math.max(1, _dims[0]), Math.max(1, _dims[1]) ];
+        if (doit || doit == undefined)
+            o.dims_relative_set(_dims);
+        return _dims;
     };
 
     function controls(o) {
@@ -660,15 +1104,15 @@ Hive.App.has_resize_h = function(o) {
 Hive.has_scale = function(o){
     var scale = o.init_state.scale ? o.init_state.scale * Hive.env().scale : 1;
     o.scale = function(){ return scale; };
-    o.scale_set = function(s){ scale = s; };
+    o.scale_set = function(s){ scale = s; o.layout(); };
 
     var _state_relative = o.state_relative, _state_relative_set = o.state_relative_set;
-    o.state_relative = function(env){
-        return $.extend(_state_relative(env), { 'scale': scale / env.scale });
+    o.state_relative = function(){
+        return $.extend(_state_relative(), { 'scale': scale });
     };
-    o.state_relative_set = function(env, s){
-        _state_relative_set(env, s);
-        if(s.scale) o.scale_set(s.scale * env.scale);
+    o.state_relative_set = function(s){
+        _state_relative_set(s);
+        if(s.scale) o.scale_set(s.scale);
     };
 };
 
@@ -701,6 +1145,14 @@ Hive.App.Html = function(o) {
     return o;
 };
 Hive.registerApp(Hive.App.Html, 'hive.html');
+
+
+Hive.App.Root = function(o) {
+    // Automatic top level app for layout and template logic
+
+};
+Hive.registerApp(Hive.App.Root, 'hive.root');
+
 
 Hive.App.RawHtml = function(o) {
     Hive.App.has_resize(o);
@@ -794,7 +1246,7 @@ Hive.App.Text = function(o) {
             o.rte.makeEditable();
             o.rte.restore_cursor();
             o.content_element
-                .bind('mousedown keydown', function(e){ e.stopPropagation(); });
+                .on('mousedown keydown', function(e){ e.stopPropagation(); });
             edit_mode = true;
         }
         else {
@@ -803,8 +1255,8 @@ Hive.App.Text = function(o) {
             o.rte.add_breaks();
             o.rte.make_uneditable();
             o.content_element
-                .unbind('mousedown keydown')
-                .blur();
+                .off('mousedown keydown')
+                .trigger('blur');
             edit_mode = false;
             o.shield();
         }
@@ -837,10 +1289,10 @@ Hive.App.Text = function(o) {
     };
 
     Hive.has_scale(o);
-    var _scale_set = o.scale_set;
-    o.scale_set = function(s){
-        _scale_set(s);
-        o.div.css('font-size', s + 'em');
+    var _layout = o.layout;
+    o.layout = function(){
+        _layout();
+        o.div.css('font-size', (Hive.env().scale * o.scale()) + 'em');
     };
 
     // New scaling code
@@ -908,7 +1360,7 @@ Hive.App.Text = function(o) {
         o.color_menu = o.hover_menu(
             d.find('.button.color'),
             d.find('.drawer.color'),
-            { 
+            {
                 auto_close : false,
                 open: function(){
                     // Update current color. Range should usually exist, but
@@ -930,7 +1382,7 @@ Hive.App.Text = function(o) {
         }
 
         $('.option[cmd],.button[cmd]').each(function(i, el) {
-            $(el).bind('mousedown', function(e) {
+            $(el).on('mousedown', function(e) {
                 e.preventDefault();
             }).click(function(){
                 o.app.rte.exec_command($(el).attr('cmd'), $(el).attr('val'));
@@ -1354,8 +1806,6 @@ Hive.App.has_rotate = function(o) {
     o.make_controls.push(controls);
 }
 
-//Hive.App.has_percent_
-
 Hive.App.has_slider_menu = function(o, handle, set, init, start, end) {
     function controls(o) {
         var common = $.extend({}, o), changed = false;
@@ -1387,7 +1837,15 @@ Hive.App.has_slider_menu = function(o, handle, set, init, start, end) {
     };
     o.make_controls.push(controls);
 };
+
 Hive.App.has_opacity = function(o) {
+    var opacity = o.init_state.opacity === undefined ? 1 : o.init_state.opacity;
+    o.opacity = function(){ return opacity; };
+    o.opacity_set = function(s){
+        opacity = s;
+        o.content_element.css('opacity', s);
+    };
+
     function controls(o) {
         var common = $.extend({}, o);
 
@@ -1397,6 +1855,17 @@ Hive.App.has_opacity = function(o) {
         return o;
     };
     o.make_controls.push(controls);
+
+    o.add_to('state', function(s){
+        s.opacity = opacity;
+        if(opacity == 1) delete s.opacity;
+        return s;
+    });
+
+    o.load.add(function(){
+        if (o.content_element)
+            o.opacity_set(opacity);
+    });
 
     var history_point;
     Hive.App.has_slider_menu(o, '.button.opacity',
@@ -1457,9 +1926,9 @@ Hive.App.Image = function(o) {
         o.div.append(o.img);
         o.img.load(function(){setTimeout(o.img_load, 1)});
     };
-    o.img_load = function() {
-        o.imageWidth  = o.img.width();
-        o.imageHeight = o.img.height();
+    o.img_load = function(){
+        o.imageWidth  = o.img.width() || o.img.prop('naturalWidth');
+        o.imageHeight = o.img.height() || o.img.prop('naturalHeight');
         o.aspect = o.imageWidth / o.imageHeight;
         if( ! o.init_state.dimensions ){
             var ww = $(window).width(), wh = $(window).height(), iw, ih, wa = ww / wh;
@@ -1477,20 +1946,137 @@ Hive.App.Image = function(o) {
             }
             o.init_state.dimensions = [ iw, ih ];
         }
-        o.img.css('width', '100%');
         o.load();
+        o.img.css('width', o.dims()[0] + 'px');
+        // fit and crop as needed
+        if (o.init_state.fit) {
+            var opts = { dims:o.dims(), pos:o.pos(), fit:o.init_state.fit, 
+                doit: (o.init_state.fit != 2), // Cropping needed, wait on execution
+                scaled: [o.imageWidth, o.imageHeight] };
+            var new_layout = o.fit_to(opts);
+            if (opts.fit == 2) {
+                o.init_state.scale_x = new_layout.dims[0] / opts.dims[0];
+                o.init_state.offset = _add(new_layout.pos)(_mul(-1)(opts.pos));
+                o.init_state.offset = _mul( 1 / opts.dims[0] /
+                    o.init_state.scale_x)(o.init_state.offset);
+            }
+            o.init_state.fit = undefined;
+        }
+        if (o.init_state.scale_x != undefined) {
+            var happ = o.content_element.parent();
+            o.content_element = $('<div class="crop_box">');
+            o.img.appendTo(o.content_element);
+            o.content_element.appendTo(happ);
+            o.div_aspect = o.dims()[0] / o.dims()[1];
+            o.layout();
+        }
+    };
+
+    (function(){
+        var drag_hold, fake_img;
+
+        // UI for setting .offset of apps on drag after long_hold
+        o.long_hold = function(ev){
+            if(!o.init_state.scale_x) return;
+            ev.stopPropagation();
+            drag_hold = true;
+
+            // show new img w/ opacity
+            fake_img = o.img.clone().appendTo(o.div).css('opacity', .5)
+                .css('z-index', 0);
+            o.img = o.img.add(fake_img);
+            return false;
+        };
+        o.long_hold_release = function(ev){
+            if(!drag_hold) return;
+            ev.stopPropagation();
+            drag_hold = false;
+            o.img = o.img.not(fake_img);
+            fake_img.remove();
+        };
+
+        var ref_offset;
+        o.dragstart = function(ev){
+            if (!drag_hold) return;
+            ev.stopPropagation();
+            ref_offset = o.offset();
+            o.fixed_coord = (ref_offset[0] == 0) ? 0 : 1;
+            history_point = Hive.History.saver(o.offset, o.offset_set, 'move crop');
+            ev.stopPropagation();
+        };
+        o.drag = function (ev, dd, shallow) {
+            if(!drag_hold || !ref_offset) return;
+            ev.stopPropagation();
+            var delta = [dd.deltaX, dd.deltaY];
+            if(ev.shiftKey)
+                delta[ Math.abs(dd.deltaX) > Math.abs(dd.deltaY) & 1 ] = 0;
+            // constrain delta for now to the "free" dimension
+            // TODO: snap to edge/center
+            delta[o.fixed_coord] = 0;
+            delta = _add(delta)(ref_offset);
+            o.offset_set(delta);
+            o.layout();
+        };
+        o.dragend = function(ev){
+            if(!drag_hold) return;
+            history_point.save();
+            o.long_hold_release(ev);
+        };
+    })();
+
+    // screen coordinates
+    o.offset = function() {
+        if (!o.init_state.scale_x)
+            return undefined;
+        return _mul(o.init_state.scale_x * o.dims()[0])(o.init_state.offset);
+    }
+    o.offset_set = function(offset) {
+        if (!offset) o.init_state.offset = undefined;
+        else
+            o.init_state.offset = _mul(1 / o.init_state.scale_x / o.dims()[0])(offset);
+        o.layout();
+    };
+
+    var _layout = o.layout;
+    o.layout = function() {
+        _layout();
+        var dims = o.dims(), scale_x = o.init_state.scale_x || 1;
+        o.img.css('width', scale_x * dims[0] + 'px');
+        var offset = o.offset();
+        if (offset) {
+            o.img.css({"margin-left": offset[0], "margin-top": offset[1]});
+        }
     };
 
     o.resize = function(delta) {
         var dims = o.resize_to(delta);
         if(!dims[0] || !dims[1]) return;
-        var newWidth = dims[1] * o.aspect;
-        var dims = newWidth < dims[0] ? [newWidth, dims[1]] : [dims[0], dims[0] / o.aspect];
-        o.dims_set(dims);
+        dims = _mul(1 / Hive.env().scale)(dims);
+        // everything past this point is in editor space.
+        var aspect = o.div_aspect || o.aspect;
+        var newWidth = dims[1] * aspect;
+        dims = (newWidth < dims[0]) ? [newWidth, dims[1]] : 
+            [dims[0], dims[0] / aspect];
+
+        // snap
+        var _pos = o.pos_relative();
+        var pos = [ _pos[0] + dims[0], _pos[1] + dims[1] ];
+        var snap_dims = o.resize_to_pos(pos);
+        var snap_dist = _apply(function(x,y) {return Math.abs(x-y);}, 
+            dims)(snap_dims);
+
+        dims = (snap_dist[0] < snap_dist[1]) ?
+            [snap_dims[1] * aspect, snap_dims[1]] :
+            [snap_dims[0], snap_dims[0] / aspect];
+
+        var newWidth = dims[1] * aspect;
+        var dims = (newWidth < dims[0] ? [newWidth, dims[1]]
+            : [dims[0], dims[0] / aspect]);
+        o.dims_relative_set(dims);
     }
 
     o.pixel_size = function(){
-        return [img.naturalWidth, img.naturalHeight]
+        return [o.img.naturalWidth, o.img.naturalHeight]
     };
 
     function controls(o) {
@@ -1552,9 +2138,80 @@ Hive.App.Rectangle = function(o) {
     o.set_css(o.init_state.content);
     setTimeout(function(){ o.load() }, 1);
 
+    o.content_element.on('dragenter dragover', function(ev){
+        ev.preventDefault();
+    }).on('drop', function(e){
+        var dt = e.originalEvent.dataTransfer;
+        file_list = dt.files;
+        var files = [];
+        for(var i = 0; i < file_list.length; i++){
+            var f = file_list.item(i), file = {
+                url: URL.createObjectURL(f),
+                name: f.name,
+                mime: f.type
+            };
+            files.push(file);
+            break; // can only handle 1 file
+        }
+        var load = function(app) {
+            // app.fit_to({dims: o.dims(), pos: o.pos(), zoom: false});
+        };
+        var app = Hive.new_file(files, 
+            { position: o.pos_relative(), dimensions: o.dims_relative(),
+                fit: 2 },
+            { load:load, position: true })[0];
+        return false;
+    });
+
     return o;
 };
 Hive.registerApp(Hive.App.Rectangle, 'hive.rectangle');
+
+
+Hive.App.Path = function(o){
+    Hive.App.has_resize(o);
+    var common = $.extend({}, o);
+
+    var state = {};
+    o.content = function(content) { return $.extend({}, state); };
+    o.set_css = function(props) {
+        props['background-color'] = props.color || props['background-color'];
+        props['box-sizing'] = 'border-box';
+        o.content_element.css(props);
+        $.extend(state, props);
+        if(o.controls) o.controls.layout();
+    }
+    o.css_setter = function(css_prop) { return function(v) {
+        var ps = {}; ps[css_prop] = v; o.set_css(ps);
+    } }
+
+    o.color = function(){ return state.color };
+    o.color_set = o.css_setter('color');
+
+    o.border_radius = function(){ return parseInt(state['border-radius']) };
+    o.border_radius_set = function(v){ o.set_css({'border-radius':v+'px'}); };
+
+    o.make_controls.push(function(o){
+        o.addControls($('#controls_rectangle'));
+    });
+
+    Hive.App.has_rotate(o);
+    Hive.App.has_color(o);
+    Hive.App.has_opacity(o);
+    var history_point;
+    Hive.App.has_slider_menu(o, '.rounding', o.border_radius_set, o.border_radius,
+        function(){ history_point = Hive.History.saver(
+            o.border_radius, o.border_radius_set, 'border radius'); },
+        function(){ history_point.save() }
+    );
+
+    o.content_element = $("<div class='content rectangle drag'>").appendTo(o.div);
+    o.set_css(o.init_state.content);
+    setTimeout(function(){ o.load() }, 1);
+
+    return o;
+};
+Hive.registerApp(Hive.App.Path, 'hive.path');
 
 
 Hive.App.Sketch = function(o) {
@@ -1669,13 +2326,13 @@ Hive.App.Audio = function(o) {
     };
 
     Hive.has_scale(o);
-    var _scale_set = o.scale_set;
-    o.scale_set = function(s) {
-        _scale_set(s);
-        o.div.css('font-size', s + 'em');
+    var _layout = o.layout;
+    o.layout = function() {
+        _layout();
+        o.div.css('font-size', (Hive.env().scale * o.scale()) + 'em');
         var height = o.div.find('.jp-interface').height();
         o.div.find('.jp-button').width(height).height(height);
-    };
+    }
 
     o.load.add(function(){
         o.dims_set(o.dims());
@@ -1734,101 +2391,128 @@ Hive.registerApp(Hive.App.Audio, 'hive.audio');
 
 
 Hive.Selection = function(){
-    var o = Hive.Selection;
-    o.elements = [];
-    o.count = function(){ return o.elements.length; };
-    o.each = function(fn){ $.each(o.elements, fn) };
+    var o = Hive.Selection, elements = [];
+
+    o.elements = function(){ return elements.slice(); };
+    o.count = function(){ return elements.length; };
+    o.each = function(fn){ $.each(elements, fn) };
     o.make_controls = [];
-    o.dragging = false;
+    o.handler_type = 2;
+
+    // relative coords and sizes for each app
+    var _positions = [], _scales = [];
+    // cached upper-left-most app position and composite size
+    var _pos = [0,0], _dims = [0,0];
+
+    // DEBUG
+    o._scales = function(){ return _scales; }
 
     Hive.App.has_resize(o);
 
-    o.multi_test = function(e) { return e.shiftKey || e.ctrlKey; }
+    // BEGIN-event-handlers
 
-    o.app_drag_init = function (app, e) {
-        var drag_items = [];
-        if(o.selected(app) || app === o) {
-            $.merge(drag_items, o.divs());
-            if(o.controls) $.merge(drag_items, o.controls.div);
+    o.is_multi = function(ev) { return ev.shiftKey || ev.ctrlKey; }
+
+    // mousedown comes from body, click comes from app div. Binding clicks
+    // from app div prevents deselecting everything else at the start of a
+    // group drag operation
+    o.click = o.mousedown = function(ev){
+        var app = ev.data;
+        if(app){
+            if (Hive.shift_does_raise && ev.shiftKey) {
+                if (ev.ctrlKey)
+                    app.stack_bottom();
+                else
+                    app.stack_top();
+                return;
+            }
+            if(o.is_multi(ev)){
+                if(o.selected(app)) o.unfocus(app);
+                else o.push(app);
+            }
+            else o.update([ app ]);
         }
-        return drag_items;
+        else {
+            // unfocus all apps if click was not on an app
+            if(!o.count() || o.is_multi(ev))
+                return;
+            var hit = false;
+            o.each(function(i, el){
+                if( $.contains(el.div.get(0), ev.target) || (
+                    el.controls &&
+                        $.contains(el.controls.div.get(0), ev.target)
+                ) ) hit = true;
+            });
+            if(o.controls && $.contains(o.controls.div.get(0), ev.target))
+                hit = true;
+            if(!hit) o.unfocus();
+            return true;
+        }
     };
-    o.app_click = function (app, e) {
-        // Prevent window click handler from unfocusing everything
-        e.stopPropagation();
 
-        if(o.multi_test(e)){
-            if(o.selected(app)) o.unfocus(app);
-            else o.push(app);
+    var dragging = false, drag_target;
+    o.dragstart = function(ev, dd){
+        o.dragging = true;
+
+        var app = ev.data;
+        if(app){
+            // If target is in selection, drag whole selection
+            if(elements.indexOf(ev.data) >= 0)
+                drag_target = o;
+            else
+                drag_target = ev.data;
+            o.move_start();
+            return;
         }
-        else o.update([ app ]);
+
+        o.offset = $('#happs').offset().left;
+
+        o.new_selection = [];
+        $('.app_select').remove();
+        o.div = $("<div class='app_select'>").css('z-index', 3);
+        o.select_box = $("<div class='select_box border selected dragbox'>")
+            .css({position: 'relative', padding: 0, left: '-5px', top: '-5px'});
+        $(document.body).append(o.div);
+        o.div.append(o.select_box);
+        o.start = [ev.pageX, ev.pageY];
+        if (ev.shiftKey || ev.ctrlKey){
+            o.initial_elements = elements.slice();
+        } else {
+            o.initial_elements = [];
+            o.unfocus();
+        }
+    };
+    o.drag = function(ev, dd){
+        if (!o.dragging) return;
+
+        var app = ev.data;
+        if(app){
+            o.move_handler(ev, dd);
+            return;
+        }
+
+        o.drag_dims = [Math.abs(dd.deltaX), Math.abs(dd.deltaY)];
+        o.drag_pos = [dd.deltaX < 0 ? ev.pageX : o.start[0],
+            dd.deltaY < 0 ? ev.pageY : o.start[1]];
+        o.div.css({ left : o.drag_pos[0], top : o.drag_pos[1],
+            width : o.drag_dims[0], height : o.drag_dims[1] });
+        o.update_focus(ev);
+    };
+    o.dragend = function (ev, dd) {
+        o.dragging = false;
+
+        var app = ev.data;
+        if(app){
+            o.move_end();
+            return;
+        }
+
+        if(!o.drag_dims) return;
+        o.select_box.remove();
+        if(o.pos) o.update_focus();
+        if(o.div) o.div.remove();
+        o.update(elements);
     }
-
-    o.app_select = function(app, multi) {
-        if(multi) app.unfocus();
-        else app.focus();
-        Hive.Controls(app, multi);
-    };
-    o.app_unselect = function(app, multi) {
-        app.unfocus();
-        if(app.controls) app.controls.remove();
-    };
-
-    o.update = function(apps){
-        if(!apps) apps = $.grep(o.elements, function(e){ return ! e.deleted; });
-        var multi = o.dragging || (apps.length > 1);
-
-        // Previously unfocused elements that should be focused
-        $.each(apps, function(i, el){ o.app_select(el, multi); });
-        // Previously focused elements that should be unfocused
-        o.each(function(i, el){
-            if($.inArray(el, apps) == -1)
-                o.app_unselect(el, multi);
-        });
-
-        o.elements = $.merge([], apps);
-
-        if(!o.dragging && multi) {
-            Hive.Controls(o, false);
-            o.controls.layout();
-        }
-        if(apps.length <= 1 && o.controls) o.controls.remove();
-    };
-    o.unfocus = function(app){
-        if(app) o.update($.grep(o.elements, function(el){ return el !== app }));
-        else o.update([]);
-    };
-    o.push = function(element) { 
-        o.update(o.elements.concat([element]));
-    };
-    o.select = function(app_or_apps){
-        return o.update($.isArray(app_or_apps) ? app_or_apps : [app_or_apps]);
-    };
-    o.selected = function(app){
-        return $.inArray(app, o.elements) != -1;
-    };
-
-    o.divs = function(){
-        return $.map(o.elements, function(a){ return a.div[0] });
-    };
-
-    o.bounds = function() { 
-        return {
-            left:   Array.min($.map(o.elements, function(el){ return el.pos()[0]})),
-            right:  Array.max($.map(o.elements, function(el){ return el.pos()[0] + el.dims()[0]})),
-            top:    Array.min($.map(o.elements, function(el){ return el.pos()[1]})),
-            bottom: Array.max($.map(o.elements, function(el){ return el.pos()[1] + el.dims()[1]}))
-        };
-    };
-    o.pos = function(){
-        var bounds = o.bounds();
-        return [bounds.left, bounds.top];
-    };
-    o.dims = function(){
-        var bounds = o.bounds();
-        return [bounds.right - bounds.left, bounds.bottom - bounds.top];
-    };
-
     o.update_focus = function(event){
         var select = { top: o.drag_pos[1], right: o.drag_pos[0] + o.drag_dims[0],
             bottom: o.drag_pos[1] + o.drag_dims[1], left: o.drag_pos[0] };
@@ -1844,49 +2528,224 @@ Hive.Selection = function(){
         }
     };
 
-    o.drag_start = function(e, dd) {
-        Hive.drag_start();
-        o.offset = $('#happs').offset().left;
+    var old_states;
+    var get_targets = function(){
+        return (drag_target == o ? elements : [drag_target]); };
+    var get_states = function(){
+        return get_targets().map(function(a){ return a.state_relative(); }) };
+    var change_start = function(){ old_states = get_states(); };
+    var change_end = function(name){
+        var apps = get_targets().slice(), new_states = get_states(),
+            start_states = old_states.slice();
+        Hive.History.save(
+            function(){ $.each(apps, function(i, a){
+                a.state_relative_set(start_states[i]) }) },
+            function(){ $.each(apps, function(i, a){
+                a.state_relative_set(new_states[i]) }) },
+            name
+        );
+    };
 
-        o.new_selection = [];
-        o.dragging = true;
-        $('.app_select').remove();
-        o.div = $("<div class='app_select'>").css('z-index', 3);
-        o.select_box = $("<div class='select_box border selected dragbox'>")
-            .css({position: 'relative', padding: 0, left: '-5px', top: '-5px'});
-        $(document.body).append(o.div);
-        o.div.append(o.select_box);
-        o.start = [e.pageX, e.pageY];
-        if (e.shiftKey || e.ctrlKey){
-            o.initial_elements = $.extend({}, o.elements);
-        } else {
-            o.initial_elements = [];
-            o.unfocus();
+    var history_point, ref_pos;
+    o.move_start = function(){
+        ref_pos = drag_target.pos_relative();
+        change_start();
+    };
+    o.move_relative = function(delta, axis_lock){
+        if(!ref_pos) return;
+        if(axis_lock)
+            delta[ Math.abs(delta[0]) > Math.abs(delta[1]) ? 1 : 0 ] = 0;
+        // if there's no selection or one app selected, regular snap
+        if(drag_target != o || elements.length == 1){
+            var pos = _add(ref_pos)(delta), snap_strength = .05,
+                snap_radius = 18;
+            // TODO-feature-snap: check key shortcut to turn off snapping
+            if(snap_strength > 0){
+                var excludes = {};
+                if(drag_target.id) excludes[drag_target.id] = true;
+                pos = snap_helper(drag_target.bounds_tuple_relative(pos),
+                    excludes, snap_strength, snap_radius);
+            }
+            drag_target.pos_relative_set(pos, .05, 18);
         }
+        else
+            // TODO-feature-snap-group: figure out reasonable snapping
+            // behavior for group selection.
+            // Proposal: every object in selection snaps to everything
+            // outside selection
+            o.pos_relative_set(_add(ref_pos)(delta));
+        o.layout();
     };
-    o.drag = function(e, dd) {
-        if (!o.dragging || $(e.target).hasClass('ehapp')) return;
-
-        o.drag_dims = [Math.abs(dd.deltaX), Math.abs(dd.deltaY)];
-        o.drag_pos = [dd.deltaX < 0 ? e.pageX : o.start[0],
-            dd.deltaY < 0 ? e.pageY : o.start[1]];
-        o.div.css({ left : o.drag_pos[0], top : o.drag_pos[1],
-            width : o.drag_dims[0], height : o.drag_dims[1] });
-        o.update_focus(e);
+    o.move_handler = function(ev, dd){
+        var delta = _mul(1 / Hive.env().scale)([dd.deltaX, dd.deltaY]);
+        o.move_relative(delta, ev.shiftKey);
     };
-    o.drag_end = function (e, dd) {
-        Hive.drag_end();
+    o.move_end = function(){
+        change_end('move');
+        $(".ruler").hidehide();
+    };
 
-        if(!o.drag_dims) return;
-        o.select_box.remove();
-        o.dragging = false;
-        if(o.pos) o.update_focus();
-        if(o.div) o.div.remove();
-        o.update(o.elements);
+    var ref_dims;
+    o.resize_start = function(){
+        ref_dims = o.dims_relative();
+        change_start();
+    };
+    o.resize = function(delta){
+        o.resize_relative(_mul(1 / Hive.env().scale)(delta));
     }
+    o.resize_relative = function(delta){
+        if(!ref_dims) return;
+
+        var scale_by = Math.max( (ref_dims[0] + delta[0]) / ref_dims[0],
+            (ref_dims[1] + delta[1]) / ref_dims[1] );
+        var dims = _mul(scale_by)(ref_dims);
+
+        o.each(function(i, a){
+            a.pos_relative_set( _add(_mul(scale_by)(_positions[i]))(_pos) );
+            a.dims_relative_set( _mul(scale_by)(_mul(ref_dims)(_scales[i])) );
+        });
+
+        var bounds = o.bounds();
+        _dims = [bounds.right - bounds.left, bounds.bottom - bounds.top];
+
+        o.layout();
+    };
+    o.resize_end = function(){
+        o.update_relative_coords();
+        change_end('resize');
+    };
+
+    // END-event-handlers
+
+    o.app_select = function(app, multi) {
+        if(multi){
+            app.unfocus();
+            evs.handler_del(app);
+        }
+        else{
+            app.focus();
+            evs.handler_set(app);
+            // TODO-feature for sketch and geometry apps: evs.handler_set(o.type)
+            // depends on defining app specific but instance unspecific creation
+            // handlers on app type constructors
+        }
+        Hive.Controls(app, multi);
+    };
+    o.app_unselect = function(app, multi) {
+        app.unfocus();
+        if(app.controls) app.controls.remove();
+    };
+
+    o.update = function(apps){
+        if(!apps) apps = $.grep(elements, function(e){ return ! e.deleted; });
+        var multi = o.dragging || (apps.length > 1);
+
+        // Previously unfocused elements that should be focused
+        $.each(apps, function(i, el){ o.app_select(el, multi); });
+        // Previously focused elements that should be unfocused
+        o.each(function(i, el){
+            if($.inArray(el, apps) == -1)
+                o.app_unselect(el, multi);
+        });
+
+        elements = $.merge([], apps);
+
+        o.update_relative_coords();
+
+        if(!o.dragging && multi) {
+            Hive.Controls(o, false);
+            o.controls.layout();
+        }
+        if(apps.length <= 1 && o.controls)
+            o.controls.remove();
+        if(apps.length == 0)
+            evs.handler_del({handler_type: 0}); 
+    };
+
+    o.unfocus = function(app){
+        if(app) o.update($.grep(elements, function(el){ return el !== app }));
+        else o.update([]);
+    };
+    o.push = function(element) { 
+        o.update(elements.concat([element]));
+    };
+    o.select = function(app_or_apps){
+        return o.update($.isArray(app_or_apps) ? app_or_apps : [app_or_apps]);
+    };
+    o.selected = function(app){
+        return $.inArray(app, elements) != -1;
+    };
+
+    o.divs = function(){
+        return $.map(elements, function(a){ return a.div[0] });
+    };
+
+    // BEGIN-coords: client space and editor space (called relative)
+    // position and dimension methods
+
+    o.update_relative_coords = function(){
+        var bounds = o.bounds();
+        _pos = [bounds.left, bounds.top];
+        _dims = [bounds.right - bounds.left, bounds.bottom - bounds.top];
+        _positions = elements.map(function(a){
+            return _add(_mul(-1)(_pos))(a.pos_relative());
+        });
+        _scales = elements.map(function(a){
+            return _div(a.dims_relative())(_dims);
+        });
+    };
+
+    o.pos = function(){
+        return _mul(Hive.env().scale)(_pos);
+    };
+    o.dims = function() {
+        return _mul(Hive.env().scale)(_dims);
+    };
+
+    o.bounds_tuple_relative = function(pos){
+        // TODO-feature-snap-group: do something more sophisticated
+        return elements[0].bounds_tuple_relative(pos);
+    };
+    o.pos_relative = function(){ return _pos.slice(); };
+    o.dims_relative = function(){ return _dims.slice(); };
+    o.pos_relative_set = function(pos){
+        o.each(function(i, a){
+            a.pos_relative_set(_add(pos)(_positions[i]));
+        });
+
+        var bounds = o.bounds();
+        _pos = [bounds.left, bounds.top];
+
+        o.layout();
+    };
+    o.dims_relative_set = function(dims){
+        // TODO: call o.resize_start() then o.resize();
+    };
+    o.bounds = function() { 
+        var abs_mins = elements.map(function(el){ return el.min_pos() });
+        var abs_maxs = elements.map(function(el){ return el.max_pos() });
+        return {
+            left:   Array.min(abs_mins.map(function(c){ return c[0] })),
+            top:    Array.min(abs_mins.map(function(c){ return c[1] })),
+            right:  Array.max(abs_maxs.map(function(c){ return c[0] })),
+            bottom: Array.max(abs_maxs.map(function(c){ return c[1] }))
+        };
+    };
+
+    // TODO: make these reflect axis aligned bounding box (when rotated, etc)
+    // currently not used. Note these depend on an up-to-date _dims and _pos
+    // o.min_pos = function(){ return _pos.slice(); };
+    // o.max_pos = function(){ return [ _pos[0] + _dims[0], _pos[1] + _dims[1] ]; };
+    // o.pos_center = function() {
+    //     var dims = o.dims();
+    //     var pos = o.pos();
+    //     return [ pos[0] + dims[0] / 2, pos[1] + dims[1] / 2 ];
+    // };
+
+    // END-coords
 
     o.copy = function(){
-        var offset = [ 0, o.dims()[1] + 20 ], load_count = o.elements.length, copies;
+        var offset = [ 0, o.dims()[1] + 20 ], load_count = elements.length, copies;
         var load_counter = function(){
             load_count--;
             if( ! load_count ) {
@@ -1895,49 +2754,20 @@ Hive.Selection = function(){
             }
         };
         Hive.History.begin();
-        copies = $.map( o.elements, function(e){
-            return e.copy({ offset: offset, load: load_counter, 'z_offset': o.elements.length })
+        copies = $.map( elements, function(e){
+            return e.copy({ offset: offset, load: load_counter, 'z_offset': elements.length })
         });
     }
     o.remove = function(){
-        var sel = $.merge([], o.elements);
+        var sel = $.merge([], elements);
         o.unfocus();
         Hive.History.begin();
         $.each(sel, function(i, el){ el.remove() });
         Hive.History.group('delete group');
     };
 
-    o.resize_start = function(){
-        o.pos_ref = o.pos();
-        o.dims_ref = o.dims();
-        Hive.History.begin();
-        o.each(function(i, el){
-            var pos = el.pos();
-            el.pos_ref = [ pos[0] - o.pos_ref[0], pos[1] - o.pos_ref[1] ];
-            el.dims_ref = el.dims();
-            el.scale_ref = el.scale ? el.scale() : null;
-            el.history_point = el.history_helper_relative('resize');
-        });
-    };
-    o.resize = function(delta){
-        var scale_by = Math.max( (o.dims_ref[0] + delta[0]) / o.dims_ref[0],
-            (o.dims_ref[1] + delta[1]) / o.dims_ref[1] );
-        var dims = [ o.dims_ref[0] * scale_by, o.dims_ref[1] * scale_by ];
-        o.each(function(i, el){
-            el.pos_set([ el.pos_ref[0] * scale_by + o.pos_ref[0],
-                el.pos_ref[1] * scale_by + o.pos_ref[1] ]);
-            el.dims_set([ el.dims_ref[0] * scale_by, el.dims_ref[1] * scale_by ]);
-            if(el.scale_ref !== null) el.scale_set(el.scale_ref * scale_by);
-        });
-        o.controls.layout();
-    };
-    o.resize_end = function(){
-        o.each(function(i, el){ el.history_point.save() });
-        Hive.History.group('resize group');
-    };
-
     o.get_stack = function(){
-        return o.elements.sort(function(a, b){ a.layer() - b.layer() });
+        return elements.sort(function(a, b){ a.layer() - b.layer() });
     };
     o.stack_top = function(){
         Hive.History.begin();
@@ -1950,58 +2780,42 @@ Hive.Selection = function(){
         Hive.History.group('stack group to bottom');
     };
 
+    var parent = o;
     o.make_controls.push(function(o){
-        o.move_start = function(){
-            Hive.drag_start();
-            o.ref_pos = o.pos();
-            Hive.History.begin();
-        };
-        o.move = function (e, dd, shallow) {
-            var delta = [dd.deltaX, dd.deltaY];
-            if(e.shiftKey)
-                delta[ Math.abs(dd.deltaX) > Math.abs(dd.deltaY) ? 1 : 0 ] = 0;
-            o.pos_set([ o.ref_pos[0] + delta[0], o.ref_pos[1] + delta[1] ]);
-        };
-        o.move_end = function(){
-            Hive.drag_end();
-            Hive.History.group('move group');
-        };
-        o.pos = function(){ var p = o.app.pos(); return [ p[0], p[1] ]; }
-
+        o.pos = parent.pos;
         o.padding = 7;
 
-        o.div.drag(o.move).drag('start', o.move_start).drag('end', o.move_end);
+        o.div.drag(parent.move_handler).drag('start', parent.move_start)
+            .drag('end', parent.move_end);
     });
 
-    $('#grid_guide').drag(o.drag).drag('start', o.drag_start).drag('end', o.drag_end);
+    o.layout = function(){
+        o.controls && o.controls.layout();
+    }
 
-    // Fallthrough click handler that unfocuses all apps if user clicks on background.
-    $(window).click(function(e) {
-        if(!Hive.Selection.count()) return;
-        var hit = false;
-        Hive.Selection.each(function(i,el){
-            if( $.contains(el.div.get(0), e.target)
-                || (el.controls && $.contains(el.controls.div.get(0), e.target))
-            ) hit = true;
-        });
-        if(o.controls && $.contains(o.controls.div.get(0), e.target)) hit = true;
-        if (!hit) Hive.Selection.unfocus();
-    });
-
-    $(document).keydown(function(e){ 
+    o.keydown = Funcs(function(ev){ 
         // ctrl+[shift+]a to select all or none
-        if( e.keyCode == 65 && e.ctrlKey ){
-            o.select( e.shiftKey ? [] : Hive.Apps.all() );
-            e.preventDefault();
-            return;
+        if( ev.keyCode == 65 && ev.ctrlKey ){
+            o.select( ev.shiftKey ? [] : Hive.Apps.all() );
+            return false;
         }
 
-        o.each(function(i, el){ el.keyPress(e) });
+        var handlers = {
+            27: function(){ o.unfocus() },
+            46: function(){ o.remove() },
+            66: function(){ o.stack_bottom() },
+            84: function(){ o.stack_top() },
+        }
+        if(handlers[ev.keyCode]){
+            handlers[ev.keyCode]();
+            return false;
+        }
 
         // TODO: improve efficiency by using o.controls.pos_set like drag handler
         // or improving o.bounds
         if(o.controls) o.controls.pos_update();
     });
+    Hive.App.has_nudge(o);
 
     return o;
 };
@@ -2091,16 +2905,6 @@ Hive.History.init = function(){
     };
 
     o.update_btn_titles();
-    $(window).keydown(function(e){
-        if(e.ctrlKey && e.keyCode == 90) {
-            o.undo();
-            return false;
-        }
-        if(e.ctrlKey && e.keyCode == 89) {
-            o.redo();
-            return false;
-        }
-    });
     $('#btn_undo').click(Hive.History.undo);
     $('#btn_redo').click(Hive.History.redo);
 };
@@ -2117,24 +2921,25 @@ Hive.new_app = function(s, opts) {
     var load = opts.load;
     opts.load = function(a) {
         // Hive.upload_finish();
-        a.center(opts.offset);
+        if (! opts.position)
+            a.center(opts.offset);
         a.dims_set(a.dims());
         Hive.Selection.select(a);
-        if(load) load();
+        if(load) load(a);
     };
     var app = Hive.App(s, opts);
     Hive.History.save(app._remove, app._unremove, 'create');
     return app;
 };
 
-Hive.new_file = function(files, opts) {
+Hive.new_file = function(files, opts, app_opts) {
     // TODO-feature: depending on type and number of files, create grouping of
     // media objects. Multiple audio files should be assembled into a play
     // list. Multiple images should be placed in a table, or slide-show
 
-    $.map(files, function(file, i){
-        var app = $.extend({ file_name: file.name },
-            js.dfilter(file, ['id', 'meta']), opts);
+    return $.map(files, function(file, i){
+        var app = $.extend({ file_name: file.name, file_id: file.id,
+            file_meta: file.meta }, opts);
 
         // TODO: html files should just be saved on s3 and inserted as an <iframe>
         // if(file.mime.match(/text\/html/)){
@@ -2162,16 +2967,18 @@ Hive.new_file = function(files, opts) {
         }
         app.url = file.url;
 
-        Hive.new_app(app, { offset: [20*i, 20*i] } );
+        return Hive.new_app(app, $.extend({ offset: [20*i, 20*i] }, app_opts) );
     });
 
     return false;
 }
 
+
 Hive.init = function(exp, page){
     Hive.Exp = exp;
     Hive.edit_page = page;
     if(!exp.auth) exp.auth = 'public';
+    Hive.env_set();
 
     //setInterval(Hive.set_draft, 5000);
     //try { Hive.set_draft(); }
@@ -2179,25 +2986,15 @@ Hive.init = function(exp, page){
     //var draft = Hive.get_draft();
     //if(draft) Hive.Exp = draft;
 
+    // TODO-refactor: separate background dialog, save dialog, and top level
+    // menus into respective constructors
+
     var ua = navigator.userAgent;
     if ( !ua.match(/(Firefox|Chrome|Safari)/i) || ua.match(/OS 5(_\d)+ like Mac OS X/i)) {
         showDialog('#editor_browsers');
     }
 
-    var old_env = Hive.env();
-    $(window).resize(function(e) {
-        var new_env = Hive.env();
-        $.map(Hive.Apps, function(a) {
-            a.state_relative_set(new_env, a.state_relative(old_env));
-        });
-        if(Hive.Selection.controls) Hive.Selection.controls.layout();
-        old_env = new_env;
-    });
-    $(window).resize();
-
-    if (Hive.Exp.fixed_width){
-        Hive.make_fixed(Hive.Exp.fixed_width);
-    }
+    $(window).on('resize', Hive.layout_apps);
 
     $('#text_default').click(function(e) {
         Hive.new_app({ type : 'hive.text', content : '' });
@@ -2206,7 +3003,6 @@ Hive.init = function(exp, page){
         Hive.new_app({ type: 'hive.text', content: '<span style="font-weight:bold">&nbsp;</span>',
             scale : 3 });
     });
-
 
     if(!Hive.Exp.background) Hive.Exp.background = { };
     if(!Hive.Exp.background.color) Hive.Exp.background.color = '#FFFFFF';
@@ -2239,15 +3035,15 @@ Hive.init = function(exp, page){
 
     Hive.bg_set(Hive.Exp.background);
 
-    $('#bg_upload').bind('with_files', function(ev, files){
+    $('#bg_upload').on('with_files', function(ev, files){
         Hive.bg_set(files[0]);
-    }).bind('response', function(ev, files){
+    }).on('response', function(ev, files){
         Hive.Exp.background.url = files[0].url;
     });
 
-    $('#link_upload').bind('with_files', function(ev, files){
+    $('#link_upload').on('with_files', function(ev, files){
         // TODO-polish: maybe create link text box first
-    }).bind('response', function(ev, files){
+    }).on('response', function(ev, files){
         Hive.Exp.background.url = files[0].url;
         // TODO-polish: maybe deal with multiple files
         var file = files[0];
@@ -2291,7 +3087,8 @@ Hive.init = function(exp, page){
     hover_menu('#insert_audio', '#menu_audio');
 
     var embed_menu = hover_menu('#insert_embed', '#menu_embed', {
-        open: function(){ $('#embed_code').get(0).focus() } });
+        open: function(){ $('#embed_code').get(0).focus() },
+        layout_x: 'center' });
     $('#embed_done').click(function() { Hive.embed_code('#embed_code'); embed_menu.close(); });
 
     hover_menu('#insert_shape', '#menu_shape');
@@ -2306,77 +3103,32 @@ Hive.init = function(exp, page){
 
     hover_menu('#insert_file', '#menu_file');
 
-    ////////////////////////////////////////////////////////////////////////////////
-    // Labs features
-    // if ($('#labs, #menu_labs').length == 2) {
-    //     hover_menu($('#labs'), $('#menu_labs'), { layout: 'center_y', min_y: 77 });
-    // }
-    // var set_make_fixed_text = function(){
-    //     var text = Hive.Exp.fixed_width ? "Make Auto-Scaling" : "Make Fixed-Width";
-    //     $('#make_fixed').text(text);
-    // };
-    // set_make_fixed_text();
-    // $('#make_fixed').click(function(e) {
-    //     if (Hive.Exp.fixed_width){
-    //         Hive.make_fixed(false);
-    //     } else {
-    //         Hive.make_fixed(1000);
-    //     }
-    //     set_make_fixed_text();
-    // });
-    // $('#edit_script').click(function() {
-    //     showDialog('#dia_edit_script', {
-    //         fade: false,
-    //         close: function() {
-    //             var script = $('#expr_script_input').val();
-    //             Hive.Exp.script = script;
-    //         }
-    //         //open: function(){ history_point = Hive.History.saver(
-    //         //    function(){ return $.extend(true, {}, Hive.Exp.background) },
-    //         //    Hive.bg_set, 'change background'
-    //         //) },
-    //         //close: function(){ history_point.save() }
-    //     });
-    // });
-    // $('#edit_style').click(function() {
-    //     showDialog('#dia_edit_style', {
-    //         fade: false,
-    //         //open: function(){ history_point = Hive.History.saver(
-    //         //    function(){ return $.extend(true, {}, Hive.Exp.background) },
-    //         //    Hive.bg_set, 'change background'
-    //         //) },
-    //         close: function(){
-    //             var style = $('#expr_style_input').val();
-    //             Hive.Exp.style = style;
-    //             $('#expr_style').html( style );
-    //             //history_point.save()
-    //         }
-    //     });
-    // });
-    // $('#raw_html').click(function(){
-    //     var app = {type: 'hive.raw_html', content: '<div></div>'};
-    //     Hive.new_app(app);
-    // });
-    // End labs
-    ////////////////////////////////////////////////////////////////////////////////
-    
     $('#btn_grid').click(Hive.toggle_grid);
 
-    $('#media_upload').bind('with_files', function(ev, files){
+    $('#media_upload').on('with_files', function(ev, files){
         // media files are available immediately upon selection
         Hive.new_file(files);
-    }).bind('response', function(ev, files){
+    }).on('response', function(ev, files){
         // after file is uploaded, save meta data and id from server by
         // matching up file name
         var find_apps = function(name){
-            return Hive.Apps.all().filter(function(a){
+            // TODO-cleanup: background should be root app
+            var apps = Hive.Apps.all().filter(function(a){
                 return (a.init_state.file_name == name) });
+            if (Hive.Exp.background.file_name == name)
+                apps = apps.concat(Hive.Exp.background);
+            return apps;
         };
         files.map(function(f){
             find_apps(f.name).map(function(a){
                 var upd = { file_id: f.id, url: f.url };
                 if(f.meta) upd.file_meta = f.meta;
-                a.state_update(upd);
+                if(a.state_update) {
+                    a.state_update(upd);
+                } else {
+                    a.content = a.url = f.url;
+                    a.file_name = f.id;
+                }
             });
         });
     });
@@ -2389,7 +3141,7 @@ Hive.init = function(exp, page){
         //$('#save_submit .label').hidehide(); // can't get to look nice
     }).ajaxStop(function(){
         busy_e.hidehide();
-        $('#save_submit').removeClass('disabled');;
+        $('#save_submit').removeClass('disabled');
         //$('#save_submit .label').showshow();
     }).ajaxError(function(ev, jqXHR, ajaxOptions){
         // TODO-polish upload_error: show some warning, and somehow indicate
@@ -2424,6 +3176,9 @@ Hive.init = function(exp, page){
         if (tags.length) tags = tags.replace(/([ ]|^)/g,"$1#").trim();
         // TODO-polish: unique the tags
         var search_tags = " " + tags + " ";
+        // TODO: remove other keywords from tags.
+        search_tags = search_tags.replace(" #remixed ", " ");
+        tags = search_tags.trim();
         $(".remix_label input").prop("checked", search_tags.indexOf(" #remix ") >= 0);
         el.val(tags);
     }
@@ -2440,6 +3195,9 @@ Hive.init = function(exp, page){
         }
     });
     tags_input_changed($("#tags_input"));
+    var save_dialog = $('#dia_save').data('dialog');
+    save_dialog.opts.open = Hive.edit_pause;
+    save_dialog.opts.close = Hive.edit_start;
 
     var overwrite_dialog = dialog.create('#dia_overwrite');
     $('#cancel_overwrite').click(overwrite_dialog.close);
@@ -2447,37 +3205,11 @@ Hive.init = function(exp, page){
         Hive.Exp.overwrite = true;
         Hive.save();
     });
-
-    // var setThumb = function(app){
-    //     // Set thumb_id property for the server to find the appropriate file object
-    //     // if a default thumb a pseudo file_id, id<10 is chosen. 
-    //     // this should be replaced when default thumbs are handled as file objects -JDT 2012-01-13
-    //     Hive.Exp.thumb_file_id = app.file_id;
-    //     $('#current_thumb').attr('src',
-    //         app.content.replace(/(amazonaws.com\/[0-9a-f]*$)/,'$1_190x190') );
-    // };
-    // var dia_thumbnail;
-    // $('#btn_thumbnail').click(function() {
-    //     dia_thumbnail = showDialog('#dia_thumbnail');
-    //     var user_thumbs = $.map(Hive.Exp.images, function(app){
-    //        if (typeof(app.file_id) != "undefined") { // Non S3 images can't be used for thumbs
-    //            var img = $('<img>').attr('src', app.thumb).attr('data-file-id', app.file_id);
-    //            var e = $("<div class='thumb'>").append(img).get(0);
-    //            return e;
-    //        };
-    //     });
-    //     $('#expr_images').empty().append(user_thumbs);
-    //     $('#dia_thumbnail .thumb img').click(function() {
-    //         setThumb({file_id: $(this).attr('data-file-id'), content: this.src});
-    //         dia_thumbnail.close();
-    //         return false;
-    //     });
-    // });
     
     // Automatically update url unless it's an already saved
     // expression or the user has modified the url manually
     $('#dia_save #title').text(context.page_data.expr.title).
-        bind('keydown keyup', function(){
+        on('keydown keyup', function(){
         if (!(Hive.Exp.home || Hive.Exp.created || $('#url').hasClass('modified') )) {
             $('#url').val($('#title').val().replace(/[^0-9a-zA-Z]/g, "-")
                 .replace(/--+/g, "-").replace(/-$/, "").toLowerCase());
@@ -2507,6 +3239,17 @@ Hive.init = function(exp, page){
     if(Hive.Exp.auth) $('#menu_privacy [val=' + Hive.Exp.auth +']').click();
 
     Hive.Selection();
+
+    evs.on(document, 'keydown');
+    evs.on('body', 'mousemove');
+    evs.on('body', 'mousedown');
+    var drag_base = $('#grid_guide');
+    evs.on(drag_base, 'draginit');
+    evs.on(drag_base, 'dragstart');
+    evs.on(drag_base, 'drag');
+    evs.on(drag_base, 'dragend');
+    Hive.edit_start();
+
     Hive.Apps.init(Hive.Exp.apps);
     Hive.History.init();
     Hive.common_setup();
@@ -2515,6 +3258,15 @@ Hive.init = function(exp, page){
 Hive.exit = function(){
     $(document).off('keydown');
     $('body').off('mousemove mousedown');
+};
+
+Hive.edit_start = function(){
+    evs.handler_set(Hive.Selection);
+    evs.handler_set(Hive);
+};
+Hive.edit_pause = function(){
+    evs.handler_del(Hive.Selection);
+    evs.handler_del(Hive);
 };
 
 Hive.edit_start = function(){
@@ -2584,7 +3336,7 @@ Hive.embed_code = function(element) {
                     return error(false, data.error);
                 }
             }
-            Hive.new_file(data/*, { load: Hive.upload_finish }*/);
+            Hive.new_file(data);
             $(element).val('');
         }
         // Hive.upload_start();
@@ -2610,9 +3362,6 @@ Hive.embed_code = function(element) {
     Hive.new_app(app);
     $(element).val('');
 } 
-
-Hive.drag_start = noop; // function(){ hovers_active(false) };
-Hive.drag_end = noop; // function(){ hovers_active(true) };
 
 Hive.save = function() {
     var expr = Hive.state();
@@ -2650,8 +3399,8 @@ Hive.save = function() {
     };
 
     $('#expr_save .expr').val(JSON.stringify(expr));
-    $('#expr_save').bind('response', on_response)
-        .bind('error', on_error).submit();
+    $('#expr_save').on('response', on_response)
+        .on('error', on_error).submit();
 };
 Hive.get_draft = function() {
     return localStorage.expr_draft ? JSON.parse(localStorage.expr_draft) : null }
@@ -2723,25 +3472,6 @@ Hive.bg_change = function(s){
     ).exec(s);
 };
 
-Hive.make_fixed = function(width){
-    if (width === false){
-        delete Hive.Exp.fixed_width;
-        $('#happs, #controls').attr('style', '');
-    } else {
-        Hive.Exp.fixed_width = width;
-        $('#happs, #controls').css({
-            width: Hive.Exp.fixed_width, 
-            margin: '0 auto', 
-            position: 'relative', 
-        });
-        $('#happs').css({
-            'border-left': '1px dashed rgba(127,127,127,0.5)', 
-            'border-right': '1px dashed rgba(127,127,127,0.5)', 
-            height: '100%'
-        });
-    }
-};
-
 function remove_all_apps() {
     var aps = $.map(Hive.Apps, id); // store a copy of Apps so we can destructively update it
     $.map(apps, function(a) { a.remove() });
@@ -2774,7 +3504,7 @@ Hive.append_color_picker = function(container, callback, init_color, opts){
             o.set_color(c);
             manual_input.val(c);
             callback(c, to_rgb(c));
-        }).bind('mousedown', function(e){ e.preventDefault()});
+        }).on('mousedown', function(e){ e.preventDefault()});
     });
 
     var hex_changed = false;
@@ -2862,13 +3592,13 @@ Hive.append_color_picker = function(container, callback, init_color, opts){
     o.set_color(init_color);
 
     // Prevent unwanted nudging of app when moving cursor in manual_input
-    manual_input.bind('mousedown keydown', function(e){
+    manual_input.on('mousedown keydown', function(e){
         hex_changed = true;
         e.stopPropagation();
     });
 
     manual_input.blur(o.update_hex).keypress(function(e){
-        if (e.keyCode == 13) {
+        if(e.keyCode == 13) {
             if (opts && opts.field_to_focus){
                 opts.field_to_focus.focus();
             } else {
@@ -2915,7 +3645,7 @@ Hive.input_frame = function(input, parent, opts){
 // Convenience functions for interactive coding
 Hive.sel = function(n) {
     if(!n) n = 0;
-    return Hive.Selection.elements[n];
+    return Hive.Selection.elements()[n];
 }
 
 Hive.foc = function(n){ Hive.Selection.update([Hive.Apps[n]]) };
@@ -2951,6 +3681,33 @@ function array_sum( a, b ){
     }
     return rv
 }
+
+Hive.rect_test = function(w, h){
+    if(!w) w = 20;
+    if(!h) h = 20;
+    js.range(w).map(function(x){
+        js.range(h).map(function(y){
+            Hive.App({
+                position: [x*50, y*50],
+                dimensions: [48, 48],
+                type: 'hive.rectangle',
+                content: {color:colors[(x+y)%36]}
+            })
+        })
+    });
+};
+
+// Rejigger the selected elements into their "best"
+// snapped positions (and sizes TBD)
+Hive.im_feeling_lucky = function(){
+    var apps = Hive.Selection.elements();
+    $.map([100, 60, 40, 30, 20, 10], function(j) {
+        $.map(apps, function(app, i){
+            app.pos_set(app.pos(), .3, j);
+            // app.resize
+        });
+    });
+};
 
 return Hive;
 

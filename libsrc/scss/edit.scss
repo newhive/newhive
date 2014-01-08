@@ -1,6 +1,13 @@
 @import "common";
 
 body.edit {
+font-family: Helvetica, Arial, sans-serif;
+
+.ruler {
+    z-index: 1337;
+    position: absolute;
+    background-color: $color_selected;
+}
 #happs {
     position: absolute;
     left: 0;
@@ -106,7 +113,7 @@ body.edit {
 .drawer.bstyle { padding : 5px 5px 0 5px; }
 .bstyle .border { background-color : #54D3AC; border-color : #0A2655; border-width : 3px; width : 20px; height : 15px; margin-bottom : 10px; }
 .bstyle .border.none { width : 26px; height : 18px; }
-.drawer.fontname { width : 24em; }
+.drawer.fontname { width : 453px; }
 .drawer.fontname .option { margin-bottom : 5px; display : float; float : left; width : 8em; height : 1em; }
 .align .option.small { margin : 5px; }
 .drawer.link { background-color : transparent; }
@@ -172,7 +179,7 @@ textarea.code {
     margin-right: -11px;
     padding-left: 8px;
     padding-right: 10px;
-    .loading { width: 25px; }
+    .loading { width: 25px; vertical-align: middle; }
     // TODO: we should have a mechanism to set up icons, correctly aligned,
     // correctly sized, with automatic hover.
     div.arrow { 
@@ -235,8 +242,8 @@ textarea.code {
 #dia_thumbnail .thumb img { width: 190px; height: 190px; }
 
 .menu.embed { padding: 10px; }
-.embed_box { font-size: 12px; margin: 10px 0; width: 250px; height: 4em; }
-.embed_button { font-size: 18px; }
+.embed_box { margin: 8px 0; width: 250px; height: 4.5em; resize: none; }
+// .embed_button { font-size: 18px; }
 
 .btn_text.selected { color: white; background-color: #696E76; }
 .btn_text { background: none; color: #696E76; padding: 2px 4px; padding: 3px 8px; display: inline-block; }
@@ -247,7 +254,7 @@ input, textarea { font-size : inherit; }
 .drawer { z-index: 2; white-space : nowrap;  }
 
 .fontsize .option { color : $color_12; vertical-align : bottom; }
-.menu label { color: $color_18; }
+// .menu label { color: $color_18; }
 .fontsize .bigger .option.small { width : 70px; height : 135px; }
 .fontsize .option:hover { background-color : $color_selected; color : $color_0; }
 .drawer.fontname .option:hover { background-color : $color_selected; }

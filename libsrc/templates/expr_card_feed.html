@@ -3,11 +3,11 @@
   param{suppress_feed}: disable activity
 #}
 {# tags #}
-{<with null}
+{<with null "plus_menu" user.logged_in}
   {|templates/tag_list.html}
 {>}
 <a { anchor_attrs "view_expr"
-    "id" id  "expr_name" name  "owner_name" owner.name }
+    "id" id  "expr_name" name "owner_name" owner.name }
   ><img class="snapshot" src=
   {<if snapshot_small}
     "{snapshot_small}"

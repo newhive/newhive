@@ -23,7 +23,7 @@ s3_buckets = {
     'assets': None,
 }
 
-admins          = ['abram', 'cara', 'zach', 'newduke', 'fatsycline']
+admins          = ['abram', 'cara', 'zach', 'newduke', 'fatsycline','root','newhive']
 
 default_email_subscriptions = ['love', 'listen', 'share_expr', 'comment', 'broadcast', 'featured', 'milestone']
 milestones = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000,
@@ -51,8 +51,7 @@ user_groups = { 'logged_in':set([]), 'logged_out':set(['logged_out']), 'all':set
 site_flags = { 
     'admin': ['admins']
     ,'merge_recent': ['cara', 'fatsycline']
-    ,'newduke': ['newduke']
-    ,'either': ['newduke', 'logged_out']
+    ,'show_hive_all': ['newduke']
     ,'logged': ['logged_out']
 }
 

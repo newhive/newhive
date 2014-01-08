@@ -6,7 +6,7 @@ from newhive.utils import now, lget, dfilter
 from newhive.analytics.analytics import user_expression_summary
 import newhive.analytics.queries
 import newhive.mail
-from newhive import config
+from newhive import state, config
 from newhive.controllers.controller import Controller
 
 class Cron(Controller):
@@ -33,6 +33,19 @@ class Cron(Controller):
         status.update({'timestamp': now(), 'args': opts})
         return self.serve_json(response, status)
 
+    def pop_featured_queue(self):
+        ru = self.db.User.root_user
+        old_featured = set(ru.tagged['Featured'])
+
+        self.db.pop_featured_queue()
+
+        ru.reload()
+        new_featured = set(ru.tagged['Featured']) - old_featured
+        mailer = newhive.mail.Featured(db=self.db, jinja_env=self.jinja_env)
+        for expr_id in new_featured:
+            mailer.send(self.db.Expr.fetch(expr_id))
+
+        return {}
 
     def email_star_broadcast(self, delay=0, span=600):
         spec = {'send_email': True, 'created': {"$gt": now() - delay - span, "$lt": now() - delay } }

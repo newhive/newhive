@@ -32,13 +32,6 @@
         "require_login": true
     },
 
-    "my_profile": {
-        "page_route": "/home/my-profile",
-        "api_route": "/api/home/my-profile",
-        "controller": "community",
-        "method": "empty"
-    },
-
     "featured": {
         "page_route": "/home/featured",
         "api_route": "/api/feed/featured",
@@ -55,22 +48,6 @@
         "client_method": "grid",
         "require_login": true
     },
-   "signup": {
-        "page_route": "/home/signup",
-        "controller": "community",
-        "method": "forms_signup",
-        "client_method": "forms"
-    },
-   "old_signup": {
-        "page_route": "/create_account/<key>",
-        "controller": "community",
-        "method": "old_signup"
-    },
-    "signup-create": {
-        "api_route": "/api/user/create",
-        "controller": "user",
-        "method": "create"
-    },
     "search": {
         "page_route": "/search",
         "api_route": "/api/search",
@@ -85,6 +62,37 @@
         "method": "expr",
         "client_method": "expr"
     },
+
+    "empty": "-----------------------------------------",
+    "empty": "These routes are (profile) community pages.",
+
+    "my_profile": {
+        "page_route": "/home/my-profile",
+        "api_route": "/api/home/my-profile",
+        "controller": "community",
+        "method": "empty"
+    },
+    "following": {
+        "page_route": "/<owner_name>/profile/following",
+        "api_route": "/api/feed/following/<owner_name>",
+        "controller": "community",
+        "method": "following",
+        "client_method": "mini"
+    },
+    "followers": {
+        "page_route": "/<owner_name>/profile/followers",
+        "api_route": "/api/feed/followers/<owner_name>",
+        "controller": "community",
+        "method": "followers",
+        "client_method": "mini"
+    },
+    "loves": {
+        "page_route": "/<owner_name>/profile/loves",
+        "api_route": "/api/feed/loves/<owner_name>",
+        "controller": "community",
+        "method": "loves",
+        "client_method": "grid"
+    },
     "expressions_public": {
         "page_route": "/<owner_name>/profile",
         "api_route": "/api/feed/expressions/<owner_name>",
@@ -97,10 +105,19 @@
         "api_route": "/api/feed/expressions/grid/<owner_name>",
         "controller": "community",
         "method": "expressions_public_tags",
-        "client_method": "grid"
+        "client_method": "grid",
+        "include_tags": true
+    },
+    "expressions_public_grid_tags": {
+        "page_route": "/<owner_name>/profile/grid/<tag_name>",
+        "api_route": "/api/feed/expressions/grid/<owner_name>/<tag_name>",
+        "controller": "community",
+        "method": "expressions_public_tags",
+        "client_method": "grid",
+        "include_tags": true
     },
     "expressions_public_tags": {
-        "page_route": "/<owner_name>/profile/tags",
+        "page_route": "/<owner_name>/tag",
         "api_route": "/api/feed/expressions/tags/<owner_name>",
         "controller": "community",
         "method": "expressions_public_tags",
@@ -134,6 +151,15 @@
         "private": true
     },
 
+    "expressions_comments": {
+        "page_route": "deprecated",
+        "page_route": "/<owner_name>/profile/comments",
+        "api_route": "/api/feed/expressions/comments/<owner_name>",
+        "controller": "community",
+        "method": "expressions_comments",
+        "client_method": "grid"
+    },
+
     "empty": "-----------------------------------------",
     "empty": "These routes are for forms.",
     "empty": "-----------------------------------------",
@@ -149,10 +175,33 @@
         "controller": "user",
         "method": "logout"
     },
+    "signup": {
+        "page_route": "/home/signup",
+        "controller": "community",
+        "method": "forms_signup",
+        "client_method": "forms"
+    },
+    "old_signup": {
+        "page_route": "/create_account/<key>",
+        "controller": "community",
+        "method": "old_signup"
+    },
+    "signup-create": {
+        "api_route": "/api/user/create",
+        "controller": "user",
+        "method": "create"
+    },
+
     "collection_order": {
-        "api_route": "/api/user/tag_reorder",
+        "api_route": "/api/user/collection_order",
         "controller": "user",
         "method": "collection_order",
+        "require_login": true
+    },
+    "tag_order": {
+        "api_route": "/api/user/tag_order",
+        "controller": "user",
+        "method": "tag_order",
         "require_login": true
     },
     "user_update": {
@@ -168,6 +217,11 @@
         "page_route": "/<owner_name>/profile/manage_tags",
         "client_method": "manage_tags"
     },
+    "add_to_collection": {
+        "api_route": "/<owner_name>/profile/add_to_collection",
+        "controller": "user",
+        "method": "add_to_collection"
+    },
     "user_settings": {
         "page_route": "/<owner_name>/profile/settings",
         "api_route": "/api/user/settings/<owner_name>",
@@ -181,34 +235,6 @@
         "api_route": "/api/user/settings/<owner_name>/deactivate",
         "controller": "user",
         "method": "deactivate"
-    },
-    "following": {
-        "page_route": "/<owner_name>/profile/following",
-        "api_route": "/api/feed/following/<owner_name>",
-        "controller": "community",
-        "method": "following",
-        "client_method": "mini"
-    },
-    "followers": {
-        "page_route": "/<owner_name>/profile/followers",
-        "api_route": "/api/feed/followers/<owner_name>",
-        "controller": "community",
-        "method": "followers",
-        "client_method": "mini"
-    },
-    "loves": {
-        "page_route": "/<owner_name>/profile/loves",
-        "api_route": "/api/feed/loves/<owner_name>",
-        "controller": "community",
-        "method": "loves",
-        "client_method": "grid"
-    },
-    "expressions_comments": {
-        "page_route": "/<owner_name>/profile/comments",
-        "api_route": "/api/feed/expressions/comments/<owner_name>",
-        "controller": "community",
-        "method": "expressions_comments",
-        "client_method": "grid"
     },
     "view_expr": {
         "page_route": "/<owner_name>/<path:expr_name>",
@@ -324,6 +350,7 @@
 
     "empty": "-----------------------------------------",
     "empty": "Admin.",
+
     "site_flags": {
         "page_route": "/home/admin/site_flags",
         "api_route": "/api/admin/site_flags",
@@ -331,6 +358,11 @@
         "method": "site_flags",
         "client_method": "admin",
         "require_login": true
+    },
+    "add_featured_queue": {
+        "api_route": "/api/admin/add_featured_queue",
+        "controller": "admin",
+        "method": "add_featured_queue"
     },
     "cron": {
         "page_route": "/home/cron/<path:method_name>",
@@ -349,6 +381,7 @@
 
     "empty": "-----------------------------------------",
     "empty": "Dev tools.",
+
     "bugbug": {
         "api_route": "/api/bugbug",
         "controller": "user",

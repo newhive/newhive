@@ -42,7 +42,7 @@ def get_api_endpoints(api):
                 rules.append(Rule(
                     route_obj['page_route'],
                     endpoint=(
-                        getattr(api, route_obj.get('controller', 'community')),
+                        getattr(api, route_obj.get('controller', 'controller')),
                         route_obj.get('method', 'empty')
                     ),
                     defaults=defaults,

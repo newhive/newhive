@@ -14,7 +14,7 @@ import lxml.html
 import logging
 
 import newhive.state
-from newhive.state import abs_url
+from newhive.config import abs_url
 from newhive.utils import AbsUrl
 from newhive import config, utils
 from newhive.server_session import db, server_env, jinja_env, hive_assets
@@ -252,7 +252,7 @@ class Mailer(object):
         if self.unsubscribable:
             if isinstance(self.recipient, newhive.state.User):
                 context.update({
-                    'unsubscribe_url': abs_url(secure=True) + "settings"
+                    'unsubscribe_url': abs_url(secure=True) + self.recipient['name'] + "/profile/settings"
                     , 'unsubscribe_text': "To manage your email subscriptions"
                     })
             else:
@@ -418,12 +418,12 @@ class ExprStar(ExprAction):
 
 class Broadcast(ExprAction):
     name = 'broadcast'
-    message = "Your expression has been broadcast to their network of listeners."
-    header_message = ['broadcast', 'your expression']
+    message = "Your expression has been republished to their network of listeners."
+    header_message = ['republished', 'your expression']
 
     @property
     def subject(self):
-        return self.feed.initiator.get('name') + ' broadcast "' + self.feed.entity.get('title') + '"'
+        return self.feed.initiator.get('name') + ' republished "' + self.feed.entity.get('title') + '"'
 
     @property
     def card(self):

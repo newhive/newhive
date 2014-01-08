@@ -6,8 +6,9 @@
   {>}
   {<else}
     {<if entity_class "Expr"}
-      {anchor_attrs "view_expr" "id" entity "owner_name" owner_name
-        "expr_name" entity_name}
+      {anchor_attrs "view_expr" "id" (or entity_other_id entity) 
+        "owner_name" (or other_owner_name owner_name)
+        "expr_name" (or other_entity_name entity_name)}
     {>}
     {<else}
       {<if initiator user.id}

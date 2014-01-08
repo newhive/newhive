@@ -18,16 +18,28 @@ class Admin(Controller):
         """
 
         resp = {}
-        print request.form
         if len(request.form.keys()):
+            print "Site_flags changed."
+            print request.form
+
             su = self.db.User.site_user
             new_flags = {}
             for k, v in request.form.items():
                 l = v.split(",")
                 new_flags[k] = l
             su.update(updated=False, site_flags=new_flags)
-            # return self.serve_json(response, resp)
 
         flags = { k:','.join(v) for k,v in self.flags.items()}
         tdata.context.update(page_data={'site_flags': flags}, route_args=args)
         return self.serve_loader_page('pages/main.html', tdata, request, response)
+
+    def add_featured_queue(self, tdata, request, response, **args):
+        """ Adds an expression to the queue of new featured expressions
+            Always called with ajax.
+        """
+
+        resp = {}
+        expr_id = request.form.get('expr_id')
+
+        self.db.User.root_user.add_to_collection(expr_id, "_featured", add_to_back=True)
+        return self.serve_json(response, resp)

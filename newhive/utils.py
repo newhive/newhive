@@ -16,6 +16,37 @@ import newhive
 from newhive import config
 from newhive.config import abs_url, url_host
 
+class Apply(object):
+    error = []
+    success = []
+
+    """docstring for Apply"""
+    def __init__(self, arg):
+        super(Apply, self).__init__()
+        clear_apply()
+        
+    @staticmethod
+    def clear_apply():
+        Apply.error = []
+        Apply.success = []
+
+    @staticmethod
+    def apply_all(func, l, print_frequency=100):
+        l = list(l)
+        total = len(l)
+        initial_success = len(Apply.success)
+        print "Running on %s items." % total
+        i = 0
+        for e in l:
+            if not func(e):
+                Apply.error.append(e)
+            else:
+                Apply.success.append(e)
+            i = i + 1
+            if (i % print_frequency == 0):
+                print "(%d of %d) items processed... " % (i, total)
+        print "success (%d of %d)" % (len(Apply.success) - initial_success, total)
+
 def lset(l, i, e, *default):
     default = default[0] if default else [None]
     if i < len(l): l[i] = e

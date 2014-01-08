@@ -23,6 +23,7 @@ class Controller(object):
     # Dispatch calls into controller methods of the form:
     # def method(self, tdata, request, response, **args):
     def dispatch(self, handler, request, **args):
+        self.request = request
         (tdata, response) = self.pre_process(request)
         # Redirect to home if route requires login but user not logged in
         if (args.get('require_login') and not tdata.user.logged_in and
@@ -86,11 +87,17 @@ class Controller(object):
         tdata.context.update(flags=user_flags)
 
         return (tdata, response)
+
+    def empty(self, tdata, request, response, **args):
+        tdata.context.update(page_data={}, route_args=args)
+        return self.serve_loader_page('pages/main.html', tdata, request, response)
     
     def render_template(self, tdata, response, template):
         context = tdata.context
         context.update(template=template)
         context.setdefault('icon', self.asset('skin/1/logo.png'))
+        context.setdefault('meta_title', 'NewHive')
+        context.setdefault('meta_url', self.request.url)
         return self.jinja_env.get_template(template).render(context)
 
     def serve_data(self, response, mime, data):

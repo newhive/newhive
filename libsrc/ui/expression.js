@@ -64,8 +64,9 @@ define([
             // $(document).mouseleave(function(e) { window.setTimeout(clear_hover, 600, e); });
             $(window).resize(layout.place_apps)
                  .click(function(){ o.send_top('focus'); });
+            $(window).on("scroll", layout.on_scroll);
         };
-
+        
         o.margin = function () {
             return $(window).width() / 4;
         }

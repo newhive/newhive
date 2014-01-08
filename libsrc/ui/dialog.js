@@ -19,7 +19,7 @@ define([
                     el_show.showshow();
                     opts.dialog.find(".success_hide").hidehide();
                 } else {
-                    opts.dialog.close();
+                    o.close();
                 }
             }
         };
@@ -73,7 +73,6 @@ define([
             this_dia.detach();
             // Add to body to create a new z index stack
             this_dia.appendTo(document.body);
-            this_dia.removeClass('hide').showshow();
             this_dia.find("form").unbind('response').on('response', opts.handler);
             // For old browsers which don't support autofocus.
             this_dia.find("*[autofocus]").focus();
@@ -85,6 +84,10 @@ define([
                 e.preventDefault(); 
             });
             $(window).resize(opts.layout);
+            // Layout before *and* after.  Before so the window doesn't scroll viewport.
+            // After so that it has guaranteed dimension for layout.
+            opts.layout();
+            this_dia.removeClass('hide').showshow();
             opts.layout();
 
             opts.open();

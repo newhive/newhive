@@ -145,9 +145,8 @@ define([
         // Common site-wide handlers
         find_all(dom, '*[data-class-toggle]').each(function(i, e) {
             var click_func = function(klass) {
-                var obj = $(e);
                 return function(el) {
-                    obj.toggleClass(klass);
+                    $(e).toggleClass(klass);
                 };
             }
             var class_toggles = $(e).attr('data-class-toggle');
@@ -166,13 +165,9 @@ define([
         find_all(elements, '*[data-link-show]').each(function(i, e) {
             var handle = find_all(elements, $(e).attr('data-link-show'));
             if(!handle) throw 'missing handle';
-            var click_func = function() {
-                var obj = e;
-                return function(el) { 
-                    $(e).toggleshow();
-                };
-            }
-            handle.on('click', click_func());
+            handle.on('click', function(el) { 
+                $(e).toggleshow();
+            });
         });
         find_all(elements, 'form[data-route-name]').each(
             function(i, e){ form_handler(e, elements) });
@@ -254,10 +249,11 @@ define([
         var with_files = function(file_list){
             if(!file_api) return;
             var files = [];
+            var urlCreator = window.URL || window.webkitURL;
             // FileList is not a list at all, has no map :'(
             for(var i = 0; i < file_list.length; i++){
                 var f = file_list.item(i), file = {
-                    url: URL.createObjectURL(f),
+                    url: urlCreator.createObjectURL(f),
                     name: f.name,
                     mime: f.type
                 };
@@ -327,7 +323,7 @@ define([
                 o.error = d(pair[1]);
             }
         });
-        window.location.hash = window.location.hash.replace(/#error[^#]*/,"")
+        // window.location.hash = window.location.hash.replace(/#error[^#]*/,"")
     };
     o.query = {}; // set by ui.controller
 

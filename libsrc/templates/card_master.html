@@ -17,40 +17,31 @@
   {<with owner}
     {|templates/profile_card.html}
   {>}
-{>}{<else}
-  <form class="search_bar" method='GET' action='/search' name='search_form'>
-      {#
-        <a href='/random' title="View Random Expression" class='random_link'
-         ><div class='hoverable icon random inline'></div></a> 
-      #}
-      <div type="button" title="Toggle Tags" value="" class='hoverable icon hash inline'></div>
-      <input type="text" id="search_box" class="inline" placeholder="Search"
-        name='q' value='{query.q}'
-      ><input type="submit" value class='hoverable icon go_arrow inline'
-    ></form
-  >
 {>}
-{#{<if page "tag_search"}
-  {|templates/tags_page.html} 
-{>}
-#}
+<form class="search_bar{<if owner} hide{>}"
+  method='GET' action='/search' name='search_form'>
+    {#
+      <a href='/random' title="View Random Expression" class='random_link'
+       ><div class='hoverable icon random inline'></div></a> 
+    #}
+    <div type="button" title="Toggle Tags" value="" class='hoverable icon hash inline'></div>
+    <input type="text" id="search_box" class="inline" placeholder="Search"
+      name='q' value='{query.q}'
+    ><input type="submit" value class='hoverable icon go_arrow inline'
+  ></form
+>
 {<unless page "tag_search"}
-  <div class="tag_list main hide" data-link-show=".icon.hash">
-    {#data-class-toggle='```{".tag_list .expander":"expanded"}```'>#}
-    <div class="expander tag_label">...</div>
-    {<with null "main_view" true}
-      {<for tag_list "tagnum"}
-        {|templates/tag_card.html}
-      {>}
-    {>}
-  </div>
+  {<with null "extra_classes" "hide"} {# "expander" route.include_tags #}
+    {|templates/tags_main.html}
+  {>}
 {>}
 {<if route.include_tags}
-  <form {form_attrs "collection_order"} method="post"
+  <form {form_attrs "collection_order"} method="POST"
     class="centered save_bar hide block">
     <button type="submit" class="inline black_btn upper">Save</button>
     <input type="hidden" name="tag_name" value="{tag_selected}">
     <input type="hidden" name="new_order">
+    <input type="hidden" name="deletes" value=0>
   </form>
 {>}
 <div id='feed' class='{layout}{<unless route.private} public{>}'>

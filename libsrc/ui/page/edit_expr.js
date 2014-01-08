@@ -12,7 +12,7 @@ define([
     editor,
     expr_page,
     lay,
-    bundles,
+    bundles, 
     edit_template
 ) {
     var o = {};
@@ -31,6 +31,7 @@ define([
             function(){
                 return editor.Apps.length == 0 }
         );
+        $('.edit.overlay').showshow();
         $("body").addClass("edit");
     };
     
@@ -51,13 +52,13 @@ define([
     };
 
     o.render = function(page_data){
-        bundles['edit.css'].map(function(url){
-            $('<link>').attr({rel: 'stylesheet', href: url})
-                .addClass('edit').appendTo('head')
-                .load(function(){
-                    $('.edit.overlay').showshow();
-                    o.resize() });
-        });
+        // bundles['edit.css'].map(function(url){
+        //     $('<link>').attr({rel: 'stylesheet', href: url})
+        //         .addClass('edit').appendTo('head')
+        //         .load(function(){
+        //             $('.edit.overlay').showshow();
+        //             o.resize() });
+        // });
         $('#site').empty().append(edit_template(page_data)).showshow();
         $('#nav').hidehide();
 
