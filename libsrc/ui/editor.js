@@ -756,7 +756,7 @@ Hive.Controls = function(app, multiselect) {
         // var minned_dims = [ Math.max(min_d[0], dims[0]),
         //     Math.max(min_d[1], dims[1]) ];
         // pos = _sub(pos)( _sub(minned_dims)(dims) );
-        return { pos: pos, dims: minned_dims };
+        return { pos: pos, dims: dims };
     };
     o.pos = function(){ return pos_dims().pos };
     o.dims = function(){ return pos_dims().dims };
