@@ -600,8 +600,10 @@ Hive.App = function(init_state, opts) {
         dimensions: _dims.slice()
     }};
     o.state_relative_set = function(s){
-        _pos = s.position.slice();
-        _dims = s.dimensions.slice();
+        if(s.position)
+            _pos = s.position.slice();
+        if(s.dimensions)
+            _dims = s.dimensions.slice();
         o.layout();
     };
 
@@ -618,7 +620,7 @@ Hive.App = function(init_state, opts) {
     };
     o.state_update = function(s){
         $.extend(o.init_state, s);
-        o.state_relative_set(o.init_state);
+        o.state_relative_set(s);
     };
 
     o.history_helper_relative = function(name){
@@ -895,6 +897,13 @@ Hive.keydown = function(ev){
         Hive.History.redo();
         return false;
     }
+};
+
+Hive.scroll = function(ev){
+    if(Hive.Selection.controls)
+        Hive.Selection.controls.layout();
+    Hive.Selection.elements().map(function(app){
+        app.controls.layout() });
 };
 
 
@@ -2242,8 +2251,6 @@ Hive.App.Image = function(o) {
                 o.init_state.offset = _mul(1 / o.init_state.scale_x / o.dims()[0])(offset);
             o.layout();
         };
-
-
     })();
 
     var _layout = o.layout;
@@ -2967,9 +2974,7 @@ Hive.Selection = function(){
 
     var parent = o;
     o.make_controls.push(function(o){
-        o.pos = parent.pos;
         o.padding = 7;
-
         o.div.drag(parent.move_handler).drag('start', parent.move_start)
             .drag('end', parent.move_end);
     });
@@ -3503,6 +3508,7 @@ Hive.init = function(exp, page){
 
     Hive.Selection();
 
+    $(window).on('scroll', Hive.scroll);
     evs.on(document, 'keydown');
     evs.on('body', 'mousemove');
     evs.on('body', 'mousedown');
