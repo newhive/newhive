@@ -350,11 +350,11 @@ var snap_helper = function(my_tuple, opts) {
                             best_snaps[goal_memo] = total;
                             best_guides[goal_memo] = best_guides[goal_memo] || {};
                             // NOTE: We were showing the ruler at coord2 - added_padding
-                            best_guides[goal_memo][precision(coord2)] = 
+                            best_guides[goal_memo][type2] = 
                                 interval_bounds(
-                                    best_guides[goal_memo][precision(coord2)] 
+                                    best_guides[goal_memo][type2] 
                                         || null_interval,
-                                    guide);
+                                    guide).concat(coord2);
                             if (total > best.strength) {
                                 best.strength = total;
                                 best.goal = goal;
@@ -371,7 +371,9 @@ var snap_helper = function(my_tuple, opts) {
             // TODO-polish: pick on a more sensible criterion
             for (var first in obj)
                 if (obj.hasOwnProperty(first)) break;
-            best_intervals[coord] = obj[first].concat([parseFloat(first)]);
+            if (obj[1])
+                first = 1;
+            best_intervals[coord] = obj[first];
         }
     }
     $(".ruler").hidehide();
@@ -3020,6 +3022,7 @@ Hive.Selection = function(){
         // check timestamp and bump sensitivity if longish
         // gap between user inputs.
         var move_dist = _sub(delta)(delta_latched);
+        delta_latched = delta.slice();
         var time = new Date().getTime() / 1000;
         times.push(time);
         // Max is better than other distance metric because user will
@@ -3036,7 +3039,7 @@ Hive.Selection = function(){
         }
         time = times[times.length - 1] - times[0];
         distance = distances[distances.length - 1] - distances[0];
-        var speed = distance / time;
+        var speed = distance ? distance / time : 1;
         // speed = move_speed = _lerp(.1, move_speed, speed);
 
         // Experiment with using distance to "average position"
@@ -3056,7 +3059,6 @@ Hive.Selection = function(){
                 speed: Math.round(100*speed)/100,
             });
 
-        delta_latched = delta.slice();
         return sensitivity;
     };
 
