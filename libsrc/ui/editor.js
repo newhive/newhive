@@ -642,7 +642,8 @@ Hive.App = function(init_state, opts) {
     o.load = Funcs(function() {
         if( ! o.init_state.position ) o.init_state.position = [ 100, 100 ];
         if( ! o.init_state.dimensions ) o.init_state.dimensions = [ 300, 200 ];
-        if( opts.offset ) o.init_state.position = array_sum(o.init_state.position, opts.offset);
+        if( opts.offset )
+            o.init_state.position = array_sum(o.init_state.position, opts.offset);
         o.state_relative_set(o.init_state);
         if (o.init_state.full_bleed_coord != undefined)
             Hive.App.has_full_bleed(o, o.init_state.full_bleed_coord);
@@ -3400,7 +3401,8 @@ Hive.init = function(exp, page){
 
     $('#media_upload').on('with_files', function(ev, files){
         // media files are available immediately upon selection
-        Hive.new_file(files);
+        center = _div([ev.clientX, ev.clientY])(Hive.env().scale);
+        Hive.new_file(files, { center: center });
     }).on('response', function(ev, files){ Hive.on_media_upload(files) });
 
     var busy_e = $('.save .loading');
