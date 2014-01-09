@@ -35,7 +35,7 @@ define([
 
 var Hive = {}, debug_mode = context.config.debug_mode, bound = js.bound,
     noop = function(){}, Funcs = js.Funcs, asset = ui_util.asset;
-Hive.show_move_sensitivity = false;
+Hive.show_move_sensitivity = true;
 Hive.no_snap = false;
 Hive.asset = asset;
 
@@ -226,11 +226,15 @@ Hive.layout_apps = function(){
 var snap_helper = function(my_tuple, opts) {
     var precision = function(goal) { return (Math.round(goal * 2) / 2).toString(); }
     opts = $.extend({
-        exclude_ids: {},
-        snap_strength: 0.35,
-        snap_radius: 10,
-        sensitivity: 0,
-        padding: 10,
+        exclude_ids: {},        // exclude apps with these ids to snap against
+        snap_strength: 0.35,    // 1.0 is the strength of two apps right next to each other
+                                // strength is additive, and highest strength wins.
+                                // Do not snap if strength is less than this value
+                                // NOTE: mid-center snapping multiplies strength by 0.4
+        snap_radius: 10,        // Snap at most this far away
+        sensitivity: 0,         // Exponent for falloff in the dimension of snap 
+                                // (makes it not snap far away)
+        padding: 10,            // Editor units to add to object snapping against each other
     }, opts );
     var s = Hive.env().scale;
     var exclude_ids = opts.exclude_ids;
@@ -238,12 +242,19 @@ var snap_helper = function(my_tuple, opts) {
     var snap_radius = opts.snap_radius;
     var sensitivity = opts.sensitivity;
     var padding = opts.padding;
-    var pos;
+    var pos = [];
+    var left = 2
     for (var j = 0; j < my_tuple[0].length; j++){
         if (my_tuple[0][j] != undefined) {
-            pos = [my_tuple[0][j], my_tuple[1][j]];
-            break;
+            pos[0] = my_tuple[0][j];
+            --left;
         }
+        if (my_tuple[1][j] != undefined) {
+            pos[1] = my_tuple[1][j];
+            --left;
+        }
+        if (!left)
+            break;
     }
     var tuple = [[],[]], new_pos = pos.slice();
     // TODO-perf: save this array only after drag/drop
@@ -339,9 +350,11 @@ var snap_helper = function(my_tuple, opts) {
                             best_snaps[goal_memo] = total;
                             best_guides[goal_memo] = best_guides[goal_memo] || {};
                             // NOTE: We were showing the ruler at coord2 - added_padding
-                            best_guides[goal_memo][coord2] = interval_bounds(
-                                best_guides[goal_memo][coord2] || null_interval,
-                                guide);
+                            best_guides[goal_memo][precision(coord2)] = 
+                                interval_bounds(
+                                    best_guides[goal_memo][precision(coord2)] 
+                                        || null_interval,
+                                    guide);
                             if (total > best.strength) {
                                 best.strength = total;
                                 best.goal = goal;
@@ -2601,6 +2614,7 @@ Hive.Selection = function(){
     o.dragstart = function(ev, dd){
         o.dragging = true;
         $("#controls").hidehide();
+        o.reset_sensitivity();
 
         var app = ev.data;
         if(app){
@@ -2633,9 +2647,11 @@ Hive.Selection = function(){
     o.drag = function(ev, dd){
         if (!o.dragging) return;
 
+        var delta = [dd.deltaX, dd.deltaY];
+        o.sensitivity = o.calculate_sensitivity(delta);
         var app = ev.data;
         if(app){
-            o.move_handler(ev, dd);
+            o.move_handler(ev, delta);
             return;
         }
 
@@ -2700,8 +2716,6 @@ Hive.Selection = function(){
         var moved_obj = drag_target || o;
         ref_pos = moved_obj.pos_relative();
         change_start();
-        delta_latched = delta_ave = [0, 0];
-        move_speed = 1;
     };
     o.move_relative = function(delta, axis_lock){
         if(!ref_pos) return;
@@ -2716,39 +2730,19 @@ Hive.Selection = function(){
                 exclude_ids: excludes,
                 snap_strength: .05,
                 snap_radius: 18,
-                sensitivity: sensitivity, });
+                sensitivity: o.sensitivity, });
         }
         drag_target.pos_relative_set(pos);
         o.layout();
     };
-    var delta_latched, move_speed, delta_ave, sensitivity;
-    o.move_handler = function(ev, dd){
-        var delta = [dd.deltaX, dd.deltaY];
-        // Calculate sensitivity
-        // TODO-feature-snap: check timestamp and bump sensitivity if longish
-        // gap between user inputs.
-        var move_dist = _sub(delta)(delta_latched);
-        // Max is better than other distance metric because user will
-        // commonly move in both axes accidentally.
-        var speed = Math.max(Math.abs(move_dist[0]), Math.abs(move_dist[1]));
-        speed = move_speed = _lerp(.1, move_speed, speed);
-        // Experiment with using distance to "average position"
-        // delta_ave = _lerp(.1, delta_ave, delta);
-        // var move_dist = _sub(delta)(delta_ave);
-        // var speed = Math.abs(move_dist[0]) + Math.abs(move_dist[1]);
-        sensitivity = 1 / (speed - .98);
-        // TODO: flags like this should live on the root app.
-        if (Hive.show_move_sensitivity)
-            drag_target.content_element.find("span")
-                .text(Math.round(100*sensitivity)/100);
-
-        delta_latched = delta.slice();
+    o.move_handler = function(ev, delta){
         delta = _div(delta)(Hive.env().scale);
 
         o.move_relative(delta, ev.shiftKey);
     };
     o.move_end = function(){
         change_end('move');
+        Hive.set_debug_info("");
         $(".ruler").hidehide();
     };
 
@@ -2992,10 +2986,10 @@ Hive.Selection = function(){
         }
 
         var handlers = {
-            27: function(){ o.unfocus() },
-            46: function(){ o.remove() },
-            66: function(){ o.stack_bottom() },
-            84: function(){ o.stack_top() },
+            27: function(){ o.unfocus() },             // esc
+            46: function(){ o.remove() },              // del
+            66: function(){ o.stack_bottom() },        // b
+            84: function(){ o.stack_top() },           // t
         }
         if(handlers[ev.keyCode]){
             handlers[ev.keyCode]();
@@ -3007,6 +3001,60 @@ Hive.Selection = function(){
         if(o.controls)
             o.controls.layout();
     });
+    var times, distances, delta_latched;
+    // var move_speed, delta_ave;
+    o.reset_sensitivity = function() {
+        delta_latched = [0, 0];
+        // delta_ave = [0, 0];
+        // move_speed = 1;
+        times = [], distances = [];
+    };
+    // TODO: move sensitivity code globally
+    o.calculate_sensitivity = function(delta) {
+        // Calculate sensitivity
+        // check timestamp and bump sensitivity if longish
+        // gap between user inputs.
+        var move_dist = _sub(delta)(delta_latched);
+        var time = new Date().getTime() / 1000;
+        times.push(time);
+        // Max is better than other distance metric because user will
+        // commonly move in both axes accidentally.
+        // TODO: track x and y independently
+        var distance = Math.max(Math.abs(move_dist[0]), Math.abs(move_dist[1]));
+        // Keep track of accumulated distance.
+        distances.push(distance + 
+            (distances.length ? distances[distances.length - 1] : 0));
+        var max_sens_time = 1;
+        while (times.length > 2 && time - times[0] > max_sens_time) {
+            times.splice(0, 1);
+            distances.splice(0, 1);
+        }
+        time = times[times.length - 1] - times[0];
+        distance = distances[distances.length - 1] - distances[0];
+        var speed = distance / time;
+        // speed = move_speed = _lerp(.1, move_speed, speed);
+
+        // Experiment with using distance to "average position"
+        // delta_ave = _lerp(.1, delta_ave, delta);
+        // var move_dist = _sub(delta)(delta_ave);
+        // var speed = Math.abs(move_dist[0]) + Math.abs(move_dist[1]);
+        // sensitivity = 1 / (speed - .98);
+        var sensitivity = 150 / speed;
+        if (times.length < 5)
+            sensitivity *= 2;
+        // TODO: flags like this should live on the root app.
+        if (Hive.show_move_sensitivity && context.flags.debugger)
+            Hive.set_debug_info({
+                sensitivity: Math.round(100*sensitivity)/100,
+                time: Math.round(10000*time)/10000,
+                distance: Math.round(10000*distance)/10000,
+                speed: Math.round(100*speed)/100,
+            });
+
+        delta_latched = delta.slice();
+        return sensitivity;
+    };
+
     Hive.App.has_nudge(o);
 
     return o;
@@ -3164,6 +3212,23 @@ Hive.new_file = function(files, opts, app_opts) {
 
     return false;
 }
+
+Hive.set_debug_info = function(info) {
+    if (typeof(info) == "object")
+        info = JSON.stringify(info).replace(/,/g,"\n")
+    var $debug = $("#edit_debug");
+    if ($debug.length == 0) {
+        $debug = $("<div id='edit_debug' class='debug'</div>");
+        $("body").append($debug);
+    }
+    if (info == "") {
+        $debug.hidehide();
+        return;
+    }
+    // TODO: option to put info over mouse
+    $debug.showshow().css({ top: "0px", left: "0px" })
+        .text(info);
+};
 
 // Called on load() and save()
 Hive.common_setup = function(){
