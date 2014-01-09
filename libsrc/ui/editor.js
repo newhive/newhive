@@ -587,8 +587,10 @@ Hive.App = function(init_state, opts) {
         dimensions: _dims.slice()
     }};
     o.state_relative_set = function(s){
-        _pos = s.position.slice();
-        _dims = s.dimensions.slice();
+        if(s.position)
+            _pos = s.position.slice();
+        if(s.dimensions)
+            _dims = s.dimensions.slice();
         o.layout();
     };
 
@@ -605,7 +607,7 @@ Hive.App = function(init_state, opts) {
     };
     o.state_update = function(s){
         $.extend(o.init_state, s);
-        o.state_relative_set(o.init_state);
+        o.state_relative_set(s);
     };
 
     o.history_helper_relative = function(name){
@@ -2236,8 +2238,6 @@ Hive.App.Image = function(o) {
                 o.init_state.offset = _mul(1 / o.init_state.scale_x / o.dims()[0])(offset);
             o.layout();
         };
-
-
     })();
 
     var _layout = o.layout;
