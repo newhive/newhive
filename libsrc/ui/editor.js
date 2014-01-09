@@ -880,6 +880,13 @@ Hive.keydown = function(ev){
     }
 };
 
+Hive.scroll = function(ev){
+    if(Hive.Selection.controls)
+        Hive.Selection.controls.layout();
+    Hive.Selection.elements().map(function(app){
+        app.controls.layout() });
+};
+
 
 Hive.App.has_nudge = function(o){
     // TODO-bugbug: implement undo/redo of this. Because nudge is naturally
@@ -2970,9 +2977,7 @@ Hive.Selection = function(){
 
     var parent = o;
     o.make_controls.push(function(o){
-        o.pos = parent.pos;
         o.padding = 7;
-
         o.div.drag(parent.move_handler).drag('start', parent.move_start)
             .drag('end', parent.move_end);
     });
@@ -3435,6 +3440,7 @@ Hive.init = function(exp, page){
 
     Hive.Selection();
 
+    $(window).on('scroll', Hive.scroll);
     evs.on(document, 'keydown');
     evs.on('body', 'mousemove');
     evs.on('body', 'mousedown');

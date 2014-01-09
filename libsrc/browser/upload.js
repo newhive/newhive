@@ -56,7 +56,7 @@ define([
             if(!dt || !dt.files || !dt.files.length) return;
 
             var dt = ev.originalEvent.dataTransfer,
-                files = [];
+                files = [],
                 file_list = dt.files,
                 url = dt.getData("URL");
             if (file_list.length == 0 && url.length) {
