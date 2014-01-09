@@ -8,6 +8,13 @@ font-family: Helvetica, Arial, sans-serif;
     position: absolute;
     background-color: $color_selected;
 }
+#edit_debug {
+    background-color: #88D;
+    width: 300px;
+    position: absolute;
+    z-index: 1337;
+    white-space: pre;
+}
 #happs {
     position: absolute;
     left: 0;
