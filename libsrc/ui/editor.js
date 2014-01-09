@@ -2072,13 +2072,13 @@ Hive.App.Image = function(o) {
         Hive.App.has_image_drop(o);
     };
     o.img_load = function(){
-        o.imageWidth  = o.img.width() || o.img.prop('naturalWidth');
-        o.imageHeight = o.img.height() || o.img.prop('naturalHeight');
-        o.aspect = o.imageWidth / o.imageHeight;
+        var imageSize = o.pixel_size();
+        var imageWidth = imageSize[0], imageHeight = imageSize[1];
+        o.aspect = imageWidth / imageHeight;
         if( ! o.init_state.dimensions ){
             var ww = $(window).width(), wh = $(window).height(), iw, ih, wa = ww / wh;
-            if( (o.imageWidth > ww * .8) || (o.imageHeight > wh * .8) ){
-                if( wa < o.imageWidth / o.imageHeight ){
+            if( (imageWidth > ww * .8) || (imageHeight > wh * .8) ){
+                if( wa < imageWidth / imageHeight ){
                     iw = 800;
                     ih = iw / o.aspect;
                 } else {
@@ -2086,7 +2086,7 @@ Hive.App.Image = function(o) {
                     iw = ih * o.aspect;
                 }
             } else {
-                iw = o.imageWidth / Hive.env().scale;
+                iw = imageWidth / Hive.env().scale;
                 ih = iw / o.aspect;
             }
             o.init_state.dimensions = [ iw, ih ];
@@ -2097,7 +2097,7 @@ Hive.App.Image = function(o) {
         if (o.init_state.fit) {
             var opts = { dims:o.dims(), pos:o.pos(), fit:o.init_state.fit, 
                 doit: (o.init_state.fit != 2), // Cropping needed, wait on execution
-                scaled: [o.imageWidth, o.imageHeight] };
+                scaled: [imageWidth, imageHeight] };
             var new_layout = o.fit_to(opts);
             if (opts.fit == 2) {
                 o.init_state.scale_x = new_layout.dims[0] / opts.dims[0];
@@ -2245,7 +2245,7 @@ Hive.App.Image = function(o) {
     };
 
     o.pixel_size = function(){
-        return [o.img.naturalWidth, o.img.naturalHeight]
+        return [o.img.prop('naturalWidth'), o.img.prop('naturalHeight')];
     };
 
     function controls(o) {
