@@ -559,6 +559,9 @@ Hive.App = function(init_state, opts) {
         return cp;
     };
 
+    // opts.doit: true to move and resize the object
+    // opts.pos, opts.dims: the pos/dims of the object you are fitting to
+    // opts.scaled: (optional): dimensions of intrinsic, clipped object
     o.fit_to = function(opts){
         if (opts.doit == undefined) opts.doit = true;
         var dims = opts.dims.slice(), pos = opts.pos.slice();
@@ -602,6 +605,7 @@ Hive.App = function(init_state, opts) {
     };
     o.state_update = function(s){
         $.extend(o.init_state, s);
+        o.state_relative_set(o.init_state);
     };
 
     o.history_helper_relative = function(name){
@@ -2192,12 +2196,12 @@ Hive.App.Image = function(o) {
         var _resize = o.resize, _resize_end = o.resize_end, 
             _resize_start = o.resize_start;
         o.resize_start = function() {
-            _resize_start();
-            if (!drag_hold) return;
+            if (!drag_hold) 
+                return _resize_start();
             ref_dims = o.dims_relative();
             ref_scale_x = o.init_state.scale_x;
             history_point = Hive.History.saver(
-                o.image_scale, o.image_scale_set, 'move crop');
+                o.state, o.state_update, 'move crop');
         };
         o.resize = function(delta) {
             if(!drag_hold)
@@ -2214,14 +2218,12 @@ Hive.App.Image = function(o) {
             o.dims_relative_set(dims);
         };
         o.resize_end = function() {
-            _resize_end();
-            if(!drag_hold) return;
+            if(!drag_hold) 
+                return _resize_end();
             history_point.save();
             o.long_hold_cancel();
         };
 
-        o.image_scale = function() { return o.init_state.scale_x; };
-        o.image_scale_set = function(scale) { o.init_state.scale_x = scale; };
         // screen coordinates
         o.offset = function() {
             if (!o.init_state.scale_x)
@@ -2264,6 +2266,7 @@ Hive.App.Image = function(o) {
     Hive.App.has_rotate(o);
     Hive.App.has_opacity(o);
 
+    o.img = $();
     o.state_update(o.init_state);
     o.url_set(o.init_state.url);
     Hive.App.has_image_drop(o);
