@@ -3,6 +3,7 @@ define([
     ,'browser/js'
     ,'server/context'
     ,'browser/upload'
+    ,'browser/layout'
     ,'ui/util'
 
     ,'./env'
@@ -16,6 +17,7 @@ define([
     ,js
     ,context
     ,upload
+    ,layout
     ,ui_util
 
     ,env
@@ -427,7 +429,7 @@ Hive.App.RawHtml = function(o) {
         o.addControls($('#controls_raw_html'));
         o.div.find('.edit').click(function(){
             var dia = $($('#dia_edit_code')[0].outerHTML);
-            Hive.showDialog(dia, {
+            u.show_dialog(dia, {
                 fade: false,
                 close: function() {
                     var new_content = dia.find('textarea').val();
@@ -1216,7 +1218,8 @@ Hive.App.Image = function(o) {
     function controls(o) {
         o.addControls($('#controls_image'));
         o.append_link_picker(o.div.find('.buttons'));
-        o.div.find('.button.set_bg').click(function() { Hive.bg_change(o.app.state()) });
+        o.div.find('.button.set_bg').click(function() {
+            Hive.bg_change(o.app.state()) });
         return o;
     };
     o.make_controls.push(controls);
@@ -2021,6 +2024,74 @@ Hive.App.has_color = function(o) {
     o.make_controls.push(controls);
 }
 
+
+Hive.init_background_dialog = function(){
+    if(!env.Exp.background) env.Exp.background = { };
+    if(!env.Exp.background.color) env.Exp.background.color = '#FFFFFF';
+    Hive.bg_div = $('#bg');
+    u.append_color_picker($('#color_pick'), Hive.bg_color_set,
+        env.Exp.background.color);
+    
+    $('#image_background').click(function() {
+        var history_point;
+        u.show_dialog('#dia_edit_bg', {
+            fade: false,
+            open: function(){ history_point = env.History.saver(
+                function(){ return $.extend(true, {}, env.Exp.background) },
+                Hive.bg_set, 'change background'
+            ) },
+            close: function(){ history_point.save() }
+        });
+    });
+
+    $('#bg_remove').click(function(){
+        delete env.Exp.background.url;
+        Hive.bg_set({});
+    });
+
+    $('#bg_opacity').focus(function() { $('#bg_opacity').focus().select() }).keyup(function(e) {
+        env.Exp.background.opacity = parseFloat($(e.target).val()) / 100;
+        Hive.bg_set(env.Exp.background);
+    });
+
+    Hive.bg_set(env.Exp.background);
+
+    $('#bg_upload').on('with_files', function(ev, files){
+        Hive.bg_set(files[0]);
+    }).on('response', function(ev, files){
+        env.Exp.background.url = files[0].url;
+    });
+};
+Hive.bg_color_set = function(c) {
+    if(!c) c = '';
+    Hive.bg_div.add('#bg_preview').css('background-color', c);
+    env.Exp.background.color = c;
+};
+Hive.bg_set = function(bg, load) {
+    env.Exp.background = bg;
+    Hive.bg_color_set(bg.color);
+
+    var img = Hive.bg_div.find('img'),
+        imgs = img.add('#bg_preview_img'),
+        url = bg.content || bg.url;
+    if(url) bg.url = url;
+
+    if(bg.url) imgs.showshow();
+    else { imgs.hidehide(); return }
+
+    imgs.attr('src', bg.url);
+    img.load(function(){
+        setTimeout(layout.place_apps, 0);
+        if(load) load();
+    });
+    if(bg.opacity) imgs.css('opacity', bg.opacity);
+};
+Hive.bg_change = function(s){
+    env.History.saver(
+        function(){ return $.extend(true, {}, env.Exp.background) },
+        Hive.bg_set, 'change background'
+    ).exec(s);
+};
 
 return Hive;
 

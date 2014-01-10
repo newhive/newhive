@@ -4,6 +4,8 @@ define([
 
 var env = o = {};
 
+// 1 editor unit := scale client pixels
+// The editor is 1000 units wide inside a 1000*scale pixel window
 var scale = 1;
 o.scale_set = function(){
     scale = $(window).width() / 1000;
@@ -11,6 +13,7 @@ o.scale_set = function(){
 o.scale = function(){
     return scale;
 };
+
 
 o.History = [];
 o.History.init = function(){

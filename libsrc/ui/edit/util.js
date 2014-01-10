@@ -1,13 +1,19 @@
 define([
     'browser/jquery'
     ,'ui/colors'
-    ,'./env'
     ,'sj!templates/color_picker.html'
+    ,'ui/menu'
+    ,'ui/dialog'
+
+    ,'./env'
 ], function(
     $
     ,colors
-    ,env
     ,color_picker_template
+    ,Menu
+    ,dialog
+
+    ,env
 ){
 
 var o = {};
@@ -131,6 +137,16 @@ o.random_str = function(){ return Math.random().toString(16).slice(2); };
 
 
 //// BEGIN-editor-refactor belongs in editor specific utils
+
+// wrappers
+o.hover_menu = function(handle, drawer, opts){
+    return Menu(handle, drawer, $.extend({ auto_height: false }, opts));
+};
+o.show_dialog = function(jq, opts){
+    var d = dialog.create(jq, opts);
+    d.open();
+    return d;
+};
 
 o.set_debug_info = function(info) {
     if (typeof(info) == "object")
@@ -615,6 +631,12 @@ o.im_feeling_lucky = function(){
 
 o.debug = function(a){
     1; // break
+};
+
+o.remove_all_apps = function() {
+    // store a copy of Apps so we can destructively update it
+    var aps = $.map(hive_app.Apps, id); 
+    $.map(apps, function(a) { a.remove() });
 };
 
 //// END-debugging
