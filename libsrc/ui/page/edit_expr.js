@@ -1,7 +1,7 @@
 define([
     'browser/jquery',
     'server/context',
-    'ui/editor',
+    'ui/edit/main',
     'ui/page/expr',
     'browser/layout',
     'json!server/compiled.bundles.json',
@@ -14,15 +14,15 @@ define([
     lay,
     bundles, 
     edit_template
-) {
+){
     var o = {};
 
     o.init = function(controller){
         // o.controller = controller;
         // o.render_overlays();
-        // window.addEventListener('message', o.handle_message, false);        
+        // window.addEventListener('message', o.handle_message, false);
         o.controller = controller;
-        curl.expose('ui/editor', 'h'); // for debugging
+        window.h = editor;
     };
 
     o.enter = function(){
