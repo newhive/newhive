@@ -814,63 +814,6 @@ Array.min = function(array){
     return Math.min.apply(Math, array);
 };
 
-Hive.new_app = function(s, opts) {
-    if(!opts) opts = {};
-    var load = opts.load;
-    opts.load = function(a) {
-        // Hive.upload_finish();
-        if (! opts.position)
-            a.center(opts.offset);
-        a.dims_set(a.dims());
-        Hive.Selection.select(a);
-        if(load) load(a);
-    };
-    var app = hive_app.App(s, opts);
-    env.History.save(app._remove, app._unremove, 'create');
-    return app;
-};
-
-Hive.new_file = function(files, opts, app_opts) {
-    // TODO-feature: depending on type and number of files, create grouping of
-    // media objects. Multiple audio files should be assembled into a play
-    // list. Multiple images should be placed in a table, or slide-show
-
-    return $.map(files, function(file, i){
-        var app = $.extend({ file_name: file.name, file_id: file.id,
-            file_meta: file.meta }, opts);
-
-        // TODO: html files should just be saved on s3 and inserted as an <iframe>
-        // if(file.mime.match(/text\/html/)){
-        //     // Not using code for auto-embeding urls that resolve to html
-        //     // pages because of too many problems with sites that
-        //     // don't want to be framed. Just link to site instead.
-        //     // app = {type: 'hive.html', content: '<iframe src="' + file.original_url + '" style="width: 100%; height: 100%;"></iframe>'};
-        //     $.extend(app, { type: 'hive.text', content:
-        //         $('<a>').attr('href', file.original_url).text(file.original_url).outerHTML() });
-        // }
-
-        // TODO: make this work...
-        // image = { content: file.url }
-        // audio = { src: file.url }
-        // link = { content: $('<a>').attr('href', file.url).text(file.name).outerHTML() }
-
-        if(file.mime.match(/image\/(png|gif|jpeg)/)) app.type = 'hive.image';
-        else if(file.mime.match(/audio\//)) app.type = 'hive.audio';
-        else {
-            app.type = 'hive.text';
-            // TODO: implement read-only for text app so server response can simply
-            // reset the link content, and not potentially lose changes to
-            // text box made while file was uploading
-            // app.read_only = true;
-        }
-        app.url = file.url;
-
-        return Hive.new_app(app, $.extend({ offset: [20*i, 20*i] }, app_opts) );
-    });
-
-    return false;
-}
-
 Hive.set_debug_info = function(info) {
     if (typeof(info) == "object")
         info = JSON.stringify(info).replace(/,/g,"\n")
@@ -893,33 +836,9 @@ Hive.common_setup = function(){
     $('title').text("Editor - " + (Hive.Exp.title || "[Untitled]"));
 };
 
-Hive.on_media_upload = function(files){
-    // after file is uploaded, save meta data and id from server by
-    // matching up file name
-    var find_apps = function(name){
-        // TODO-cleanup: background should be root app
-        var apps = hive_app.Apps.all().filter(function(a){
-            return (a.init_state.file_name == name) });
-        if (Hive.Exp.background.file_name == name)
-            apps = apps.concat(Hive.Exp.background);
-        return apps;
-    };
-    files.map(function(f){
-        find_apps(f.name).map(function(a){
-            var upd = { file_id: f.id, url: f.url };
-            if(f.meta) upd.file_meta = f.meta;
-            if(a.state_update) {
-                a.state_update(upd);
-            } else {
-                a.content = a.url = f.url;
-                a.file_name = f.id;
-            }
-        });
-    });
-};
-
 Hive.init = function(exp, page){
-    Hive.Exp = exp;
+    // this reference must be maintained, do not assign to Exp
+    env.Exp = Hive.Exp = exp;
     Hive.edit_page = page;
     if(!exp.auth) exp.auth = 'public';
     env.scale_set();
@@ -941,10 +860,10 @@ Hive.init = function(exp, page){
     $(window).on('resize', u.layout_apps);
 
     $('#text_default').click(function(e) {
-        Hive.new_app({ type : 'hive.text', content : '' });
+        hive_app.new_app({ type : 'hive.text', content : '' });
     });
     $('#text_header').click(function(e) {
-        Hive.new_app({ type: 'hive.text', content: '<span style="font-weight:bold">&nbsp;</span>',
+        hive_app.new_app({ type: 'hive.text', content: '<span style="font-weight:bold">&nbsp;</span>',
             scale : 3 });
     });
 
@@ -995,7 +914,7 @@ Hive.init = function(exp, page){
                 $('<a>').attr('href', file.url).text(file.name)[0].outerHTML,
             file_name: file.name
         };
-        Hive.new_app(app);
+        hive_app.new_app(app);
     });
 
     // var new_link = function() { asyncUpload({
@@ -1037,12 +956,12 @@ Hive.init = function(exp, page){
 
     Hive.hover_menu('#insert_shape', '#menu_shape');
     $('#shape_rectangle').click(function(e) {
-        Hive.new_app({ type : 'hive.rectangle', content :
+        hive_app.new_app({ type : 'hive.rectangle', content :
             { color : colors[24], 'border-color' : 'black', 'border-width' : 0,
                 'border-style' : 'solid', 'border-radius' : 0 } });
     });
     $('#shape_sketch').click(function(e) {
-        Hive.new_app({ type: 'hive.sketch', dimensions: [700, 700 / 1.6], content: { brush: 'simple', brush_size: 10 } });
+        hive_app.new_app({ type: 'hive.sketch', dimensions: [700, 700 / 1.6], content: { brush: 'simple', brush_size: 10 } });
     });
 
     Hive.hover_menu('#insert_file', '#menu_file');
@@ -1052,8 +971,8 @@ Hive.init = function(exp, page){
     $('#media_upload').on('with_files', function(ev, files){
         // media files are available immediately upon selection
         center = u._div([ev.clientX, ev.clientY])(env.scale());
-        Hive.new_file(files, { center: center });
-    }).on('response', function(ev, files){ Hive.on_media_upload(files) });
+        u.new_file(files, { center: center });
+    }).on('response', function(ev, files){ u.on_media_upload(files) });
 
     var busy_e = $('.save .loading');
     $(document).ajaxStart(function(){
@@ -1193,7 +1112,7 @@ Hive.edit_pause = function(){
 };
 
 // Matches youtube and vimeo URLs, any URL pointing to an image, and
-// creates the appropriate App state to be passed to Hive.new_app.
+// creates the appropriate App state to be passed to hive_app.new_app.
 Hive.embed_code = function(element) {
     var c = $(element).val().trim(), app;
 
@@ -1245,12 +1164,12 @@ Hive.embed_code = function(element) {
             if( data.error ){
                 if(m = c.match(/^https?:\/\/(.*)(jpg|jpeg|png|gif)$/i)){
                     app = { type : 'hive.image', content : c }
-                    Hive.new_app(app);
+                    hive_app.new_app(app);
                 } else {
                     return error(false, data.error);
                 }
             }
-            Hive.new_file(data);
+            u.new_file(data);
             $(element).val('');
         }
         // Hive.upload_start();
@@ -1273,7 +1192,7 @@ Hive.embed_code = function(element) {
         app = { type : 'hive.html', content: dom[0].innerHTML };
     }
 
-    Hive.new_app(app);
+    hive_app.new_app(app);
     $(element).val('');
 }; 
 

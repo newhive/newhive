@@ -125,6 +125,72 @@ o.random_str = function(){ return Math.random().toString(16).slice(2); };
 
 //// BEGIN-editor-refactor belongs in editor specific utils
 
+o.on_media_upload = function(files){
+    // after file is uploaded, save meta data and id from server by
+    // matching up file name
+    var find_apps = function(name){
+        // TODO-cleanup: background should be root app
+        var apps = env.Apps.all().filter(function(a){
+            return (a.init_state.file_name == name) });
+        if (env.Exp.background.file_name == name)
+            apps = apps.concat(env.Exp.background);
+        return apps;
+    };
+    files.map(function(f){
+        find_apps(f.name).map(function(a){
+            var upd = { file_id: f.id, url: f.url };
+            if(f.meta) upd.file_meta = f.meta;
+            if(a.state_update) {
+                a.state_update(upd);
+            } else {
+                a.content = a.url = f.url;
+                a.file_name = f.id;
+            }
+        });
+    });
+};
+
+o.new_file = function(files, opts, app_opts) {
+    // TODO-feature: depending on type and number of files, create grouping of
+    // media objects. Multiple audio files should be assembled into a play
+    // list. Multiple images should be placed in a table, or slide-show
+
+    return $.map(files, function(file, i){
+        var app = $.extend({ file_name: file.name, file_id: file.id,
+            file_meta: file.meta }, opts);
+
+        // TODO: html files should just be saved on s3 and inserted as an <iframe>
+        // if(file.mime.match(/text\/html/)){
+        //     // Not using code for auto-embeding urls that resolve to html
+        //     // pages because of too many problems with sites that
+        //     // don't want to be framed. Just link to site instead.
+        //     // app = {type: 'hive.html', content: '<iframe src="' + file.original_url + '" style="width: 100%; height: 100%;"></iframe>'};
+        //     $.extend(app, { type: 'hive.text', content:
+        //         $('<a>').attr('href', file.original_url).text(file.original_url).outerHTML() });
+        // }
+
+        // TODO: make this work...
+        // image = { content: file.url }
+        // audio = { src: file.url }
+        // link = { content: $('<a>').attr('href', file.url).text(file.name).outerHTML() }
+
+        if(file.mime.match(/image\/(png|gif|jpeg)/)) app.type = 'hive.image';
+        else if(file.mime.match(/audio\//)) app.type = 'hive.audio';
+        else {
+            app.type = 'hive.text';
+            // TODO: implement read-only for text app so server response can simply
+            // reset the link content, and not potentially lose changes to
+            // text box made while file was uploading
+            // app.read_only = true;
+        }
+        app.url = file.url;
+
+        return env.new_app(app, $.extend({ offset: [20*i, 20*i] }, app_opts) );
+    });
+
+    return false;
+};
+
 o.layout_apps = function(){
     var old_scale = env.scale();
     env.scale_set();

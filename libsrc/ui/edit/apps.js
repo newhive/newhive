@@ -36,6 +36,22 @@ Hive.registerApp = function(app, name) {
     Hive.appTypes[name] = app;
 }
 
+env.new_app = Hive.new_app = function(s, opts) {
+    if(!opts) opts = {};
+    var load = opts.load;
+    opts.load = function(a) {
+        // Hive.upload_finish();
+        if (! opts.position)
+            a.center(opts.offset);
+        a.dims_set(a.dims());
+        env.Selection.select(a);
+        if(load) load(a);
+    };
+    var app = Hive.App(s, opts);
+    env.History.save(app._remove, app._unremove, 'create');
+    return app;
+};
+
 // collection object for all App objects in page. An App is a widget
 // that you can move, resize, and copy. Each App type has more specific
 // editing functions.
@@ -1678,7 +1694,7 @@ Hive.App.has_image_drop = function(o) {
                 { load:load, position: true })[0];
         }
     };
-    upload.drop_target(o.content_element, on_files, Hive.on_media_upload);
+    upload.drop_target(o.content_element, on_files, u.on_media_upload);
 
     return o;
 };
