@@ -48,13 +48,17 @@ var Hive = {}
 Hive.show_move_sensitivity = true;
 Hive.no_snap = false;
 Hive.asset = asset;
-Hive.u = u;
 
-Hive.hover_menu = function(handle, drawer, opts){
+// Expose to outside for debugging
+Hive.u = u;
+Hive.env = env;
+Hive.app = hive_app;
+
+// wrapppers
+var hover_menu = function(handle, drawer, opts){
     return Menu(handle, drawer, $.extend({ auto_height: false }, opts));
 };
-
-Hive.showDialog = function(jq, opts){
+var showDialog = function(jq, opts){
     var d = dialog.create(jq, opts);
     d.open();
     return d;
@@ -491,7 +495,7 @@ env.Selection = Hive.Selection = function(){
     };
     o.move_end = function(){
         change_end('move');
-        Hive.set_debug_info("");
+        u.set_debug_info("");
         $(".ruler").hidehide();
     };
 
@@ -659,10 +663,10 @@ env.Selection = Hive.Selection = function(){
         var abs_mins = elements.map(function(el){ return el.min_pos() });
         var abs_maxs = elements.map(function(el){ return el.max_pos() });
         return {
-            left:   Array.min(abs_mins.map(function(c){ return c[0] })),
-            top:    Array.min(abs_mins.map(function(c){ return c[1] })),
-            right:  Array.max(abs_maxs.map(function(c){ return c[0] })),
-            bottom: Array.max(abs_maxs.map(function(c){ return c[1] }))
+            left:   u.min(abs_mins.map(function(c){ return c[0] })),
+            top:    u.min(abs_mins.map(function(c){ return c[1] })),
+            right:  u.max(abs_maxs.map(function(c){ return c[0] })),
+            bottom: u.max(abs_maxs.map(function(c){ return c[1] }))
         };
     };
 
@@ -792,7 +796,7 @@ env.Selection = Hive.Selection = function(){
             sensitivity *= 2;
         // TODO: flags like this should live on the root app.
         if (Hive.show_move_sensitivity && context.flags.debugger)
-            Hive.set_debug_info({
+            u.set_debug_info({
                 sensitivity: Math.round(100*sensitivity)/100,
                 time: Math.round(10000*time)/10000,
                 distance: Math.round(10000*distance)/10000,
@@ -805,30 +809,6 @@ env.Selection = Hive.Selection = function(){
     hive_app.App.has_nudge(o);
 
     return o;
-};
-
-Array.max = function(array){
-    return Math.max.apply(Math, array);
-};
-Array.min = function(array){
-    return Math.min.apply(Math, array);
-};
-
-Hive.set_debug_info = function(info) {
-    if (typeof(info) == "object")
-        info = JSON.stringify(info).replace(/,/g,"\n")
-    var $debug = $("#edit_debug");
-    if ($debug.length == 0) {
-        $debug = $("<div id='edit_debug' class='debug'</div>");
-        $("body").append($debug);
-    }
-    if (info == "") {
-        $debug.hidehide();
-        return;
-    }
-    // TODO: option to put info over mouse
-    $debug.showshow().css({ top: "0px", left: "0px" })
-        .text(info);
 };
 
 // Called on load() and save()
@@ -854,7 +834,7 @@ Hive.init = function(exp, page){
 
     var ua = navigator.userAgent;
     if ( !ua.match(/(Firefox|Chrome|Safari)/i) || ua.match(/OS 5(_\d)+ like Mac OS X/i)) {
-        Hive.showDialog('#editor_browsers');
+        showDialog('#editor_browsers');
     }
 
     $(window).on('resize', u.layout_apps);
@@ -876,7 +856,7 @@ Hive.init = function(exp, page){
 
     $('#image_background').click(function() {
         var history_point;
-        Hive.showDialog('#dia_edit_bg', {
+        showDialog('#dia_edit_bg', {
             fade: false,
             open: function(){ history_point = env.History.saver(
                 function(){ return $.extend(true, {}, Hive.Exp.background) },
@@ -931,10 +911,10 @@ Hive.init = function(exp, page){
     // $('#insert_file' ).click(new_link);
     
 
-    Hive.hover_menu('#insert_text', '#menu_text');
+    hover_menu('#insert_text', '#menu_text');
 
-    var image_menu = Hive.hover_menu('#insert_image', '#menu_image');
-    var image_embed_menu = Hive.hover_menu('#image_from_url', '#image_embed_submenu', {
+    var image_menu = hover_menu('#insert_image', '#menu_image');
+    var image_embed_menu = hover_menu('#image_from_url', '#image_embed_submenu', {
         click_persist: $('#image_embed_code'), auto_close: false,
         open: function(){
             $('#image_embed_code').focus();
@@ -947,14 +927,14 @@ Hive.init = function(exp, page){
         return false;
     });
 
-    Hive.hover_menu('#insert_audio', '#menu_audio');
+    hover_menu('#insert_audio', '#menu_audio');
 
-    var embed_menu = Hive.hover_menu('#insert_embed', '#menu_embed', {
+    var embed_menu = hover_menu('#insert_embed', '#menu_embed', {
         open: function(){ $('#embed_code').get(0).focus() },
         layout_x: 'center' });
     $('#embed_done').click(function() { Hive.embed_code('#embed_code'); embed_menu.close(); });
 
-    Hive.hover_menu('#insert_shape', '#menu_shape');
+    hover_menu('#insert_shape', '#menu_shape');
     $('#shape_rectangle').click(function(e) {
         hive_app.new_app({ type : 'hive.rectangle', content :
             { color : colors[24], 'border-color' : 'black', 'border-width' : 0,
@@ -964,7 +944,7 @@ Hive.init = function(exp, page){
         hive_app.new_app({ type: 'hive.sketch', dimensions: [700, 700 / 1.6], content: { brush: 'simple', brush_size: 10 } });
     });
 
-    Hive.hover_menu('#insert_file', '#menu_file');
+    hover_menu('#insert_file', '#menu_file');
 
     $('#btn_grid').click(Hive.toggle_grid);
 
@@ -1067,7 +1047,7 @@ Hive.init = function(exp, page){
 
     $('#url').change(checkUrl);
 
-    Hive.hover_menu($('#privacy' ), $('#menu_privacy')); //todo-delete, { group: save_menu } );
+    hover_menu($('#privacy' ), $('#menu_privacy')); //todo-delete, { group: save_menu } );
     $('#menu_privacy').click(function(e) {
         $('#menu_privacy div').removeClass('selected');
         var t = $(e.target);

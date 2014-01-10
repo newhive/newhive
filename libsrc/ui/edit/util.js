@@ -64,6 +64,13 @@ o._lerp = function(alpha, old_val, new_val) {
     }
 };
 
+o.max = function(array){
+    return Math.max.apply(Math, array);
+};
+o.min = function(array){
+    return Math.min.apply(Math, array);
+};
+
 // Returns the nonnegative (nonoverlapping) distance btw two intervals.
 o.interval_dist = function(a, b) {
     c = [a[1] - b[0], a[0] - b[1]];
@@ -124,6 +131,23 @@ o.random_str = function(){ return Math.random().toString(16).slice(2); };
 
 
 //// BEGIN-editor-refactor belongs in editor specific utils
+
+o.set_debug_info = function(info) {
+    if (typeof(info) == "object")
+        info = JSON.stringify(info).replace(/,/g,"\n")
+    var $debug = $("#edit_debug");
+    if ($debug.length == 0) {
+        $debug = $("<div id='edit_debug' class='debug'</div>");
+        $("body").append($debug);
+    }
+    if (info == "") {
+        $debug.hidehide();
+        return;
+    }
+    // TODO: option to put info over mouse
+    $debug.showshow().css({ top: "0px", left: "0px" })
+        .text(info);
+};
 
 o.on_media_upload = function(files){
     // after file is uploaded, save meta data and id from server by
