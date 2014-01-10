@@ -29,6 +29,11 @@ define([
     var event_bubbler = function(event_name, data){
     	var handlers = _handlers;
         return (function(ev){
+            if ($.inArray(event_name, ["keyup", "keypress", "keydown"]) >= 0
+                && $(":focus").length) {
+                // _stopPropagation();
+                return;
+            }
             ev.data = data;
 
             // patch native event with hacked stopPropagation that encompasses
