@@ -1,5 +1,6 @@
 define([
     'browser/jquery'
+    ,'server/context'
     ,'ui/colors'
     ,'sj!templates/color_picker.html'
     ,'ui/menu'
@@ -8,6 +9,7 @@ define([
     ,'./env'
 ], function(
     $
+    ,context
     ,colors
     ,color_picker_template
     ,Menu
@@ -164,6 +166,61 @@ o.set_debug_info = function(info) {
     $debug.showshow().css({ top: "0px", left: "0px" })
         .text(info);
 };
+
+var times, distances, delta_latched;
+// var move_speed, delta_ave;
+o.reset_sensitivity = function() {
+    delta_latched = [0, 0];
+    // delta_ave = [0, 0];
+    // move_speed = 1;
+    times = [], distances = [];
+};
+// TODO: move sensitivity code globally
+o.calculate_sensitivity = function(delta) {
+    // Calculate sensitivity
+    // check timestamp and bump sensitivity if longish
+    // gap between user inputs.
+    var move_dist = o._sub(delta)(delta_latched);
+    delta_latched = delta.slice();
+    var time = new Date().getTime() / 1000;
+    times.push(time);
+    // Max is better than other distance metric because user will
+    // commonly move in both axes accidentally.
+    // TODO: track x and y independently
+    var distance = Math.max(Math.abs(move_dist[0]), Math.abs(move_dist[1]));
+    // Keep track of accumulated distance.
+    distances.push(distance + 
+        (distances.length ? distances[distances.length - 1] : 0));
+    var max_sens_time = 1;
+    while (times.length > 2 && time - times[0] > max_sens_time) {
+        times.splice(0, 1);
+        distances.splice(0, 1);
+    }
+    time = times[times.length - 1] - times[0];
+    distance = distances[distances.length - 1] - distances[0];
+    var speed = distance ? distance / time : 1;
+    // speed = move_speed = o._lerp(.1, move_speed, speed);
+
+    // Experiment with using distance to "average position"
+    // delta_ave = o._lerp(.1, delta_ave, delta);
+    // var move_dist = o._sub(delta)(delta_ave);
+    // var speed = Math.abs(move_dist[0]) + Math.abs(move_dist[1]);
+    // sensitivity = 1 / (speed - .98);
+    var sensitivity = 150 / speed;
+    if (times.length < 5)
+        sensitivity *= 2;
+    // TODO: flags like this should live on the root app.
+    if (env.show_move_sensitivity && context.flags.debugger)
+        o.set_debug_info({
+            sensitivity: Math.round(100*sensitivity)/100,
+            time: Math.round(10000*time)/10000,
+            distance: Math.round(10000*distance)/10000,
+            speed: Math.round(100*speed)/100,
+        });
+
+    return sensitivity;
+};
+
 
 o.on_media_upload = function(files){
     // after file is uploaded, save meta data and id from server by

@@ -9,9 +9,9 @@ define([
     ,'./env'
     ,'./util'
     ,'./events'
+    // ,'./app_modifiers'
 
     ,'js!google_closure.js'
-    // ,'./app_modifiers'
 ], function(
     $
     ,js
@@ -19,11 +19,11 @@ define([
     ,upload
     ,layout
     ,ui_util
+    // ,app_has
 
     ,env
     ,u
     ,evs
-    // ,app_has
 ){
 
 var Hive = {}
@@ -1755,7 +1755,7 @@ Hive.App.has_resize = function(o) {
         var _pos = o.pos_relative();
         // TODO: allow snapping to aspect ratio (keyboard?)
         // TODO: set snap parameters be set by user
-        if(!Hive.no_snap){
+        if(!env.no_snap){
             var tuple = [];
             tuple[0] = [undefined, undefined, pos[0]];
             tuple[1] = [undefined, undefined, pos[1]];
