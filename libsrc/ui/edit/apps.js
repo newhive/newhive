@@ -1693,7 +1693,7 @@ Hive.App.has_image_drop = function(o) {
         } else {
             // TODO-dnd: have fit depend on where the object was dropped relative
             // to image center
-            app = Hive.new_file(files, init_state,
+            app = u.new_file(files, init_state,
                 { load:load, position: true })[0];
         }
     };
