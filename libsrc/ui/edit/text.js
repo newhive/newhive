@@ -100,19 +100,22 @@ o.Text = function(o) {
     };
 
     // New scaling code
-    var scale_ref, dims_ref, history_point, 
-        _resize_start = o.resize_start, _resize = o.resize;
-    o.resize_start = function(){
-        _resize_start();
+    var scale_ref, dims_ref, history_point;
+    o.before_resize = function(){
         scale_ref = o.scale();
         dims_ref = o.dims();
-        history_point = o.history_helper_relative('resize');
-    };
-    o.resize = function(delta) {
-        _resize(delta);
+    }
+    o.after_resize = function() {
+        scale_ref = dims_ref = undefined;
+    }
+    var _dims_relative_set = o.dims_relative_set;
+    o.dims_relative_set = function(dims) {
+        _dims_relative_set(dims);
+        if (!dims_ref) return;
+
         var scale_by = o.dims()[0] / dims_ref[0];
         o.scale_set(scale_ref * scale_by);
-    };
+    }
     
     var _load = o.load;
     o.load = function() {

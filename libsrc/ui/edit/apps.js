@@ -202,8 +202,7 @@ Hive.App = function(init_state, opts) {
     };
     o.pos_set = function(pos){
         var s = env.scale();
-        _pos = [ pos[0] / s, pos[1] / s ];
-        o.layout();
+        o.pos_relative_set( [ pos[0] / s, pos[1] / s ] );
     };
     o.dims = function() {
         var s = env.scale();
@@ -211,8 +210,7 @@ Hive.App = function(init_state, opts) {
     };
     o.dims_set = function(dims){
         var s = env.scale();
-        _dims = [ dims[0] / s, dims[1] / s ];
-        o.layout();
+        o.dims_relative_set( [ dims[0] / s, dims[1] / s ] );
     };
     o.width = function(){ return o.dims()[0] };
     o.height = function(){ return o.dims()[1] };
@@ -364,14 +362,33 @@ Hive.App = function(init_state, opts) {
     // initialize
 
     o.div = $('<div class="ehapp">').appendTo('#happs');
+ 
+    o.add_to_collection = true;
+    o.type(o); // add type-specific properties
+    if (o.add_to_collection)
+        o.apps.add(o); // add to apps collection
     evs.on(o.div, 'dragstart', o).on(o.div, 'drag', o).on(o.div, 'dragend', o)
         .on(o.div, 'click', o).long_hold(o.div, o);
- 
-    o.type(o); // add type-specific properties
-    o.apps.add(o); // add to apps collection
 
     return o;
 };
+Hive.registerApp(Hive.App, 'hive.app');
+
+// TODO: root, selection, app inherits pseudoApp
+// TODO-perf: ? For all inheritance, use prototype.
+
+// PseudoApp cannot be added to selection
+// It has no (server) state.
+Hive.App.PseudoApp = function(o) {
+
+};
+Hive.registerApp(Hive.App.PseudoApp, 'hive.pseudo');
+Hive.App.Root = function(o) {
+    // Automatic top level app for layout and template logic
+
+};
+Hive.registerApp(Hive.App.Root, 'hive.root');
+
 
 // This App shows an arbitrary single HTML tag.
 Hive.App.Html = function(o) {
@@ -402,22 +419,6 @@ Hive.App.Html = function(o) {
     return o;
 };
 Hive.registerApp(Hive.App.Html, 'hive.html');
-
-// TODO: root, selection, app inherits pseudoApp
-// TODO-perf: ? For all inheritance, use prototype.
-
-// PseudoApp cannot be added to selection
-// It has no (server) state.
-Hive.App.PseudoApp = function(o) {
-
-};
-Hive.registerApp(Hive.App.PseudoApp, 'hive.pseudo');
-Hive.App.Root = function(o) {
-    // Automatic top level app for layout and template logic
-
-};
-Hive.registerApp(Hive.App.Root, 'hive.root');
-
 
 Hive.App.RawHtml = function(o) {
     Hive.App.has_resize(o);
@@ -486,6 +487,7 @@ Hive.registerApp(Hive.App.Script, 'hive.script');
 Hive.App.Image = function(o) {
     o.is_image = true;
     Hive.App.has_resize(o);
+    // TODO-cleanup: aspects should be y/x
     o.get_aspect = function() {
         return o.div_aspect || o.aspect;
     };
@@ -1181,11 +1183,14 @@ Hive.App.has_image_drop = function(o) {
 Hive.App.has_resize = function(o) {
     var dims_ref, history_point;
     o.resize_start = function(){
+        if (o.before_resize) o.before_resize();
         $("#controls").hidehide();
         dims_ref = o.dims();
+        u.reset_sensitivity();
         history_point = o.history_helper_relative('resize');
     };
     o.resize = function(delta) {
+        o.sensitivity = u.calculate_sensitivity(delta);
         var dims = o.resize_to(delta);
         if(!dims[0] || !dims[1]) return;
         dims = u._div(dims)(env.scale());
@@ -1220,8 +1225,10 @@ Hive.App.has_resize = function(o) {
 
     o.resize_end = function(){ 
         $("#controls").showshow();
-        history_point.save();
+        u.set_debug_info("");
         $(".ruler").hidehide();
+        if (o.after_resize) o.after_resize();
+        history_point.save();
     };
     o.resize_to = function(delta){
         return [ Math.max(1, dims_ref[0] + delta[0]), 
@@ -1240,7 +1247,9 @@ Hive.App.has_resize = function(o) {
             pos = u.snap_helper(tuple, {
                 exclude_ids: excludes,
                 snap_strength: .5,
-                snap_radius: 10, });
+                snap_radius: 10, 
+                sensitivity: o.sensitivity, 
+            });
         }
         var _dims = [];
         _dims[0] = pos[0] - _pos[0];
@@ -1288,7 +1297,6 @@ Hive.App.has_resize = function(o) {
 
 Hive.App.has_resize_h = function(o) {
     o.resize_h = function(dims) {
-        o.dims_set(dims);
         return o.dims_set([ dims[0], o.calcHeight() ]);
     }
 
@@ -1309,6 +1317,7 @@ Hive.App.has_resize_h = function(o) {
 
         // Dragging behavior
         o.c.resize_h.drag('start', function(e, dd) {
+                if (o.app.before_h_resize) o.app.before_h_resize();
                 o.refDims = o.app.dims();
                 o.drag_target = e.target;
                 o.drag_target.busy = true;
@@ -1501,6 +1510,7 @@ Hive.App.has_color = function(o) {
 }
 
 
+//TODO: integrate this code into root app
 Hive.init_background_dialog = function(){
     if(!env.Exp.background) env.Exp.background = { };
     if(!env.Exp.background.color) env.Exp.background.color = '#FFFFFF';

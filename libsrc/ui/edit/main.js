@@ -19,7 +19,7 @@ define([
     ,'./selection'
 
     ,'./text'
-    
+
     ,'browser/jquery/jplayer/skin'
     ,'browser/jquery/rotate.js'
     ,'js!browser/jquery/event/drag.js'
@@ -39,7 +39,7 @@ define([
     ,u
     ,evs
     ,env
-    ,Selection
+    ,selection
 ){
 
 var Hive = {}
@@ -280,11 +280,13 @@ Hive.init = function(exp, page){
     Hive.init_menus();
     // Hive.init_autosave();
 
+    env.History.init();
+    hive_app.Apps.init(Hive.Exp.apps);
+    env.Selection = hive_app.new_app({ type : 'hive.selection' });
+
     Hive.init_global_handlers()
     Hive.edit_start();
 
-    hive_app.Apps.init(Hive.Exp.apps);
-    env.History.init();
     Hive.init_common();
 };
 
