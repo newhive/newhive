@@ -18,6 +18,8 @@ define([
     ,'./env'
     ,'./selection'
 
+    ,'./text'
+    
     ,'browser/jquery/jplayer/skin'
     ,'browser/jquery/rotate.js'
     ,'js!browser/jquery/event/drag.js'
