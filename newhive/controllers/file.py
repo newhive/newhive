@@ -1,6 +1,9 @@
 import hsaudiotag.auto
 import urllib, urlparse, itertools, mimetypes, os, json
 from werkzeug.http import parse_options_header
+from PIL import Image
+import threading
+
 from newhive.utils import lget
 from newhive.controllers.controller import ModelController, auth_required
 from PIL import Image
@@ -73,14 +76,15 @@ def create_file(owner, file, url=None, args={}):
     }
     handler = supported_mimes.get(file.mime, _handle_link)
 
-    with os.tmpfile() as local_file:
-        local_file.write(file.read())
-        file_data = { 'owner': owner.id, 'tmp_file': local_file,
-            'name': file.filename, 'mime': file.mime }
-        if url: file_data['source_url'] = url
-        file_record = owner.db.File.create(file_data)
-        file_record.update(**handler(file_record, args))
-        return file_record
+    local_file = os.tmpfile()
+    
+    local_file.write(file.read())
+    file_data = { 'owner': owner.id, 'tmp_file': local_file,
+        'name': file.filename, 'mime': file.mime }
+    if url: file_data['source_url'] = url
+    file_record = owner.db.File.create(file_data)
+    file_record.update(**handler(file_record, args))
+    return file_record
 
 # download URL, return file object with mime property
 def fetch_url(url):
