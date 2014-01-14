@@ -210,7 +210,7 @@ o.calculate_sensitivity = function(delta) {
     if (times.length < 5)
         sensitivity *= 2;
     // TODO: flags like this should live on the root app.
-    if (env.show_move_sensitivity && context.flags.debugger)
+    if (env.show_move_sensitivity && context.flags.can_debug)
         o.set_debug_info({
             sensitivity: Math.round(100*sensitivity)/100,
             time: Math.round(10000*time)/10000,

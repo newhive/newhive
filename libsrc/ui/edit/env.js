@@ -1,6 +1,4 @@
-define([
-], function(
-){
+define([], function(){
 
 var env = o = {};
 env.show_move_sensitivity = true;

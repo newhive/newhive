@@ -3,7 +3,7 @@ define([
     'sj!templates/card_master.html',
     'sj!templates/cards.html',
     'sj!templates/feed_card.html',
-    'sj!templates/user_card.html',
+    'sj!templates/user_card.html'
 ], function($, card_template) {
     // TODO: Separate out browser/jquery code
     return { render: function(data){
