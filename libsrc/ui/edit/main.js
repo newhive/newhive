@@ -182,7 +182,7 @@ Hive.init_save_dialog = function(){
     $('#save_submit').click(function(){
         if( ! $(this).hasClass('disabled') ){
             if(checkUrl()){
-                page.controller.set_exit_warning(false);
+                Hive.edit_page.controller.set_exit_warning(false);
                 Hive.save();
             }
         }
@@ -390,12 +390,12 @@ Hive.embed_code = function(element) {
 }; 
 
 Hive.save = function() {
+    var expr = Hive.state();
     if(expr.name.match(/^(profile|tag)$/)) {
         alert('The name "' + expr.name + '" is reserved.');
         return false;
     }
 
-    var expr = Hive.state();
     // Handle remix
     if (expr.owner_name != context.user.name) {
         expr.owner_name = context.user.name;
