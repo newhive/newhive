@@ -189,8 +189,57 @@ o.Selection = function(o) {
         );
     };
 
-    var history_point, ref_pos;
+    var history_point, ref_pos, full_apps, pushing_apps;
+    o.pushing_start = function(full){
+        env.History.begin();
+
+        o.padding = 0;
+        o.size = full.dims_relative()[1 - full.full_bleed_coord];
+        o.start_pos = full.pos_relative()[1 - full.full_bleed_coord] - o.padding;
+        pushing_apps = env.Apps.all().filter(function(app) {
+            return !(app.id == full.id || env.Selection.selected(app));
+        });
+        for (var i = 0; i < pushing_apps.length; ++i) {
+            var app = pushing_apps[i];
+            app.old_start = app.pos_relative()[1 - full.full_bleed_coord];
+            if (app.old_start >= o.start_pos)
+                app.old_start -= o.size + 2 * o.padding;
+        }
+    }
+    o.pushing_move = function(pos) {
+        var full = full_apps[0];
+        pos[full.full_bleed_coord] = 0;
+        var coord = 1 - full.full_bleed_coord; // Work in y
+        o.start_pos = pos[coord] - o.padding;
+        o.stop_pos = o.start_pos + o.size + 2 * o.padding;
+
+        var push_start = 0, push_size = 0, apps = pushing_apps;
+        for (var i = 0; i < apps.length; ++i) {
+            var app = apps[i];
+            var start = app.old_start;
+            var stop = start + app.dims_relative()[coord];
+            if (start < o.stop_pos && stop > o.start_pos) {
+                var push_try = o.stop_pos - start;
+                push_size = Math.max(push_size, push_try);
+            }
+        }
+        for (var i = 0; i < apps.length; ++i) {
+            var app = apps[i];
+            var start = app.old_start;
+            var stop = start + app.dims_relative()[coord];
+            var new_pos = app.pos_relative();
+            if (stop > o.start_pos) start += push_size;
+            new_pos[coord] = start;
+            app.pos_relative_set(new_pos);
+        }
+    };
     o.move_start = function(){
+        full_apps = drag_target ? [drag_target] : elements;
+        full_apps = full_apps.filter(function(a) { 
+            return a.full_bleed_coord != undefined; });
+        // if (context.flags.full_bleed && full_apps.length)
+        if (full_apps.length)
+            o.pushing_start(full_apps[0]);
         var moved_obj = drag_target || o;
         ref_pos = moved_obj.pos_relative();
         change_start();
@@ -210,6 +259,8 @@ o.Selection = function(o) {
                 snap_radius: 18,
                 sensitivity: o.sensitivity, });
         }
+        if (full_apps.length)
+            o.pushing_move(pos);
         drag_target.pos_relative_set(pos);
         o.layout();
     };

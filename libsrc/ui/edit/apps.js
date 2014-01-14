@@ -1079,15 +1079,21 @@ Hive.App.has_full_bleed = function(o, coord){
     dims[coord] = 1000;
     o.dims_relative_set(dims);
 
-    o.orig_pos_set = o.pos_set;
-    o.orig_move_start = o.move_start;
-    o.orig_move_end = o.move_end;
+    o._pos_set = o.pos_set;
+    o._move_start = o.move_start;
+    o._move_end = o.move_end;
 
+    _pos_relative_set = o.pos_relative_set;
+    o.pos_relative_set = function(pos) {
+        pos = pos.slice();
+        pos[o.full_bleed_coord] = 0;
+        _pos_relative_set(pos);
+    }
     o.move_start = function() {
         env.History.begin();
 
-        o.orig_move_start();
-        o.padding = 10; // Scale into screen space?
+        o._move_start();
+        o.padding = 0; // Scale into screen space?
         o.size = o.dims()[1 - o.full_bleed_coord];//o.size || 200;
         o.start_pos = o.pos()[1 - o.full_bleed_coord] - o.padding;
         o.apps = Hive.Apps.all().filter(function(app) {
@@ -1097,17 +1103,17 @@ Hive.App.has_full_bleed = function(o, coord){
         for (var i = 0; i < apps.length; ++i) {
             var app = apps[i];
             app.old_start = app.pos()[1 - o.full_bleed_coord];
-            (app.orig_move_start || app.move_start)();
+            (app._move_start || app.move_start)();
             if (app.old_start >= o.start_pos)
                 app.old_start -= o.size + 2 * o.padding;
         }
     };
     o.move_end = function() {
-        o.orig_move_end();
+        o._move_end();
         var apps = o.apps;
         for (var i = 0; i < apps.length; ++i) {
             var app = apps[i];
-            (app.orig_move_end || app.move_end)();
+            (app._move_end || app.move_end)();
         }
         env.History.group('full-bleed move');
     };
@@ -1135,13 +1141,13 @@ Hive.App.has_full_bleed = function(o, coord){
                 var new_pos = app.pos();
                 if (stop > o.start_pos) start += push_size;
                 new_pos[coord] = start;
-                (app.orig_pos_set || app.pos_set)(new_pos);
+                (app._pos_set || app.pos_set)(new_pos);
             }
         }
-        o.orig_pos_set(pos);
+        o._pos_set(pos);
     };
 
-    o.div.drag('start', o.move_start).drag('end', o.move_end);
+    // o.div.drag('start', o.move_start).drag('end', o.move_end);
     // o.move_setup();
     // o.pos_set(o.pos());
 };
