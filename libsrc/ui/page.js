@@ -7,7 +7,7 @@ define([
     'browser/jquery',
     'json!ui/routes.json',
     'browser/js',
-    'ui/dialog', 
+    'ui/dialog',
     'ui/new_account',
     'server/context',
     'browser/layout',
