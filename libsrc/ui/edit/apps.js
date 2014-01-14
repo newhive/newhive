@@ -560,6 +560,9 @@ Hive.App.Image = function(o) {
     };
     // TODO-cleanup: move to has_crop
     o.allow_crop = function() {
+        if (!context.flags.rect_drag_drop)
+            return false;
+
         o.init_state.scale_x = o.init_state.scale_x || 1;
         o.init_state.offset = o.init_state.offset || [0, 0];
         // o.is_cropped = true;
@@ -569,6 +572,7 @@ Hive.App.Image = function(o) {
         o.content_element.appendTo(happ);
         o.div_aspect = o.dims()[0] / o.dims()[1];
         o.layout();
+        return true;
     };
 
     // TODO-cleanup: move to has_crop
@@ -578,7 +582,8 @@ Hive.App.Image = function(o) {
         // UI for setting .offset of apps on drag after long_hold
         o.long_hold = function(ev){
             if(o != ev.data) return;
-            if(!o.init_state.scale_x) o.allow_crop();
+            if(!o.init_state.scale_x) 
+                if (!o.allow_crop()) return false;
             $("#controls").hidehide();
             ev.stopPropagation();
             drag_hold = true;
