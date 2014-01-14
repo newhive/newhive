@@ -555,15 +555,20 @@ Hive.App.Image = function(o) {
             o.init_state.fit = undefined;
         }
         if (o.init_state.scale_x != undefined) {
-            // TODO-cleanup: move to has_crop
-            // o.is_cropped = true;
-            var happ = o.content_element.parent();
-            o.content_element = $('<div class="crop_box">');
-            o.img.appendTo(o.content_element);
-            o.content_element.appendTo(happ);
-            o.div_aspect = o.dims()[0] / o.dims()[1];
-            o.layout();
+            o.allow_crop();
         }
+    };
+    // TODO-cleanup: move to has_crop
+    o.allow_crop = function() {
+        o.init_state.scale_x = o.init_state.scale_x || 1;
+        o.init_state.offset = o.init_state.offset || [0, 0];
+        // o.is_cropped = true;
+        var happ = o.content_element.parent();
+        o.content_element = $('<div class="crop_box">');
+        o.img.appendTo(o.content_element);
+        o.content_element.appendTo(happ);
+        o.div_aspect = o.dims()[0] / o.dims()[1];
+        o.layout();
     };
 
     // TODO-cleanup: move to has_crop
@@ -572,7 +577,8 @@ Hive.App.Image = function(o) {
 
         // UI for setting .offset of apps on drag after long_hold
         o.long_hold = function(ev){
-            if(!o.init_state.scale_x || o != ev.data) return;
+            if(o != ev.data) return;
+            if(!o.init_state.scale_x) o.allow_crop();
             $("#controls").hidehide();
             ev.stopPropagation();
             drag_hold = true;
