@@ -129,6 +129,12 @@ o.Controls = function(app, multiselect) {
 
     var pad_ul = [45, 45], pad_br = [45, 110], min_d = [135, 40];
     var pos_dims = function(){
+        if(o.multiselect){
+            pad_ul = [3, 3];
+            pad_br = [3, 3];
+            min_d = [1, 1];
+        }
+        // TODO-bugbug: can still be pushed off screen with really small apps 
         var ap = o.app.pos(),
             win = $(window), wdims = [win.width(), win.height()],
             pos = [ Math.max(pad_ul[0] + window.scrollX,
@@ -139,12 +145,13 @@ o.Controls = function(app, multiselect) {
             dims[0] = wdims[0] + window.scrollX - pad_br[0] - pos[0];
         if(dims[1] + pos[1] > wdims[1] + window.scrollY - pad_br[1])
             dims[1] = wdims[1] + window.scrollY - pad_br[1] - pos[1];
-        // TODO-bug: make pos adjust in the correct dimension depending on
-        // which edge app overlaps
-        // var minned_dims = [ Math.max(min_d[0], dims[0]),
-        //     Math.max(min_d[1], dims[1]) ];
-        // pos = u._sub(pos)( u._sub(minned_dims)(dims) );
-        return { pos: pos, dims: dims };
+
+        var minned_dims = [ Math.max(min_d[0], dims[0]),
+            Math.max(min_d[1], dims[1]) ];
+        delta_dir = [ ap[0] < 0 ? 0 : -1, ap[1] < 0 ? 0 : -1 ];
+        pos = u._add(pos)(u._mul(delta_dir)(u._sub(minned_dims)(dims)));
+
+        return { pos: pos, dims: minned_dims };
     };
     o.pos = function(){ return pos_dims().pos };
     o.dims = function(){ return pos_dims().dims };
