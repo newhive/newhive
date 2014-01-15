@@ -318,13 +318,13 @@ o.snap_helper = function(my_tuple, opts) {
     var sensitivity = opts.sensitivity;
     var padding = opts.padding;
     var pos = [];
-    var left = 2
+    var left = 2;
     for (var j = 0; j < my_tuple[0].length; j++){
-        if (my_tuple[0][j] != undefined) {
+        if (my_tuple[0][j] != undefined && pos[0] == undefined) {
             pos[0] = my_tuple[0][j];
             --left;
         }
-        if (my_tuple[1][j] != undefined) {
+        if (my_tuple[1][j] != undefined && pos[1] == undefined) {
             pos[1] = my_tuple[1][j];
             --left;
         }
@@ -379,7 +379,7 @@ o.snap_helper = function(my_tuple, opts) {
         var best_guides = {};
         var my_interval = [my_tuple[1 - coord][0], my_tuple[1 - coord][2]];
         if (my_interval[0] == undefined || my_interval[1] == undefined) {
-            my_interval = dist_cent.slice()[coord];
+            my_interval = dist_cent.slice()[1 - coord];
             my_interval = [my_interval, my_interval];
         }
         var best = { goal:0, strength:0, start:[0,0], end:[0,0] };
