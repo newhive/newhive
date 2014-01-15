@@ -29,7 +29,7 @@ define([
         o.controller.set_exit_warning("If you leave this page any unsaved " +
             "changes to your expression will be lost.",
             function(){
-                return editor.Apps.length == 0 }
+                return editor.app.Apps.length == 0 }
         );
         $('.edit.overlay').showshow();
         $("body").addClass("edit");
