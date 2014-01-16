@@ -308,9 +308,9 @@ Hive.init = function(exp, page){
     // Hive.init_autosave();
 
     env.History.init();
+    hive_app.Apps.init(Hive.Exp.apps);
     Hive.init_common();
     env.Selection = hive_app.new_app({ type : 'hive.selection' });
-    hive_app.Apps.init(Hive.Exp.apps);
 
     Hive.init_global_handlers()
     Hive.edit_start();

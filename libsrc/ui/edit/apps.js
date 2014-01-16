@@ -111,7 +111,9 @@ env.Apps = Hive.Apps = (function(){
                 $("#dia_editor_help").data("dialog").open();
             } else {
                 // otherwise query is assumed to be tag list
-                $("#tags_input").val(unescape(query));
+                $tags = $("#tags_input");
+                var e = {target:$tags};
+                $tags.val(unescape(query)).trigger("change",e);
             }
         }
         stack.splice(0);
