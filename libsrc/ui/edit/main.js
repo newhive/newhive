@@ -59,7 +59,34 @@ Hive.app = hive_app;
 // Called on load() and save()
 Hive.init_common = function(){
     $('title').text("Editor - " + (Hive.Exp.title || "[Untitled]"));
+    var tags = " " + $("#tags_input").val().trim() + " ";
+    env.gifwall = (tags.indexOf(" #gifwall ") >= 0);
+    env.squish_full_bleed = env.gifwall;
+    Hive.enter();
 };
+var $style = $();
+Hive.enter = function(){
+    $style.remove();
+    if (env.gifwall) {
+        $style = $("<style>").appendTo($("body"));
+        $style.html(" \
+            .overlay .fluff {display:none !important} \
+            .control.stack {display:none} \
+            .control.rotate {display:none} \
+            .control .set_bg {display:none} \
+            .control .opacity {display:none} \
+            body.edit {overflow-x:hidden} \
+            ");
+    }
+    $("#app_btns").showhide(!env.gifwall);
+};
+
+Hive.exit = function(){
+    $style.remove();
+    $(document).off('keydown');
+    $('body').off('mousemove mousedown');
+};
+
 Hive.grid = false;
 Hive.toggle_grid = function() {
     Hive.grid = ! Hive.grid;
@@ -281,18 +308,12 @@ Hive.init = function(exp, page){
     // Hive.init_autosave();
 
     env.History.init();
-    hive_app.Apps.init(Hive.Exp.apps);
+    Hive.init_common();
     env.Selection = hive_app.new_app({ type : 'hive.selection' });
+    hive_app.Apps.init(Hive.Exp.apps);
 
     Hive.init_global_handlers()
     Hive.edit_start();
-
-    Hive.init_common();
-};
-
-Hive.exit = function(){
-    $(document).off('keydown');
-    $('body').off('mousemove mousedown');
 };
 
 Hive.edit_start = function(){
@@ -497,7 +518,7 @@ Hive.scroll = function(ev){
     if(env.Selection.controls)
         env.Selection.controls.layout();
     env.Selection.elements().map(function(app){
-        app.controls.layout() });
+        if(app.controls) app.controls.layout() });
 };
 // END-Events /////////////////////////////////////////////////////////
 

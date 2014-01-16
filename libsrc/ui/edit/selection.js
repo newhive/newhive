@@ -30,6 +30,9 @@ o.Selection = function(o) {
     o.elements = function(){ return elements.slice(); };
     o.count = function(){ return elements.length; };
     o.each = function(fn){ $.each(elements, fn) };
+    o.get_targets = function(){
+        return (drag_target == o) ? elements.slice() : [drag_target]; 
+    };
     o.add_to_collection = false;
     o.make_controls = [];
     o.handler_type = 2;
@@ -42,7 +45,7 @@ o.Selection = function(o) {
 
     // BEGIN-event-handlers
 
-    o.is_multi = function(ev) { return ev.shiftKey || ev.ctrlKey; }
+    o.is_multi = function(ev) { return !env.gifwall && (ev.shiftKey || ev.ctrlKey); }
 
     // mousedown comes from body, click comes from app div. Binding clicks
     // from app div prevents deselecting everything else at the start of a
@@ -82,6 +85,7 @@ o.Selection = function(o) {
     };
 
     var dragging = false, drag_target;
+    o.drag_target = function(){ return drag_target; };
     o.dragstart = function(ev, dd){
         o.dragging = true;
         $("#controls").hidehide();
@@ -171,53 +175,67 @@ o.Selection = function(o) {
         return o2;
     };
 
-    var old_states;
-    var get_targets = function(){
-        return (drag_target == o ? elements : [drag_target]); };
-    var get_states = function(){
-        return get_targets().map(function(a){ return a.state_relative(); }) };
-    var change_start = function(){ old_states = get_states(); };
-    var change_end = function(name){
-        var apps = get_targets().slice(), new_states = get_states(),
-            start_states = old_states.slice();
-        env.History.save(
-            function(){ $.each(apps, function(i, a){
-                a.state_relative_set(start_states[i]) }) },
-            function(){ $.each(apps, function(i, a){
-                a.state_relative_set(new_states[i]) }) },
-            name
-        );
-    };
-
-    var history_point, ref_pos, full_apps, pushing_apps;
-    o.pushing_start = function(full){
-        env.History.begin();
-
+    var ref_pos, full_apps, pushing_apps, pushing_rel_pos,
+        prev_selection, coord_full;
+    o.pushing_start = function(){
+        // Save current selection and restore it after move.
+        prev_selection = elements.slice();
+        o.update([]);
+        var full = full_apps[0];
+        coord_full = full.full_bleed_coord;
+        var coord = 1 - coord_full;
         o.padding = 0;
-        o.size = full.dims_relative()[1 - full.full_bleed_coord];
-        o.start_pos = full.pos_relative()[1 - full.full_bleed_coord] - o.padding;
+        o.size = full.dims_relative()[coord];
+        o.start_pos = full.pos_relative()[coord] - o.padding;
+        o.stop_pos = o.start_pos + o.size + 2 * o.padding;
         pushing_apps = env.Apps.all().filter(function(app) {
             return !(app.id == full.id || env.Selection.selected(app));
         });
         for (var i = 0; i < pushing_apps.length; ++i) {
             var app = pushing_apps[i];
-            app.old_start = app.pos_relative()[1 - full.full_bleed_coord];
+            app.old_start = app.pos_relative()[coord];
+            var stop = app.old_start + app.dims_relative()[coord];
+            if (app.old_start + .5 < o.stop_pos && stop > .5 + o.start_pos
+                && app.full_bleed_coord == undefined) {
+                if (!o.selected(app)) o.push(app);
+                pushing_apps.splice(i, 1);
+                --i;
+                continue;
+            }
             if (app.old_start >= o.start_pos)
                 app.old_start -= o.size + 2 * o.padding;
         }
+        if (!o.selected(full)) o.push(full);
+        if (env.highlight_full_bleed)
+            full.highlight();
+        drag_target = o;
+        pushing_rel_pos = o.start_pos - o.pos_relative()[coord];
     }
     o.pushing_move = function(pos) {
-        var full = full_apps[0];
-        pos[full.full_bleed_coord] = 0;
-        var coord = 1 - full.full_bleed_coord; // Work in y
-        o.start_pos = pos[coord] - o.padding;
-        o.stop_pos = o.start_pos + o.size + 2 * o.padding;
+        var full = full_apps[0], coord = 1 - coord_full,
+            min_start = 0, push_start = 0, push_size = 0, apps = pushing_apps;
+        // constrain the movement to be only in one coord.
+        pos[coord_full] = ref_pos[coord_full];
+        o.start_pos = pos[coord] - o.padding + pushing_rel_pos;
 
-        var push_start = 0, push_size = 0, apps = pushing_apps;
+        if (env.squish_full_bleed) {
+            for (var i = 0; i < apps.length; ++i) {
+                var app = apps[i];
+                var start = app.old_start;
+                var stop = start + app.dims_relative()[coord];
+                if (stop < o.start_pos && stop > min_start)
+                    min_start = stop;
+            }
+            pos[coord] = min_start + o.padding - pushing_rel_pos;
+            o.start_pos = pos[coord] - o.padding + pushing_rel_pos;
+        }
+        o.stop_pos = o.start_pos + o.size + 2 * o.padding;
         for (var i = 0; i < apps.length; ++i) {
             var app = apps[i];
             var start = app.old_start;
             var stop = start + app.dims_relative()[coord];
+            if (env.squish_full_bleed && stop < o.start_pos && stop > min_start)
+                min_start = stop;
             if (start < o.stop_pos && stop > o.start_pos) {
                 var push_try = o.stop_pos - start;
                 push_size = Math.max(push_size, push_try);
@@ -228,21 +246,24 @@ o.Selection = function(o) {
             var start = app.old_start;
             var stop = start + app.dims_relative()[coord];
             var new_pos = app.pos_relative();
-            if (stop > o.start_pos) start += push_size;
+            if (stop > o.start_pos + .5) start += push_size;
             new_pos[coord] = start;
             app.pos_relative_set(new_pos);
         }
     };
     o.move_start = function(){
-        full_apps = drag_target ? [drag_target] : elements;
+        full_apps = (drag_target && drag_target != o) ? [drag_target] : elements;
         full_apps = full_apps.filter(function(a) { 
             return a.full_bleed_coord != undefined; });
         // if (context.flags.full_bleed && full_apps.length)
         if (full_apps.length)
-            o.pushing_start(full_apps[0]);
+            o.pushing_start();
+        else
+            full_apps = [];
         var moved_obj = drag_target || o;
+        o.update_relative_coords();
         ref_pos = moved_obj.pos_relative();
-        change_start();
+        env.History.change_start(full_apps.length);
     };
     o.move_relative = function(delta, axis_lock){
         if(!ref_pos) return;
@@ -257,6 +278,8 @@ o.Selection = function(o) {
                 exclude_ids: excludes,
                 snap_strength: .05,
                 snap_radius: 18,
+                guide_0: !env.gifwall && !(!full_apps.length || coord_full == 0),
+                guide_1: !env.gifwall && !(!full_apps.length || coord_full == 1),
                 sensitivity: o.sensitivity, });
         }
         if (full_apps.length)
@@ -270,9 +293,14 @@ o.Selection = function(o) {
         o.move_relative(delta, ev.shiftKey);
     };
     o.move_end = function(){
-        change_end('move');
+        env.History.change_end('move');
         u.set_debug_info("");
         $(".ruler").hidehide();
+        if (full_apps.length) {
+            if (env.highlight_full_bleed)
+                full_apps[0].highlight({on: false});
+            o.update(prev_selection);
+        }
     };
 
     hive_app.App.has_resize(o);
@@ -283,14 +311,14 @@ o.Selection = function(o) {
 
         drag_target = o;
         ref_dims = o.dims_relative();
-        change_start();
+        env.History.change_start();
     }
     o.after_resize = function() {
         o.each(function(i, a) { 
             if (a.after_resize) a.after_resize(); });
 
         o.update_relative_coords();
-        change_end('resize');
+        env.History.change_end('resize');
 
         drag_target = ref_dims = undefined;
     }

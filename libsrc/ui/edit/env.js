@@ -6,14 +6,19 @@ env.no_snap = false;
 
 // 1 editor unit := scale client pixels
 // The editor is 1000 units wide inside a 1000*scale pixel window
-var scale = 1;
+var scale = 1, zoom = 1;
 o.scale_set = function(){
-    scale = $(window).width() / 1000;
+    scale = zoom * $(window).width() / 1000;
 };
 o.scale = function(){
     return scale;
 };
-
+o.zoom_set = function(_zoom) {
+    var scale = env.scale();
+    zoom = _zoom;
+    env.layout_apps(scale);
+}
+o.zoom = function(){ return zoom; };
 
 o.History = [];
 o.History.init = function(){
@@ -98,6 +103,31 @@ o.History.init = function(){
 
         return o2;
     };
+
+    //// BEGIN-Utility functions
+    var old_states, save_targets;
+    var get_states = function(){
+        return save_targets.map(function(a){ return a.state_relative(); }) 
+    };
+    // all == true: save all state
+    // all == false: save selection state
+    o.change_start = function(all){
+        save_targets = all ? env.Apps.all() : env.Selection.get_targets();
+        old_states = get_states();
+    };
+    o.change_end = function(name){
+        var targets = save_targets.slice(), new_states = get_states(),
+            start_states = old_states.slice();
+        o.save(
+            function(){ $.each(targets, function(i, a){
+                a.state_relative_set(start_states[i]) }) },
+            function(){ $.each(targets, function(i, a){
+                a.state_relative_set(new_states[i]) }) },
+            name
+        );
+        save_targets = old_states = undefined;
+    };
+    ///////////////
 
     o.update_btn_titles();
     $('#btn_undo').click(env.History.undo);

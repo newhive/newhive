@@ -46,6 +46,13 @@ env.new_app = Hive.new_app = function(s, opts) {
         if (! opts.position)
             a.center(opts.offset);
         a.dims_set(a.dims());
+        if (env.gifwall) {
+            // TODO: move the app into the right place, and push other apps
+            a.pos_set([0, $("body")[0].scrollHeight]);
+            var aspect = a.get_aspect();
+            Hive.App.has_full_bleed(a);
+            a.dims_relative_set(a.dims_relative(), aspect);
+        }
         env.Selection.select(a);
         if(load) load(a);
     };
@@ -196,6 +203,7 @@ Hive.App = function(init_state, opts) {
 
     var _pos = [-999, -999], _dims = [-1, -1];
 
+    o.get_aspect = function() { return false; };
     o.pos = function(){
         var s = env.scale();
         return [ _pos[0] * s, _pos[1] * s ];
@@ -304,7 +312,15 @@ Hive.App = function(init_state, opts) {
         }
         return { pos: pos, dims: scaled };
     };
+    o.highlight = function(opts) {
+        opts = opts || {};
+        opts = $.extend({on: true}, opts);
 
+        var $highlight = o.div.find(".highlight");
+        if (0 == $highlight.length)
+            $highlight = $("<div class='highlight hide'></div>").appendTo(o.div);
+        $highlight.showhide(opts.on);
+    }
     o.state_relative = function(){ return {
         position: _pos.slice(),
         dimensions: _dims.slice()
@@ -554,7 +570,7 @@ Hive.App.Image = function(o) {
             }
             o.init_state.fit = undefined;
         }
-        if (o.init_state.scale_x != undefined) {
+        if (env.gifwall || o.init_state.scale_x != undefined) {
             o.allow_crop();
         }
     };
@@ -582,6 +598,7 @@ Hive.App.Image = function(o) {
         // UI for setting .offset of apps on drag after long_hold
         o.long_hold = function(ev){
             if(o != ev.data) return;
+            if(o.has_full_bleed() && $(ev.target).hasClass("resize")) return;
             if(!o.init_state.scale_x) 
                 if (!o.allow_crop()) return false;
             $("#controls").hidehide();
@@ -690,6 +707,10 @@ Hive.App.Image = function(o) {
     })();
 
     var _layout = o.layout;
+    o.max_height = function(){
+        off = o.offset()[1] / env.scale();
+        return o.dims_relative()[0] / o.aspect + off;
+    }
     o.layout = function() {
         _layout();
         var dims = o.dims(), scale_x = o.init_state.scale_x || 1;
@@ -1074,98 +1095,103 @@ Hive.App.has_shield = function(o, opts) {
 // coord = 1 ==> full in y dimension (x scrolling)
 Hive.App.has_full_bleed = function(o, coord){
     if (!coord) coord = 0;  // default is vertical scrolling
-    o.full_bleed_coord = coord;
-    var dims = o.dims_relative();
-    dims[coord] = 1000;
-    o.dims_relative_set(dims);
+    o.full_bleed_coord = o.full_coord = coord;
+    o.stack_coord = 1 - o.full_coord;
 
-    o._pos_set = o.pos_set;
-    o._move_start = o.move_start;
-    o._move_end = o.move_end;
+    // To make the functionality removable, we check that we are indeed
+    // full bleed
+    o.has_full_bleed = function() { return (o.full_coord != undefined); };
 
-    _pos_relative_set = o.pos_relative_set;
-    o.pos_relative_set = function(pos) {
-        pos = pos.slice();
-        pos[o.full_bleed_coord] = 0;
-        _pos_relative_set(pos);
-    }
-    o.move_start = function() {
-        env.History.begin();
-
-        o._move_start();
-        o.padding = 0; // Scale into screen space?
-        o.size = o.dims()[1 - o.full_bleed_coord];//o.size || 200;
-        o.start_pos = o.pos()[1 - o.full_bleed_coord] - o.padding;
-        o.apps = Hive.Apps.all().filter(function(app) {
-            return !(app.id == o.id || env.Selection.selected(app));
+    var _dims_relative_set = o.dims_relative_set,
+        _pos_relative_set = o.pos_relative_set,
+        _get_aspect = o.get_aspect,
+        _resize_start = o.resize_start,
+        _resize = o.resize,
+        _resize_end = o.resize_end,
+        push_apps;
+    o.before_resize = function(){
+        if (!env.gifwall || !o.has_full_bleed())
+            return;
+        o.dims_ref_set();
+        env.History.change_start(true);
+        push_apps = env.Apps.all().filter(function(a){
+            return a.id != o.id;
         });
-        var apps = o.apps;
-        for (var i = 0; i < apps.length; ++i) {
-            var app = apps[i];
-            app.old_start = app.pos()[1 - o.full_bleed_coord];
-            (app._move_start || app.move_start)();
-            if (app.old_start >= o.start_pos)
-                app.old_start -= o.size + 2 * o.padding;
-        }
     };
-    o.move_end = function() {
-        o._move_end();
-        var apps = o.apps;
-        for (var i = 0; i < apps.length; ++i) {
-            var app = apps[i];
-            (app._move_end || app.move_end)();
+    o.resize = function(delta){
+        if (!env.gifwall || !o.has_full_bleed())
+            return _resize(delta);
+        var start = o.max_pos()[o.stack_coord];
+        _resize(delta);
+        var dims = o.dims_relative();
+        if (o.max_height && dims[1] > o.max_height()) {
+            dims[1] = o.max_height();
+            o.dims_relative_set(dims);
         }
-        env.History.group('full-bleed move');
-    };
-    o.pos_set = function(pos) {
-        pos[o.full_bleed_coord] = 0;
-        var coord = 1 - o.full_bleed_coord; // Work in y
-        o.start_pos = pos[coord] - o.padding;
-        o.stop_pos = o.start_pos + o.size + 2 * o.padding;
-
-        if (o.apps) {
-            var push_start = 0, push_size = 0, apps = o.apps;
-            for (var i = 0; i < apps.length; ++i) {
-                var app = apps[i];
-                var start = app.old_start;
-                var stop = start + app.dims()[coord];
-                if (start < o.stop_pos && stop > o.start_pos) {
-                    var push_try = o.stop_pos - start;
-                    push_size = Math.max(push_size, push_try);
-                }
+        var push = o.max_pos()[o.stack_coord] - start;
+        // Move all apps below my start by delta as well
+        for (var i = push_apps.length - 1; i >= 0; i--) {
+            var a = push_apps[i];
+            if (a.min_pos()[o.stack_coord] > start - .5) {
+                var pos = a.pos_relative();
+                pos[o.stack_coord] += push;
+                a.pos_relative_set(pos);
             }
-            for (var i = 0; i < apps.length; ++i) {
-                var app = apps[i];
-                var start = app.old_start;
-                var stop = start + app.dims()[coord];
-                var new_pos = app.pos();
-                if (stop > o.start_pos) start += push_size;
-                new_pos[coord] = start;
-                (app._pos_set || app.pos_set)(new_pos);
-            }
-        }
-        o._pos_set(pos);
+        };
     };
-
-    // o.div.drag('start', o.move_start).drag('end', o.move_end);
-    // o.move_setup();
-    // o.pos_set(o.pos());
+    o.after_resize = function(){
+        if (!env.gifwall || !o.has_full_bleed())
+            return;
+        env.History.change_end();
+        return true;
+    };
+    o.get_aspect = function() {
+        if (o.has_full_bleed())
+            return false;
+        return _get_aspect();
+    };
+    o.pos_relative_set = function(pos) {
+        if (o.has_full_bleed()) {
+            pos = pos.slice();
+            pos[o.full_bleed_coord] = 0;
+        }
+        _pos_relative_set(pos);
+    };
+    o.dims_relative_set = function(dims, aspect) {
+        if (o.has_full_bleed()) {
+            if (aspect) {
+                if (!o.full_bleed_coord)
+                    aspect = 1 / aspect;
+                dims[1 - o.full_bleed_coord] = 1000 * aspect;
+            }
+            dims[o.full_bleed_coord] = 1000;
+        }
+        _dims_relative_set(dims);
+    };
+    o.pos_relative_set(o.pos_relative());
+    o.dims_relative_set(o.dims_relative());
 };
 
 // Let users drag images onto this app
 // NOTE: this adds handlers to o.content_element, so if
 // content_element changes, this modifier needs to be called again.
 Hive.App.has_image_drop = function(o) {
-    if (!context.flags.rect_drag_drop)
+    if (!env.gifwall && !context.flags.rect_drag_drop)
         return o;
-    o.content_element.on('dragenter dragover', function(ev){
-        // TODO-dnd: handle drop highlighting
-        if (o.highlight)
+    o.content_element.on('dragenter dragover dragleave', function(ev){
+        // Handle drop highlighting.
+        if (!env.gifwall && ev.type == "dragenter")
             o.highlight();
+        else if (!env.gifwall && ev.type == "dragleave")
+            o.highlight({on: false});
         ev.preventDefault();
     });
 
     var on_files = function(files){
+        if (env.gifwall) {
+            $("#media_upload").trigger('with_files', [files]);
+            return;
+        }
         if (files.length == 0)
             return false;
         var load = function(app) {
@@ -1193,12 +1219,12 @@ Hive.App.has_image_drop = function(o) {
         }
     };
     upload.drop_target(o.content_element, on_files, u.on_media_upload);
-
     return o;
 };
 
 Hive.App.has_resize = function(o) {
     var dims_ref, history_point;
+    o.dims_ref_set = function(){ dims_ref = o.dims(); };
     o.resize_start = function(){
         if (o.before_resize) o.before_resize();
         $("#controls").hidehide();
@@ -1212,7 +1238,7 @@ Hive.App.has_resize = function(o) {
         if(!dims[0] || !dims[1]) return;
         dims = u._div(dims)(env.scale());
         // everything past this point is in editor space.
-        var aspect = o.get_aspect ? o.get_aspect() : false;
+        var aspect = o.get_aspect();
 
         if (aspect) {
             var newWidth = dims[1] * aspect;
@@ -1244,8 +1270,9 @@ Hive.App.has_resize = function(o) {
         $("#controls").showshow();
         u.set_debug_info("");
         $(".ruler").hidehide();
-        if (o.after_resize) o.after_resize();
-        history_point.save();
+        var skip_history = false;
+        if (o.after_resize) skip_history = o.after_resize();
+        if (!skip_history) history_point.save();
     };
     o.resize_to = function(delta){
         return [ Math.max(1, dims_ref[0] + delta[0]), 
@@ -1255,7 +1282,7 @@ Hive.App.has_resize = function(o) {
         var _pos = o.pos_relative();
         // TODO: allow snapping to aspect ratio (keyboard?)
         // TODO: set snap parameters be set by user
-        if(!env.no_snap){
+        if(!env.no_snap && !o.has_full_bleed()){
             var tuple = [];
             tuple[0] = [undefined, undefined, pos[0]];
             tuple[1] = [undefined, undefined, pos[1]];
@@ -1263,9 +1290,9 @@ Hive.App.has_resize = function(o) {
             excludes[o.id] = true;
             pos = u.snap_helper(tuple, {
                 exclude_ids: excludes,
-                snap_strength: .5,
+                snap_strength: .05,
                 snap_radius: 10, 
-                sensitivity: o.sensitivity, 
+                sensitivity: o.sensitivity / 2, 
             });
         }
         var _dims = [];

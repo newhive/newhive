@@ -33,6 +33,7 @@ define([
         );
         $('.edit.overlay').showshow();
         $("body").addClass("edit");
+        editor.enter();
     };
     
     o.exit = function(){

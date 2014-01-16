@@ -11,7 +11,7 @@ font-family: Helvetica, Arial, sans-serif;
 #edit_debug {
     background-color: #88D;
     width: 300px;
-    position: absolute;
+    position: fixed;
     z-index: 1337;
     white-space: pre;
 }
@@ -50,6 +50,14 @@ font-family: Helvetica, Arial, sans-serif;
 }
 
 .ehapp, .ehapp > * { position : absolute; }
+// .ehapp { @include box-sizing( border-box ); }
+.ehapp .highlight {
+    width: 100%;
+    height: 100%;
+    background-color: rgba(150,226,206,.6);
+    pointer-events:none;
+    z-index: 1336;
+}
 .ehapp .shield {
     left : 0px; top : 0px;
     z-index: 2;
