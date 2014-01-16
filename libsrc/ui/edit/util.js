@@ -140,6 +140,17 @@ o.random_str = function(){ return Math.random().toString(16).slice(2); };
 
 //// BEGIN-editor-refactor belongs in editor specific utils
 
+o.app_bounds = function(elements) { 
+    var abs_mins = elements.map(function(el){ return el.min_pos() });
+    var abs_maxs = elements.map(function(el){ return el.max_pos() });
+    return {
+        left:   o.min(abs_mins.map(function(c){ return c[0] })),
+        top:    o.min(abs_mins.map(function(c){ return c[1] })),
+        right:  o.max(abs_maxs.map(function(c){ return c[0] })),
+        bottom: o.max(abs_maxs.map(function(c){ return c[1] }))
+    };
+};
+
 // wrappers
 o.hover_menu = function(handle, drawer, opts){
     return Menu(handle, drawer, $.extend({ auto_height: false }, opts));

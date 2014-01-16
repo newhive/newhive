@@ -76,9 +76,13 @@ Hive.enter = function(){
             .control .set_bg {display:none} \
             .control .opacity {display:none} \
             body.edit {overflow-x:hidden} \
+            body.edit .app_btns {min-width:0px} \
+            body.edit .app_btns .icon {display:none} \
+            body.edit .app_btns .icon.insert_image {display:inline-block} \
+            body.edit .app_btns .icon.change_zoom {display:inline-block} \
+            #image_background { display: none; } \
             ");
     }
-    $("#app_btns").showhide(!env.gifwall);
 };
 
 Hive.exit = function(){
@@ -107,10 +111,18 @@ Hive.init_menus = function() {
         hive_app.new_app({ type: 'hive.text', content: '<span style="font-weight:bold">&nbsp;</span>',
             scale : 3 });
     });
+    $('.app_btns .change_zoom').click(function(e) {
+        var zooms = [ 1, .4, .16 ];
+        var zoom = env.zoom();
+        // NOTE: indexOf will return -1 for unlisted zoom, so it will just
+        // zoom to zooms[0] in that case.
+        var i = (zooms.indexOf(zoom) + 1) % zooms.length;
+        env.zoom_set(zooms[i]);
+    });
 
-    u.hover_menu('#insert_text', '#menu_text');
+    u.hover_menu('.insert_text', '#menu_text');
 
-    var image_menu = u.hover_menu('#insert_image', '#menu_image');
+    var image_menu = u.hover_menu('.insert_image', '#menu_image');
     var image_embed_menu = u.hover_menu('#image_from_url', '#image_embed_submenu', {
         click_persist: $('#image_embed_code'), auto_close: false,
         open: function(){
@@ -124,14 +136,14 @@ Hive.init_menus = function() {
         return false;
     });
 
-    u.hover_menu('#insert_audio', '#menu_audio');
+    u.hover_menu('.insert_audio', '#menu_audio');
 
-    var embed_menu = u.hover_menu('#insert_embed', '#menu_embed', {
+    var embed_menu = u.hover_menu('.insert_embed', '#menu_embed', {
         open: function(){ $('#embed_code').get(0).focus() },
         layout_x: 'center' });
     $('#embed_done').click(function() { Hive.embed_code('#embed_code'); embed_menu.close(); });
 
-    u.hover_menu('#insert_shape', '#menu_shape');
+    u.hover_menu('.insert_shape', '#menu_shape');
     $('#shape_rectangle').click(function(e) {
         hive_app.new_app({ type : 'hive.rectangle', content :
             { color : colors[24], 'border-color' : 'black', 'border-width' : 0,
@@ -141,7 +153,7 @@ Hive.init_menus = function() {
         hive_app.new_app({ type: 'hive.sketch', dimensions: [700, 700 / 1.6], content: { brush: 'simple', brush_size: 10 } });
     });
 
-    u.hover_menu('#insert_file', '#menu_file');
+    u.hover_menu('.insert_file', '#menu_file');
 
     $('#btn_grid').click(Hive.toggle_grid);
 

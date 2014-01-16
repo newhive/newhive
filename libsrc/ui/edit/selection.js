@@ -439,14 +439,7 @@ o.Selection = function(o) {
         o.layout();
     };
     o.bounds = function() { 
-        var abs_mins = elements.map(function(el){ return el.min_pos() });
-        var abs_maxs = elements.map(function(el){ return el.max_pos() });
-        return {
-            left:   u.min(abs_mins.map(function(c){ return c[0] })),
-            top:    u.min(abs_mins.map(function(c){ return c[1] })),
-            right:  u.max(abs_maxs.map(function(c){ return c[0] })),
-            bottom: u.max(abs_maxs.map(function(c){ return c[1] }))
-        };
+        return u.app_bounds(elements);
     };
 
     // END-coords

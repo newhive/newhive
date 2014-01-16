@@ -48,7 +48,10 @@ env.new_app = Hive.new_app = function(s, opts) {
         a.dims_set(a.dims());
         if (env.gifwall) {
             // TODO: move the app into the right place, and push other apps
-            a.pos_set([0, $("body")[0].scrollHeight]);
+            // a.pos_set([0, $("body")[0].scrollHeight]);
+            var not_it = env.Apps.all().filter(function(x) { return a.id != x.id; });
+            var height = Math.max(0, u.app_bounds(not_it).bottom);
+            a.pos_set([0, height]);
             var aspect = a.get_aspect();
             Hive.App.has_full_bleed(a);
             a.dims_relative_set(a.dims_relative(), aspect);
