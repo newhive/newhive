@@ -209,6 +209,7 @@ Hive.App = function(init_state, opts) {
     var _pos = [-999, -999], _dims = [-1, -1];
 
     o.get_aspect = function() { return false; };
+    o.has_full_bleed = function() { return false; };
     o.pos = function(){
         var s = env.scale();
         return [ _pos[0] * s, _pos[1] * s ];

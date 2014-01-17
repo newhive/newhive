@@ -175,7 +175,7 @@ o.Selection = function(o) {
         return o2;
     };
 
-    var ref_pos, full_apps, pushing_apps, pushing_rel_pos,
+    var ref_pos, full_apps = [], pushing_apps, pushing_rel_pos,
         prev_selection, coord_full;
     o.pushing_start = function(){
         // Save current selection and restore it after move.
@@ -278,8 +278,8 @@ o.Selection = function(o) {
                 exclude_ids: excludes,
                 snap_strength: .05,
                 snap_radius: 18,
-                guide_0: !env.gifwall && !(!full_apps.length || coord_full == 0),
-                guide_1: !env.gifwall && !(!full_apps.length || coord_full == 1),
+                guide_0: !env.gifwall && (!full_apps.length || coord_full == 1),
+                guide_1: !env.gifwall && (!full_apps.length || coord_full == 0),
                 sensitivity: o.sensitivity, });
         }
         if (full_apps.length)
@@ -300,6 +300,7 @@ o.Selection = function(o) {
             if (env.highlight_full_bleed)
                 full_apps[0].highlight({on: false});
             o.update(prev_selection);
+            full_apps = [];
         }
     };
 
