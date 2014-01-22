@@ -173,7 +173,7 @@ class HiveAssets(Assets):
         # actually get webassets to build bundles (webassets is very lazy)
         for b in self.final_bundles:
             self.bundles[b] = self.assets_env[b].urls()
-        self.write_js(self.bundles, 'libsrc/server/compiled.bundles.json')
+        #self.write_js(self.bundles, 'libsrc/server/compiled.bundles.json')
         print("Assets build complete in %s seconds", time.time() - t0)
 
         ## now grab the rest of 'em after compiling our webassets shit
