@@ -27,10 +27,11 @@ define([
         o.controller.set_exit_warning("If you leave this page any unsaved " +
             "changes to your expression will be lost.",
             function(){
-                return editor.Apps.length == 0 }
+                return editor.app.Apps.length == 0 }
         );
         $('.edit.overlay').showshow();
         $("body").addClass("edit");
+        editor.enter();
     };
     
     o.exit = function(){
@@ -46,7 +47,7 @@ define([
     o.resize = function(){
         // browser_layout.center($('#page_prev'), undefined, {'h': false});
         // browser_layout.center($('#page_next'), undefined, {'h': false});
-        lay.center($('#app_btns'), $('#site'), {v: false});        
+        lay.center($('.app_btns'), $('#site'), {v: false});        
     };
 
     o.render = function(page_data){
