@@ -23,6 +23,8 @@ o.Text = function(o) {
     hive_app.App.has_resize(o);
     hive_app.App.has_resize_h(o);
     hive_app.App.has_shield(o, {auto: false});
+    // for now, having internal and external alignment is too weird.
+    o.has_align = false;  
 
     o.get_aspect = function() {
         var dims = o.dims();
