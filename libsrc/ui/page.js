@@ -62,6 +62,7 @@ define([
     user_activity_template
 ){
     var o = {}, expr_page = false, grid_width, controller,
+        border_width = 1,
         column_layout = false,
         anim_direction; // 0 = up, +/-1 = right/left
     const anim_duration = 700;
@@ -211,12 +212,9 @@ define([
     };
 
     o.render = function(method, data){
-        // console.log(method);
         var page_data = data.page_data;
         if (page_data.title) $("head title").text(page_data.title);
-        o.method = method;
-        o.done_layout = false;
-        o.column_layout = false
+        o.column_layout = false;
         o.columns = 0;
         new_page = pages[method];
         expr_page = (method == 'expr');
@@ -418,7 +416,7 @@ define([
     }
 
     o.grid = function(page_data){
-        grid_width = 412;
+        grid_width = 410;
         render_site(page_data);
         // TODO: BUGBUG: should be data driven
         o.column_layout = (context.route_name == "network");
@@ -545,9 +543,10 @@ define([
     //     render_site(page_data);
     // };
 
+    // TODO: User cards should use same card size as expression only in search
     o.mini = function(page_data){
         page_data.layout = 'grid';
-        grid_width = 232 + 20 + 1; // padding = 10 + 10
+        grid_width = 222 + 2*10; // padding = 10 + 10
         render_site(page_data);
     };
     
@@ -575,12 +574,13 @@ define([
             $('#site').empty().append(master_template(page_data));
     }
 
+    var done_layout = false;
     o.resize = function(){
         if(context.page_data.layout == 'grid' || context.page_data.layout == 'mini') {
             var columns = Math.max(1, Math.min(3, 
                 Math.floor($(window).width() / grid_width)));
-            $('#feed').css('width', columns * grid_width);
-            if (o.columns != columns || !o.done_layout) {
+            $('#feed').css('width', columns * (grid_width + border_width));
+            if (o.columns != columns || !done_layout) {
                 o.columns = columns;
                 if (o.column_layout)
                     o.layout_columns();
@@ -589,7 +589,7 @@ define([
         }
         if (context.page && context.page.resize)
             context.page.resize();
-        o.done_layout = true;
+        done_layout = true;
     };
 
     // Move the expr.card's into the feed layout, shuffling them
