@@ -64,7 +64,7 @@ class Assets(object):
             if version != old_versions.get(name):
                 print 'uploading: '+ name
                 k = S3Key(self.asset_bucket)
-                k.name = name
+                k.name = name + '.' + version
                 # assets expire 10 years from now (we rely on cache busting query string)
                 headers = {
                     'Cache-Control': 'max-age=' + str(86400 * 3650),
@@ -87,7 +87,8 @@ class Assets(object):
         props = self.assets.get(name)
         # TODO: return path of special logging 404 page if asset not found
         if props:
-            url = (self.local_base_url if props[2] else self.base_url) + name + '?' + props[1]
+            url = (self.local_base_url if props[2] else
+                self.base_url) + name + '.' + props[1]
             if abs and url.startswith('/'): url = abs_url() + url[1:]
             return url
         elif return_debug:
@@ -295,17 +296,17 @@ class HiveAssets(Assets):
         self.assets_env.register('email.css', email_scss, output='../lib/email.css')
         self.final_bundles.append('email.css')
 
-        self.assets_env.register('admin.js',
-            'raphael/raphael.js',
-            'raphael/g.raphael.js',
-            'raphael/g.pie.js',
-            'raphael/g.line.js',
-            'browser/jquery/tablesorter.min.js',
-            'browser/jquery-ui/jquery-ui-1.10.3.custom.js',
-            'd3/d3.js',
-            'd3/d3.time.js',
-            output='../lib/admin.js'
-        )
+        # self.assets_env.register('admin.js',
+        #     'raphael/raphael.js',
+        #     'raphael/g.raphael.js',
+        #     'raphael/g.pie.js',
+        #     'raphael/g.line.js',
+        #     'browser/jquery/tablesorter.min.js',
+        #     'browser/jquery-ui/jquery-ui-1.10.3.custom.js',
+        #     'd3/d3.js',
+        #     'd3/d3.time.js',
+        #     output='../lib/admin.js'
+        # )
         # self.final_bundles.append('admin.js')
 
         admin_scss = webassets.Bundle("scss/chart.scss",
