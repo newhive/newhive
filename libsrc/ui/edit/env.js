@@ -14,9 +14,8 @@ o.scale = function(){
     return scale;
 };
 o.zoom_set = function(_zoom) {
-    var scale = env.scale();
     zoom = _zoom;
-    env.layout_apps(scale);
+    env.layout_apps();
 }
 o.zoom = function(){ return zoom; };
 
@@ -111,6 +110,7 @@ o.History.init = function(){
     };
     // all == true: save all state
     // all == false: save selection state
+    // TODO: allow list of apps
     o.change_start = function(all){
         save_targets = all ? env.Apps.all() : env.Selection.get_targets();
         old_states = get_states();

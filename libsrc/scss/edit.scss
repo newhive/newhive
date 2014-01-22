@@ -1,6 +1,19 @@
 @import "common";
 
 body.edit {
+&.gifwall {
+    overflow-x:hidden;
+    .overlay .fluff {display:none !important}
+    .control.stack {display:none}
+    .control.rotate {display:none}
+    .control .set_bg {display:none}
+    .control .opacity {display:none}
+    .app_btns {min-width:0px}
+    .app_btns .icon {display:none}
+    .app_btns .icon.insert_image {display:inline-block}
+    .app_btns .icon.change_zoom {display:inline-block}
+    #image_background { display: none; }
+}    
 font-family: Helvetica, Arial, sans-serif;
 
 .ruler {
@@ -54,7 +67,8 @@ font-family: Helvetica, Arial, sans-serif;
 .ehapp .highlight {
     width: 100%;
     height: 100%;
-    background-color: rgba(150,226,206,.6);
+    background-color: $color_selected;
+    opacity: .6;
     pointer-events:none;
     z-index: 1336;
 }

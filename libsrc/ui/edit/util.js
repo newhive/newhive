@@ -299,12 +299,8 @@ o.new_file = function(files, opts, app_opts) {
     return false;
 };
 
-env.layout_apps = o.layout_apps = function(old_scale){
-    var old_scale = old_scale || env.scale();
+env.layout_apps = o.layout_apps = function(){
     env.scale_set();
-    var new_scale = env.scale();
-    if(old_scale == new_scale) return;
-
     $.map(env.Apps, function(a){ a.layout() });
     if(env.Selection.controls) env.Selection.controls.layout();
 };

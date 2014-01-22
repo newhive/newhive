@@ -67,26 +67,12 @@ Hive.init_common = function(){
 var $style = $();
 Hive.enter = function(){
     $style.remove();
-    if (env.gifwall) {
-        $style = $("<style>").appendTo($("body"));
-        $style.html(" \
-            .overlay .fluff {display:none !important} \
-            .control.stack {display:none} \
-            .control.rotate {display:none} \
-            .control .set_bg {display:none} \
-            .control .opacity {display:none} \
-            body.edit {overflow-x:hidden} \
-            body.edit .app_btns {min-width:0px} \
-            body.edit .app_btns .icon {display:none} \
-            body.edit .app_btns .icon.insert_image {display:inline-block} \
-            body.edit .app_btns .icon.change_zoom {display:inline-block} \
-            #image_background { display: none; } \
-            ");
-    }
+    if (env.gifwall)
+        $("body").addClass("gifwall");
 };
 
 Hive.exit = function(){
-    $style.remove();
+    $("body").removeClass("gifwall");
     $(document).off('keydown');
     $('body').off('mousemove mousedown');
 };
@@ -112,7 +98,7 @@ Hive.init_menus = function() {
             scale : 3 });
     });
     $('.app_btns .change_zoom').click(function(e) {
-        var zooms = [ 1, .4, .16 ];
+        var zooms = [ 1, .5, .25 ];
         var zoom = env.zoom();
         // NOTE: indexOf will return -1 for unlisted zoom, so it will just
         // zoom to zooms[0] in that case.
@@ -297,7 +283,14 @@ Hive.init_save_dialog = function(){
 };
 Hive.init_global_handlers = function(){
     // Global event handlers
-    $(window).on('resize', u.layout_apps);
+    $(window).on('resize', function(ev) {
+        var old_scale = env.scale();
+        env.scale_set();
+        var new_scale = env.scale();
+        if(old_scale == new_scale) return;
+
+        u.layout_apps();
+    });
     $(window).on('scroll', Hive.scroll);
     evs.on(document, 'keydown');
     evs.on('body', 'mousemove');

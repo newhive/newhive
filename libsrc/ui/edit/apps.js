@@ -51,7 +51,7 @@ env.new_app = Hive.new_app = function(s, opts) {
             // a.pos_set([0, $("body")[0].scrollHeight]);
             var not_it = env.Apps.all().filter(function(x) { return a.id != x.id; });
             var height = Math.max(0, u.app_bounds(not_it).bottom);
-            a.pos_set([0, height]);
+            a.pos_relative_set([0, height]);
             var aspect = a.get_aspect();
             Hive.App.has_full_bleed(a);
             a.dims_relative_set(a.dims_relative(), aspect);
@@ -577,12 +577,12 @@ Hive.App.Image = function(o) {
             o.init_state.fit = undefined;
         }
         if (env.gifwall || o.init_state.scale_x != undefined) {
-            o.allow_crop();
+            o.allow_crop(true);
         }
     };
     // TODO-cleanup: move to has_crop
-    o.allow_crop = function() {
-        if (!context.flags.rect_drag_drop)
+    o.allow_crop = function(force) {
+        if (!force && !context.flags.rect_drag_drop)
             return false;
 
         o.init_state.scale_x = o.init_state.scale_x || 1;
@@ -1111,9 +1111,7 @@ Hive.App.has_full_bleed = function(o, coord){
     var _dims_relative_set = o.dims_relative_set,
         _pos_relative_set = o.pos_relative_set,
         _get_aspect = o.get_aspect,
-        _resize_start = o.resize_start,
         _resize = o.resize,
-        _resize_end = o.resize_end,
         push_apps;
     o.before_resize = function(){
         if (!env.gifwall || !o.has_full_bleed())
@@ -1184,11 +1182,11 @@ Hive.App.has_full_bleed = function(o, coord){
 Hive.App.has_image_drop = function(o) {
     if (!env.gifwall && !context.flags.rect_drag_drop)
         return o;
-    o.content_element.on('dragenter dragover dragleave', function(ev){
+    o.content_element.on('dragenter dragover dragleave drop', function(ev){
         // Handle drop highlighting.
         if (!env.gifwall && ev.type == "dragenter")
             o.highlight();
-        else if (!env.gifwall && ev.type == "dragleave")
+        else if (!env.gifwall && (ev.type == "dragleave" || ev.type == "drop"))
             o.highlight({on: false});
         ev.preventDefault();
     });
