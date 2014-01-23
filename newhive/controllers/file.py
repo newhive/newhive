@@ -106,18 +106,12 @@ def _handle_audio(file_record, args):
 
 def _handle_image(file_record, args):
     # resample image by powers of root 2, save if file size reduces by x2
-<<<<<<< HEAD
     if True:
         t = threading.Thread(target=file_record.set_resamples)
         t.daemon = True
         t.start()
     else:
         file_record.set_resamples()
-=======
-    t = threading.Thread(target=file_record.set_resamples)
-    t.daemon = True
-    t.start()
->>>>>>> c85d4136489eb4a0e8ce249906132ea0445f4f8a
 
     if args.get('thumb'):
         thumb_file = file_record.set_thumb(222, 222)
