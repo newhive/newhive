@@ -4,6 +4,7 @@ from werkzeug.http import parse_options_header
 from newhive.utils import lget
 from newhive.controllers.controller import ModelController, auth_required
 from PIL import Image
+import threading
 
 class File(ModelController):
     model_name = 'File'
