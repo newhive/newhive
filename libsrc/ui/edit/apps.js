@@ -342,7 +342,7 @@ Hive.App = function(init_state, opts) {
     o.state = function(){
         var s = $.extend({}, o.init_state, o.state_relative(), {
             z: o.layer(),
-            full_bleed_coord: o.full_bleed_coord,
+            full_bleed_coord: o.full_coord,
             // TODO-cleanup: flatten state and use o.state() and
             // o.state_update to simplify behavior around shared attributes
             content: o.content(),
@@ -376,7 +376,7 @@ Hive.App = function(init_state, opts) {
             o.init_state.position = u.array_sum(o.init_state.position, opts.offset);
         o.state_relative_set(o.init_state);
         if (o.init_state.full_bleed_coord != undefined)
-            Hive.App.has_full_bleed(o, o.init_state.full_bleed_coord);
+            Hive.App.has_full_bleed(o, o.init_state.full_coord);
         if(opts.load) opts.load(o);
         u.layout_apps();
     });
@@ -1033,19 +1033,58 @@ Hive.App.has_nudge = function(o){
     // point that automatically merges into the next history point if it's the
     // same type, similar to History.begin + History.group
     o.keydown.add(function(ev){
-        var nudge = function(dx, dy){
+        var nudge = function(delta){
             return function(){
-                var s = env.scale(), delta = u._mul(1/s)([dx, dy]);
-                if(ev.shiftKey)
+                delta = u._mul(1 / env.scale())(delta);
+                var me = o.elements()[0];
+                if (me && me.has_full_bleed()) {
+                    delta[me.full_coord = 0];
+                    if (env.gifwall && delta[1]) {
+                        // push up/down by an entire full-bleed app.
+                        var apps = $.grep(env.Apps.all(), function(app) {
+                            return app.has_full_bleed();
+                        });
+                        var swap, best_app, invert = u._sign(delta[1]),
+                            my_pos = me.pos_relative(), best = Infinity;
+                        for (var i = 0; i < apps.length; ++i) {
+                            var app = apps[i], 
+                                other_pos = invert * app.pos_relative()[1];
+                            if (other_pos > invert * my_pos[1]
+                                && other_pos < best) {
+                                best_app = app;
+                                best = other_pos;
+                            }
+                        }
+                        if (!best_app)
+                            return;
+                        env.History.change_start([best_app, me]);
+                        if (invert > 0) {
+                            var oth_pos = best_app.pos_relative();
+                            my_pos[1] += best_app.max_pos()[1] - me.max_pos()[1];
+                            oth_pos[1] -= best_app.min_pos()[1] - me.min_pos()[1];
+                            me.pos_relative_set(my_pos);
+                            best_app.pos_relative_set(oth_pos);
+                        } else {
+                            var oth_pos = best_app.pos_relative();
+                            oth_pos[1] -= best_app.max_pos()[1] - me.max_pos()[1];
+                            my_pos[1] += best_app.min_pos()[1] - me.min_pos()[1];
+                            me.pos_relative_set(my_pos);
+                            best_app.pos_relative_set(oth_pos);
+                        }
+                        env.History.change_end("swap");
+                        return;
+                    }
+                }
+                if (ev.shiftKey)
                     delta = u._mul(10)(delta);
                 o.pos_relative_set(u._add(o.pos_relative())(delta));
             }
         }
         var handlers = {
-            37: nudge(-1,0)   // Left
-            , 38: nudge(0,-1) // Up
-            , 39: nudge(1,0)  // Right
-            , 40: nudge(0,1)  // Down
+            37: nudge([-1,0])   // Left
+            , 38: nudge([0,-1]) // Up
+            , 39: nudge([1,0])  // Right
+            , 40: nudge([0,1])  // Down
         }
         if(handlers[ev.keyCode]){
             handlers[ev.keyCode]();
@@ -1105,12 +1144,14 @@ Hive.App.has_shield = function(o, opts) {
 // coord = 1 ==> full in y dimension (x scrolling)
 Hive.App.has_full_bleed = function(o, coord){
     if (!coord) coord = 0;  // default is vertical scrolling
-    o.full_bleed_coord = o.full_coord = coord;
+    o.full_coord = coord;
     o.stack_coord = 1 - o.full_coord;
 
     // To make the functionality removable, we check that we are indeed
     // full bleed
     o.has_full_bleed = function() { return (o.full_coord != undefined); };
+    // TODO: just reset the functions instead
+    o.remove_full_bleed = function() { o.full_coord = undefined; };
 
     var _dims_relative_set = o.dims_relative_set,
         _pos_relative_set = o.pos_relative_set,
@@ -1161,18 +1202,18 @@ Hive.App.has_full_bleed = function(o, coord){
     o.pos_relative_set = function(pos) {
         if (o.has_full_bleed()) {
             pos = pos.slice();
-            pos[o.full_bleed_coord] = 0;
+            pos[o.full_coord] = 0;
         }
         _pos_relative_set(pos);
     };
     o.dims_relative_set = function(dims, aspect) {
         if (o.has_full_bleed()) {
             if (aspect) {
-                if (!o.full_bleed_coord)
+                if (!o.full_coord)
                     aspect = 1 / aspect;
-                dims[1 - o.full_bleed_coord] = 1000 * aspect;
+                dims[1 - o.full_coord] = 1000 * aspect;
             }
-            dims[o.full_bleed_coord] = 1000;
+            dims[o.full_coord] = 1000;
         }
         _dims_relative_set(dims);
     };
@@ -1306,8 +1347,8 @@ Hive.App.has_resize = function(o) {
         var _dims = [];
         _dims[0] = pos[0] - _pos[0];
         _dims[1] = pos[1] - _pos[1];
-        if (o.full_bleed_coord != undefined)
-            _dims[o.full_bleed_coord] = 1000;
+        if (o.full_coord != undefined)
+            _dims[o.full_coord] = 1000;
         _dims = [ Math.max(1, _dims[0]), Math.max(1, _dims[1]) ];
         if (doit || doit == undefined)
             o.dims_relative_set(_dims);

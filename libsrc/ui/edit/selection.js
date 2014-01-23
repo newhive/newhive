@@ -154,15 +154,15 @@ o.Selection = function(o) {
         o.update(elements);
     }
     o.update_focus = function(event){
-        var select = { top: o.drag_pos[1], right: o.drag_pos[0] + o.drag_dims[0],
-            bottom: o.drag_pos[1] + o.drag_dims[1], left: o.drag_pos[0] };
+        var s = env.scale();
+        var select = { 
+            left: (o.drag_pos[0] - o.offset) / s,
+            right: (o.drag_pos[0] + o.drag_dims[0]) / s,
+            top: (o.drag_pos[1] - o.offset) / s, 
+            bottom: (o.drag_pos[1] + o.drag_dims[1]) / s, 
+        };
         o.old_selection = o.new_selection;
-        o.new_selection = $.grep(hive_app.Apps.all(), function(el){
-            var dims = el.dims();
-            var pos = el.pos();
-            return (select.top <= pos[1] && select.left <= pos[0] + o.offset
-                && select.right >= pos[0] + dims[0] + o.offset && select.bottom >= pos[1] + dims[1]);
-        });
+        o.new_selection = u.overlapped_apps(select);
         if (o.old_selection.length != o.new_selection.length){
             o.update($.unique($.merge(o.new_selection, o.initial_elements)));
         }
@@ -176,13 +176,13 @@ o.Selection = function(o) {
     };
 
     var ref_pos, full_apps = [], pushing_apps, pushing_rel_pos,
-        prev_selection, coord_full;
+        prev_selection, coord_full, full;
+    o.set_full = function(app) { full = app; };
     o.pushing_start = function(){
         // Save current selection and restore it after move.
         prev_selection = elements.slice();
         o.update([]);
-        var full = full_apps[0];
-        coord_full = full.full_bleed_coord;
+        coord_full = full.full_coord;
         var coord = 1 - coord_full;
         o.padding = 0;
         o.size = full.dims_relative()[coord];
@@ -196,7 +196,7 @@ o.Selection = function(o) {
             app.old_start = app.pos_relative()[coord];
             var stop = app.old_start + app.dims_relative()[coord];
             if (app.old_start + .5 < o.stop_pos && stop > .5 + o.start_pos
-                && app.full_bleed_coord == undefined) {
+                && app.full_coord == undefined) {
                 if (!o.selected(app)) o.push(app);
                 pushing_apps.splice(i, 1);
                 --i;
@@ -211,12 +211,13 @@ o.Selection = function(o) {
         drag_target = o;
         pushing_rel_pos = o.start_pos - o.pos_relative()[coord];
     }
-    o.pushing_move = function(pos) {
-        var full = full_apps[0], coord = 1 - coord_full,
+    o.pushing_move = function(pos, rel_pos) {
+        var coord = 1 - coord_full,
             min_start = 0, push_start = 0, push_size = 0, apps = pushing_apps;
+        if (rel_pos === undefined) rel_pos = pushing_rel_pos;
         // constrain the movement to be only in one coord.
         pos[coord_full] = ref_pos[coord_full];
-        o.start_pos = pos[coord] - o.padding + pushing_rel_pos;
+        o.start_pos = pos[coord] - o.padding + rel_pos;
 
         if (env.squish_full_bleed) {
             for (var i = 0; i < apps.length; ++i) {
@@ -226,8 +227,8 @@ o.Selection = function(o) {
                 if (stop < o.start_pos && stop > min_start)
                     min_start = stop;
             }
-            pos[coord] = min_start + o.padding - pushing_rel_pos;
-            o.start_pos = pos[coord] - o.padding + pushing_rel_pos;
+            pos[coord] = min_start + o.padding - rel_pos;
+            o.start_pos = pos[coord] - o.padding + rel_pos;
         }
         o.stop_pos = o.start_pos + o.size + 2 * o.padding;
         for (var i = 0; i < apps.length; ++i) {
@@ -254,11 +255,12 @@ o.Selection = function(o) {
     o.move_start = function(){
         full_apps = (drag_target && drag_target != o) ? [drag_target] : elements;
         full_apps = full_apps.filter(function(a) { 
-            return a.full_bleed_coord != undefined; });
+            return a.full_coord != undefined; });
         // if (context.flags.full_bleed && full_apps.length)
-        if (full_apps.length)
+        if (full_apps.length) {
+            full = full_apps[0];
             o.pushing_start();
-        else
+        } else
             full_apps = [];
         var moved_obj = drag_target || o;
         o.update_relative_coords();
