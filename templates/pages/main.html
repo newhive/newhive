@@ -32,7 +32,12 @@ NewHive is your radically simple, DIY self publishing tool." %}
 {% block body %}
   <div id='overlays'></div>
   <div id='site'></div>
-  <div id='exprs'><div class='expr blank'></div></div>
+  <div id='exprs'><div class='expr blank'></div>
+  {% if page_data.expr %}
+    <iframe id='expr_{{ page_data.expr.id }}' class='expr' allowfullscreen
+      src='{{ page_data.content_url }}'></iframe>
+  {% endif %}
+  </div>
   <script>
 curl(['ui/controller'], function(controller){
     controller.init({{ route_args|json }});

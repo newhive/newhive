@@ -140,6 +140,17 @@ o.random_str = function(){ return Math.random().toString(16).slice(2); };
 
 //// BEGIN-editor-refactor belongs in editor specific utils
 
+o.app_bounds = function(elements) { 
+    var abs_mins = elements.map(function(el){ return el.min_pos() });
+    var abs_maxs = elements.map(function(el){ return el.max_pos() });
+    return {
+        left:   o.min(abs_mins.map(function(c){ return c[0] })),
+        top:    o.min(abs_mins.map(function(c){ return c[1] })),
+        right:  o.max(abs_maxs.map(function(c){ return c[0] })),
+        bottom: o.max(abs_maxs.map(function(c){ return c[1] }))
+    };
+};
+
 // wrappers
 o.hover_menu = function(handle, drawer, opts){
     return Menu(handle, drawer, $.extend({ auto_height: false }, opts));
@@ -288,8 +299,8 @@ o.new_file = function(files, opts, app_opts) {
     return false;
 };
 
-o.layout_apps = function(){
-    var old_scale = env.scale();
+env.layout_apps = o.layout_apps = function(old_scale){
+    var old_scale = old_scale || env.scale();
     env.scale_set();
     var new_scale = env.scale();
     if(old_scale == new_scale) return;
@@ -310,21 +321,26 @@ o.snap_helper = function(my_tuple, opts) {
         sensitivity: 0,         // Exponent for falloff in the dimension of snap 
                                 // (makes it not snap far away)
         padding: 10,            // Editor units to add to object snapping against each other
+        guide_0: true,          // show horizontal guide
+        guide_1: true,          // show vertical guide
     }, opts );
-    var s = env.scale();
-    var exclude_ids = opts.exclude_ids;
-    var snap_strength = opts.snap_strength;
-    var snap_radius = opts.snap_radius;
-    var sensitivity = opts.sensitivity;
-    var padding = opts.padding;
-    var pos = [];
-    var left = 2
+    var s = env.scale(),
+        exclude_ids = opts.exclude_ids,
+        snap_strength = opts.snap_strength,
+        snap_radius = opts.snap_radius,
+        sensitivity = opts.sensitivity,
+        padding = opts.padding,
+        pos = [], show_guide = [];
+    show_guide[0] = opts.guide_0;
+    show_guide[1] = opts.guide_1;
+
+    var left = 2;
     for (var j = 0; j < my_tuple[0].length; j++){
-        if (my_tuple[0][j] != undefined) {
+        if (my_tuple[0][j] != undefined && pos[0] == undefined) {
             pos[0] = my_tuple[0][j];
             --left;
         }
-        if (my_tuple[1][j] != undefined) {
+        if (my_tuple[1][j] != undefined && pos[1] == undefined) {
             pos[1] = my_tuple[1][j];
             --left;
         }
@@ -379,7 +395,7 @@ o.snap_helper = function(my_tuple, opts) {
         var best_guides = {};
         var my_interval = [my_tuple[1 - coord][0], my_tuple[1 - coord][2]];
         if (my_interval[0] == undefined || my_interval[1] == undefined) {
-            my_interval = dist_cent.slice()[coord];
+            my_interval = dist_cent.slice()[1 - coord];
             my_interval = [my_interval, my_interval];
         }
         var best = { goal:0, strength:0, start:[0,0], end:[0,0] };
@@ -410,7 +426,6 @@ o.snap_helper = function(my_tuple, opts) {
                             var other_interval =
                                 [tuple[1 - coord][app_i][0],tuple[1 - coord][app_i][2]];
                             var dist = o.interval_dist(my_interval, other_interval);
-                            var guide = o.interval_bounds(my_interval, other_interval);
                             // power fall-off w/ decay when user jiggles mouse
                             var snap_dist_scaled = 1 - snap_dist / snap_radius;
                             strength *= Math.pow(snap_dist_scaled, sensitivity);
@@ -423,6 +438,13 @@ o.snap_helper = function(my_tuple, opts) {
                             var total = best_snaps[goal_memo] || 0;
                             total += strength;
                             best_snaps[goal_memo] = total;
+                            if (total > best.strength) {
+                                best.strength = total;
+                                best.goal = goal;
+                            }
+                            if (!show_guide[coord])
+                                continue;
+                            var guide = o.interval_bounds(my_interval, other_interval);
                             best_guides[goal_memo] = best_guides[goal_memo] || {};
                             // NOTE: We were showing the ruler at coord2 - added_padding
                             best_guides[goal_memo][type2] = 
@@ -430,10 +452,6 @@ o.snap_helper = function(my_tuple, opts) {
                                     best_guides[goal_memo][type2] 
                                         || o.null_interval,
                                     guide).concat(coord2);
-                            if (total > best.strength) {
-                                best.strength = total;
-                                best.goal = goal;
-                            }
                         }
                     }
                 }
@@ -442,6 +460,8 @@ o.snap_helper = function(my_tuple, opts) {
         if (best.strength > snap_strength) {
             new_pos[coord] = best.goal;
             var obj = best_guides[precision(best.goal)];
+            if (!obj)
+                continue;
             // Just pick the first available guide matching the goal.
             // TODO-polish: pick on a more sensible criterion
             for (var first in obj)

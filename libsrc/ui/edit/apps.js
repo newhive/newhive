@@ -46,6 +46,16 @@ env.new_app = Hive.new_app = function(s, opts) {
         if (! opts.position)
             a.center(opts.offset);
         a.dims_set(a.dims());
+        if (env.gifwall) {
+            // TODO: move the app into the right place, and push other apps
+            // a.pos_set([0, $("body")[0].scrollHeight]);
+            var not_it = env.Apps.all().filter(function(x) { return a.id != x.id; });
+            var height = Math.max(0, u.app_bounds(not_it).bottom);
+            a.pos_set([0, height]);
+            var aspect = a.get_aspect();
+            Hive.App.has_full_bleed(a);
+            a.dims_relative_set(a.dims_relative(), aspect);
+        }
         env.Selection.select(a);
         if(load) load(a);
     };
@@ -104,7 +114,9 @@ env.Apps = Hive.Apps = (function(){
                 $("#dia_editor_help").data("dialog").open();
             } else {
                 // otherwise query is assumed to be tag list
-                $("#tags_input").val(unescape(query));
+                $tags = $("#tags_input");
+                var e = {target:$tags};
+                $tags.val(unescape(query)).trigger("change",e);
             }
         }
         stack.splice(0);
@@ -196,14 +208,15 @@ Hive.App = function(init_state, opts) {
 
     var _pos = [-999, -999], _dims = [-1, -1];
 
+    o.get_aspect = function() { return false; };
+    o.has_full_bleed = function() { return false; };
     o.pos = function(){
         var s = env.scale();
         return [ _pos[0] * s, _pos[1] * s ];
     };
     o.pos_set = function(pos){
         var s = env.scale();
-        _pos = [ pos[0] / s, pos[1] / s ];
-        o.layout();
+        o.pos_relative_set( [ pos[0] / s, pos[1] / s ] );
     };
     o.dims = function() {
         var s = env.scale();
@@ -211,8 +224,7 @@ Hive.App = function(init_state, opts) {
     };
     o.dims_set = function(dims){
         var s = env.scale();
-        _dims = [ dims[0] / s, dims[1] / s ];
-        o.layout();
+        o.dims_relative_set( [ dims[0] / s, dims[1] / s ] );
     };
     o.width = function(){ return o.dims()[0] };
     o.height = function(){ return o.dims()[1] };
@@ -306,7 +318,15 @@ Hive.App = function(init_state, opts) {
         }
         return { pos: pos, dims: scaled };
     };
+    o.highlight = function(opts) {
+        opts = opts || {};
+        opts = $.extend({on: true}, opts);
 
+        var $highlight = o.div.find(".highlight");
+        if (0 == $highlight.length)
+            $highlight = $("<div class='highlight hide'></div>").appendTo(o.div);
+        $highlight.showhide(opts.on);
+    }
     o.state_relative = function(){ return {
         position: _pos.slice(),
         dimensions: _dims.slice()
@@ -364,14 +384,33 @@ Hive.App = function(init_state, opts) {
     // initialize
 
     o.div = $('<div class="ehapp">').appendTo('#happs');
+ 
+    o.add_to_collection = true;
+    o.type(o); // add type-specific properties
+    if (o.add_to_collection)
+        o.apps.add(o); // add to apps collection
     evs.on(o.div, 'dragstart', o).on(o.div, 'drag', o).on(o.div, 'dragend', o)
         .on(o.div, 'click', o).long_hold(o.div, o);
- 
-    o.type(o); // add type-specific properties
-    o.apps.add(o); // add to apps collection
 
     return o;
 };
+Hive.registerApp(Hive.App, 'hive.app');
+
+// TODO: root, selection, app inherits pseudoApp
+// TODO-perf: ? For all inheritance, use prototype.
+
+// PseudoApp cannot be added to selection
+// It has no (server) state.
+Hive.App.PseudoApp = function(o) {
+
+};
+Hive.registerApp(Hive.App.PseudoApp, 'hive.pseudo');
+Hive.App.Root = function(o) {
+    // Automatic top level app for layout and template logic
+
+};
+Hive.registerApp(Hive.App.Root, 'hive.root');
+
 
 // This App shows an arbitrary single HTML tag.
 Hive.App.Html = function(o) {
@@ -402,22 +441,6 @@ Hive.App.Html = function(o) {
     return o;
 };
 Hive.registerApp(Hive.App.Html, 'hive.html');
-
-// TODO: root, selection, app inherits pseudoApp
-// TODO-perf: ? For all inheritance, use prototype.
-
-// PseudoApp cannot be added to selection
-// It has no (server) state.
-Hive.App.PseudoApp = function(o) {
-
-};
-Hive.registerApp(Hive.App.PseudoApp, 'hive.pseudo');
-Hive.App.Root = function(o) {
-    // Automatic top level app for layout and template logic
-
-};
-Hive.registerApp(Hive.App.Root, 'hive.root');
-
 
 Hive.App.RawHtml = function(o) {
     Hive.App.has_resize(o);
@@ -483,533 +506,10 @@ Hive.App.Script = function(o){
 };
 Hive.registerApp(Hive.App.Script, 'hive.script');
 
-var is_chrome = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
-Hive.App.Text = function(o) {
-    Hive.App.has_resize(o);
-    Hive.App.has_resize_h(o);
-    Hive.App.has_shield(o, {auto: false});
-
-    o.get_aspect = function() {
-        var dims = o.dims();
-        return dims[0] / dims[1];
-    };
-    var content = o.init_state.content;
-    o.content = function(content) {
-        if(typeof(content) != 'undefined') {
-            // avoid 0-height content element in FF
-            if(content == null || content == '') o.rte.setHtml(false, '&nbsp;');
-            else o.rte.setHtml(false, content);
-        } else {
-            // remove any remaining selection-saving carets
-            o.rte.content_element.find('span[id^="goog_"]').remove();
-            return o.rte.getCleanContents();
-        }
-    }
-
-    var edit_mode = false;
-    o.edit_mode = function(mode) {
-        if (mode === edit_mode) return;
-        if (mode) {
-            o.unshield();
-            o.rte.remove_breaks();
-            o.rte.makeEditable();
-            o.rte.restore_cursor();
-            o.content_element
-                .on('mousedown keydown', function(e){ e.stopPropagation(); });
-            edit_mode = true;
-        }
-        else {
-            o.rte.unwrap_all_selections();
-            o.rte.save_cursor();
-            o.rte.add_breaks();
-            o.rte.make_uneditable();
-            o.content_element
-                .off('mousedown keydown')
-                .trigger('blur');
-            edit_mode = false;
-            o.shield();
-        }
-    }
-
-    o.focus.add(function(){
-        o.refresh_size();
-        o.edit_mode(true);
-    });
-    o.unfocus.add(function(){
-        o.edit_mode(false);
-    });
-
-    o.link = function(v) {
-        if(typeof(v) == 'undefined') return o.rte.get_link();
-        //if(!v) o.rte.edit('unlink');
-        //else o.rte.make_link(v);
-        o.rte.make_link(v);
-    };
-
-    o.calcWidth = function() {
-        return o.content_element.width();
-    }
-    o.calcHeight = function() {
-        return o.content_element.height();
-    }
-
-    o.refresh_size = function() {
-        o.resize_h([o.calcWidth(), o.dims()[1]]);
-    };
-
-    Hive.has_scale(o);
-    var _layout = o.layout;
-    o.layout = function(){
-        _layout();
-        o.div.css('font-size', (env.scale() * o.scale()) + 'em');
-    };
-
-    // New scaling code
-    var scale_ref, dims_ref, history_point, 
-        _resize_start = o.resize_start, _resize = o.resize;
-    o.resize_start = function(){
-        _resize_start();
-        scale_ref = o.scale();
-        dims_ref = o.dims();
-        history_point = o.history_helper_relative('resize');
-    };
-    o.resize = function(delta) {
-        _resize(delta);
-        var scale_by = o.dims()[0] / dims_ref[0];
-        o.scale_set(scale_ref * scale_by);
-    };
-    
-    var _load = o.load;
-    o.load = function() {
-        o.scale_set(o.scale());
-        o.content(content);
-        _load();
-        o.refresh_size();
-    };
-
-    o.history_saver = function(){
-        var exec_cmd = function(cmd){ return function(){
-            var uneditable = o.rte.isUneditable();
-            if(uneditable) o.rte.makeEditable();
-            o.rte.exec_command(cmd);
-            if(uneditable) o.rte.makeUneditable();
-            o.rte.unwrap_all_selections();
-        } };
-        env.History.save(exec_cmd('+undo'), exec_cmd('+redo'), 'edit');
-    };
-
-    function controls(o) {
-        var common = $.extend({}, o), d = o.div;
-
-        o.addControls($('#controls_text'));
-
-        var link_open = function(){
-            var link = o.app.rte.get_link();
-        }
-        o.link_menu = o.append_link_picker(d.find('.buttons'),
-                        {open: link_open, field_to_focus: o.app.content_element});
-
-        var cmd_buttons = function(query, func) {
-            $(query).each(function(i, e) {
-                $(e).click(function() { func($(e).attr('val')) });
-            })
-        }
-
-        o.hover_menu(d.find('.button.fontname'), d.find('.drawer.fontname'));
-
-        o.color_picker = u.append_color_picker(
-            d.find('.drawer.color'),
-            function(v) {
-                o.app.rte.exec_command('+foreColor', v);
-            },
-            undefined,
-            {field_to_focus: o.app.content_element, iframe: true}
-        );
-        o.color_menu = o.hover_menu(
-            d.find('.button.color'),
-            d.find('.drawer.color'),
-            {
-                auto_close : false,
-                open: function(){
-                    // Update current color. Range should usually exist, but
-                    // better to do nothing than throw error if not
-                    var range = o.app.rte.getRange();
-                    if (range){
-                        var current_color = $(o.app.rte.getRange().getContainerElement()).css('color');
-                        o.color_picker.set_color(current_color);
-                    }
-                },
-            }
-        );
-
-        o.align_menu = o.hover_menu(d.find('.button.align'), d.find('.drawer.align'));
-
-        o.close_menus = function() {
-            o.link_menu.close();
-            o.color_menu.close();
-        }
-
-        $('.option[cmd],.button[cmd]').each(function(i, el) {
-            $(el).on('mousedown', function(e) {
-                e.preventDefault();
-            }).click(function(){
-                o.app.rte.exec_command($(el).attr('cmd'), $(el).attr('val'));
-            });
-        });
-
-        o.select_box.click(function(e){
-            e.stopPropagation();
-            o.app.edit_mode(false);
-        });
-
-        return o;
-    }
-    o.make_controls.push(controls);
-
-    o.div.addClass('text');
-    if(!o.init_state.dimensions) o.dims_set([ 300, 20 ]);
-    o.content_element = $('<div></div>');
-    o.content_element.attr('id', u.random_str()).addClass('text_content_element');
-    o.div.append(o.content_element);
-    o.rte = new Hive.goog_rte(o.content_element, o);
-    goog.events.listen(o.rte.undo_redo.undoManager_,
-            goog.editor.plugins.UndoRedoManager.EventType.STATE_ADDED,
-            o.history_saver);
-    goog.events.listen(o.rte, goog.editor.Field.EventType.DELAYEDCHANGE, o.refresh_size);
-    o.shield();
-
-    setTimeout(function(){ o.load(); }, 100);
-    return o;
-}
-Hive.registerApp(Hive.App.Text, 'hive.text');
-
-Hive.goog_rte = function(content_element, app){
-    var that = this;
-    var id = content_element.attr('id');
-    this.content_element = content_element;
-    this.app = app;
-
-    goog.editor.SeamlessField.call(this, id);
-
-    this.make_uneditable = function() {
-        // Firefox tries to style the entire content_element, which google
-        // clobbers with makeUneditable.  This solution works, but results
-        // in multiple nested empty divs in some cases. TODO: improve
-        that.content_element.css('opacity', ''); //Opacity isn't supported for text anyway yet
-        var style = that.content_element.attr('style');
-        if (style != '') {
-            var inner_wrapper = $('<div></div>');
-            inner_wrapper.attr('style', style);
-            that.content_element.wrapInner(inner_wrapper[0]);
-        }
-        that.makeUneditable();
-    };
-
-    function rangeIntersectsNode(range, node) {
-        var nodeRange = node.ownerDocument.createRange();
-        try {
-          nodeRange.selectNode(node);
-        }
-        catch (e) {
-          nodeRange.selectNodeContents(node);
-        }
-
-        return range.compareBoundaryPoints(Range.END_TO_START, nodeRange) == -1 &&
-               range.compareBoundaryPoints(Range.START_TO_END, nodeRange) == 1;
-    }
-
-    this.select = function(range) {
-        var s = window.getSelection();
-        if(!s) return;
-        s.removeAllRanges();
-        if(range)
-        s.addRange(range);
-        return s;
-    }
-
-    this.get_range = function() {
-        var s = window.getSelection();
-        if(s.rangeCount) return window.getSelection().getRangeAt(0).cloneRange();
-        else return null;
-    }
-
-    // Finds link element the cursor is on, selects it after saving
-    // any existing selection, returns its href
-    this.get_link = function() {
-        // If the color menu is still open the selection needs to be restored.
-        // TODO: make this work right :)
-        if (saved_range) that.restore_selection();
-
-        that.range = that.get_range();
-        var r = that.range.cloneRange(); // save existing selection
-
-        // Look for link in parents
-        var node = r.startContainer;
-        while(node.parentNode) {
-            node = node.parentNode;
-            if (node == that.content_element) return;
-            if($(node).is('a')) {
-                r.selectNode(node);   
-                that.select(r);
-                return $(node).attr('href');
-            }
-        }
-
-        // Look for the first link that intersects r
-        var find_intersecting = function(r) {
-            var link = false;
-            $(document).find('a').each(function() {
-                if(!link && rangeIntersectsNode(r, this)) link = this;
-            });
-            if(link) {
-                r.selectNode(link);
-                that.select(r);
-                return $(link).attr('href');
-            };
-            return '';
-        }
-        var link = find_intersecting(r);
-        if(link) return link;
-
-        // If there's still no link, select current word
-        if(!r.toString()) {
-            // select current word
-            // r.expand('word') // works in IE and Chrome
-            var s = that.select(r);
-            // If the cursor is not at the beginning of a word...
-            if(!r.startContainer.data || !/\W|^$/.test(
-                r.startContainer.data.charAt(r.startOffset - 1))
-            ) s.modify('move','backward','word');
-            s.modify('extend','forward','word');
-        }
-
-        // It's possible to grab a previously missed link with the above code 
-        var link = find_intersecting(that.get_range());
-        return link;
-    }
-
-    this.make_link = function(href) {
-        // TODO: don't use browser API directly
-        if (href === ''){
-            document.execCommand('unlink', false);
-        } else {
-            document.execCommand('createlink', false, href);
-        }
-    };
-
-    var saved_range;
-    this.save_selection = function(){
-        var range = this.getRange();
-        saved_range = range.saveUsingCarets();
-    };
-
-    this.restore_selection = function(){
-        if (!saved_range || saved_range.isDisposed()) return false;
-        saved_range.restore();
-        saved_range = false;
-        return true;
-    };
-
-    // Wrap a node around selecte text, even if selection spans multiple block elements
-    var current_selection;
-    this.wrap_selection = function(wrapper){
-        if (current_selection) return;
-        wrapper = wrapper || '<span class="hive_selection"></span>';
-        var range, node, nodes;
-
-        // Turn wrapper into DOM object
-        if (typeof(wrapper) == "string") wrapper = $(wrapper)[0];
-
-        // Get selection
-        range = that.getRange();
-        if (!range) return;
-
-        if (range.getStartNode() === range.getEndNode()) {
-            // Return if selection is empty
-            if (range.getStartOffset() === range.getEndOffset()) return;
-
-            // Check if selection is already a link
-            var node = $(range.getStartNode());
-            if (node.parent().is('a')) nodes = node.parent();
-        }
-
-        that.save_selection();
-        range.select(); // For some reason on FF save_selection unselects the range
-        if (!nodes){
-            // Create temporary anchor nodes using execcommand
-            document.execCommand('createLink', false, 'temporary_link');
-
-            // Replace temporary nodes with desired wrapper, saving reference in
-            // closure for use by unwrap_selection
-            nodes = $(range.getContainer()).find('a[href=temporary_link]');
-        }
-        current_selection = nodes.wrapInner(wrapper)
-        current_selection = current_selection.children()
-        current_selection = current_selection.unwrap();
-
-        // Remove browser selection
-        window.getSelection().removeAllRanges();
-        return current_selection;
-    };
-    this.unwrap_selection = function(){
-        if (! current_selection) return;
-        current_selection.each(function(i,el){ $(el).replaceWith($(el).html()); });
-        that.restore_selection();
-        current_selection = false;
-    };
-    this.unwrap_all_selections = function(){
-        var selection =  that.content_element.find('.hive_selection');
-        if (selection.length) {
-            current_selection = selection;
-            that.unwrap_selection();
-        }
-    };
-
-    this.undo_redo = new goog.editor.plugins.UndoRedo();
-    this.basic_text = new goog.editor.plugins.BasicTextFormatter();
-    this.registerPlugin(this.undo_redo);
-    this.registerPlugin(this.basic_text);
-    this.registerPlugin(new goog.editor.plugins.RemoveFormatting());
-
-    var previous_range = {};
-    this.content_element.on('paste', function(){
-        setTimeout(function(){
-            that.strip_sizes();
-
-            // Unformat all text, google RTE doesn't have selectAll so we use browser
-            document.execCommand('selectAll');
-            that.execCommand('+removeFormat');
-        }, 0);
-
-        // Paste unformatting code
-        //    var current_range = that.getRange();
-        //    var pasted_range = goog.dom.Range.createFromNodes(
-        //        previous_range.before.getStartNode(), 
-        //        previous_range.before.getStartOffset(), 
-        //        current_range.getStartNode(), 
-        //        current_range.getStartOffset()
-        //        );
-        //    pasted_range.select();
-        //    that.execCommand('+removeFormat');
-
-        //    // Place cursor at end of pasted range
-        //    var range = that.getRange();
-        //    previous_range.before = goog.dom.Range.createFromNodes(
-        //        range.getEndNode(), 
-        //        range.getEndOffset(), 
-        //        range.getEndNode(), 
-        //        range.getEndOffset()
-        //        );
-        //    previous_range.before.select();
-        //}, 0);
-    });
-
-    var range_change_callback = function(type){
-        return function(){
-            var range = that.getRange();
-            $.each(type, function(i, name){
-                previous_range[name] = range;
-            });
-        }
-    };
-
-    this.exec_command = function(cmd, val){
-        that.execCommand(cmd, val);
-        that.strip_sizes();
-    };
-
-    this.strip_sizes = function(){
-        that.content_element.find('*').css('font-size', '');
-        //    .css('width', '').css('height', '')
-        //    .attr('width', '').attr('height', '');
-    };
-
-
-    goog.events.listen(this, goog.editor.Field.EventType.DELAYEDCHANGE, range_change_callback(['delayed']));
-    goog.events.listen(this, goog.editor.Field.EventType.BEFORECHANGE, range_change_callback(['before']));
-    goog.events.listen(this, goog.editor.Field.EventType.SELECTIONCHANGE, range_change_callback(['delayed', 'before']));
-    //goog.events.listen(this, goog.editor.Field.EventType.FOCUS, range_change_callback(['before']));
-
-    var saved_cursor;
-    this.save_cursor = function(){
-        saved_cursor = previous_range.delayed.saveUsingCarets();
-    };
-    this.restore_cursor = function(){
-        if (saved_cursor){
-            that.focus();
-            saved_cursor.restore();
-            return true;
-        } else {
-            that.focusAndPlaceCursorAtStart();
-            return false;
-        };
-    };
-    //goog.events.listen(this, goog.editor.Field.EventType.LOAD, this.restore_cursor);
-
-    // Text wrapping hack: insert explicit line breaks where text is
-    // soft-wrapped before saving, remove them on loading
-    this.add_breaks = function(){
-        var text_content = that.content_element;
-
-        // Get text nodes: .find gets all non-textNode elements, contents gets
-        // all child nodes (inc textNodes) and the not() part removes all
-        // non-textNodes. Technique by Nathan MacInnes, nathan@macinn.es from
-        // http://stackoverflow.com/questions/4671713/#7431801
-         var textNodes = text_content.find('*').add(text_content).contents()
-            .not(text_content.find('*'));
-
-        // Split each textNode into individual textNodes, one for each word
-        textNodes.each(function (index, lastNode) {
-            var startOfWord = /\W\b/,
-                result;
-            while (startOfWord.exec(lastNode.nodeValue) !== null) {
-                result = startOfWord.exec(lastNode.nodeValue);
-                // startOfWord matches the character before the start of a
-                // word, so need to add 1.
-                lastNode = lastNode.splitText(result.index + 1);
-            }
-        });
-        // end contributed code
-
-        var textNodes = text_content.find('*').add(text_content).contents()
-            .not(text_content.find('*'));
-
-        textNodes.wrap('<span class="wordmark">');
-
-        // iterate over wordmarks, add <br>s where line breaks occur
-        var y = 0;
-        text_content.find('.wordmark').each(function(i, e) {
-            var ely = $(e).offset().top;
-            if($(e).text().length && ely > y) {
-                var br = $('<br class="softbr">');
-                $(e).before(br);
-                if(ely != $(e).offset().top){
-                    br.remove(); // if element moves, oops, remove <br>
-                }
-            }
-            y = ely;
-        });
-
-        // unwrap all words
-        text_content.find('.wordmark').each(function(i, e) {
-            $(e).replaceWith($(e).text());
-        });
-
-        var html = text_content.wrapInner($("<span class='viewstyle' style='white-space:nowrap'>")).html();
-        return html;
-    }
-    this.remove_breaks = function() {
-        that.content_element.find('.softbr').remove();
-        var wrapper = that.content_element.find('.viewstyle');
-        if(wrapper.length) that.content_element.html(wrapper.html());
-    }
-}
-goog.editor.Field.DELAYED_CHANGE_FREQUENCY = 100;
-goog.inherits(Hive.goog_rte, goog.editor.SeamlessField);
-
 Hive.App.Image = function(o) {
     o.is_image = true;
     Hive.App.has_resize(o);
+    // TODO-cleanup: aspects should be y/x
     o.get_aspect = function() {
         return o.div_aspect || o.aspect;
     };
@@ -1076,16 +576,25 @@ Hive.App.Image = function(o) {
             }
             o.init_state.fit = undefined;
         }
-        if (o.init_state.scale_x != undefined) {
-            // TODO-cleanup: move to has_crop
-            // o.is_cropped = true;
-            var happ = o.content_element.parent();
-            o.content_element = $('<div class="crop_box">');
-            o.img.appendTo(o.content_element);
-            o.content_element.appendTo(happ);
-            o.div_aspect = o.dims()[0] / o.dims()[1];
-            o.layout();
+        if (env.gifwall || o.init_state.scale_x != undefined) {
+            o.allow_crop();
         }
+    };
+    // TODO-cleanup: move to has_crop
+    o.allow_crop = function() {
+        if (!context.flags.rect_drag_drop)
+            return false;
+
+        o.init_state.scale_x = o.init_state.scale_x || 1;
+        o.init_state.offset = o.init_state.offset || [0, 0];
+        // o.is_cropped = true;
+        var happ = o.content_element.parent();
+        o.content_element = $('<div class="crop_box">');
+        o.img.appendTo(o.content_element);
+        o.content_element.appendTo(happ);
+        o.div_aspect = o.dims()[0] / o.dims()[1];
+        o.layout();
+        return true;
     };
 
     // TODO-cleanup: move to has_crop
@@ -1094,7 +603,10 @@ Hive.App.Image = function(o) {
 
         // UI for setting .offset of apps on drag after long_hold
         o.long_hold = function(ev){
-            if(!o.init_state.scale_x || o != ev.data) return;
+            if(o != ev.data) return;
+            if(o.has_full_bleed() && $(ev.target).hasClass("resize")) return;
+            if(!o.init_state.scale_x) 
+                if (!o.allow_crop()) return false;
             $("#controls").hidehide();
             ev.stopPropagation();
             drag_hold = true;
@@ -1201,6 +713,10 @@ Hive.App.Image = function(o) {
     })();
 
     var _layout = o.layout;
+    o.max_height = function(){
+        off = o.offset()[1] / env.scale();
+        return o.dims_relative()[0] / o.aspect + off;
+    }
     o.layout = function() {
         _layout();
         var dims = o.dims(), scale_x = o.init_state.scale_x || 1;
@@ -1585,92 +1101,103 @@ Hive.App.has_shield = function(o, opts) {
 // coord = 1 ==> full in y dimension (x scrolling)
 Hive.App.has_full_bleed = function(o, coord){
     if (!coord) coord = 0;  // default is vertical scrolling
-    o.full_bleed_coord = coord;
-    var dims = o.dims_relative();
-    dims[coord] = 1000;
-    o.dims_relative_set(dims);
+    o.full_bleed_coord = o.full_coord = coord;
+    o.stack_coord = 1 - o.full_coord;
 
-    o.orig_pos_set = o.pos_set;
-    o.orig_move_start = o.move_start;
-    o.orig_move_end = o.move_end;
+    // To make the functionality removable, we check that we are indeed
+    // full bleed
+    o.has_full_bleed = function() { return (o.full_coord != undefined); };
 
-    o.move_start = function() {
-        env.History.begin();
-
-        o.orig_move_start();
-        o.padding = 10; // Scale into screen space?
-        o.size = o.dims()[1 - o.full_bleed_coord];//o.size || 200;
-        o.start_pos = o.pos()[1 - o.full_bleed_coord] - o.padding;
-        o.apps = Hive.Apps.all().filter(function(app) {
-            return !(app.id == o.id || env.Selection.selected(app));
+    var _dims_relative_set = o.dims_relative_set,
+        _pos_relative_set = o.pos_relative_set,
+        _get_aspect = o.get_aspect,
+        _resize_start = o.resize_start,
+        _resize = o.resize,
+        _resize_end = o.resize_end,
+        push_apps;
+    o.before_resize = function(){
+        if (!env.gifwall || !o.has_full_bleed())
+            return;
+        o.dims_ref_set();
+        env.History.change_start(true);
+        push_apps = env.Apps.all().filter(function(a){
+            return a.id != o.id;
         });
-        var apps = o.apps;
-        for (var i = 0; i < apps.length; ++i) {
-            var app = apps[i];
-            app.old_start = app.pos()[1 - o.full_bleed_coord];
-            (app.orig_move_start || app.move_start)();
-            if (app.old_start >= o.start_pos)
-                app.old_start -= o.size + 2 * o.padding;
-        }
     };
-    o.move_end = function() {
-        o.orig_move_end();
-        var apps = o.apps;
-        for (var i = 0; i < apps.length; ++i) {
-            var app = apps[i];
-            (app.orig_move_end || app.move_end)();
+    o.resize = function(delta){
+        if (!env.gifwall || !o.has_full_bleed())
+            return _resize(delta);
+        var start = o.max_pos()[o.stack_coord];
+        _resize(delta);
+        var dims = o.dims_relative();
+        if (o.max_height && dims[1] > o.max_height()) {
+            dims[1] = o.max_height();
+            o.dims_relative_set(dims);
         }
-        env.History.group('full-bleed move');
-    };
-    o.pos_set = function(pos) {
-        pos[o.full_bleed_coord] = 0;
-        var coord = 1 - o.full_bleed_coord; // Work in y
-        o.start_pos = pos[coord] - o.padding;
-        o.stop_pos = o.start_pos + o.size + 2 * o.padding;
-
-        if (o.apps) {
-            var push_start = 0, push_size = 0, apps = o.apps;
-            for (var i = 0; i < apps.length; ++i) {
-                var app = apps[i];
-                var start = app.old_start;
-                var stop = start + app.dims()[coord];
-                if (start < o.stop_pos && stop > o.start_pos) {
-                    var push_try = o.stop_pos - start;
-                    push_size = Math.max(push_size, push_try);
-                }
+        var push = o.max_pos()[o.stack_coord] - start;
+        // Move all apps below my start by delta as well
+        for (var i = push_apps.length - 1; i >= 0; i--) {
+            var a = push_apps[i];
+            if (a.min_pos()[o.stack_coord] > start - .5) {
+                var pos = a.pos_relative();
+                pos[o.stack_coord] += push;
+                a.pos_relative_set(pos);
             }
-            for (var i = 0; i < apps.length; ++i) {
-                var app = apps[i];
-                var start = app.old_start;
-                var stop = start + app.dims()[coord];
-                var new_pos = app.pos();
-                if (stop > o.start_pos) start += push_size;
-                new_pos[coord] = start;
-                (app.orig_pos_set || app.pos_set)(new_pos);
-            }
-        }
-        o.orig_pos_set(pos);
+        };
     };
-
-    o.div.drag('start', o.move_start).drag('end', o.move_end);
-    // o.move_setup();
-    // o.pos_set(o.pos());
+    o.after_resize = function(){
+        if (!env.gifwall || !o.has_full_bleed())
+            return;
+        env.History.change_end();
+        return true;
+    };
+    o.get_aspect = function() {
+        if (o.has_full_bleed())
+            return false;
+        return _get_aspect();
+    };
+    o.pos_relative_set = function(pos) {
+        if (o.has_full_bleed()) {
+            pos = pos.slice();
+            pos[o.full_bleed_coord] = 0;
+        }
+        _pos_relative_set(pos);
+    };
+    o.dims_relative_set = function(dims, aspect) {
+        if (o.has_full_bleed()) {
+            if (aspect) {
+                if (!o.full_bleed_coord)
+                    aspect = 1 / aspect;
+                dims[1 - o.full_bleed_coord] = 1000 * aspect;
+            }
+            dims[o.full_bleed_coord] = 1000;
+        }
+        _dims_relative_set(dims);
+    };
+    o.pos_relative_set(o.pos_relative());
+    o.dims_relative_set(o.dims_relative());
 };
 
 // Let users drag images onto this app
 // NOTE: this adds handlers to o.content_element, so if
 // content_element changes, this modifier needs to be called again.
 Hive.App.has_image_drop = function(o) {
-    if (!context.flags.rect_drag_drop)
+    if (!env.gifwall && !context.flags.rect_drag_drop)
         return o;
-    o.content_element.on('dragenter dragover', function(ev){
-        // TODO-dnd: handle drop highlighting
-        if (o.highlight)
+    o.content_element.on('dragenter dragover dragleave', function(ev){
+        // Handle drop highlighting.
+        if (!env.gifwall && ev.type == "dragenter")
             o.highlight();
+        else if (!env.gifwall && ev.type == "dragleave")
+            o.highlight({on: false});
         ev.preventDefault();
     });
 
     var on_files = function(files){
+        if (env.gifwall) {
+            $("#media_upload").trigger('with_files', [files]);
+            return;
+        }
         if (files.length == 0)
             return false;
         var load = function(app) {
@@ -1693,28 +1220,31 @@ Hive.App.has_image_drop = function(o) {
         } else {
             // TODO-dnd: have fit depend on where the object was dropped relative
             // to image center
-            app = Hive.new_file(files, init_state,
+            app = u.new_file(files, init_state,
                 { load:load, position: true })[0];
         }
     };
     upload.drop_target(o.content_element, on_files, u.on_media_upload);
-
     return o;
 };
 
 Hive.App.has_resize = function(o) {
     var dims_ref, history_point;
+    o.dims_ref_set = function(){ dims_ref = o.dims(); };
     o.resize_start = function(){
+        if (o.before_resize) o.before_resize();
         $("#controls").hidehide();
         dims_ref = o.dims();
+        u.reset_sensitivity();
         history_point = o.history_helper_relative('resize');
     };
     o.resize = function(delta) {
+        o.sensitivity = u.calculate_sensitivity(delta);
         var dims = o.resize_to(delta);
         if(!dims[0] || !dims[1]) return;
         dims = u._div(dims)(env.scale());
         // everything past this point is in editor space.
-        var aspect = o.get_aspect ? o.get_aspect() : false;
+        var aspect = o.get_aspect();
 
         if (aspect) {
             var newWidth = dims[1] * aspect;
@@ -1744,8 +1274,11 @@ Hive.App.has_resize = function(o) {
 
     o.resize_end = function(){ 
         $("#controls").showshow();
-        history_point.save();
+        u.set_debug_info("");
         $(".ruler").hidehide();
+        var skip_history = false;
+        if (o.after_resize) skip_history = o.after_resize();
+        if (!skip_history) history_point.save();
     };
     o.resize_to = function(delta){
         return [ Math.max(1, dims_ref[0] + delta[0]), 
@@ -1755,7 +1288,7 @@ Hive.App.has_resize = function(o) {
         var _pos = o.pos_relative();
         // TODO: allow snapping to aspect ratio (keyboard?)
         // TODO: set snap parameters be set by user
-        if(!env.no_snap){
+        if(!env.no_snap && !o.has_full_bleed()){
             var tuple = [];
             tuple[0] = [undefined, undefined, pos[0]];
             tuple[1] = [undefined, undefined, pos[1]];
@@ -1763,8 +1296,10 @@ Hive.App.has_resize = function(o) {
             excludes[o.id] = true;
             pos = u.snap_helper(tuple, {
                 exclude_ids: excludes,
-                snap_strength: .5,
-                snap_radius: 10, });
+                snap_strength: .05,
+                snap_radius: 10, 
+                sensitivity: o.sensitivity / 2, 
+            });
         }
         var _dims = [];
         _dims[0] = pos[0] - _pos[0];
@@ -1812,7 +1347,6 @@ Hive.App.has_resize = function(o) {
 
 Hive.App.has_resize_h = function(o) {
     o.resize_h = function(dims) {
-        o.dims_set(dims);
         return o.dims_set([ dims[0], o.calcHeight() ]);
     }
 
@@ -1833,6 +1367,7 @@ Hive.App.has_resize_h = function(o) {
 
         // Dragging behavior
         o.c.resize_h.drag('start', function(e, dd) {
+                if (o.app.before_h_resize) o.app.before_h_resize();
                 o.refDims = o.app.dims();
                 o.drag_target = e.target;
                 o.drag_target.busy = true;
@@ -2025,6 +1560,7 @@ Hive.App.has_color = function(o) {
 }
 
 
+//TODO: integrate this code into root app
 Hive.init_background_dialog = function(){
     if(!env.Exp.background) env.Exp.background = { };
     if(!env.Exp.background.color) env.Exp.background.color = '#FFFFFF';
