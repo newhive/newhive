@@ -228,28 +228,44 @@
  <div class='control buttons'
   ><img class='button color hoverable' src='{asset "skin/edit/color.png"}' title="Color"
 
-  {#><img class='button stroke hoverable tip_N' src='{asset "skin/edit/border_color.png"}' title='Border color'
+{#
+  ><img class='button stroke hoverable tip_N' src='{asset "skin/edit/border_color.png"}' title='Border color'
   ><img class='button blank bwidth hoverable tip_N' src='{asset "skin/edit/border_width.png"}' title='Border width'
-  ><div class='button blank bstyle hoverable' title='Border style'></div#}
+  ><div class='button blank bstyle hoverable' title='Border style'></div
+#}
 
   ><img class='button rounding hoverable tip_N'
     src='{asset "skin/edit/rounded_corners.png"}' title='corner rounding'></div>
 
-  {#
+{#
    <div class='control drawer bstyle'>
    ><div class='border hoverable' style='border-style: solid;' title='Solid border'></div
    ><div class='border hoverable' style='border-style: dashed;' title='Dashed border'></div
    ><div class='border none hoverable' style='border-style: none;' title='No border'></div
   ></div
-  #}
+#}
 </div>
 
 <div id='controls_misc' class='controls_src'>
- <img class='control drag resize hoverable tip_SE' src='{asset "skin/edit/resize.png"}' title="Resize">
- <img class='control drag resize_h hoverable tip_E' src='{asset "skin/edit/resize_h.png"}' title="Resize">
- <img class='button color hoverable' src='{asset "skin/edit/color.png"}' title="Color">
- <img class='button opacity tip_N hoverable' src='{asset "skin/edit/opacity.png"}' title='Opacity'>
- <div class='control drawer color border'></div>
+  <img class='control drag resize hoverable tip_SE' 
+    src='{asset "skin/edit/resize.png"}' title="Resize">
+  <img class='control drag resize_h hoverable tip_E' 
+    src='{asset "skin/edit/resize_h.png"}' title="Resize">
+  <img class='button color hoverable' src='{asset "skin/edit/color.png"}' title="Color">
+  <img class='button opacity tip_N hoverable' 
+    src='{asset "skin/edit/opacity.png"}' title='Opacity'>
+  <div class='control drawer color border'></div>
+  <img class='button align' src='{asset "skin/edit/justify.png"}'>
+  <div class='control drawer border align'>
+   <div><nobr>
+    <img class='option small hoverable' cmd='+alignLeft'    src='{asset "skin/edit/justify_left.png"}'>
+    <img class='option small hoverable' cmd='+alignRight'   src='{asset "skin/edit/justify_right.png"}'>
+   </nobr></div>
+   <div>
+    <img class='option small hoverable' cmd='+alignCenter'  src='{asset "skin/edit/justify_center.png"}'>
+    <img class='option small hoverable' cmd='+alignFull'    src='{asset "skin/edit/justify_full.png"}'>
+   </div>
+  </div>
 </div>
 
 <div id='controls_sketch' class='controls_src'>

@@ -385,13 +385,14 @@ Hive.App = function(init_state, opts) {
 
     o.div = $('<div class="ehapp">').appendTo('#happs');
  
-    o.add_to_collection = true;
+    o.has_align = o.add_to_collection = true;
     o.type(o); // add type-specific properties
+    if (o.has_align)
+        Hive.App.has_align(o);
     if (o.add_to_collection)
         o.apps.add(o); // add to apps collection
     evs.on(o.div, 'dragstart', o).on(o.div, 'drag', o).on(o.div, 'dragend', o)
         .on(o.div, 'click', o).long_hold(o.div, o);
-
     return o;
 };
 Hive.registerApp(Hive.App, 'hive.app');
@@ -508,10 +509,13 @@ Hive.registerApp(Hive.App.Script, 'hive.script');
 
 Hive.App.Image = function(o) {
     o.is_image = true;
+    o.has_crop = false;
     Hive.App.has_resize(o);
     // TODO-cleanup: aspects should be y/x
     o.get_aspect = function() {
-        return o.div_aspect || o.aspect;
+        if (o.init_state.scale_x)
+            return o.dims_relative()[0] / o.dims_relative()[1];
+        return o.aspect;
     };
     o.content = function(content) {
         if(typeof(content) != 'undefined') o.url_set(content);
@@ -1497,6 +1501,57 @@ Hive.App.has_slider_menu = function(o, handle, set, init, start, end) {
     o.make_controls.push(controls);
 };
 
+Hive.App.has_align = function(o) {
+    function controls(o) {
+        var common = $.extend({}, o);
+
+        o.addButton($('#controls_misc .button.align'));
+        o.addButton($('#controls_misc .drawer.align'));
+        // o.c.align = o.div.find('.align.button');
+        o.align_menu = o.hover_menu(o.div.find('.button.align'), 
+            o.div.find('.drawer.align'));
+
+        o.div.find('.option[cmd]').each(function(i, el) {
+            $(el).on('mousedown', function(e) {
+                e.preventDefault();
+            }).click(function(){
+                env.History.change_start([o.app]);
+                var cmd = $(el).attr('cmd')
+                    ,coord = 0
+                    ,width = 1000
+                    ,pos = o.app.pos_relative()
+                    ,dims = o.app.dims_relative();
+                switch(cmd) {
+                  case "+alignLeft":
+                    pos[coord] = 0;
+                    break;
+                  case "+alignRight":
+                    pos[coord] = width - dims[coord];
+                    break;
+                  case "+alignCenter":
+                    pos[coord] = (width - dims[coord]) / 2;
+                    break;
+                  case "+alignFull":
+                    pos[coord] = 0;
+                    dims[coord] = width;
+                    var aspect = o.app.get_aspect();
+                    if (aspect) {
+                        if (!coord) aspect = 1 / aspect;
+                        dims[1 - coord] = width * aspect;
+                    }
+                    o.app.dims_relative_set(dims);
+                    break;
+                }
+                o.app.pos_relative_set(pos);
+                env.History.change_end("align");
+            });
+        });
+
+        return o;
+    };
+    o.make_controls.push(controls);
+};
+    
 Hive.App.has_opacity = function(o) {
     var opacity = o.init_state.opacity === undefined ? 1 : o.init_state.opacity;
     o.opacity = function(){ return opacity; };
