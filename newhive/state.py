@@ -1836,7 +1836,6 @@ class File(Entity):
             size = (size[0] / factor, size[1] / factor)
             size_str = str(int(size[0])) + 'x' + str(int(size[1]))
             cmd = ['mogrify', '-resize', size_str, resample_fn]
-            print cmd
             call(cmd)
             resamples.append(size)
             self.db.s3.upload_file(resample_fn, 'media',
