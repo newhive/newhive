@@ -1,6 +1,7 @@
 import newhive
 import re, pymongo, bson.objectid, random, urllib, os, time, json, math
 import operator as op
+from tempfile import mkstemp
 from os.path import join as joinpath
 from md5 import md5
 from datetime import datetime
@@ -1823,21 +1824,24 @@ class File(Entity):
 
     def set_resamples(self):
         imo = Img.open(self.file)
-        format = imo.format
-        (w, h) = imo.size
+        # format = imo.format
+        size = imo.size
         factor = 2 ** .5
+        ext = '.' + self.get('mime').split('/')[1]
+        resample_fd, resample_fn = mkstemp(suffix=ext)
+        os.write(resample_fd, self.file.read())
+        os.close(resample_fd)
         resamples = []
-        while (w >= 100) or (h >= 100):
-            w /= factor
-            h /= factor
-            size = (int(w), int(h))
-            imo = imo.resize(size, resample=Img.ANTIALIAS)
-            resample_file = os.tmpfile()
-            imo.save(resample_file, quality=90, format=format)
+        while (size[0] >= 100) or (size[0] >= 100):
+            size = (size[0] / factor, size[1] / factor)
+            size_str = str(int(size[0])) + 'x' + str(int(size[1]))
+            cmd = ['mogrify', '-resize', size_str, resample_fn]
+            call(cmd)
             resamples.append(size)
-            self.db.s3.upload_file(resample_file, 'media',
+            self.db.s3.upload_file(resample_fn, 'media',
                 self._resample_name(size[0]), self._resample_name(size[0]),
                 self['mime'])
+        os.remove(resample_fn)
         resamples.reverse()
         self.update(resamples=resamples)
 
