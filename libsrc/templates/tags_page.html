@@ -8,7 +8,7 @@
     <form { form_attrs "tag_follow" } id='follow_tag_form' method='POST'>
       <input type="hidden" name="tag" value="{tags_search.0}">
       <input type="hidden" name="action" value="toggle">
-      <button type="submit" class="needs_login teal_btn upper hoverable" value="">
+      <button type="submit" class="needs_login teal_btn upper hoverable follow" value="">
       	{<contains viewer.tags_following tags_search.0}
           <span class="hide_hover">Following tag</span
           ><span class="show_hover">Unfollow tag</span>
@@ -21,6 +21,6 @@
     {>}
     <button type="submit" class="needs_login teal_btn upper create" value="">
       <span class="plus_button"></span>
-      <span class="text">Add to tag</span>
+      <span class="text">Create #{get page_data.tags_search 0} Page</span>
     </button></a></div>
   </div></div>
