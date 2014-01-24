@@ -1,18 +1,19 @@
 <div id="tag_bar">
-{#}  <div id="tag_name">
+{#  <div id="tag_name">
     {<for tags_search "tagnum"}
       {|templates/tag_card.html}  
-    {>}</div> #}
+    {>}</div> 
+#}
+  {set "tag_name" (get page_data.tags_search 0)}
   <div class="centered"> 
-  	{# button or <a>? #}
     <form { form_attrs "tag_follow" } id='follow_tag_form' method='POST'>
       <input type="hidden" name="tag" value="{tags_search.0}">
       <input type="hidden" name="action" value="toggle">
       <button type="submit" class="needs_login teal_btn upper hoverable follow" value="">
       	{<contains viewer.tags_following tags_search.0}
-          <span class="hide_hover">Following tag</span
-          ><span class="show_hover">Unfollow tag</span>
-      	{>}{<else}Follow tag{>}</button>
+          <span class="hide_hover">Following #{tag_name}</span
+          ><span class="show_hover">Unfollow #{tag_name}</span>
+      	{>}{<else}Follow #{tag_name}{>}</button>
     </form>
     {# The click through on button "needs_login" goes to the <a>, so need
       to remove it if not logged in. #}
@@ -21,6 +22,6 @@
     {>}
     <button type="submit" class="needs_login teal_btn upper create" value="">
       <span class="plus_button"></span>
-      <span class="text">Create #{get page_data.tags_search 0} Page</span>
+      <span class="text">Create #{tag_name} Page</span>
     </button></a></div>
   </div></div>
