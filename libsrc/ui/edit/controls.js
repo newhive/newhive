@@ -110,18 +110,23 @@ o.Controls = function(app, multiselect) {
     };
 
     o.appendControl = function(c) { 
-        o.div.append(c); 
+        o.div.append(c);
+        return c;
     };
     o.appendButton = function(c) {
         var buttons = o.div.find('.buttons');
         if (buttons.length == 0)
             buttons = $('<div class="control buttons"></div>').appendTo(o.div);
         buttons.append(c);
+        return c;
     }
 
-    o.addControl = function(ctrls) { $.map(ctrls.clone(false), o.appendControl); };
-    o.addButton = function(ctrls) { $.map(ctrls.clone(false), o.appendButton); };
-    o.addControls = function(ctrls) { $.map(ctrls.clone(false).children(), o.appendControl); };
+    o.addControl = function(ctrls) { 
+        return $($.map(ctrls.clone(false), o.appendControl)); };
+    o.addButton = function(ctrls) { 
+        return $($.map(ctrls.clone(false), o.appendButton)); };
+    o.addControls = function(ctrls) { 
+        return $($.map(ctrls.clone(false).children(), o.appendControl)); };
     o.hover_menu = function(handle, drawer, opts) {
         return u.hover_menu(handle, drawer, $.extend({
             auto_height: false, offset_y : o.padding + 1}, opts))

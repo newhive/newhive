@@ -116,6 +116,7 @@ font-family: Helvetica, Arial, sans-serif;
     z-index: 4;
 }
 .control { position : absolute; cursor : default; z-index : 1 }
+.control.resize_v { cursor : s-resize; }
 .control.resize_h { cursor : ew-resize; }
 .control.resize { cursor : se-resize; }
 .control.stack img { display : inline-block; margin-left : 5px; }

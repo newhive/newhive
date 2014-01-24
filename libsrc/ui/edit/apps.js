@@ -1359,14 +1359,20 @@ Hive.App.has_resize = function(o) {
         var common = $.extend({}, o);
         o.resize_control = true;
 
-        o.addControl($('#controls_misc .resize'));
-        o.c.resize = o.div.find('.resize');
+        if (o.app.has_full_bleed())
+            o.c.resize = o.addControl($('#controls_misc .resize_v'));
+        else
+            o.c.resize = o.addControl($('#controls_misc .resize'));
 
         o.layout = function() {
             common.layout()
             var p = o.padding;
             var dims = o.dims();
-            o.c.resize.css({ left: dims[0] -18 + p, top: dims[1] - 18 + p });
+            if (o.app.has_full_bleed())
+                o.c.resize.css({ top: dims[1] -18 + o.padding,
+                    left: Math.min(dims[0] / 2 - 18, dims[0] - 54) });
+            else
+                o.c.resize.css({ left: dims[0] -18 + p, top: dims[1] - 18 + p });
         };
 
         o.c.resize.drag('start', function(e, dd) {
