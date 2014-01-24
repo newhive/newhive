@@ -1836,7 +1836,7 @@ class File(Entity):
         ident.seek(0)
         ident_frames = ident.read().strip().split("\n")
         if len([x for x in ident_frames if not re.search(r'\+0\+0',x)]) > 0:
-            self.update(resamples=[]])
+            self.update(resamples=[])
             return False
 
         resamples = []
