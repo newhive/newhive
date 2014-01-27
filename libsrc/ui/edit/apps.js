@@ -1250,24 +1250,18 @@ Hive.App.has_image_drop = function(o) {
         };
         // TODO-dnd: Insert ajax to turn into proper file (from blob URL)
         var file = files[0];
+        // TODO-dnd: have fit depend on where the object was dropped relative
+        // to image center
         var init_state = { 
             position: o.pos_relative(), 
             dimensions: o.dims_relative(),
             fit: 2 };
-        if (o.is_image) {
-            // o.set_from_file(file);
-            o.init_state.file_name = file.name;
-            o.init_state.url = o.init_state.content = file.url;
-            o.init_state = $.extend(o.init_state, init_state);
-            // TODO-dnd: have undo state
-            o.url_set(file.url);
-            var app = o;
-        } else {
-            // TODO-dnd: have fit depend on where the object was dropped relative
-            // to image center
-            app = u.new_file(files, init_state,
-                { load:load, position: true })[0];
-        }
+        env.History.begin();
+        app = u.new_file(files, init_state,
+            { load:load, position: true })[0];
+        if (init_state.fit == 2)
+            o.remove();
+        env.History.group("Image drop");
     };
     upload.drop_target(o.content_element, on_files, u.on_media_upload);
     return o;

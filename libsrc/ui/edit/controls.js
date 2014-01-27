@@ -129,7 +129,7 @@ o.Controls = function(app, multiselect) {
         return $($.map(ctrls.clone(false).children(), o.appendControl)); };
     o.hover_menu = function(handle, drawer, opts) {
         return u.hover_menu(handle, drawer, $.extend({
-            auto_height: false, offset_y : o.padding + 1}, opts))
+            auto_height: false, offset_y : o.padding - 4}, opts))
     };
 
     var pad_ul = [45, 45], pad_br = [45, 110], min_d = [135, 40];
