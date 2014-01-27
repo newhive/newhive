@@ -241,13 +241,14 @@ define([
         if (0)
             console.log("DEBUG: " + text);
     };
-    var cache_frames = function(expr_ids, current){
+
+    o.cache_frames = function(expr_ids, current){
         if (expr_ids.length == 0)
             return false;
         var expr_id = expr_ids[0];
         var contentFrame = o.get_expr(expr_id);
         if (contentFrame.length > 0) {
-            cache_frames(expr_ids.slice(1));
+            o.cache_frames(expr_ids.slice(1));
             debug("caching frame, already loaded: " + find_card(expr_id));
             return contentFrame;
         }
@@ -295,7 +296,7 @@ define([
                 }
             }
             if (expr_ids.length > 1)
-                cache_frames(expr_ids.slice(1))
+                o.cache_frames(expr_ids.slice(1))
             // alert("loaded frame.  Others remaining:" + loading_frame_list);
         });
         $('#exprs').append(contentFrame);
@@ -323,7 +324,7 @@ define([
 
         var contentFrame = o.get_expr(expr_id);
         if (contentFrame.length == 0) {
-            contentFrame = cache_frames([expr_id], true);
+            contentFrame = o.cache_frames([expr_id], true);
         }
         else {
             contentFrame.get(0).contentWindow.
@@ -725,7 +726,7 @@ define([
                     var found_next = (found + len + off) % len;
                     expr_ids = expr_ids.concat(page_data.cards[found_next].id);
                 }
-                cache_frames(expr_ids);
+                o.cache_frames(expr_ids);
                 if (offset) {
                     var card = page_data.cards[found]
                     page_data.expr_id = card.id;
