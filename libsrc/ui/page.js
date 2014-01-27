@@ -302,8 +302,11 @@ define([
                 o.dia_collections.close();
             };
             var update_text = function (){
-                var text = $(".dialog.add_to_collection .tag_name");
-                $(text).val( $(text).val().replace(/[^a-z0-9\_]+/i, '') );
+                var text = $(".dialog.add_to_collection .tag_name")
+                    , val = $(text).val()
+                    , val_filtered = val.replace(/[^a-z0-9\_]+/i, '')
+                ;
+                if(val != val_filtered) $(text).val( val_filtered );
                 $(".dialog.add_to_collection .tag_new")
                     .text($(text).val()).showshow().addClass("tag_15");
                 if ('' == $(text).val())
