@@ -5,6 +5,7 @@ define([
     ,'browser/upload'
     ,'browser/layout'
     ,'ui/util'
+    ,'ui/colors'
 
     ,'./env'
     ,'./util'
@@ -19,11 +20,12 @@ define([
     ,upload
     ,layout
     ,ui_util
-    // ,app_has
+    ,colors
 
     ,env
     ,u
     ,evs
+    // ,app_has
 ){
 
 var Hive = {}
