@@ -44,7 +44,6 @@ define([
 
 var Hive = {}
     ,debug_mode = context.config.debug_mode
-    ,bound = js.bound
     ,noop = function(){}
     ,Funcs = js.Funcs
     ,asset = ui_util.asset

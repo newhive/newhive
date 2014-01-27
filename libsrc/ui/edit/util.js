@@ -1,5 +1,7 @@
 define([
     'browser/jquery'
+    ,'browser/js'
+    
     ,'server/context'
     ,'ui/colors'
     ,'sj!templates/color_picker.html'
@@ -9,6 +11,8 @@ define([
     ,'./env'
 ], function(
     $
+    ,js
+    
     ,context
     ,colors
     ,color_picker_template
@@ -18,7 +22,8 @@ define([
     ,env
 ){
 
-var o = {};
+var o = {}
+    ,bound = js.bound;
 
 // TODO-refactor: move into util
 
