@@ -27,12 +27,20 @@ define([
     o.anim_duration = 400;
 
     // pagination functions here
+    o.set_page = function(page){
+        ui_page = page;
+    }
     var loading = false, more_cards = true, ui_page, win = $(window);
     var on_scroll_add_page = function(){
+        if (loading)
+            return;
         loading = true;
         o.controller.next_cards(render_new_cards);
     };
     var render_new_cards = function(data){
+        // TODO-cleanup-HACK: There should be a unified flow for merging
+        // the new data
+        ui_page.render_new_cards(data);
         // ugly hack to merge old context attributes to new data
         // data.card_type = context.page_data.card_type;
         // data.layout = context.page_data.layout;

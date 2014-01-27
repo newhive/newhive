@@ -27,26 +27,23 @@ define([
     }
 
     // pagination functions here
-    var loading = false, ui_page, win = $(window);
+    var loading = false, ui_page, win = $(window), card_type, card_layout;
     o.more_cards = false;
     var on_scroll_add_page = function(){
         if((win.scrollTop() > ($('#feed').height() - win.height()))
             && !loading && o.more_cards
         ){
             loading = true;
-            o.controller.next_cards(render_new_cards);
+            o.controller.next_cards(ui_page.render_new_cards);
         }
     };
-    var render_new_cards = function(data){
+    o.render_new_cards = function(data){
         // ugly hack to merge old context attributes to new data
-        data.card_type = context.page_data.card_type;
-        data.layout = context.page_data.layout;
+        data.card_type = card_type;
+        data.layout = card_layout;
         if(data.cards.length < 20)
             o.more_cards = false;
         cards_template(data).insertBefore('#feed .footer');
-        o.attach_handlers();
-        ui_page.layout_columns();
-        ui_page.add_grid_borders();
         loading = false;
     };
 
@@ -70,6 +67,11 @@ define([
     };
 
     o.attach_handlers = function(){
+        // TODO-cleanup: These values need to be saved last in render order
+        // but have nothing to do with handlers.
+        card_type = context.page_data.card_type;
+        card_layout = context.page_data.layout;
+
         $('#feed .expr.card').on('mouseenter', function(event){
             card_animate($(this), "in");
         }).on('mouseleave', function(event){

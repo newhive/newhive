@@ -211,6 +211,13 @@ define([
             user.tagged.slice(0, user.tagged_ordered);
     };
 
+    o.render_new_cards = function(data){
+        if (render_new_cards_func)
+            render_new_cards_func(data);
+        o.attach_handlers();
+        o.layout_columns();
+        o.add_grid_borders();
+    }
     o.render = function(method, data){
         var page_data = data.page_data;
         if (page_data.title) $("head title").text(page_data.title);
@@ -233,6 +240,8 @@ define([
             pages[method].preprocess_page_data(page_data);
         if (new_page) {
             context.page = new_page;
+            if (new_page.render_new_cards)
+                render_new_cards_func = new_page.render_new_cards;
             if (new_page.set_page) 
                 new_page.set_page(o);
         } else if (context.page) {
