@@ -29,7 +29,7 @@ class Admin(Controller):
                 new_flags[k] = l
             su.update(updated=False, site_flags=new_flags)
 
-        flags = { k:','.join(v) for k,v in self.flags.items()}
+        flags = { k:','.join(v) for k,v in config.site_flags.items()}
         tdata.context.update(page_data={'site_flags': flags}, route_args=args)
         return self.serve_loader_page('pages/main.html', tdata, request, response)
 

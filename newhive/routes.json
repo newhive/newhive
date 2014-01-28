@@ -179,17 +179,23 @@
         "page_route": "/home/signup",
         "controller": "community",
         "method": "forms_signup",
-        "client_method": "forms"
+        "client_method": "new_account"
     },
     "old_signup": {
         "page_route": "/create_account/<key>",
         "controller": "community",
         "method": "old_signup"
     },
-    "signup-create": {
+    "signup_create": {
         "api_route": "/api/user/create",
         "controller": "user",
-        "method": "create"
+        "method": "create",
+        "secure": true
+    },
+    "name_check": {
+        "api_route": "/api/user/name_check",
+        "controller": "user",
+        "method": "name_check"
     },
 
     "collection_order": {

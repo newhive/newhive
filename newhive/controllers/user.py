@@ -441,8 +441,7 @@ class User(ModelController):
         response_dict = {'type': type, 'name': request.form.get('username')}
         return self.serve_json(response, response_dict)
 
-    # TODO-hookup & test
-    def name_check(self, request, response):
+    def name_check(self, tdata, request, response, **args):
         user_available = False if self.db.User.named(request.args.get('name')) else True
         return self.serve_json(response, user_available)
 
@@ -514,21 +513,25 @@ class User(ModelController):
             """
 
         assert 'agree' in request.form
-        referral = self._check_referral(request)
-        if (not referral):
-            return self.serve_json(response, { 'error': 'referral' })
-        referrer = self.db.User.fetch(referral['user'])
-        assert referrer, 'Referring user not found'
 
-        args = dfilter(request.form, ['username', 'password', 'email', 'fullname', 'gender', 'thumb', 'thumb_file_id'])
+        referral = False
+        if not self.flags.get('open_signup'):
+            referral = self._check_referral(request)
+            if (not referral):
+                return self.serve_json(response, { 'error': 'referral' })
+            referrer = self.db.User.fetch(referral['user'])
+            assert referrer, 'Referring user not found'
+
+        args = dfilter(request.form, ['username', 'password', 'email',
+            'fullname', 'gender', 'thumb', 'thumb_file_id'])
         args.update({
-             'referrer' : referrer.id
-            ,'sites'    : [args['username'].lower() + '.' + config.server_name]
+             'sites'    : [args['username'].lower() + '.' + config.server_name]
             ,'email'   : args.get('email').lower()
             ,'name'    : args['username']
             #,'flags'    : { 'add_invites_on_save' : True }
         })
         if not args.get('fullname'): args['fullname'] = args['username']
+        if referral: args['referrer'] = referrer.id
         credential_id = request.form.get('credential_id')
         if credential_id:
             credentials = self.db.Temp.fetch(credential_id)
@@ -555,14 +558,20 @@ class User(ModelController):
         # self._friends_to_listen(request, user)
         # self._friends_not_to_listen(request, user)
 
-        if referral.get('reuse'):
-            referral.increment({'reuse': -1})
-            referral.update_cmd({'$push': {'users_created': user.id}})
-            if referral['reuse'] <= 0: referral.update(used=True)
-        else:
-            referral.update(used=True, user_created=user.id, user_created_name=user['name'], user_created_date=user['created'])
-            contact = self.db.Contact.find({'referral_id': referral.id})
-            if contact: contact.update(user_created=user.id)
+        if referral:
+            if referral.get('reuse'):
+                referral.increment({'reuse': -1})
+                referral.update_cmd({'$push': {'users_created': user.id}})
+                if referral['reuse'] <= 0: referral.update(used=True)
+            else:
+                referral.update(
+                    used=True,
+                    user_created=user.id,
+                    user_created_name=user['name'],
+                    user_created_date=user['created']
+                )
+                contact = self.db.Contact.find({'referral_id': referral.id})
+                if contact: contact.update(user_created=user.id)
 
         user.give_invites(config.initial_invite_count)
         if args.has_key('thumb_file_id'):

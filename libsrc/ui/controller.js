@@ -7,7 +7,16 @@ define([
     'json!ui/routes.json',
     // 'history/history',
     'ui/routing'
-], function($, util, page, pages, context, routes/*, history*/, routing) {
+], function(
+     $
+    ,util
+    ,page
+    ,pages
+    ,context
+    ,routes
+    //,history
+    ,routing
+){
     var o = { back: false }, route;
 
     o.init = function(route_args){
