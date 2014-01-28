@@ -52,14 +52,13 @@ define([
 
     o.drop_target = function(el, on_files, on_response){
         var on_drop = function(ev){
-            var dt = ev.originalEvent.dataTransfer;
-            if(!dt || !dt.files || !dt.files.length) return;
-
             var dt = ev.originalEvent.dataTransfer,
-                files = [];
+                files = [],
                 file_list = dt.files,
                 url = dt.getData("URL");
             if (file_list.length == 0 && url.length) {
+                // TODO-bugbug: make async request for URL, call on_files on
+                // success with actual content-type
                 var file_name = url.split("/").slice(-1)[0];
                 var i = file_name.lastIndexOf(".");
                 if (i > 0) {

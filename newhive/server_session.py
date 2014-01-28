@@ -28,4 +28,3 @@ server_env = {
     ,'assets': hive_assets
     ,'config': config
 }
-

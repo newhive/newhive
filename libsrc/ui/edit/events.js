@@ -29,8 +29,11 @@ define([
     var event_bubbler = function(event_name, data){
     	var handlers = _handlers;
         return (function(ev){
-            // TODO-cleanup: make this a general purpose data attribute like
-            // Jquery
+            if ($.inArray(event_name, ["keyup", "keypress", "keydown"]) >= 0
+                && $(":focus").length) {
+                // _stopPropagation();
+                return;
+            }
             ev.data = data;
 
             // patch native event with hacked stopPropagation that encompasses
@@ -64,7 +67,7 @@ define([
         var timer, fired
         o.long_hold = function(element, data){
             var bubble_hold = event_bubbler('long_hold', data),
-                bubble_release = event_bubbler('long_hold_release', data);
+                bubble_release = event_bubbler('long_hold_cancel', data);
 
             var cancel = function(ev, fire_release){
                 if(timer){

@@ -1,10 +1,9 @@
 define([
     'browser/jquery',
     'server/context',
-    'ui/editor',
+    'ui/edit/main',
     'ui/page/expr',
     'browser/layout',
-    'json!server/compiled.bundles.json',
     'sj!templates/edit.html'
 ], function(
     $,
@@ -12,27 +11,27 @@ define([
     editor,
     expr_page,
     lay,
-    bundles, 
     edit_template
-) {
+){
     var o = {};
 
     o.init = function(controller){
         // o.controller = controller;
         // o.render_overlays();
-        // window.addEventListener('message', o.handle_message, false);        
+        // window.addEventListener('message', o.handle_message, false);
         o.controller = controller;
-        curl.expose('ui/editor', 'h'); // for debugging
+        window.h = editor;
     };
 
     o.enter = function(){
         o.controller.set_exit_warning("If you leave this page any unsaved " +
             "changes to your expression will be lost.",
             function(){
-                return editor.Apps.length == 0 }
+                return editor.app.Apps.length == 0 }
         );
         $('.edit.overlay').showshow();
         $("body").addClass("edit");
+        editor.enter();
     };
     
     o.exit = function(){
@@ -41,24 +40,17 @@ define([
         $('link.edit').remove();
         $('#site').empty();
         $("body").removeClass("edit");
-
         o.controller.set_exit_warning(false);
+        editor.exit();
     };
 
     o.resize = function(){
         // browser_layout.center($('#page_prev'), undefined, {'h': false});
         // browser_layout.center($('#page_next'), undefined, {'h': false});
-        lay.center($('#app_btns'), $('#site'), {v: false});        
+        lay.center($('.app_btns'), $('#site'), {v: false});        
     };
 
     o.render = function(page_data){
-        // bundles['edit.css'].map(function(url){
-        //     $('<link>').attr({rel: 'stylesheet', href: url})
-        //         .addClass('edit').appendTo('head')
-        //         .load(function(){
-        //             $('.edit.overlay').showshow();
-        //             o.resize() });
-        // });
         $('#site').empty().append(edit_template(page_data)).showshow();
         $('#nav').hidehide();
 

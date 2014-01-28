@@ -399,7 +399,7 @@ body {
                     top:0; bottom:0; right:0; left:0;
                     z-index: -1;
                     // background-color: $color_light_blue;
-                    div { padding: 10px; }
+                    div { padding: 15px; }
                 }
             }
         }
@@ -409,9 +409,19 @@ body {
         margin: 35px auto;
         margin-bottom: 40px;
         position: relative;
-        button.create {
+        .centered {
             position: relative;
-            span.text { padding-left: 25px; }
+            width: 1px;
+            button {
+                position: absolute;
+                white-space: nowrap;
+                &.follow { right: 4px; }
+                &.create {
+                    position: relative;
+                    left: 4px;
+                    span.text { padding-left: 25px; }
+                }
+            }
         }
         button:hover .plus_button {
             background-image: asset_url('skin/nav/plus-hover.png');

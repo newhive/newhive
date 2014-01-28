@@ -159,6 +159,8 @@ class Expr(ModelController):
             expr = expr_obj,
             use_ga = False,
         )
+        if snapshot_mode:
+            tdata.context['css'] = "body { overflow-x: hidden; }"
         return self.serve_page(tdata, response, 'pages/expr.html')
         
     def expr_to_html(self, exp, snapshot_mode=False, viewport=(1000, 750)):
@@ -172,7 +174,7 @@ class Expr(ModelController):
         html_for_app = partial(self.html_for_app, scale=expr_scale,
             snapshot_mode=snapshot_mode)
         app_html = map(html_for_app, exp.get('apps', []))
-        if exp.has_key('dimensions'):
+        if exp.has_key('dimensions') and 'gifwall' not in exp.get('tags_index',[]):
             app_html.append("<div id='expr_spacer' class='happ' style='top: {}px;'></div>".format(exp['dimensions'][1]))
         return ''.join(app_html)
 
