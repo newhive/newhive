@@ -74,6 +74,7 @@ button {
         color: white;
         background-color: black;
     }
+    cursor: pointer;
 }
 .disabled  {
     &.teal_btn, &.text_btn, &.black_btn {
