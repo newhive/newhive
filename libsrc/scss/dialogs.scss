@@ -274,8 +274,9 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
 }
 
 #dia_login_or_join {
-    padding: 20px 0px;
+    padding: 20px 40px;
     .heading { margin: 15px 0px; }
+    .spacer { height: 10px; }
     h3 {
         margin: 10px 0px;
         // text-align: center;
@@ -295,17 +296,18 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
 
     input[type=submit] { float: right; }
     .column {
-        min-width: 220px;
-        overflow: auto;
-        float: left;
+        width: 230px;
+        display: inline-block;
         padding: 0 40px;
     }
     .left {
         // .field { width: 240px; }
         border-right: 1px solid #D1D1D1;
+        float: left;
     }
     .right {
         // .field { width: 270px; }
+        float: left;
         input[type=text], input[type=password] {
             width: 100%;
             margin: 4px 0px;

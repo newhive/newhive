@@ -62,14 +62,14 @@ class Controller(object):
             config.debug_mode or tdata.user.get('name') in config.beta_testers)
 
         # Find flags appropriate to current user
-        self.flags = config.site_flags
+        flags = config.site_flags
         su = self.db.User.site_user
         su.setdefault('site_flags', {})
         su.update(updated=False, site_flags=su['site_flags'])
-        self.flags.update(su['site_flags'])
+        flags.update(su['site_flags'])
         user_flags = {}
         user = tdata.user
-        for flag, v in self.flags.items():
+        for flag, v in flags.items():
             add = False
             inclusion = set([])
             for user_list in v:
@@ -85,6 +85,7 @@ class Controller(object):
                 or user.get('name', 'logged_out') in inclusion):
                 user_flags[flag] = True
         tdata.context.update(flags=user_flags)
+        self.flags = user_flags
 
         return (tdata, response)
 
