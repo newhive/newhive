@@ -8,7 +8,6 @@ define([
     'json!ui/routes.json',
     'browser/js',
     'ui/dialog',
-    'ui/new_account',
     'server/context',
     'browser/layout',
     'ui/page/pages',
@@ -44,7 +43,6 @@ define([
     routes,
     js,
     dialog,
-    new_account,
     context,
     browser_layout,
     pages,
@@ -433,17 +431,6 @@ define([
         // TODO: BUGBUG: should be data driven
         o.column_layout = (context.route_name == "network");
     }
-
-    o.forms = function(page_data){
-        switch(page_data.form) {
-        case "create_account":
-            new_account.init(o);
-            new_account.render();
-            break;
-        default:
-            $('#site').empty().append(home_template(page_data));
-        }
-    };
 
     o.render_main_tags = function(){
         $("#site>.tag_list_container").replaceWith(
