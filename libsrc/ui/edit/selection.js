@@ -101,7 +101,11 @@ o.Selection = function(o) {
             o.move_start();
             return;
         }
-
+        if (env.gifwall) {
+            $("#controls").showshow();
+            o.dragging = false;
+            return;
+        }
         o.offset = $('#happs').offset().left;
 
         o.new_selection = [];

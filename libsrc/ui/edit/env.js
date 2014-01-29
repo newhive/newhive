@@ -57,6 +57,7 @@ o.History.init = function(){
         o[o.current].undo();
         o.current -= 1;
         o.update_btn_titles();
+        env.layout_apps();
         return false;
     };
 
@@ -66,6 +67,7 @@ o.History.init = function(){
         next.redo();
         o.current += 1;
         o.update_btn_titles();
+        env.layout_apps();
         return false;
     };
         

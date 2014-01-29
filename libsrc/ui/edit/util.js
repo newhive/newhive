@@ -224,6 +224,8 @@ o.calculate_sensitivity = function(delta) {
     // Calculate sensitivity
     // check timestamp and bump sensitivity if longish
     // gap between user inputs.
+    if (!delta_latched)
+        return 1;
     var move_dist = o._sub(delta)(delta_latched);
     delta_latched = delta.slice();
     var time = new Date().getTime() / 1000;
@@ -336,6 +338,9 @@ env.layout_apps = o.layout_apps = function(){
     env.scale_set();
     $.map(env.Apps, function(a){ a.layout() });
     if(env.Selection.controls) env.Selection.controls.layout();
+    var height = Math.max(0, o.app_bounds(env.Apps.all()).bottom) * env.scale();
+    $(".prompts").css("top", height);
+    $(".prompts .highlight").css("width", 1000*env.scale());
 };
 
 o.snap_helper = function(my_tuple, opts) {

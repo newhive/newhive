@@ -20,7 +20,7 @@
 <div id='dia_save' class='standard dialog' data-handle="#btn_save">
   <div class="heading expr title">Save</div>
   <div class='upper label medbold'>Title</div>
-  <textarea id='title'>{exr.title}</textarea>
+  <textarea rows="1" autofocus id='title'>{exr.title}</textarea>
 
   <div class='upper label medbold'>URL</div>
   <div class=''>newhive.com/{user.name}/</div>
@@ -327,6 +327,14 @@ blah blah
  <input id='cancel_overwrite' type='button' class='btn black rounded' value='No'>
 </div>
 
+<div class='editor_overlay hide'>
+  <div class='inset'></div>
+</div>
+<div class="gifwall prompts centered">
+  <div class="highlight hide"></div>
+  <div class="hint">Drag in images to create your #gifwall</div>
+  <img class="plus_btn" src='{asset "skin/nav/plus.png"}'>
+</div>
 <div id='grid_guide'></div>
 
 <div id='controls'></div>

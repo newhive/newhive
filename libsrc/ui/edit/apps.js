@@ -49,20 +49,33 @@ env.new_app = Hive.new_app = function(s, opts) {
             a.center(opts.offset);
         a.dims_set(a.dims());
         if (env.gifwall) {
-            // TODO: move the app into the right place, and push other apps
-            // a.pos_set([0, $("body")[0].scrollHeight]);
+            env.History.begin();
+            env.History.save(a._remove, a._unremove, 'create');
+            // move the app into the right place, and push other apps
             var not_it = env.Apps.all().filter(function(x) { return a.id != x.id; });
             var height = Math.max(0, u.app_bounds(not_it).bottom);
+            if (opts.insert_at)
+                height = opts.insert_at[1];
             a.pos_relative_set([0, height]);
             var aspect = a.get_aspect();
             Hive.App.has_full_bleed(a);
             a.dims_relative_set(a.dims_relative(), aspect);
+            delta = a.dims_relative();
+            delta[0] = 0;
+            a.dims_relative_set([1000, 0]);
+            a.resize_start();
+            a.resize(delta);
+            a.resize_end();
+            // env.layout_apps();
+            env.History.group("create");
         }
+
         env.Selection.select(a);
         if(load) load(a);
     };
     var app = Hive.App(s, opts);
-    env.History.save(app._remove, app._unremove, 'create');
+    if (!env.gifwall)
+        env.History.save(app._remove, app._unremove, 'create');
     return app;
 };
 
@@ -160,13 +173,16 @@ Hive.App = function(init_state, opts) {
 
     o._remove = function(){
         o.unfocus();
+        env.Selection.unfocus(o);
         o.div.hidehide();
         o.deleted = true;
         if(o.controls) o.controls.remove();
+        env.layout_apps();
     };
     o._unremove = function(){
         o.div.showshow();
         o.deleted = false;
+        env.layout_apps();
     };
     o.remove = function(){
         o._remove();
@@ -610,7 +626,9 @@ Hive.App.Image = function(o) {
         // UI for setting .offset of apps on drag after long_hold
         o.long_hold = function(ev){
             if(o != ev.data) return;
-            if(o.has_full_bleed() && $(ev.target).hasClass("resize")) return;
+            if(o.has_full_bleed() && 
+                ($(ev.target).hasClass("resize") || $(ev.target).hasClass("resize_v")))
+                return;
             if(!o.init_state.scale_x) 
                 if (!o.allow_crop()) return false;
             $("#controls").hidehide();
@@ -720,7 +738,8 @@ Hive.App.Image = function(o) {
 
     var _layout = o.layout;
     o.max_height = function(){
-        off = o.offset()[1] / env.scale();
+        off = o.offset() || [0,0];
+        off = off[1] / env.scale();
         return o.dims_relative()[0] / o.aspect + off;
     }
     o.layout = function() {
@@ -1159,7 +1178,20 @@ Hive.App.has_full_bleed = function(o, coord){
         _pos_relative_set = o.pos_relative_set,
         _get_aspect = o.get_aspect,
         _resize = o.resize,
-        push_apps;
+        _remove = o._remove, _unremove = o._unremove,
+        push_apps, remove_delta;
+    o._remove = function() {
+        remove_delta = [0, 0];
+        remove_delta[o.stack_coord] = o.dims()[o.stack_coord];
+        o.before_resize();
+        o.resize(u._mul(-1)(remove_delta));
+        _remove();
+    }
+    o._unremove = function() {
+        o.dims_ref_set();
+        o.resize(remove_delta);
+        _unremove();
+    }
     o.before_resize = function(){
         if (!env.gifwall || !o.has_full_bleed())
             return;
@@ -1194,6 +1226,7 @@ Hive.App.has_full_bleed = function(o, coord){
         if (!env.gifwall || !o.has_full_bleed())
             return;
         env.History.change_end();
+        env.layout_apps();
         return true;
     };
     o.get_aspect = function() {
@@ -1227,20 +1260,22 @@ Hive.App.has_full_bleed = function(o, coord){
 // NOTE: this adds handlers to o.content_element, so if
 // content_element changes, this modifier needs to be called again.
 Hive.App.has_image_drop = function(o) {
-    if (!env.gifwall && !context.flags.rect_drag_drop)
+    if (o.has_image_drop || (!env.gifwall && !context.flags.rect_drag_drop))
         return o;
+    o.has_image_drop = true;
     o.content_element.on('dragenter dragover dragleave drop', function(ev){
         // Handle drop highlighting.
-        if (!env.gifwall && ev.type == "dragenter")
+        if (ev.type == "dragenter") {
             o.highlight();
-        else if (!env.gifwall && (ev.type == "dragleave" || ev.type == "drop"))
+        } else if (ev.type == "dragleave" || ev.type == "drop") {
             o.highlight({on: false});
+        }
         ev.preventDefault();
     });
 
     var on_files = function(files){
         if (env.gifwall) {
-            $("#media_upload").trigger('with_files', [files]);
+            u.new_file(files, {}, { insert_at: o.pos_relative() });
             return;
         }
         if (files.length == 0)

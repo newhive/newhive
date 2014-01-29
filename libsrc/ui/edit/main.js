@@ -68,10 +68,14 @@ Hive.enter = function(){
     $style.remove();
     if (env.gifwall)
         $("body").addClass("gifwall");
+    else
+        $("body").addClass("default");
 };
 
 Hive.exit = function(){
+    env.zoom_set(1);
     $("body").removeClass("gifwall");
+    $("body").removeClass("default");
     $(document).off('keydown');
     $('body').off('mousemove mousedown');
 };
@@ -247,6 +251,12 @@ Hive.init_save_dialog = function(){
         Hive.Exp.overwrite = true;
         Hive.save();
     });
+    $("#dia_save").on('keydown', function(e) {
+        if ((e.keyCode || e.which || e.charCode || 0) == 13) {
+            $("#save_submit").click();
+            e.preventDefault();
+        }
+    });
     
     // Automatically update url unless it's an already saved
     // expression or the user has modified the url manually
@@ -295,6 +305,9 @@ Hive.init_global_handlers = function(){
     evs.on('body', 'mousemove');
     evs.on('body', 'mousedown');
     var drag_base = $('#grid_guide');
+    evs.on(drag_base, 'dragenter');
+    evs.on(drag_base, 'dragleave');
+    evs.on(drag_base, 'drop');
     evs.on(drag_base, 'draginit');
     evs.on(drag_base, 'dragstart');
     evs.on(drag_base, 'drag');
@@ -318,6 +331,7 @@ Hive.init = function(exp, page){
 
     Hive.init_global_handlers()
     Hive.edit_start();
+    env.layout_apps();
 };
 
 Hive.edit_start = function(){
@@ -491,14 +505,33 @@ Hive.state = function() {
 
 // BEGIN-Events  //////////////////////////////////////////////////////
 
+global_highlight = function(showhide) {
+    if (env.gifwall)
+        $(".prompts .highlight").showhide(showhide);
+    else
+        $(".editor_overlay").showhide(showhide);
+};
+
 // Most general event handlers
 Hive.handler_type = 3;
-Hive.dragstart = noop; // function(){ hovers_active(false) };
+Hive.dragenter = function(ev){ 
+    // hovers_active(false);
+    global_highlight(true);
+    ev.preventDefault();
+};
+Hive.dragstart = function(){ 
+    // hovers_active(false);
+    // global_highlight(true);
+};
 Hive.dragend = function(){
     // TODO-usability: fix disabling hover states in ui/util.hoverable
     // hovers_active(true)
     // In case scrollbar has been toggled:
+    global_highlight(false);
     u.layout_apps(); 
+};
+Hive.dragleave = Hive.drop = function(){
+    global_highlight(false);
 };
 Hive.mouse_pos = [0, 0];
 Hive.mousemove = function(ev){
