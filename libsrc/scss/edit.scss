@@ -8,6 +8,13 @@ font-family: Helvetica, Arial, sans-serif;
     position: absolute;
     background-color: $color_selected;
 }
+#edit_debug {
+    background-color: #88D;
+    width: 300px;
+    position: fixed;
+    z-index: 1337;
+    white-space: pre;
+}
 #happs {
     position: absolute;
     left: 0;
@@ -43,6 +50,14 @@ font-family: Helvetica, Arial, sans-serif;
 }
 
 .ehapp, .ehapp > * { position : absolute; }
+// .ehapp { @include box-sizing( border-box ); }
+.ehapp .highlight {
+    width: 100%;
+    height: 100%;
+    background-color: rgba(150,226,206,.6);
+    pointer-events:none;
+    z-index: 1336;
+}
 .ehapp .shield {
     left : 0px; top : 0px;
     z-index: 2;
@@ -122,7 +137,7 @@ font-family: Helvetica, Arial, sans-serif;
 .drawer.fontsize { white-space : nowrap; overflow : hidden; }
 .fontsize .option { line-height : 100px; vertical-align : middle; }
 
-#app_btns {
+.app_btns {
     bottom: 20px;
     min-width: 354px; /* for centering before loading complete */
 
@@ -135,13 +150,14 @@ font-family: Helvetica, Arial, sans-serif;
 
     .active { background-color: black; }
 
-    #insert_text   { &.active { background-image: asset_url('skin/1/text-hover.png');   } background-image: asset_url('skin/1/text.png');   }
-    #insert_image  { &.active { background-image: asset_url('skin/1/images-hover.png'); } background-image: asset_url('skin/1/images.png'); }
-    #insert_audio  { &.active { background-image: asset_url('skin/1/audio-hover.png');  } background-image: asset_url('skin/1/audio.png');  }
-    #insert_embed  { &.active { background-image: asset_url('skin/1/editor_embed-hover.png');  } background-image: asset_url('skin/1/editor_embed.png');  }
-    #insert_shape  { &.active { background-image: asset_url('skin/1/shapes-hover.png'); } background-image: asset_url('skin/1/shapes.png'); }
-    #insert_file   { &.active { background-image: asset_url('skin/1/upload-hover.png'); } background-image: asset_url('skin/1/upload.png'); }
-    #labs          { &.active { background-image: asset_url('skin/1/labs-hover.png');   } background-image: asset_url('skin/1/labs.png'); }
+    .insert_text   { &.active { background-image: asset_url('skin/1/text-hover.png');   } background-image: asset_url('skin/1/text.png');   }
+    .insert_image  { &.active { background-image: asset_url('skin/1/images-hover.png'); } background-image: asset_url('skin/1/images.png'); }
+    .insert_audio  { &.active { background-image: asset_url('skin/1/audio-hover.png');  } background-image: asset_url('skin/1/audio.png');  }
+    .insert_embed  { &.active { background-image: asset_url('skin/1/editor_embed-hover.png');  } background-image: asset_url('skin/1/editor_embed.png');  }
+    .insert_shape  { &.active { background-image: asset_url('skin/1/shapes-hover.png'); } background-image: asset_url('skin/1/shapes.png'); }
+    .insert_file   { &.active { background-image: asset_url('skin/1/upload-hover.png'); } background-image: asset_url('skin/1/upload.png'); }
+    .change_zoom   { &.active { background-image: asset_url('skin/1/zoom-hover.png'); } background-image: asset_url('skin/1/zoom.png'); display:none; }
+    .labs          { &.active { background-image: asset_url('skin/1/labs-hover.png');   } background-image: asset_url('skin/1/labs.png'); }
 }
 
 textarea.code {

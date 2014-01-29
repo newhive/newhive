@@ -51,8 +51,12 @@ user_groups = { 'logged_in':set([]), 'logged_out':set(['logged_out']), 'all':set
 site_flags = { 
     'admin': ['admins']
     ,'merge_recent': ['cara', 'fatsycline']
-    ,'show_hive_all': ['newduke']
+    ,'show_hive_all': ['newduke','nd4']
     ,'logged': ['logged_out']
+    ,'rect_drag_drop': ['admins','nd4']
+    ,'shift_does_raise': ['newduke','nd4','abram']
+    ,'snap_crop': ['admins','nd4']
+    ,'can_debug': ['admins', 'nd4']
 }
 
 site_user = 'newhive'

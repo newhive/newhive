@@ -4,10 +4,11 @@ define([
     'json!server/compiled.config.json',
     'ui/routing',
     'browser/js',
+    'browser/upload',
     'ui/menu',
     'ui/dialog',
     'ui/util'
-], function(api_routes, config, routing, js, menu, dialog, ui_util){
+], function(api_routes, config, routing, js, upload, menu, dialog, ui_util){
     var o = { config: config };
 
     o.asset = function(context, name){
@@ -143,13 +144,13 @@ define([
         // var all_elements = elements.add(document.body);
 
         // Common site-wide handlers
-        find_all(dom, '*[data-class-toggle]').each(function(i, e) {
+        find_all(dom, '*[data-class-toggle]').each(function(i, ev) {
             var click_func = function(klass) {
                 return function(el) {
-                    $(e).toggleClass(klass);
+                    $(ev).toggleClass(klass);
                 };
             }
-            var class_toggles = $(e).attr('data-class-toggle');
+            var class_toggles = $(ev).attr('data-class-toggle');
             if (class_toggles) {
                 class_toggles = JSON.parse(class_toggles);
             }
@@ -160,40 +161,43 @@ define([
                 find_all(dom, toggle).on('click', click_func(klass));
             }
         });
-
         // TODO-cleanup: this is a subcase of class-toggle.
-        find_all(elements, '*[data-link-show]').each(function(i, e) {
-            var handle = find_all(elements, $(e).attr('data-link-show'));
+        find_all(elements, '*[data-link-show]').each(function(i, ev) {
+            var handle = find_all(elements, $(ev).attr('data-link-show'));
             if(!handle) throw 'missing handle';
             handle.on('click', function(el) { 
-                $(e).toggleshow();
+                $(ev).toggleshow();
             });
         });
+
         find_all(elements, 'form[data-route-name]').each(
-            function(i, e){ form_handler(e, elements) });
-        find_all(elements, '.menu.drawer[data-handle]').each(function(i, e){
-            var handle = find_all(elements, $(e).attr('data-handle'));
+            function(i, ev){ form_handler(ev, elements) });
+
+        find_all(elements, '.menu.drawer[data-handle]').each(function(i, ev){
+            var handle = find_all(elements, $(ev).attr('data-handle'));
             if(!handle) throw 'missing handle';
-            var parent = find_all(elements, $(e).attr('data-parent'));
+            var parent = find_all(elements, $(ev).attr('data-parent'));
             var opts = {};
             if (parent.length && parent.data('menu')) {
                 opts['group'] = parent.data('menu');
                 opts['layout_x'] = 'submenu';
                 // opts['layout'] =  'center_y';
             }
-            menu(handle, e, opts);
+            menu(handle, ev, opts);
         });
-        find_all(elements, '.dialog[data-handle]').each(function(i, e){
-            var handle = find_all(elements, $(e).attr('data-handle'));
+
+        find_all(elements, '.dialog[data-handle]').each(function(i, ev){
+            var handle = find_all(elements, $(ev).attr('data-handle'));
             if(!handle) throw 'missing handle';
-            var d = dialog.create(e);
+            var d = dialog.create(ev);
             handle.click(d.open);
         });
-        find_all(elements, '.hoverable').each(function(i, e){
-            ui_util.hoverable($(e)) });
+
+        find_all(elements, '.hoverable').each(function(i, ev){
+            ui_util.hoverable($(ev)) });
 
         js.each(o._after_render_handlers, function(handler, selector){
-            find_all(elements, selector).each(function(i,e){ handler($(e)) });
+            find_all(elements, selector).each(function(i,ev){ handler($(ev)) });
         });
 
         return elements;
@@ -202,22 +206,43 @@ define([
         o._after_render_handlers[selector] = handler;
     };
 
-    function form_handler(form, all){
-        var form = $(form),
-            file_api = FileList && Blob,
-            inputs = form.find('[type=file]');
+    var submit_form = function(form){
+        var opts = {};
+        opts.url = form.attr('action');
+        opts.data = new FormData($(form)[0]);
+        opts.success = function(data){
+            // if(!file_api) input.trigger('with_files',
+                // [ data.map(function(f){ return f.url }) ]);
+            form.trigger('response', [data]);
+            form.find("*[type=submit]").
+                removeClass('disabled').prop('disabled','');
+        };
+        opts.error = function(data){
+            // TODO: open new window with debugger
+            console.error("Server error post request: " + form.attr('action')
+                + '\n(remove form handlers to see error) $("form").unbind("submit")');
+            form.trigger('error', [data]);
+        };
+        form.trigger('before_submit');
+        upload.submit(false, opts);
+        form.trigger('after_submit');
+        form.find("*[type=submit]").addClass('disabled').prop('disabled','true');
+    };
 
-        // TODO-test: test support for multiple files
+    function form_handler(form, all){
         // TODO-polish: handle erros from file uploads
         // TODO-compat: port <iframe> hack from old code and finish
         //     support for browsers without file API (file_api boolean)
 
-        inputs.each(function(i, e){
-            var input = $(e);
+        var form = $(form),
+            file_api = FileList && Blob;
+
+        form.find('[type=file]').each(function(i, el){
+            var input = $(el)
 
             input.on('change', function(){
-                with_files(e.files);
-                submit();
+                form.trigger('with_files', [upload.unwrap_file_list(el.files)]);
+                submit_form(form);
                 input.val('');
             });
 
@@ -225,87 +250,19 @@ define([
                 drop_selector = input.attr('data-drop-area');
                 drop_areas = find_all(all, 'label[for=' + input_id + ']')
                     .add(drop_selector).add(find_all(all, drop_selector));
-            drop_areas.on('dragenter dragover', function(ev){
-                    ev.preventDefault();
-                })
-                .on('drop', function(e){
-                    var dt = e.originalEvent.dataTransfer;
-                    if(!dt || !dt.files || !dt.files.length) return;
-                    with_files(dt.files);
-                    submit(dt.files);
-                    return false;
-                });
+                upload.drop_target(drop_areas,
+                    function(files){
+                        form.trigger('with_files', [files]); },
+                    function(file_records){
+                        form.trigger('response', [file_records]); }
+                );
         });
 
         // make form submission of non-file inputs asynchronous too
-        form.on('submit', function(e){
-            form.trigger('before_submit');
-            submit();
-            form.trigger('after_submit');
-            form.find("*[type=submit]").addClass('disabled').prop('disabled','true');
+        form.on('submit', function(ev){
+            submit_form(form);
             return false;
         });
-
-        var with_files = function(file_list){
-            if(!file_api) return;
-            var files = [];
-            var urlCreator = window.URL || window.webkitURL;
-            // FileList is not a list at all, has no map :'(
-            for(var i = 0; i < file_list.length; i++){
-                var f = file_list.item(i), file = {
-                    url: urlCreator.createObjectURL(f),
-                    name: f.name,
-                    mime: f.type
-                };
-                files.push(file);
-            };
-            form.trigger('with_files', [files]);
-        };
-
-        var submit = function(files){
-            var form_data = new FormData(form[0]);
-            if(files){
-                for(var i = 0; i < files.length; i++){
-                    var f = files.item(i);
-                    form_data.append('files', f.slice(0, f.size), f.name);
-                }
-            }
-
-            // TODO-polish: add busy indicator while uploading
-            $.ajax({
-                url: form.attr('action'),
-                type: 'POST',
-                // xhr: function() {  // custom xhr
-                //     var myXhr = $.ajaxSettings.xhr();
-                //     if(myXhr.upload) myXhr.upload.addEventListener(
-                //         'progress', on_progress, false);
-                //     return myXhr;
-                // },
-                //Ajax events
-                // beforeSend: beforeSendHandler,
-                success: function(data){
-                    // if(!file_api) input.trigger('with_files',
-                        // [ data.map(function(f){ return f.url }) ]);
-                    form.trigger('response', [data]);
-                    form.find("*[type=submit]").
-                        removeClass('disabled').prop('disabled','');
-                },
-                error: function(data){
-                    // TODO: open new window with debugger
-                    console.error("Server error post request: " + form.attr('action')
-                        + '\n(remove form handlers to see error) $("form").unbind("submit")');
-                    form.trigger('error', [data]);
-                },
-                // Form data
-                data: form_data,
-
-                // Options to tell JQuery not to process data or
-                // worry about content-type
-                cache: false,
-                contentType: false,
-                processData: false
-            });
-        };
     }
 
     o.parse_query = function(){

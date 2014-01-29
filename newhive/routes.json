@@ -98,7 +98,8 @@
         "api_route": "/api/feed/expressions/<owner_name>",
         "controller": "community",
         "method": "expressions_public",
-        "client_method": "profile"
+        "client_method": "profile",
+        "include_tags": true
     },
     "expressions_public_grid": {
         "page_route": "/<owner_name>/profile/grid",

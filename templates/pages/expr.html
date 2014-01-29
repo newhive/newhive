@@ -7,6 +7,9 @@
       <script src='{{item}}'></script>
     {% endfor %}
   {% endif %}
+  {% if css %}
+    <style> {{ css }} </style>
+  {% endif %}
 {% endblock %}
 
 {% block body %}

@@ -277,3 +277,4 @@ colors.tag_color = function($i, $total) {
 return colors;
 
 });
+

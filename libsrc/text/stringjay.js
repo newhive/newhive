@@ -211,8 +211,10 @@ define(['browser/js', 'module'],
 			if(parsed = match(/^\s*-?[\d][\d.E]*/i)); // match number
 			else if(parsed = match(/^\s*"/)){ // match string
 				while(1){
+					var str = /(\\.)|(")/;
+					var matched = template.match(str);
 					parsed += match(/(\\.)|"/, true, 'string close');
-					if(parsed.charAt(parsed.length-1) == '"') break;
+					if(matched[2]) break;
 				}	
 			}
 			// implement by iteratively passing more shit to JSON.parse
