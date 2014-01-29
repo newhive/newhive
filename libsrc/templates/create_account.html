@@ -20,14 +20,14 @@
 	  <div id="left_pane">
 	  	<div class="upper subheading"><span>newhive.com/</span><span
           id="username_label">username</span></div>
-        <div class='name_msg error hide'>That name is already taken</div>
+        <div class='name_msg error hide'>Name is not available</div>
         <div class='name_msg good hide'>Name available</div>
-	  	<div><input type="text" name="username" placeholder="USERNAME"></div>
-	  	<div><input type="text" name="full_name"
-          placeholder="FULL NAME (OPTIONAL)" value='{fullname}'></div>
+	  	<div><input type="text" name="name" placeholder="USERNAME"></div>
 	  	<div><input type="password" name="password" placeholder="PASSWORD"></div>
 	  	<div><input type="text" name="email" placeholder="EMAIL"
           value='{query.email}'></div>
+        <div><input type="text" name="full_name"
+          placeholder="FULL NAME (OPTIONAL)" value='{fullname}'></div>
 	  </div>
 	  <div id="right_pane">
 	  	{#
@@ -50,6 +50,7 @@
       	Create my account<span id="go_btn"></span></button></div>
     </div>
     <input type='hidden' name='key' value='{query.key}'>
+    <input class='hide' name='phone' value=''>
   </form>
 {>}{>}
 

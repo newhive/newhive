@@ -23,18 +23,20 @@ define([
 
     var old_name;
     var check_name = function(name){
+        var set_name_err = function(data){
+            $('.name_msg').hidehide();
+            $('.name_msg.' + (data ? 'good' : 'error')).showshow();
+            $('#create_account .submit').attr("disabled", !data);
+        }
         if(!name || old_name == name)
             return;
+        if(! name.match(/^[a-z][a-z0-9]{2,23}$/)){
+            set_name_err(false);
+            return;
+        }
+
         $.get(routing.page_state('name_check', {}).api, {name: name},
-            function(data){
-                $('.name_msg').hidehide();
-                $('.name_msg.' + (data ? 'good' : 'error')).showshow();
-            }
-        );
-        var input = $('#name_check input');
-        if(input.val() == name) return;
-        input.val(name);
-        $('#name_check').submit();
+            set_name_err);
     };
     
     o.render = function(){
@@ -43,32 +45,35 @@ define([
     }
 
     o.attach_handlers = function(){
-        field_name = $('#create_account input[name=username]');
-        field_name.focus().keyup(update_name_url);
+        field_name = $('#create_account input[name=name]');
+        field_name.focus().keyup(update_name);
         $('#create_account input[name=email]').keyup(check_form);
         $('#create_account input[name=password]').keyup(check_form);
         $('#create_account input[name=agree]').change(check_form);
+
+        $('#create_form input').on('change', check_form);
+        $('#create_form').on('submit', check_form);
     }
 
-    function update_name_url() {
+    function update_name() {
         var username = field_name.val();
-        if (username.length == 0)
+        if(username.length == 0)
             username = "username";
             // $('#create_account input[name=username]').attr("placeholder");
         $('#username_label').html(username);
-        check_form();
         check_name(username);
     }
 
     function check_form() {
-        if( $('#create_account input[name=username]').val() != "" &&
-            $('#create_account input[name=email]').val() != "" &&
+        if( $('#create_account input[name=email]').val() != "" &&
             $('#create_account input[name=password]').val() != "" &&
             $('#create_account input[name=agree]').prop('checked')
-        )
-            $('#create_account .submit').removeAttr("disabled");
-        else
-            $('#create_account .submit').attr("disabled", "disabled");
+        ) {
+            $('#create_account .submit').attr("disabled", false);
+        } else {
+            $('#create_account .submit').attr("disabled", true);
+            return false;
+        }
     }
 
     return o;

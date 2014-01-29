@@ -527,7 +527,8 @@ class User(HasSocial):
     def create(self):
         self['name'] = self['name'].lower()
         # self['signup_group'] = self.collection.config.signup_group
-        assert re.match('[a-z][a-z0-9]{2,23}$', self['name']) != None, 'Invalid username'
+        assert re.match('[a-z][a-z0-9]{2,23}$', self['name']) != None, (
+            'Invalid username')
         assert not (self['name'] in reserved_words)
         dict.update(self,
             fullname = self.get('fullname', self['name']),
@@ -535,7 +536,7 @@ class User(HasSocial):
             flags = {},
         )
         # self['email_subscriptions'] = self.collection.config.default_email_subscriptions
-        assert self.has_key('referrer')
+
         self.build_search(self)
         self.get_expr_count(force_update=True)
         super(User, self).create()

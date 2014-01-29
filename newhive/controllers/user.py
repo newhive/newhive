@@ -513,6 +513,16 @@ class User(ModelController):
             """
 
         assert 'agree' in request.form
+        assert not request.form.get('phone') # check invisible field for spam
+
+        args = dfilter(request.form, ['name', 'password', 'email',
+            'fullname', 'gender', 'thumb', 'thumb_file_id'])
+        args.update({
+             'sites'    : [args['name'].lower() + '.' + config.server_name]
+            ,'email'   : args.get('email').lower()
+            #,'flags'    : { 'add_invites_on_save' : True }
+        })
+        if not args.get('fullname'): args['fullname'] = args['name']
 
         referral = False
         if not self.flags.get('open_signup'):
@@ -521,17 +531,8 @@ class User(ModelController):
                 return self.serve_json(response, { 'error': 'referral' })
             referrer = self.db.User.fetch(referral['user'])
             assert referrer, 'Referring user not found'
+            args['referrer'] = referrer.id
 
-        args = dfilter(request.form, ['username', 'password', 'email',
-            'fullname', 'gender', 'thumb', 'thumb_file_id'])
-        args.update({
-             'sites'    : [args['username'].lower() + '.' + config.server_name]
-            ,'email'   : args.get('email').lower()
-            ,'name'    : args['username']
-            #,'flags'    : { 'add_invites_on_save' : True }
-        })
-        if not args.get('fullname'): args['fullname'] = args['username']
-        if referral: args['referrer'] = referrer.id
         credential_id = request.form.get('credential_id')
         if credential_id:
             credentials = self.db.Temp.fetch(credential_id)
@@ -541,17 +542,16 @@ class User(ModelController):
                 'oauth': {'facebook': credentials}
                 ,'facebook' : fb_profile
             })
-        if request.form.get('age'): args.update({'birth_year' : datetime.now().year - int(request.form.get('age'))})
+        if request.form.get('age'):
+            args.update({'birth_year':
+                datetime.now().year - int(request.form.get('age'))})
 
         try:
             user = self.db.User.create(args)
         except Exception, e:
-            return self.serve_json(response, { 'error':'username exists or invalid username' })
+            return self.serve_json(response, { 'error':
+                'username exists or invalid username' })
 
-        if user.get('referrer') != self.db.User.site_user.id:
-            self.db.FriendJoined.create(user, referrer)
-            # new user follows referrer
-            self.db.Star.create(user, referrer)
         # TODO: offer suggested users to follow.
         # new user follows NewHive
         self.db.Star.create(user, self.db.User.site_user)
@@ -559,6 +559,11 @@ class User(ModelController):
         # self._friends_not_to_listen(request, user)
 
         if referral:
+            if user.get('referrer') != self.db.User.site_user.id:
+                self.db.FriendJoined.create(user, referrer)
+                # new user follows referrer
+                self.db.Star.create(user, referrer)
+                
             if referral.get('reuse'):
                 referral.increment({'reuse': -1})
                 referral.update_cmd({'$push': {'users_created': user.id}})
@@ -584,7 +589,7 @@ class User(ModelController):
             # log_error(db, request=request, message="unable to welcome send email for {}".format(user.get('email')))
             pass
 
-        request.form = dict(username = args['username'], secret = args['password'])
+        request.form = dict(username = args['name'], secret = args['password'])
         self.login(tdata, request, response)
         return self.redirect(response, '/' + user['name'] + '/profile')
 
