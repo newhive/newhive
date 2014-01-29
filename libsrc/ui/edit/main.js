@@ -100,7 +100,7 @@ Hive.init_menus = function() {
         hive_app.new_app({ type: 'hive.text', content: '<span style="font-weight:bold">&nbsp;</span>',
             scale : 3 });
     });
-    $('.app_btns .change_zoom').click(function(e) {
+    $('.change_zoom').click(function(e) {
         var zooms = [ 1, .5, .25 ];
         var zoom = env.zoom();
         // NOTE: indexOf will return -1 for unlisted zoom, so it will just

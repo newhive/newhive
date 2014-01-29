@@ -10,7 +10,18 @@ body.edit {
     .control .set_bg {display:none}
     .control .opacity {display:none}
     .control .button.align {display:none}
-    .prompts.gifwall {display:block}
+    .prompts.gifwall {
+        display:block;
+        padding-top: 160px;
+        padding-bottom: 160px;
+        // .hint { margin-top: 160px;}
+        img.plus_btn { 
+            display: none;
+            width: 140px; 
+            margin: 40px 0px; 
+            pointer-events:auto;
+        }
+    }
     .app_btns {min-width:0px}
     .app_btns .icon {display:none}
     .app_btns .icon.insert_image {display:inline-block}
@@ -22,6 +33,7 @@ body.edit {
     }
 }
 &.default {
+    .change_zoom {display:none}
     .ehapp .highlight {
         background-color: $color_selected;
         opacity: .6;
@@ -57,7 +69,10 @@ font-family: Helvetica, Arial, sans-serif;
 
 #edit_nav {
     right: 20px; bottom: 20px;
-
+    .change_zoom {
+        padding: 6px 0px;
+        img { width: 40px; }
+    }
     & > * {
         display: inline-block;
         padding: 10px 4px;
@@ -95,10 +110,6 @@ font-family: Helvetica, Arial, sans-serif;
 
     font-size: 32px;
     font-weight: 700;
-    &.gifwall {
-        .hint { margin-top: 200px;}
-        img.plus_btn { width: 140px; margin: 40px 0px; }
-    }
 }
 .ehapp, .ehapp > * { position : absolute; }
 // .ehapp { @include box-sizing( border-box ); }
@@ -211,7 +222,7 @@ font-family: Helvetica, Arial, sans-serif;
     .insert_embed  { &.active { background-image: asset_url('skin/1/editor_embed-hover.png');  } background-image: asset_url('skin/1/editor_embed.png');  }
     .insert_shape  { &.active { background-image: asset_url('skin/1/shapes-hover.png'); } background-image: asset_url('skin/1/shapes.png'); }
     .insert_file   { &.active { background-image: asset_url('skin/1/upload-hover.png'); } background-image: asset_url('skin/1/upload.png'); }
-    .change_zoom   { &.active { background-image: asset_url('skin/1/zoom-hover.png'); } background-image: asset_url('skin/1/zoom.png'); display:none; }
+    // .change_zoom   { &.active { background-image: asset_url('skin/1/zoom-hover.png'); } background-image: asset_url('skin/1/zoom.png'); display:none; }
     .labs          { &.active { background-image: asset_url('skin/1/labs-hover.png');   } background-image: asset_url('skin/1/labs.png'); }
 }
 
