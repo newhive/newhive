@@ -27,12 +27,20 @@ define([
     o.anim_duration = 400;
 
     // pagination functions here
+    o.set_page = function(page){
+        ui_page = page;
+    }
     var loading = false, more_cards = true, ui_page, win = $(window);
     var on_scroll_add_page = function(){
+        if (loading)
+            return;
         loading = true;
         o.controller.next_cards(render_new_cards);
     };
     var render_new_cards = function(data){
+        // TODO-cleanup-HACK: There should be a unified flow for merging
+        // the new data
+        ui_page.render_new_cards(data);
         // ugly hack to merge old context attributes to new data
         // data.card_type = context.page_data.card_type;
         // data.layout = context.page_data.layout;
@@ -241,13 +249,14 @@ define([
         if (0)
             console.log("DEBUG: " + text);
     };
-    var cache_frames = function(expr_ids, current){
+
+    o.cache_frames = function(expr_ids, current){
         if (expr_ids.length == 0)
             return false;
         var expr_id = expr_ids[0];
         var contentFrame = o.get_expr(expr_id);
         if (contentFrame.length > 0) {
-            cache_frames(expr_ids.slice(1));
+            o.cache_frames(expr_ids.slice(1));
             debug("caching frame, already loaded: " + find_card(expr_id));
             return contentFrame;
         }
@@ -295,7 +304,7 @@ define([
                 }
             }
             if (expr_ids.length > 1)
-                cache_frames(expr_ids.slice(1))
+                o.cache_frames(expr_ids.slice(1))
             // alert("loaded frame.  Others remaining:" + loading_frame_list);
         });
         $('#exprs').append(contentFrame);
@@ -323,7 +332,7 @@ define([
 
         var contentFrame = o.get_expr(expr_id);
         if (contentFrame.length == 0) {
-            contentFrame = cache_frames([expr_id], true);
+            contentFrame = o.cache_frames([expr_id], true);
         }
         else {
             contentFrame.get(0).contentWindow.
@@ -725,7 +734,7 @@ define([
                     var found_next = (found + len + off) % len;
                     expr_ids = expr_ids.concat(page_data.cards[found_next].id);
                 }
-                cache_frames(expr_ids);
+                o.cache_frames(expr_ids);
                 if (offset) {
                     var card = page_data.cards[found]
                     page_data.expr_id = card.id;

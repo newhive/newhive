@@ -3,6 +3,9 @@
     src='{"skin/edit/undo.png"|asset}'></div
   ><div class='center'><img id='btn_redo' title='redo' class='hoverable'
     src='{asset "skin/edit/redo.png"}'></div
+  ><div class='change_zoom center'><img title='zoom' class='hoverable'
+    src='{asset "skin/1/zoom.png"}'></div
+  ><div class='change_zoom icon hoverable'></div
   ><div class='fluff pad'></div
   ><div class='fluff center pad'><img id='btn_grid' title="Show Grid" class='hoverable'
     src='{asset "skin/edit/grid-off.png"}'></div
@@ -20,7 +23,7 @@
 <div id='dia_save' class='standard dialog' data-handle="#btn_save">
   <div class="heading expr title">Save</div>
   <div class='upper label medbold'>Title</div>
-  <textarea id='title'>{exr.title}</textarea>
+  <textarea rows="1" autofocus id='title'>{exr.title}</textarea>
 
   <div class='upper label medbold'>URL</div>
   <div class=''>newhive.com/{user.name}/</div>
@@ -59,7 +62,6 @@
  ><div class='insert_embed icon hoverable'></div
  ><div class='insert_shape icon hoverable'></div
  ><div class='insert_file icon hoverable'></div
- ><div class='change_zoom icon hoverable'></div
 ></div>
 
 <div id='menu_text' class='menu drawer medbold'>
@@ -228,28 +230,46 @@
  <div class='control buttons'
   ><img class='button color hoverable' src='{asset "skin/edit/color.png"}' title="Color"
 
-  {#><img class='button stroke hoverable tip_N' src='{asset "skin/edit/border_color.png"}' title='Border color'
+{#
+  ><img class='button stroke hoverable tip_N' src='{asset "skin/edit/border_color.png"}' title='Border color'
   ><img class='button blank bwidth hoverable tip_N' src='{asset "skin/edit/border_width.png"}' title='Border width'
-  ><div class='button blank bstyle hoverable' title='Border style'></div#}
+  ><div class='button blank bstyle hoverable' title='Border style'></div
+#}
 
   ><img class='button rounding hoverable tip_N'
     src='{asset "skin/edit/rounded_corners.png"}' title='corner rounding'></div>
 
-  {#
+{#
    <div class='control drawer bstyle'>
    ><div class='border hoverable' style='border-style: solid;' title='Solid border'></div
    ><div class='border hoverable' style='border-style: dashed;' title='Dashed border'></div
    ><div class='border none hoverable' style='border-style: none;' title='No border'></div
   ></div
-  #}
+#}
 </div>
 
 <div id='controls_misc' class='controls_src'>
- <img class='control drag resize hoverable tip_SE' src='{asset "skin/edit/resize.png"}' title="Resize">
- <img class='control drag resize_h hoverable tip_E' src='{asset "skin/edit/resize_h.png"}' title="Resize">
- <img class='button color hoverable' src='{asset "skin/edit/color.png"}' title="Color">
- <img class='button opacity tip_N hoverable' src='{asset "skin/edit/opacity.png"}' title='Opacity'>
- <div class='control drawer color border'></div>
+  <img class='control drag resize hoverable tip_SE' 
+    src='{asset "skin/edit/resize.png"}' title="Resize">
+  <img class='control drag resize_h hoverable tip_E' 
+    src='{asset "skin/edit/resize_h.png"}' title="Resize">
+  <img class='control drag resize_v hoverable tip_S' 
+    src='{asset "skin/edit/resize_v.png"}' title="Resize">
+  <img class='button color hoverable' src='{asset "skin/edit/color.png"}' title="Color">
+  <img class='button opacity tip_N hoverable' 
+    src='{asset "skin/edit/opacity.png"}' title='Opacity'>
+  <div class='control drawer color border'></div>
+  <img class='button align' src='{asset "skin/edit/justify.png"}'>
+  <div class='control drawer border align'>
+   <div><nobr>
+    <img class='option small hoverable' cmd='+alignLeft'    src='{asset "skin/edit/justify_left.png"}'>
+    <img class='option small hoverable' cmd='+alignRight'   src='{asset "skin/edit/justify_right.png"}'>
+   </nobr></div>
+   <div>
+    <img class='option small hoverable' cmd='+alignCenter'  src='{asset "skin/edit/justify_center.png"}'>
+    <img class='option small hoverable' cmd='+alignFull'    src='{asset "skin/edit/justify_full.png"}'>
+   </div>
+  </div>
 </div>
 
 <div id='controls_sketch' class='controls_src'>
@@ -309,6 +329,14 @@ blah blah
  <input id='cancel_overwrite' type='button' class='btn black rounded' value='No'>
 </div>
 
+<div class='editor_overlay hide'>
+  <div class='inset'></div>
+</div>
+<div class="gifwall prompts centered">
+  <div class="highlight hide"></div>
+  <div class="hint">Drag in images to create your #gifwall</div>
+  <img class="plus_btn" src='{asset "skin/nav/plus.png"}'>
+</div>
 <div id='grid_guide'></div>
 
 <div id='controls'></div>

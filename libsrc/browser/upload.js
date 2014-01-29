@@ -92,8 +92,8 @@ define([
         };
 
         el.on('dragenter dragover', function(ev){
-                ev.preventDefault();
-            }).on('drop', on_drop);
+            ev.preventDefault();
+        }).on('drop', on_drop);
     };
 
     return o;

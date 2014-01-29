@@ -74,8 +74,6 @@ define([
             // Add to body to create a new z index stack
             this_dia.appendTo(document.body);
             this_dia.find("form").unbind('response').on('response', opts.handler);
-            // For old browsers which don't support autofocus.
-            this_dia.find("*[autofocus]").focus();
             this_dia.find(".error_msg").hidehide();
             this_dia.find(".success_show").hidehide();
             this_dia.find(".success_hide").showshow();
@@ -88,6 +86,8 @@ define([
             // After so that it has guaranteed dimension for layout.
             opts.layout();
             this_dia.removeClass('hide').showshow();
+            // For old browsers which don't support autofocus.
+            this_dia.find("*[autofocus]").focus();
             opts.layout();
 
             opts.open();

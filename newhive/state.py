@@ -527,7 +527,8 @@ class User(HasSocial):
     def create(self):
         self['name'] = self['name'].lower()
         # self['signup_group'] = self.collection.config.signup_group
-        assert re.match('[a-z][a-z0-9]{2,23}$', self['name']) != None, 'Invalid username'
+        assert re.match('[a-z][a-z0-9]{2,23}$', self['name']) != None, (
+            'Invalid username')
         assert not (self['name'] in reserved_words)
         dict.update(self,
             fullname = self.get('fullname', self['name']),
@@ -535,7 +536,7 @@ class User(HasSocial):
             flags = {},
         )
         # self['email_subscriptions'] = self.collection.config.default_email_subscriptions
-        assert self.has_key('referrer')
+
         self.build_search(self)
         self.get_expr_count(force_update=True)
         super(User, self).create()
@@ -1828,26 +1829,36 @@ class File(Entity):
         size = imo.size
         factor = 2 ** .5
         ext = '.' + self.get('mime').split('/')[1]
-        resample_fd, resample_fn = mkstemp(suffix=ext)
+        resample_fd, resample_filename = mkstemp(suffix=ext)
         os.write(resample_fd, self.file.read())
         os.close(resample_fd)
+
+        # remove resamples for gifs with offset animation frames,
+        # because imagemagick fails to resample them
+        ident = os.tmpfile()
+        call (['identify', resample_filename], stdout=ident)
+        ident.seek(0)
+        ident_frames = ident.read().strip().split("\n")
+        if len([x for x in ident_frames if not re.search(r'\+0\+0',x)]) > 0:
+            self.update(resamples=[])
+            return False
+
         resamples = []
         while (size[0] >= 100) or (size[0] >= 100):
             size = (size[0] / factor, size[1] / factor)
             size_str = str(int(size[0])) + 'x' + str(int(size[1]))
-            cmd = ['mogrify', '-resize', size_str, resample_fn]
-            print cmd
+            cmd = ['mogrify', '-resize', size_str, resample_filename]
             call(cmd)
             resamples.append(size)
-            self.db.s3.upload_file(resample_fn, 'media',
+            self.db.s3.upload_file(resample_filename, 'media',
                 self._resample_name(size[0]), self._resample_name(size[0]),
                 self['mime'])
-        os.remove(resample_fn)
+        os.remove(resample_filename)
         resamples.reverse()
         self.update(resamples=resamples)
 
     def get_resample(self, w=None, h=None):
-        resamples = self.get('resamples', [])
+        resamples = self.get('resamples', []) or []
         for size in resamples:
             if (w and size[0] > w) or (h and size[1] > h):
                 return ( self.db.s3.bucket_url('media') + self.id + '_' +

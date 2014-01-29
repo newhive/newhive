@@ -4,7 +4,12 @@
   {# create or signup/login #}
   {<unless user.logged_in}
     <span class='signup'>
-      <span class='signup_btn text_btn btn menu_item'>Sign Up</span>
+      {<if flags.open_signup}
+        <a {anchor_attrs "signup"} class='signup_btn text_btn btn menu_item'
+          >Sign Up</a>
+      {>}{<else}
+        <span class='signup_btn text_btn btn menu_item'>Sign Up</span>
+      {>}
       <span class='red_spacer'></span>
       <span class='login_btn text_btn left_border btn menu_item'>Log in</span>
     </span>
@@ -64,21 +69,32 @@
     <div class="small heading centered">
       NewHive is your blank canvas.<br>
       It’s freedom of expression on the web.
-    </div>
-    <div class="column left">
+
+      {<if flags.open_signup}
+        <div class='spacer'></div>
+        <h3><a {anchor_attrs "signup"}
+          class='title line2'>Signup for account</a></h3>
+        or<br>
+      {>}
+      {<else}</div>{>} {# (hack) conditionally put following inside this tag #}
+
+    <div class="column {<if flags.open_signup}center{>}{<else}left{>}">
       <h3>
         {#<span class="title line1">Have an account?</span><br/>#}
         <span class="title line2">Log in:</span>
       </h3>
       {|templates/login_form.html}
     </div>
-    <div class="column right">
+    {<if flags.open_signup}</div>{>}
+
+    <div class="column right {<if flags.open_signup}hide{>}">
       <h3>
         {#<span class="title line1">Need an account?</span><br/>#}
         <span class="title line2">Request Invite:</span>
       </h3>
       {|templates/request_invite_form.html}
     </div>
+
   </div>
 
   <div id="dia_recover" class="standard dialog" data-handle='.password_recovery'>

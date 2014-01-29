@@ -57,6 +57,7 @@ site_flags = {
     ,'shift_does_raise': ['newduke','nd4','abram']
     ,'snap_crop': ['admins','nd4']
     ,'can_debug': ['admins', 'nd4']
+    ,'open_signup': []
 }
 
 site_user = 'newhive'

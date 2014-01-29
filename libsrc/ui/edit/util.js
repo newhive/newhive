@@ -1,5 +1,7 @@
 define([
     'browser/jquery'
+    ,'browser/js'
+    
     ,'server/context'
     ,'ui/colors'
     ,'sj!templates/color_picker.html'
@@ -9,6 +11,8 @@ define([
     ,'./env'
 ], function(
     $
+    ,js
+    
     ,context
     ,colors
     ,color_picker_template
@@ -18,7 +22,8 @@ define([
     ,env
 ){
 
-var o = {};
+var o = {}
+    ,bound = js.bound;
 
 // TODO-refactor: move into util
 
@@ -139,6 +144,34 @@ o.random_str = function(){ return Math.random().toString(16).slice(2); };
 
 
 //// BEGIN-editor-refactor belongs in editor specific utils
+o.region_from_app = function(app) {
+    var min_pos = app.min_pos(), max_pos = app.max_pos();
+    return { left: min_pos[0], right: max_pos[0],
+        top: min_pos[1], bottom: max_pos[1], };
+}
+o.overlapped_apps = function(region, full) {
+    // var select = { top: o.drag_pos[1], right: o.drag_pos[0] + o.drag_dims[0],
+    //     bottom: o.drag_pos[1] + o.drag_dims[1], left: o.drag_pos[0] };
+    // o.old_selection = o.new_selection;
+    var some_overlap = function(region, pos, dims) {
+        return (region.bottom >= pos[1]
+            && region.right >= pos[0]
+            && region.left <= pos[0] + dims[0]
+            && region.top <= pos[1] + dims[1]);
+    }
+    var full_overlap = function(region, pos, dims) {
+        return (region.top <= pos[1]
+            && region.left <= pos[0]
+            && region.right >= pos[0] + dims[0]
+            && region.bottom >= pos[1] + dims[1]);
+    }
+    var overlap = full ? full_overlap : some_overlap
+    return $.grep(env.Apps.all(), function(el){
+        var dims = el.dims_relative();
+        var pos = el.pos_relative();
+        return overlap(region, pos, dims);
+    });
+};
 
 o.app_bounds = function(elements) { 
     var abs_mins = elements.map(function(el){ return el.min_pos() });
@@ -191,6 +224,8 @@ o.calculate_sensitivity = function(delta) {
     // Calculate sensitivity
     // check timestamp and bump sensitivity if longish
     // gap between user inputs.
+    if (!delta_latched)
+        return 1;
     var move_dist = o._sub(delta)(delta_latched);
     delta_latched = delta.slice();
     var time = new Date().getTime() / 1000;
@@ -299,14 +334,13 @@ o.new_file = function(files, opts, app_opts) {
     return false;
 };
 
-env.layout_apps = o.layout_apps = function(old_scale){
-    var old_scale = old_scale || env.scale();
+env.layout_apps = o.layout_apps = function(){
     env.scale_set();
-    var new_scale = env.scale();
-    if(old_scale == new_scale) return;
-
     $.map(env.Apps, function(a){ a.layout() });
     if(env.Selection.controls) env.Selection.controls.layout();
+    var height = Math.max(0, o.app_bounds(env.Apps.all()).bottom) * env.scale();
+    $(".prompts").css("top", height);
+    $(".prompts .highlight").css("width", 1000*env.scale());
 };
 
 o.snap_helper = function(my_tuple, opts) {

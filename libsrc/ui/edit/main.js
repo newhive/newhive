@@ -44,7 +44,6 @@ define([
 
 var Hive = {}
     ,debug_mode = context.config.debug_mode
-    ,bound = js.bound
     ,noop = function(){}
     ,Funcs = js.Funcs
     ,asset = ui_util.asset
@@ -67,26 +66,16 @@ Hive.init_common = function(){
 var $style = $();
 Hive.enter = function(){
     $style.remove();
-    if (env.gifwall) {
-        $style = $("<style>").appendTo($("body"));
-        $style.html(" \
-            .overlay .fluff {display:none !important} \
-            .control.stack {display:none} \
-            .control.rotate {display:none} \
-            .control .set_bg {display:none} \
-            .control .opacity {display:none} \
-            body.edit {overflow-x:hidden} \
-            body.edit .app_btns {min-width:0px} \
-            body.edit .app_btns .icon {display:none} \
-            body.edit .app_btns .icon.insert_image {display:inline-block} \
-            body.edit .app_btns .icon.change_zoom {display:inline-block} \
-            #image_background { display: none; } \
-            ");
-    }
+    if (env.gifwall)
+        $("body").addClass("gifwall");
+    else
+        $("body").addClass("default");
 };
 
 Hive.exit = function(){
-    $style.remove();
+    env.zoom_set(1);
+    $("body").removeClass("gifwall");
+    $("body").removeClass("default");
     $(document).off('keydown');
     $('body').off('mousemove mousedown');
 };
@@ -111,8 +100,8 @@ Hive.init_menus = function() {
         hive_app.new_app({ type: 'hive.text', content: '<span style="font-weight:bold">&nbsp;</span>',
             scale : 3 });
     });
-    $('.app_btns .change_zoom').click(function(e) {
-        var zooms = [ 1, .4, .16 ];
+    $('.change_zoom').click(function(e) {
+        var zooms = [ 1, .5, .25 ];
         var zoom = env.zoom();
         // NOTE: indexOf will return -1 for unlisted zoom, so it will just
         // zoom to zooms[0] in that case.
@@ -262,6 +251,12 @@ Hive.init_save_dialog = function(){
         Hive.Exp.overwrite = true;
         Hive.save();
     });
+    $("#dia_save").on('keydown', function(e) {
+        if ((e.keyCode || e.which || e.charCode || 0) == 13) {
+            $("#save_submit").click();
+            e.preventDefault();
+        }
+    });
     
     // Automatically update url unless it's an already saved
     // expression or the user has modified the url manually
@@ -297,12 +292,22 @@ Hive.init_save_dialog = function(){
 };
 Hive.init_global_handlers = function(){
     // Global event handlers
-    $(window).on('resize', u.layout_apps);
+    $(window).on('resize', function(ev) {
+        var old_scale = env.scale();
+        env.scale_set();
+        var new_scale = env.scale();
+        if(old_scale == new_scale) return;
+
+        u.layout_apps();
+    });
     $(window).on('scroll', Hive.scroll);
     evs.on(document, 'keydown');
     evs.on('body', 'mousemove');
     evs.on('body', 'mousedown');
     var drag_base = $('#grid_guide');
+    evs.on(drag_base, 'dragenter');
+    evs.on(drag_base, 'dragleave');
+    evs.on(drag_base, 'drop');
     evs.on(drag_base, 'draginit');
     evs.on(drag_base, 'dragstart');
     evs.on(drag_base, 'drag');
@@ -326,6 +331,7 @@ Hive.init = function(exp, page){
 
     Hive.init_global_handlers()
     Hive.edit_start();
+    env.layout_apps();
 };
 
 Hive.edit_start = function(){
@@ -499,14 +505,33 @@ Hive.state = function() {
 
 // BEGIN-Events  //////////////////////////////////////////////////////
 
+global_highlight = function(showhide) {
+    if (env.gifwall)
+        $(".prompts .highlight").showhide(showhide);
+    else
+        $(".editor_overlay").showhide(showhide);
+};
+
 // Most general event handlers
 Hive.handler_type = 3;
-Hive.dragstart = noop; // function(){ hovers_active(false) };
+Hive.dragenter = function(ev){ 
+    // hovers_active(false);
+    global_highlight(true);
+    ev.preventDefault();
+};
+Hive.dragstart = function(){ 
+    // hovers_active(false);
+    // global_highlight(true);
+};
 Hive.dragend = function(){
     // TODO-usability: fix disabling hover states in ui/util.hoverable
     // hovers_active(true)
     // In case scrollbar has been toggled:
+    global_highlight(false);
     u.layout_apps(); 
+};
+Hive.dragleave = Hive.drop = function(){
+    global_highlight(false);
 };
 Hive.mouse_pos = [0, 0];
 Hive.mousemove = function(ev){
