@@ -5,13 +5,22 @@ define([
     'ui/page/pages',
     'server/context',
     'json!ui/routes.json',
-    // 'history/history',
+    //'history/history',
     'ui/routing'
-], function($, util, page, pages, context, routes/*, history*/, routing) {
+], function(
+     $
+    ,util
+    ,page
+    ,pages
+    ,context
+    ,routes
+    //,history
+    ,routing
+){
     var o = { back: false }, route;
 
     o.init = function(route_args){
-        curl.expose('server/context', 'c'); // useful for debugging
+        window.c = context; // useful for debugging
         setup_google_analytics();
         // init_history();
 
@@ -137,7 +146,7 @@ define([
         function success(data){
             if (push_state == undefined || push_state)
                 history.pushState(page_state, null, page_state.page);
-            context.parse_query();
+            context.parse_query(data.cards_route && data.cards_route.route_args);
             o.dispatch(page_state.route_name, data);
             if (page_state.route_name != "view_expr")
                 $("body").scrollTop(0);
@@ -164,7 +173,7 @@ define([
             return o.open(route_name, route_args);
         var page_state = routing.page_state(route_name, route_args, query);
         history.pushState(page_state, null, page_state.page);
-        context.parse_query();
+        context.parse_query(route_args);
     };
 
   

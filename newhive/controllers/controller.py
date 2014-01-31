@@ -23,6 +23,7 @@ class Controller(object):
     # Dispatch calls into controller methods of the form:
     # def method(self, tdata, request, response, **args):
     def dispatch(self, handler, request, **args):
+        self.request = request
         (tdata, response) = self.pre_process(request)
         # Redirect to home if route requires login but user not logged in
         if (args.get('require_login') and not tdata.user.logged_in and
@@ -61,14 +62,14 @@ class Controller(object):
             config.debug_mode or tdata.user.get('name') in config.beta_testers)
 
         # Find flags appropriate to current user
-        self.flags = config.site_flags
+        flags = config.site_flags
         su = self.db.User.site_user
         su.setdefault('site_flags', {})
         su.update(updated=False, site_flags=su['site_flags'])
-        self.flags.update(su['site_flags'])
+        flags.update(su['site_flags'])
         user_flags = {}
         user = tdata.user
-        for flag, v in self.flags.items():
+        for flag, v in flags.items():
             add = False
             inclusion = set([])
             for user_list in v:
@@ -84,6 +85,7 @@ class Controller(object):
                 or user.get('name', 'logged_out') in inclusion):
                 user_flags[flag] = True
         tdata.context.update(flags=user_flags)
+        self.flags = user_flags
 
         return (tdata, response)
 
@@ -95,6 +97,8 @@ class Controller(object):
         context = tdata.context
         context.update(template=template)
         context.setdefault('icon', self.asset('skin/1/logo.png'))
+        context.setdefault('meta_title', 'NewHive')
+        context.setdefault('meta_url', self.request.url)
         return self.jinja_env.get_template(template).render(context)
 
     def serve_data(self, response, mime, data):

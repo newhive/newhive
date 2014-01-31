@@ -188,7 +188,7 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
 #dia_referral .medbold { line-height: 1em; }
 #dia_referral .label .small { font-size: 12px; font-weight: normal }
 
-/* Editor browser warning dialog */
+/* Editor browser warning dialog 
 #editor_browsers, #ie_warning {
     padding: 20px 50px;
     text-align: center;
@@ -213,6 +213,7 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
 #editor_browsers a {
     text-decoration: underline;
 }
+*/
 
 /* signup thank-you dialog */
 #signup_thank_you {
@@ -273,8 +274,9 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
 }
 
 #dia_login_or_join {
-    padding: 20px 0px;
+    padding: 20px 40px;
     .heading { margin: 15px 0px; }
+    .spacer { height: 10px; }
     h3 {
         margin: 10px 0px;
         // text-align: center;
@@ -294,17 +296,18 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
 
     input[type=submit] { float: right; }
     .column {
-        min-width: 220px;
-        overflow: auto;
-        float: left;
+        width: 230px;
+        display: inline-block;
         padding: 0 40px;
     }
     .left {
         // .field { width: 240px; }
         border-right: 1px solid #D1D1D1;
+        float: left;
     }
     .right {
         // .field { width: 270px; }
+        float: left;
         input[type=text], input[type=password] {
             width: 100%;
             margin: 4px 0px;
@@ -528,6 +531,7 @@ form.login {
         right: 20px;
         bottom: 20px;
     }
+    span.teal_btn { cursor: default; }
     #password { width:300px; }
 }
 #menu_privacy .selected { display : none; }

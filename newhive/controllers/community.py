@@ -51,10 +51,11 @@ class Community(Controller):
     def forms_signup(self, tdata, request, username=None, **paging_args):
         referral = self.db.Referral.find({'key': request.args.get('key')})
         resp = {'form': 'create_account', 'title': "NewHive - Sign Up", }
-        if not referral:
-            resp['error'] = 'referral'
-        else:
-            resp['fullname'] = referral.get('name')
+        if not self.flags.get('open_signup'):
+            if not referral:
+                resp['error'] = 'referral'
+            else:
+                resp['fullname'] = referral.get('name')
         return resp
 
     def expressions_for(self, tdata, cards, owner):
@@ -104,7 +105,7 @@ class Community(Controller):
             "card_type": "expr",
             "tag_selected": tag_name,
             'owner': profile,
-            'title': 'Expressions by' + owner['name'],
+            'title': 'Expressions by ' + owner['name'],
         }
         if owner.id == tdata.user.id:
             data.update({"tag_entropy": owner.get('tag_entropy', {}).get(tag_name)})
@@ -275,8 +276,11 @@ class Community(Controller):
             self.db.Expr.named(owner_name, expr_name) )
         if not expr: return None
 
+        meta = {}
         resp = {
             'expr_id': expr.id,
+            'content_url': abs_url(domain=self.config.content_domain, 
+                secure=request.is_secure) + expr.id,
             'expr': expr.client_view(viewer=tdata.user, activity=10)
         }
 
@@ -287,11 +291,13 @@ class Community(Controller):
             resp['expr']['title'] = '[password required]'
             resp['error'] = 'password'
         else:
+            meta['img_url'] = expr.snapshot_name('big')
             expr_owner = expr.get_owner()
             if expr_owner and expr_owner['analytics'].get('views_by'):
                 expr_owner.increment({'analytics.views_by': 1})
             if not expr.get('views'): expr['views'] = 0
             if expr_owner.id != tdata.user.id: expr.increment({'views': 1})
+        resp['meta'] = meta
         return resp
 
     def edit_expr(self, tdata, request, id=None):
@@ -326,7 +332,7 @@ class Community(Controller):
         return data
 
     def admin_query(self, tdata, request, **args):
-        if not tdata.context['flags'].get('admin'):
+        if not self.flags.get('admin'):
             return {}
 
         q = json.loads(request.args.get('q', '{}'))
@@ -426,4 +432,11 @@ class Community(Controller):
             return self.serve_json(response, page_data)
         else:
             tdata.context.update(page_data=page_data, route_args=kwargs)
+            if page_data.get('meta'):
+                tdata.context.update(page_data['meta'])
+                del page_data['meta']
+            if page_data.get('expr'):
+                tdata.context.update(meta_title=page_data.get('expr').get('title'))
+            tdata.context.update(meta_url=request.url)
+
             return self.serve_loader_page('pages/main.html', tdata, request, response)

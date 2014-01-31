@@ -1,6 +1,58 @@
 @import "common";
 
 body.edit {
+.prompts.gifwall {display:none}
+&.gifwall {
+    overflow-x:hidden;
+    .overlay .fluff {display:none !important}
+    .control.stack {display:none}
+    .control.rotate {display:none}
+    .control .set_bg {display:none}
+    .control .opacity {display:none}
+    .control .button.align {display:none}
+    .prompts.gifwall {
+        display:block;
+        padding-top: 160px;
+        padding-bottom: 160px;
+        // .hint { margin-top: 160px;}
+        img.plus_btn { 
+            display: none;
+            width: 140px; 
+            margin: 40px 0px; 
+            pointer-events:auto;
+        }
+    }
+    .app_btns {min-width:0px}
+    .app_btns .icon {display:none}
+    .app_btns .icon.insert_image {display:inline-block}
+    .app_btns .icon.change_zoom {display:inline-block}
+    #image_background { display: none; }
+    .highlight {
+        border-top: $color_forest_teal 10px dashed;
+        position: absolute;
+    }
+}
+&.default {
+    #edit_nav .change_zoom {display:none}
+    .ehapp .highlight {
+        background-color: $color_selected;
+        opacity: .6;
+    }
+}
+font-family: Helvetica, Arial, sans-serif;
+
+.ruler {
+    z-index: 1337;
+    position: absolute;
+    background-color: $color_selected;
+}
+#edit_debug {
+    background-color: #88D;
+    width: 300px;
+    position: fixed;
+    z-index: 1337;
+    white-space: pre;
+}
 #happs {
     position: absolute;
     left: 0;
@@ -17,7 +69,10 @@ body.edit {
 
 #edit_nav {
     right: 20px; bottom: 20px;
-
+    .change_zoom {
+        padding: 6px 0px;
+        img { width: 40px; }
+    }
     & > * {
         display: inline-block;
         padding: 10px 4px;
@@ -34,8 +89,36 @@ body.edit {
     position : fixed;
     width : 100%; height : 100%;
 }
+.editor_overlay {
+    z-index: 4;
+    position: fixed;
+    width : 100%; height : 100%;
+    pointer-events:none;
 
+    @include box-sizing( border-box );
+    padding: 20px;
+    .inset {
+        width : 100%; height : 100%;
+        border: $color_forest_teal 2px dashed;
+    }
+}
+.prompts {
+    z-index: 2;
+    position : absolute;
+    width : 100%;
+    pointer-events:none;
+
+    font-size: 32px;
+    font-weight: 700;
+}
 .ehapp, .ehapp > * { position : absolute; }
+// .ehapp { @include box-sizing( border-box ); }
+.ehapp .highlight {
+    width: 100%;
+    height: 100%;
+    pointer-events:none;
+    z-index: 1336;
+}
 .ehapp .shield {
     left : 0px; top : 0px;
     z-index: 2;
@@ -80,6 +163,7 @@ body.edit {
     z-index: 4;
 }
 .control { position : absolute; cursor : default; z-index : 1 }
+.control.resize_v { cursor : s-resize; }
 .control.resize_h { cursor : ew-resize; }
 .control.resize { cursor : se-resize; }
 .control.stack img { display : inline-block; margin-left : 5px; }
@@ -87,9 +171,13 @@ body.edit {
 .drawer { background-color : white; }
 
 .control.stack { white-space : nowrap; }
-.control.buttons .button {
-    margin-right: 4px;
-    float: left;
+.control.buttons {
+    pointer-events: none;
+    * { pointer-events: auto; }
+    .button {
+        margin-right: 4px;
+        float: left;
+    }
 }
 .drawer.brush .option:hover { background-color: $color_selected; }
 .drawer.brush .option.selected { background-color: $color_pale_yellow; }
@@ -106,15 +194,16 @@ body.edit {
 .drawer.bstyle { padding : 5px 5px 0 5px; }
 .bstyle .border { background-color : #54D3AC; border-color : #0A2655; border-width : 3px; width : 20px; height : 15px; margin-bottom : 10px; }
 .bstyle .border.none { width : 26px; height : 18px; }
-.drawer.fontname { width : 24em; }
-.drawer.fontname .option { margin-bottom : 5px; display : float; float : left; width : 8em; height : 1em; }
+.drawer.fontname { width : 453px; }
+.drawer.fontname .option { margin-bottom : 5px; display : float; float : left; width : 146px; height : 1em; 
+    &.longish { margin-top: 2px; font-size:15px; } }
 .align .option.small { margin : 5px; }
 .drawer.link { background-color : transparent; }
 .drawer.link img { vertical-align : middle; }
 .drawer.fontsize { white-space : nowrap; overflow : hidden; }
 .fontsize .option { line-height : 100px; vertical-align : middle; }
 
-#app_btns {
+.app_btns {
     bottom: 20px;
     min-width: 354px; /* for centering before loading complete */
 
@@ -127,13 +216,14 @@ body.edit {
 
     .active { background-color: black; }
 
-    #insert_text   { &.active { background-image: asset_url('skin/1/text-hover.png');   } background-image: asset_url('skin/1/text.png');   }
-    #insert_image  { &.active { background-image: asset_url('skin/1/images-hover.png'); } background-image: asset_url('skin/1/images.png'); }
-    #insert_audio  { &.active { background-image: asset_url('skin/1/audio-hover.png');  } background-image: asset_url('skin/1/audio.png');  }
-    #insert_embed  { &.active { background-image: asset_url('skin/1/editor_embed-hover.png');  } background-image: asset_url('skin/1/editor_embed.png');  }
-    #insert_shape  { &.active { background-image: asset_url('skin/1/shapes-hover.png'); } background-image: asset_url('skin/1/shapes.png'); }
-    #insert_file   { &.active { background-image: asset_url('skin/1/upload-hover.png'); } background-image: asset_url('skin/1/upload.png'); }
-    #labs          { &.active { background-image: asset_url('skin/1/labs-hover.png');   } background-image: asset_url('skin/1/labs.png'); }
+    .insert_text   { &.active { background-image: asset_url('skin/1/text-hover.png');   } background-image: asset_url('skin/1/text.png');   }
+    .insert_image  { &.active { background-image: asset_url('skin/1/images-hover.png'); } background-image: asset_url('skin/1/images.png'); }
+    .insert_audio  { &.active { background-image: asset_url('skin/1/audio-hover.png');  } background-image: asset_url('skin/1/audio.png');  }
+    .insert_embed  { &.active { background-image: asset_url('skin/1/editor_embed-hover.png');  } background-image: asset_url('skin/1/editor_embed.png');  }
+    .insert_shape  { &.active { background-image: asset_url('skin/1/shapes-hover.png'); } background-image: asset_url('skin/1/shapes.png'); }
+    .insert_file   { &.active { background-image: asset_url('skin/1/upload-hover.png'); } background-image: asset_url('skin/1/upload.png'); }
+    // .change_zoom   { &.active { background-image: asset_url('skin/1/zoom-hover.png'); } background-image: asset_url('skin/1/zoom.png'); display:none; }
+    .labs          { &.active { background-image: asset_url('skin/1/labs-hover.png');   } background-image: asset_url('skin/1/labs.png'); }
 }
 
 textarea.code {
@@ -172,7 +262,7 @@ textarea.code {
     margin-right: -11px;
     padding-left: 8px;
     padding-right: 10px;
-    .loading { width: 25px; }
+    .loading { width: 25px; vertical-align: middle; }
     // TODO: we should have a mechanism to set up icons, correctly aligned,
     // correctly sized, with automatic hover.
     div.arrow { 
@@ -235,8 +325,8 @@ textarea.code {
 #dia_thumbnail .thumb img { width: 190px; height: 190px; }
 
 .menu.embed { padding: 10px; }
-.embed_box { font-size: 12px; margin: 10px 0; width: 250px; height: 4em; }
-.embed_button { font-size: 18px; }
+.embed_box { margin: 8px 0; width: 250px; height: 4.5em; resize: none; }
+// .embed_button { font-size: 18px; }
 
 .btn_text.selected { color: white; background-color: #696E76; }
 .btn_text { background: none; color: #696E76; padding: 2px 4px; padding: 3px 8px; display: inline-block; }
@@ -247,12 +337,10 @@ input, textarea { font-size : inherit; }
 .drawer { z-index: 2; white-space : nowrap;  }
 
 .fontsize .option { color : $color_12; vertical-align : bottom; }
-.menu label { color: $color_18; }
+// .menu label { color: $color_18; }
 .fontsize .bigger .option.small { width : 70px; height : 135px; }
 .fontsize .option:hover { background-color : $color_selected; color : $color_0; }
 .drawer.fontname .option:hover { background-color : $color_selected; }
-
-#privacy { background-color : $color_selected; color : $color_0; }
 
 .dialogue_handle { background-color : $color_selected; }
 

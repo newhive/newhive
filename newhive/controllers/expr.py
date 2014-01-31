@@ -113,7 +113,7 @@ class Expr(ModelController):
             if res.get('remix_parent_id'):
                 upd['tags'] += " #remixed" # + remix_name
             res.update(**upd)
-            if not config.live_server and (upd.get('apps') or upd.get('background')):
+            if not self.config.live_server and (upd.get('apps') or upd.get('background')):
                 res.threaded_snapshot(retry=120)
             new_expression = False
 
@@ -159,6 +159,8 @@ class Expr(ModelController):
             expr = expr_obj,
             use_ga = False,
         )
+        if snapshot_mode:
+            tdata.context['css'] = "body { overflow-x: hidden; }"
         return self.serve_page(tdata, response, 'pages/expr.html')
         
     def expr_to_html(self, exp, snapshot_mode=False, viewport=(1000, 750)):
@@ -172,7 +174,7 @@ class Expr(ModelController):
         html_for_app = partial(self.html_for_app, scale=expr_scale,
             snapshot_mode=snapshot_mode)
         app_html = map(html_for_app, exp.get('apps', []))
-        if exp.has_key('dimensions'):
+        if exp.has_key('dimensions') and 'gifwall' not in exp.get('tags_index',[]):
             app_html.append("<div id='expr_spacer' class='happ' style='top: {}px;'></div>".format(exp['dimensions'][1]))
         return ''.join(app_html)
 
@@ -185,7 +187,17 @@ class Expr(ModelController):
             if media: content = media.get_resample(
                 app.get('dimensions', [100,100])[0] * scale
             )
+            content = content.replace("https:","")
             html = "<img src='%s'>" % content
+            scale_x = app.get('scale_x')
+            if scale_x:
+                css = 'width:%f%%' % (100*scale_x)
+                if app.get('offset'):
+                    scale_x *= app.get('dimensions', 1)[0]
+                    offset = [x * scale_x for x in app.get('offset')]
+                    css = '%s;margin-left:%spx;margin-top:%spx' % (
+                        css, offset[0], offset[1] )
+                html = "<div class='crop_box'><img src='%s' style='%s'></div>" % (content, css)
             link = app.get('href')
             if link: html = "<a href='%s'>%s</a>" % (link, html)
         elif type == 'hive.sketch':
@@ -256,4 +268,3 @@ def css_for_app(app):
     if app.get('scale'):
         rv += "font-size: {font-size}em;".format(**css)
     return rv
-

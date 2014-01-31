@@ -43,6 +43,12 @@ define([
             };
         }(jQuery));
         (function($){
+            $.fn.showhide = function( showhide ) {
+                if (showhide) return $(this).showshow();
+                else return $(this).hidehide();
+            };
+        }(jQuery));
+        (function($){
             $.fn.toggleshow = function( speed, easing, callback) {
                 var elem = $(this);
                 if (elem.hasClass("hide") || elem.css("display") == "none")

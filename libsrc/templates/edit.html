@@ -3,11 +3,14 @@
     src='{"skin/edit/undo.png"|asset}'></div
   ><div class='center'><img id='btn_redo' title='redo' class='hoverable'
     src='{asset "skin/edit/redo.png"}'></div
-  ><div class='pad'></div
-  ><div class='center pad'><img id='btn_grid' title="Show Grid" class='hoverable'
+  ><div class='change_zoom center'><img title='zoom' class='hoverable'
+    src='{asset "skin/1/zoom.png"}'></div
+  ><div class='change_zoom icon hoverable'></div
+  ><div class='fluff pad'></div
+  ><div class='fluff center pad'><img id='btn_grid' title="Show Grid" class='hoverable'
     src='{asset "skin/edit/grid-off.png"}'></div
-  ><div class='smpad'></div
-  ><div class='center hoverable text text_btn black_active' title="Editor Help" id='btn_help'>?</div
+  ><div class='fluff smpad'></div
+  ><div class='fluff center hoverable text text_btn black_active' title="Editor Help" id='btn_help'>?</div
   ><div id='btn_save' class='save upper text text_btn hoverable center pad black_active'
     >Save <div class='inline arrow'></div>
     <img src='{asset "skin/edit/loading.gif"}' class='hide loading'
@@ -15,12 +18,14 @@
 ></div>
 
 <div class="dialog" id="dia_editor_help" data-handle="#btn_help">
-  <iframe src="{config.content_url}{config.site_user}/default-instructional"></iframe>
+  {<defer}
+    <iframe src="{config.content_url}{config.site_user}/default-instructional"></iframe>
+  {>}
 </div>
 <div id='dia_save' class='standard dialog' data-handle="#btn_save">
   <div class="heading expr title">Save</div>
   <div class='upper label medbold'>Title</div>
-  <textarea id='title'>{exr.title}</textarea>
+  <textarea rows="1" autofocus id='title'>{exr.title}</textarea>
 
   <div class='upper label medbold'>URL</div>
   <div class=''>newhive.com/{user.name}/</div>
@@ -52,13 +57,13 @@
   <div val='public' class='menu_item'>Public</div>
 </div>
 
-<div id='app_btns' class='edit nav overlay panel'
- ><div id='insert_text'  class='icon hoverable'></div
- ><div id='insert_image' class='icon hoverable'></div
- ><div id='insert_audio' class='icon hoverable'></div
- ><div id='insert_embed' class='icon hoverable'></div
- ><div id='insert_shape' class='icon hoverable'></div
- ><div id='insert_file'  class='icon hoverable'></div
+<div class='app_btns edit nav overlay panel'
+ ><div class='insert_text icon hoverable'></div
+ ><div class='insert_image icon hoverable'></div
+ ><div class='insert_audio icon hoverable'></div
+ ><div class='insert_embed icon hoverable'></div
+ ><div class='insert_shape icon hoverable'></div
+ ><div class='insert_file icon hoverable'></div
 ></div>
 
 <div id='menu_text' class='menu drawer medbold'>
@@ -77,9 +82,10 @@
     data-menu-opts='"layout_x":"submenu"'
   >
     <form id='embed_image_form'>
-      <input type='text' id='image_embed_code'>&nbsp;&nbsp;<input
+      <input type='text' id='image_embed_code' placeholder='Paste URL here...'> {# #}
+      &nbsp;&nbsp;<input
         id='image_embed_done' type='submit'
-        class='btn black rounded embed_button' value='Enter'>
+        class='black_btn upper embed_button' value='Enter'>
     </form>
   </div>
 </div>
@@ -91,12 +97,12 @@
 
 <div id='menu_embed' class='menu drawer embed'>
   <span class='medbold'>Embed</span><br>
-  <div class='spacer'></div>
   <div class='description'>{# TODO: ui.embed_code_description #}</div>
     <textarea id='embed_code' class='embed_box'
-      {#placeholder='{ui.embed_code_textarea}'#}></textarea>
+      placeholder='Paste in your YouTube / Vimeo URL or embed code here.'>{# #}
+    </textarea>
     <div style='text-align : center'><input id='embed_done' type='submit'
-      class='btn black rounded embed_button' value='Enter'></div>
+      class='black_btn upper embed_button' value='Enter'></div>
 </div>
 
 <div id='menu_shape' class='menu drawer medbold'>
@@ -136,47 +142,51 @@
     > <span class='option fs5' style='font-size :   8em' val =   '8'>a</span
   ></div
   >--><div class='control drawer border fontname'
-   ><div class='option' style='font-family:Georgia'         cmd='+fontName' val='Georgia'        >Georgia       </div
-   ><div class='option' style='font-family:Helvetica'       cmd='+fontName' val='Helvetica'      >Helvetica     </div
-   ><div class='option' style='font-family:Courier New'     cmd='+fontName' val='Courier New'    >Courier New   </div
-   ><div class='option' style='font-family:Times'           cmd='+fontName' val='Times'          >Times         </div
-   ><div class='option' style='font-family:Trebuchet'       cmd='+fontName' val='Trebuchet'      >Trebuchet     </div
-   ><div class='option' style='font-family:Museo'           cmd='+fontName' val='Museo'          >Museo         </div
-   ><div class='option' style='font-family:BPscript'        cmd='+fontName' val='BPscript'       >BPscript      </div
-   ><div class='option' style='font-family:Code'            cmd='+fontName' val='Code'           >Code          </div
-   ><div class='option' style='font-family:Comic Zine'      cmd='+fontName' val='Comic Zine'     >Comic Zine    </div
-   ><div class='option' style='font-family:Folk Outline'    cmd='+fontName' val='Folk Outline'   >Folk Outline  </div
-   ><div class='option' style='font-family:Folk Shadow'     cmd='+fontName' val='Folk Shadow'    >Folk Shadow   </div
-   ><div class='option' style='font-family:Folk Sketches'   cmd='+fontName' val='Folk Sketches'  >Folk Sketches </div
-   ><div class='option' style='font-family:Folk'            cmd='+fontName' val='Folk'           >Folk          </div
-   ><div class='option' style='font-family:Lane'            cmd='+fontName' val='Lane'           >Lane          </div
-   ><div class='option' style='font-family:Lane Posh'       cmd='+fontName' val='Lane Posh'      >Lane Posh     </div
-   ><div class='option' style='font-family:Lane Up'         cmd='+fontName' val='Lane Up'        >Lane Up       </div
-   ><div class='option' style='font-family:League Gothic'   cmd='+fontName' val='League Gothic'  >League Gothic </div
-   ><div class='option' style='font-family:Lemon Chi'       cmd='+fontName' val='Lemon Chi'      >Lemon Chi     </div
-   ><div class='option' style='font-family:Lilly'           cmd='+fontName' val='Lilly'          >Lilly         </div
+   ><div class='option' style='font-family:Helvetica'         cmd='+fontName' val='Helvetica'        >Helvetica       </div
+   ><div class='option' style='font-family:Museo'         cmd='+fontName' val='Museo'        >Museo       </div
    ><div class='option' style='font-family:Lobster'         cmd='+fontName' val='Lobster'        >Lobster       </div
-   ><div class='option' style='font-family:Matiz'           cmd='+fontName' val='Matiz'          >Matiz         </div
-   ><div class='option' style='font-family:Quicksand'       cmd='+fontName' val='Quicksand'      >Quicksand     </div
-   ><div class='option' style='font-family:Bitstream Mono'  cmd='+fontName' val='Bitstream Mono' >Bitstream     </div
-
-   ><div class='option' style='font-family:Folks'           cmd='+fontName' val='Folks'          >Folks        </div
-   ><div class='option' style='font-family:Merge'           cmd='+fontName' val='Merge'          >Merge        </div
-   ><div class='option' style='font-family:Bebas'           cmd='+fontName' val='Bebas'          >Bebas        </div
-   ><div class='option' style='font-family:Arvo'            cmd='+fontName' val='Arvo'           >Arvo         </div
-   ><div class='option' style='font-family:St Ryde'         cmd='+fontName' val='St Ryde'        >St Ryde      </div
-   ><div class='option' style='font-family:Chunk Five'      cmd='+fontName' val='Chunk Five'     >Chunk Five   </div
-   ><div class='option' style='font-family:Droid Serif'     cmd='+fontName' val='Droid Serif'    >Droid Serif  </div
-   ><div class='option' style='font-family:Komika Title'    cmd='+fontName' val='Komika Title'   >Komika Title </div
-   ><div class='option' style='font-family:Banda'           cmd='+fontName' val='Banda'          >Banda        </div
-   ><div class='option' style='font-family:Pacifico'        cmd='+fontName' val='Pacifico'       >Pacifico     </div
-   ><div class='option' style='font-family:Fjord'           cmd='+fontName' val='Fjord'          >Fjord        </div
-   ><div class='option' style='font-family:Josefin Slab'    cmd='+fontName' val='Josefin Slab'   >Josefin Slab </div
-   ><div class='option' style='font-family:Nevis'           cmd='+fontName' val='Nevis'          >Nevis        </div
-   ><div class='option' style='font-family:Lobster Two'     cmd='+fontName' val='Lobster Two'    >Lobster Two  </div
-   ><div class='option' style='font-family:Crimson'         cmd='+fontName' val='Crimson'        >Crimson      </div
-   ><div class='option' style='font-family:Classic Round'   cmd='+fontName' val='Classic Round'  >Classic Round</div
-   ><div class='option' style='font-family:Novecento'       cmd='+fontName' val='Novecento'      >Novecento   </div
+   ><div class='option' style='font-family:Quicksand'         cmd='+fontName' val='Quicksand'        >Quicksand       </div
+   ><div class='option' style='font-family:St Ryde'         cmd='+fontName' val='St Ryde'        >St Ryde       </div
+   ><div class='option' style='font-family:BEBAS'         cmd='+fontName' val='BEBAS'        >BEBAS       </div
+   ><div class='option' style='font-family:Questrial'         cmd='+fontName' val='Questrial'        >Questrial       </div
+   ><div class='option' style='font-family:Nixie One'         cmd='+fontName' val='Nixie One'        >Nixie One       </div
+   ><div class='option' style='font-family:Bpscript'         cmd='+fontName' val='Bpscript'        >Bpscript       </div
+   ><div class='option' style='font-family:Oswald'         cmd='+fontName' val='Oswald'        >Oswald       </div
+   ><div class='option' style='font-family:Coustard'         cmd='+fontName' val='Coustard'        >Coustard       </div
+   ><div class='option' style='font-family:Clicker Script'         cmd='+fontName' val='Clicker Script'        >Clicker Script       </div
+   ><div class='option' style='font-family:Abel'         cmd='+fontName' val='Abel'        >Abel       </div
+   ><div class='option' style='font-family:Chunk Five'         cmd='+fontName' val='Chunk Five'        >Chunk Five       </div
+   ><div class='option' style='font-family:Miniver'         cmd='+fontName' val='Miniver'        >Miniver       </div
+   ><div class='option' style='font-family:Josefin Sans'         cmd='+fontName' val='Josefin Sans'        >Josefin Sans       </div
+   ><div class='option' style='font-family:Josefin Slab'         cmd='+fontName' val='Josefin Slab'        >Josefin Slab       </div
+   ><div class='option' style='font-family:CODYSTAR'         cmd='+fontName' val='CODYSTAR'        >CODYSTAR       </div
+   ><div class='option' style='font-family:Montserrat'         cmd='+fontName' val='Montserrat'        >Montserrat       </div
+   ><div class='option' style='font-family:Arvo'         cmd='+fontName' val='Arvo'        >Arvo       </div
+   ><div class='option' style='font-family:Cookie'         cmd='+fontName' val='Cookie'        >Cookie       </div
+   ><div class='option' style='font-family:Oxygen'         cmd='+fontName' val='Oxygen'        >Oxygen       </div
+   ><div class='option' style='font-family:Courier New'         cmd='+fontName' val='Courier New'        >Courier New       </div
+   ><div class='option' style='font-family:Cherry Swash'         cmd='+fontName' val='Cherry Swash'        >Cherry Swash       </div
+   ><div class='option' style='font-family:Raleway'         cmd='+fontName' val='Raleway'        >Raleway       </div
+   ><div class='option' style='font-family:Libre Baskerille'         cmd='+fontName' val='Libre Baskerille'        >Libre Baskerille       </div
+   ><div class='option longish' style='font-family:Petit Formal Script'         cmd='+fontName' val='Petit Formal Script'        >Petit Formal Script       </div
+   ><div class='option' style='font-family:Nunito'         cmd='+fontName' val='Nunito'        >Nunito       </div
+   ><div class='option' style='font-family:Flamenco'         cmd='+fontName' val='Flamenco'        >Flamenco       </div
+   ><div class='option' style='font-family:Novecento'         cmd='+fontName' val='Novecento'        >Novecento       </div
+   ><div class='option' style='font-family:BenchNine'         cmd='+fontName' val='BenchNine'        >BenchNine       </div
+   ><div class='option' style='font-family:Podkova'         cmd='+fontName' val='Podkova'        >Podkova       </div
+   ><div class='option' style='font-family:Code'         cmd='+fontName' val='Code'        >Code       </div
+   ><div class='option' style='font-family:Lane'         cmd='+fontName' val='Lane'        >Lane       </div
+   ><div class='option' style='font-family:Rokkitt'         cmd='+fontName' val='Rokkitt'        >Rokkitt       </div
+   ><div class='option' style='font-family:Special Elite'         cmd='+fontName' val='Special Elite'        >Special Elite       </div
+   ><div class='option' style='font-family:Lato'         cmd='+fontName' val='Lato'        >Lato       </div
+   ><div class='option' style='font-family:Times'         cmd='+fontName' val='Times'        >Times       </div
+   ><div class='option' style='font-family:Komika Title'         cmd='+fontName' val='Komika Title'        >Komika Title       </div
+   ><div class='option' style='font-family:Archivo Narrow'         cmd='+fontName' val='Archivo Narrow'        >Archivo Narrow       </div
+   ><div class='option' style='font-family:Lusitana'         cmd='+fontName' val='Lusitana'        >Lusitana       </div
+   ><div class='option' style='font-family:League Gothic'         cmd='+fontName' val='League Gothic'        >League Gothic       </div
+   ><div class='option' style='font-family:Open Sans'         cmd='+fontName' val='Open Sans'        >Open Sans       </div
+   ><div class='option' style='font-family:Cutive'         cmd='+fontName' val='Cutive'        >Cutive       </div
+   ><div class='option' style='font-family:Pacifico'         cmd='+fontName' val='Pacifico'        >Pacifico       </div
   ></div
   ><div class='control drawer border color'></div
   ><div class='control drawer border align'
@@ -222,28 +232,46 @@
  <div class='control buttons'
   ><img class='button color hoverable' src='{asset "skin/edit/color.png"}' title="Color"
 
-  {#><img class='button stroke hoverable tip_N' src='{asset "skin/edit/border_color.png"}' title='Border color'
+{#
+  ><img class='button stroke hoverable tip_N' src='{asset "skin/edit/border_color.png"}' title='Border color'
   ><img class='button blank bwidth hoverable tip_N' src='{asset "skin/edit/border_width.png"}' title='Border width'
-  ><div class='button blank bstyle hoverable' title='Border style'></div#}
+  ><div class='button blank bstyle hoverable' title='Border style'></div
+#}
 
   ><img class='button rounding hoverable tip_N'
     src='{asset "skin/edit/rounded_corners.png"}' title='corner rounding'></div>
 
-  {#
+{#
    <div class='control drawer bstyle'>
    ><div class='border hoverable' style='border-style: solid;' title='Solid border'></div
    ><div class='border hoverable' style='border-style: dashed;' title='Dashed border'></div
    ><div class='border none hoverable' style='border-style: none;' title='No border'></div
   ></div
-  #}
+#}
 </div>
 
 <div id='controls_misc' class='controls_src'>
- <img class='control drag resize hoverable tip_SE' src='{asset "skin/edit/resize.png"}' title="Resize">
- <img class='control drag resize_h hoverable tip_E' src='{asset "skin/edit/resize_h.png"}' title="Resize">
- <img class='button color hoverable' src='{asset "skin/edit/color.png"}' title="Color">
- <img class='button opacity tip_N' src='{asset "skin/edit/opacity.png"}' title='Opacity'>
- <div class='control drawer color border'></div>
+  <img class='control drag resize hoverable tip_SE' 
+    src='{asset "skin/edit/resize.png"}' title="Resize">
+  <img class='control drag resize_h hoverable tip_E' 
+    src='{asset "skin/edit/resize_h.png"}' title="Resize">
+  <img class='control drag resize_v hoverable tip_S' 
+    src='{asset "skin/edit/resize_v.png"}' title="Resize">
+  <img class='button color hoverable' src='{asset "skin/edit/color.png"}' title="Color">
+  <img class='button opacity tip_N hoverable' 
+    src='{asset "skin/edit/opacity.png"}' title='Opacity'>
+  <div class='control drawer color border'></div>
+  <img class='button align' src='{asset "skin/edit/justify.png"}'>
+  <div class='control drawer border align'>
+   <div><nobr>
+    <img class='option small hoverable' cmd='+alignLeft'    src='{asset "skin/edit/justify_left.png"}'>
+    <img class='option small hoverable' cmd='+alignRight'   src='{asset "skin/edit/justify_right.png"}'>
+   </nobr></div>
+   <div>
+    <img class='option small hoverable' cmd='+alignCenter'  src='{asset "skin/edit/justify_center.png"}'>
+    <img class='option small hoverable' cmd='+alignFull'    src='{asset "skin/edit/justify_full.png"}'>
+   </div>
+  </div>
 </div>
 
 <div id='controls_sketch' class='controls_src'>
@@ -303,6 +331,14 @@ blah blah
  <input id='cancel_overwrite' type='button' class='btn black rounded' value='No'>
 </div>
 
+<div class='editor_overlay hide'>
+  <div class='inset'></div>
+</div>
+<div class="gifwall prompts centered">
+  <div class="highlight hide"></div>
+  <div class="hint">Drag in images to create your #gifwall</div>
+  <img class="plus_btn" src='{asset "skin/nav/plus.png"}'>
+</div>
 <div id='grid_guide'></div>
 
 <div id='controls'></div>

@@ -1,6 +1,9 @@
 define(['browser/jquery'], function($) {
     var o = {};
 
+    o.on_scroll = function(ev) {
+
+    }
     o.place_apps = function() {
         var win_width = $(window).width();
         $('.happfill').each(function(i, div) {
@@ -25,6 +28,12 @@ define(['browser/jquery'], function($) {
                 if((angle = e.attr('data-angle')) && e.rotate)
                     e.rotate(parseFloat(angle));
                 e.css('opacity', this.style.opacity);
+                if (e.hasClass('hive_image') && e.find('.crop_box').length) {
+                    var img = e.find('img');
+                    var ic = {}, props = ['margin-top', 'margin-left'];
+                    props.map(function(p) { ic[p] = parseFloat(img.css(p)) });
+                    img.data('css', ic);
+                }
             }
             var c = $.extend({}, e.data('css'));
             for(var p in c) {
@@ -32,6 +41,15 @@ define(['browser/jquery'], function($) {
                 else c[p] = Math.round(c[p] * s);
             }
             e.css(c);
+            
+            if (e.hasClass('hive_image') && e.find('.crop_box').length) {
+                var img = e.find('img');
+                var ic = $.extend({}, img.data('css'));
+                for(var p in ic) {
+                    ic[p] = Math.round(ic[p] * s);
+                }
+                img.css(ic);
+            }
         });
     };
 

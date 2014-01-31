@@ -84,14 +84,18 @@ o.throttle = function(callback, min_delay, that) {
     }
 };
 
-/*** Returns a function that calls a list of functions ***/
-// I have a feeling this should not be used anywhere
+// Returns a function that calls a list of functions (useful for creating
+// composable event handlers). If any function in collection have a return
+// value, return this and abort the remaining functions in list
 o.Funcs = function(fn, filter) {
     var o = [];
     if(fn) o.push(fn);
     var callback = function() {
         if (!filter || filter()){
-            for(var i in o) o[i].apply(this, arguments);
+            for(var i in o){
+                var ret = o[i].apply(this, arguments);
+                if(ret !== undefined) return ret;
+            }
         }
     };
     callback.handlers = o;

@@ -1,6 +1,7 @@
 import newhive
 import re, pymongo, bson.objectid, random, urllib, os, time, json, math
 import operator as op
+from tempfile import mkstemp
 from os.path import join as joinpath
 from md5 import md5
 from datetime import datetime
@@ -162,7 +163,7 @@ class Database:
                 ]:
                     search['feed'] = pattern[1].lower()
                 else: search['tags'].append( pattern[1].lower() )
-            else: search['text'].append( pattern[1].lower() )
+            else: search['text'].append( pattern[0].lower() )
 
         for k in ['text', 'tags', 'phrases', 'feed']:
             if len(search[k]) == 0:
@@ -526,7 +527,8 @@ class User(HasSocial):
     def create(self):
         self['name'] = self['name'].lower()
         # self['signup_group'] = self.collection.config.signup_group
-        assert re.match('[a-z][a-z0-9]{2,23}$', self['name']) != None, 'Invalid username'
+        assert re.match('[a-z][a-z0-9]{2,23}$', self['name']) != None, (
+            'Invalid username')
         assert not (self['name'] in reserved_words)
         dict.update(self,
             fullname = self.get('fullname', self['name']),
@@ -534,7 +536,7 @@ class User(HasSocial):
             flags = {},
         )
         # self['email_subscriptions'] = self.collection.config.default_email_subscriptions
-        assert self.has_key('referrer')
+
         self.build_search(self)
         self.get_expr_count(force_update=True)
         super(User, self).create()
@@ -1361,7 +1363,7 @@ class Expr(HasSocial):
 
     # size is 'big', 'small', or 'tiny'.
     def snapshot_name(self, size):
-        if not self.get('snapshot_time') or self.get('snapshot_id'):
+        if not self.get('snapshot_time') or not self.get('snapshot_id'):
             return False
 
         dimensions = {"big": (715, 430), "small": (390, 235), 'tiny': (70, 42)}
@@ -1415,21 +1417,21 @@ class Expr(HasSocial):
                 local = generate_thumb(f, (w, h), 'jpeg')
             upload_list.append((local,name))
 
-        it = True
+        it = 0
         for local, name in upload_list:
             file_data = {'owner': self.owner.id,
                 'tmp_file': (local if it else open(local, 'r')),
                 'name': 'snapshot.jpg', 'mime': 'image/jpeg',
                 'generated_from': self.id, 'generated_from_type': 'Expr'}
-            if it:
+            if not it:
                 file_record = self.db.File.create(file_data)
                 file_record['dimensions'] = ( 
                     dimension_list[it][0], dimension_list[it][1])
-                it = False
             else:
                 file_record.set_thumb(
                     dimension_list[it][0], dimension_list[it][1], file=local,
                     mime='image/jpeg', autogen=False)
+            it += 1
         file_record.save()
 
         # clean up local files, upload them atomically to s3 (on success)
@@ -1507,6 +1509,7 @@ class Expr(HasSocial):
                 tagged[tag] = [self.id] + tagged[tag]
         self.owner.update(tagged=tagged, updated=False)
         # TODO-perf: shouldn't need after a migration.
+        # Probably easier to leave it in than to update counts here.
         self.owner.calculate_tags()
 
         return self
@@ -1822,26 +1825,37 @@ class File(Entity):
 
     def set_resamples(self):
         imo = Img.open(self.file)
-        format = imo.format
-        (w, h) = imo.size
+        # format = imo.format
+        size = imo.size
         factor = 2 ** .5
+        ext = '.' + self.get('mime').split('/')[1]
+        resample_fd, resample_filename = mkstemp(suffix=ext)
+        os.write(resample_fd, self.file.read())
+        os.close(resample_fd)
+        ident = os.tmpfile()
+        call (['identify', resample_filename], stdout=ident)
+        ident.seek(0)
+        ident_frames = ident.read().strip().split("\n")
+        if len([x for x in ident_frames if not re.search(r'\+0\+0',x)]) > 0:
+            self.update(resamples=[])
+            return False
+
         resamples = []
-        while (w >= 100) or (h >= 100):
-            w /= factor
-            h /= factor
-            size = (int(w), int(h))
-            imo = imo.resize(size, resample=Img.ANTIALIAS)
-            resample_file = os.tmpfile()
-            imo.save(resample_file, quality=90, format=format)
+        while (size[0] >= 100) or (size[0] >= 100):
+            size = (size[0] / factor, size[1] / factor)
+            size_str = str(int(size[0])) + 'x' + str(int(size[1]))
+            cmd = ['mogrify', '-resize', size_str, resample_filename]
+            call(cmd)
             resamples.append(size)
-            self.db.s3.upload_file(resample_file, 'media',
+            self.db.s3.upload_file(resample_filename, 'media',
                 self._resample_name(size[0]), self._resample_name(size[0]),
                 self['mime'])
+        os.remove(resample_filename)
         resamples.reverse()
         self.update(resamples=resamples)
 
     def get_resample(self, w=None, h=None):
-        resamples = self.get('resamples', [])
+        resamples = self.get('resamples', []) or []
         for size in resamples:
             if (w and size[0] > w) or (h and size[1] > h):
                 return ( self.db.s3.bucket_url('media') + self.id + '_' +
@@ -2192,6 +2206,7 @@ class Remix(Feed):
         new_expr = self.get('new_expr')
         if new_expr:
             self['entity_other_id'] = new_expr.id
+            del self['new_expr']
         res = super(Remix, self).create()
         return res
 
