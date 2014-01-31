@@ -51,20 +51,14 @@ class Assets(object):
 
     # upload each asset
     def push_s3(self):
-        versions_key_name = '.versions.json'
-        versions_key = self.asset_bucket.get_key(versions_key_name)
-        old_versions = json.loads(versions_key.get_contents_as_string()) if versions_key else {}
-        if not versions_key:
-            versions_key = S3Key(self.asset_bucket)
-            versions_key.name = versions_key_name
-
         print('Syncing all assets to s3...')
         for name, (path, version, local) in self.assets.iteritems():
             if not path or local: continue
-            if version != old_versions.get(name):
-                print 'uploading: '+ name
+            versioned_name = name + '.' + version
+            if not S3Key(self.asset_bucket, versioned_name).exists():
+                print 'uploading: ' + name
                 k = S3Key(self.asset_bucket)
-                k.name = name + '.' + version
+                k.name = versioned_name
                 # assets expire 10 years from now (we rely on cache busting query string)
                 headers = {
                     'Cache-Control': 'max-age=' + str(86400 * 3650),
@@ -77,9 +71,6 @@ class Assets(object):
                 k.set_contents_from_filename(path, headers=headers)
                 k.make_public()
         print("Done Syncing to s3")
-
-        new_versions = dict([(r[0], r[1][1]) for r in self.assets.iteritems()]) # make name: version dict
-        versions_key.set_contents_from_string(json.dumps(new_versions))
 
         return self
 
