@@ -23,6 +23,24 @@ define([
             "'><div class='vcenter_middle'>" + block(context) + "</div></div>";
     };
 
+    var entityMap = {
+       "&": "&amp;",
+       "<": "&lt;",
+       ">": "&gt;",
+       '"': '&quot;',
+       "'": '&#39;',
+       "/": '&#x2F;'
+    };
+    function escapeHtml(string) {
+        return String(string).replace(/[&<>"'\/]/g, function (s) {
+            return entityMap[s];
+        });
+    };
+    
+    o.defer = function(context, block){
+        return '<div class="defer" data-content="' + escapeHtml(block(context)) + '"></div>';
+    };
+
     o.recency_time = function(context, time) {
         var now = Date.now();
         var ago = now/1000 - time;

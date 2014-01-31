@@ -18,9 +18,9 @@
 ></div>
 
 <div class="dialog" id="dia_editor_help" data-handle="#btn_help">
-{#
-  <iframe src="{config.content_url}{config.site_user}/default-instructional"></iframe>
-#}
+  {<defer}
+    <iframe src="{config.content_url}{config.site_user}/default-instructional"></iframe>
+  {>}
 </div>
 <div id='dia_save' class='standard dialog' data-handle="#btn_save">
   <div class="heading expr title">Save</div>
