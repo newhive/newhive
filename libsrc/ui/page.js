@@ -62,6 +62,7 @@ define([
     var o = {}, expr_page = false, grid_width, controller,
         border_width = 1,
         column_layout = false,
+        render_new_cards_func,
         anim_direction; // 0 = up, +/-1 = right/left
     const anim_duration = 700;
 

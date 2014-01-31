@@ -265,8 +265,26 @@ define([
         });
     }
 
-    o.parse_query = function(){
-        o.query = js.parse_query(window.location.toString());
+    o.parse_query = function(route_args){
+        var url = window.location.toString();
+        o.query = js.parse_query(url);
+        o.query_raw = url.substring((url + '?').indexOf('?') + 1);
+        if (!route_args)
+            if (o.page_data && o.page_data.cards_route)
+                route_args = o.page_data.cards_route.route_args;
+        var query_from_route = "";
+        if (route_args) {
+            query_from_route = route_args.search_query || "";
+            query_from_route = 
+                routing.substitute_variables(query_from_route, route_args);
+            if (query_from_route != "") {
+                // TODO: merge the raw query attrs (removing dupes) 
+                // with the generated ones.
+                o.query_raw += 
+                    ((o.query_raw != "") ? "&" : "") + "q=" + query_from_route;
+            }
+        }
+
         // Save error message and remove it from hash args
         // Note, we can't put the error info into query args, because altering the URL
         // causes a redirect.  Thus it has to be in hash args
