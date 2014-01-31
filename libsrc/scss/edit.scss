@@ -33,7 +33,7 @@ body.edit {
     }
 }
 &.default {
-    .change_zoom {display:none}
+    #edit_nav .change_zoom {display:none}
     .ehapp .highlight {
         background-color: $color_selected;
         opacity: .6;
