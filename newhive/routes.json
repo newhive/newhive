@@ -114,7 +114,7 @@
         "api_route": "/api/feed/expressions/grid/<owner_name>/<tag_name>",
         "controller": "community",
         "method": "expressions_public_tags",
-        "search_query": "%40<owner_name>+%23<tag_name>",
+        "search_query": "@<owner_name> #<tag_name>",
         "client_method": "grid",
         "include_tags": true
     },
@@ -131,7 +131,7 @@
         "api_route": "/api/feed/<owner_name>/tag/<tag_name>",
         "controller": "community",
         "method": "expressions_tag",
-        "search_query": "%40<owner_name>+%23<tag_name>",
+        "search_query": "@<owner_name> #<tag_name>",
         "client_method": "grid",
         "include_tags": true
     },
@@ -140,7 +140,7 @@
         "api_route": "/api/feed/<owner_name>/tag/<tag_name>/<entropy>",
         "controller": "community",
         "method": "expressions_tag",
-        "search_query": "%40<owner_name>+%23<tag_name>",
+        "search_query": "@<owner_name> #<tag_name>",
         "client_method": "grid",
         "include_tags": true,
         "private": true

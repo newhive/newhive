@@ -6,7 +6,7 @@
 {<with null "plus_menu" user.logged_in}
   {|templates/tag_list.html}
 {>}
-<a { query_attrs "view_expr" query_raw
+<a { query_attrs "view_expr" search_query
     "id" id  "expr_name" name "owner_name" owner.name }
   ><img class="snapshot" src=
   {<if snapshot_small}
