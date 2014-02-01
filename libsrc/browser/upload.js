@@ -49,15 +49,18 @@ define([
         return files;
     };
 
+    o.file_list_to_list = function(input_file_list) {
+        var file_list = [];
+        file_list[input_file_list.length - 1] = 0;
+        return $.map(input_file_list, function(x, i) {
+            return input_file_list.item(i);});
+    }
     o.drop_target = function(el, on_files, on_response){
         var on_drop = function(ev){
             var dt = ev.originalEvent.dataTransfer,
                 files = [],
-                file_list = [],
                 url = dt.getData("URL");
-            file_list[dt.files.length - 1] = 0;
-            file_list = $.map(dt.files, function(x, i) {
-                return dt.files.item(i);});
+            var file_list = o.file_list_to_list(dt.files);
             if (file_list.length == 0 && url.length) {
                 // TODO-bugbug: make async request for URL, call on_files on
                 // success with actual content-type

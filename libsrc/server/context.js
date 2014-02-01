@@ -263,7 +263,10 @@ define([
             var input = $(el)
 
             input.on('change', function(){
-                form.trigger('with_files', [upload.unwrap_file_list(el.files)]);
+                var file_list = upload.file_list_to_list(el.files);
+                form.trigger('with_files', 
+                    [upload.unwrap_file_list(el.files), file_list]);
+                el.files = file_list;
                 submit_form(form);
                 input.val('');
             });
