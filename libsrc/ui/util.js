@@ -13,7 +13,7 @@ define([
         return false;
     };
     o.asset_name_from_url = function(url){
-        if (url.slice(-9, 1) != ".")
+        if (url.slice(-9).slice(0,1) != ".")
             return false;
         var asset_name = 
             url.slice(0,-9).replace(/^(https?:)?(\/\/)?[^\/]+\//,"");
