@@ -26,21 +26,20 @@ define([
 
         if(files){
             for(var i = 0; i < files.length; i++){
-                var f = files.item(i);
+                var f = files[i];
                 opts.data.append('files', f.slice(0, f.size), f.name);
             }
         }
-
-        $.ajax(opts);
+        if (files.length)
+            $.ajax(opts);
     };
 
     o.unwrap_file_list = function(file_list){
         // if(!file_api) return;
         var files = [];
         var urlCreator = window.URL || window.webkitURL;
-        // FileList is not a list at all, has no map :'(
         for(var i = 0; i < file_list.length; i++){
-            var f = file_list.item(i), file = {
+            var f = file_list[i], file = {
                 url: urlCreator.createObjectURL(f),
                 name: f.name,
                 mime: f.type
@@ -54,8 +53,11 @@ define([
         var on_drop = function(ev){
             var dt = ev.originalEvent.dataTransfer,
                 files = [],
-                file_list = dt.files,
+                file_list = [],
                 url = dt.getData("URL");
+            file_list[dt.files.length - 1] = 0;
+            file_list = $.map(dt.files, function(x, i) {
+                return dt.files.item(i);});
             if (file_list.length == 0 && url.length) {
                 // TODO-bugbug: make async request for URL, call on_files on
                 // success with actual content-type
@@ -80,13 +82,13 @@ define([
                             mime: mime
                         });
                     }
-                    on_files(files);
+                    on_files(files, file_list);
                 }
             } else{
-                on_files(o.unwrap_file_list(file_list));
+                on_files(o.unwrap_file_list(file_list), file_list);
             }
 
-            o.submit(dt.files, { success: on_response });
+            o.submit(file_list, { success: on_response });
 
             return false;
         };

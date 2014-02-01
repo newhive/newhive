@@ -22,6 +22,7 @@ body.edit {
             pointer-events:auto;
         }
     }
+    .app_btns {display:none !important}
     .app_btns {min-width:0px}
     .app_btns .icon {display:none}
     .app_btns .icon.insert_image {display:inline-block}
@@ -41,7 +42,7 @@ body.edit {
         .highlight {
             width: 100%;
             height: 100%;
-            border: $color_forest_teal 7px dashed;
+            border: $color_selected 7px dashed;
             @include box-sizing( border-box );
             // position: absolute;
             // top: 0px;

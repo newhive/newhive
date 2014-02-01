@@ -293,7 +293,7 @@ o.on_media_upload = function(files){
     });
 };
 
-o.new_file = function(files, opts, app_opts) {
+o.new_file = function(files, opts, app_opts, filter) {
     // TODO-feature: depending on type and number of files, create grouping of
     // media objects. Multiple audio files should be assembled into a play
     // list. Multiple images should be placed in a table, or slide-show
@@ -327,6 +327,8 @@ o.new_file = function(files, opts, app_opts) {
             // app.read_only = true;
         }
         app.url = file.url;
+        if (filter && !filter(app))
+            return;
 
         return env.new_app(app, $.extend({ offset: [20*i, 20*i] }, app_opts) );
     });

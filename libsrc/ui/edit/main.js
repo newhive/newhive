@@ -121,9 +121,16 @@ Hive.init_menus = function() {
 
     $('#btn_grid').click(Hive.toggle_grid);
 
-    $('#media_upload').on('with_files', function(ev, files){
+    $('#media_upload').on('with_files', function(ev, files, file_list){
         // media files are available immediately upon selection
-        center = u._div([ev.clientX, ev.clientY])(env.scale());
+        if (env.gifwall) {
+            files = files.filter(function(file, i) {
+                var res = (file.mime.slice(0, 6) == 'image/');
+                if (!res) file_list.splice(i, 1);
+                return res;
+            });
+        }
+        center = u._mul([ev.clientX, ev.clientY])(env.scale());
         u.new_file(files, { center: center });
     }).on('response', function(ev, files){ u.on_media_upload(files) });
 
@@ -520,9 +527,12 @@ Hive.state = function() {
 // BEGIN-Events  //////////////////////////////////////////////////////
 
 global_highlight = function(showhide) {
-    if (1 && env.gifwall)
+    if (1 && env.gifwall) {
         $(".prompts .highlight").showhide(showhide);
-    else
+        var fn = showhide ? "mouseover" : 'mouseout';
+        $(".prompts .plus_btn").trigger(fn);
+        // $(".prompts .plus_btn").addremoveClass("active", showhide);
+    } else
         $(".editor_overlay").showhide(showhide);
 };
 

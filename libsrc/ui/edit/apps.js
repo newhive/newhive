@@ -1279,8 +1279,13 @@ Hive.App.has_image_drop = function(o) {
         ev.preventDefault();
     });
 
-    var on_files = function(files){
+    var on_files = function(files, file_list){
         if (env.gifwall) {
+            files = files.filter(function(file, i) {
+                var res = (file.mime.slice(0, 6) == 'image/');
+                if (!res) file_list.splice(i, 1);
+                return res;
+            });
             u.new_file(files, {}, { insert_at: o.pos_relative() });
             return;
         }

@@ -273,8 +273,8 @@ define([
                 drop_areas = find_all(all, 'label[for=' + input_id + ']')
                     .add(drop_selector).add(find_all(all, drop_selector));
                 upload.drop_target(drop_areas,
-                    function(files){
-                        form.trigger('with_files', [files]); },
+                    function(files, file_list){
+                        form.trigger('with_files', [files, file_list]); },
                     function(file_records){
                         form.trigger('response', [file_records]); }
                 );
