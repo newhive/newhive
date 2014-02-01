@@ -279,7 +279,8 @@ class Community(Controller):
         meta = {}
         resp = {
             'expr_id': expr.id,
-            'content_url': abs_url(domain=self.config.content_domain) + expr.id,
+            'content_url': abs_url(domain=self.config.content_domain, 
+                secure=request.is_secure) + expr.id,
             'expr': expr.client_view(viewer=tdata.user, activity=10)
         }
 
