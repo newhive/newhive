@@ -66,6 +66,7 @@ env.new_app = Hive.new_app = function(s, opts) {
             a.resize_start();
             a.resize(delta);
             a.resize_end();
+            $("body").scrollTop(a.pos()[1] + a.dims()[1] - 100);
             // env.layout_apps();
             env.History.group("create");
         }
@@ -341,8 +342,13 @@ Hive.App = function(init_state, opts) {
         opts = $.extend({on: true}, opts);
 
         var $highlight = o.div.find(".highlight");
-        if (0 == $highlight.length)
-            $highlight = $("<div class='highlight hide'></div>").appendTo(o.div);
+        if (0 == $highlight.length) {
+            if (env.gifwall)
+                $highlight = $("<div class='highlight_box hide'\
+                    ><div class='highlight'></div></div>").appendTo(o.div);
+            else
+                $highlight = $("<div class='highlight hide></div>").appendTo(o.div);
+        }
         $highlight.showhide(opts.on);
     }
     o.state_relative = function(){ return {

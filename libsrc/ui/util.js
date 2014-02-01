@@ -5,10 +5,22 @@ define([
     var o = {};
 
     o.asset = function(name){
+        return _asset(name) || "Not-found:" + name;
+    };
+    var _asset = function(name){
         if (assets[name])
             return assets[name];
-        return "Not-found:" + name;
+        return false;
     };
+    o.asset_name_from_url = function(url){
+        if (url.slice(-9).slice(0,1) != ".")
+            return false;
+        var asset_name = 
+            url.slice(0,-9).replace(/^(https?:)?(\/\/)?[^\/]+\//,"");
+        if (_asset(asset_name))
+            return asset_name;
+        return false;
+    }
 
     o.val = function(x) {
         if (typeof(x) == "number")
@@ -82,7 +94,9 @@ define([
         });
 
         function hover_url(url) {
-            var h = url.replace(/(.png)|(-\w*)$/, '-hover.png');
+            var orig_asset = o.asset_name_from_url(url) || url;
+            var h = orig_asset.replace(/(.png)|(-\w*)$/, '-hover.png');
+            h = _asset(h) || h;
             var i = $("<img style='display:none'>").attr('src', h);
             $(document.body).append(i);
             return h;
