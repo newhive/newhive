@@ -4,6 +4,8 @@ var env = o = {};
 env.show_move_sensitivity = false;
 env.no_snap = false;
 
+env.dragging_count = 0;
+
 // 1 editor unit := scale client pixels
 // The editor is 1000 units wide inside a 1000*scale pixel window
 var scale = 1, zoom = 1;

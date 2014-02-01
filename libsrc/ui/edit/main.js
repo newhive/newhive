@@ -55,31 +55,6 @@ Hive.u = u;
 Hive.env = env;
 Hive.app = hive_app;
 
-// Called on load() and save()
-Hive.init_common = function(){
-    $('title').text("Editor - " + (Hive.Exp.title || "[Untitled]"));
-    var tags = " " + $("#tags_input").val().trim() + " ";
-    env.gifwall = (tags.indexOf(" #gifwall ") >= 0);
-    env.squish_full_bleed = env.gifwall;
-    Hive.enter();
-};
-var $style = $();
-Hive.enter = function(){
-    $style.remove();
-    if (env.gifwall)
-        $("body").addClass("gifwall");
-    else
-        $("body").addClass("default");
-};
-
-Hive.exit = function(){
-    env.zoom_set(1);
-    $("body").removeClass("gifwall");
-    $("body").removeClass("default");
-    $(document).off('keydown');
-    $('body').off('mousemove mousedown');
-};
-
 Hive.grid = false;
 Hive.toggle_grid = function() {
     Hive.grid = ! Hive.grid;
@@ -312,6 +287,20 @@ Hive.init_global_handlers = function(){
     evs.on(drag_base, 'dragstart');
     evs.on(drag_base, 'drag');
     evs.on(drag_base, 'dragend');
+
+    // The plus button needs to be clickable, but pass other events through
+    $(".prompts .plus_btn").on("dragenter",function(ev) { 
+        $("#grid_guide").trigger(ev);
+        return false; })
+    .on("dragleave",function(ev) { 
+        $("#grid_guide").trigger(ev);
+        return false; })
+    .on('dragenter dragover', function(ev){
+        ev.preventDefault(); })
+    .on("drop",function(ev) {
+        ev.preventDefault();
+        $("#grid_guide").trigger(ev);
+        return false; });
 };
 Hive.init = function(exp, page){
     // this reference must be maintained, do not assign to Exp
@@ -332,6 +321,31 @@ Hive.init = function(exp, page){
     Hive.init_global_handlers()
     Hive.edit_start();
     env.layout_apps();
+};
+
+// Called on load() and save()
+Hive.init_common = function(){
+    $('title').text("Editor - " + (Hive.Exp.title || "[Untitled]"));
+    var tags = " " + $("#tags_input").val().trim() + " ";
+    env.gifwall = (tags.indexOf(" #gifwall ") >= 0);
+    env.squish_full_bleed = env.gifwall;
+    Hive.enter();
+};
+// var $style = $();
+Hive.enter = function(){
+    // $style.remove();
+    if (env.gifwall)
+        $("body").addClass("gifwall");
+    else
+        $("body").addClass("default");
+};
+
+Hive.exit = function(){
+    env.zoom_set(1);
+    $("body").removeClass("gifwall");
+    $("body").removeClass("default");
+    $(document).off('keydown');
+    $('body').off('mousemove mousedown');
 };
 
 Hive.edit_start = function(){
@@ -506,7 +520,7 @@ Hive.state = function() {
 // BEGIN-Events  //////////////////////////////////////////////////////
 
 global_highlight = function(showhide) {
-    if (env.gifwall)
+    if (1 && env.gifwall)
         $(".prompts .highlight").showhide(showhide);
     else
         $(".editor_overlay").showhide(showhide);
@@ -517,6 +531,8 @@ Hive.handler_type = 3;
 Hive.dragenter = function(ev){ 
     // hovers_active(false);
     global_highlight(true);
+    env.dragging_count++;
+    // console.log("enter: " + env.dragging_count);
     ev.preventDefault();
 };
 Hive.dragstart = function(){ 
@@ -526,12 +542,17 @@ Hive.dragstart = function(){
 Hive.dragend = function(){
     // TODO-usability: fix disabling hover states in ui/util.hoverable
     // hovers_active(true)
+
     // In case scrollbar has been toggled:
-    global_highlight(false);
     u.layout_apps(); 
 };
-Hive.dragleave = Hive.drop = function(){
-    global_highlight(false);
+Hive.drop = Hive.dragleave = function(){
+    if (env.dragging_count > 0) 
+        --env.dragging_count;
+    // console.log("leave: " + env.dragging_count);
+
+    if (0 == env.dragging_count)
+        global_highlight(false);
 };
 Hive.mouse_pos = [0, 0];
 Hive.mousemove = function(ev){

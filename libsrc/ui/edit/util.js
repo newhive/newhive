@@ -340,7 +340,7 @@ env.layout_apps = o.layout_apps = function(){
     if(env.Selection.controls) env.Selection.controls.layout();
     var height = Math.max(0, o.app_bounds(env.Apps.all()).bottom) * env.scale();
     $(".prompts").css("top", height);
-    $(".prompts .highlight").css("width", 1000*env.scale());
+    $(".prompts .highlight_box").css("width", 100*env.zoom() + "%");
 };
 
 o.snap_helper = function(my_tuple, opts) {
