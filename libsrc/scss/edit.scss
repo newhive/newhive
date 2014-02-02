@@ -1,7 +1,18 @@
 @import "common";
 
 body.edit {
+// for backwards-compatability with old editor.
+// TODO: Make Gibson default and migrate all old expressions to override
+// default
+.ehapp.text { font-family: Helvetica, Arial, sans-serif; }
 .prompts.gifwall {display:none}
+&.default {
+    #edit_nav .change_zoom {display:none}
+    .ehapp .highlight {
+        background-color: $color_selected;
+        opacity: .6;
+    }
+}
 &.gifwall {
     overflow-x:hidden;
     .overlay .fluff {display:none !important}
@@ -49,14 +60,6 @@ body.edit {
         }
     }
 }
-&.default {
-    #edit_nav .change_zoom {display:none}
-    .ehapp .highlight {
-        background-color: $color_selected;
-        opacity: .6;
-    }
-}
-font-family: Helvetica, Arial, sans-serif;
 
 .ruler {
     z-index: 1337;
