@@ -5,6 +5,7 @@ define([
 ){
     var o = {};
 
+    // files = false or list of files to upload
     o.submit = function(files, opts){
         opts = $.extend({
             url: '/api/file/create',
@@ -30,7 +31,7 @@ define([
                 opts.data.append('files', f.slice(0, f.size), f.name);
             }
         }
-        if (files.length)
+        // if (files.length)
             $.ajax(opts);
     };
 
