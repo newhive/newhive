@@ -1,7 +1,10 @@
 @import "common";
 
 body.edit {
-// font-family: Helvetica, Arial, sans-serif;
+// for backwards-compatability with old editor.
+// TODO: Make Gibson default and migrate all old expressions to override
+// default
+.ehapp.text { font-family: Helvetica, Arial, sans-serif; }
 .prompts.gifwall {display:none}
 &.default {
     #edit_nav .change_zoom {display:none}
