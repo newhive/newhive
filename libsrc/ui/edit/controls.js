@@ -60,7 +60,7 @@ o.Controls = function(app, multiselect) {
 
         // set_link is called when input is blurred
         var set_link = function(){
-            var v = input.text();
+            var v = input.val();
             // TODO: improve URL guessing
             if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && 
                 v.match(/\w+\.\w{2,}/)) v = 'http://' + v;
