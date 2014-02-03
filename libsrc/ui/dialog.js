@@ -89,7 +89,7 @@ define([
             // For old browsers which don't support autofocus.
             this_dia.find("*[autofocus]").focus();
             $.each(this_dia.find(".defer"), function (i, el) {
-                $(el).parent().html($(".defer").attr("data-content"));
+                $(el).replaceWith($($(el).attr("data-content")));
             });
             opts.layout();
 

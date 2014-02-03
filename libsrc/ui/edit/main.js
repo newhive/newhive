@@ -55,31 +55,6 @@ Hive.u = u;
 Hive.env = env;
 Hive.app = hive_app;
 
-// Called on load() and save()
-Hive.init_common = function(){
-    $('title').text("Editor - " + (Hive.Exp.title || "[Untitled]"));
-    var tags = " " + $("#tags_input").val().trim() + " ";
-    env.gifwall = (tags.indexOf(" #gifwall ") >= 0);
-    env.squish_full_bleed = env.gifwall;
-    Hive.enter();
-};
-var $style = $();
-Hive.enter = function(){
-    $style.remove();
-    if (env.gifwall)
-        $("body").addClass("gifwall");
-    else
-        $("body").addClass("default");
-};
-
-Hive.exit = function(){
-    env.zoom_set(1);
-    $("body").removeClass("gifwall");
-    $("body").removeClass("default");
-    $(document).off('keydown');
-    $('body').off('mousemove mousedown');
-};
-
 Hive.grid = false;
 Hive.toggle_grid = function() {
     Hive.grid = ! Hive.grid;
@@ -146,9 +121,16 @@ Hive.init_menus = function() {
 
     $('#btn_grid').click(Hive.toggle_grid);
 
-    $('#media_upload').on('with_files', function(ev, files){
+    $('#media_upload').on('with_files', function(ev, files, file_list){
         // media files are available immediately upon selection
-        center = u._div([ev.clientX, ev.clientY])(env.scale());
+        if (env.gifwall) {
+            files = files.filter(function(file, i) {
+                var res = (file.mime.slice(0, 6) == 'image/');
+                if (!res) file_list.splice(i, 1);
+                return res;
+            });
+        }
+        center = u._mul([ev.clientX, ev.clientY])(env.scale());
         u.new_file(files, { center: center });
     }).on('response', function(ev, files){ u.on_media_upload(files) });
 
@@ -312,6 +294,20 @@ Hive.init_global_handlers = function(){
     evs.on(drag_base, 'dragstart');
     evs.on(drag_base, 'drag');
     evs.on(drag_base, 'dragend');
+
+    // The plus button needs to be clickable, but pass other events through
+    $(".prompts .plus_btn").on("dragenter",function(ev) { 
+        $("#grid_guide").trigger(ev);
+        return false; })
+    .on("dragleave",function(ev) { 
+        $("#grid_guide").trigger(ev);
+        return false; })
+    .on('dragenter dragover', function(ev){
+        ev.preventDefault(); })
+    .on("drop",function(ev) {
+        ev.preventDefault();
+        $("#grid_guide").trigger(ev);
+        return false; });
 };
 Hive.init = function(exp, page){
     // this reference must be maintained, do not assign to Exp
@@ -332,6 +328,31 @@ Hive.init = function(exp, page){
     Hive.init_global_handlers()
     Hive.edit_start();
     env.layout_apps();
+};
+
+// Called on load() and save()
+Hive.init_common = function(){
+    $('title').text("Editor - " + (Hive.Exp.title || "[Untitled]"));
+    var tags = " " + $("#tags_input").val().trim() + " ";
+    env.gifwall = (tags.indexOf(" #gifwall ") >= 0);
+    env.squish_full_bleed = env.gifwall;
+    Hive.enter();
+};
+// var $style = $();
+Hive.enter = function(){
+    // $style.remove();
+    if (env.gifwall)
+        $("body").addClass("gifwall");
+    else
+        $("body").addClass("default");
+};
+
+Hive.exit = function(){
+    env.zoom_set(1);
+    $("body").removeClass("gifwall");
+    $("body").removeClass("default");
+    $(document).off('keydown');
+    $('body').off('mousemove mousedown');
 };
 
 Hive.edit_start = function(){
@@ -510,17 +531,22 @@ Hive.state = function() {
 // BEGIN-Events  //////////////////////////////////////////////////////
 
 global_highlight = function(showhide) {
-    if (env.gifwall)
+    if (env.gifwall) {
         $(".prompts .highlight").showhide(showhide);
-    else
+        var fn = showhide ? "mouseover" : 'mouseout';
+        $(".prompts .plus_btn").trigger(fn);
+        // $(".prompts .plus_btn").addremoveClass("active", showhide);
+    } else
         $(".editor_overlay").showhide(showhide);
 };
 
 // Most general event handlers
 Hive.handler_type = 3;
+var dragging_count = 0;
 Hive.dragenter = function(ev){ 
     // hovers_active(false);
     global_highlight(true);
+    dragging_count++;
     ev.preventDefault();
 };
 Hive.dragstart = function(){ 
@@ -530,12 +556,16 @@ Hive.dragstart = function(){
 Hive.dragend = function(){
     // TODO-usability: fix disabling hover states in ui/util.hoverable
     // hovers_active(true)
+
     // In case scrollbar has been toggled:
-    global_highlight(false);
     u.layout_apps(); 
 };
-Hive.dragleave = Hive.drop = function(){
-    global_highlight(false);
+Hive.drop = Hive.dragleave = function(){
+    if (dragging_count > 0) 
+        --dragging_count;
+
+    if (0 == dragging_count)
+        global_highlight(false);
 };
 Hive.mouse_pos = [0, 0];
 Hive.mousemove = function(ev){

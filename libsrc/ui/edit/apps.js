@@ -66,6 +66,7 @@ env.new_app = Hive.new_app = function(s, opts) {
             a.resize_start();
             a.resize(delta);
             a.resize_end();
+            $("body").scrollTop(a.pos()[1] + a.dims()[1] - 100);
             // env.layout_apps();
             env.History.group("create");
         }
@@ -163,13 +164,27 @@ Hive.App = function(init_state, opts) {
     o.id = init_state.id || u.random_str();
     o.handler_type = 0;
 
-    o.add_to = function(method, more_method){
+    // Chain "more_method" onto an existing "method" (or noop if method 
+    // does not exist)
+    // opts.order = ("before", "after", "user")
+    o.USER = 0; o.BEFORE = 1; o.AFTER = 2;
+    o.add_to = function(method, more_method, opts){
+        opts = $.extend({ order: o.BEFORE }, opts);
         // Add functionality to methods, used by behavior and child constructors
-        var old_method = o[method];
-        o[method] = function(){
-            return more_method(old_method());
+        var old_method = o[method] || noop;
+        o[method] = function(more_args){
+            switch (opts.order) {
+            case (o.BEFORE):
+                return more_method(old_method(more_args));
+            case (o.AFTER):
+                return old_method(more_method(more_args));
+            case (o.USER):
+                return more_method(old_method);
+            }
         };
     };
+    o.add_after = function(method, more_method) 
+        { return o.add_to(method, more_method, {order: o.AFTER}) };
 
     o._remove = function(){
         o.unfocus();
@@ -341,8 +356,13 @@ Hive.App = function(init_state, opts) {
         opts = $.extend({on: true}, opts);
 
         var $highlight = o.div.find(".highlight");
-        if (0 == $highlight.length)
-            $highlight = $("<div class='highlight hide'></div>").appendTo(o.div);
+        if (0 == $highlight.length) {
+            if (env.gifwall)
+                $highlight = $("<div class='highlight_box hide'\
+                    ><div class='highlight'></div></div>").appendTo(o.div);
+            else
+                $highlight = $("<div class='highlight hide></div>").appendTo(o.div);
+        }
         $highlight.showhide(opts.on);
     }
     o.state_relative = function(){ return {
@@ -1273,8 +1293,13 @@ Hive.App.has_image_drop = function(o) {
         ev.preventDefault();
     });
 
-    var on_files = function(files){
+    var on_files = function(files, file_list){
         if (env.gifwall) {
+            files = files.filter(function(file, i) {
+                var res = (file.mime.slice(0, 6) == 'image/');
+                if (!res) file_list.splice(i, 1);
+                return res;
+            });
             u.new_file(files, {}, { insert_at: o.pos_relative() });
             return;
         }

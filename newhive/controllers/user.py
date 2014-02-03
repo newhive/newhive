@@ -524,14 +524,15 @@ class User(ModelController):
         })
         if not args.get('fullname'): args['fullname'] = args['name']
 
-        referral = False
-        if not self.flags.get('open_signup'):
-            referral = self._check_referral(request)
-            if (not referral):
-                return self.serve_json(response, { 'error': 'referral' })
-            referrer = self.db.User.fetch(referral['user'])
+        referral = self._check_referral(request)
+        if (not referral and not self.flags.get('open_signup')):
+            return self.serve_json(response, { 'error': 'referral' })
+        referrer = self.db.User.fetch(referral['user'])
+        if self.flags.get('open_signup'):
+            if not referrer: referrer = self.db.User.site_user
+        else:
             assert referrer, 'Referring user not found'
-            args['referrer'] = referrer.id
+        args['referrer'] = referrer.id
 
         credential_id = request.form.get('credential_id')
         if credential_id:
@@ -558,25 +559,24 @@ class User(ModelController):
         # self._friends_to_listen(request, user)
         # self._friends_not_to_listen(request, user)
 
-        if referral:
-            if user.get('referrer') != self.db.User.site_user.id:
-                self.db.FriendJoined.create(user, referrer)
-                # new user follows referrer
-                self.db.Star.create(user, referrer)
-                
-            if referral.get('reuse'):
-                referral.increment({'reuse': -1})
-                referral.update_cmd({'$push': {'users_created': user.id}})
-                if referral['reuse'] <= 0: referral.update(used=True)
-            else:
-                referral.update(
-                    used=True,
-                    user_created=user.id,
-                    user_created_name=user['name'],
-                    user_created_date=user['created']
-                )
-                contact = self.db.Contact.find({'referral_id': referral.id})
-                if contact: contact.update(user_created=user.id)
+        if user.get('referrer') != self.db.User.site_user.id:
+            self.db.FriendJoined.create(user, referrer)
+            # new user follows referrer
+            self.db.Star.create(user, referrer)
+            
+        if referral.get('reuse'):
+            referral.increment({'reuse': -1})
+            referral.update_cmd({'$push': {'users_created': user.id}})
+            if referral['reuse'] <= 0: referral.update(used=True)
+        else:
+            referral.update(
+                used=True,
+                user_created=user.id,
+                user_created_name=user['name'],
+                user_created_date=user['created']
+            )
+            contact = self.db.Contact.find({'referral_id': referral.id})
+            if contact: contact.update(user_created=user.id)
 
         user.give_invites(config.initial_invite_count)
         if args.has_key('thumb_file_id'):

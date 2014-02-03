@@ -187,6 +187,7 @@ class Expr(ModelController):
             if media: content = media.get_resample(
                 app.get('dimensions', [100,100])[0] * scale
             )
+            # TODO-cleanup: remove after media migration
             content = content.replace("https:","")
             html = "<img src='%s'>" % content
             scale_x = app.get('scale_x')

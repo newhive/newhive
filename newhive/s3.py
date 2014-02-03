@@ -44,7 +44,9 @@ class S3Interface(object):
         if mimetype: s3_headers['Content-Type'] = mimetype
         k.set_contents_from_file(file, headers=s3_headers)
         k.make_public()
-        return k.generate_url(0, query_auth=False)
+        url = k.generate_url(0, query_auth=False)
+        url = re.sub(r'^https?:', '', url)
+        return url
 
     def bucket_url(self, bucket='media'):
         return ('https://%s.s3.amazonaws.com/' %

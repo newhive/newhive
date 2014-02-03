@@ -30,6 +30,7 @@
         }
     }
     .icon.hash {
+        visibility: hidden;
         background-color: transparent;
         @include border-radius(0px);
         background-image: asset_url('skin/nav/collections.png');
@@ -48,7 +49,7 @@
     }
     .icon {
         @include border-radius(11px);
-        width: 44px;
+        width: 42px;
         height: 44px;
     }
 }
@@ -580,6 +581,9 @@ body {
             .feed_item {
                 padding-left: 0px;
                 &:hover { background-color: inherit; }
+            }
+            .title {
+                max-width: 390px;
             }
             .info {
                 margin-bottom: 10px;
