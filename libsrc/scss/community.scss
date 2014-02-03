@@ -56,11 +56,13 @@
 
 #exprs {
     position:absolute; left: 0; bottom: 0;
-    overflow:hidden;
     z-index: 1;
     width:100%; height:100%;
     display: none;
     background-color: white;
+
+    // prevent scrollers from momentarily appearing during animation
+    &.animated { overflow:hidden; }
 
     .expr {
         width:100%; height:100%; position:absolute; left: 0; top:0;
