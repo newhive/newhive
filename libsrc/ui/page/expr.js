@@ -261,7 +261,8 @@ define([
         var contentFrameURL = o.content_url_base + expr_id +
             '?' + $.param(args);
         contentFrame = $('<iframe class="expr" allowfullscreen>')
-            .attr('src', contentFrameURL).attr('id', 'expr_' + expr_id);
+            .attr('src', contentFrameURL).attr('id', 'expr_' + expr_id)
+            .addClass('expr_hidden').hidehide();
 
         // Cache the expr data on the card
         var page_data = context.page_data;
@@ -320,7 +321,7 @@ define([
         var expr_id = page_data.expr_id;
         var expr_curr = $('.expr_visible');
         expr_curr.removeClass('expr_visible');
-        $('#exprs').showshow();
+        $('#exprs').showshow().addClass('animated');
         $('.social_btn').showshow();
 
         var contentFrame = o.get_expr(expr_id);
@@ -331,7 +332,7 @@ define([
             contentFrame.get(0).contentWindow.
                 postMessage({action: 'show'}, '*');
         }
-        contentFrame.addClass('expr_visible').removeClass('expr_hidden');
+        contentFrame.addClass('expr_visible').removeClass('expr_hidden').showshow();
         contentFrame.showshow();
         $('#exprs .expr').not('.expr_visible').css({'z-index': 0 });
         var found = find_card(expr_id);
@@ -433,14 +434,16 @@ define([
 
     var hide_other_exprs = function() {
         var to_hide = $('#exprs .expr').not('.expr_visible,.blank').filter(":visible");
+        $('#exprs').removeClass('animated');
         to_hide.each(function(i, el) {
             $(el).get(0).contentWindow.
                 postMessage({action: 'hide'}, '*');
         });
-        to_hide.addClass('expr_hidden');
+        to_hide.addClass('expr_hidden').hidehide();
         fixup_tags_list();
     };
 
+    // TODO: garbage collect expression frames
     var hide_exprs = function() {
         var contentFrame = $('.expr_visible');
 
@@ -450,7 +453,7 @@ define([
             },{
                 duration: 0, //anim_duration,
                 complete: function() {
-                    contentFrame.addClass('expr_hidden');
+                    contentFrame.addClass('expr_hidden').hidehide();
                     contentFrame.removeClass('expr_visible');
                     contentFrame.get(0).contentWindow.
                         postMessage({action: 'hide'}, '*');

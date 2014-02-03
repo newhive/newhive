@@ -1,5 +1,3 @@
-def mnot(e): return {'$not': e}
-
 def mq(**d):
     return Query(d)
 
@@ -39,3 +37,7 @@ class Query(dict):
     def add(self, key, val):
         self[key] = val
         return self
+    
+    @property
+    def mnot(self):
+        return Query({'$not': self})
