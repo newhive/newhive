@@ -26,6 +26,7 @@ var o = {}
     ,bound = js.bound;
 
 // TODO-refactor: move into util
+o.capitalize = function(str) { return str[0].toUpperCase() + str.slice(1); };
 
 // Return -1 if x < 0, 1 if x > 0, or 0 if x == 0.
 o._sign = function(x) {
@@ -120,7 +121,12 @@ o.has_shuffle = function(arr) {
     };
 };
 
-
+o.array_unique = function(a) {
+    return a.reduce(function(p, c) {
+        if (p.indexOf(c) < 0) p.push(c);
+        return p;
+    }, []);
+};
 o.array_delete = function(arr, e) {
     for(var n = 0; n < arr.length; n++) {
         if(arr[n] == e) {
