@@ -493,10 +493,14 @@ Hive.state = function() {
         Hive.Exp.password = $('#password').val();
 
     // get height
-    var h = 0;
+    var w = 0, h = 0;
     for(var i in Hive.Exp.apps) {
-        var a = Hive.Exp.apps[i], y = a.dimensions[1] + a.position[1];
-        if(y > h) h = y;
+        var a = Hive.Exp.apps[i]
+            ,x = a.dimensions[0] + a.position[0] 
+            ,y = a.dimensions[1] + a.position[1]
+        ;
+        w = Math.max(w, x);
+        h = Math.max(h, y);
     }
     Hive.Exp.dimensions = [1000, Math.ceil(h)];
 
