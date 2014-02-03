@@ -27,13 +27,12 @@ define([
     }
 
     // pagination functions here
-    var loading = false, ui_page, win = $(window), card_type, card_layout;
+    var ui_page, win = $(window), card_type, card_layout;
     o.more_cards = false;
     var on_scroll_add_page = function(){
         if((win.scrollTop() > ($('#feed').height() - win.height()))
-            && !loading && o.more_cards
+            && !o.more_cards
         ){
-            loading = true;
             o.controller.next_cards(ui_page.render_new_cards);
         }
     };
@@ -47,7 +46,6 @@ define([
         ui_page.attach_handlers();
         ui_page.layout_columns();
         ui_page.add_grid_borders();
-        loading = false;
     };
 
     var allow_reorder = function() {

@@ -84,7 +84,11 @@ define([
     };
 
     // TODO-cleanup: merge with open_route?
+    var loading = false;
     o.next_cards = function(with_cards){
+        if (loading)
+            return false;
+        loading = true;
         var add_cards = function(data){
             context.page_data.cards = context.page_data.cards.concat(data.cards);
             if(with_cards) with_cards(data);
@@ -96,6 +100,7 @@ define([
                 route.route_args, route.query).api,
             dataType: 'json',
             success: add_cards,
+            complete: function() { loading = false; },
             data: $.extend({ at: context.page_data.cards.length }, route.query)
         };
         $.ajax(api_call);

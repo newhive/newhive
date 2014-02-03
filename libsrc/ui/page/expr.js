@@ -30,24 +30,17 @@ define([
     o.set_page = function(page){
         ui_page = page;
     }
-    var loading = false, more_cards = true, ui_page, win = $(window);
+    var more_cards = true, ui_page, win = $(window);
     var on_scroll_add_page = function(){
-        if (loading)
-            return;
-        loading = true;
-        o.controller.next_cards(render_new_cards);
+        if (more_cards) 
+            o.controller.next_cards(render_new_cards);
     };
     var render_new_cards = function(data){
         // TODO-cleanup-HACK: There should be a unified flow for merging
         // the new data
         ui_page.render_new_cards(data);
-        // ugly hack to merge old context attributes to new data
-        // data.card_type = context.page_data.card_type;
-        // data.layout = context.page_data.layout;
         if(data.cards.length < 20)
             more_cards = false;
-        // context.page_data.cards = context.page_data.cards.concat(data.cards);
-        loading = false;
     };
 
     o.init = function(controller){
