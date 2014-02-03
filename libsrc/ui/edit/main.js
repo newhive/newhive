@@ -527,7 +527,7 @@ Hive.state = function() {
 // BEGIN-Events  //////////////////////////////////////////////////////
 
 global_highlight = function(showhide) {
-    if (1 && env.gifwall) {
+    if (env.gifwall) {
         $(".prompts .highlight").showhide(showhide);
         var fn = showhide ? "mouseover" : 'mouseout';
         $(".prompts .plus_btn").trigger(fn);
@@ -538,11 +538,11 @@ global_highlight = function(showhide) {
 
 // Most general event handlers
 Hive.handler_type = 3;
+var dragging_count = 0;
 Hive.dragenter = function(ev){ 
     // hovers_active(false);
     global_highlight(true);
-    env.dragging_count++;
-    // console.log("enter: " + env.dragging_count);
+    dragging_count++;
     ev.preventDefault();
 };
 Hive.dragstart = function(){ 
@@ -557,11 +557,10 @@ Hive.dragend = function(){
     u.layout_apps(); 
 };
 Hive.drop = Hive.dragleave = function(){
-    if (env.dragging_count > 0) 
-        --env.dragging_count;
-    // console.log("leave: " + env.dragging_count);
+    if (dragging_count > 0) 
+        --dragging_count;
 
-    if (0 == env.dragging_count)
+    if (0 == dragging_count)
         global_highlight(false);
 };
 Hive.mouse_pos = [0, 0];
