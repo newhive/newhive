@@ -164,13 +164,27 @@ Hive.App = function(init_state, opts) {
     o.id = init_state.id || u.random_str();
     o.handler_type = 0;
 
-    o.add_to = function(method, more_method){
+    // Chain "more_method" onto an existing "method" (or noop if method 
+    // does not exist)
+    // opts.order = ("before", "after", "user")
+    o.USER = 0; o.BEFORE = 1; o.AFTER = 2;
+    o.add_to = function(method, more_method, opts){
+        opts = $.extend({ order: o.BEFORE }, opts);
         // Add functionality to methods, used by behavior and child constructors
-        var old_method = o[method];
-        o[method] = function(){
-            return more_method(old_method());
+        var old_method = o[method] || noop;
+        o[method] = function(more_args){
+            switch (opts.order) {
+            case (o.BEFORE):
+                return more_method(old_method(more_args));
+            case (o.AFTER):
+                return old_method(more_method(more_args));
+            case (o.USER):
+                return more_method(old_method);
+            }
         };
     };
+    o.add_after = function(method, more_method) 
+        { return o.add_to(method, more_method, {order: o.AFTER}) };
 
     o._remove = function(){
         o.unfocus();
