@@ -580,6 +580,9 @@ body {
                 padding-left: 0px;
                 &:hover { background-color: inherit; }
             }
+            .title {
+                max-width: 390px;
+            }
             .info {
                 margin-bottom: 10px;
                 img.thumb { 
