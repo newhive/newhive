@@ -112,6 +112,8 @@ class Expr(ModelController):
             # remix: ensure that the remix tag is not deletable
             if res.get('remix_parent_id'):
                 upd['tags'] += " #remixed" # + remix_name
+            reserved_tags = ["remixed", "gifwall"];
+            # TODO: disallow removal of reserved tags
             res.update(**upd)
             if not self.config.live_server and (upd.get('apps') or upd.get('background')):
                 res.threaded_snapshot(retry=120)
@@ -188,7 +190,9 @@ class Expr(ModelController):
                 app.get('dimensions', [100,100])[0] * scale
             )
             # TODO-cleanup: remove after media migration
-            content = content.replace("https:","")
+            content = (content.replace("https:","")
+                .replace("dev-1-s1-newhive.s3.amazonaws.com/","dev.media.newhive.com/"))
+
             html = "<img src='%s'>" % content
             scale_x = app.get('scale_x')
             if scale_x:
