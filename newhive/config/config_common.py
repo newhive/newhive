@@ -22,6 +22,7 @@ s3_buckets = {
     'system': None,
     'assets': None,
 }
+cloudfront_domain = None
 
 admins          = ['abram', 'cara', 'zach', 'newduke', 'fatsycline','root','newhive']
 
