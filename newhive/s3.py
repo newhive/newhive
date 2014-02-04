@@ -2,6 +2,7 @@ import urllib
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
 import newhive
+import re
 
 class S3Interface(object):
     def __init__(self, config=None):

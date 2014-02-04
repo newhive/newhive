@@ -199,16 +199,14 @@ Hive.init_save_dialog = function(){
     });
     // canonicalize tags field.
     function tags_input_changed(el) {
+        const reserved_tags = ["remixed", "gifwall"];
         var tags = el.val().trim();
-        tags = tags.replace(/[#,]/g," ").replace(/[ ]+/g," ").trim();
-        if (tags.length) tags = tags.replace(/([ ]|^)/g,"$1#").trim();
-        // TODO-polish: unique the tags
-        var search_tags = " " + tags + " ";
-        // TODO: remove other keywords from tags.
-        search_tags = search_tags.replace(" #remixed ", " ");
-        tags = search_tags.trim();
+        var tag_list = Hive.tag_list(tags);
+        tags = Hive.canonical_tags(tag_list, reserved_tags);
+        $("#tags_input").val(tags);
+        Hive.set_tag_index(Hive.tag_list(tags));
+        var search_tags = " " + tags.toLowerCase() + " ";
         $(".remix_label input").prop("checked", search_tags.indexOf(" #remix ") >= 0);
-        el.val(tags);
     }
     $("#tags_input").change(function(e){
         var el = $(e.target);
@@ -330,11 +328,56 @@ Hive.init = function(exp, page){
     env.layout_apps();
 };
 
+Hive.tag_list = function(tags) {
+    tags = tags.split(" ");
+    tags = $.map(tags, function(x) {
+        return x.toLowerCase().replace(/[^a-z0-9]/gi,'');
+    });
+    u.array_delete(tags, "");
+    return tags;
+}
+Hive.canonical_tags = function(tags_list, special) {
+    // context.flags.modify_special_tags = true;
+    tags_list = $.map(tags_list, function(x, i) {
+        if (special && special.indexOf(x) >= 0) {
+            x = u.capitalize(x);
+            if (!context.flags.modify_special_tags)
+                x = "";
+        }
+        return "#" + x;
+    });
+    if (!context.flags.modify_special_tags && special && Hive.Exp.tags_index)
+        $.map(Hive.Exp.tags_index, function(x, i) {
+            if (special.indexOf(x) >= 0) {
+                x = "#" + u.capitalize(x);
+                tags_list.push(x);
+            }
+        });
+    tags_list = u.array_unique(tags_list);
+    u.array_delete(tags_list, "#");
+    return tags_list.join(" ");
+}
+Hive.set_tag_index = function(tags) {
+    Hive.Exp.tags_index = tags;
+}
 // Called on load() and save()
 Hive.init_common = function(){
+    var query = location.search.slice(1);
+    if (query.length) {
+        if (query == "new_user") {
+            $("#dia_editor_help").data("dialog").open();
+        } else {
+            // otherwise query is assumed to be tag list
+            $tags = $("#tags_input");
+            var e = {target:$tags};
+            var tags = (Hive.Exp.tags || "") + " " + unescape(query);
+            Hive.set_tag_index(Hive.tag_list(tags));
+            $tags.val(tags).trigger("change",e);
+        }
+    }
     $('title').text("Editor - " + (Hive.Exp.title || "[Untitled]"));
     var tags = " " + $("#tags_input").val().trim() + " ";
-    env.gifwall = (tags.indexOf(" #gifwall ") >= 0);
+    env.gifwall = (tags.indexOf(" #Gifwall ") >= 0);
     env.squish_full_bleed = env.gifwall;
     Hive.enter();
 };
@@ -514,14 +557,10 @@ Hive.state = function() {
         Hive.Exp.password = $('#password').val();
 
     // get height
-    var w = 0, h = 0;
+    var h = 0;
     for(var i in Hive.Exp.apps) {
-        var a = Hive.Exp.apps[i]
-            ,x = a.dimensions[0] + a.position[0] 
-            ,y = a.dimensions[1] + a.position[1]
-        ;
-        w = Math.max(w, x);
-        h = Math.max(h, y);
+        var a = Hive.Exp.apps[i], y = a.dimensions[1] + a.position[1];
+        if(y > h) h = y;
     }
     Hive.Exp.dimensions = [1000, Math.ceil(h)];
 
