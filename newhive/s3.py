@@ -2,12 +2,15 @@ import urllib
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
 import newhive
+from newhive import config
 import re
 
 def fixup_s3_url(url):
-    url = re.sub(r'^https?:', '', url)
-    url = url.replace("dev-1-s1-newhive.s3.amazonaws.com/",
-        "dev.media.tnh.me/")
+    cloudfront = config.cloudfront_domains['media']
+    if cloudfront:
+        url = re.sub(r'^https?://.*?/', '//' + cloudfront + '/', url)
+    else:
+        url = re.sub(r'^https?:', '', url)
     return url
 
 class S3Interface(object):
