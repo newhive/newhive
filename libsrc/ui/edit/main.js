@@ -333,19 +333,20 @@ Hive.tag_list = function(tags) {
     tags = $.map(tags, function(x) {
         return x.toLowerCase().replace(/[^a-z0-9]/gi,'');
     });
+    u.array_delete(tags, "");
     return tags;
 }
 Hive.canonical_tags = function(tags_list, special) {
-    // context.flags.allow_special_tags = true;
+    // context.flags.modify_special_tags = true;
     tags_list = $.map(tags_list, function(x, i) {
         if (special && special.indexOf(x) >= 0) {
             x = u.capitalize(x);
-            if (!context.flags.allow_special_tags)
+            if (!context.flags.modify_special_tags)
                 x = "";
         }
         return "#" + x;
     });
-    if (!context.flags.allow_special_tags && special && Hive.Exp.tags_index)
+    if (!context.flags.modify_special_tags && special && Hive.Exp.tags_index)
         $.map(Hive.Exp.tags_index, function(x, i) {
             if (special.indexOf(x) >= 0) {
                 x = "#" + u.capitalize(x);
@@ -369,14 +370,14 @@ Hive.init_common = function(){
             // otherwise query is assumed to be tag list
             $tags = $("#tags_input");
             var e = {target:$tags};
-            var tags = Hive.Exp.tags + " " + unescape(query);
+            var tags = (Hive.Exp.tags || "") + " " + unescape(query);
             Hive.set_tag_index(Hive.tag_list(tags));
             $tags.val(tags).trigger("change",e);
         }
     }
     $('title').text("Editor - " + (Hive.Exp.title || "[Untitled]"));
     var tags = " " + $("#tags_input").val().trim() + " ";
-    env.gifwall = (tags.indexOf(" #gifwall ") >= 0);
+    env.gifwall = (tags.indexOf(" #Gifwall ") >= 0);
     env.squish_full_bleed = env.gifwall;
     Hive.enter();
 };
@@ -556,14 +557,10 @@ Hive.state = function() {
         Hive.Exp.password = $('#password').val();
 
     // get height
-    var w = 0, h = 0;
+    var h = 0;
     for(var i in Hive.Exp.apps) {
-        var a = Hive.Exp.apps[i]
-            ,x = a.dimensions[0] + a.position[0] 
-            ,y = a.dimensions[1] + a.position[1]
-        ;
-        w = Math.max(w, x);
-        h = Math.max(h, y);
+        var a = Hive.Exp.apps[i], y = a.dimensions[1] + a.position[1];
+        if(y > h) h = y;
     }
     Hive.Exp.dimensions = [1000, Math.ceil(h)];
 
