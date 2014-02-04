@@ -105,7 +105,7 @@ class Community(Controller):
             "card_type": "expr",
             "tag_selected": tag_name,
             'owner': profile,
-            'title': 'Expressions by' + owner['name'],
+            'title': 'Expressions by ' + owner['name'],
         }
         if owner.id == tdata.user.id:
             data.update({"tag_entropy": owner.get('tag_entropy', {}).get(tag_name)})

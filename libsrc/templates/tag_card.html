@@ -4,38 +4,39 @@
   suppress_link: true to suppress the natural tag link behavior
   item: tag name
 #}
+{set "tag_name" item}
 {<unless suppress_link}
   <a {<if route.include_tags}
-    {# { search_attrs "@" page_data.owner.name " " "" "#" item } #}
+    {# { search_attrs "@" page_data.owner.name " " "" "#" tag_name } #}
     {<if route.private}
       {anchor_attrs "expressions_tag_private" 
-        "entropy" (get tag_entropy item) "owner_name" owner.name "tag_name" item}
+        "entropy" (get tag_entropy tag_name) "owner_name" owner.name "tag_name" tag_name}
     {>}{<else}
       {<if (or (eq route_name "expressions_tag") 
         (eq route_name "expressions_public_tags"))}
-        {anchor_attrs "expressions_tag" "owner_name" owner.name "tag_name" item}
+        {anchor_attrs "expressions_tag" "owner_name" owner.name "tag_name" tag_name}
       {>}{<else}
         {anchor_attrs "expressions_public_grid_tags" "owner_name" 
-          owner.name "tag_name" item}
+          owner.name "tag_name" tag_name}
       {>}
     {>}
   {>}{<else}
     {<if (and
-      (or (eq item "remix") (eq item "remixed")) 
+      (or (eq tag_name "remix") (eq tag_name "remixed")) 
       (or remix_root_tag expr.remix_root_tag)) }
       {anchor_attrs "expressions_tag" "owner_name" 
         (or expr.remix_root_owner remix_root_owner)
         "tag_name" (or remix_root_tag expr.remix_root_tag)}
     {>}{<else}
-      { search_attrs "#" item }
+      { query_attrs "search" (concat "q=#" tag_name) }
     {>}
   {>}
   >
 {>}
 <div class=
-{<if (and main_view tag_selected (neq tag_selected item))}
+{<if (and main_view tag_selected (neq tag_selected tag_name))}
   "tag_label tag_unselected"
 {>}{<else}
   "tag_label tag_{mod tagnum 16}"
 {>}
->{item}</div></a>
+>{tag_name}</div></a>

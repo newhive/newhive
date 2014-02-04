@@ -1,7 +1,18 @@
 @import "common";
 
 body.edit {
+// for backwards-compatability with old editor.
+// TODO: Make Gibson default and migrate all old expressions to override
+// default
+.ehapp.text { font-family: Helvetica, Arial, sans-serif; }
 .prompts.gifwall {display:none}
+&.default {
+    #edit_nav .change_zoom {display:none}
+    .ehapp .highlight {
+        background-color: $color_selected;
+        opacity: .6;
+    }
+}
 &.gifwall {
     overflow-x:hidden;
     .overlay .fluff {display:none !important}
@@ -16,30 +27,39 @@ body.edit {
         padding-bottom: 160px;
         // .hint { margin-top: 160px;}
         img.plus_btn { 
-            display: none;
+            // display: none;
             width: 140px; 
             margin: 40px 0px; 
             pointer-events:auto;
         }
     }
+    .app_btns {display:none !important}
     .app_btns {min-width:0px}
     .app_btns .icon {display:none}
     .app_btns .icon.insert_image {display:inline-block}
     .app_btns .icon.change_zoom {display:inline-block}
     #image_background { display: none; }
-    .highlight {
-        border-top: $color_forest_teal 10px dashed;
+
+    .highlight_box {
+        z-index: 2;
         position: absolute;
+        top: 0px;
+        bottom: 0px;
+        // height: 100%;
+        width: 100%;
+        padding: 10px;
+        @include box-sizing( border-box );
+        pointer-events: none;
+        .highlight {
+            width: 100%;
+            height: 100%;
+            border: $color_selected 7px dashed;
+            @include box-sizing( border-box );
+            // position: absolute;
+            // top: 0px;
+        }
     }
 }
-&.default {
-    .change_zoom {display:none}
-    .ehapp .highlight {
-        background-color: $color_selected;
-        opacity: .6;
-    }
-}
-font-family: Helvetica, Arial, sans-serif;
 
 .ruler {
     z-index: 1337;
@@ -103,7 +123,7 @@ font-family: Helvetica, Arial, sans-serif;
     }
 }
 .prompts {
-    z-index: 2;
+    z-index: 3;
     position : absolute;
     width : 100%;
     pointer-events:none;

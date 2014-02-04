@@ -26,6 +26,7 @@ var o = {}
     ,bound = js.bound;
 
 // TODO-refactor: move into util
+o.capitalize = function(str) { return str[0].toUpperCase() + str.slice(1); };
 
 // Return -1 if x < 0, 1 if x > 0, or 0 if x == 0.
 o._sign = function(x) {
@@ -120,7 +121,12 @@ o.has_shuffle = function(arr) {
     };
 };
 
-
+o.array_unique = function(a) {
+    return a.reduce(function(p, c) {
+        if (p.indexOf(c) < 0) p.push(c);
+        return p;
+    }, []);
+};
 o.array_delete = function(arr, e) {
     for(var n = 0; n < arr.length; n++) {
         if(arr[n] == e) {
@@ -293,7 +299,7 @@ o.on_media_upload = function(files){
     });
 };
 
-o.new_file = function(files, opts, app_opts) {
+o.new_file = function(files, opts, app_opts, filter) {
     // TODO-feature: depending on type and number of files, create grouping of
     // media objects. Multiple audio files should be assembled into a play
     // list. Multiple images should be placed in a table, or slide-show
@@ -327,6 +333,8 @@ o.new_file = function(files, opts, app_opts) {
             // app.read_only = true;
         }
         app.url = file.url;
+        if (filter && !filter(app))
+            return;
 
         return env.new_app(app, $.extend({ offset: [20*i, 20*i] }, app_opts) );
     });
@@ -340,7 +348,7 @@ env.layout_apps = o.layout_apps = function(){
     if(env.Selection.controls) env.Selection.controls.layout();
     var height = Math.max(0, o.app_bounds(env.Apps.all()).bottom) * env.scale();
     $(".prompts").css("top", height);
-    $(".prompts .highlight").css("width", 1000*env.scale());
+    $(".prompts .highlight_box").css("width", 100*env.zoom() + "%");
 };
 
 o.snap_helper = function(my_tuple, opts) {

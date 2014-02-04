@@ -30,6 +30,7 @@
         }
     }
     .icon.hash {
+        visibility: hidden;
         background-color: transparent;
         @include border-radius(0px);
         background-image: asset_url('skin/nav/collections.png');
@@ -48,18 +49,20 @@
     }
     .icon {
         @include border-radius(11px);
-        width: 44px;
+        width: 42px;
         height: 44px;
     }
 }
 
 #exprs {
     position:absolute; left: 0; bottom: 0;
-    overflow:hidden;
     z-index: 1;
     width:100%; height:100%;
     display: none;
     background-color: white;
+
+    // prevent scrollers from momentarily appearing during animation
+    &.animated { overflow:hidden; }
 
     .expr {
         width:100%; height:100%; position:absolute; left: 0; top:0;
@@ -578,6 +581,9 @@ body {
             .feed_item {
                 padding-left: 0px;
                 &:hover { background-color: inherit; }
+            }
+            .title {
+                max-width: 390px;
             }
             .info {
                 margin-bottom: 10px;

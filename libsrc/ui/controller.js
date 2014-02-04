@@ -84,7 +84,11 @@ define([
     };
 
     // TODO-cleanup: merge with open_route?
+    var loading = false;
     o.next_cards = function(with_cards){
+        if (loading)
+            return false;
+        loading = true;
         var add_cards = function(data){
             context.page_data.cards = context.page_data.cards.concat(data.cards);
             if(with_cards) with_cards(data);
@@ -96,6 +100,7 @@ define([
                 route.route_args, route.query).api,
             dataType: 'json',
             success: add_cards,
+            complete: function() { loading = false; },
             data: $.extend({ at: context.page_data.cards.length }, route.query)
         };
         $.ajax(api_call);
@@ -146,7 +151,7 @@ define([
         function success(data){
             if (push_state == undefined || push_state)
                 history.pushState(page_state, null, page_state.page);
-            context.parse_query();
+            context.parse_query(data.cards_route && data.cards_route.route_args);
             o.dispatch(page_state.route_name, data);
             if (page_state.route_name != "view_expr")
                 $("body").scrollTop(0);
@@ -173,7 +178,7 @@ define([
             return o.open(route_name, route_args);
         var page_state = routing.page_state(route_name, route_args, query);
         history.pushState(page_state, null, page_state.page);
-        context.parse_query();
+        context.parse_query(route_args);
     };
 
   

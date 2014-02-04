@@ -4,8 +4,9 @@ import re
 
 import newhive
 from newhive import state
-from newhive.utils import now, time_u, Apply
+from newhive.utils import now, time_u, Apply, lget
 from newhive.server_session import db
+from newhive.mongo_helpers import mq
 
 # A couple handy defaults
 nd = db.User.named('newduke')

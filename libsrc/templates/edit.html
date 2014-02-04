@@ -18,7 +18,9 @@
 ></div>
 
 <div class="dialog" id="dia_editor_help" data-handle="#btn_help">
-  <iframe src="{config.content_url}{config.site_user}/default-instructional"></iframe>
+  {<defer}
+    <iframe src="{config.content_url}{config.site_user}/default-instructional"></iframe>
+  {>}
 </div>
 <div id='dia_save' class='standard dialog' data-handle="#btn_save">
   <div class="heading expr title">Save</div>
@@ -333,9 +335,11 @@ blah blah
   <div class='inset'></div>
 </div>
 <div class="gifwall prompts centered">
-  <div class="highlight hide"></div>
+  <div class="highlight_box"><div class="highlight hide"></div></div>
   <div class="hint">Drag in images to create your #gifwall</div>
-  <img class="plus_btn" src='{asset "skin/nav/plus.png"}'>
+  <label for="media_input">
+    <img class="plus_btn hoverable" src='{asset "skin/edit/plus.png"}'>
+  </label>
 </div>
 <div id='grid_guide'></div>
 

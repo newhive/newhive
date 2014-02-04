@@ -23,6 +23,24 @@ define([
             "'><div class='vcenter_middle'>" + block(context) + "</div></div>";
     };
 
+    var entityMap = {
+       "&": "&amp;",
+       "<": "&lt;",
+       ">": "&gt;",
+       '"': '&quot;',
+       "'": '&#39;',
+       "/": '&#x2F;'
+    };
+    function escapeHtml(string) {
+        return String(string).replace(/[&<>"'\/]/g, function (s) {
+            return entityMap[s];
+        });
+    };
+    
+    o.defer = function(context, block){
+        return '<div class="defer" data-content="' + escapeHtml(block(context)) + '"></div>';
+    };
+
     o.recency_time = function(context, time) {
         var now = Date.now();
         var ago = now/1000 - time;
@@ -107,6 +125,10 @@ define([
     //   object constructor, see TODO-cleanup-object in text/stringjay
     o.query_attrs = function(scope, route_name, query){
         var args = get_route_args(Array.prototype.slice.call(arguments, 1));
+        query = $.map(query.split("&"),function(e) {
+            return $.map(e.split("="),function(k) {
+                return encodeURIComponent(k)}).join("=")
+        }).join("&");
         return attrs(route_name, args, query, false);
     };
 
@@ -241,7 +263,10 @@ define([
             var input = $(el)
 
             input.on('change', function(){
-                form.trigger('with_files', [upload.unwrap_file_list(el.files)]);
+                var file_list = upload.file_list_to_list(el.files);
+                form.trigger('with_files', 
+                    [upload.unwrap_file_list(el.files), file_list]);
+                el.files = file_list;
                 submit_form(form);
                 input.val('');
             });
@@ -251,8 +276,8 @@ define([
                 drop_areas = find_all(all, 'label[for=' + input_id + ']')
                     .add(drop_selector).add(find_all(all, drop_selector));
                 upload.drop_target(drop_areas,
-                    function(files){
-                        form.trigger('with_files', [files]); },
+                    function(files, file_list){
+                        form.trigger('with_files', [files, file_list]); },
                     function(file_records){
                         form.trigger('response', [file_records]); }
                 );
@@ -265,8 +290,28 @@ define([
         });
     }
 
-    o.parse_query = function(){
-        o.query = js.parse_query(window.location.toString());
+    o.parse_query = function(route_args){
+        var url = window.location.toString();
+        o.query = js.parse_query(url);
+        o.search_query = o.query.q || "";//url.substring((url + '?').indexOf('?') + 1);
+        if (!route_args)
+            if (o.page_data && o.page_data.cards_route)
+                route_args = o.page_data.cards_route.route_args;
+        var query_from_route = "";
+        if (route_args) {
+            query_from_route = route_args.search_query || "";
+            query_from_route = 
+                routing.substitute_variables(query_from_route, route_args);
+            if (query_from_route != "") {
+                // TODO: merge the raw query attrs (removing dupes) 
+                // with the generated ones.
+                o.search_query = o.search_query + query_from_route;
+                    // ((o.search_query != "") ? "&" : "") + "q=" + query_from_route;
+            }
+        }
+        if (o.search_query != "")
+            o.search_query = "q=" + o.search_query;
+
         // Save error message and remove it from hash args
         // Note, we can't put the error info into query args, because altering the URL
         // causes a redirect.  Thus it has to be in hash args
