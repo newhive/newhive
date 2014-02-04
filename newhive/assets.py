@@ -21,9 +21,13 @@ class Assets(object):
 
         self.s3_con = S3Connection(config.aws_id, config.aws_secret)
         self.asset_bucket = self.s3_con.create_bucket(config.s3_buckets.get('asset'))
-        bucket_url = self.asset_bucket.generate_url(0)
-        self.base_url = re.sub(r'^https?:', '',
-            bucket_url[0:bucket_url.index('?')])
+        cloudfront = config.cloudfront_domains['media']
+        if cloudfront:
+            self.base_url = '//' + cloudfront + '/'
+        else:
+            bucket_url = self.asset_bucket.generate_url(0)
+            self.base_url = re.sub(r'^https?:', '',
+                bucket_url[0:bucket_url.index('?')])
         self.local_base_url = '/lib/' #re.sub('https?:', '', abs_url()) + 'lib/'
         self.default_local = False
 

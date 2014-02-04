@@ -20,7 +20,11 @@ aws_secret      = False
 s3_buckets = {
     'media': None,
     'system': None,
-    'assets': None,
+    'asset': None,
+}
+cloudfront_domains = {
+    'media': None,
+    'asset': None
 }
 
 admins          = ['abram', 'cara', 'zach', 'newduke', 'fatsycline','root','newhive']
