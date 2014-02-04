@@ -4,6 +4,12 @@ from boto.s3.key import Key as S3Key
 import newhive
 import re
 
+def fixup_s3_url(url):
+    url = re.sub(r'^https?:', '', url)
+    url = url.replace("dev-1-s1-newhive.s3.amazonaws.com/",
+        "dev.media.tnh.me/")
+    return url
+
 class S3Interface(object):
     def __init__(self, config=None):
         config = self.config = config if config else newhive.config
@@ -46,7 +52,7 @@ class S3Interface(object):
         k.set_contents_from_file(file, headers=s3_headers)
         k.make_public()
         url = k.generate_url(0, query_auth=False)
-        url = re.sub(r'^https?:', '', url)
+        url = fixup_s3_url(url);
         return url
 
     def bucket_url(self, bucket='media'):
