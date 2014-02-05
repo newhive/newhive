@@ -983,11 +983,10 @@ Hive.App.Audio = function(o) {
         o.dims_set(dims);
     };
 
-    var colored;
     o.color = function(){ return o.init_state.color; };
     o.color_set = function(v){
         o.init_state.color = v;
-        colored.css('background-color', v);
+        o.div.find('.jp-play-bar, .jp-interface').css('background-color', v);
     };
 
     Hive.has_scale(o);
@@ -1045,7 +1044,6 @@ Hive.App.Audio = function(o) {
     if(! o.init_state.dimensions) o.init_state.dimensions = [ 200, 35 ];
     o.content_element = o.skin();
 
-    colored = o.div.find('.jp-play-bar, .jp-interface');
     if(!o.init_state.color) o.init_state.color = colors[23];
 
     o.update_shield();
