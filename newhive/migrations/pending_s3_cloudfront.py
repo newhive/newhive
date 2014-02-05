@@ -22,13 +22,13 @@ def fixup_expr_assets(expr):
     apps = expr.get('apps',[])
     for app in apps:
         fixup_assets_s3(app, ['url', 'content'])
-    expr.update(apps=apps)
+    expr.update(apps=apps,updated=False)
     return True;
 
 def fixup_file_assets(f):
     fixup_assets_s3(f, ['url'])
     if f.get('url'):
-        f.update(url=f['url'])
+        f.update(url=f['url'],updated=False)
     return True;
 
 def fixup_assets_s3(app, fields):
