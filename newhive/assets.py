@@ -2,7 +2,7 @@ from os.path import dirname, join, abspath, normpath, isfile, isdir
 import os, json, time, webassets, webassets.script, re
 from boto.s3.key import Key as S3Key
 from boto.s3.connection import S3Connection
-import S3Interface
+#import S3Interface
 from newhive import config
 from newhive.manage import git
 from newhive.routes import Routes
