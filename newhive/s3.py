@@ -63,6 +63,6 @@ class S3Interface(object):
         if cloudfront:
             return '//' + cloudfront + '/'
         else:
-            return '//%s.s3.amazonaws.com/' % self.buckets[bucket]
+            return '//%s.s3.amazonaws.com/' % self.config.s3_buckets[bucket]
 
 
