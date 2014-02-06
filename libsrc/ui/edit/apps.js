@@ -262,6 +262,9 @@ Hive.App = function(init_state, opts) {
         o.div.width(dims[0]).height(dims[1]);
         if(o.controls)
             o.controls.layout();
+        // TODO-cleanup: have selection handle control creation
+        if(env.Selection && u.array_equals(env.Selection.elements(), [o]))
+            env.Selection.layout();
     };
 
     o.pos_relative = function(){ return _pos.slice(); };

@@ -3,6 +3,7 @@ define([], function(){
 var env = o = {};
 env.show_move_sensitivity = false;
 env.no_snap = false;
+env.show_mini_selection_border = false
 
 // 1 editor unit := scale client pixels
 // The editor is 1000 units wide inside a 1000*scale pixel window

@@ -30,19 +30,20 @@ var o = {}
 // selection border, and all the buttons surounding the App when selected, and for
 // these button's behavior.  App specific behavior is added by
 // hive_app.App.Foo.Controls function, and a list of modifiers in app.make_controls
-o.Controls = function(app, multiselect) {
+o.Controls = function(app, multiselect, delegate) {
     if(app.controls) {
         // Check if existing controls are same type as requested
         if(app.controls.multiselect == multiselect) return;
         else app.controls.remove(); // otherwise destroy them and reconstruct requested type
     }
     var o = app.controls = {};
-    o.app = app;
+    // TODO-cleanup: remove delegate, have selection handle control creation
+    o.app = delegate || app;
     o.multiselect = multiselect;
 
     o.remove = function() {
         o.div.remove();
-        o.app.controls = false;
+        app.controls = false;
     };
 
     o.append_link_picker = function(d, opts) {
