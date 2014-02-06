@@ -27,7 +27,6 @@ define([
     // bubbling to the handlers in _handlers after handler.handler_type.
     // Bubbling halts when a handler returns a defined falsey value
     var event_bubbler = function(event_name, data){
-    	var handlers = _handlers;
         return (function(ev){
             if ($.inArray(event_name, ["keyup", "keypress", "keydown"]) >= 0
                 && $(":focus").length) {
@@ -46,9 +45,9 @@ define([
             };
 
             var resp = true;
-            for(var i in handlers){
-                if(handlers[i] && handlers[i][event_name])
-                    resp = handlers[i][event_name].apply(null, arguments);
+            for(var i in _handlers){
+                if(_handlers[i] && _handlers[i][event_name])
+                    resp = _handlers[i][event_name].apply(null, arguments);
                 if(resp != undefined && !resp)
 					return false; // handled
                 if(do_stop) break;

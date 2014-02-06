@@ -78,6 +78,9 @@ body.edit {
     left: 0;
     top: 0;
     z-index: 3;
+
+    &.drag .drag { cursor: move; }
+    &.draw { cursor: crosshair; }
 }
 
 .edit.overlay {
@@ -175,7 +178,6 @@ body.edit {
 }
 
 .controls_src { display : none; }
-.drag { cursor : move; }
 
 .controls {
     position:absolute;
@@ -183,7 +185,7 @@ body.edit {
     z-index: 4;
 }
 .control { position : absolute; cursor : default; z-index : 1 }
-.control.resize_v { cursor : s-resize; }
+.control.resize_v { cursor : ns-resize; }
 .control.resize_h { cursor : ew-resize; }
 .control.resize { cursor : se-resize; }
 .control.stack img { display : inline-block; margin-left : 5px; }
@@ -248,26 +250,6 @@ body.edit {
 
 textarea.code {
     font-family: monospace;
-}
-
-.code_editor{
-    width: auto;
-    h2 {
-        margin: 10px 0 0 5px;
-    }
-    p {
-        margin: 0 0 0 5px;
-    }
-    .small_text {
-        font-size: 12px;
-        color: $color_grey_medium;
-    }
-    textarea {
-        margin-top: 10px;
-        width: 600px;
-        min-height: 200px;
-        font-size: 14px;
-    }
 }
 
 #menu_image {
@@ -338,12 +320,6 @@ textarea.code {
     #bg_opacity { font-size : xx-small; }
 }
 
-#btn_thumbnail_wrapper { padding-top: 8px; }
-#btn_thumbnail_text { float: left; margin-right: 5px; font-weight : bold; cursor : default; }
-#dia_thumbnail { width : 823px; max-height : 480px; overflow : auto; }
-#dia_thumbnail .thumb { float : left; margin : 5px; width : 190px; height : 190px; overflow : hidden; position : relative; }
-#dia_thumbnail .thumb img { width: 190px; height: 190px; }
-
 .menu.embed { padding: 10px; }
 .embed_box { margin: 8px 0; width: 250px; height: 4.5em; resize: none; }
 // .embed_button { font-size: 18px; }
@@ -362,8 +338,6 @@ input, textarea { font-size : inherit; }
 .fontsize .option:hover { background-color : $color_selected; color : $color_0; }
 .drawer.fontname .option:hover { background-color : $color_selected; }
 
-.dialogue_handle { background-color : $color_selected; }
-
 .hive_selection {
     background: $color_light_grey;
 }
@@ -371,4 +345,5 @@ input, textarea { font-size : inherit; }
     min-width: 100%;
     word-wrap: normal;
 }
+
 }

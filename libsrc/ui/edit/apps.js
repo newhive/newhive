@@ -877,6 +877,13 @@ Hive.App.Path = function(o){
     return o;
 };
 Hive.registerApp(Hive.App.Path, 'hive.path');
+// Path creation tool
+(function(o){
+    o.focus = function(){
+        evs.handler_set(o);
+        $('#site').addClass('draw').removeClass('move');
+    };
+})(Hive.App.Path);
 
 
 Hive.App.Sketch = function(o) {
