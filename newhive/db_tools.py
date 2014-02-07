@@ -9,7 +9,7 @@ from newhive.mongo_helpers import mq
 # A couple handy defaults
 nd = db.User.named('newduke')
 ac = db.User.named('abram')
-e1 = db.Expr.with_url('newduke/index')
+e1 = db.Expr.with_url('newhive/default-instructional')
 
 def show_sizeof(x, level=0,show_deep=0):
     if (level <= show_deep):
