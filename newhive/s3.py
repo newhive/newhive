@@ -20,7 +20,7 @@ class S3Interface(object):
         # initialize s3 connection
         if config.aws_id:
             self.con = S3Connection(config.aws_id, config.aws_secret)
-            self.buckets = { k: self.con.create_bucket(v)
+            self.buckets = { k: self.con.get_bucket(v)
                 for k, v in config.s3_buckets.items() }
 
     def delete_file(self, bucket, path):

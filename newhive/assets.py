@@ -20,7 +20,7 @@ class Assets(object):
         self.strip = len(self.base_path) + 1
 
         self.s3_con = S3Connection(config.aws_id, config.aws_secret)
-        self.asset_bucket = self.s3_con.create_bucket(config.s3_buckets.get('asset'))
+        self.asset_bucket = self.s3_con.get_bucket(config.s3_buckets.get('asset'))
         cloudfront = config.cloudfront_domains['asset']
         if cloudfront:
             self.base_url = '//' + cloudfront + '/'
