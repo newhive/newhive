@@ -127,7 +127,7 @@ class Database:
                 if not expr_only:
                     results = results + self.User.page(spec, **args)
                     results.sort(cmp=lambda x, y: cmp(x[sort], y[sort]), reverse=True)
-            if not id or len(results) > 500:
+            if not id or len(results) > 500 or args.get('limit', 27) > 1000:
                 break;
             if len(filter(lambda x: x.id==id,results)):
                 break;

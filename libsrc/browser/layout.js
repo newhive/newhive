@@ -93,8 +93,9 @@ define(['browser/jquery'], function($) {
             else e.width(w).height('');
             o.center(e, e.parent(), { minimum : false });
         };
-        if(!e.width()) e.load(load);
-        else load();
+        // if(!e.width()) e.load(load);
+        // else 
+            load();
         return e;
     }
 
