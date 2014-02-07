@@ -56,8 +56,8 @@ class Apply(object):
                 Apply.error.append(e)
             else:
                 Apply.success.append(e)
-            if not dryrun and not reset:
-                e.inc('migrated')
+                if not dryrun and not reset:
+                    e.inc('migrated')
             if (i % print_frequency == 0):
                 print "(%d of %d) items processed... " % (i, total)
         print "success (%d of %d)" % (len(Apply.success) - initial_success, total)
