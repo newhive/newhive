@@ -14,21 +14,25 @@ def fixup_s3_url(url):
     # url = re.sub(r'https?://([^/]*tnh.me)/', '//\1/', url)
     return url
 
-def migrate():
-    Apply.apply_all(fixup_expr_assets, db.Expr.search({}))
-    Apply.apply_all(fixup_file_assets, db.File.search({}))
+def migrate(**opts):
+    Apply.apply_continue(fixup_expr_assets, db.Expr, **opts)
+    Apply.apply_continue(fixup_file_assets, db.File, **opts)
 
-def fixup_expr_assets(expr):
+def fixup_expr_assets(expr, dryrun=True):
+    if expr.get('migrated'):
+        return True
     apps = expr.get('apps',[])
     for app in apps:
         fixup_assets_s3(app, ['url', 'content'])
-    expr.update(apps=apps,updated=False)
+    if not dryrun:
+        expr.update(apps=apps,updated=False)
     return True;
 
-def fixup_file_assets(f):
+def fixup_file_assets(f, dryrun=True):
     fixup_assets_s3(f, ['url'])
-    if f.get('url'):
-        f.update(url=f['url'],updated=False)
+    if not dryrun:
+        if f.get('url'):
+            f.update(url=f['url'],updated=False)
     return True;
 
 def fixup_assets_s3(app, fields):

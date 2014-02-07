@@ -31,18 +31,33 @@ class Apply(object):
         Apply.success = []
 
     @staticmethod
-    def apply_all(func, l, print_frequency=100):
+    def apply_continue(func, klass, query={}, print_frequency=100, dryrun=False, 
+            reset=False, runcount=1):
+        if not reset:
+            dict.update(query, {'$or': [{'migrated': {'$exists':False}}, {'migrated': {'$lt': 1}}]})
+        else:
+            dict.update(query, {'migrated': {'$gt': 0}})
+
+        Apply.apply_all(func, klass.search(query), print_frequency=print_frequency,
+            dryrun=dryrun, reset=reset)
+
+    @staticmethod
+    def apply_all(func, l, print_frequency=100, dryrun=False, reset=False):
         l = list(l)
         total = len(l)
         initial_success = len(Apply.success)
         print "Running on %s items." % total
         i = 0
         for e in l:
-            if not func(e):
+            i = i + 1
+            if reset:
+                e.reset('migrated')
+            elif not func(e, dryrun=dryrun):
                 Apply.error.append(e)
             else:
                 Apply.success.append(e)
-            i = i + 1
+            if not dryrun and not reset:
+                e.inc('migrated')
             if (i % print_frequency == 0):
                 print "(%d of %d) items processed... " % (i, total)
         print "success (%d of %d)" % (len(Apply.success) - initial_success, total)

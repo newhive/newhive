@@ -400,12 +400,27 @@ class Entity(dict):
         dict.update(self, d)
         return self._col.update({ '_id' : self.id }, { '$set' : d }, safe=True)
 
-    def update_cmd(self, d, **opts): return self._col.update({ '_id' : self.id }, d, **opts)
+    def update_cmd(self, d, **opts): 
+        return self._col.update({ '_id' : self.id }, d, **opts)
+
+    def inc(self, key, value=1):
+        """Increment key counter by value."""
+        return self.increment({key:value})[key]
+    
+    def reset(self, key, value=0):
+        d = {key:value, 'updated':False}
+        self.update(**d)
+        return value
 
     def increment(self, d):
         """Increment counter(s) identified by a dict.
         For example {'foo': 2, 'bar': -1, 'baz.qux': 10}"""
-        return self.update_cmd({'$inc': d}, upsert=True)
+        fields = { key: True for (key, v) in d.items() }
+        res = self._col.find_and_modify({ '_id' : self.id },
+            {'$inc': d }, fields=fields, new=True)
+        dict.update(self, res)
+        # del res['_id']
+        return res
 
     def flag(self, name):
         return self.update_cmd({'$set': {'flags.' + name: True}})
