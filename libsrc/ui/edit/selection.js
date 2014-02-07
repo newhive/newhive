@@ -88,11 +88,9 @@ o.Selection = function(o) {
     o.drag_target = function(){ return drag_target; };
     o.dragstart = function(ev, dd){
         o.dragging = true;
-        $("#controls").hidehide();
-        u.reset_sensitivity();
-
         var app = ev.data;
         if(app){
+            $("#controls").hidehide();
             // If target is in selection, drag whole selection
             if(elements.indexOf(ev.data) >= 0)
                 drag_target = o;
@@ -100,13 +98,12 @@ o.Selection = function(o) {
                 drag_target = ev.data;
             o.move_start();
             return;
-        }
-        if (env.gifwall) {
-            $("#controls").showshow();
+        } else if(env.gifwall) {
             o.dragging = false;
             return;
         }
         o.offset = $('#happs').offset().left;
+        u.reset_sensitivity();
 
         o.new_selection = [];
         $('.app_select').remove();
@@ -367,37 +364,51 @@ o.Selection = function(o) {
             // depends on defining app specific but instance unspecific creation
             // handlers on app type constructors
         }
-        Controls(app, multi);
+        // Controls(app, multi || context.flags.show_mini_selection_border);
+        if (multi || env.show_mini_selection_border)
+            Controls(app, true);
+        // Controls(app, multi);
     };
-    o.app_unselect = function(app, multi) {
+    o.app_unselect = function(app) {
         app.unfocus();
         if(app.controls) app.controls.remove();
     };
 
     o.update = function(apps){
-        if(!apps) apps = $.grep(elements, function(e){ return ! e.deleted; });
+        apps = $.grep(apps || elements, function(e){ return ! e.deleted; });
         var multi = o.dragging || (apps.length > 1);
 
         // Previously unfocused elements that should be focused
         $.each(apps, function(i, el){ o.app_select(el, multi); });
         // Previously focused elements that should be unfocused
         o.each(function(i, el){
-            if($.inArray(el, apps) == -1)
-                o.app_unselect(el, multi);
+            if($.inArray(el, apps) == -1) {
+                o.app_unselect(el);
+            }
         });
 
         elements = $.merge([], apps);
 
         o.update_relative_coords();
 
+        if (o.controls) o.controls.remove();
         if(!o.dragging && multi) {
             Controls(o, false);
             o.controls.layout();
         }
-        if(apps.length <= 1 && o.controls)
-            o.controls.remove();
-        if(apps.length == 0)
+        // if(apps.length <= 1 && o.controls)
+        //     o.controls.remove();
+        if(!o.dragging && apps.length == 1) {
+            // TODO-feature: this code should always run, and it should create
+            // controls which apply to all objects in the selection
+            Controls(o, false, apps[0]);
+            if (env.gifwall && context.flags.show_mini_selection_border)
+                o.controls.div.find(".select_border").hidehide();
+            o.controls.layout();
+        }
+        if(apps.length == 0) {
             evs.handler_del({handler_type: 0}); 
+        }
     };
 
     o.unfocus = function(app){

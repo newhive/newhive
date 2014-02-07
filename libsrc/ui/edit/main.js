@@ -379,6 +379,9 @@ Hive.init_common = function(){
     var tags = " " + $("#tags_input").val().trim() + " ";
     env.gifwall = (tags.indexOf(" #Gifwall ") >= 0);
     env.squish_full_bleed = env.gifwall;
+    env.show_mini_selection_border = 
+        env.gifwall || context.flags.show_mini_selection_border;
+
     Hive.enter();
 };
 // var $style = $();
