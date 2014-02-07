@@ -357,8 +357,12 @@ env.layout_apps = o.layout_apps = function(){
     env.scale_set();
     $.map(env.Apps, function(a){ a.layout() });
     if(env.Selection.controls) env.Selection.controls.layout();
-    var height = Math.max(0, o.app_bounds(env.Apps.all()).bottom) * env.scale();
-    $(".prompts").css("top", height);
+    var top = Math.max(0, o.app_bounds(env.Apps.all()).bottom) * env.scale();
+    var min_height = 2*160 + $(".prompts .js_vcenter").height();
+    var bottom = Math.max(top + min_height, $(window).height());
+    var margin = (bottom - top - $(".prompts .js_vcenter").height()) / 2;
+    $(".prompts").css("top", top).height(bottom - top);
+    $(".prompts .js_vcenter").css("margin-top", margin);
     $(".prompts .highlight_box").css("width", 100*env.zoom() + "%");
 };
 

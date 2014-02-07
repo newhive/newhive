@@ -305,7 +305,11 @@ Hive.init_global_handlers = function(){
     .on("drop",function(ev) {
         ev.preventDefault();
         $("#grid_guide").trigger(ev);
-        return false; });
+        return false; })
+    .on("mouseenter", function(ev) {
+        $("#grid_guide").trigger("dragenter"); })
+    .on("mouseleave", function(ev) {
+        $("#grid_guide").trigger("dragleave"); });
 };
 Hive.init = function(exp, page){
     // this reference must be maintained, do not assign to Exp
@@ -326,6 +330,7 @@ Hive.init = function(exp, page){
     Hive.init_global_handlers()
     Hive.edit_start();
     env.layout_apps();
+    setTimeout(function() { env.layout_apps(); }, 100);
 };
 
 Hive.tag_list = function(tags) {
@@ -576,8 +581,7 @@ global_highlight = function(showhide) {
     if (env.gifwall) {
         $(".prompts .highlight").showhide(showhide);
         var fn = showhide ? "mouseover" : 'mouseout';
-        $(".prompts .plus_btn").trigger(fn);
-        // $(".prompts .plus_btn").addremoveClass("active", showhide);
+        $(".prompts .plus_btn").data('hover_showhide')(showhide);
     } else
         $(".editor_overlay").showhide(showhide);
 };
