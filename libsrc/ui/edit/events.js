@@ -21,6 +21,11 @@ define([
 		_handlers[handler.handler_type] = false;
 	};
 	o.handlers = function(){ return _handlers.slice(); };
+    var focused = true;
+    o.focus = function(){
+        focused = true };
+    o.unfocus = function(){
+        focused = false };
 
     // Create an event handler that dispatches to the current (focused)
     // _handlers in order, optionally starting at the given handler first and
@@ -28,8 +33,9 @@ define([
     // Bubbling halts when a handler returns a defined falsey value
     var event_bubbler = function(event_name, data){
         return (function(ev){
-            if ($.inArray(event_name, ["keyup", "keypress", "keydown"]) >= 0
-                && $(":focus").length) {
+            if( !focused || ($.inArray(event_name,
+                ["keyup", "keypress", "keydown"]) >= 0 && $(":focus").length)
+            ){
                 // _stopPropagation();
                 return;
             }

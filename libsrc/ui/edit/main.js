@@ -222,8 +222,8 @@ Hive.init_save_dialog = function(){
     });
     tags_input_changed($("#tags_input"));
     var save_dialog = $('#dia_save').data('dialog');
-    save_dialog.opts.open = Hive.edit_pause;
-    save_dialog.opts.close = Hive.edit_start;
+    save_dialog.opts.open = Hive.unfocus;
+    save_dialog.opts.close = Hive.focus;
 
     var overwrite_dialog = dialog.create('#dia_overwrite');
     $('#cancel_overwrite').click(overwrite_dialog.close);
@@ -284,6 +284,8 @@ Hive.init_global_handlers = function(){
     evs.on(document, 'keydown');
     evs.on('body', 'mousemove');
     evs.on('body', 'mousedown');
+    evs.on('body', 'mousedown');
+    //evs.on('body', 'click');
     var drag_base = $('#grid_guide');
     evs.on(drag_base, 'dragenter');
     evs.on(drag_base, 'dragleave');
@@ -306,6 +308,10 @@ Hive.init_global_handlers = function(){
         ev.preventDefault();
         $("#grid_guide").trigger(ev);
         return false; });
+
+    evs.handler_set(env.Selection);
+    evs.handler_set(Hive);
+    env.apps_e.addClass('default');
 };
 Hive.init = function(exp, page){
     // this reference must be maintained, do not assign to Exp
@@ -318,13 +324,15 @@ Hive.init = function(exp, page){
     Hive.init_menus();
     // Hive.init_autosave();
 
+    env.apps_e = $('#happs'); // container element for all interactive apps
     env.History.init();
     hive_app.Apps.init(Hive.Exp.apps);
     Hive.init_common();
+    // TODO-cleanup: remove Selection from registered apps, and factor out
+    // shared functionality into has_coords
     env.Selection = hive_app.new_app({ type : 'hive.selection' });
 
     Hive.init_global_handlers()
-    Hive.edit_start();
     env.layout_apps();
 };
 
@@ -398,14 +406,18 @@ Hive.exit = function(){
     $('body').off('mousemove mousedown');
 };
 
-Hive.edit_start = function(){
-    evs.handler_set(env.Selection);
-    evs.handler_set(Hive);
-};
-Hive.edit_pause = function(){
-    evs.handler_del(env.Selection);
-    evs.handler_del(Hive);
-};
+(function(){
+    var focus_classes;
+
+    Hive.focus = function(){
+        focus_classes = env.apps_e.attr('class');
+        evs.focus();
+    };
+    Hive.unfocus = function(){
+        env.apps_e.attr('class', focus_classes);
+        evs.unfocus();
+    };
+})();
 
 // Matches youtube and vimeo URLs, any URL pointing to an image, and
 // creates the appropriate App state to be passed to hive_app.new_app.

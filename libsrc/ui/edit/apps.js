@@ -410,7 +410,7 @@ Hive.App = function(init_state, opts) {
 
     // initialize
 
-    o.div = $('<div class="ehapp">').appendTo('#happs');
+    o.div = $('<div class="ehapp">').appendTo(env.apps_e);
  
     o.has_align = o.add_to_collection = true;
     o.type(o); // add type-specific properties
@@ -877,11 +877,24 @@ Hive.App.Path = function(o){
     return o;
 };
 Hive.registerApp(Hive.App.Path, 'hive.path');
+
 // Path creation tool
 (function(o){
     o.focus = function(){
+        // TODO: UI for indicating path drawing is active
+        // probably highlight shape menu at bottom middle
         evs.handler_set(o);
-        $('#site').addClass('draw').removeClass('move');
+        $('#site').addClass('draw').removeClass('default');
+    };
+    o.unfocus = function(){
+        $('#site').addClass('draw').removeClass('default');
+        evs.handler_del(o);
+    };
+
+    o.mousedown = function(e){
+    };
+
+    o.mouseup = function(e){
     };
 })(Hive.App.Path);
 

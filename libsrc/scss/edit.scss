@@ -79,7 +79,8 @@ body.edit {
     top: 0;
     z-index: 3;
 
-    &.drag .drag { cursor: move; }
+    // currently selection always gets events, but they can be intercepted
+    &.default .drag { cursor: move; }
     &.draw { cursor: crosshair; }
 }
 

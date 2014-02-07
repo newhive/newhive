@@ -106,7 +106,7 @@ o.Selection = function(o) {
             o.dragging = false;
             return;
         }
-        o.offset = $('#happs').offset().left;
+        o.offset = apps_e.offset().left;
 
         o.new_selection = [];
         $('.app_select').remove();
