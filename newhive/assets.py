@@ -2,8 +2,8 @@ from os.path import dirname, join, abspath, normpath, isfile, isdir
 import os, json, time, webassets, webassets.script, re
 from boto.s3.key import Key as S3Key
 from boto.s3.connection import S3Connection
-#import S3Interface
 from newhive import config
+from newhive.s3 import S3Interface
 from newhive.manage import git
 from newhive.routes import Routes
 from newhive.utils import lget, now, abs_url
@@ -20,10 +20,10 @@ class Assets(object):
         self.base_path = normpath(join(config.src_home, asset_path))
         self.strip = len(self.base_path) + 1
 
+        # TODO-cleanup: use S3Interface instead of s3_con
         self.s3_con = S3Connection(config.aws_id, config.aws_secret)
         self.asset_bucket = self.s3_con.get_bucket(config.s3_buckets.get('asset'))
-        # TODO-cleanup: use S3Interface instead of s3_con
-        cloudfront = config.cloudfront_domains['media']
+        cloudfront = config.cloudfront_domains['asset']
         if cloudfront:
             self.base_url = '//' + cloudfront + '/'
         else:

@@ -1847,6 +1847,9 @@ class File(Entity):
         resample_fd, resample_filename = mkstemp(suffix=ext)
         os.write(resample_fd, self.file.read())
         os.close(resample_fd)
+
+        # remove resamples for gifs with offset animation frames,
+        # because imagemagick fails to resample them
         ident = os.tmpfile()
         call (['identify', resample_filename], stdout=ident)
         ident.seek(0)
