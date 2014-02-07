@@ -11,6 +11,18 @@ nd = db.User.named('newduke')
 ac = db.User.named('abram')
 e1 = db.Expr.with_url('newduke/index')
 
+def show_sizeof(x, level=0,show_deep=0):
+    if (level <= show_deep):
+        print "\t" * level, x.__class__, sys.getsizeof(x), x
+
+    if hasattr(x, '__iter__'):
+        if hasattr(x, 'items'):
+            for xx in x.items():
+                show_sizeof(xx, level + 1, show_deep)
+        else:
+            for xx in x:
+                show_sizeof(xx, level + 1, show_deep)
+
 def recent_exprs(within_secs):
     return db.Expr.search({'updated': {'$gt': now() - within_secs}})
 
@@ -76,4 +88,3 @@ def new_referral_link(from_user_name, to_email='', reuse=1):
 def new_referral(from_user_name, to_email='', reuse=1):
     return db.User.named(from_user_name).new_referral(
         {'to': to_email, 'reuse': reuse})
-

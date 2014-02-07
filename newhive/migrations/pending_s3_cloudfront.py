@@ -9,7 +9,7 @@ from newhive.utils import now, time_u, Apply
 def fixup_s3_url(url):
     url = re.sub(r"(https?:)?//dev-1-s1-newhive.s3.amazonaws.com(:80|:443)?/",
         "//dev.media.tnh.me/", url)
-    url = re.sub(r"(https?:)?//s1-thenewhive.s3.amazonaws.com(:80|:443)?/",
+    url = re.sub(r"(https?:)?//s[1-5]-thenewhive.s3.amazonaws.com(:80|:443)?/",
         "//media.tnh.me/", url)
     # url = re.sub(r'https?://([^/]*tnh.me)/', '//\1/', url)
     return url
