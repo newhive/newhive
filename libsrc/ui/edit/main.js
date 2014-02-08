@@ -130,6 +130,11 @@ Hive.init_menus = function() {
                 return res;
             });
         }
+        if (env.click_app) {
+            env.click_app.with_files(ev, files, file_list);
+            env.click_app = undefined;
+            return;
+        }
         center = u._mul([ev.clientX, ev.clientY])(env.scale());
         u.new_file(files, { center: center });
     }).on('response', function(ev, files){ u.on_media_upload(files) });
