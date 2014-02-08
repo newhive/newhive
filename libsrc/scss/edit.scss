@@ -26,7 +26,7 @@ body.edit {
         display:block;
         // padding-top: 160px;
         // padding-bottom: 160px;
-        // .hint { margin-top: 160px;}
+        .hint { pointer-events:auto; }
         img.plus_btn { 
             // display: none;
             width: 140px; 

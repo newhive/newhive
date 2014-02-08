@@ -299,7 +299,8 @@ Hive.init_global_handlers = function(){
     evs.on(drag_base, 'dragend');
 
     // The plus button needs to be clickable, but pass other events through
-    $(".prompts .plus_btn").on("dragenter",function(ev) { 
+    $(".prompts .plus_btn").add($(".prompts .hint"))
+    .on("dragenter",function(ev) { 
         $("#grid_guide").trigger(ev);
         return false; })
     .on("dragleave",function(ev) { 
