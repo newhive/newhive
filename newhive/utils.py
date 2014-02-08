@@ -1,5 +1,5 @@
 from __future__ import division
-import time, random, re, base64, copy, pytz, pandas
+import time, random, re, base64, copy, pytz, pandas, copy
 from datetime import datetime
 import urlparse
 import werkzeug.urls
@@ -33,16 +33,18 @@ class Apply(object):
     @staticmethod
     def apply_continue(func, klass, query={}, print_frequency=100, dryrun=False, 
             reset=False, runcount=1):
+        _query = copy.copy(query)
         if not reset:
-            dict.update(query, {'$or': [{'migrated': {'$exists':False}}, {'migrated': {'$lt': 1}}]})
+            dict.update(_query, {'$or': [{'migrated': {'$exists':False}}, 
+                {'migrated': {'$lt': 1}}]})
+            Apply.apply_all(func, klass.search(_query), 
+                print_frequency=print_frequency, dryrun=dryrun)
         else:
-            dict.update(query, {'migrated': {'$gt': 0}})
-
-        Apply.apply_all(func, klass.search(query), print_frequency=print_frequency,
-            dryrun=dryrun, reset=reset)
+            dict.update(_query, {'migrated': {'$gt': 0}})
+            klass._col.update(_query, {'$unset': {'migrated':0}}, multi=True)
 
     @staticmethod
-    def apply_all(func, l, print_frequency=100, dryrun=False, reset=False):
+    def apply_all(func, l, print_frequency=100, dryrun=False):
         l = list(l)
         total = len(l)
         initial_success = len(Apply.success)
@@ -50,13 +52,11 @@ class Apply(object):
         i = 0
         for e in l:
             i = i + 1
-            if reset:
-                e.reset('migrated')
-            elif not func(e, dryrun=dryrun):
+            if not func(e, dryrun=dryrun):
                 Apply.error.append(e)
             else:
                 Apply.success.append(e)
-                if not dryrun and not reset:
+                if not dryrun:
                     e.inc('migrated')
             if (i % print_frequency == 0):
                 print "(%d of %d) items processed... " % (i, total)
