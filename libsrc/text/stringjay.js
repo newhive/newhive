@@ -544,11 +544,13 @@ define(['browser/js', 'module'],
 	};
 	context_base.lower = function(context, s){ return s.toLowerCase(); };
 	// TODO-cleanup: add example cases to all these functions.
-	// {<for (reverse user.activity)}<item>{>}
+	// {<for (unique user.activity)}<item>{>}
 	context_base.unique = function(context, l){
 		var field = false;
 		if (arguments.length >= 3)
 			field = arguments[2];
+		if (!l.reduce)
+			return [];
 		return l.reduce(function(p, c) {
 			if (field) {
 	        	if (!p.filter(function(e) {return e[field]==c[field];}
@@ -559,7 +561,14 @@ define(['browser/js', 'module'],
 	        return p;
     	}, []);
 	};
-	context_base.reverse = function(context, l){ return l.concat().reverse(); };
+	// {reverse [1,2,3]} ==> [3,2,1]
+	// {reverse "not_a_list"} ==> []
+	// {<for (reverse user.activity)}<item>{>}
+	context_base.reverse = function(context, l){
+		if (!l.reverse)
+			return [];
+		return l.concat().reverse(); 
+	};
 
 	// TODO: write as accumulate
 	// {set "k" (plus 2 2 2)}
