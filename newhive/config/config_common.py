@@ -62,6 +62,7 @@ site_flags = {
     ,'snap_crop': ['admins','nd4']
     ,'can_debug': ['admins','nd4']
     ,'show_mini_selection_border': ['admins','nd4']
+    ,'copy_table': ['admins','nd4']
     ,'open_signup': []
     ,'modify_special_tags': ['admins','nd4']
 }

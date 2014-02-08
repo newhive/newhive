@@ -1,9 +1,11 @@
 define([], function(){
 
 var env = o = {};
+env.padding = 10;
 env.show_move_sensitivity = false;
 env.no_snap = false;
 env.show_mini_selection_border = false
+env.copy_table = false;
 
 // 1 editor unit := scale client pixels
 // The editor is 1000 units wide inside a 1000*scale pixel window
@@ -22,7 +24,7 @@ o.zoom = function(){ return zoom; };
 
 o.History = [];
 o.History.init = function(){
-    var o = env.History, group_start;
+    var o = env.History, group_start, group_level = 0;
     o.current = -1;
 
     // These two methods are used to collapse multiple history actions into one. Example:
@@ -30,8 +32,13 @@ o.History.init = function(){
     //     // code that that creates a lot of history actions
     //     env.History.group('group move')
     // TODO: replace begin and group with existing version of saver
-    o.begin = function(){ group_start = o.current + 1 };
+    o.begin = function(){
+        if (! group_level++)
+            group_start = o.current + 1 
+    };
     o.group = function(name){
+        if (--group_level)
+            return;
         var group_length = o.current - group_start + 1;
         if(group_length < 1) return;
         post_change = env.Selection.update;

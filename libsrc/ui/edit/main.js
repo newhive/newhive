@@ -387,7 +387,9 @@ Hive.init_common = function(){
     }
     $('title').text("Editor - " + (Hive.Exp.title || "[Untitled]"));
     var tags = " " + $("#tags_input").val().trim() + " ";
+    env.copy_table = context.flags.copy_table || false;
     env.gifwall = (tags.indexOf(" #Gifwall ") >= 0);
+
     env.squish_full_bleed = env.gifwall;
     env.show_mini_selection_border = 
         env.gifwall || context.flags.show_mini_selection_border;

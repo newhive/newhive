@@ -230,6 +230,68 @@ o.Controls = function(app, multiselect, delegate) {
                 env.Selection.select(copy);
             } });
         });
+        if (env.copy_table) {
+            var ref_copy;
+            const copy_grid = 30;
+            var grid_size = function(offset) {
+                var round = function(x) {
+                    return Math.max(1, Math.ceil(x));
+                }
+                offset = u._sub(offset)(ref_copy);
+                offset = u._div(offset)([copy_grid, -copy_grid]);
+                offset = offset.map(round, offset)
+                return offset;
+            };
+            o.c.copy.on('dragstart', function(ev) {
+                ref_copy = [ev.clientX, ev.clientY];
+            })
+            .on('drag', function(ev) {
+                var grid = grid_size([ev.clientX, ev.clientY]);
+                d.find($(".copy_copy")).remove();
+                var copy = d.find(".copy");
+                var left = parseFloat(copy.css("left"));
+                var top = parseFloat(copy.css("top"));
+                for (var x = 0; x < grid[0]; ++x) {
+                    for (var y = 0; y < grid[1]; ++y) {
+                        if (x == 0 && y == 0)
+                            continue;
+                        var $el = copy.clone();
+                        $el.addClass("copy_copy")
+                            .css("left", left + x*copy_grid)
+                            .css("top", top - y*copy_grid)
+                            .appendTo(d);
+                    }
+                }
+            })
+            .on('dragend', function(ev) {
+                var grid = grid_size([ev.clientX, ev.clientY]);
+                d.find($(".copy_copy")).remove();
+                var count = grid[0] * grid[1] - 1;
+                copy_list = [o.app];
+                if (o.app.elements)
+                    copy_list = o.app.elements();
+                var padding = [env.padding, env.padding];
+                var grid_dims = u._add(padding)(u._mul(1/env.scale())(o.app.dims()));
+                env.History.begin();
+                for (var x = 0; x < grid[0]; ++x) {
+                    for (var y = 0; y < grid[1]; ++y) {
+                        if (x == 0 && y == 0)
+                            continue;
+                        var copy = o.app.copy({
+                            offset: u._mul([x, y])(grid_dims),
+                            load: function(){
+                                if (! --count)
+                                    env.Selection.select(copy_list);
+                            } });
+                        if (copy.concat)
+                            copy_list = copy_list.concat(copy)
+                        else
+                            copy_list.push(copy);
+                    }
+                }
+                env.History.group('copy grid');
+            });
+        }
         d.find('.stack_up').click(o.app.stack_top);
         d.find('.stack_down').click(o.app.stack_bottom);
 

@@ -462,19 +462,27 @@ o.Selection = function(o) {
 
     // END-coords
 
-    o.copy = function(){
-        var offset = [ 0, o.dims()[1] + 20 ], load_count = elements.length, copies;
-        var load_counter = function(){
+    o.copy = function(opts){
+        var load_count = elements.length, copies, _load = opts.load;
+        opts = $.extend({ 
+            offset: [ 0, o.dims()[1] + 20 ],
+            'z_offset': elements.length },
+            opts)
+        opts.load = function(){
             load_count--;
             if( ! load_count ) {
-                o.select( copies );
-                env.History.group('copy group');
+                if (_load)
+                    _load();
+                else
+                    o.select( copies );
             }
         };
         env.History.begin();
         copies = $.map( elements, function(e){
-            return e.copy({ offset: offset, load: load_counter, 'z_offset': elements.length })
+            return e.copy(opts)
         });
+        env.History.group('copy group');
+        return copies;
     }
     o.remove = function(){
         var sel = $.merge([], elements);
