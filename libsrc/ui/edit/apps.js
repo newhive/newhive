@@ -448,7 +448,12 @@ Hive.App.Html = function(o) {
     Hive.App.has_resize(o);
     o.content = function() { return o.content_element[0].outerHTML; };
 
-    o.content_element = $(o.init_state.content).addClass('content');
+    var content = o.init_state.content;
+    // TODO: turn off autoplay when editing.
+    // m = content.match(/(.*youtube.*)&amp;autoplay=1(.*)/);
+    // if (m)
+    //     content = m[1] + m[2];
+    o.content_element = $(content).addClass('content');
     o.div.append(o.content_element);
     if(    o.content_element.is('object')
         || o.content_element.is('embed')

@@ -426,15 +426,19 @@ Hive.edit_pause = function(){
 // Matches youtube and vimeo URLs, any URL pointing to an image, and
 // creates the appropriate App state to be passed to hive_app.new_app.
 Hive.embed_code = function(element) {
-    var c = $(element).val().trim(), app;
-
-    if(m = c.match(/^https?:\/\/www.youtube.com\/.*?v=(.*?)(#t=(\d+))?$/i)
-        || (m = c.match(/src="https?:\/\/www.youtube(-nocookie)?.com\/embed\/(.*?)"/i))
-        || (m = c.match(/https?:\/\/youtu.be\/(.*)$/i))
-    ) {
+    var c = $(element).val().trim(), app
+    var v = "", more_args = "", start = 0;
+    if(m = c.match(/^https?:\/\/www.youtube.com\/.*?v=([^&]+)(.*)(#t=(\d+))?$/i)) {
+        v = m[1];
+        more_args = m[2] || "";
+        start = m[4] || 0;
+    } else if (m = c.match(/src="https?:\/\/www.youtube(-nocookie)?.com\/embed\/(.*?)"/i)
+        || (m = c.match(/https?:\/\/youtu.be\/(.*)$/i)))
+        v = m[1];
+    if (v != "") {
         var args = { 'rel': 0, 'showsearch': 0, 'showinfo': 0 };
-        if(m[3]) args['start'] = m[3];
-        var url = '//www.youtube.com/embed/' + m[1] + '?' + $.param(args);
+        if (start) args['start'] = start;
+        var url = '//www.youtube.com/embed/' + v + '?' + $.param(args) + more_args;
         app = { type : 'hive.html', content : 
             "<iframe width='100%' height='100%' class='youtube-player'" +
             "  src='" + url + "' frameborder='0' " +
