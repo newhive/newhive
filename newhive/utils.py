@@ -16,6 +16,11 @@ import newhive
 from newhive import config
 from newhive.config import abs_url, url_host
 
+# TODO-cleanup: move this into query helpers
+def filter_query(query, filter):
+    query.setdefault('$and', [])
+    query['$and'].append(filter)
+
 class Apply(object):
     error = []
     success = []
@@ -35,6 +40,11 @@ class Apply(object):
             reset=False, runcount=1):
         _query = copy.copy(query)
         if not reset:
+            or_clause = { '$or': [
+                {'migrated': {'$exists':False}}, 
+                {'migrated': {'$lt': 1}}
+                ] }
+            filter_query(_query, or_clause)
             dict.update(_query, {'$or': [{'migrated': {'$exists':False}}, 
                 {'migrated': {'$lt': 1}}]})
             Apply.apply_all(func, klass.search(_query), 
