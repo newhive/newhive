@@ -14,8 +14,6 @@ def fixup_s3_url(url):
     # migrate from our cname to cloudfront
     url = re.sub(r"//dev.media.tnh.me/",
         "//d2pmwekhvitugk.cloudfront.net/", url)
-    # url = re.sub(r"//d2pmwekhvitugk.cloudfront.net//",
-    #     "//d2pmwekhvitugk.cloudfront.net/", url)
     url = re.sub(r"//media.tnh.me/",
         "//d1v8u1ev1s9e4n.cloudfront.net/", url)
     # url = re.sub(r'https?://([^/]*tnh.me)(:80|:443)?/', '//\1/', url)
