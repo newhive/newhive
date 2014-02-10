@@ -884,10 +884,10 @@ Hive.registerApp(Hive.App.Path, 'hive.path');
         // TODO: UI for indicating path drawing is active
         // probably highlight shape menu at bottom middle
         evs.handler_set(o);
-        $('#site').addClass('draw').removeClass('default');
+        env.top_e.addClass('draw').removeClass('default');
     };
     o.unfocus = function(){
-        $('#site').addClass('draw').removeClass('default');
+        env.top_e.removeClass('draw').addClass('default');
         evs.handler_del(o);
     };
 

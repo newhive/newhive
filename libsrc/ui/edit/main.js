@@ -311,7 +311,7 @@ Hive.init_global_handlers = function(){
 
     evs.handler_set(env.Selection);
     evs.handler_set(Hive);
-    env.apps_e.addClass('default');
+    env.top_e.addClass('default');
 };
 Hive.init = function(exp, page){
     // this reference must be maintained, do not assign to Exp
@@ -325,6 +325,7 @@ Hive.init = function(exp, page){
     // Hive.init_autosave();
 
     env.apps_e = $('#happs'); // container element for all interactive apps
+    env.top_e = $('#site');
     env.History.init();
     hive_app.Apps.init(Hive.Exp.apps);
     Hive.init_common();
@@ -410,11 +411,11 @@ Hive.exit = function(){
     var focus_classes;
 
     Hive.focus = function(){
-        focus_classes = env.apps_e.attr('class');
+        focus_classes = env.top_e.attr('class');
         evs.focus();
     };
     Hive.unfocus = function(){
-        env.apps_e.attr('class', focus_classes);
+        env.top_e.attr('class', focus_classes);
         evs.unfocus();
     };
 })();
