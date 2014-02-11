@@ -1,4 +1,4 @@
-import sys
+import sys, copy
 from werkzeug.routing import Map, Rule, RequestRedirect
 from werkzeug import Request, Response, exceptions, url_unquote
 import jinja2
@@ -98,9 +98,6 @@ def split_domain(url):
     index = max(0, domain.find('.' + dev + config.server_name), 
         domain.find('.' + dev + config.content_domain))
     prefix = domain[0:index]
-    if prefix in config.live_prefixes:
-        prefix = ''
-        index = 0
     if index > 0: index = index + 1
     site = domain[index:]
     if prefix == 'www': prefix = ''
@@ -109,10 +106,13 @@ def split_domain(url):
 @Request.application
 def handle(request):
     time_start = now()
-    prefix, site = split_domain(request.environ['HTTP_HOST'])
-    request.environ['HTTP_HOST'] = site
-    if len(request.environ['PATH_INFO']) <= 1:
-        request.environ['PATH_INFO'] = prefix
+    environ = copy.copy(request.environ)
+    prefix, site = split_domain(environ['HTTP_HOST'])
+    environ['HTTP_HOST'] = site
+    if prefix not in config.live_prefixes:
+        request.environ['HTTP_HOST'] = site
+        if len(environ['PATH_INFO']) <= 1:
+            environ['PATH_INFO'] = prefix
     stats = False
     #stats = True
     if stats:
@@ -121,16 +121,16 @@ def handle(request):
         # if not yappi.is_running():
         #     yappi.start()
     try: (controller, handler), args = routes.bind_to_environ(
-        request.environ).match()
+        environ).match()
     except exceptions.NotFound as e:
         err=True
         if not config.live_server:
           try:
             err=False
             dev = config.dev_prefix + '.' if config.dev_prefix else ''
-            request.environ['HTTP_HOST'] = config.server_name + ':' + request.environ['SERVER_PORT']
+            environ['HTTP_HOST'] = config.server_name + ':' + environ['SERVER_PORT']
             (controller, handler), args = routes.bind_to_environ(
-                request.environ).match()
+                environ).match()
           except exceptions.NotFound as e:
             err=True
         if err:
