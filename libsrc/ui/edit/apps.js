@@ -1592,31 +1592,69 @@ Hive.App.has_rotate = function(o) {
     o.make_controls.push(controls);
 }
 
-Hive.App.has_slider_menu = function(o, handle, set, init, start, end) {
+Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end) {
+    var initial, val, initialized = false;
+
     function controls(o) {
-        var common = $.extend({}, o), changed = false;
+        var common = $.extend({}, o);
         if(!start) start = noop;
         if(!end) end = noop;
 
-        var drawer = $('<div>').addClass('control drawer hide');
-        var input = $("<input class='control' type='text' size='3'>")
-            .appendTo(drawer);
-        o.div.find('.buttons').append(drawer);
-        var m = o.hover_menu(o.div.find(handle), drawer, {
-            open: function(){
-                    input.val(init());
-                    input.focus().select();
-                    start();
-                },
-            close: function(){ if(changed) end() }
+        var drawer = $('<div>').addClass('control border drawer slider hide')
+            ,range = $("<input type='range' min='0' max='100'>")
+                .appendTo(drawer)
+                .css('vertical-align', 'middle')
+            ,num_input = $("<input type='text' size='3'>")
+                .appendTo(drawer)
+        o.div.find('.buttons').append(drawer)
+        handle = o.div.find(handle_q)
+
+        handle.add(drawer).bind('mousewheel', function(e){
+            initialize();
+            var amt = e.originalEvent.wheelDelta / 20;
+            if(!amt) return;
+            val = js.bound(val + amt, 0, 100);
+            update_val();
         });
-        input.keyup(function(e) {
-            if(e.keyCode == 13) { input.blur(); m.close(); }
-            var v = parseFloat(input.val());
-            if(v != init()) {
-                changed = true;
-                set(v === NaN ? init() : v);
+
+        var initialize = function(){
+            if(initialized) return;
+            initial = val = init();
+            initialized = true;
+        }
+
+        var update_val = function(){
+            num_input.val(val)
+            range.val(val)
+            set(val)
+        }
+
+        var m = o.hover_menu(handle, drawer, {
+            open: function(){
+                num_input.focus().select()
+                initialize()
+                update_val()
+                start()
+            },
+            close: function(){
+                if(val != initial) end()
             }
+        })
+
+        range.bind('change', function(){
+            var v = parseFloat(range.val());
+            if(v === NaN) return;
+            val = v;
+            num_input.val(val)
+            set(val)
+        });
+
+        num_input.keyup(function(e) {
+            if(e.keyCode == 13) { num_input.blur(); m.close(); }
+            var v = parseFloat(num_input.val());
+            if(v === NaN) return;
+            val = v;
+            set(val);
         });
 
         return o;
