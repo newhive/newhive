@@ -201,9 +201,9 @@ define([
     
     return {
         'initExpression': function() {
-            layout.place_apps();
+            // layout.place_apps();
             $(Hive.Page.init);
-            Hive.Page.show();
+            // Hive.Page.show();
         }
     };
 });

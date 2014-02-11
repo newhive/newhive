@@ -130,6 +130,11 @@ Hive.init_menus = function() {
                 return res;
             });
         }
+        if (env.click_app) {
+            env.click_app.with_files(ev, files, file_list);
+            env.click_app = undefined;
+            return;
+        }
         center = u._mul([ev.clientX, ev.clientY])(env.scale());
         u.new_file(files, { center: center });
     }).on('response', function(ev, files){ u.on_media_upload(files) });
@@ -296,18 +301,29 @@ Hive.init_global_handlers = function(){
     evs.on(drag_base, 'dragend');
 
     // The plus button needs to be clickable, but pass other events through
-    $(".prompts .plus_btn").on("dragenter",function(ev) { 
-        $("#grid_guide").trigger(ev);
-        return false; })
-    .on("dragleave",function(ev) { 
-        $("#grid_guide").trigger(ev);
-        return false; })
-    .on('dragenter dragover', function(ev){
-        ev.preventDefault(); })
-    .on("drop",function(ev) {
-        ev.preventDefault();
-        $("#grid_guide").trigger(ev);
-        return false; });
+    $(".prompts .plus_btn").add($(".prompts .hint"))
+        .on("dragenter",function(ev) { 
+            $("#grid_guide").trigger(ev);
+            return false;
+        })
+        .on("dragleave",function(ev) { 
+            $("#grid_guide").trigger(ev);
+            return false;
+        })
+        .on('dragenter dragover', function(ev){
+            ev.preventDefault();
+        })
+        .on("drop",function(ev) {
+            ev.preventDefault();
+            $("#grid_guide").trigger(ev);
+            return false;
+        })
+        .on("mouseenter", function(ev){
+            $("#grid_guide").trigger("dragenter");
+        })
+        .on("mouseleave", function(ev) {
+            $("#grid_guide").trigger("dragleave");
+        });
 
     evs.handler_set(env.Selection);
     evs.handler_set(Hive);
@@ -335,6 +351,7 @@ Hive.init = function(exp, page){
 
     Hive.init_global_handlers()
     env.layout_apps();
+    setTimeout(function() { env.layout_apps(); }, 100);
 };
 
 Hive.tag_list = function(tags) {
@@ -386,8 +403,13 @@ Hive.init_common = function(){
     }
     $('title').text("Editor - " + (Hive.Exp.title || "[Untitled]"));
     var tags = " " + $("#tags_input").val().trim() + " ";
+    env.copy_table = context.flags.copy_table || false;
     env.gifwall = (tags.indexOf(" #Gifwall ") >= 0);
+
     env.squish_full_bleed = env.gifwall;
+    env.show_mini_selection_border = 
+        env.gifwall || context.flags.show_mini_selection_border;
+
     Hive.enter();
 };
 // var $style = $();
@@ -423,15 +445,19 @@ Hive.exit = function(){
 // Matches youtube and vimeo URLs, any URL pointing to an image, and
 // creates the appropriate App state to be passed to hive_app.new_app.
 Hive.embed_code = function(element) {
-    var c = $(element).val().trim(), app;
-
-    if(m = c.match(/^https?:\/\/www.youtube.com\/.*?v=(.*?)(#t=(\d+))?$/i)
-        || (m = c.match(/src="https?:\/\/www.youtube(-nocookie)?.com\/embed\/(.*?)"/i))
-        || (m = c.match(/https?:\/\/youtu.be\/(.*)$/i))
-    ) {
+    var c = $(element).val().trim(), app
+    var v = "", more_args = "", start = 0;
+    if(m = c.match(/^https?:\/\/www.youtube.com\/.*?v=([^&]+)(.*)(#t=(\d+))?$/i)) {
+        v = m[1];
+        more_args = m[2] || "";
+        start = m[4] || 0;
+    } else if (m = c.match(/src="https?:\/\/www.youtube(-nocookie)?.com\/embed\/(.*?)"/i)
+        || (m = c.match(/https?:\/\/youtu.be\/(.*)$/i)))
+        v = m[1];
+    if (v != "") {
         var args = { 'rel': 0, 'showsearch': 0, 'showinfo': 0 };
-        if(m[3]) args['start'] = m[3];
-        var url = '//www.youtube.com/embed/' + m[1] + '?' + $.param(args);
+        if (start) args['start'] = start;
+        var url = '//www.youtube.com/embed/' + v + '?' + $.param(args) + more_args;
         app = { type : 'hive.html', content : 
             "<iframe width='100%' height='100%' class='youtube-player'" +
             "  src='" + url + "' frameborder='0' " +
@@ -586,8 +612,7 @@ global_highlight = function(showhide) {
     if (env.gifwall) {
         $(".prompts .highlight").showhide(showhide);
         var fn = showhide ? "mouseover" : 'mouseout';
-        $(".prompts .plus_btn").trigger(fn);
-        // $(".prompts .plus_btn").addremoveClass("active", showhide);
+        $(".prompts .plus_btn").data('hover_showhide')(showhide);
     } else
         $(".editor_overlay").showhide(showhide);
 };

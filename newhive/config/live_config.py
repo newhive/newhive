@@ -13,7 +13,7 @@ content_domain  = 'tnh.me'
 s3_buckets = {
     'media': 's1-thenewhive',
     'thumb': 'thumb-newhive',
-    'asset': 'skin-newhive'
+    'asset': 'live-skin-newhive'
 }
 
 cloudfront_domains = {
