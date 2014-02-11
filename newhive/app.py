@@ -98,9 +98,6 @@ def split_domain(url):
     index = max(0, domain.find('.' + dev + config.server_name), 
         domain.find('.' + dev + config.content_domain))
     prefix = domain[0:index]
-    if prefix in config.live_prefixes:
-        prefix = ''
-        index = 0
     if index > 0: index = index + 1
     site = domain[index:]
     if prefix == 'www': prefix = ''
