@@ -1876,7 +1876,7 @@ class File(Entity):
         resamples = self.get('resamples', []) or []
         for size in resamples:
             if (w and size[0] > w) or (h and size[1] > h):
-                return self.get('url') + self.id + '_' + str(int(size[0]))
+                return self.get('url') + '_' + str(int(size[0]))
                 # This was necessary when media assets were on 5 buckets
                 # but resamples were only on one.
                 # return ( self.db.s3.bucket_url('media') + self.id + '_' +
