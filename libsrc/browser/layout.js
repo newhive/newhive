@@ -15,11 +15,16 @@ define(['browser/jquery'], function($) {
             var e = $(this);
             var s = e.parent().width() / 1000;
             if(!e.data('css')) {
-                var c = {}, props = ['left', 'top', 'width', 'height'];
-                if($(app_div).css('border-radius').indexOf('px') > 0) $.merge(props,
-                         ['border-top-left-radius', 'border-top-right-radius',
-                             'border-bottom-right-radius', 'border-bottom-left-radius']
-                     );
+                var c = {}, props = ['left', 'top', 'width', 'height'],
+                    border = $(app_div).css('border-radius');
+
+                if(border && border.indexOf('px') > 0)
+                    $.merge(props, [
+                        'border-top-left-radius'
+                        ,'border-top-right-radius'
+                        ,'border-bottom-right-radius'
+                        ,'border-bottom-left-radius'
+                    ]);
                 props.map(function(p) { c[p] = parseFloat(app_div.style[p]) });
                 var scale = parseFloat(e.attr('data-scale'));
                 if(scale) c['font-size'] = scale;
@@ -94,7 +99,8 @@ define(['browser/jquery'], function($) {
             o.center(e, e.parent(), { minimum : false });
         };
         if(!e.width()) e.load(load);
-        else load();
+        // else 
+        load();
         return e;
     }
 

@@ -20,11 +20,16 @@ class Assets(object):
         self.base_path = normpath(join(config.src_home, asset_path))
         self.strip = len(self.base_path) + 1
 
-        self.s3_con = S3Connection(config.aws_id, config.aws_secret)
-        self.asset_bucket = self.s3_con.create_bucket(config.s3_buckets.get('asset'))
         # TODO-cleanup: use S3Interface everywhere instead of s3_con
-        self.s3 = S3Interface()
-        self.base_url = self.s3.bucket_url('asset')
+        self.s3_con = S3Connection(config.aws_id, config.aws_secret)
+        self.asset_bucket = self.s3_con.get_bucket(config.s3_buckets.get('asset'))
+        cloudfront = config.cloudfront_domains['asset']
+        if cloudfront:
+            self.base_url = '//' + cloudfront + '/'
+        else:
+            bucket_url = self.asset_bucket.generate_url(0)
+            self.base_url = re.sub(r'^https?:', '',
+                bucket_url[0:bucket_url.index('?')])
         self.local_base_url = '/lib/' #re.sub('https?:', '', abs_url()) + 'lib/'
         self.default_local = False
 

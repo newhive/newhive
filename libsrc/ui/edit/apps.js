@@ -350,7 +350,7 @@ Hive.App = function(init_state, opts) {
                 $highlight = $("<div class='highlight_box hide'\
                     ><div class='highlight'></div></div>").appendTo(o.div);
             else
-                $highlight = $("<div class='highlight hide></div>").appendTo(o.div);
+                $highlight = $("<div class='highlight hide'></div>").appendTo(o.div);
         }
         $highlight.showhide(opts.on);
     }
