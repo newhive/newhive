@@ -9,6 +9,7 @@ database_port   = 27017
 email_port      = 2525
 media_path      = '/home/domains/thenewhive.com'
 redirect_domains = ['newhive.com', 'thenewhive.com']
+live_prefixes   = ['live-5', 'live-6']
 
 embedly_key     = '1774adc27ebd4753a2f20c3635d1508e'
 analytics_db    = 'analytics'
