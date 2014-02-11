@@ -127,7 +127,7 @@ def handle(request):
         if not config.live_server:
           try:
             err=False
-            dev = config.dev_prefix + '.' if config.dev_prefix else ''
+            #dev = config.dev_prefix + '.' if config.dev_prefix else ''
             request.environ['HTTP_HOST'] = config.server_name + ':' + request.environ['SERVER_PORT']
             (controller, handler), args = routes.bind_to_environ(
                 request.environ).match()

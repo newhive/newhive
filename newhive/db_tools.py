@@ -3,8 +3,12 @@ import re
 import newhive
 from newhive import state
 from newhive.utils import now, time_u, Apply, lget
-from newhive.server_session import db
+from newhive.server_session import db, server_env
 from newhive.mongo_helpers import mq
+
+assets = server_env['assets']
+jinja_env = server_env['jinja_env']
+config = server_env['config']
 
 # A couple handy defaults
 nd = db.User.named('newduke')
