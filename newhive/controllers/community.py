@@ -51,10 +51,11 @@ class Community(Controller):
     def forms_signup(self, tdata, request, username=None, **paging_args):
         referral = self.db.Referral.find({'key': request.args.get('key')})
         resp = {'form': 'create_account', 'title': "NewHive - Sign Up", }
-        if not referral:
-            resp['error'] = 'referral'
-        else:
-            resp['fullname'] = referral.get('name')
+        if not self.flags.get('open_signup'):
+            if not referral:
+                resp['error'] = 'referral'
+            else:
+                resp['fullname'] = referral.get('name')
         return resp
 
     def expressions_for(self, tdata, cards, owner):
@@ -104,7 +105,7 @@ class Community(Controller):
             "card_type": "expr",
             "tag_selected": tag_name,
             'owner': profile,
-            'title': 'Expressions by' + owner['name'],
+            'title': 'Expressions by ' + owner['name'],
         }
         if owner.id == tdata.user.id:
             data.update({"tag_entropy": owner.get('tag_entropy', {}).get(tag_name)})
@@ -278,7 +279,8 @@ class Community(Controller):
         meta = {}
         resp = {
             'expr_id': expr.id,
-            'content_url': abs_url(domain=self.config.content_domain) + expr.id,
+            'content_url': abs_url(domain=self.config.content_domain, 
+                secure=request.is_secure) + expr.id,
             'expr': expr.client_view(viewer=tdata.user, activity=10)
         }
 
@@ -330,7 +332,7 @@ class Community(Controller):
         return data
 
     def admin_query(self, tdata, request, **args):
-        if not tdata.context['flags'].get('admin'):
+        if not self.flags.get('admin'):
             return {}
 
         q = json.loads(request.args.get('q', '{}'))

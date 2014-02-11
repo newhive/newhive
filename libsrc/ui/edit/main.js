@@ -44,7 +44,6 @@ define([
 
 var Hive = {}
     ,debug_mode = context.config.debug_mode
-    ,bound = js.bound
     ,noop = function(){}
     ,Funcs = js.Funcs
     ,asset = ui_util.asset
@@ -55,41 +54,6 @@ Hive.asset = asset;
 Hive.u = u;
 Hive.env = env;
 Hive.app = hive_app;
-
-// Called on load() and save()
-Hive.init_common = function(){
-    $('title').text("Editor - " + (Hive.Exp.title || "[Untitled]"));
-    var tags = " " + $("#tags_input").val().trim() + " ";
-    env.gifwall = (tags.indexOf(" #gifwall ") >= 0);
-    env.squish_full_bleed = env.gifwall;
-    Hive.enter();
-};
-var $style = $();
-Hive.enter = function(){
-    $style.remove();
-    if (env.gifwall) {
-        $style = $("<style>").appendTo($("body"));
-        $style.html(" \
-            .overlay .fluff {display:none !important} \
-            .control.stack {display:none} \
-            .control.rotate {display:none} \
-            .control .set_bg {display:none} \
-            .control .opacity {display:none} \
-            body.edit {overflow-x:hidden} \
-            body.edit .app_btns {min-width:0px} \
-            body.edit .app_btns .icon {display:none} \
-            body.edit .app_btns .icon.insert_image {display:inline-block} \
-            body.edit .app_btns .icon.change_zoom {display:inline-block} \
-            #image_background { display: none; } \
-            ");
-    }
-};
-
-Hive.exit = function(){
-    $style.remove();
-    $(document).off('keydown');
-    $('body').off('mousemove mousedown');
-};
 
 Hive.grid = false;
 Hive.toggle_grid = function() {
@@ -111,8 +75,8 @@ Hive.init_menus = function() {
         hive_app.new_app({ type: 'hive.text', content: '<span style="font-weight:bold">&nbsp;</span>',
             scale : 3 });
     });
-    $('.app_btns .change_zoom').click(function(e) {
-        var zooms = [ 1, .4, .16 ];
+    $('.change_zoom').click(function(e) {
+        var zooms = [ 1, .5, .25 ];
         var zoom = env.zoom();
         // NOTE: indexOf will return -1 for unlisted zoom, so it will just
         // zoom to zooms[0] in that case.
@@ -157,9 +121,16 @@ Hive.init_menus = function() {
 
     $('#btn_grid').click(Hive.toggle_grid);
 
-    $('#media_upload').on('with_files', function(ev, files){
+    $('#media_upload').on('with_files', function(ev, files, file_list){
         // media files are available immediately upon selection
-        center = u._div([ev.clientX, ev.clientY])(env.scale());
+        if (env.gifwall) {
+            files = files.filter(function(file, i) {
+                var res = (file.mime.slice(0, 6) == 'image/');
+                if (!res) file_list.splice(i, 1);
+                return res;
+            });
+        }
+        center = u._mul([ev.clientX, ev.clientY])(env.scale());
         u.new_file(files, { center: center });
     }).on('response', function(ev, files){ u.on_media_upload(files) });
 
@@ -228,16 +199,14 @@ Hive.init_save_dialog = function(){
     });
     // canonicalize tags field.
     function tags_input_changed(el) {
+        const reserved_tags = ["remixed", "gifwall"];
         var tags = el.val().trim();
-        tags = tags.replace(/[#,]/g," ").replace(/[ ]+/g," ").trim();
-        if (tags.length) tags = tags.replace(/([ ]|^)/g,"$1#").trim();
-        // TODO-polish: unique the tags
-        var search_tags = " " + tags + " ";
-        // TODO: remove other keywords from tags.
-        search_tags = search_tags.replace(" #remixed ", " ");
-        tags = search_tags.trim();
+        var tag_list = Hive.tag_list(tags);
+        tags = Hive.canonical_tags(tag_list, reserved_tags);
+        $("#tags_input").val(tags);
+        Hive.set_tag_index(Hive.tag_list(tags));
+        var search_tags = " " + tags.toLowerCase() + " ";
         $(".remix_label input").prop("checked", search_tags.indexOf(" #remix ") >= 0);
-        el.val(tags);
     }
     $("#tags_input").change(function(e){
         var el = $(e.target);
@@ -261,6 +230,12 @@ Hive.init_save_dialog = function(){
     $('#save_overwrite').click(function() {
         Hive.Exp.overwrite = true;
         Hive.save();
+    });
+    $("#dia_save").on('keydown', function(e) {
+        if ((e.keyCode || e.which || e.charCode || 0) == 13) {
+            $("#save_submit").click();
+            e.preventDefault();
+        }
     });
     
     // Automatically update url unless it's an already saved
@@ -297,16 +272,40 @@ Hive.init_save_dialog = function(){
 };
 Hive.init_global_handlers = function(){
     // Global event handlers
-    $(window).on('resize', u.layout_apps);
+    $(window).on('resize', function(ev) {
+        var old_scale = env.scale();
+        env.scale_set();
+        var new_scale = env.scale();
+        if(old_scale == new_scale) return;
+
+        u.layout_apps();
+    });
     $(window).on('scroll', Hive.scroll);
     evs.on(document, 'keydown');
     evs.on('body', 'mousemove');
     evs.on('body', 'mousedown');
     var drag_base = $('#grid_guide');
+    evs.on(drag_base, 'dragenter');
+    evs.on(drag_base, 'dragleave');
+    evs.on(drag_base, 'drop');
     evs.on(drag_base, 'draginit');
     evs.on(drag_base, 'dragstart');
     evs.on(drag_base, 'drag');
     evs.on(drag_base, 'dragend');
+
+    // The plus button needs to be clickable, but pass other events through
+    $(".prompts .plus_btn").on("dragenter",function(ev) { 
+        $("#grid_guide").trigger(ev);
+        return false; })
+    .on("dragleave",function(ev) { 
+        $("#grid_guide").trigger(ev);
+        return false; })
+    .on('dragenter dragover', function(ev){
+        ev.preventDefault(); })
+    .on("drop",function(ev) {
+        ev.preventDefault();
+        $("#grid_guide").trigger(ev);
+        return false; });
 };
 Hive.init = function(exp, page){
     // this reference must be maintained, do not assign to Exp
@@ -326,6 +325,77 @@ Hive.init = function(exp, page){
 
     Hive.init_global_handlers()
     Hive.edit_start();
+    env.layout_apps();
+};
+
+Hive.tag_list = function(tags) {
+    tags = tags.split(" ");
+    tags = $.map(tags, function(x) {
+        return x.toLowerCase().replace(/[^a-z0-9]/gi,'');
+    });
+    u.array_delete(tags, "");
+    return tags;
+}
+Hive.canonical_tags = function(tags_list, special) {
+    // context.flags.modify_special_tags = true;
+    tags_list = $.map(tags_list, function(x, i) {
+        if (special && special.indexOf(x) >= 0) {
+            x = u.capitalize(x);
+            if (!context.flags.modify_special_tags)
+                x = "";
+        }
+        return "#" + x;
+    });
+    if (!context.flags.modify_special_tags && special && Hive.Exp.tags_index)
+        $.map(Hive.Exp.tags_index, function(x, i) {
+            if (special.indexOf(x) >= 0) {
+                x = "#" + u.capitalize(x);
+                tags_list.push(x);
+            }
+        });
+    tags_list = u.array_unique(tags_list);
+    u.array_delete(tags_list, "#");
+    return tags_list.join(" ");
+}
+Hive.set_tag_index = function(tags) {
+    Hive.Exp.tags_index = tags;
+}
+// Called on load() and save()
+Hive.init_common = function(){
+    var query = location.search.slice(1);
+    if (query.length) {
+        if (query == "new_user") {
+            $("#dia_editor_help").data("dialog").open();
+        } else {
+            // otherwise query is assumed to be tag list
+            $tags = $("#tags_input");
+            var e = {target:$tags};
+            var tags = (Hive.Exp.tags || "") + " " + unescape(query);
+            Hive.set_tag_index(Hive.tag_list(tags));
+            $tags.val(tags).trigger("change",e);
+        }
+    }
+    $('title').text("Editor - " + (Hive.Exp.title || "[Untitled]"));
+    var tags = " " + $("#tags_input").val().trim() + " ";
+    env.gifwall = (tags.indexOf(" #Gifwall ") >= 0);
+    env.squish_full_bleed = env.gifwall;
+    Hive.enter();
+};
+// var $style = $();
+Hive.enter = function(){
+    // $style.remove();
+    if (env.gifwall)
+        $("body").addClass("gifwall");
+    else
+        $("body").addClass("default");
+};
+
+Hive.exit = function(){
+    env.zoom_set(1);
+    $("body").removeClass("gifwall");
+    $("body").removeClass("default");
+    $(document).off('keydown');
+    $('body').off('mousemove mousedown');
 };
 
 Hive.edit_start = function(){
@@ -499,14 +569,42 @@ Hive.state = function() {
 
 // BEGIN-Events  //////////////////////////////////////////////////////
 
+global_highlight = function(showhide) {
+    if (env.gifwall) {
+        $(".prompts .highlight").showhide(showhide);
+        var fn = showhide ? "mouseover" : 'mouseout';
+        $(".prompts .plus_btn").trigger(fn);
+        // $(".prompts .plus_btn").addremoveClass("active", showhide);
+    } else
+        $(".editor_overlay").showhide(showhide);
+};
+
 // Most general event handlers
 Hive.handler_type = 3;
-Hive.dragstart = noop; // function(){ hovers_active(false) };
+var dragging_count = 0;
+Hive.dragenter = function(ev){ 
+    // hovers_active(false);
+    global_highlight(true);
+    dragging_count++;
+    ev.preventDefault();
+};
+Hive.dragstart = function(){ 
+    // hovers_active(false);
+    // global_highlight(true);
+};
 Hive.dragend = function(){
     // TODO-usability: fix disabling hover states in ui/util.hoverable
     // hovers_active(true)
+
     // In case scrollbar has been toggled:
     u.layout_apps(); 
+};
+Hive.drop = Hive.dragleave = function(){
+    if (dragging_count > 0) 
+        --dragging_count;
+
+    if (0 == dragging_count)
+        global_highlight(false);
 };
 Hive.mouse_pos = [0, 0];
 Hive.mousemove = function(ev){

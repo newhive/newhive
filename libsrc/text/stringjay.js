@@ -494,6 +494,16 @@ define(['browser/js', 'module'],
 	context_base.json = function(context, data){
 		return JSON.stringify(data);
 	};
+	// TODO: write as accumulate
+	// {set "k" (concat "you " "are " "awesome")}
+	context_base.concat = function(context){
+		var sum = "";
+		for(var i = 1; i < arguments.length; ++i){
+			if (typeof(arguments[i]) == "string")
+				sum += arguments[i];
+		}
+		return sum;
+	};
 	// Set lhs to the value of rhs
 	// ex: {set "my_var" 3}
 	context_base.set = function(context, lhs, rhs){
@@ -557,9 +567,7 @@ define(['browser/js', 'module'],
 		var sum = 0;
 		for(var i = 1; i < arguments.length; ++i){
 			if (typeof(arguments[i]) == "number")
-				return sum += arguments[i];
-			else
-				return 0;
+				sum += arguments[i];
 		}
 		return sum;
 	};

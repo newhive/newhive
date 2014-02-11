@@ -6,9 +6,11 @@
       NewHive is your blank canvas.<br>
       It’s freedom of expression on the web.
     </div>
-    {<with null "compact" "true"}{|templates/request_invite_form.html}{>}
+    {<unless flags.open_signup}
+      {<with null "compact" "true"}{|templates/request_invite_form.html}{>}
+    {>}
     <iframe
-      src="http://player.vimeo.com/video/77183542?title=0&amp;byline=0&amp;portrait=0"
+      src="//player.vimeo.com/video/77183542?title=0&amp;byline=0&amp;portrait=0"
       width="640px" height="360px" frameborder="0" webkitAllowFullScreen allowFullScreen
     ></iframe>
   </div>

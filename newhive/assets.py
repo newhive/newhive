@@ -21,8 +21,13 @@ class Assets(object):
 
         self.s3_con = S3Connection(config.aws_id, config.aws_secret)
         self.asset_bucket = self.s3_con.get_bucket(config.s3_buckets.get('asset'))
-        bucket_url = self.asset_bucket.generate_url(0)
-        self.base_url = bucket_url[0:bucket_url.index('?')]
+        cloudfront = config.cloudfront_domains['asset']
+        if cloudfront:
+            self.base_url = '//' + cloudfront + '/'
+        else:
+            bucket_url = self.asset_bucket.generate_url(0)
+            self.base_url = re.sub(r'^https?:', '',
+                bucket_url[0:bucket_url.index('?')])
         self.local_base_url = '/lib/' #re.sub('https?:', '', abs_url()) + 'lib/'
         self.default_local = False
 
@@ -51,20 +56,14 @@ class Assets(object):
 
     # upload each asset
     def push_s3(self):
-        versions_key_name = '.versions.json'
-        versions_key = self.asset_bucket.get_key(versions_key_name)
-        old_versions = json.loads(versions_key.get_contents_as_string()) if versions_key else {}
-        if not versions_key:
-            versions_key = S3Key(self.asset_bucket)
-            versions_key.name = versions_key_name
-
         print('Syncing all assets to s3...')
         for name, (path, version, local) in self.assets.iteritems():
             if not path or local: continue
-            if version != old_versions.get(name):
-                print 'uploading: '+ name
+            versioned_name = name + '.' + version
+            if not S3Key(self.asset_bucket, versioned_name).exists():
+                print 'uploading: ' + name
                 k = S3Key(self.asset_bucket)
-                k.name = name
+                k.name = versioned_name
                 # assets expire 10 years from now (we rely on cache busting query string)
                 headers = {
                     'Cache-Control': 'max-age=' + str(86400 * 3650),
@@ -78,16 +77,14 @@ class Assets(object):
                 k.make_public()
         print("Done Syncing to s3")
 
-        new_versions = dict([(r[0], r[1][1]) for r in self.assets.iteritems()]) # make name: version dict
-        versions_key.set_contents_from_string(json.dumps(new_versions))
-
         return self
 
     def url(self, name, abs=False, return_debug=True):
         props = self.assets.get(name)
         # TODO: return path of special logging 404 page if asset not found
         if props:
-            url = (self.local_base_url if props[2] else self.base_url) + name + '?' + props[1]
+            url = ((self.local_base_url + name) if props[2] else
+                (self.base_url + name + '.' + props[1]))
             if abs and url.startswith('/'): url = abs_url() + url[1:]
             return url
         elif return_debug:
@@ -295,17 +292,17 @@ class HiveAssets(Assets):
         self.assets_env.register('email.css', email_scss, output='../lib/email.css')
         self.final_bundles.append('email.css')
 
-        self.assets_env.register('admin.js',
-            'raphael/raphael.js',
-            'raphael/g.raphael.js',
-            'raphael/g.pie.js',
-            'raphael/g.line.js',
-            'browser/jquery/tablesorter.min.js',
-            'browser/jquery-ui/jquery-ui-1.10.3.custom.js',
-            'd3/d3.js',
-            'd3/d3.time.js',
-            output='../lib/admin.js'
-        )
+        # self.assets_env.register('admin.js',
+        #     'raphael/raphael.js',
+        #     'raphael/g.raphael.js',
+        #     'raphael/g.pie.js',
+        #     'raphael/g.line.js',
+        #     'browser/jquery/tablesorter.min.js',
+        #     'browser/jquery-ui/jquery-ui-1.10.3.custom.js',
+        #     'd3/d3.js',
+        #     'd3/d3.time.js',
+        #     output='../lib/admin.js'
+        # )
         # self.final_bundles.append('admin.js')
 
         admin_scss = webassets.Bundle("scss/chart.scss",

@@ -2,6 +2,16 @@ import urllib
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key as S3Key
 import newhive
+from newhive import config
+import re
+
+def fixup_s3_url(url):
+    cloudfront = config.cloudfront_domains['media']
+    if cloudfront:
+        url = re.sub(r'^https?://.*?/', '//' + cloudfront + '/', url)
+    else:
+        url = re.sub(r'^https?:', '', url)
+    return url
 
 class S3Interface(object):
     def __init__(self, config=None):
@@ -44,7 +54,9 @@ class S3Interface(object):
         if mimetype: s3_headers['Content-Type'] = mimetype
         k.set_contents_from_file(file, headers=s3_headers)
         k.make_public()
-        return k.generate_url(0, query_auth=False)
+        url = k.generate_url(0, query_auth=False)
+        url = fixup_s3_url(url);
+        return url
 
     def bucket_url(self, bucket='media'):
         return ('https://%s.s3.amazonaws.com/' %

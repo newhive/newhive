@@ -112,6 +112,8 @@ class Expr(ModelController):
             # remix: ensure that the remix tag is not deletable
             if res.get('remix_parent_id'):
                 upd['tags'] += " #remixed" # + remix_name
+            reserved_tags = ["remixed", "gifwall"];
+            # TODO: disallow removal of reserved tags
             res.update(**upd)
             if not self.config.live_server and (upd.get('apps') or upd.get('background')):
                 res.threaded_snapshot(retry=120)
@@ -174,7 +176,7 @@ class Expr(ModelController):
         html_for_app = partial(self.html_for_app, scale=expr_scale,
             snapshot_mode=snapshot_mode)
         app_html = map(html_for_app, exp.get('apps', []))
-        if exp.has_key('dimensions'):
+        if exp.has_key('dimensions') and 'gifwall' not in exp.get('tags_index',[]):
             app_html.append("<div id='expr_spacer' class='happ' style='top: {}px;'></div>".format(exp['dimensions'][1]))
         return ''.join(app_html)
 
@@ -187,6 +189,7 @@ class Expr(ModelController):
             if media: content = media.get_resample(
                 app.get('dimensions', [100,100])[0] * scale
             )
+
             html = "<img src='%s'>" % content
             scale_x = app.get('scale_x')
             if scale_x:

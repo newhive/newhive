@@ -21,7 +21,11 @@ aws_secret      = False
 s3_buckets = {
     'media': None,
     'system': None,
-    'assets': None,
+    'asset': None,
+}
+cloudfront_domains = {
+    'media': None,
+    'asset': None
 }
 
 admins          = ['abram', 'cara', 'zach', 'newduke', 'fatsycline','root','newhive']
@@ -57,7 +61,9 @@ site_flags = {
     ,'rect_drag_drop': ['admins','nd4']
     ,'shift_does_raise': ['newduke','nd4','abram']
     ,'snap_crop': ['admins','nd4']
-    ,'can_debug': ['admins', 'nd4']
+    ,'can_debug': ['admins','nd4']
+    ,'open_signup': []
+    ,'modify_special_tags': ['admins','nd4']
 }
 
 site_user = 'newhive'

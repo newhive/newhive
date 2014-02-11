@@ -1,7 +1,7 @@
 define([], function(){
 
 var env = o = {};
-env.show_move_sensitivity = true;
+env.show_move_sensitivity = false;
 env.no_snap = false;
 
 // 1 editor unit := scale client pixels
@@ -14,9 +14,8 @@ o.scale = function(){
     return scale;
 };
 o.zoom_set = function(_zoom) {
-    var scale = env.scale();
     zoom = _zoom;
-    env.layout_apps(scale);
+    env.layout_apps();
 }
 o.zoom = function(){ return zoom; };
 
@@ -58,6 +57,7 @@ o.History.init = function(){
         o[o.current].undo();
         o.current -= 1;
         o.update_btn_titles();
+        env.layout_apps();
         return false;
     };
 
@@ -67,6 +67,7 @@ o.History.init = function(){
         next.redo();
         o.current += 1;
         o.update_btn_titles();
+        env.layout_apps();
         return false;
     };
         
@@ -109,10 +110,17 @@ o.History.init = function(){
     var get_states = function(){
         return save_targets.map(function(a){ return a.state_relative(); }) 
     };
-    // all == true: save all state
-    // all == false: save selection state
-    o.change_start = function(all){
-        save_targets = all ? env.Apps.all() : env.Selection.get_targets();
+    // apps == true: save all state
+    // apps == false: save selection state
+    // else apps = list of apps to save
+    o.change_start = function(apps){
+        if (typeof(apps) != "object") {
+            if (!apps) 
+                apps = env.Selection.get_targets();
+            else
+                apps = env.Apps.all();
+        }
+        save_targets = apps.slice();
         old_states = get_states();
     };
     o.change_end = function(name){

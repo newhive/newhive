@@ -114,6 +114,7 @@
         "api_route": "/api/feed/expressions/grid/<owner_name>/<tag_name>",
         "controller": "community",
         "method": "expressions_public_tags",
+        "search_query": "@<owner_name> #<tag_name>",
         "client_method": "grid",
         "include_tags": true
     },
@@ -130,6 +131,7 @@
         "api_route": "/api/feed/<owner_name>/tag/<tag_name>",
         "controller": "community",
         "method": "expressions_tag",
+        "search_query": "@<owner_name> #<tag_name>",
         "client_method": "grid",
         "include_tags": true
     },
@@ -138,6 +140,7 @@
         "api_route": "/api/feed/<owner_name>/tag/<tag_name>/<entropy>",
         "controller": "community",
         "method": "expressions_tag",
+        "search_query": "@<owner_name> #<tag_name>",
         "client_method": "grid",
         "include_tags": true,
         "private": true
@@ -180,17 +183,23 @@
         "page_route": "/home/signup",
         "controller": "community",
         "method": "forms_signup",
-        "client_method": "forms"
+        "client_method": "new_account"
     },
     "old_signup": {
         "page_route": "/create_account/<key>",
         "controller": "community",
         "method": "old_signup"
     },
-    "signup-create": {
+    "signup_create": {
         "api_route": "/api/user/create",
         "controller": "user",
-        "method": "create"
+        "method": "create",
+        "secure": true
+    },
+    "name_check": {
+        "api_route": "/api/user/name_check",
+        "controller": "user",
+        "method": "name_check"
     },
 
     "collection_order": {

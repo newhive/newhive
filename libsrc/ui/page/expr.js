@@ -27,19 +27,20 @@ define([
     o.anim_duration = 400;
 
     // pagination functions here
-    var loading = false, more_cards = true, ui_page, win = $(window);
+    o.set_page = function(page){
+        ui_page = page;
+    }
+    var more_cards = true, ui_page, win = $(window);
     var on_scroll_add_page = function(){
-        loading = true;
-        o.controller.next_cards(render_new_cards);
+        if (more_cards) 
+            o.controller.next_cards(render_new_cards);
     };
     var render_new_cards = function(data){
-        // ugly hack to merge old context attributes to new data
-        // data.card_type = context.page_data.card_type;
-        // data.layout = context.page_data.layout;
+        // TODO-cleanup-HACK: There should be a unified flow for merging
+        // the new data
+        ui_page.render_new_cards(data);
         if(data.cards.length < 20)
             more_cards = false;
-        // context.page_data.cards = context.page_data.cards.concat(data.cards);
-        loading = false;
     };
 
     o.init = function(controller){
@@ -241,13 +242,14 @@ define([
         if (0)
             console.log("DEBUG: " + text);
     };
-    var cache_frames = function(expr_ids, current){
+
+    o.cache_frames = function(expr_ids, current){
         if (expr_ids.length == 0)
             return false;
         var expr_id = expr_ids[0];
         var contentFrame = o.get_expr(expr_id);
         if (contentFrame.length > 0) {
-            cache_frames(expr_ids.slice(1));
+            o.cache_frames(expr_ids.slice(1));
             debug("caching frame, already loaded: " + find_card(expr_id));
             return contentFrame;
         }
@@ -259,7 +261,8 @@ define([
         var contentFrameURL = o.content_url_base + expr_id +
             '?' + $.param(args);
         contentFrame = $('<iframe class="expr" allowfullscreen>')
-            .attr('src', contentFrameURL).attr('id', 'expr_' + expr_id);
+            .attr('src', contentFrameURL).attr('id', 'expr_' + expr_id)
+            .addClass('expr_hidden').hidehide();
 
         // Cache the expr data on the card
         var page_data = context.page_data;
@@ -295,7 +298,7 @@ define([
                 }
             }
             if (expr_ids.length > 1)
-                cache_frames(expr_ids.slice(1))
+                o.cache_frames(expr_ids.slice(1))
             // alert("loaded frame.  Others remaining:" + loading_frame_list);
         });
         $('#exprs').append(contentFrame);
@@ -318,18 +321,18 @@ define([
         var expr_id = page_data.expr_id;
         var expr_curr = $('.expr_visible');
         expr_curr.removeClass('expr_visible');
-        $('#exprs').showshow();
+        $('#exprs').showshow().addClass('animated');
         $('.social_btn').showshow();
 
         var contentFrame = o.get_expr(expr_id);
         if (contentFrame.length == 0) {
-            contentFrame = cache_frames([expr_id], true);
+            contentFrame = o.cache_frames([expr_id], true);
         }
         else {
             contentFrame.get(0).contentWindow.
                 postMessage({action: 'show'}, '*');
         }
-        contentFrame.addClass('expr_visible').removeClass('expr_hidden');
+        contentFrame.addClass('expr_visible').removeClass('expr_hidden').showshow();
         contentFrame.showshow();
         $('#exprs .expr').not('.expr_visible').css({'z-index': 0 });
         var found = find_card(expr_id);
@@ -431,14 +434,16 @@ define([
 
     var hide_other_exprs = function() {
         var to_hide = $('#exprs .expr').not('.expr_visible,.blank').filter(":visible");
+        $('#exprs').removeClass('animated');
         to_hide.each(function(i, el) {
             $(el).get(0).contentWindow.
                 postMessage({action: 'hide'}, '*');
         });
-        to_hide.addClass('expr_hidden');
+        to_hide.addClass('expr_hidden').hidehide();
         fixup_tags_list();
     };
 
+    // TODO: garbage collect expression frames
     var hide_exprs = function() {
         var contentFrame = $('.expr_visible');
 
@@ -448,7 +453,7 @@ define([
             },{
                 duration: 0, //anim_duration,
                 complete: function() {
-                    contentFrame.addClass('expr_hidden');
+                    contentFrame.addClass('expr_hidden').hidehide();
                     contentFrame.removeClass('expr_visible');
                     contentFrame.get(0).contentWindow.
                         postMessage({action: 'hide'}, '*');
@@ -725,7 +730,7 @@ define([
                     var found_next = (found + len + off) % len;
                     expr_ids = expr_ids.concat(page_data.cards[found_next].id);
                 }
-                cache_frames(expr_ids);
+                o.cache_frames(expr_ids);
                 if (offset) {
                     var card = page_data.cards[found]
                     page_data.expr_id = card.id;
