@@ -28,6 +28,18 @@ var o = {}
 // TODO-refactor: move into util
 o.capitalize = function(str) { return str[0].toUpperCase() + str.slice(1); };
 
+// 
+o.rad2deg = function(angle) { return angle * (180. / Math.PI) }
+o.deg2rad = function(angle) { return angle * (Math.PI / 180.) }
+o.rotate = function(pt, angle) {
+    var cos = Math.cos(angle);
+    var sin = Math.sin(angle);
+    var res = [];
+    res[0] = pt[0]*cos - pt[1]*sin;
+    res[1] = pt[1]*cos + pt[0]*sin;
+    return res;
+}
+
 // Return -1 if x < 0, 1 if x > 0, or 0 if x == 0.
 o._sign = function(x) {
     return typeof x === 'number' ? x ? x < 0 ? -1 : 1 : x === x ? 0 : NaN : NaN;
