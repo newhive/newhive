@@ -319,13 +319,17 @@ class Community(Controller):
             viewer=tdata.user, id=id, **args)
         print('executed search', search)
         tags = search.get('tags', [])
+        text = search.get('text', [])
+        # Treat single-word text search as a tag search (show tag page)
+        if len(search) == 1 and len(text) == 1:
+            tags = text
         data = {
             "cards": result,
             "card_type": "expr",
             'title': 'Search',
             'header': ("Search", request.args['q']),
         }
-        if (len(search) == 1 and len(tags) == 1):
+        if len(search) == 1 and len(tags) == 1:
             profile = tdata.user
             profile = dfilter(profile, ['tags_following'])
             data.update({'tags_search': tags, 'page': 'tag_search', 'viewer': profile})
