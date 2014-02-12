@@ -653,11 +653,11 @@ Hive.keydown = function(ev){
     // TODO-feature-editor-prompts #706: if key pressed is a word character,
     // create hive.text app with content of the character pressed
 
-    if(ev.ctrlKey && ev.keyCode == 90){
+    if(u.is_ctrl(ev) && ev.keyCode == 90){
         env.History.undo();
         return false;
     }
-    else if(ev.ctrlKey && ev.keyCode == 89){
+    else if(u.is_ctrl(ev) && ev.keyCode == 89){
         env.History.redo();
         return false;
     }
