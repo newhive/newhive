@@ -25,6 +25,10 @@ define([
 var o = {}
     ,bound = js.bound;
 
+o.is_ctrl = function(ev){
+    return (ev.ctrlKey || ev.metaKey);
+}
+
 // TODO-refactor: move into util
 o.capitalize = function(str) { return str[0].toUpperCase() + str.slice(1); };
 

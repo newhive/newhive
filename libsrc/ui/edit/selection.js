@@ -45,7 +45,9 @@ o.Selection = function(o) {
 
     // BEGIN-event-handlers
 
-    o.is_multi = function(ev) { return !env.gifwall && (ev.shiftKey || ev.ctrlKey); }
+    o.is_multi = function(ev){
+        return !env.gifwall && (ev.shiftKey || u.is_ctrl(ev));
+    }
 
     // mousedown comes from body, click comes from app div. Binding clicks
     // from app div prevents deselecting everything else at the start of a
@@ -54,7 +56,7 @@ o.Selection = function(o) {
         var app = ev.data;
         if(app){
             if (context.flags.shift_does_raise && ev.shiftKey) {
-                if (ev.ctrlKey)
+                if(u.is_ctrl(ev))
                     app.stack_bottom();
                 else
                     app.stack_top();
@@ -113,7 +115,7 @@ o.Selection = function(o) {
         $(document.body).append(o.div);
         o.div.append(o.select_box);
         o.start = [ev.pageX, ev.pageY];
-        if (ev.shiftKey || ev.ctrlKey){
+        if (ev.shiftKey || u.is_ctrl(ev)){
             o.initial_elements = elements.slice();
         } else {
             o.initial_elements = [];
@@ -519,7 +521,7 @@ o.Selection = function(o) {
 
     o.keydown = Funcs(function(ev){ 
         // ctrl+[shift+]a to select all or none
-        if( ev.keyCode == 65 && ev.ctrlKey ){
+        if( ev.keyCode == 65 && u.is_ctrl(ev) ){
             o.select( ev.shiftKey ? [] : hive_app.Apps.all() );
             return false;
         }
