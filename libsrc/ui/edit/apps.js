@@ -1593,12 +1593,12 @@ Hive.App.has_rotate = function(o) {
 }
 
 Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end) {
-    var initial, val, initialized = false;
+    var initial, val, initialized = false
 
     function controls(o) {
-        var common = $.extend({}, o);
-        if(!start) start = noop;
-        if(!end) end = noop;
+        var common = $.extend({}, o)
+        if(!start) start = noop
+        if(!end) end = noop
 
         var drawer = $('<div>').addClass('control border drawer slider hide')
             ,range = $("<input type='range' min='0' max='100'>")
@@ -1610,12 +1610,12 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end) {
         handle = o.div.find(handle_q)
 
         handle.add(drawer).bind('mousewheel', function(e){
-            initialize();
-            var amt = e.originalEvent.wheelDelta / 20;
-            if(!amt) return;
-            val = js.bound(val + amt, 0, 100);
-            update_val();
-        });
+            initialize()
+            var amt = e.originalEvent.wheelDelta / 20
+            if(!amt) return
+            val = js.bound(val + amt, 0, 100)
+            update_val()
+        })
 
         var initialize = function(){
             if(initialized) return;
@@ -1643,11 +1643,12 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end) {
 
         range.bind('change', function(){
             var v = parseFloat(range.val());
-            if(v === NaN) return;
-            val = v;
+            if(v === NaN) return
+            val = v
+            update_val()
             num_input.val(val)
             set(val)
-        });
+        })
 
         num_input.keyup(function(e) {
             if(e.keyCode == 13) { num_input.blur(); m.close(); }
@@ -1655,12 +1656,12 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end) {
             if(v === NaN) return;
             val = v;
             set(val);
-        });
+        })
 
-        return o;
-    };
-    o.make_controls.push(controls);
-};
+        return o
+    }
+    o.make_controls.push(controls)
+}
 
 Hive.App.has_align = function(o) {
     function controls(o) {
