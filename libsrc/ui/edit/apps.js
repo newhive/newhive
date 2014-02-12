@@ -90,14 +90,20 @@ env.Apps = Hive.Apps = (function(){
         return $.map(o.all(), function(app) { return app.state(); });
     };
     
-    var stack = [], restack = function() {
-        for(var i = 0; i < stack.length; i++)
-            if(stack[i]) stack[i].layer_set(i);
-    };
+    var stack = []
     u.has_shuffle(stack);
+    o.restack = function(){
+        var c_layer = 0
+        for(var i = 0; i < stack.length; i++){
+            if(!stack[i] || stack[i].deleted)
+                continue
+            stack[i].layer_set(c_layer)
+            c_layer++
+        }
+    }
     o.stack = function(from, to){
         stack.move_element(from, to);
-        restack();
+        o.restack();
     };
     o._stack = stack;
     
@@ -109,15 +115,10 @@ env.Apps = Hive.Apps = (function(){
         // if there's already an app at this layer, splice in the new app one layer above
         else if( stack[app.layer()] ) stack.splice(app.layer() + 1, 0, app);
         else stack[app.layer()] = app;
-        restack();
+        o.restack();
         return i;
     };
     
-    o.remove = function(app) {
-        u.array_delete(o, app);
-        u.array_delete(stack, app);
-    };
-
     o.fetch = function(id){
         for(var i = 0; i < o.length; i++) if( o[i].id == id ) return o[i];
     };
@@ -199,6 +200,11 @@ Hive.App = function(init_state, opts) {
         if(from == to) return;
         env.History.saver(o.layer, stack_to, 'change layer').exec(to);
     };
+    o.stack_down = function(ignore){
+
+    }
+    o.stack_up = function(ignore){
+    }
     o.stack_bottom = function(){
         o.stack_to(0) };
     o.stack_top = function(){
@@ -1629,12 +1635,12 @@ Hive.App.has_rotate = function(o) {
 }
 
 Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end) {
-    var initial, val, initialized = false;
+    var initial, val, initialized = false
 
     function controls(o) {
-        var common = $.extend({}, o);
-        if(!start) start = noop;
-        if(!end) end = noop;
+        var common = $.extend({}, o)
+        if(!start) start = noop
+        if(!end) end = noop
 
         var drawer = $('<div>').addClass('control border drawer slider hide')
             ,range = $("<input type='range' min='0' max='100'>")
@@ -1646,12 +1652,12 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end) {
         handle = o.div.find(handle_q)
 
         handle.add(drawer).bind('mousewheel', function(e){
-            initialize();
-            var amt = e.originalEvent.wheelDelta / 20;
-            if(!amt) return;
-            val = js.bound(val + amt, 0, 100);
-            update_val();
-        });
+            initialize()
+            var amt = e.originalEvent.wheelDelta / 20
+            if(!amt) return
+            val = js.bound(val + amt, 0, 100)
+            update_val()
+        })
 
         var initialize = function(){
             if(initialized) return;
@@ -1679,11 +1685,12 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end) {
 
         range.bind('change', function(){
             var v = parseFloat(range.val());
-            if(v === NaN) return;
-            val = v;
+            if(v === NaN) return
+            val = v
+            update_val()
             num_input.val(val)
             set(val)
-        });
+        })
 
         num_input.keyup(function(e) {
             if(e.keyCode == 13) { num_input.blur(); m.close(); }
@@ -1691,12 +1698,12 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end) {
             if(v === NaN) return;
             val = v;
             set(val);
-        });
+        })
 
-        return o;
-    };
-    o.make_controls.push(controls);
-};
+        return o
+    }
+    o.make_controls.push(controls)
+}
 
 Hive.App.has_align = function(o) {
     function controls(o) {
