@@ -141,11 +141,11 @@ o.Controls = function(app, multiselect, delegate) {
             min_d = [1, 1];
         }
         // TODO-bugbug: can still be pushed off screen with really small apps 
-        var ap = o.app.pos(),
+        var ap = app.pos(),
             win = $(window), wdims = [win.width(), win.height()],
             pos = [ Math.max(pad_ul[0] + window.scrollX,
                 ap[0]), Math.max(pad_ul[1] + window.scrollY, ap[1]) ],
-            ad = o.app.dims(),
+            ad = app.dims(),
             dims = [ ap[0] - pos[0] + ad[0], ap[1] - pos[1] + ad[1] ];
         if(dims[0] + pos[0] > wdims[0] + window.scrollX - pad_br[0])
             dims[0] = wdims[0] + window.scrollX - pad_br[0] - pos[0];
@@ -163,6 +163,8 @@ o.Controls = function(app, multiselect, delegate) {
     o.dims = function(){ return pos_dims().dims };
 
     o.layout = function() {
+        if (delegate && o.app.controls)
+            o.app.controls.layout();
         var pos = o.pos(), dims = o.dims(),
             cx = dims[0] / 2, cy = dims[1] / 2, p = o.padding,
             bw = o.border_width, outer_l = -cx -bw - p,

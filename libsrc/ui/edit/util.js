@@ -28,9 +28,9 @@ var o = {}
 // TODO-refactor: move into util
 o.capitalize = function(str) { return str[0].toUpperCase() + str.slice(1); };
 
-// 
 o.rad2deg = function(angle) { return angle * (180. / Math.PI) }
 o.deg2rad = function(angle) { return angle * (Math.PI / 180.) }
+// rotate the given 2-vector counterclockwise (y-up) through angle radians
 o.rotate = function(pt, angle) {
     var cos = Math.cos(angle);
     var sin = Math.sin(angle);
@@ -38,6 +38,9 @@ o.rotate = function(pt, angle) {
     res[0] = pt[0]*cos - pt[1]*sin;
     res[1] = pt[1]*cos + pt[0]*sin;
     return res;
+}
+o.rotate_about = function(pt, cent, angle) {
+    return o._add(cent)(o.rotate(o._sub(pt)(cent), angle));
 }
 
 // Return -1 if x < 0, 1 if x > 0, or 0 if x == 0.
@@ -136,7 +139,9 @@ o.array_equals = function(a, b) {
   }
   return true;
 }
-
+o.nth = function(array, n) {
+    return array.map(function(x) { return x[n] })
+}
 o.max = function(array){
     return Math.max.apply(Math, array);
 };
