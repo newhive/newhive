@@ -275,6 +275,10 @@ o.Selection = function(o) {
         if(axis_lock)
             delta[ Math.abs(delta[0]) > Math.abs(delta[1]) ? 1 : 0 ] = 0;
         var pos = u._add(ref_pos)(delta);
+        var off = [0, 0];
+        if (o != drag_target)
+            off = u._sub(drag_target.min_pos())(drag_target.pos_relative());
+        pos = u._add(pos)(off);
         // TODO-feature-snap: check key shortcut to turn off snapping
         if(!env.no_snap){
             var excludes = {};
@@ -287,6 +291,7 @@ o.Selection = function(o) {
                 guide_1: !env.gifwall && (!full_apps.length || coord_full == 0),
                 sensitivity: o.sensitivity, });
         }
+        pos = u._sub(pos)(off);
         if (full_apps.length)
             o.pushing_move(pos);
         drag_target.pos_relative_set(pos);

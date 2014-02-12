@@ -238,6 +238,7 @@ Hive.App = function(init_state, opts) {
 
     o.get_aspect = function() { return false; };
     o.has_full_bleed = function() { return false; };
+    o.angle = function(){ return 0; };
     o.pos = function(){
         var s = env.scale();
         return [ _pos[0] * s, _pos[1] * s ];
@@ -291,17 +292,43 @@ Hive.App = function(init_state, opts) {
         return [ pos[0] + dims[0] / 2, pos[1] + dims[1] / 2 ];
     };
     // TODO: make these two reflect axis aligned bounding box (when rotated, etc)
-    o.min_pos = function(){ return _pos.slice(); };
-    o.max_pos = function(){ return [ _pos[0] + _dims[0], _pos[1] + _dims[1] ]; };
+    var _min_pos = function(){ return _pos.slice(); };
+    var _max_pos = function(){ return [ _pos[0] + _dims[0], _pos[1] + _dims[1] ]; };
+    o.pts = function() {
+        var _min = _min_pos(), _max = _max_pos(), r = o.angle()
+            ,_cen = u._mul(.5)(u._add(_min)(_max))
+            ,mtx = [_min, _max], corners = [];
+        for (var x = 0; x < 2; ++x) {
+            for (var y = 0; y < 2; ++y) {
+                corners.push(u.rotate_about
+                    ([mtx[x][0], mtx[y][1]], _cen, u.deg2rad(r)));
+            }
+        }
+        return corners;
+    }
+    o.max_pos = function() {
+        // return o._max_pos();
+        var c = o.pts();
+        return [Math.max.apply(null, u.nth(c, 0)), 
+                Math.max.apply(null, u.nth(c, 1))];
+    }
+    o.min_pos = function() {
+        // return o._min_pos();
+        var c = o.pts();
+        return [Math.min.apply(null, u.nth(c, 0)), 
+                Math.min.apply(null, u.nth(c, 1))];
+    }
     o.cent_pos = function() { return u._mul(.5)(u._add(o.min_pos())(o.max_pos())); };
     // return [[x-min, x-center, x-max], [y-min, y-center, y-max]]
     // if o were moved to pos
     o.bounds_tuple_relative = function(pos) {
-        var curr_ = [o.min_pos(), o.cent_pos(), o.max_pos()];
+        var curr_ = [o.min_pos(), o.cent_pos(), o.max_pos()]
+            ,del = u._sub(o.min_pos())(o.pos_relative());
+        // curr_ = curr_.map(function(x) { return u._sub(x)(del) });
         var curr = [[],[]];
         $.map(curr_, function(pair) {
-            curr[0] = curr[0].concat(pair[0] + pos[0] - _pos[0]);
-            curr[1] = curr[1].concat(pair[1] + pos[1] - _pos[1]);
+            curr[0] = curr[0].concat(pair[0] + pos[0] - 2*_pos[0] + curr_[0][0] + 100);
+            curr[1] = curr[1].concat(pair[1] + pos[1] - curr_[0][1]);
         });
         return [curr[0].slice(), curr[1].slice()];
     }
@@ -1398,12 +1425,14 @@ Hive.App.has_resize = function(o) {
     }
 
     o.resize_end = function(){ 
-        $("#controls").showshow();
         u.set_debug_info("");
         $(".ruler").hidehide();
         var skip_history = false;
         if (o.after_resize) skip_history = o.after_resize();
         if (!skip_history) history_point.save();
+        if (env.Selection.selected(o)) 
+            env.Selection.update_relative_coords();
+        $("#controls").showshow();
     };
     o.resize_to = function(delta){
         return [ Math.max(1, dims_ref[0] + delta[0]), 
@@ -1580,7 +1609,9 @@ Hive.App.has_rotate = function(o) {
         o.rotateHandle.drag('start', function(e, dd) {
                 refAngle = angle;
                 offsetAngle = o.getAngle(e);
-                history_point = env.History.saver(o.app.angle, o.app.angle_set, 'rotate');
+                $("#controls").hidehide();
+                history_point = env.History.saver(
+                    o.app.angle, o.app.angle_set, 'rotate');
             })
             .drag(function(e, dd) {
                 angle = o.getAngle(e) - offsetAngle + refAngle;
@@ -1588,7 +1619,12 @@ Hive.App.has_rotate = function(o) {
                     angle = angleRound(angle);
                 o.app.angle_set(angle);
             })
-            .drag('end', function(){ history_point.save(); })
+            .drag('end', function(){
+                history_point.save();
+                if (env.Selection.selected(o.app)) 
+                    env.Selection.update_relative_coords();
+                $("#controls").showshow();
+            })
             .dblclick(function(){ o.app.angle_set(0); });
 
         o.app.angle_set(o.app.angle());
