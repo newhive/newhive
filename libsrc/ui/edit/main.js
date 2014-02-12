@@ -587,6 +587,7 @@ Hive.init_autosave = function (){
 // Get and set the JSON object Hive.Exp which represents the edited expression
 Hive.state = function() {
     //Hive.Exp.domain = $('#domain').val();
+    hive_app.Apps.restack(); // collapse layers of deleted apps
     Hive.Exp.name = $('#url').val();
     Hive.Exp.apps = hive_app.Apps.state();
     Hive.Exp.title = $('#title').val();

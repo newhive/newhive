@@ -90,14 +90,20 @@ env.Apps = Hive.Apps = (function(){
         return $.map(o.all(), function(app) { return app.state(); });
     };
     
-    var stack = [], restack = function() {
-        for(var i = 0; i < stack.length; i++)
-            if(stack[i]) stack[i].layer_set(i);
-    };
+    var stack = []
     u.has_shuffle(stack);
+    o.restack = function(){
+        var c_layer = 0
+        for(var i = 0; i < stack.length; i++){
+            if(!stack[i] || stack[i].deleted)
+                continue
+            stack[i].layer_set(c_layer)
+            c_layer++
+        }
+    }
     o.stack = function(from, to){
         stack.move_element(from, to);
-        restack();
+        o.restack();
     };
     o._stack = stack;
     
@@ -109,15 +115,10 @@ env.Apps = Hive.Apps = (function(){
         // if there's already an app at this layer, splice in the new app one layer above
         else if( stack[app.layer()] ) stack.splice(app.layer() + 1, 0, app);
         else stack[app.layer()] = app;
-        restack();
+        o.restack();
         return i;
     };
     
-    o.remove = function(app) {
-        u.array_delete(o, app);
-        u.array_delete(stack, app);
-    };
-
     o.fetch = function(id){
         for(var i = 0; i < o.length; i++) if( o[i].id == id ) return o[i];
     };
@@ -199,6 +200,11 @@ Hive.App = function(init_state, opts) {
         if(from == to) return;
         env.History.saver(o.layer, stack_to, 'change layer').exec(to);
     };
+    o.stack_down = function(ignore){
+
+    }
+    o.stack_up = function(ignore){
+    }
     o.stack_bottom = function(){
         o.stack_to(0) };
     o.stack_top = function(){
