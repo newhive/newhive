@@ -414,14 +414,16 @@ body {
         position: relative;
         .centered {
             position: relative;
-            width: 1px;
+            // width: 1px;
             button {
-                position: absolute;
+                // absolute positioning lets us place the buttons so that their
+                // gap is centered.  We decided to center the whole instead.
+                // position: absolute;
                 white-space: nowrap;
-                &.follow { right: 4px; }
+                // &.follow { right: 4px; }
                 &.create {
                     position: relative;
-                    left: 4px;
+                    // left: 4px;
                     span.text { padding-left: 25px; }
                 }
             }
