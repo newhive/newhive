@@ -54,7 +54,7 @@ body.edit {
         .highlight {
             width: 100%;
             height: 100%;
-            border: $color_selected 7px dashed;
+            border: $color_selected 10px dashed;
             @include box-sizing( border-box );
             // position: absolute;
             // top: 0px;
