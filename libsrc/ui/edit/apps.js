@@ -327,8 +327,8 @@ Hive.App = function(init_state, opts) {
         // curr_ = curr_.map(function(x) { return u._sub(x)(del) });
         var curr = [[],[]];
         $.map(curr_, function(pair) {
-            curr[0] = curr[0].concat(pair[0] + pos[0] - 2*_pos[0] + curr_[0][0] + 100);
-            curr[1] = curr[1].concat(pair[1] + pos[1] - curr_[0][1]);
+            curr[0] = curr[0].concat(pair[0] + pos[0] - _pos[0]);
+            curr[1] = curr[1].concat(pair[1] + pos[1] - _pos[1]);
         });
         return [curr[0].slice(), curr[1].slice()];
     }
@@ -1536,6 +1536,8 @@ Hive.App.has_resize_h = function(o) {
             .drag('end', function(e, dd) {
                 o.drag_target.busy = false;
                 o.app.div.drag('end');
+                if (env.Selection.selected(o.app)) 
+                    env.Selection.update_relative_coords();
             })
             .drag(function(e, dd) { 
                 o.app.resize_h([ o.refDims[0] + dd.deltaX, o.refDims[1] ]);
