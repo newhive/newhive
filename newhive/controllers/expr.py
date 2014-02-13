@@ -149,8 +149,9 @@ class Expr(ModelController):
         else:
             expr_obj = self.db.Expr.named(owner_name, expr_name)
         if not expr_obj: return self.serve_404(tdata, request, response)
-        if expr_obj.get('auth') == 'password' and not expr_obj.cmp_password(
-            request.form.get('password')): 
+        if (expr_obj.get('auth') == 'password'
+            and not expr_obj.cmp_password(request.form.get('password'))
+            and not expr_obj.cmp_password(request.args.get('pw'))):
             expr_obj = { 'auth': 'password' }
         # TODO: consider allowing analytics for content frame.
         viewport = [int(x) for x in

@@ -286,6 +286,7 @@ class Community(Controller):
 
         if (not tdata.user.can_view(expr)
             and not expr.cmp_password(request.form.get('password'))
+            and not expr.cmp_password(request.args.get('pw'))
         ):
             resp['expr'] = dfilter(resp['expr'], ['owner', 'auth', 'id', 'name'])
             resp['expr']['title'] = '[password required]'
