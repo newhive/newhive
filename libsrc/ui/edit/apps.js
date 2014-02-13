@@ -1612,6 +1612,8 @@ Hive.App.has_rotate = function(o) {
                 refAngle = angle;
                 offsetAngle = o.getAngle(e);
                 $("#controls").hidehide();
+                if (o.app.before_rotate)
+                    o.app.before_rotate(refAngle);
                 history_point = env.History.saver(
                     o.app.angle, o.app.angle_set, 'rotate');
             })
@@ -1623,13 +1625,12 @@ Hive.App.has_rotate = function(o) {
             })
             .drag('end', function(){
                 history_point.save();
-                if (env.Selection.selected(o.app)) 
-                    env.Selection.update_relative_coords();
+                env.Selection.update_relative_coords();
                 $("#controls").showshow();
             })
             .dblclick(function(){ o.app.angle_set(0); });
 
-        o.app.angle_set(o.app.angle());
+        if (!o.app.is_selection) o.app.angle_set(o.app.angle());
 
         return o;
     }

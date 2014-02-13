@@ -34,6 +34,7 @@ o.Selection = function(o) {
         return (drag_target == o) ? elements.slice() : [drag_target]; 
     };
     o.add_to_collection = false;
+    o.is_selection = true;
     o.make_controls = [];
     o.handler_type = 2;
 
@@ -314,6 +315,26 @@ o.Selection = function(o) {
         }
     };
 
+    hive_app.App.has_rotate(o);
+    var angle = 0;
+    o.angle = function(){ return angle; };
+    o.before_rotate = function(ref_angle) {
+        angle = ref_angle;
+        o.each(function(i, el) {
+            el.ref_angle = el.angle();
+            el.ref_cen = el.cent_pos();
+            el.ref_pos = u._sub(el.pos_relative())(el.ref_cen);
+        })
+    }
+    o.angle_set = function(a) {
+        a -= angle;
+        var sel_cent = o.cent_pos();
+        o.each(function(i, el) {
+            el.angle_set(el.ref_angle + a);
+            var cent = u.rotate_about(el.ref_cen, sel_cent, u.deg2rad(a));
+            el.pos_relative_set(u._add(el.ref_pos)(cent));
+        });
+    }
     hive_app.App.has_resize(o);
     var ref_dims, _resize = o.resize;
     o.before_resize = function() {
