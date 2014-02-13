@@ -161,13 +161,12 @@ o.Controls = function(app, multiselect, delegate) {
 
         var minned_dims = [ Math.max(min_d[0], dims[0]),
             Math.max(min_d[1], dims[1]) ];
-        delta_dir = [ ap[0] < 0 ? 0 : -1, ap[1] < 0 ? 0 : -1 ];
         if(env.gifwall && !o.multiselect) {
             pos[1] = Math.max(pad_ul[1], ap[1]);
             dims[1] = ap[1] - pos[1] + ad[1];
             minned_dims = dims.slice();
         }
-        pos = u._add(pos)(u._mul(delta_dir)(u._sub(minned_dims)(dims)));
+        pos = u._add(pos)(u._apply(Math.max, 0)(u._sub(minned_dims)(dims)));
 
         return { pos: pos, dims: minned_dims };
     };

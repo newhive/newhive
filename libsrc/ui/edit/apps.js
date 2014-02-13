@@ -292,8 +292,8 @@ Hive.App = function(init_state, opts) {
         return [ pos[0] + dims[0] / 2, pos[1] + dims[1] / 2 ];
     };
     // TODO: make these two reflect axis aligned bounding box (when rotated, etc)
-    var _min_pos = function(){ return _pos.slice(); };
-    var _max_pos = function(){ return [ _pos[0] + _dims[0], _pos[1] + _dims[1] ]; };
+    var _min_pos = function(){ return o.pos_relative(); };
+    var _max_pos = function(){ return u._add(o.pos_relative())(o.dims_relative()) };
     o.pts = function() {
         var _min = _min_pos(), _max = _max_pos(), r = o.angle()
             ,_cen = u._mul(.5)(u._add(_min)(_max))
