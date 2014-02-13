@@ -133,13 +133,20 @@ o.Controls = function(app, multiselect, delegate) {
             auto_height: false, offset_y : o.padding - 4}, opts))
     };
 
+    o.padding = 4;
+    o.border_width = 5;
     var pad_ul = [45, 45], pad_br = [45, 110], min_d = [135, 40];
+    if(multiselect){
+        pad_ul = [3, 3];
+        pad_br = [3, 3];
+        min_d = [1, 1];
+        o.padding = 1;
+        if (!env.gifwall)
+            o.border_width = 2;
+    }
+    pad_ul = $.map(pad_ul, function(x) { return Math.max(x, o.border_width) });
+    pad_br = $.map(pad_br, function(x) { return Math.max(x, o.border_width) });
     var pos_dims = function(){
-        if(o.multiselect){
-            pad_ul = [3, 3];
-            pad_br = [3, 3];
-            min_d = [1, 1];
-        }
         // TODO-bugbug: can still be pushed off screen with really small apps 
         var ap = o.app.pos(),
             win = $(window), wdims = [win.width(), win.height()],
@@ -155,6 +162,11 @@ o.Controls = function(app, multiselect, delegate) {
         var minned_dims = [ Math.max(min_d[0], dims[0]),
             Math.max(min_d[1], dims[1]) ];
         delta_dir = [ ap[0] < 0 ? 0 : -1, ap[1] < 0 ? 0 : -1 ];
+        if(env.gifwall && !o.multiselect) {
+            pos[1] = Math.max(pad_ul[1], ap[1]);
+            dims[1] = ap[1] - pos[1] + ad[1];
+            minned_dims = dims.slice();
+        }
         pos = u._add(pos)(u._mul(delta_dir)(u._sub(minned_dims)(dims)));
 
         return { pos: pos, dims: minned_dims };
@@ -209,13 +221,7 @@ o.Controls = function(app, multiselect, delegate) {
         o.app.unfocus();
     });
 
-    o.padding = 4;
-    o.border_width = 5;
-    if(multiselect){
-        o.padding = 1;
-        o.border_width = 2;
-    }
-    else {
+    if (!multiselect) {
         o.addControls($('#controls_common'));
         var d = o.div;
         o.c = {};
