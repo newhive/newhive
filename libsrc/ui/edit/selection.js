@@ -317,7 +317,7 @@ o.Selection = function(o) {
 
     hive_app.App.has_rotate(o);
     var angle = 0;
-    o.angle = function(){ return angle; };
+    o.angle = function(){ return 0; };
     o.before_rotate = function(ref_angle) {
         angle = ref_angle;
         o.each(function(i, el) {
