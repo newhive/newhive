@@ -640,6 +640,15 @@ o.append_color_picker = function(container, callback, init_color, opts){
         shades.css('background-color', 'rgb(' + hsvToRgb(hsv[0], 1, 1).join(',') + ')');
         calc_color();
     };
+    div.bind('mousewheel', function(e){
+        // initialize()
+        var amt = e.originalEvent.wheelDelta / 40
+        if(!amt) return
+        hsv[0] = js.bound(hsv[0] + amt/100, 0, 1)
+        calc_color()
+        e.preventDefault()
+    })
+
 
     o.set_color = function(color){
         var rgb = to_rgb(color);
