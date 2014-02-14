@@ -1660,6 +1660,7 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end) {
             if(!amt) return
             val = js.bound(val + amt, 0, 100)
             update_val()
+            e.preventDefault()
         })
 
         var initialize = function(){

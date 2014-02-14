@@ -166,7 +166,7 @@ o.Controls = function(app, multiselect, delegate) {
             dims[1] = ap[1] - pos[1] + ad[1];
             minned_dims = dims.slice();
         }
-        pos = u._add(pos)(u._apply(Math.max, 0)(u._sub(minned_dims)(dims)));
+        pos = u._sub(pos)(u._apply(Math.max, 0)(u._sub(minned_dims)(dims)));
 
         return { pos: pos, dims: minned_dims };
     };
