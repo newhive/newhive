@@ -518,6 +518,7 @@ o.Selection = function(o) {
         env.History.begin();
         $.each(sel, function(i, el){ el.remove() });
         env.History.group('delete group');
+        env.layout_apps() // in case scrollbar visibility changed
     };
 
     o.get_stack = function(){

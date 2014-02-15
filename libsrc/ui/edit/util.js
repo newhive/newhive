@@ -377,7 +377,8 @@ o.new_file = function(files, opts, app_opts, filter) {
 env.layout_apps = o.layout_apps = function(){
     env.scale_set();
     $.map(env.Apps, function(a){ a.layout() });
-    if(env.Selection.controls) env.Selection.controls.layout();
+    // handled by App.layout
+    // if(env.Selection.controls) env.Selection.controls.layout();
 
     var zoom = 100*env.zoom();
     var padding_left = (zoom == 100) ? "30px" : zoom + "%";
@@ -754,21 +755,6 @@ o.sel = function(n) {
 }
 
 o.foc = function(n){ env.Selection.update([env.Apps[n]]) };
-
-o.rect_test = function(w, h){
-    if(!w) w = 20;
-    if(!h) h = 20;
-    js.range(w).map(function(x){
-        js.range(h).map(function(y){
-            Hive.App({
-                position: [x*50, y*50],
-                dimensions: [48, 48],
-                type: 'hive.rectangle',
-                content: {color:colors[(x+y)%36]}
-            })
-        })
-    });
-};
 
 // Rejigger the selected elements into their "best"
 // snapped positions (and sizes TBD)

@@ -67,12 +67,12 @@ env.new_app = Hive.new_app = function(s, opts) {
             a.resize(delta);
             a.resize_end();
             $("body").scrollTop(a.pos()[1] + a.dims()[1] - 100);
-            // env.layout_apps();
             env.History.group("create");
         }
 
         env.Selection.select(a);
         if(load) load(a);
+        env.layout_apps() // in case scrollbar visibility changed
     };
     var app = Hive.App(s, opts);
     if (!env.gifwall)
@@ -182,12 +182,10 @@ Hive.App = function(init_state, opts) {
         o.div.hidehide();
         o.deleted = true;
         if(o.controls) o.controls.remove();
-        env.layout_apps();
     };
     o._unremove = function(){
         o.div.showshow();
         o.deleted = false;
-        env.layout_apps();
     };
     o.remove = function(){
         o._remove();
@@ -441,7 +439,6 @@ Hive.App = function(init_state, opts) {
         if (o.init_state.full_bleed_coord != undefined)
             Hive.App.has_full_bleed(o, o.init_state.full_coord);
         if(opts.load) opts.load(o);
-        u.layout_apps();
     });
 
     // initialize
@@ -873,47 +870,71 @@ Hive.App.Rectangle = function(o) {
 };
 Hive.registerApp(Hive.App.Rectangle, 'hive.rectangle');
 
+Hive.App.has_ctrl_points = function(o){
+    var app = o;
+    o.make_controls.push(function(o){
+        app.points().map(function(p){
+            var ctrl_e = $('<div>').addClass('control point')
+                .css({left: p[0], top: p[1] })
+                .appendTo(o.div)
+        })
+    })
+}
 
 Hive.App.Path = function(o){
     Hive.App.has_resize(o);
     var common = $.extend({}, o);
 
-    var state = {};
+    var state = {}, points = [];
     o.content = function(content) { return $.extend({}, state); };
-    o.set_css = function(props) {
-        props['background-color'] = props.color || props['background-color'];
-        props['box-sizing'] = 'border-box';
-        o.content_element.css(props);
-        $.extend(state, props);
-        if(o.controls) o.controls.layout();
+    o.points = function(){ return points.slice() }
+    o.point_set = function(i, p){
+        points[i] = p.slice();
     }
-    o.css_setter = function(css_prop) { return function(v) {
-        var ps = {}; ps[css_prop] = v; o.set_css(ps);
-    } }
 
-    o.color = function(){ return state.color };
-    o.color_set = o.css_setter('color');
+    // o.set_css = function(props) {
+    //     props['background-color'] = props.color || props['background-color'];
+    //     props['box-sizing'] = 'border-box';
+    //     o.content_element.css(props);
+    //     $.extend(state, props);
+    //     if(o.controls) o.controls.layout();
+    // }
+    // o.css_setter = function(css_prop) { return function(v) {
+    //     var ps = {}; ps[css_prop] = v; o.set_css(ps);
+    // } }
 
-    o.border_radius = function(){ return parseInt(state['border-radius']) };
-    o.border_radius_set = function(v){ o.set_css({'border-radius':v+'px'}); };
+    // o.color = function(){ return state.color };
+    // o.color_set = o.css_setter('color');
+
+    // o.border_radius = function(){ return parseInt(state['border-radius']) };
+    // o.border_radius_set = function(v){ o.set_css({'border-radius':v+'px'}); };
 
     o.make_controls.push(function(o){
         o.addControls($('#controls_rectangle'));
     });
+    Hive.App.has_ctrl_points(o)
 
-    Hive.App.has_rotate(o);
-    Hive.App.has_color(o);
-    Hive.App.has_opacity(o);
-    var history_point;
-    Hive.App.has_slider_menu(o, '.rounding', o.border_radius_set, o.border_radius,
-        function(){ history_point = env.History.saver(
-            o.border_radius, o.border_radius_set, 'border radius'); },
-        function(){ history_point.save() }
-    );
+    // Hive.App.has_rotate(o);
+    // Hive.App.has_color(o);
+    // Hive.App.has_opacity(o);
+    // var history_point;
+    // Hive.App.has_slider_menu(o, '.rounding', o.border_radius_set, o.border_radius,
+    //     function(){ history_point = env.History.saver(
+    //         o.border_radius, o.border_radius_set, 'border radius'); },
+    //     function(){ history_point.save() }
+    // );
 
-    o.content_element = $("<div class='content rectangle drag'>").appendTo(o.div);
-    o.set_css(o.init_state.content);
-    setTimeout(function(){ o.load() }, 1);
+    points = [ [0, 0], [50, 100], [100, 0] ];
+    o.content_element = $("<svg xmlns='http://www.w3.org/2000/svg'"
+        + " class='content rectangle' viewbox='0 0 100 100'"
+        + " preserveAspectRatio='none'>"
+        + "<polygon points='0,0 50,100 100,0'></polygon></svg>")
+        .appendTo(o.div)
+    // o.content_element = $("<div class='content rectangle drag'>").appendTo(o.div);
+
+    // o.set_css(o.init_state.content);
+
+    o.load()
 
     return o;
 };
@@ -1888,6 +1909,21 @@ Hive.bg_change = function(s){
         function(){ return $.extend(true, {}, env.Exp.background) },
         Hive.bg_set, 'change background'
     ).exec(s);
+};
+
+Hive.rect_test = function(w, h){
+    if(!w) w = 20;
+    if(!h) h = 20;
+    js.range(w).map(function(x){
+        js.range(h).map(function(y){
+            Hive.App({
+                position: [x*50, y*50],
+                dimensions: [48, 48],
+                type: 'hive.rectangle',
+                content: {color:colors[(x+y)%36]}
+            })
+        })
+    });
 };
 
 return Hive;

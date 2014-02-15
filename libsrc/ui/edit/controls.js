@@ -230,11 +230,14 @@ o.Controls = function(app, multiselect, delegate) {
         o.c.remove  = d.find('.remove' );
         o.c.resize  = d.find('.resize' );
         o.c.stack   = d.find('.stack'  );
-        o.c.remove.click(function() { o.app.remove(); });
+        o.c.remove.click(function(){
+            o.app.remove();
+            env.layout_apps() // in case scrollbar visibility changed
+        });
         o.c.copy    = d.find('.copy'   );
         o.c.copy.click(function(){
-            var copy = o.app.copy({ load: function(){
-                env.Selection.select(copy);
+            var copy = o.app.copy({ load: function(a){
+                env.Selection.select(a);
             } });
         });
         if (env.copy_table) {

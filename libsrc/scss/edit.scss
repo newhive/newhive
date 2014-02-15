@@ -181,30 +181,43 @@ body.edit {
     font-family: Bitstream Mono, fixed;
 }
 
+.drawer { background-color : white; }
+
 .controls_src { display : none; }
 
 .controls {
     position:absolute;
     width:0; height:0;
     z-index: 4;
-}
-.control { position : absolute; cursor : default; z-index : 1 }
-.control.resize_v { cursor : ns-resize; }
-.control.resize_h { cursor : ew-resize; }
-.control.resize { cursor : se-resize; }
-.control.stack img { display : inline-block; margin-left : 5px; }
-.control.drawer { position : absolute; text-align : left; background-color : white; display : none; }
-.drawer { background-color : white; }
 
-.control.stack { white-space : nowrap; }
-.control.buttons {
-    pointer-events: none;
-    * { pointer-events: auto; }
-    .button {
-        margin-right: 4px;
-        float: left;
+    .control { position : absolute; cursor : default; z-index : 1 }
+
+    .resize_v { cursor : ns-resize; }
+    .resize_h { cursor : ew-resize; }
+    .resize { cursor : se-resize; }
+    .stack img { display : inline-block; margin-left : 5px; }
+    .control.drawer {
+        text-align: left;
+        display: none;
+    }
+    .point {
+        background-color: $color_selected;
+        margin: -7px 0 0 -7px;
+        width: 14px; height:14px;
+        border-radius: 7px;
+    }
+
+    .stack { white-space : nowrap; }
+    .buttons {
+        pointer-events: none;
+        * { pointer-events: auto; }
+        .button {
+            margin-right: 4px;
+            float: left;
+        }
     }
 }
+
 .drawer.brush .option:hover { background-color: $color_selected; }
 .drawer.brush .option.selected { background-color: $color_pale_yellow; }
 .control .button, .control .option { cursor : default; }
