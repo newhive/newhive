@@ -15,7 +15,7 @@ from newhive.config import abs_url, url_host
 
 db=state.Database() 
 
-max_threads = 10
+max_threads = 30
 max_time = 10.
 
 # TODO: make this a serializable class
@@ -65,7 +65,7 @@ def append_log(url, msg):
 # (which can point externally if desired)
 server_url = abs_url()[:-1]
 content_server = url_host(False)
-server_url = "http://staging.newhive.com"
+server_url = "http://live-6.newhive.com"
 content_server = "live-6.tnh.me/"
 
 exprs = db.Expr.search({ 'auth': 'public'})
@@ -177,9 +177,9 @@ class LoadTest(unittest.TestCase):
         return (self.error_count < count * .02)
 
     def test_load_user(self):
-        self.assertTrue(self.loadtest(max_count=5000, qps=100., generate_url=generate_url_profile))
+        self.assertTrue(self.loadtest(max_count=500, qps=100., generate_url=generate_url_profile))
     def test_load_expr(self):
-        self.assertTrue(self.loadtest(max_count=5000, qps=100., generate_url=generate_url_expr))
+        self.assertTrue(self.loadtest(max_count=500, qps=100., generate_url=generate_url_expr))
     def test_load_content(self):
         self.assertTrue(self.loadtest(max_count=1000, qps=100., generate_url=generate_url_content))
     def test_load_snapshot(self):

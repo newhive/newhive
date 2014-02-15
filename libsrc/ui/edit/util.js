@@ -78,13 +78,6 @@ o._lerp = function(alpha, old_val, new_val) {
     }
 };
 
-o.max = function(array){
-    return Math.max.apply(Math, array);
-};
-o.min = function(array){
-    return Math.min.apply(Math, array);
-};
-
 // Returns the nonnegative (nonoverlapping) distance btw two intervals.
 o.interval_dist = function(a, b) {
     c = [a[1] - b[0], a[0] - b[1]];
@@ -119,6 +112,24 @@ o.has_shuffle = function(arr) {
         var e = arr.splice(from, 1)[0];
         arr.splice(to, 0, e);
     };
+};
+// Shallow array comparison
+o.array_equals = function(a, b) {
+  if (a === b) return true;
+  if (a == null || b == null) return false;
+  if (a.length != b.length) return false;
+
+  for (var i = 0; i < a.length; ++i) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
+o.max = function(array){
+    return Math.max.apply(Math, array);
+};
+o.min = function(array){
+    return Math.min.apply(Math, array);
 };
 
 o.array_unique = function(a) {
@@ -346,9 +357,20 @@ env.layout_apps = o.layout_apps = function(){
     env.scale_set();
     $.map(env.Apps, function(a){ a.layout() });
     if(env.Selection.controls) env.Selection.controls.layout();
-    var height = Math.max(0, o.app_bounds(env.Apps.all()).bottom) * env.scale();
-    $(".prompts").css("top", height);
-    $(".prompts .highlight_box").css("width", 100*env.zoom() + "%");
+
+    var zoom = 100*env.zoom();
+    var padding_left = (zoom == 100) ? "30px" : zoom + "%";
+    var padding_right = (zoom == 100) ? "30px" : "20px";
+    $(".prompts .js_vcenter").css("padding-left", padding_left)
+        .css("padding-right", padding_right);
+    $(".prompts .highlight_box").css("width", zoom + "%");
+
+    var min_height = 2*160 + $(".prompts .js_vcenter").height();
+    var top = Math.max(0, o.app_bounds(env.Apps.all()).bottom) * env.scale();
+    var bottom = Math.max(top + min_height, $(window).height());
+    var margin = (bottom - top - $(".prompts .js_vcenter").height()) / 2;
+    $(".prompts").css("top", top).height(bottom - top);
+    $(".prompts .js_vcenter").css("margin-top", margin)
 };
 
 o.snap_helper = function(my_tuple, opts) {

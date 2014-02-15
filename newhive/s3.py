@@ -59,7 +59,10 @@ class S3Interface(object):
         return url
 
     def bucket_url(self, bucket='media'):
-        return ('https://%s.s3.amazonaws.com/' %
-            self.config.s3_buckets[bucket])
+        cloudfront = config.cloudfront_domains[bucket]
+        if cloudfront:
+            return '//' + cloudfront + '/'
+        else:
+            return '//%s.s3.amazonaws.com/' % self.config.s3_buckets[bucket]
 
 

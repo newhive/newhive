@@ -181,3 +181,11 @@ def handle(request):
     return response
 
 application = handle
+# for interactive debugging in apache. I believe you must use wsgi
+# daemon mode for this to work. Put this in apache site config:
+#   WSGIDaemonProcess site processes=1 threads=1 python-path=/var/www/newhive/
+#   WSGIProcessGroup site
+# TODO-perf: test whether daemon mode improves load testing
+# if config.debug_mode:
+#     from werkzeug.debug import DebuggedApplication
+#     application = DebuggedApplication(application, evalex=config.debug_unsecure)

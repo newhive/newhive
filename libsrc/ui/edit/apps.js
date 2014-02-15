@@ -262,6 +262,9 @@ Hive.App = function(init_state, opts) {
         o.div.width(dims[0]).height(dims[1]);
         if(o.controls)
             o.controls.layout();
+        // TODO-cleanup: have selection handle control creation
+        if(env.Selection && u.array_equals(env.Selection.elements(), [o]))
+            env.Selection.layout();
     };
 
     o.pos_relative = function(){ return _pos.slice(); };
@@ -445,7 +448,12 @@ Hive.App.Html = function(o) {
     Hive.App.has_resize(o);
     o.content = function() { return o.content_element[0].outerHTML; };
 
-    o.content_element = $(o.init_state.content).addClass('content');
+    var content = o.init_state.content;
+    // TODO: turn off autoplay when editing.
+    // m = content.match(/(.*youtube.*)&amp;autoplay=1(.*)/);
+    // if (m)
+    //     content = m[1] + m[2];
+    o.content_element = $(content).addClass('content');
     o.div.append(o.content_element);
     if(    o.content_element.is('object')
         || o.content_element.is('embed')
@@ -1279,6 +1287,10 @@ Hive.App.has_image_drop = function(o) {
         }
         ev.preventDefault();
     });
+    o.div.on("dblclick",function(ev) { 
+        env.click_app = o;
+        $("#media_input").click() 
+    });
 
     var on_files = function(files, file_list){
         if (env.gifwall) {
@@ -1310,6 +1322,7 @@ Hive.App.has_image_drop = function(o) {
             o.remove();
         env.History.group("Image drop");
     };
+    o.with_files = function(ev, file, file_list) { on_files(file, file_list)};
     upload.drop_target(o.content_element, on_files, u.on_media_upload);
     return o;
 };

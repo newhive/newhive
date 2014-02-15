@@ -1,5 +1,5 @@
 from __future__ import division
-import time, random, re, base64, copy, pytz, pandas
+import time, random, re, base64, copy, pytz, pandas, copy
 from datetime import datetime
 import urlparse
 import werkzeug.urls
@@ -16,6 +16,11 @@ import newhive
 from newhive import config
 from newhive.config import abs_url, url_host
 
+# TODO-cleanup: move this into query helpers
+def filter_query(query, filter):
+    query.setdefault('$and', [])
+    query['$and'].append(filter)
+
 class Apply(object):
     error = []
     success = []
@@ -31,18 +36,38 @@ class Apply(object):
         Apply.success = []
 
     @staticmethod
-    def apply_all(func, l, print_frequency=100):
+    def apply_continue(func, klass, query={}, print_frequency=100, dryrun=False, 
+            reset=False, runcount=1):
+        _query = copy.copy(query)
+        if not reset:
+            or_clause = { '$or': [
+                {'migrated': {'$exists':False}}, 
+                {'migrated': {'$lt': 1}}
+                ] }
+            filter_query(_query, or_clause)
+            dict.update(_query, {'$or': [{'migrated': {'$exists':False}}, 
+                {'migrated': {'$lt': 1}}]})
+            Apply.apply_all(func, klass.search(_query), 
+                print_frequency=print_frequency, dryrun=dryrun)
+        else:
+            dict.update(_query, {'migrated': {'$gt': 0}})
+            klass._col.update(_query, {'$unset': {'migrated':0}}, multi=True)
+
+    @staticmethod
+    def apply_all(func, l, print_frequency=100, dryrun=False):
         l = list(l)
         total = len(l)
         initial_success = len(Apply.success)
         print "Running on %s items." % total
         i = 0
         for e in l:
-            if not func(e):
+            i = i + 1
+            if not func(e, dryrun=dryrun):
                 Apply.error.append(e)
             else:
                 Apply.success.append(e)
-            i = i + 1
+                if not dryrun:
+                    e.inc('migrated')
             if (i % print_frequency == 0):
                 print "(%d of %d) items processed... " % (i, total)
         print "success (%d of %d)" % (len(Apply.success) - initial_success, total)
