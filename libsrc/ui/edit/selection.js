@@ -132,8 +132,10 @@ o.Selection = function(o) {
         var app = ev.data;
         if(app){
             o.move_handler(ev, delta);
+            return
         }
 
+        if(!o.start) return;
         o.drag_dims = [Math.abs(dd.deltaX), Math.abs(dd.deltaY)];
         o.drag_pos = [dd.deltaX < 0 ? ev.pageX : o.start[0],
             dd.deltaY < 0 ? ev.pageY : o.start[1]];
@@ -143,7 +145,7 @@ o.Selection = function(o) {
     };
     o.dragend = function (ev, dd) {
         o.dragging = false;
-        drag_target.show_controls()
+        if(drag_target) drag_target.show_controls()
 
         var app = ev.data;
         if(app){
@@ -408,6 +410,10 @@ o.Selection = function(o) {
         apps = $.grep(apps || elements, function(e){ return ! e.deleted; });
         var multi = o.dragging || (apps.length > 1);
 
+        // TODO-feature, TODO-cleanup: do not make distinction between
+        // selecting a single and multiple apps.
+        // show controls which apply to all objects in the selection
+
         // Previously unfocused elements that should be focused
         $.each(apps, function(i, el){ o.app_select(el, multi); });
         // Previously focused elements that should be unfocused
@@ -429,12 +435,9 @@ o.Selection = function(o) {
         // if(apps.length <= 1 && o.controls)
         //     o.controls.remove();
         if(!o.dragging && apps.length == 1) {
-            // TODO-feature: this code should always run, and it should create
-            // controls which apply to all objects in the selection
-            Controls(o, false, apps[0]);
+            Controls(apps[0], false);
             if (env.gifwall && context.flags.show_mini_selection_border)
                 o.controls.div.find(".select_border").hidehide();
-            o.controls.layout();
         }
         if(apps.length == 0) {
             evs.handler_del({handler_type: 0}); 

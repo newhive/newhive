@@ -38,7 +38,8 @@ o.Controls = function(app, multiselect, delegate) {
     }
     var o = app.controls = {};
     // TODO-cleanup: remove delegate, have selection handle control creation
-    o.app = delegate || app;
+    //o.app = delegate || app;
+    o.app = app;
     o.multiselect = multiselect;
 
     o.remove = function() {
@@ -161,12 +162,14 @@ o.Controls = function(app, multiselect, delegate) {
 
         var minned_dims = [ Math.max(min_d[0], dims[0]),
             Math.max(min_d[1], dims[1]) ];
+        var delta_dir = [ ap[0] < 0 ? 0 : -1, ap[1] < 0 ? 0 : -1 ];
         if(env.gifwall && !o.multiselect) {
             pos[1] = Math.max(pad_ul[1], ap[1]);
             dims[1] = ap[1] - pos[1] + ad[1];
             minned_dims = dims.slice();
         }
-        pos = u._sub(pos)(u._apply(Math.max, 0)(u._sub(minned_dims)(dims)));
+        //pos = u._sub(pos)(u._apply(Math.max, 0)(u._sub(minned_dims)(dims)));
+        pos = u._add(pos)(u._mul(delta_dir)(u._sub(minned_dims)(dims)));
 
         return { pos: pos, dims: minned_dims };
     };
@@ -174,8 +177,8 @@ o.Controls = function(app, multiselect, delegate) {
     o.dims = function(){ return pos_dims().dims };
 
     o.layout = function() {
-        if (delegate && o.app.controls)
-            o.app.controls.layout();
+        //if (delegate && o.app.controls)
+        //    o.app.controls.layout();
         var pos = o.pos(), dims = o.dims(),
             cx = dims[0] / 2, cy = dims[1] / 2, p = o.padding,
             bw = o.border_width, outer_l = -cx -bw - p,

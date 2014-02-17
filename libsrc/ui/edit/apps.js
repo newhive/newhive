@@ -276,7 +276,7 @@ Hive.App = function(init_state, opts) {
         o.controls = false
     }
     o.show_controls = function(){
-        if(!hidden_controls) return;
+        if(!hidden_controls) return
         o.controls = hidden_controls
         o.controls.div.showshow()
         o.controls.layout()
@@ -1684,6 +1684,9 @@ Hive.App.has_rotate = function(o) {
                 history_point.save();
                 env.Selection.update_relative_coords();
                 o.app.show_controls()
+                // TODO-cleanup-selection remove hack
+                // (get controls for an app to update rotation)
+                o.app.angle_set(angle) 
             })
             .dblclick(function(){ o.app.angle_set(0); });
 
