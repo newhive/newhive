@@ -98,7 +98,9 @@ o.Selection = function(o) {
                 drag_target = o;
             else
                 drag_target = ev.data;
-            drag_target.hide_controls()
+            // TODO-cleanup-controls remove true branch
+            if(elements.length == 1) elements[0].hide_controls()
+            else o.hide_controls()
             o.move_start();
             return;
         } else if(env.gifwall) {
@@ -145,7 +147,9 @@ o.Selection = function(o) {
     };
     o.dragend = function (ev, dd) {
         o.dragging = false;
-        if(drag_target) drag_target.show_controls()
+        // TODO-cleanup-controls remove true branch
+        if(elements.length == 1) elements[0].show_controls()
+        else o.show_controls()
 
         var app = ev.data;
         if(app){
@@ -410,9 +414,9 @@ o.Selection = function(o) {
         apps = $.grep(apps || elements, function(e){ return ! e.deleted; });
         var multi = o.dragging || (apps.length > 1);
 
-        // TODO-feature, TODO-cleanup: do not make distinction between
-        // selecting a single and multiple apps.
-        // show controls which apply to all objects in the selection
+        // TODO-feature, TODO-cleanup-controls: do not make
+        // distinction between selecting single and multiple apps.
+        // Show controls which apply to all objects in the selection
 
         // Previously unfocused elements that should be focused
         $.each(apps, function(i, el){ o.app_select(el, multi); });
@@ -478,7 +482,7 @@ o.Selection = function(o) {
         });
     };
 
-    var _pos_relative = o.pos_relative, _pos_relative_set = o.pos_relative_set;
+    var _pos_relative_set = o.pos_relative_set;
     o.pos_relative_set = function(pos){
         o.each(function(i, a){
             a.pos_relative_set(u._add(pos)(_positions[i]));

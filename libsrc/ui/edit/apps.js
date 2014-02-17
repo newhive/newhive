@@ -1684,7 +1684,7 @@ Hive.App.has_rotate = function(o) {
                 history_point.save();
                 env.Selection.update_relative_coords();
                 o.app.show_controls()
-                // TODO-cleanup-selection remove hack
+                // TODO-cleanup-controls remove hack
                 // (get controls for an app to update rotation)
                 o.app.angle_set(angle) 
             })
