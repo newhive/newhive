@@ -83,8 +83,8 @@ o.Selection = function(o) {
             if(o.controls && $.contains(o.controls.div.get(0), ev.target))
                 hit = true;
             if(!hit) o.unfocus();
-            return true;
         }
+        //ev.stopPropagation()
     };
 
     var dragging = false, drag_target;
@@ -93,12 +93,12 @@ o.Selection = function(o) {
         o.dragging = true;
         var app = ev.data;
         if(app){
-            $("#controls").hidehide();
             // If target is in selection, drag whole selection
             if(elements.indexOf(ev.data) >= 0)
                 drag_target = o;
             else
                 drag_target = ev.data;
+            drag_target.hide_controls()
             o.move_start();
             return;
         } else if(env.gifwall) {
@@ -125,13 +125,13 @@ o.Selection = function(o) {
     };
     o.drag = function(ev, dd){
         if (!o.dragging) return;
+        ev.stopPropagation()
 
         var delta = [dd.deltaX, dd.deltaY];
         o.sensitivity = u.calculate_sensitivity(delta);
         var app = ev.data;
         if(app){
             o.move_handler(ev, delta);
-            return;
         }
 
         o.drag_dims = [Math.abs(dd.deltaX), Math.abs(dd.deltaY)];
@@ -143,12 +143,12 @@ o.Selection = function(o) {
     };
     o.dragend = function (ev, dd) {
         o.dragging = false;
-        $("#controls").showshow();
+        drag_target.show_controls()
 
         var app = ev.data;
         if(app){
             o.move_end();
-            return;
+            return false;
         }
 
         if(!o.drag_dims) return;
@@ -156,6 +156,7 @@ o.Selection = function(o) {
         if(o.pos) o.update_focus();
         if(o.div) o.div.remove();
         o.update(elements);
+        return false;
     }
     o.update_focus = function(event){
         var s = env.scale();
@@ -296,7 +297,7 @@ o.Selection = function(o) {
         if (full_apps.length)
             o.pushing_move(pos);
         drag_target.pos_relative_set(pos);
-        o.layout();
+        //o.layout();
     };
     o.move_handler = function(ev, delta){
         delta = u._div(delta)(env.scale());
@@ -313,6 +314,7 @@ o.Selection = function(o) {
             o.update(prev_selection);
             full_apps = [];
         }
+        o.layout();
     };
 
     hive_app.App.has_rotate(o);

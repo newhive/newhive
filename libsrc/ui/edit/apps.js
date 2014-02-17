@@ -261,10 +261,35 @@ Hive.App = function(init_state, opts) {
         return [ pos[0] + dims[0] / 2, pos[1] + dims[1] / 2 ];
     };
 
+    var full;
+    o.full = function(){ return full }
+    o.full_set = function(v){
+        full = Boolean(v)
+        o.div.addremoveClass('full', full)
+    }
+
+    var hidden_controls = false;
+    o.hide_controls = function(){
+        if(!o.controls) return
+        hidden_controls = o.controls
+        o.controls.div.hidehide()
+        o.controls = false
+    }
+    o.show_controls = function(){
+        if(!hidden_controls) return;
+        o.controls = hidden_controls
+        o.controls.div.showshow()
+        o.controls.layout()
+    }
+
     o.layout = function(){
         var pos = o.pos(), dims = o.dims();
-        o.div.css({ 'left' : pos[0], 'top' : pos[1] });
-        o.div.width(dims[0]).height(dims[1]);
+        if(full){
+            o.div.css({left: 0, top: 0, width: '100%', height: '100%' })
+        }else{
+            o.div.css({ 'left' : pos[0], 'top' : pos[1] });
+            o.div.width(dims[0]).height(dims[1]);
+        }
         if(o.controls)
             o.controls.layout();
         // TODO-cleanup: have selection handle control creation
@@ -678,7 +703,7 @@ Hive.App.Image = function(o) {
                 return;
             if(!o.init_state.scale_x) 
                 if (!o.allow_crop()) return false;
-            $("#controls").hidehide();
+            o.hide_controls()
             ev.stopPropagation();
             drag_hold = true;
 
@@ -690,7 +715,7 @@ Hive.App.Image = function(o) {
         };
         o.long_hold_cancel = function(ev){
             if(!drag_hold) return;
-            $("#controls").showshow();
+            o.show_controls()
             if (ev)
                 ev.stopPropagation();
             drag_hold = false;
@@ -861,7 +886,8 @@ Hive.App.Rectangle = function(o) {
         function(){ history_point.save() }
     );
 
-    o.content_element = $("<div class='content rectangle drag'>").appendTo(o.div);
+    o.div.addClass('rectangle')
+    o.content_element = $("<div class='content drag'>").appendTo(o.div);
     o.set_css(o.init_state.content);
     setTimeout(function(){ o.load() }, 1);
 
@@ -881,8 +907,18 @@ Hive.App.has_ctrl_points = function(o){
     })
 }
 
+Hive.App.has_full_edit = function(o){
+    o.focus.add(function(){
+        o.full_set(true)
+    })
+    o.unfocus.add(function(){
+        o.full_set(false)
+    })
+}
+
 Hive.App.Path = function(o){
     Hive.App.has_resize(o);
+    Hive.App.has_ctrl_points(o)
     var common = $.extend({}, o);
 
     var state = {}, points = [];
@@ -912,7 +948,6 @@ Hive.App.Path = function(o){
     o.make_controls.push(function(o){
         o.addControls($('#controls_rectangle'));
     });
-    Hive.App.has_ctrl_points(o)
 
     // Hive.App.has_rotate(o);
     // Hive.App.has_color(o);
@@ -925,8 +960,9 @@ Hive.App.Path = function(o){
     // );
 
     points = [ [0, 0], [50, 100], [100, 0] ];
+    o.div.addClass('path')
     o.content_element = $("<svg xmlns='http://www.w3.org/2000/svg'"
-        + " class='content rectangle' viewbox='0 0 100 100'"
+        + " class='content' viewbox='0 0 100 100'"
         + " preserveAspectRatio='none'>"
         + "<polygon points='0,0 50,100 100,0'></polygon></svg>")
         .appendTo(o.div)
@@ -1406,7 +1442,7 @@ Hive.App.has_resize = function(o) {
     o.dims_ref_set = function(){ dims_ref = o.dims(); };
     o.resize_start = function(){
         if (o.before_resize) o.before_resize();
-        $("#controls").hidehide();
+        o.hide_controls()
         dims_ref = o.dims();
         u.reset_sensitivity();
         history_point = o.history_helper_relative('resize');
@@ -1453,7 +1489,7 @@ Hive.App.has_resize = function(o) {
         if (!skip_history) history_point.save();
         if (env.Selection.selected(o)) 
             env.Selection.update_relative_coords();
-        $("#controls").showshow();
+        o.show_controls()
     };
     o.resize_to = function(delta){
         return [ Math.max(1, dims_ref[0] + delta[0]), 
@@ -1632,7 +1668,7 @@ Hive.App.has_rotate = function(o) {
         o.rotateHandle.drag('start', function(e, dd) {
                 refAngle = angle;
                 offsetAngle = o.getAngle(e);
-                $("#controls").hidehide();
+                o.app.hide_controls()
                 if (o.app.before_rotate)
                     o.app.before_rotate(refAngle);
                 history_point = env.History.saver(
@@ -1647,7 +1683,7 @@ Hive.App.has_rotate = function(o) {
             .drag('end', function(){
                 history_point.save();
                 env.Selection.update_relative_coords();
-                $("#controls").showshow();
+                o.app.show_controls()
             })
             .dblclick(function(){ o.app.angle_set(0); });
 
