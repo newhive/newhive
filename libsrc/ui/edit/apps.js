@@ -906,7 +906,7 @@ Hive.App.has_ctrl_points = function(o){
             _layout()
 
             js.range(app.points_len()).map(function(i){
-                var p = app.point_client(i)
+                var p = u._mul(app.point(i))(env.scale())
                 ps_j[i].css({left: p[0], top: p[1] })
             })
         }
@@ -920,21 +920,13 @@ Hive.App.has_ctrl_points = function(o){
                     app.hide_controls()
                 })
                 .on('drag', function(ev, dd){
-                    app.point_client_set(i, [dd.deltaX, dd.deltaY])
+                    delta = u._div([dd.deltaX, dd.deltaY])(env.scale())
+                    app.point_set(i, delta, true)
                 })
                 .on('dragend', function(){
                     app.show_controls()
                 })
         })
-    })
-}
-
-Hive.App.has_full_edit = function(o){
-    o.focus.add(function(){
-        o.full_set(true)
-    })
-    o.unfocus.add(function(){
-        o.full_set(false)
     })
 }
 
@@ -948,18 +940,11 @@ Hive.App.Polygon = function(o){
     o.points = function(){ return points.slice() }
     o.points_len = function(){ return points.length }
 
-    var to_client = function(p, dims){
-        return u._mul(dims || o.dims())( u._div(p)([100,100]) )
-    }
-    var from_client = function(p, dims){
-        return u._mul([100,100])( u._div(p)(dims || o.dims()) )
-    }
     var ref_point, ref_points, ref_pos, ref_dims;
     o.point_set_start = function(i){
         ref_point = points[i].slice()
         ref_points = o.points()
-        ref_pos = o.pos()
-        ref_dims = o.dims()
+        ref_pos = o.pos_relative()
     }
     var point_update = function(i, p){
         points[i] = p.slice()
@@ -968,7 +953,6 @@ Hive.App.Polygon = function(o){
         svg_p.y = p[1]
     }
     o.point_set = function(i, p, reframe){
-        console.log(p)
         ref_points[i] = u._add(ref_point)(p)
         if(reframe){
             var left = Infinity, right = -Infinity,
@@ -982,21 +966,19 @@ Hive.App.Polygon = function(o){
 
             var  pos_delta = [-left, -top]
                 ,new_dims = [right - left, bottom - top]
-            // scale = [(right - left) / 100, (bottom - top) / 100]
 
             ref_points.map(function(p, i){
                 point_update(i, u._add(p)(pos_delta))
             })
-            o.pos_set( u._sub(ref_pos)(to_client(pos_delta)) )
-            // o.dims_set(to_client(new_dims))
+            o.pos_relative_set( u._sub(ref_pos)(pos_delta) )
+            o.dims_relative_set(new_dims)
+            o.content_element[0].setAttribute('viewBox',
+                [0, 0, new_dims[0], new_dims[1]].join(' '))
         }
         else
             point_update(i, p)
     }
-    o.point_client = function(i){ return to_client(points[i]) }
-    o.point_client_set = function(i, p){
-        o.point_set(i, from_client(p, ref_dims), true)
-    }
+    o.point = function(i){ return points[i].slice() }
 
     // o.set_css = function(props) {
     //     props['background-color'] = props.color || props['background-color'];
@@ -1034,10 +1016,14 @@ Hive.App.Polygon = function(o){
     o.content_element = $("<svg xmlns='http://www.w3.org/2000/svg'"
         + " class='content' viewbox='0 0 100 100'"
         + " preserveAspectRatio='none'>"
-        + "<polygon points='0,0 50,100 100,0'></polygon></svg>")
+        + "<polygon points='0,0'></polygon></svg>")
         .appendTo(o.div)
     // o.content_element = $("<div class='content rectangle drag'>").appendTo(o.div);
     poly_el = o.content_element.find('polygon')[0]
+    $(poly_el).attr('points', points.map(function(p){ return p[0]+','+p[1] })
+        .join(' '))
+    o.point_set_start(0)
+    o.point_set(0, points[0], true)
 
     // o.set_css(o.init_state.content);
 
