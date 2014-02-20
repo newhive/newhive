@@ -148,7 +148,14 @@ o.Controls = function(app, multiselect, delegate) {
     pad_ul = $.map(pad_ul, function(x) { return Math.max(x, o.border_width) });
     pad_br = $.map(pad_br, function(x) { return Math.max(x, o.border_width) });
     var pos_dims = function(){
-        // TODO-bugbug: can still be pushed off screen with really small apps 
+        // TODO-bugbug-border-push:
+        //    * Can still be pushed off screen with really small apps 
+        //    * Add scroll height when pushed from bottom to prevent
+        //      overlap of controls with app content
+        // TODO-polish-border-push:
+        //    * Make pushed border segments dashed
+        //    * Create pushed controls container so controls meant to
+        //      overlay app content can be separated
         var ap = app.pos(),
             win = $(window), wdims = [win.width(), win.height()],
             pos = [ Math.max(pad_ul[0] + window.scrollX,

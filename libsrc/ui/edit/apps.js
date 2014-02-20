@@ -192,6 +192,8 @@ Hive.App = function(init_state, opts) {
         env.History.save(o._unremove, o._remove, 'delete');
     };
 
+    // TODO-bugbug-layers: o.layer() does not correspond to position in stack
+    // due to deleted apps
     var stack_to = function(i){ o.apps.stack(o.layer(), i); };
     o.stack_to = function(to){
         var from = o.layer();
@@ -899,10 +901,27 @@ Hive.registerApp(Hive.App.Rectangle, 'hive.rectangle');
 Hive.App.has_ctrl_points = function(o){
     var app = o;
     o.make_controls.push(function(o){
-        app.points().map(function(p){
-            var ctrl_e = $('<div>').addClass('control point')
-                .css({left: p[0], top: p[1] })
+        var els = [] 
+
+        var _layout = o.layout
+        o.layout = function(){
+            _layout()
+
+            var ps = app.points(), dims = app.dims()
+            els.map(function(el, i){
+                var p = u._mul(dims)(u._div( ps[i] )( [100, 100] ))
+                el.css({left: p[0], top: p[1] })
+            })
+        }
+
+        app.points().map(function(p, i){
+            els[i] = $('<div>')
+                .addClass('control point')
                 .appendTo(o.div)
+                .on('dragstart', app.move_point_start)
+                .bind('drag', function(ev, dd){
+                    app.move_point(i, ev, dd)
+                })
         })
     })
 }
@@ -919,13 +938,25 @@ Hive.App.has_full_edit = function(o){
 Hive.App.Path = function(o){
     Hive.App.has_resize(o);
     Hive.App.has_ctrl_points(o)
-    var common = $.extend({}, o);
+    var common = $.extend({}, o), poly_el;
 
     var state = {}, points = [];
     o.content = function(content) { return $.extend({}, state); };
     o.points = function(){ return points.slice() }
     o.point_set = function(i, p){
         points[i] = p.slice();
+        var svg_point = poly_el.points.getItem(i)
+        svg_point.x = p[0]
+        svg_point.y = p[1]
+    }
+
+    o.move_point_start = function(){
+    }
+    o.move_point = function(i, ev, dd){
+        var  d = [dd.deltaX, dd.deltaY]
+            ,dims = o.dims()
+            ,p = u._mul([100,100])(u._div(d)(dims))
+        o.point_set(i, p)
     }
 
     // o.set_css = function(props) {
@@ -966,6 +997,7 @@ Hive.App.Path = function(o){
         + " preserveAspectRatio='none'>"
         + "<polygon points='0,0 50,100 100,0'></polygon></svg>")
         .appendTo(o.div)
+    poly_el = o.content_element.find('polygon')[0]
     // o.content_element = $("<div class='content rectangle drag'>").appendTo(o.div);
 
     // o.set_css(o.init_state.content);
