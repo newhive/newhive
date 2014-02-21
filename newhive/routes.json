@@ -331,7 +331,7 @@
         "method": "expr_share"
     },
     "password_recover": {
-        "api_route": "/api/community/password_recover",
+        "api_route": "/api/user/password_email",
         "controller": "user",
         "method": "password_recover"
     },
