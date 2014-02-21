@@ -613,7 +613,7 @@ o.append_color_picker = function(container, callback, init_color, opts){
     if(!color_probe.length)
         color_probe = $("<div id='color_probe'>").appendTo('body')
     var normalize = function(c){
-        return color_probe_0.css('color', c).css('color') }
+        return color_probe_0.css('color', '').css('color', c).css('color') }
     var to_rgb = function(c){
         var c = normalize(c)
         if(!c) return
