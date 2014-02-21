@@ -7,10 +7,10 @@
     src='{asset "skin/1/zoom.png"}'></div
   ><div class='change_zoom icon hoverable'></div
   ><div class='fluff pad'></div
-  ><div class='fluff center pad'><img id='btn_grid' title="Show Grid" class='hoverable'
+  ><div class='fluff center pad'><img id='btn_grid' title="show grid" class='hoverable'
     src='{asset "skin/edit/grid-off.png"}'></div
   ><div class='fluff smpad'></div
-  ><div class='fluff center hoverable text text_btn black_active' title="Editor Help" id='btn_help'>?</div
+  ><div class='fluff center hoverable text text_btn black_active' title="editor help" id='btn_help'>?</div
   ><div id='btn_save' class='save upper text text_btn hoverable center pad black_active'
     >Save <div class='inline arrow'></div>
     <img src='{asset "skin/edit/loading.gif"}' class='hide loading'
@@ -119,12 +119,12 @@
  <img class='control remove hoverable tip_NE' src='{asset "skin/edit/delete_app.png"}' title='delete'>
  <div class='control stack'><img class='stack_up hoverable' src='{asset "skin/edit/stack_up.png"}' title='move to front'><img class='stack_down hoverable' src='{asset "skin/edit/stack_down.png"}' title='move to back'></div>
  <img class='control copy   hoverable tip_N' src='{asset "skin/edit/copy.png"}'
-   title='Duplicate Element'>
+   title='duplicate element'>
 </div>
 
 <div id='controls_text' class='controls_src'>
  <div class='control buttons'
-  ><img class='button link hoverable tip_W'     src='{asset "skin/edit/link.png"}' title='Link'
+  ><img class='button link hoverable tip_W'     src='{asset "skin/edit/link.png"}' title='link'
   ><!--<img class='button fontsize hoverable' src='{asset "skin/edit/text_size.png"}'
   >--><img class='button fontname'           src='{asset "skin/edit/font.png"}'
   ><img class='button color'              src='{asset "skin/edit/color.png"}'
@@ -204,62 +204,57 @@
 
 <div id='controls_image' class='controls_src'>
  <div class='control buttons'
-  ><img class='button link hoverable tip_W' src='{asset "skin/edit/link.png"}' title='Link'
+  ><img class='button link hoverable tip_W' src='{asset "skin/edit/link.png"}' title='link'
   ><img class='button set_bg hoverable' src='{asset "skin/edit/fullscreen.png"}' title='make background'
  ></div
 ></div>
 
 <div id='controls_html' class='controls_src'>
  <div class='control buttons'
-  ><img class='button opacity tip_N' title='Opacity' src='{asset "skin/edit/opacity.png"}'
+  ><img class='button opacity tip_N' title='opacity' src='{asset "skin/edit/opacity.png"}'
  ></div
 ></div>
 {# Unused? Missing png.
   <div id='controls_raw_html' class='controls_src'>
    <div class='control buttons'
-    ><img class='button edit tip_N' title='Edit Contents' src='{asset "skin/edit/edit.png"}'
+    ><img class='button edit tip_N' title='edit contents' src='{asset "skin/edit/edit.png"}'
    ></div
   ></div>
 #}
 
 <div id='controls_script' class='controls_src'>
  <div class='control buttons'
-  ><img class='button code' title='Run' src='{asset "skin/edit/opacity.png"}'
+  ><img class='button code' title='run' src='{asset "skin/edit/opacity.png"}'
  ></div
 ></div>
 
 <div id='controls_rectangle' class='controls_src'>
  <div class='control buttons'
-  ><img class='button color hoverable' src='{asset "skin/edit/color.png"}' title="Color"
-
-{#
-  ><img class='button stroke hoverable tip_N' src='{asset "skin/edit/border_color.png"}' title='Border color'
-  ><img class='button blank bwidth hoverable tip_N' src='{asset "skin/edit/border_width.png"}' title='Border width'
-  ><div class='button blank bstyle hoverable' title='Border style'></div
-#}
-
+  ><img class='button color hoverable' src='{asset "skin/edit/color.png"}' title="color"
   ><img class='button rounding hoverable tip_N'
-    src='{asset "skin/edit/rounded_corners.png"}' title='corner rounding'></div>
+    src='{asset "skin/edit/rounded_corners.png"}' title='corner rounding'
+ ></div
+></div>
 
-{#
-   <div class='control drawer bstyle'>
-   ><div class='border hoverable' style='border-style: solid;' title='Solid border'></div
-   ><div class='border hoverable' style='border-style: dashed;' title='Dashed border'></div
-   ><div class='border none hoverable' style='border-style: none;' title='No border'></div
-  ></div
-#}
-</div>
+<div id='controls_path' class='controls_src'>
+ <div class='control buttons'
+  ><img class='button color hoverable' src='{asset "skin/edit/color.png"}' title="color"
+  ><img class='button blank stroke-width hoverable tip_N' src='{asset "skin/edit/border_width.png"}' title='stroke width'
+  ><img class='button stroke hoverable tip_N' src='{asset "skin/edit/border_color.png"}' title='stroke color'
+  ><img class='button blur hoverable tip_N' src='{asset "skin/edit/border_color.png"}' title='gaussian blur'
+ ></div
+></div>
 
 <div id='controls_misc' class='controls_src'>
   <img class='control drag resize hoverable tip_SE' 
-    src='{asset "skin/edit/resize.png"}' title="Resize">
+    src='{asset "skin/edit/resize.png"}' title="resize">
   <img class='control drag resize_h hoverable tip_E' 
-    src='{asset "skin/edit/resize_h.png"}' title="Resize">
+    src='{asset "skin/edit/resize_h.png"}' title="resize">
   <img class='control drag resize_v hoverable tip_S' 
-    src='{asset "skin/edit/resize_v.png"}' title="Resize">
-  <img class='button color hoverable' src='{asset "skin/edit/color.png"}' title="Color">
+    src='{asset "skin/edit/resize_v.png"}' title="resize">
+  <img class='button color hoverable' src='{asset "skin/edit/color.png"}' title="color">
   <img class='button opacity tip_N hoverable' 
-    src='{asset "skin/edit/opacity.png"}' title='Opacity'>
+    src='{asset "skin/edit/opacity.png"}' title='opacity'>
   <div class='control drawer color border'></div>
   <img class='button align' src='{asset "skin/edit/justify.png"}'>
   <div class='control drawer border align'>
@@ -276,12 +271,11 @@
 
 <div id='controls_sketch' class='controls_src'>
  <div class='control buttons'
-  {#><img class='button link hoverable tip_W'     src='{asset "skin/edit/link.png"}' title='Link'#}
+  {#><img class='button link hoverable tip_W'     src='{asset "skin/edit/link.png"}' title='link'#}
   ><img class='button fill hoverable tip_N' src='{asset "skin/edit/color.png"}' title='fill color'
   ><img class='button brush rounding hoverable tip_N' src='{asset "skin/edit/brush_icon.png"}' title='brush'
   ><img class='button eraser rounding hoverable' src='{asset "skin/edit/eraser_icon.png"}' title='eraser'
   ><img class='button size rounding hoverable tip_N' src='{asset "skin/edit/brush_size.png"}' title='brush size'
-  {#><div class='button about blank rounding hoverable tip_N' title='about'>?</div#}
 
   ><div class='control drawer fill border'></div
   ><div class='control drawer border brush'
@@ -297,17 +291,6 @@
    ><div class='option' val="circles">circles</div
    ><div class='option' val="grid"   >grid   </div
   ></div
-  ><div class='control drawer border about'>
-blah blah
-  </div
-  {#><img class='button stroke hoverable tip_N' src='{asset "skin/edit/border_color.png"}' title='Border color'#}
-  {#><img class='button blank bwidth hoverable tip_N' src='{asset "skin/edit/border_width.png"}' title='Border width'#}
-  {#><div class='button blank bstyle hoverable' title='Border style'></div#}
-  {#><div class='control drawer bstyle'
-   ><div class='border hoverable' style='border-style : solid;' title='Solid border'></div
-   ><div class='border hoverable' style='border-style : dashed;' title='Dashed border'></div
-   ><div class='border none hoverable' style='border-style : none;' title='No border'></div
-  ></div#}
  ></div>
 </div>
 

@@ -324,24 +324,35 @@ o.Selection = function(o) {
     };
 
     hive_app.App.has_rotate(o);
-    var angle = 0;
+    var angle = 0, rotation_refs;
     o.angle = function(){ return 0; };
-    o.before_rotate = function(ref_angle) {
+    o.rotate_start = function(ref_angle) {
         angle = ref_angle;
+        rotation_refs = []
         o.each(function(i, el) {
-            el.ref_angle = el.angle();
-            el.ref_cen = el.cent_pos();
-            el.ref_pos = u._sub(el.pos_relative())(el.ref_cen);
+            if(el.rotate_start)
+                el.rotate_start(ref_angle)
+            rotation_refs[i] = {
+                 ref_angle: el.angle()
+                ,ref_cen: el.cent_pos()
+                ,ref_pos: u._sub(el.pos_relative())(el.cent_pos())
+            }
         })
     }
     o.angle_set = function(a) {
         a -= angle;
         var sel_cent = o.cent_pos();
         o.each(function(i, el) {
-            el.angle_set(el.ref_angle + a);
-            var cent = u.rotate_about(el.ref_cen, sel_cent, u.deg2rad(a));
-            el.pos_relative_set(u._add(el.ref_pos)(cent));
+            el.angle_set(rotation_refs[i].ref_angle + a);
+            var cent = u.rotate_about(rotation_refs[i].ref_cen,
+                sel_cent, u.deg2rad(a));
+            el.pos_relative_set(u._add(rotation_refs[i].ref_pos)(cent));
         });
+    }
+    o.rotate_end = function(){
+        elements.map(function(a){
+            if(a.rotate_end) a.rotate_end()
+        })
     }
     hive_app.App.has_resize(o);
     var ref_dims, _resize = o.resize;

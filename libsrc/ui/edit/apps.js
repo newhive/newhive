@@ -46,7 +46,7 @@ env.new_app = Hive.new_app = function(s, opts) {
     opts.load = function(a) {
         // Hive.upload_finish();
         if (! opts.position)
-            a.center(opts.offset);
+            a.center_set(opts.offset);
         a.dims_set(a.dims());
         if (env.gifwall) {
             env.History.begin();
@@ -277,18 +277,25 @@ Hive.App = function(init_state, opts) {
     }
     o.show_controls = function(){
         if(!hidden_controls) return
+        if(o.controls){
+            // discard the controls that were replaced while hidden
+            hidden_controls.remove()
+            return
+        }
         o.controls = hidden_controls
+        hidden_controls = false
         o.controls.div.showshow()
         o.controls.layout()
     }
 
-    o.layout = function(){
-        var pos = o.pos(), dims = o.dims();
+    o.layout = function(pos, dims){
+        var pos = pos || o.pos(), dims = dims || o.dims();
         if(full){
-            o.div.css({left: 0, top: 0, width: '100%', height: '100%' })
+            // o.div.css({left: 0, top: 0, width: '100%', height: '100%' })
         }else{
             o.div.css({ 'left' : pos[0], 'top' : pos[1] });
-            o.div.width(dims[0]).height(dims[1]);
+            // rounding fixes SVG layout bug in Chrome
+            o.div.width(Math.round(dims[0])).height(Math.round(dims[1]));
         }
         if(o.controls)
             o.controls.layout();
@@ -358,7 +365,7 @@ Hive.App = function(init_state, opts) {
 
     // END-coords
 
-    o.center = function(offset) {
+    o.center_set = function(offset) {
         var win = $(window),
             pos = [ ( win.width() - o.width() ) / 2 + win.scrollLeft(),
                 ( win.height() - o.height() ) / 2 + win.scrollTop() ];
@@ -897,6 +904,9 @@ Hive.App.Rectangle = function(o) {
 Hive.registerApp(Hive.App.Rectangle, 'hive.rectangle');
 
 Hive.App.has_ctrl_points = function(o){
+    // TODO-feature-polish-control-points: make control points actual objects
+    // that can be focused and handle events, like nudge, delete, etc
+
     var app = o;
     o.make_controls.push(function(o){
         var ps_j = []
@@ -933,18 +943,62 @@ Hive.App.has_ctrl_points = function(o){
 Hive.App.Polygon = function(o){
     Hive.App.has_resize(o);
     Hive.App.has_ctrl_points(o)
-    var common = $.extend({}, o), poly_el;
+    var common = $.extend({}, o), poly_el
 
-    var state = {}, points = [];
-    o.content = function(content) { return $.extend({}, state); };
+    var state = {}
+    state.points = []
+    state.style = {}
+    state.style['stroke-width'] = 0
+    state.style['fill'] = '#000000'
+    $.extend(state, o.init_state.content)
+    var points = state.points
+
+    o.content = function(content) { return $.extend(true, {}, state); }
     o.points = function(){ return points.slice() }
     o.points_len = function(){ return points.length }
 
-    var ref_point, ref_points, ref_pos, ref_dims;
+    // o.center = function(){
+    //     return u._div(points.reduce(function(a, b){ return u._add(a)(b) })
+    //         )(points.length)
+    // }
+    o.size_update = function(new_dims){
+        o.content_element[0].setAttribute('viewBox',
+            [0, 0, new_dims[0], new_dims[1]].join(' '))
+    }
+
+    o.point_offset = function(){
+        var off = state.style['stroke-width'] / 2
+        return [off, off]
+    }
+    // TODO-polish-polygon-transform: make a version of reframe
+    // that doesn't change coords, for use during transformations
+    o.reframe = function(display_only){
+        var  old_points = (display_only ? points : ref_points)
+            ,f = u.points_rect(old_points)
+
+        var  pad = o.point_offset()
+            ,points_delta = u._add(pad)([-f.x, -f.y])
+            ,new_dims = u._add([f.width - f.x, f.height - f.y])(
+                u._mul(pad)(2) )
+            ,new_pos = u._sub(ref_pos)( u._add([-f.x, -f.y])(pad) )
+
+        old_points.map(function(p, i){
+            point_update(i, u._add(p)(points_delta))
+        })
+        o.size_update(new_dims)
+        o.pos_relative_set(new_pos)
+        o.dims_relative_set(new_dims)
+    }
+    var ref_point = [0,0], ref_points, ref_pos, ref_dims, ref_center, ref_offset
     o.point_set_start = function(i){
         ref_point = points[i].slice()
         ref_points = o.points()
         ref_pos = o.pos_relative()
+        ref_dims = o.dims_relative()
+        ref_center = u._mul(.5)(ref_dims)
+        // var f = u.points_rect(ref_points)
+        // ref_offset = [f.x, f.y]
+        ref_offset = o.point_offset()
     }
     var point_update = function(i, p){
         points[i] = p.slice()
@@ -954,64 +1008,93 @@ Hive.App.Polygon = function(o){
     }
     o.point_set = function(i, p, reframe){
         ref_points[i] = u._add(ref_point)(p)
-        if(reframe){
-            var left = Infinity, right = -Infinity,
-                top = Infinity, bottom = -Infinity
-            ref_points.map(function(p){
-                left = Math.min(left, p[0])
-                right = Math.max(right, p[0])
-                top = Math.min(top, p[1])
-                bottom = Math.max(bottom, p[1])
-            })
-
-            var  pos_delta = [-left, -top]
-                ,new_dims = [right - left, bottom - top]
-
-            ref_points.map(function(p, i){
-                point_update(i, u._add(p)(pos_delta))
-            })
-            o.pos_relative_set( u._sub(ref_pos)(pos_delta) )
-            o.dims_relative_set(new_dims)
-            o.content_element[0].setAttribute('viewBox',
-                [0, 0, new_dims[0], new_dims[1]].join(' '))
-        }
+        if(reframe)
+            o.reframe()
         else
             point_update(i, p)
     }
     o.point = function(i){ return points[i].slice() }
 
-    // o.set_css = function(props) {
-    //     props['background-color'] = props.color || props['background-color'];
-    //     props['box-sizing'] = 'border-box';
-    //     o.content_element.css(props);
-    //     $.extend(state, props);
-    //     if(o.controls) o.controls.layout();
-    // }
-    // o.css_setter = function(css_prop) { return function(v) {
-    //     var ps = {}; ps[css_prop] = v; o.set_css(ps);
-    // } }
+    o.add_to('resize_start', function(){ o.point_set_start(0) })
+    var _resize = o.resize, _resize_end = o.resize_end
+    o.resize = function(delta){
+        var dims = _resize(delta)
+        scale = u._div(dims)(ref_dims)
+        ref_points.map(function(p, i){
+            point_update(i, u._mul(p)(scale))
+        })
+        o.size_update(o.dims_relative())
+    }
+    o.resize_end = function(){
+        _resize_end()
+        o.point_set_start(0)
+        o.reframe()
+    }
 
-    // o.color = function(){ return state.color };
-    // o.color_set = o.css_setter('color');
+    o.set_css = function(props) {
+        $(poly_el).css(props)
+        var restroke = (typeof props['stroke-width'] != 'undefined')
+        if(restroke){
+            var v = parseInt(props['stroke-width'])
+            if(!v) v = 0
+            o.point_set_start(0)
+        }
+        $.extend(state.style, props);
+        if(restroke) o.reframe()
+    }
+    o.css_setter = function(css_prop){ return function(v) {
+        var ps = {}; ps[css_prop] = v; o.set_css(ps); } }
+    o.css_getter = function(css_prop){ return function(){
+        return state.style[css_prop] } }
+
+    o.color = o.css_getter('fill')
+    o.color_set = o.css_setter('fill')
+    o.stroke = o.css_getter('stroke')
+    o.stroke_set = o.css_setter('stroke')
 
     // o.border_radius = function(){ return parseInt(state['border-radius']) };
     // o.border_radius_set = function(v){ o.set_css({'border-radius':v+'px'}); };
 
     o.make_controls.push(function(o){
-        o.addControls($('#controls_rectangle'));
+        o.addControls($('#controls_path'));
+        stroke_update(stroke_width())
     });
+    Hive.App.has_rotate(o)
+    o.rotate_start = function(){ o.point_set_start(0) }
+    o.angle_set = function(a){
+        ref_points.map(function(p, i){
+            point_update(i, u.rotate_about(p, ref_center, u.deg2rad(a)))
+        })
+        // TODO-polish-polygon-transform: call non-updating reframe
+    }
+    o.rotate_end = function(){
+        o.point_set_start(0)
+        o.reframe()
+    }
+    Hive.App.has_color(o)
+    Hive.App.has_color(o, 'stroke')
+    var history_point ,stroke_width = o.css_getter('stroke-width')
+        ,stroke_width_set = o.css_setter('stroke-width')
+        ,stroke_update = function(v){
+            var stroke_ctrl = o.controls.div.find('.button.stroke')
+            stroke_ctrl[v ? 'showshow' : 'hidehide']()
+        }
+    Hive.App.has_slider_menu(o, '.stroke-width'
+        ,function(v){
+            stroke_update(v)
+            stroke_width_set(v)
+        }
+        ,stroke_width
+        ,function(){ history_point = env.History.saver(
+            stroke_width, stroke_width_set, 'stroke') }
+        ,function(){ history_point.save() }
+    )
+    Hive.App.has_opacity(o);
 
-    // Hive.App.has_rotate(o);
-    // Hive.App.has_color(o);
-    // Hive.App.has_opacity(o);
-    // var history_point;
-    // Hive.App.has_slider_menu(o, '.rounding', o.border_radius_set, o.border_radius,
-    //     function(){ history_point = env.History.saver(
-    //         o.border_radius, o.border_radius_set, 'border radius'); },
-    //     function(){ history_point.save() }
-    // );
-
-    points = [ [0, 0], [50, 100], [100, 0] ];
+    if(!points.length)
+        points.push.apply(points, [ [0, 0], [50, 100], [100, 0] ])
+    o.dims_relative_set([ 100, 100 ]);
+    o.init_state.dimensions = [ 100, 100 ];
     o.div.addClass('svg')
     o.content_element = $("<svg xmlns='http://www.w3.org/2000/svg'"
         + " class='content' viewbox='0 0 100 100'"
@@ -1022,10 +1105,9 @@ Hive.App.Polygon = function(o){
     poly_el = o.content_element.find('polygon')[0]
     $(poly_el).attr('points', points.map(function(p){ return p[0]+','+p[1] })
         .join(' '))
+    o.set_css(state.style)
     o.point_set_start(0)
-    o.point_set(0, points[0], true)
-
-    // o.set_css(o.init_state.content);
+    o.reframe()
 
     o.load()
 
@@ -1374,6 +1456,7 @@ Hive.App.has_full_bleed = function(o, coord){
         o.resize(remove_delta);
         _unremove();
     }
+    // TODO-cleanup: move to resize_start
     o.before_resize = function(){
         if (!env.gifwall || !o.has_full_bleed())
             return;
@@ -1403,7 +1486,10 @@ Hive.App.has_full_bleed = function(o, coord){
                 a.pos_relative_set(pos);
             }
         };
+
+        return dims
     };
+    // TODO-cleanup: move to resize_end
     o.after_resize = function(){
         if (!env.gifwall || !o.has_full_bleed())
             return;
@@ -1524,7 +1610,7 @@ Hive.App.has_resize = function(o) {
         var snap_dims = o.resize_to_pos(pos, !aspect);
 
         if (!aspect)
-            return;
+            return snap_dims;
 
         var snap_dist = u._apply(function(x,y) {return Math.abs(x-y);}, 
             dims)(snap_dims);
@@ -1536,6 +1622,8 @@ Hive.App.has_resize = function(o) {
         dims = (newWidth < dims[0] ? [newWidth, dims[1]]
             : [dims[0], dims[0] / aspect]);
         o.dims_relative_set(dims);
+
+        return dims
     }
 
     o.resize_end = function(){ 
@@ -1683,7 +1771,8 @@ Hive.App.has_rotate = function(o) {
     o.angle_set = function(a){
         angle = a;
         o.content_element.rotate(a);
-        if(o.controls) o.controls.select_box.rotate(a);
+        if(o.controls && o.controls.multiselect)
+            o.controls.select_box.rotate(a);
     }
     o.load.add(function() { if(o.angle()) o.angle_set(o.angle()) });
 
@@ -1726,28 +1815,24 @@ Hive.App.has_rotate = function(o) {
                 refAngle = angle;
                 offsetAngle = o.getAngle(e);
                 o.app.hide_controls()
-                if (o.app.before_rotate)
-                    o.app.before_rotate(refAngle);
+                if (o.app.rotate_start)
+                    o.app.rotate_start(refAngle);
                 history_point = env.History.saver(
                     o.app.angle, o.app.angle_set, 'rotate');
             })
             .drag(function(e, dd) {
-                angle = o.getAngle(e) - offsetAngle + refAngle;
-                if( e.shiftKey && Math.abs(angle - angleRound(angle)) < 10 )
-                    angle = angleRound(angle);
-                o.app.angle_set(angle);
+                var a = o.getAngle(e) - offsetAngle + refAngle;
+                if( e.shiftKey && Math.abs(a - angleRound(a)) < 10 )
+                    a = angleRound(a);
+                o.app.angle_set(a);
             })
             .drag('end', function(){
+                if(o.app.rotate_end) o.app.rotate_end();
                 history_point.save();
                 env.Selection.update_relative_coords();
                 o.app.show_controls()
-                // TODO-cleanup-controls remove hack
-                // (get controls for an app to update rotation)
-                o.app.angle_set(angle) 
             })
             .dblclick(function(){ o.app.angle_set(0); });
-
-        if (!o.app.is_selection) o.app.angle_set(o.app.angle());
 
         return o;
     }
@@ -1916,20 +2001,22 @@ Hive.App.has_opacity = function(o) {
     );
 };
     
-Hive.App.has_color = function(o) {
+Hive.App.has_color = function(o, name){
+    if(!name) name = 'color'
+    var color_drawer, getter = o[name], setter = o[name + '_set']
     function controls(o) {
-        var common = $.extend({}, o);
+        color_drawer = o.addButton($('#controls_misc .drawer.color'));
+        o.c.color = o.div.find('.button.'+ name);
 
-        o.addButton($('#controls_misc .drawer.color'));
-        o.c.color = o.div.find('.button.color');
-        o.c.color_drawer = o.div.find('.drawer.color');
-
-        u.append_color_picker(o.c.color_drawer, o.app.color_set, o.app.color());
-        var history_point;
-        o.hover_menu(o.c.color, o.c.color_drawer, {
-            auto_close: false,
-            open: function(){ history_point = env.History.saver(o.app.color, o.app.color_set, 'color'); },
-            close: function(){ history_point.save() }
+        u.append_color_picker(color_drawer, setter, getter());
+        var history_point
+        o.hover_menu(o.c.color, color_drawer, {
+            auto_close: false
+            ,open: function(){
+                history_point = env.History.saver(
+                    getter, setter, 'color')
+            }
+            ,close: function(){ history_point.save() }
         });
         return o;
 
