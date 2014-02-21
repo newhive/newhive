@@ -18,6 +18,10 @@ class User(ModelController):
         else: 
             resp = { 'error': 'Incorrect username or password.' }
             error = "login"
+
+        if request.args.get('json') or request.form.get('json'):
+            return self.serve_json(response, resp)
+
         query = ""
         if error:
             query = "#error=" + error
