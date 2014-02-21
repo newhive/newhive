@@ -192,8 +192,6 @@ Hive.App = function(init_state, opts) {
         env.History.save(o._unremove, o._remove, 'delete');
     };
 
-    // TODO-bugbug-layers: o.layer() does not correspond to position in stack
-    // due to deleted apps
     var stack_to = function(i){ o.apps.stack(o.layer(), i); };
     o.stack_to = function(to){
         var from = o.layer();
@@ -901,41 +899,38 @@ Hive.registerApp(Hive.App.Rectangle, 'hive.rectangle');
 Hive.App.has_ctrl_points = function(o){
     var app = o;
     o.make_controls.push(function(o){
-        var els = [] 
+        var ps_j = []
 
         var _layout = o.layout
         o.layout = function(){
             _layout()
 
-            var ps = app.points(), dims = app.dims()
-            els.map(function(el, i){
-                var p = u._mul(dims)(u._div( ps[i] )( [100, 100] ))
-                el.css({left: p[0], top: p[1] })
+            js.range(app.points_len()).map(function(i){
+                var p = u._mul(app.point(i))(env.scale())
+                ps_j[i].css({left: p[0], top: p[1] })
             })
         }
 
-        app.points().map(function(p, i){
-            els[i] = $('<div>')
+        js.range(app.points_len()).map(function(i){
+            ps_j[i] = $('<div>')
                 .addClass('control point')
                 .appendTo(o.div)
-                .on('dragstart', app.move_point_start)
-                .bind('drag', function(ev, dd){
-                    app.move_point(i, ev, dd)
+                .on('dragstart', function(){
+                    app.point_set_start(i)
+                    app.hide_controls()
+                })
+                .on('drag', function(ev, dd){
+                    delta = u._div([dd.deltaX, dd.deltaY])(env.scale())
+                    app.point_set(i, delta, true)
+                })
+                .on('dragend', function(){
+                    app.show_controls()
                 })
         })
     })
 }
 
-Hive.App.has_full_edit = function(o){
-    o.focus.add(function(){
-        o.full_set(true)
-    })
-    o.unfocus.add(function(){
-        o.full_set(false)
-    })
-}
-
-Hive.App.Path = function(o){
+Hive.App.Polygon = function(o){
     Hive.App.has_resize(o);
     Hive.App.has_ctrl_points(o)
     var common = $.extend({}, o), poly_el;
@@ -943,21 +938,47 @@ Hive.App.Path = function(o){
     var state = {}, points = [];
     o.content = function(content) { return $.extend({}, state); };
     o.points = function(){ return points.slice() }
-    o.point_set = function(i, p){
-        points[i] = p.slice();
-        var svg_point = poly_el.points.getItem(i)
-        svg_point.x = p[0]
-        svg_point.y = p[1]
-    }
+    o.points_len = function(){ return points.length }
 
-    o.move_point_start = function(){
+    var ref_point, ref_points, ref_pos, ref_dims;
+    o.point_set_start = function(i){
+        ref_point = points[i].slice()
+        ref_points = o.points()
+        ref_pos = o.pos_relative()
     }
-    o.move_point = function(i, ev, dd){
-        var  d = [dd.deltaX, dd.deltaY]
-            ,dims = o.dims()
-            ,p = u._mul([100,100])(u._div(d)(dims))
-        o.point_set(i, p)
+    var point_update = function(i, p){
+        points[i] = p.slice()
+        var svg_p = poly_el.points.getItem(i)
+        svg_p.x = p[0]
+        svg_p.y = p[1]
     }
+    o.point_set = function(i, p, reframe){
+        ref_points[i] = u._add(ref_point)(p)
+        if(reframe){
+            var left = Infinity, right = -Infinity,
+                top = Infinity, bottom = -Infinity
+            ref_points.map(function(p){
+                left = Math.min(left, p[0])
+                right = Math.max(right, p[0])
+                top = Math.min(top, p[1])
+                bottom = Math.max(bottom, p[1])
+            })
+
+            var  pos_delta = [-left, -top]
+                ,new_dims = [right - left, bottom - top]
+
+            ref_points.map(function(p, i){
+                point_update(i, u._add(p)(pos_delta))
+            })
+            o.pos_relative_set( u._sub(ref_pos)(pos_delta) )
+            o.dims_relative_set(new_dims)
+            o.content_element[0].setAttribute('viewBox',
+                [0, 0, new_dims[0], new_dims[1]].join(' '))
+        }
+        else
+            point_update(i, p)
+    }
+    o.point = function(i){ return points[i].slice() }
 
     // o.set_css = function(props) {
     //     props['background-color'] = props.color || props['background-color'];
@@ -991,14 +1012,18 @@ Hive.App.Path = function(o){
     // );
 
     points = [ [0, 0], [50, 100], [100, 0] ];
-    o.div.addClass('path')
+    o.div.addClass('svg')
     o.content_element = $("<svg xmlns='http://www.w3.org/2000/svg'"
         + " class='content' viewbox='0 0 100 100'"
         + " preserveAspectRatio='none'>"
-        + "<polygon points='0,0 50,100 100,0'></polygon></svg>")
+        + "<polygon points='0,0'></polygon></svg>")
         .appendTo(o.div)
-    poly_el = o.content_element.find('polygon')[0]
     // o.content_element = $("<div class='content rectangle drag'>").appendTo(o.div);
+    poly_el = o.content_element.find('polygon')[0]
+    $(poly_el).attr('points', points.map(function(p){ return p[0]+','+p[1] })
+        .join(' '))
+    o.point_set_start(0)
+    o.point_set(0, points[0], true)
 
     // o.set_css(o.init_state.content);
 
@@ -1006,12 +1031,12 @@ Hive.App.Path = function(o){
 
     return o;
 };
-Hive.registerApp(Hive.App.Path, 'hive.path');
+Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
 
-// Path creation tool
+// Polygon creation tool
 (function(o){
     o.focus = function(){
-        // TODO: UI for indicating path drawing is active
+        // TODO: UI for indicating polygon drawing is active
         // probably highlight shape menu at bottom middle
         evs.handler_set(o);
         env.top_e.addClass('draw').removeClass('default');
@@ -1026,7 +1051,7 @@ Hive.registerApp(Hive.App.Path, 'hive.path');
 
     o.mouseup = function(e){
     };
-})(Hive.App.Path);
+})(Hive.App.Polygon);
 
 
 Hive.App.Sketch = function(o) {
