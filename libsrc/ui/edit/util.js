@@ -69,21 +69,12 @@ o._apply = function(func, scale) {
     }
 };
 
-o._mul = function(scale) {
-    return o._apply(function(x, y){ return x * y; }, scale);
-};
-o._add = function(scale) {
-    return o._apply(function(x, y){ return x + y; }, scale);
-};
-o._div = function(scale) {
-    return o._apply(function(x, y){ return x / y; }, scale);
-};
-o._sub = function(scale) {
-    return o._apply(function(a, b) { return a - b; }, scale);
-};
-o._inv = function(l){
-    return l.map(function(x){ return 1/x; });
-};
+o._mul = function(scale){ return o._apply(js.op['*'], scale) }
+o._add = function(scale){ return o._apply(js.op['+'], scale) }
+o._div = function(scale){ return o._apply(js.op['/'], scale) }
+o._sub = function(scale){ return o._apply(js.op['-'], scale) }
+o._inv = function(l){ return l.map(function(x){ return 1/x; }) }
+
 // Linear interpolation
 // Return a value that is alpha (scalar) of the way between old_val
 // and new_val.  The values can be numbers or equal-length vectors.
@@ -96,6 +87,20 @@ o._lerp = function(alpha, old_val, new_val) {
         }, old_val)(new_val);
     }
 };
+
+o.points_rect = function(ps){
+    var f = {
+        x: Infinity ,width: -Infinity
+        ,y: Infinity ,height: -Infinity
+    }
+    ps.map(function(p){
+        f.x = Math.min(f.x, p[0])
+        f.width = Math.max(f.width, p[0])
+        f.y = Math.min(f.y, p[1])
+        f.height = Math.max(f.height, p[1])
+    })
+    return f
+}
 
 // Returns the nonnegative (nonoverlapping) distance btw two intervals.
 o.interval_dist = function(a, b) {
@@ -604,8 +609,16 @@ o.append_color_picker = function(container, callback, init_color, opts){
         manual_input = div.find('.color_input'),
         pickers = div.find('.color_select');
 
-    var to_rgb = function(c) {
-        return $.map($('<div>').css('color', c).css('color')
+    var color_probe = $('#color_probe'), color_probe_0 = $('<div>')
+    if(!color_probe.length)
+        color_probe = $("<div id='color_probe'>").appendTo('body')
+    var normalize = function(c){
+        return color_probe_0.css('color', c).css('color') }
+    var to_rgb = function(c){
+        var c = normalize(c)
+        if(!c) return
+        // this handles color names like "blue"
+        return $.map(getComputedStyle(color_probe.css('color', c)[0]).color
             .replace(/[^\d,]/g,'').split(','), function(v){ return parseInt(v) });
     }, to_hex = function(color){
         if (typeof(color) == "string") color = to_rgb(color);
@@ -625,12 +638,14 @@ o.append_color_picker = function(container, callback, init_color, opts){
         }).on('mousedown', function(e){ e.preventDefault()});
     });
 
-    var hex_changed = false;
     o.update_hex = function() {
-        if (!hex_changed) return;
-        hex_changed = false;
         var v = manual_input.val();
-        var c = $('<div>').css('color', v).css('color');
+        var c = normalize(v)
+        if(!c){
+            c = normalize('#'+v)
+            if(!c) return
+        }
+        o.set_color(c, true)
         callback(c, to_rgb(c));
     };
 
@@ -651,11 +666,11 @@ o.append_color_picker = function(container, callback, init_color, opts){
     })
 
 
-    o.set_color = function(color){
+    o.set_color = function(color, manual){
         var rgb = to_rgb(color);
         hsv = rgbToHsv(rgb[0], rgb[1], rgb[2]);
         shades.css('background-color', 'rgb(' + hsvToRgb(hsv[0], 1, 1).join(',') + ')');
-        manual_input.val(to_hex(color));
+        if(rgb && !manual) manual_input.val(to_hex(color));
     };
 
     var get_shade = function(e) {
@@ -718,13 +733,7 @@ o.append_color_picker = function(container, callback, init_color, opts){
     bar.click(get_hue).drag(get_hue);
     o.set_color(init_color);
 
-    // Prevent unwanted nudging of app when moving cursor in manual_input
-    manual_input.on('mousedown keydown', function(e){
-        hex_changed = true;
-        e.stopPropagation();
-    });
-
-    manual_input.blur(o.update_hex).keypress(function(e){
+    manual_input.on('keyup input paste', function(e){
         if(e.keyCode == 13) {
             if (opts && opts.field_to_focus){
                 opts.field_to_focus.focus();
@@ -732,6 +741,7 @@ o.append_color_picker = function(container, callback, init_color, opts){
                 manual_input.blur();
             }
         }
+        o.update_hex()
     });
 
     // if (opts.iframe){
