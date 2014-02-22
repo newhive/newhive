@@ -57,7 +57,7 @@ class User(ModelController):
         new_order += old_order[len(new_order) + deletes:]
 
         # remove the tag on owned expression
-        if tag_name not in ['remixed']:
+        if tag_name not in ['remixed', 'Gifwall']:
             removed = set(old_order) - set(new_order)
             for expr_id in removed:
                 expr = self.db.Expr.fetch(expr_id)

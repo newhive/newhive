@@ -461,15 +461,19 @@ o.Selection = function(o) {
     // position and dimension methods
 
     o.update_relative_coords = function(){
-        var bounds = o.bounds();
-        _pos_relative_set([bounds.left, bounds.top]);
-        o.dims_relative_set([bounds.right - bounds.left,
-            bounds.bottom - bounds.top]);
+        var bounds = o.bounds(), _pos = [bounds.left, bounds.top]
+            ,_dims = [bounds.right - bounds.left, bounds.bottom - bounds.top];
+        o.no_layout = true;
+        if (!u.array_equals(_pos, o.pos_relative()))
+            _pos_relative_set(_pos);
+        if (!u.array_equals(_dims, o.dims_relative()))
+            o.dims_relative_set(_dims);
+        o.no_layout = false;
         _positions = elements.map(function(a){
-            return u._sub(a.pos_relative())(o.pos_relative());
+            return u._sub(a.pos_relative())(_pos);
         });
         _scales = elements.map(function(a){
-            return u._div(a.dims_relative())(o.dims_relative());
+            return u._div(a.dims_relative())(_dims);
         });
     };
 
@@ -542,7 +546,10 @@ o.Selection = function(o) {
     });
 
     o.layout = function(){
-        o.controls && o.controls.layout();
+        if (o.no_layout)
+            return;
+        if (o.controls)
+            o.controls.layout();
     }
 
     o.keydown = Funcs(function(ev){ 
