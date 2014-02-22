@@ -11,13 +11,16 @@ class User(ModelController):
         return self.serve_json(response, resp)
 
     def login(self, tdata, request, response, **args):
-        authed = auth.handle_login(self.db, request, response)
-        error = False
-        if type(authed) == self.db.User.entity: 
-            resp = authed.client_view()
-        else: 
-            resp = { 'error': 'Incorrect username or password.' }
-            error = "login"
+        if tdata.user.logged_in:
+            resp = tdata.user.client_view()
+        else:
+            authed = auth.handle_login(self.db, request, response)
+            error = False
+            if type(authed) == self.db.User.entity: 
+                resp = authed.client_view()
+            else: 
+                resp = { 'error': 'Incorrect username or password.' }
+                error = "login"
 
         if request.args.get('json') or request.form.get('json'):
             return self.serve_json(response, resp)
