@@ -38,7 +38,8 @@ o.Controls = function(app, multiselect, delegate) {
     }
     var o = app.controls = {};
     // TODO-cleanup: remove delegate, have selection handle control creation
-    o.app = delegate || app;
+    //o.app = delegate || app;
+    o.app = app;
     o.multiselect = multiselect;
 
     o.remove = function() {
@@ -147,7 +148,15 @@ o.Controls = function(app, multiselect, delegate) {
     pad_ul = $.map(pad_ul, function(x) { return Math.max(x, o.border_width) });
     pad_br = $.map(pad_br, function(x) { return Math.max(x, o.border_width) });
     var pos_dims = function(){
-        // TODO-bugbug: can still be pushed off screen with really small apps 
+        // TODO-bugbug-border-push:
+        //    * Can still be pushed off screen with really small apps 
+        //    * Add scroll height when pushed from bottom to prevent
+        //      overlap of controls with app content
+        // TODO-polish-border-push:
+        //    * Make pushed border segments dashed
+        //    * Create pushed controls container so controls meant to
+        //      overlay app content can be separated
+        // Maybe ditch border pushing entirely. Not convinced it's worth it
         var ap = app.pos(),
             win = $(window), wdims = [win.width(), win.height()],
             pos = [ Math.max(pad_ul[0] + window.scrollX,
@@ -161,12 +170,14 @@ o.Controls = function(app, multiselect, delegate) {
 
         var minned_dims = [ Math.max(min_d[0], dims[0]),
             Math.max(min_d[1], dims[1]) ];
+        var delta_dir = [ ap[0] < 0 ? 0 : -1, ap[1] < 0 ? 0 : -1 ];
         if(env.gifwall && !o.multiselect) {
             pos[1] = Math.max(pad_ul[1], ap[1]);
             dims[1] = ap[1] - pos[1] + ad[1];
             minned_dims = dims.slice();
         }
-        pos = u._sub(pos)(u._apply(Math.max, 0)(u._sub(minned_dims)(dims)));
+        //pos = u._sub(pos)(u._apply(Math.max, 0)(u._sub(minned_dims)(dims)));
+        pos = u._add(pos)(u._mul(delta_dir)(u._sub(minned_dims)(dims)));
 
         return { pos: pos, dims: minned_dims };
     };
@@ -174,8 +185,8 @@ o.Controls = function(app, multiselect, delegate) {
     o.dims = function(){ return pos_dims().dims };
 
     o.layout = function() {
-        if (delegate && o.app.controls)
-            o.app.controls.layout();
+        //if (delegate && o.app.controls)
+        //    o.app.controls.layout();
         var pos = o.pos(), dims = o.dims(),
             cx = dims[0] / 2, cy = dims[1] / 2, p = o.padding,
             bw = o.border_width, outer_l = -cx -bw - p,
@@ -222,6 +233,9 @@ o.Controls = function(app, multiselect, delegate) {
         o.app.unfocus();
     });
 
+    if(o.multiselect && o.app.angle)
+        o.select_box.rotate(o.app.angle());
+
     if (!multiselect) {
         o.addControls($('#controls_common'));
         var d = o.div;
@@ -230,11 +244,14 @@ o.Controls = function(app, multiselect, delegate) {
         o.c.remove  = d.find('.remove' );
         o.c.resize  = d.find('.resize' );
         o.c.stack   = d.find('.stack'  );
-        o.c.remove.click(function() { o.app.remove(); });
+        o.c.remove.click(function(){
+            o.app.remove();
+            env.layout_apps() // in case scrollbar visibility changed
+        });
         o.c.copy    = d.find('.copy'   );
         o.c.copy.click(function(){
-            var copy = o.app.copy({ load: function(){
-                env.Selection.select(copy);
+            var copy = o.app.copy({ load: function(a){
+                env.Selection.select(a);
             } });
         });
         if (env.copy_table) {

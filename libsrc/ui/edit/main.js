@@ -289,9 +289,9 @@ Hive.init_global_handlers = function(){
     evs.on(document, 'keydown');
     evs.on('body', 'mousemove');
     evs.on('body', 'mousedown');
-    evs.on('body', 'mousedown');
+    evs.on('body', 'mouseup');
     //evs.on('body', 'click');
-    var drag_base = $('#grid_guide');
+    var drag_base = $('#happs');
     evs.on(drag_base, 'dragenter');
     evs.on(drag_base, 'dragleave');
     evs.on(drag_base, 'drop');
@@ -303,11 +303,11 @@ Hive.init_global_handlers = function(){
     // The plus button needs to be clickable, but pass other events through
     $(".prompts .plus_btn").add($(".prompts .hint"))
         .on("dragenter",function(ev) { 
-            $("#grid_guide").trigger(ev);
+            drag_base.trigger(ev);
             return false;
         })
         .on("dragleave",function(ev) { 
-            $("#grid_guide").trigger(ev);
+            drag_base.trigger(ev);
             return false;
         })
         .on('dragenter dragover', function(ev){
@@ -315,14 +315,14 @@ Hive.init_global_handlers = function(){
         })
         .on("drop",function(ev) {
             ev.preventDefault();
-            $("#grid_guide").trigger(ev);
+            drag_base.trigger(ev);
             return false;
         })
         .on("mouseenter", function(ev){
-            $("#grid_guide").trigger("dragenter");
+            drag_base.trigger("dragenter");
         })
         .on("mouseleave", function(ev) {
-            $("#grid_guide").trigger("dragleave");
+            drag_base.trigger("dragleave");
         });
 
     evs.handler_set(env.Selection);
@@ -645,10 +645,12 @@ Hive.drop = Hive.dragleave = function(){
     if (0 == dragging_count)
         global_highlight(false);
 };
-Hive.mouse_pos = [0, 0];
-Hive.mousemove = function(ev){
-    Hive.mouse_pos = [ev.clientX, ev.clientY];
-};
+// TODO-feature-editor-prompts: could be used in handlers for non-pointer
+// events, like in a type to add text box handler
+// Hive.mouse_pos = [0, 0];
+// Hive.mousemove = function(ev){
+//     Hive.mouse_pos = [ev.clientX, ev.clientY];
+// };
 Hive.keydown = function(ev){
     // TODO-feature-editor-prompts #706: if key pressed is a word character,
     // create hive.text app with content of the character pressed
