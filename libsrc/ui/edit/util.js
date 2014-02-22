@@ -29,6 +29,11 @@ o.is_ctrl = function(ev){
     return (ev.ctrlKey || ev.metaKey);
 }
 
+o.css_coords = function(el, pos, dims){
+    return el.css({ left: pos[0], top: pos[1]
+        ,width: dims[0], height: dims[1] })
+}
+
 // TODO-refactor: move into util
 o.capitalize = function(str) { return str[0].toUpperCase() + str.slice(1); };
 

@@ -289,7 +289,7 @@ Hive.init_global_handlers = function(){
     evs.on(document, 'keydown');
     evs.on('body', 'mousemove');
     evs.on('body', 'mousedown');
-    evs.on('body', 'mousedown');
+    evs.on('body', 'mouseup');
     //evs.on('body', 'click');
     var drag_base = $('#happs');
     evs.on(drag_base, 'dragenter');
@@ -645,10 +645,12 @@ Hive.drop = Hive.dragleave = function(){
     if (0 == dragging_count)
         global_highlight(false);
 };
-Hive.mouse_pos = [0, 0];
-Hive.mousemove = function(ev){
-    Hive.mouse_pos = [ev.clientX, ev.clientY];
-};
+// TODO-feature-editor-prompts: could be used in handlers for non-pointer
+// events, like in a type to add text box handler
+// Hive.mouse_pos = [0, 0];
+// Hive.mousemove = function(ev){
+//     Hive.mouse_pos = [ev.clientX, ev.clientY];
+// };
 Hive.keydown = function(ev){
     // TODO-feature-editor-prompts #706: if key pressed is a word character,
     // create hive.text app with content of the character pressed

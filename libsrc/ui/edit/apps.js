@@ -436,11 +436,9 @@ Hive.App = function(init_state, opts) {
         var s = $.extend({}, o.init_state, o.state_relative(), {
             z: o.layer(),
             full_bleed_coord: o.full_coord,
-            // TODO-cleanup: flatten state and use o.state() and
-            // o.state_update to simplify behavior around shared attributes
-            content: o.content(),
             id: o.id
         });
+        if(o.content) s.content = o.content()
         return s;
     };
     o.state_update = function(s){
@@ -533,6 +531,7 @@ Hive.App.Html = function(o) {
         return o;
     }
     o.make_controls.push(controls);
+    Hive.App.has_opacity(o)
 
     setTimeout(function(){ o.load(); }, 100);
 
@@ -926,7 +925,7 @@ Hive.App.has_ctrl_points = function(o){
                 .addClass('control point')
                 .appendTo(o.div)
                 .on('dragstart', function(){
-                    app.point_set_start(i)
+                    app.transform_start(i)
                     app.hide_controls()
                 })
                 .on('drag', function(ev, dd){
@@ -943,19 +942,24 @@ Hive.App.has_ctrl_points = function(o){
 Hive.App.Polygon = function(o){
     Hive.App.has_resize(o);
     Hive.App.has_ctrl_points(o)
-    var common = $.extend({}, o), poly_el
+    var common = $.extend({}, o), poly_el, blur_el
 
     var state = {}
     state.points = []
     state.style = {}
     state.style['stroke-width'] = 0
+    state.style['stroke-linejoin'] = 'round'
     state.style['fill'] = '#000000'
-    $.extend(state, o.init_state.content)
+    state = $.extend(true, o.init_state, state, o.init_state)
     var points = state.points
 
-    o.content = function(content) { return $.extend(true, {}, state); }
     o.points = function(){ return points.slice() }
     o.points_len = function(){ return points.length }
+    o.point_insert = function(index, p){
+        o.transform_start(0)
+        points.splice(index, 0, p)
+        o.reframe()
+    }
 
     // o.center = function(){
     //     return u._div(points.reduce(function(a, b){ return u._add(a)(b) })
@@ -967,7 +971,7 @@ Hive.App.Polygon = function(o){
     }
 
     o.point_offset = function(){
-        var off = state.style['stroke-width'] / 2
+        var off = state.style['stroke-width'] / 2 + o.blur() * 1.5
         return [off, off]
     }
     // TODO-polish-polygon-transform: make a version of reframe
@@ -983,26 +987,34 @@ Hive.App.Polygon = function(o){
             ,new_pos = u._sub(ref_pos)( u._add([-f.x, -f.y])(pad) )
 
         old_points.map(function(p, i){
-            point_update(i, u._add(p)(points_delta))
+            point_update(i, u._add(p)(points_delta), display_only)
         })
         o.size_update(new_dims)
-        o.pos_relative_set(new_pos)
-        o.dims_relative_set(new_dims)
+
+        if(display_only){
+            var s = env.scale()
+                ,pos = u._mul( u._add(new_pos)(o.dims_relative()) )( s )
+                ,dims = u._mul(new_dims)(s)
+            u.css_coords(o.div, pos, dims)
+        }
+        else{
+            o.pos_relative_set(new_pos)
+            o.dims_relative_set(new_dims)
+        }
     }
-    var ref_point = [0,0], ref_points, ref_pos, ref_dims, ref_center, ref_offset
-    o.point_set_start = function(i){
+    var ref_point = [0,0] ,ref_points ,ref_pos ,ref_dims
+        ,ref_center ,ref_stroke_width
+    o.transform_start = function(i){
         ref_point = points[i].slice()
         ref_points = o.points()
         ref_pos = o.pos_relative()
         ref_dims = o.dims_relative()
         ref_center = u._mul(.5)(ref_dims)
-        // var f = u.points_rect(ref_points)
-        // ref_offset = [f.x, f.y]
-        ref_offset = o.point_offset()
+        ref_stroke_width = stroke_width()
     }
-    var point_update = function(i, p){
-        points[i] = p.slice()
-        var svg_p = poly_el.points.getItem(i)
+    var point_update = function(i, p, display_only){
+        if(!display_only) points[i] = p.slice()
+        var svg_p = poly_el[0].points.getItem(i)
         svg_p.x = p[0]
         svg_p.y = p[1]
     }
@@ -1015,7 +1027,7 @@ Hive.App.Polygon = function(o){
     }
     o.point = function(i){ return points[i].slice() }
 
-    o.add_to('resize_start', function(){ o.point_set_start(0) })
+    o.add_to('resize_start', function(){ o.transform_start(0) })
     var _resize = o.resize, _resize_end = o.resize_end
     o.resize = function(delta){
         var dims = _resize(delta)
@@ -1027,20 +1039,20 @@ Hive.App.Polygon = function(o){
     }
     o.resize_end = function(){
         _resize_end()
-        o.point_set_start(0)
+        o.transform_start(0)
         o.reframe()
     }
 
-    o.set_css = function(props) {
-        $(poly_el).css(props)
+    o.set_css = function(props, no_reframe) {
+        poly_el.css(props)
+        $.extend(state.style, props);
         var restroke = (typeof props['stroke-width'] != 'undefined')
         if(restroke){
             var v = parseInt(props['stroke-width'])
             if(!v) v = 0
-            o.point_set_start(0)
+            o.transform_start(0)
+            o.reframe()
         }
-        $.extend(state.style, props);
-        if(restroke) o.reframe()
     }
     o.css_setter = function(css_prop){ return function(v) {
         var ps = {}; ps[css_prop] = v; o.set_css(ps); } }
@@ -1052,6 +1064,19 @@ Hive.App.Polygon = function(o){
     o.stroke = o.css_getter('stroke')
     o.stroke_set = o.css_setter('stroke')
 
+    o.blur = function(){ return state.blur || 0 }
+    o.blur_set = function(v){
+        state.blur = v
+        if(v){
+            blur_el[0].setAttribute('stdDeviation', v)
+            poly_el.css('filter', 'url(#' + o.id + '_blur)')
+        }
+        else
+            poly_el.css('filter', '')
+        o.transform_start(0)
+        o.reframe()
+    }
+
     // o.border_radius = function(){ return parseInt(state['border-radius']) };
     // o.border_radius_set = function(v){ o.set_css({'border-radius':v+'px'}); };
 
@@ -1060,7 +1085,7 @@ Hive.App.Polygon = function(o){
         stroke_update(stroke_width())
     });
     Hive.App.has_rotate(o)
-    o.rotate_start = function(){ o.point_set_start(0) }
+    o.rotate_start = function(){ o.transform_start(0) }
     o.angle_set = function(a){
         ref_points.map(function(p, i){
             point_update(i, u.rotate_about(p, ref_center, u.deg2rad(a)))
@@ -1068,7 +1093,7 @@ Hive.App.Polygon = function(o){
         // TODO-polish-polygon-transform: call non-updating reframe
     }
     o.rotate_end = function(){
-        o.point_set_start(0)
+        o.transform_start(0)
         o.reframe()
     }
     Hive.App.has_color(o)
@@ -1089,24 +1114,32 @@ Hive.App.Polygon = function(o){
             stroke_width, stroke_width_set, 'stroke') }
         ,function(){ history_point.save() }
     )
+    Hive.App.has_slider_menu(o, '.blur' ,o.blur_set ,o.blur
+        ,function(){ history_point = env.History.saver(
+            o.blur, o.blur_set, 'stroke') }
+        ,function(){ history_point.save() }
+    )
     Hive.App.has_opacity(o);
 
     if(!points.length)
         points.push.apply(points, [ [0, 0], [50, 100], [100, 0] ])
-    o.dims_relative_set([ 100, 100 ]);
-    o.init_state.dimensions = [ 100, 100 ];
+    o.dims_relative_set(o.init_state.dimensions || [100, 100])
     o.div.addClass('svg')
     o.content_element = $("<svg xmlns='http://www.w3.org/2000/svg'"
         + " class='content' viewbox='0 0 100 100'"
         + " preserveAspectRatio='none'>"
+        + "<filter id='" + o.id + "_blur' filterUnits='userSpaceOnUse'>"
+            + "<feGaussianBlur/></filter>"
         + "<polygon points='0,0'></polygon></svg>")
         .appendTo(o.div)
     // o.content_element = $("<div class='content rectangle drag'>").appendTo(o.div);
-    poly_el = o.content_element.find('polygon')[0]
-    $(poly_el).attr('points', points.map(function(p){ return p[0]+','+p[1] })
+    poly_el = o.content_element.find('polygon')
+    poly_el.attr('points', points.map(function(p){ return p[0]+','+p[1] })
         .join(' '))
+    blur_el = o.content_element.find('feGaussianBlur')
     o.set_css(state.style)
-    o.point_set_start(0)
+    o.blur_set(o.blur())
+    o.transform_start(0)
     o.reframe()
 
     o.load()
@@ -1117,6 +1150,8 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
 
 // Polygon creation tool
 (function(o){
+    var creating, point_i
+
     o.focus = function(){
         // TODO: UI for indicating polygon drawing is active
         // probably highlight shape menu at bottom middle
@@ -1128,11 +1163,47 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         evs.handler_del(o);
     };
 
-    o.mousedown = function(e){
+    // o.mousedown = function(e){
+    // };
+
+    var pos = function(ev){
+        return u._mul(1 / env.scale())([ev.clientX, ev.clientY]) }
+
+    o.mouseup = function(ev){
+        var p = pos(ev)
+        if(!creating){
+            creating = Hive.App({'type': 'hive.polygon'
+                ,points: [[0,0], [0,0]], position: p, dimensions: [1,1] })
+            point_i = 1
+            creating.transform_start(0)
+            return false
+        }
+
+        if(u.array_equals( p, creating.point(point_i-1) )){
+            // double click ends creating
+            creating = false
+            point_i = false
+            return false
+        }
+
+        // add point
+        point_i = creating.points_len()
+        creating.point_insert(point_i, u._sub(p)(creating.pos_relative()))
+        creating.transform_start(point_i)
+
+        return false
     };
 
-    o.mouseup = function(e){
-    };
+    o.mousemove = function(ev){
+        var p = pos(ev)
+        if(creating)
+            creating.point_set(point_i, p)
+    }
+
+    o.dragstart = function(ev, dd){
+    }
+    o.drag = function(ev, dd){
+    }
 })(Hive.App.Polygon);
 
 
@@ -1973,8 +2044,8 @@ Hive.App.has_opacity = function(o) {
     function controls(o) {
         var common = $.extend({}, o);
 
-        o.addButton($('#controls_misc .opacity'));
-        o.c.opacity = o.div.find('.opacity');
+        o.div.find('.button.opacity').length
+            || o.addButton($('#controls_misc .opacity'))
 
         return o;
     };
