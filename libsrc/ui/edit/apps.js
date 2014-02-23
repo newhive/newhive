@@ -45,8 +45,8 @@ env.new_app = Hive.new_app = function(s, opts) {
     var load = opts.load;
     opts.load = function(a) {
         // Hive.upload_finish();
-        if (! opts.position)
-            a.center_set(opts.offset);
+        if (!s.position && !opts.position)
+            a.center_weird(opts.offset);
         a.dims_set(a.dims());
         if (env.gifwall) {
             env.History.begin();
@@ -70,7 +70,7 @@ env.new_app = Hive.new_app = function(s, opts) {
             env.History.group("create");
         }
 
-        env.Selection.select(a);
+        if(!opts.no_select) env.Selection.select(a);
         if(load) load(a);
         env.layout_apps() // in case scrollbar visibility changed
     };
@@ -215,10 +215,12 @@ Hive.App = function(init_state, opts) {
     o.focus = Funcs(function() {
         if(focused) return;
         focused = true;
+        evs.handler_set(o);
     }, function(){ return !o.focused()} );
     o.unfocus = Funcs(function() {
         if(!focused) return;
         focused = false;
+        evs.handler_del(o);
     }, o.focused);
 
     // stacking order of aps
@@ -365,13 +367,16 @@ Hive.App = function(init_state, opts) {
 
     // END-coords
 
-    o.center_set = function(offset) {
+    o.center_weird = function(offset) {
         var win = $(window),
             pos = [ ( win.width() - o.width() ) / 2 + win.scrollLeft(),
                 ( win.height() - o.height() ) / 2 + win.scrollTop() ];
         if(typeof(offset) != "undefined"){ pos = u.array_sum(pos, offset) };
         o.pos_set(pos);
     };
+
+    o.center_relative_set = function(center){
+        o.pos_relative_set(u._sub(center)(u._div(o.dims_relative())(2))) }
 
     o.copy = function(opts){
         if(!opts) opts = {};
@@ -908,7 +913,7 @@ Hive.App.has_ctrl_points = function(o){
 
     var app = o;
     o.make_controls.push(function(o){
-        var ps_j = []
+        var p_els = []
 
         var _layout = o.layout
         o.layout = function(){
@@ -916,12 +921,12 @@ Hive.App.has_ctrl_points = function(o){
 
             js.range(app.points_len()).map(function(i){
                 var p = u._mul(app.point(i))(env.scale())
-                ps_j[i].css({left: p[0], top: p[1] })
+                p_els[i].css({left: p[0], top: p[1] })
             })
         }
 
         js.range(app.points_len()).map(function(i){
-            ps_j[i] = $('<div>')
+            p_els[i] = $('<div>')
                 .addClass('control point')
                 .appendTo(o.div)
                 .on('dragstart', function(){
@@ -930,7 +935,7 @@ Hive.App.has_ctrl_points = function(o){
                 })
                 .on('drag', function(ev, dd){
                     delta = u._div([dd.deltaX, dd.deltaY])(env.scale())
-                    app.point_set(i, delta, true)
+                    app.point_move(i, delta)
                 })
                 .on('dragend', function(){
                     app.show_controls()
@@ -944,21 +949,31 @@ Hive.App.Polygon = function(o){
     Hive.App.has_ctrl_points(o)
     var common = $.extend({}, o), poly_el, blur_el
 
-    var state = {}
-    state.points = []
-    state.style = {}
-    state.style['stroke-width'] = 0
-    state.style['stroke-linejoin'] = 'round'
-    state.style['fill'] = '#000000'
-    state = $.extend(true, o.init_state, state, o.init_state)
+    var style = {}, state = o.init_state
+    style['stroke-width'] = 1
+    style['stroke'] = '#000'
+    style['stroke-linejoin'] = 'round'
+    style['fill'] = '#000'
+    js.setdefault(state, {points: [], style: {}})
+    js.setdefault(state.style, style)
     var points = state.points
 
     o.points = function(){ return points.slice() }
     o.points_len = function(){ return points.length }
-    o.point_insert = function(index, p){
-        o.transform_start(0)
+    o.point_insert = function(index){
+        var svg_point = o.content_element[0].createSVGPoint()
+            ,p = points[index-1]
+        svg_point.x = p[0]
+        svg_point.y = p[1]
+        poly_el[0].points.insertItemBefore(svg_point, index)
         points.splice(index, 0, p)
-        o.reframe()
+        o.reframe(true)
+    }
+    o.point_remove = function(index){
+        poly_el[0].points.removeItem(index)
+        points.splice(index, 1)
+        ref_points.splice(index, 1)
+        o.reframe(true)
     }
 
     // o.center = function(){
@@ -987,15 +1002,13 @@ Hive.App.Polygon = function(o){
             ,new_pos = u._sub(ref_pos)( u._add([-f.x, -f.y])(pad) )
 
         old_points.map(function(p, i){
-            point_update(i, u._add(p)(points_delta), display_only)
+            o.point_update(i, u._add(p)(points_delta), display_only)
         })
         o.size_update(new_dims)
 
         if(display_only){
             var s = env.scale()
-                ,pos = u._mul( u._add(new_pos)(o.dims_relative()) )( s )
-                ,dims = u._mul(new_dims)(s)
-            u.css_coords(o.div, pos, dims)
+            u.css_coords(o.div, u._mul(new_pos)(s), u._mul(new_dims)(s))
         }
         else{
             o.pos_relative_set(new_pos)
@@ -1012,28 +1025,49 @@ Hive.App.Polygon = function(o){
         ref_center = u._mul(.5)(ref_dims)
         ref_stroke_width = stroke_width()
     }
-    var point_update = function(i, p, display_only){
+    o.point_update = function(i, p, display_only){
         if(!display_only) points[i] = p.slice()
         var svg_p = poly_el[0].points.getItem(i)
         svg_p.x = p[0]
         svg_p.y = p[1]
     }
-    o.point_set = function(i, p, reframe){
+    o.point_move = function(i, p){
         ref_points[i] = u._add(ref_point)(p)
-        if(reframe)
-            o.reframe()
-        else
-            point_update(i, p)
+        o.reframe()
+    }
+    o.point_set = function(i, p){
+        ref_points[i] = points[i] = p
+        o.reframe(true)
     }
     o.point = function(i){ return points[i].slice() }
+    o.points_set = function(ps){
+        $.each(ps, o.point_update)
+        o.transform_start(0)
+        o.reframe()
+        if(o.controls) o.controls.layout()
+    }
 
-    o.add_to('resize_start', function(){ o.transform_start(0) })
+    var _sr = o.state_relative, _srs = o.state_relative_set
+    o.state_relative = function(){
+        var s = _sr()
+        s.points = o.points()
+        return s
+    }
+    o.state_relative_set = function(s){
+        _srs(s)
+        if(s.points) o.points_set(s.points)
+    }
+
+    o.add_to('resize_start', function(){
+        o.transform_start(0)
+        // history_point = env.History.saver(o.points, o.points_set, 'resize')
+    })
     var _resize = o.resize, _resize_end = o.resize_end
     o.resize = function(delta){
         var dims = _resize(delta)
         scale = u._div(dims)(ref_dims)
         ref_points.map(function(p, i){
-            point_update(i, u._mul(p)(scale))
+            o.point_update(i, u._mul(p)(scale))
         })
         o.size_update(o.dims_relative())
     }
@@ -1042,6 +1076,10 @@ Hive.App.Polygon = function(o){
         o.transform_start(0)
         o.reframe()
     }
+    // o.after_resize = function(){
+    //     history_point.save()
+    //     return true
+    // }
 
     o.set_css = function(props, no_reframe) {
         poly_el.css(props)
@@ -1051,7 +1089,7 @@ Hive.App.Polygon = function(o){
             var v = parseInt(props['stroke-width'])
             if(!v) v = 0
             o.transform_start(0)
-            o.reframe()
+            o.reframe(true)
         }
     }
     o.css_setter = function(css_prop){ return function(v) {
@@ -1074,7 +1112,7 @@ Hive.App.Polygon = function(o){
         else
             poly_el.css('filter', '')
         o.transform_start(0)
-        o.reframe()
+        o.reframe(true)
     }
 
     // o.border_radius = function(){ return parseInt(state['border-radius']) };
@@ -1085,14 +1123,18 @@ Hive.App.Polygon = function(o){
         stroke_update(stroke_width())
     });
     Hive.App.has_rotate(o)
-    o.rotate_start = function(){ o.transform_start(0) }
+    o.rotate_start = function(){
+        o.transform_start(0)
+        history_point = o.history_helper_relative('rotate')
+    }
     o.angle_set = function(a){
         ref_points.map(function(p, i){
-            point_update(i, u.rotate_about(p, ref_center, u.deg2rad(a)))
+            o.point_update(i, u.rotate_about(p, ref_center, u.deg2rad(a)))
         })
-        // TODO-polish-polygon-transform: call non-updating reframe
+        o.reframe(true)
     }
     o.rotate_end = function(){
+        history_point.save()
         o.transform_start(0)
         o.reframe()
     }
@@ -1112,12 +1154,18 @@ Hive.App.Polygon = function(o){
         ,stroke_width
         ,function(){ history_point = env.History.saver(
             stroke_width, stroke_width_set, 'stroke') }
-        ,function(){ history_point.save() }
+        ,function(){
+            history_point.save()
+            o.reframe()
+        }
     )
     Hive.App.has_slider_menu(o, '.blur' ,o.blur_set ,o.blur
         ,function(){ history_point = env.History.saver(
             o.blur, o.blur_set, 'stroke') }
-        ,function(){ history_point.save() }
+        ,function(){
+            history_point.save()
+            o.reframe()
+        }
     )
     Hive.App.has_opacity(o);
 
@@ -1150,60 +1198,142 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
 
 // Polygon creation tool
 (function(o){
-    var creating, point_i
+    var creating, template, point_i, handle_template = {}, handle_freeform = {}
+    o.handler_type = 1
+
+    o.mode = function(_template){
+        // set creation mode.
+        // If _template is false, make free form (points picked by clicks)
+        // Otherwise create a shape defined by a template Polygon object,
+        if(_template){
+            template = _template
+            for(k in handle_freeform) delete o[k]
+            $.extend(o, handle_template)
+        }
+        else{
+            for(k in handle_template) delete o[k]
+            $.extend(o, handle_freeform)
+        }
+    }
+
+    o.finish = function(){
+        if(creating.points_len() < 2){
+            creating._remove()
+            return false
+        }
+        creating.reframe()
+        creating = false
+        point_i = false
+    }
 
     o.focus = function(){
         // TODO: UI for indicating polygon drawing is active
         // probably highlight shape menu at bottom middle
         evs.handler_set(o);
-        env.top_e.addClass('draw').removeClass('default');
+        env.apps_e.addClass('draw').removeClass('default');
     };
     o.unfocus = function(){
-        env.top_e.removeClass('draw').addClass('default');
+        env.apps_e.removeClass('draw').addClass('default');
         evs.handler_del(o);
     };
-
-    // o.mousedown = function(e){
-    // };
 
     var pos = function(ev){
         return u._mul(1 / env.scale())([ev.clientX, ev.clientY]) }
 
-    o.mouseup = function(ev){
+    var from_template = function(){
+        var s = template.state()
+        delete s.position
+        delete s.id
+        delete s.z
+        return s
+    }
+
+    var no_click
+    handle_template.click = function(ev){
+        ev.stopPropagation()
+        if(no_click){
+            no_click = false
+            return
+        }
+        var s = from_template()
+        template = Hive.new_app(s, {no_select: 1})
+        template.center_relative_set(pos(ev))
+    }
+
+    handle_template.dragstart = function(ev, dd){
+        ev.stopPropagation()
+        var s = from_template()
+        s.position = pos(ev)
+        creating = template = Hive.new_app(s, {no_select: 1})
+    }
+    handle_template.drag = function(ev, dd){
+        no_click = true
+
+    }
+    handle_template.dragend = function(ev, dd){
+        creating = false
+        ev.stopPropagation()
+    }
+
+    handle_freeform.click = handle_freeform.mousedown = handle_freeform.drag
+        = handle_freeform.dragstart = function(e){ return false };
+
+    var ref_pos
+    handle_freeform.mouseup = function(ev){
         var p = pos(ev)
+
         if(!creating){
-            creating = Hive.App({'type': 'hive.polygon'
-                ,points: [[0,0], [0,0]], position: p, dimensions: [1,1] })
+            creating = template = Hive.new_app( {'type': 'hive.polygon'
+                ,points: [[0,0], [0,0]], position: p, dimensions: [1,1] }
+                ,{no_select: 1} )
             point_i = 1
             creating.transform_start(0)
+            ref_pos = creating.pos_relative()
             return false
         }
 
-        if(u.array_equals( p, creating.point(point_i-1) )){
+        ref_pos = creating.pos_relative()
+        var cur_p = creating.point(point_i)
+            ,close_d = u._sub(creating.point(0))(cur_p)
+
+        if(u.array_equals( cur_p, creating.point(point_i-1) )
+            || Math.abs(close_d[0] + close_d[1]) < 5
+        ){
             // double click ends creating
-            creating = false
-            point_i = false
+            creating.point_remove(point_i)
+            o.finish()
             return false
         }
 
         // add point
         point_i = creating.points_len()
-        creating.point_insert(point_i, u._sub(p)(creating.pos_relative()))
+        creating.point_insert(point_i)
         creating.transform_start(point_i)
 
         return false
     };
 
-    o.mousemove = function(ev){
-        var p = pos(ev)
-        if(creating)
+    handle_freeform.mousemove = function(ev){
+        if(creating){
+            var p = u._sub(pos(ev))(ref_pos)
             creating.point_set(point_i, p)
+        }
     }
 
-    o.dragstart = function(ev, dd){
+    o.keydown = function(ev){ 
+        if(creating){
+            if(ev.keyCode == 27){ // esc
+                creating._remove()
+                return creating = false
+            }
+            else if(ev.keyCode == 13){ // enter
+                o.finish()
+                return false
+            }
+        }
     }
-    o.drag = function(ev, dd){
-    }
+
+    o.mode(false)
 })(Hive.App.Polygon);
 
 
@@ -1962,17 +2092,16 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end) {
 
         range.bind('change', function(){
             var v = parseFloat(range.val());
-            if(v === NaN) return
             val = v
             update_val()
             num_input.val(val)
             set(val)
         })
 
-        num_input.keyup(function(e) {
-            if(e.keyCode == 13) { num_input.blur(); m.close(); }
+        num_input.on('input keyup change', function(ev){
+            if(ev.keyCode == 13) { num_input.blur(); m.close(); }
             var v = parseFloat(num_input.val());
-            if(v === NaN) return;
+            if(isNaN(v)) return;
             val = v;
             set(val);
         })

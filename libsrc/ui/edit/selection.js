@@ -402,11 +402,9 @@ o.Selection = function(o) {
     o.app_select = function(app, multi) {
         if(multi){
             app.unfocus();
-            evs.handler_del(app);
         }
         else{
             app.focus();
-            evs.handler_set(app);
             // TODO-feature for sketch and geometry apps: evs.handler_set(o.type)
             // depends on defining app specific but instance unspecific creation
             // handlers on app type constructors
@@ -574,13 +572,16 @@ o.Selection = function(o) {
         }
 
         var handlers = {
-            27: function(){ o.unfocus() },             // esc
-            46: function(){ o.remove() },              // del
-            66: function(){ o.stack_bottom() },        // b
-            84: function(){ o.stack_top() },           // t
+            27: function(){ // esc
+                    if(elements.length) o.unfocus()
+                    else return true
+                },
+            46: function(){ o.remove() }, // del
+            66: function(){ o.stack_bottom() }, // b
+            84: function(){ o.stack_top() }, // t
         }
         if(handlers[ev.keyCode]){
-            handlers[ev.keyCode]();
+            if(handlers[ev.keyCode]()) return;
             return false;
         }
 

@@ -14,6 +14,12 @@ o.copy = function(from, to, deep){
     return to;
 };
 
+o.setdefault = function(dest, source){
+    for(var k in source)
+        if(typeof dest[k] == 'undefined')
+            dest[k] = source[k]
+}
+
 // This improves upon jQuery.extend, in that it actually copies native objects (second if)
 // function copy(from, to) {
 //     if (from == null || typeof from != "object") return from;

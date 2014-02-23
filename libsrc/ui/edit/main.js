@@ -114,7 +114,8 @@ Hive.init_menus = function() {
                 'border-style' : 'solid', 'border-radius' : 0 } });
     });
     $('#shape_sketch').click(function(e) {
-        hive_app.new_app({ type: 'hive.sketch', dimensions: [700, 700 / 1.6], content: { brush: 'simple', brush_size: 10 } });
+        hive_app.new_app({ type: 'hive.sketch', dimensions: [700, 700 / 1.6]
+            ,content: { brush: 'simple', brush_size: 10 } });
     });
 
     u.hover_menu('.insert_file', '#menu_file');
@@ -290,7 +291,7 @@ Hive.init_global_handlers = function(){
     evs.on('body', 'mousemove');
     evs.on('body', 'mousedown');
     evs.on('body', 'mouseup');
-    //evs.on('body', 'click');
+    // evs.on('body', 'click');
     var drag_base = $('#happs');
     evs.on(drag_base, 'dragenter');
     evs.on(drag_base, 'dragleave');
@@ -327,7 +328,7 @@ Hive.init_global_handlers = function(){
 
     evs.handler_set(env.Selection);
     evs.handler_set(Hive);
-    env.top_e.addClass('default');
+    env.apps_e.addClass('default');
 };
 Hive.init = function(exp, page){
     // this reference must be maintained, do not assign to Exp
@@ -341,7 +342,6 @@ Hive.init = function(exp, page){
     // Hive.init_autosave();
 
     env.apps_e = $('#happs'); // container element for all interactive apps
-    env.top_e = $('#site');
     env.History.init();
     hive_app.Apps.init(Hive.Exp.apps);
     Hive.init_common();
@@ -433,11 +433,11 @@ Hive.exit = function(){
     var focus_classes;
 
     Hive.focus = function(){
-        focus_classes = env.top_e.attr('class');
+        focus_classes = env.apps_e.attr('class');
         evs.focus();
     };
     Hive.unfocus = function(){
-        env.top_e.attr('class', focus_classes);
+        env.apps_e.attr('class', focus_classes);
         evs.unfocus();
     };
 })();
@@ -655,14 +655,16 @@ Hive.keydown = function(ev){
     // TODO-feature-editor-prompts #706: if key pressed is a word character,
     // create hive.text app with content of the character pressed
 
-    if(u.is_ctrl(ev) && ev.keyCode == 90){
+    if(u.is_ctrl(ev) && ev.keyCode == 90){ // ctrl+z
         env.History.undo();
         return false;
     }
-    else if(u.is_ctrl(ev) && ev.keyCode == 89){
+    else if(u.is_ctrl(ev) && ev.keyCode == 89){ // ctrl+y
         env.History.redo();
         return false;
     }
+    else if(ev.keyCode == 27) // esc
+        evs.focused().unfocus()
 };
 
 Hive.scroll = function(ev){

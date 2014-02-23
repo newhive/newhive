@@ -26,6 +26,11 @@ define([
         focused = true };
     o.unfocus = function(){
         focused = false };
+    o.focused = function(){
+        // return first thing in _handlers
+        for(var i = 0; i<_handlers.length; i++)
+            if(_handlers[i]) return _handlers[i]
+    }
 
     // Create an event handler that dispatches to the current (focused)
     // _handlers in order, optionally starting at the given handler first and
@@ -56,7 +61,10 @@ define([
                     resp = _handlers[i][event_name].apply(null, arguments);
                 if(resp != undefined && !resp)
 					return false; // handled
-                if(do_stop) break;
+                if(do_stop){
+                    ev.stopImmediatePropagation()
+                    break;
+                }
             }
         });
     };
