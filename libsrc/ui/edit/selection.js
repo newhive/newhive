@@ -353,7 +353,8 @@ o.Selection = function(o) {
         a -= angle;
         var sel_cent = o.cent_pos();
         o.each(function(i, el) {
-            el.angle_set(rotation_refs[i].ref_angle + a);
+            if(el.angle_set)
+                el.angle_set(rotation_refs[i].ref_angle + a);
             var cent = u.rotate_about(rotation_refs[i].ref_cen,
                 sel_cent, u.deg2rad(a));
             el.pos_relative_set(u._add(rotation_refs[i].ref_pos)(cent));
