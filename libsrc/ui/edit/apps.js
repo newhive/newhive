@@ -1273,8 +1273,6 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         if(ev.data) return // if mouseup fired from app, ignore
         if(no_click){
             no_click = false
-            // after drag operation, do not create
-            ev.stopPropagation()
             return
         }
         var s = from_template()
@@ -1284,13 +1282,14 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
 
     handle_template.dragstart = function(ev, dd){
         ev.stopPropagation()
+        if(creating) return
         var s = from_template()
         s.position = pos(ev)
         creating = template = Hive.new_app(s, {no_select: 1})
     }
     handle_template.drag = function(ev, dd){
         no_click = true
-        creating.dims_set([dd.clientX, dd.clientY])
+        creating.dims_set([dd.deltaX, dd.deltaY])
     }
     handle_template.dragend = function(ev, dd){
         creating = false
