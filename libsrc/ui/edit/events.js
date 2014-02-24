@@ -26,6 +26,11 @@ define([
         focused = true };
     o.unfocus = function(){
         focused = false };
+    o.focused = function(){
+        // return first thing in _handlers
+        for(var i = 0; i<_handlers.length; i++)
+            if(_handlers[i]) return _handlers[i]
+    }
 
     // Create an event handler that dispatches to the current (focused)
     // _handlers in order, optionally starting at the given handler first and
@@ -42,13 +47,14 @@ define([
             ev.data = data;
 
             // patch native event with hacked stopPropagation that encompasses
-            // our custom bubbling. Consider renaming to "stopCustomPropagation"
-            // TODO-minor-bugbug: add corresponding hack for ev.preventDefault
+            // our custom bubbling.
             var _stopPropagation = ev.stopPropagation, do_stop = false;
             ev.stopPropagation = function(){
-                do_stop = true;
-                _stopPropagation();
+                do_stop = true
+                _stopPropagation.apply(ev)
             };
+            ev.stop_editor_propagation = function(){
+                do_stop = true }
 
             var resp = true;
             for(var i in _handlers){
@@ -56,12 +62,18 @@ define([
                     resp = _handlers[i][event_name].apply(null, arguments);
                 if(resp != undefined && !resp)
 					return false; // handled
-                if(do_stop) break;
+                if(do_stop)
+                    break
             }
         });
     };
 
 	o.on = function(element, event_name, data){
+        // this assumes mousedown is handled elsewhere, and canceled
+        // which allows for separate mousedown and dragstart handlers 
+        if(event_name == 'dragstart')
+            $(element).drag('start', event_bubbler(event_name, data),
+                {bubble_mousedown: true})
 		$(element).on(event_name, event_bubbler(event_name, data));
 		return o;
 	};
@@ -84,20 +96,20 @@ define([
                 fired = false;
             };
 
-            element
-                .on('mousedown', function(ev){
-                    function long_hold(){
-                        fired = true;
-                        bubble_hold(ev);
-                    }
-                    timer = setTimeout(long_hold, 500);
-                })
-                .on('mouseup', function(ev){
-                    cancel(ev, fired);
-                })
-                .on('mousemove', function(ev){
-                    cancel(ev, false);
-                });
+            // element
+            //     .on('mousedown', function(ev){
+            //         function long_hold(){
+            //             fired = true;
+            //             bubble_hold(ev);
+            //         }
+            //         timer = setTimeout(long_hold, 500);
+            //     })
+            //     .on('mouseup', function(ev){
+            //         cancel(ev, fired);
+            //     })
+            //     .on('mousemove', function(ev){
+            //         cancel(ev, false);
+            //     });
 
             return o;
         };

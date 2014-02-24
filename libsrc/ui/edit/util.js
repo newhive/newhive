@@ -190,6 +190,12 @@ o.array_sum = function( a, b ){
 // used for app id
 o.random_str = function(){ return Math.random().toString(16).slice(2); };
 
+o.polygon = function(sides){
+    js.range(sides - 1).map(function(i){
+        var a = i == 0 ? 0 : Math.PI * 2 / i
+        return [Math.cos(a), Math.sin(a)]
+    })
+}
 
 //// BEGIN-editor-refactor belongs in editor specific utils
 o.region_from_app = function(app) {
