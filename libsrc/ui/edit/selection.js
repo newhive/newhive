@@ -50,42 +50,52 @@ o.Selection = function(o) {
         return !env.gifwall && (ev.shiftKey || u.is_ctrl(ev));
     }
 
-    // mousedown comes from body, click comes from app div. Binding clicks
-    // from app div prevents deselecting everything else at the start of a
-    // group drag operation
-    o.click = o.mousedown = function(ev){
+    var app_clicking
+    o.mousedown = function(ev){
+        // mousedown comes from body,
+        // if mousedown on app or controls, store app in app_clicking,
+        // if mousedown was not on selected app or controls, unselect all
+        ev.stopPropagation()
+        app_clicking = ev.data
+
+        if(!o.count() || o.is_multi(ev) || ev.data)
+            return
+
+        var hit = false
+        o.each(function(i, el){
+            if( el.controls && $.contains(el.controls.div.get(0), ev.target) )
+                hit = true
+        })
+        if(o.controls && $.contains(o.controls.div.get(0), ev.target))
+            hit = true
+        if(!hit)
+            o.unfocus()
+    }
+
+    o.mouseup = function(ev){
+        // Select or deselect an app. Mouseup comes from app div.
+
+        var app_clicked = app_clicking
+        app_clicking = false
+        if(o.dragging) return
+
         var app = ev.data;
-        if(app){
-            if (context.flags.shift_does_raise && ev.shiftKey) {
-                if(u.is_ctrl(ev))
-                    app.stack_bottom();
-                else
-                    app.stack_top();
-                return;
-            }
-            if(o.is_multi(ev)){
-                if(o.selected(app)) o.unfocus(app);
-                else o.push(app);
-            }
-            else o.update([ app ]);
+        // must be mouseup on an app that was mousedowned
+        if(!app || app != app_clicked) return
+
+        if (context.flags.shift_does_raise && ev.shiftKey) {
+            if(u.is_ctrl(ev))
+                app.stack_bottom()
+            else
+                app.stack_top()
+            return
         }
-        else {
-            // unfocus all apps if click was not on an app
-            if(!o.count() || o.is_multi(ev))
-                return;
-            var hit = false;
-            o.each(function(i, el){
-                if( $.contains(el.div.get(0), ev.target) || (
-                    el.controls &&
-                        $.contains(el.controls.div.get(0), ev.target)
-                ) ) hit = true;
-            });
-            if(o.controls && $.contains(o.controls.div.get(0), ev.target))
-                hit = true;
-            if(!hit) o.unfocus();
+        if(o.is_multi(ev)){
+            if(o.selected(app)) o.unfocus(app);
+            else o.push(app)
         }
-        //ev.stopPropagation()
-    };
+        else o.update([ app ])
+    }
 
     var dragging = false, drag_target;
     o.drag_target = function(){ return drag_target; };

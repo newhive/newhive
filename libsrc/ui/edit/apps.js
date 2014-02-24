@@ -486,8 +486,14 @@ Hive.App = function(init_state, opts) {
         Hive.App.has_align(o);
     if (o.add_to_collection)
         o.apps.add(o); // add to apps collection
-    evs.on(o.div, 'dragstart', o).on(o.div, 'drag', o).on(o.div, 'dragend', o)
-        .on(o.div, 'click', o).long_hold(o.div, o);
+    // TODO-cleanup-events: attach app object to these events on app div without
+    // creating duplicate event handlers, allowing for easier overriding
+    evs.on(o.div, 'dragstart', o, {bubble_mousedown: true})
+        .on(o.div, 'drag', o)
+        .on(o.div, 'dragend', o)
+        .on(o.div, 'mousedown', o)
+        .on(o.div, 'mouseup', o)
+        .long_hold(o.div, o);
     return o;
 };
 Hive.registerApp(Hive.App, 'hive.app');
@@ -925,22 +931,32 @@ Hive.App.has_ctrl_points = function(o){
             })
         }
 
+        var dragging
         js.range(app.points_len()).map(function(i){
             p_els[i] = $('<div>')
                 .addClass('control point')
                 .appendTo(o.div)
-                .on('dragstart', function(){
+                .on('dragstart', function(ev){
+                    dragging = true
                     app.transform_start(i)
                     app.hide_controls()
+                    ev.stopPropagation()
                 })
                 .on('drag', function(ev, dd){
                     delta = u._div([dd.deltaX, dd.deltaY])(env.scale())
                     app.point_move(i, delta)
                 })
-                .on('dragend', function(){
+                .on('dragend', function(ev){
+                    dragging = false
                     app.show_controls()
+                    ev.stopPropagation()
                 })
         })
+
+        app.mouseup = function(ev){
+            if(dragging)
+                ev.stopPropagation()
+        }
     })
 }
 
@@ -1125,16 +1141,14 @@ Hive.App.Polygon = function(o){
     Hive.App.has_rotate(o)
     o.rotate_start = function(){
         o.transform_start(0)
-        history_point = o.history_helper_relative('rotate')
     }
     o.angle_set = function(a){
         ref_points.map(function(p, i){
             o.point_update(i, u.rotate_about(p, ref_center, u.deg2rad(a)))
         })
-        o.reframe(true)
+        // o.reframe(true)
     }
     o.rotate_end = function(){
-        history_point.save()
         o.transform_start(0)
         o.reframe()
     }
@@ -1249,10 +1263,18 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
     }
 
     var no_click
-    handle_template.click = function(ev){
-        ev.stopPropagation()
+    handle_template.mouseup = function(ev){
+        // TODO-cleanup-events: use better implementation,
+        // where it's easier to override app drag events
+
+        // mouseup must bubble to drag_base in order for dragstart to work
+        // but must not custom bubble in events module to selection
+        ev.stop_editor_propagation()
+        if(ev.data) return // if mouseup fired from app, ignore
         if(no_click){
             no_click = false
+            // after drag operation, do not create
+            ev.stopPropagation()
             return
         }
         var s = from_template()
@@ -1268,7 +1290,7 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
     }
     handle_template.drag = function(ev, dd){
         no_click = true
-
+        creating.dims_set([dd.clientX, dd.clientY])
     }
     handle_template.dragend = function(ev, dd){
         creating = false
@@ -1889,8 +1911,8 @@ Hive.App.has_resize = function(o) {
                 o.c.resize.css({ left: dims[0] -18 + p, top: dims[1] - 18 + p });
         };
 
-        o.c.resize.drag('start', function(e, dd) {
-                o.drag_target = e.target;
+        o.c.resize.drag('start', function(ev, dd) {
+                o.drag_target = ev.target;
                 o.drag_target.busy = true;
                 o.app.resize_start();
             })

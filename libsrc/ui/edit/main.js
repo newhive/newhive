@@ -426,7 +426,7 @@ Hive.exit = function(){
     $("body").removeClass("gifwall");
     $("body").removeClass("default");
     $(document).off('keydown');
-    $('body').off('mousemove mousedown');
+    $('body').off('mousemove mousedown mouseup click');
 };
 
 (function(){
