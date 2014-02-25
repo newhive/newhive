@@ -12,8 +12,8 @@ debug_unsecure  = True
 # ssl_port        = 443
 # debug_mode      = False
 
-server_name     = 'site'
-content_domain  = 'content'
+server_name     = 'office.newhive.com'
+content_domain  = 'office.tnh.me'
 dev_prefix      = None
 
 aws_id          = 'AKIAJSU3W7EYEO4ZZCNA'
