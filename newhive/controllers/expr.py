@@ -127,6 +127,11 @@ class Expr(ModelController):
         res['id'] = res.id
         return self.serve_json(response, res)
 
+    # the whole editor except the save dialog and upload code goes in sandbox
+    def editor_sandbox(self, tdata, request, response, expr_id=None, **args):
+        tdata.context['page_data'] = {}
+        return self.serve_page(tdata, response, 'pages/editor_sandbox.html')
+
     def snapshot(self, tdata, request, response, expr_id, **args):
         expr_obj = self.db.Expr.fetch(expr_id)
         if expr_obj.private and tdata.user.id != expr_obj.owner.id:
@@ -139,7 +144,7 @@ class Expr(ModelController):
         return self.serve_404(tdata, request, response)
 
     def fetch_naked(self, tdata, request, response, expr_id=None,
-        owner_name=None, expr_name=None
+        owner_name=None, expr_name=None, **args
     ):
         # Request must come from content_domain, as this serves untrusted content
         snapshot_mode = request.args.get('snapshot') is not None

@@ -7,6 +7,33 @@
     "empty": "These routes are community pages.",
     "empty": "-----------------------------------------",
 
+    "naked_expr_id": {
+        "page_route": "/<expr_id>",
+        "controller": "expr",
+        "method": "fetch_naked",
+        "content_domain": true
+    },
+    "naked_expr_name": {
+        "page_route": "/<owner_name>/<path:expr_name>",
+        "controller": "expr",
+        "method": "fetch_naked",
+        "content_domain": true
+    },
+    "blank_sandbox": {
+        "page_route": "/home/edit",
+        "controller": "expr",
+        "method": "editor_sandbox",
+        "content_domain": true,
+        "precedence": 1
+    },
+    "editor_sandbox": {
+        "page_route": "/home/edit/<expr_id>",
+        "controller": "expr",
+        "method": "editor_sandbox",
+        "content_domain": true,
+        "precedence": 1
+    },
+
     "home": {
         "page_route": "/",
         "api_route": "/api/feed/trending/",
