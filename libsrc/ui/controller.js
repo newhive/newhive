@@ -1,17 +1,19 @@
 define([
-    'browser/jquery',
-    'browser/js',
-    'ui/page',
-    'ui/page/pages',
-    'server/context',
-    'json!ui/routes.json',
-    //'history/history',
-    'ui/routing'
+    'browser/jquery'
+    ,'browser/js'
+    ,'ui/page'
+    ,'ui/page/pages'
+    ,'ui/util'
+    ,'server/context'
+    ,'json!ui/routes.json'
+    // ,'history/history'
+    ,'ui/routing'
 ], function(
      $
-    ,util
+    ,js
     ,page
     ,pages
+    ,util
     ,context
     ,routes
     //,history
@@ -31,9 +33,11 @@ define([
         context.parse_query();
         routing.register_state(route_args);
         page.init(o);
-        util.each(pages, function(m){
+        js.each(pages, function(m){
             if(m.init) m.init(o);
         });
+        if (util.mobile())
+            $("body").addClass('mobile');
         o.dispatch(route_args.route_name, context.page_data);
         wrapLinks();
     };

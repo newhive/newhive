@@ -31,6 +31,24 @@ define([
             return 0;
     }
 
+    o.mobile = function() {
+        return (navigator.userAgent.match(/Android/i)
+            || navigator.userAgent.match(/webOS/i)
+            || navigator.userAgent.match(/iPhone/i)
+            || navigator.userAgent.match(/iPad/i)
+            || navigator.userAgent.match(/iPod/i)
+            || navigator.userAgent.match(/BlackBerry/i)
+            || navigator.userAgent.match(/Windows Phone/i));
+    };
+
+    o.portable_css = function(property, value, dict) {
+        dict = dict || {};
+        dict[property] = value;
+        dict["-ms-" + property] = value;
+        dict["-webkit-" + property] = value;
+        return dict;
+    }
+
     // Can extend jquery functions with custom behavior.
     o.extend_jquery = function() {
         (function($){
