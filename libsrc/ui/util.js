@@ -41,14 +41,6 @@ define([
             || navigator.userAgent.match(/Windows Phone/i));
     };
 
-    o.portable_css = function(property, value, dict) {
-        dict = dict || {};
-        dict[property] = value;
-        dict["-ms-" + property] = value;
-        dict["-webkit-" + property] = value;
-        return dict;
-    }
-
     // Can extend jquery functions with custom behavior.
     o.extend_jquery = function() {
         (function($){

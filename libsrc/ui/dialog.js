@@ -64,7 +64,7 @@ define([
             if (util.mobile()) {
                 var s = $(window).width() / _width
                 s = Math.min(s, $(window).height() / util.val(this_dia.css("height")))
-                this_dia.css(util.portable_css("transform", "scale("+s+","+s+")"))
+                this_dia.css("transform", "scale("+s+")")
             }
             opts.layout()
         }
