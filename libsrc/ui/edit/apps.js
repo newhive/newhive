@@ -895,9 +895,9 @@ Hive.App.Rectangle = function(o) {
     o.color = function(){ return o.css_state.color };
     o.color_set = o.css_setter('color');
 
-    // o.make_controls.push(function(o){
-    //     o.addControls($('#controls_rectangle'));
-    // });
+    o.make_controls.push(function(o){
+        o.addControls($('#controls_rectangle'));
+    });
 
     Hive.App.has_rotate(o);
     Hive.App.has_color(o);
@@ -2240,11 +2240,11 @@ Hive.App.has_color = function(o, name){
     function controls(o) {
         var common = $.extend({}, o);
 
-        o.addButton($('#controls_misc .drawer.color'));
-        o.addButton($('#controls_misc .button.color'));
-        o.c.color = o.div.find('.button.color');
+        // o.addButton($('#controls_misc .drawer.color'));
+        // o.addButton($('#controls_misc .button.color'));
+        // o.c.color = o.div.find('.button.color');
         color_drawer = o.addButton($('#controls_misc .drawer.color'));
-        // o.c.color = o.div.find('.button.'+ name);
+        o.c.color = o.div.find('.button.'+ name);
 
         u.append_color_picker(color_drawer, setter, getter());
         var history_point
