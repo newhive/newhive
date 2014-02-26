@@ -38,19 +38,23 @@ def get_api_endpoints(api):
     for route_obj in routes:
         # Add page routes (for HTTP and HTTPS)
         for route_type in ['page_route', 'api_route']:
-            if route_obj.get(route_type):
-                defaults = default_route_args(route_obj)
-                for secure in (False, True):
-                    rules.append(Rule(
-                        route_obj[route_type],
-                        endpoint=(
-                            getattr(api, route_obj.get('controller', 'controller')),
-                            route_obj.get('method', 'empty')
-                        ),
-                        defaults=defaults,
-                        host=url_host(secure=secure,
-                            on_main_domain=not route_obj.get('content_domain'))
-                    ))
+            path = route_obj.get(route_type)
+            if not path: continue
+
+            defaults = default_route_args(route_obj)
+            if route_type == 'api_route':
+                defaults['json'] = True
+            for secure in (False, True):
+                rules.append(Rule(
+                    path,
+                    endpoint=(
+                        getattr(api, route_obj.get('controller', 'controller')),
+                        route_obj.get('method', 'empty')
+                    ),
+                    defaults=defaults,
+                    host=url_host(secure=secure,
+                        on_main_domain=not route_obj.get('content_domain'))
+                ))
     return rules
 
 api = Controllers(server_env)

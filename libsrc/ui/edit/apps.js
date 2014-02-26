@@ -991,6 +991,10 @@ Hive.App.Polygon = function(o){
         ref_points.splice(index, 1)
         o.reframe(true)
     }
+    o.pts = function(){
+        var pos = o.pos_relative()
+        return points.map(u._add(pos))
+    }
 
     // o.center = function(){
     //     return u._div(points.reduce(function(a, b){ return u._add(a)(b) })

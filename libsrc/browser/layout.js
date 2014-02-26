@@ -61,9 +61,10 @@ define(['browser/jquery'], function($) {
     // TODO: generalize into layout function that can size to parent,
     // as well as center to any side or corner
     o.center = function(e, inside, opts){
+        e = $(e)
         if(!e.width() || !e.height()) return; // As image is loading, sometimes height can be falsely reported as 0
 
-        var w = (typeof(inside) == 'undefined' ? $(window) : inside),
+        var w = (inside ? $(inside) : $(window))
             opts = $.extend({
                 absolute: false,
                 minimum: true,

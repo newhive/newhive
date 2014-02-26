@@ -108,10 +108,11 @@ define([
 
     o.set_exit_warning = function(warning, exit_condition){
         o.exit_warning = warning;
-        o.exit_condition = exit_condition;
+        o.exit_condition = exit_condition || function(){ return true }
         if(warning){
             window.onbeforeunload = function(){
-                return o.exit_warning;
+                if(!o.exit_condition())
+                    return o.exit_warning;
             };
         } else {
             window.onbeforeunload = null;
@@ -121,10 +122,8 @@ define([
     // TODO-cleanup: refactor these into distinct functionalities of
     // fetching data from server and opening a new page
     o.open_route = function(page_state, callback, push_state) {
-        if(o.exit_warning &&
-            (!o.exit_condition || !o.exit_condition()) &&
-            !confirm(o.exit_warning)
-        ) return;
+        if(o.exit_warning && !o.exit_condition() && !confirm(o.exit_warning))
+            return;
 
         context.query;
 

@@ -329,6 +329,8 @@ define(['browser/js', 'module'],
 	};
 
 	o.template = function(template_src, name, user_context){
+		if(!user_context) user_context = {}
+		if(!name) name = 'anonymous'
 		var ast = parse(template_src);
 		function template(data){
 			if(!data) data = {};
@@ -342,7 +344,7 @@ define(['browser/js', 'module'],
 		template.template_apply = function(stack){
 			return render_node(stack, ast);
 		};
-		template.template_name = name;
+		template.template_name = name
 
 		// add template_apply to context for rendering from within a template
 		set_reference(user_context, name, template.template_apply);

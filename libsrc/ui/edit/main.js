@@ -11,12 +11,14 @@ define([
     ,'server/context'
     ,'ui/colors'
     ,'browser/upload'
+    ,'browser/layout'
 
     ,'./apps'
     ,'./util'
     ,'./events'
     ,'./env'
     ,'./selection'
+    ,'sj!templates/edit_sandbox.html'
 
     ,'./text'
 
@@ -34,12 +36,14 @@ define([
     ,context
     ,colors
     ,upload
+    ,layout
 
     ,hive_app
     ,u
     ,evs
     ,env
     ,selection
+    ,edit_template
 ){
 
 var Hive = {}
@@ -51,6 +55,7 @@ var Hive = {}
 Hive.asset = asset;
 
 // Expose to outside for debugging
+window.h = Hive
 Hive.u = u;
 Hive.env = env;
 Hive.app = hive_app;
@@ -153,6 +158,7 @@ Hive.init_menus = function() {
         hive_app.new_app(app);
     });
 };
+
 Hive.init_dialogs = function() {
     // TODO-refactor: separate background dialog, save dialog, and top level
     // menus into respective constructors
@@ -162,120 +168,14 @@ Hive.init_dialogs = function() {
     // if ( !ua.match(/(Firefox|Chrome|Safari)/i) || ua.match(/OS 5(_\d)+ like Mac OS X/i)) {
     //     u.show_dialog('#editor_browsers');
     // }
-
     hive_app.init_background_dialog();
-    Hive.init_save_dialog();
 };
-Hive.init_save_dialog = function(){
-    var busy_e = $('.save .loading');
-    $(document).ajaxStart(function(){
-        // TODO-draft: set a flag to block saving while uploads are in progress
-        busy_e.showshow();
-        $('#save_submit').addClass('disabled');
-        //$('#save_submit .label').hidehide(); // can't get to look nice
-    }).ajaxStop(function(){
-        busy_e.hidehide();
-        $('#save_submit').removeClass('disabled');
-        //$('#save_submit .label').showshow();
-    }).ajaxError(function(ev, jqXHR, ajaxOptions){
-        // TODO-polish upload_error: show some warning, and somehow indicate
-        // which app(s) failed to save
-    });
 
-    var checkUrl = function(){
-        var u = $('#url').val();
-        if(u.match(/[^\w.\/-]/)) {
-            alert("Please just use letters, numbers, dash, period and slash in URLs. It makes it easier to share on other websites.");
-            $('#url').focus();
-            return false;
-        } else {
-            return true;
-        }
-    };
+Hive.layout = function(){
+    u.layout_apps();
+    layout.center('.app_btns', 'body', {v: false});        
+}
 
-    // var save_menu = Hive.u.hover_menu('#btn_save', '#dia_save',
-    //     { auto_close : false, click_persist : '#dia_save' });
-    $('#save_submit').click(function(){
-        if( ! $(this).hasClass('disabled') ){
-            if(checkUrl()){
-                Hive.edit_page.controller.set_exit_warning(false);
-                Hive.save();
-            }
-        }
-    });
-    // canonicalize tags field.
-    function tags_input_changed(el) {
-        const reserved_tags = ["remixed", "gifwall"];
-        var tags = el.val().trim();
-        var tag_list = Hive.tag_list(tags);
-        tags = Hive.canonical_tags(tag_list, reserved_tags);
-        $("#tags_input").val(tags);
-        Hive.set_tag_index(Hive.tag_list(tags));
-        var search_tags = " " + tags.toLowerCase() + " ";
-        $(".remix_label input").prop("checked", search_tags.indexOf(" #remix ") >= 0);
-    }
-    $("#tags_input").change(function(e){
-        var el = $(e.target);
-        tags_input_changed(el);
-    });
-    $(".remix_label input").change(function(e) {
-        if ($(e.target).prop("checked")) {
-            $("#tags_input").val("#remix " + $("#tags_input").val());
-        } else {
-            $("#tags_input").val($("#tags_input").val().replace(/[#,]?remix/gi,""));
-            tags_input_changed($("#tags_input"));
-        }
-    });
-    tags_input_changed($("#tags_input"));
-    var save_dialog = $('#dia_save').data('dialog');
-    save_dialog.opts.open = Hive.unfocus;
-    save_dialog.opts.close = Hive.focus;
-
-    var overwrite_dialog = dialog.create('#dia_overwrite');
-    $('#cancel_overwrite').click(overwrite_dialog.close);
-    $('#save_overwrite').click(function() {
-        Hive.Exp.overwrite = true;
-        Hive.save();
-    });
-    $("#dia_save").on('keydown', function(e) {
-        if ((e.keyCode || e.which || e.charCode || 0) == 13) {
-            $("#save_submit").click();
-            e.preventDefault();
-        }
-    });
-    
-    // Automatically update url unless it's an already saved
-    // expression or the user has modified the url manually
-    $('#dia_save #title')
-        .text(context.page_data.expr.title)
-        .on('keydown keyup', function(){
-            if (!(Hive.Exp.home || Hive.Exp.created || $('#url').hasClass('modified') )) {
-                $('#url').val($('#title').val().replace(/[^0-9a-zA-Z]/g, "-")
-                    .replace(/--+/g, "-").replace(/-$/, "").toLowerCase());
-            }
-        }).keydown()
-        .blur(function(){
-            $('#title').val($('#title').val().trim());
-        }).blur();
-
-    $('#dia_save #url')
-        .focus(function(){
-            $(this).addClass('modified');
-        })
-        .change(checkUrl);
-
-    u.hover_menu($('#privacy' ), $('#menu_privacy')); //todo-delete, { group: save_menu } );
-    $('#menu_privacy').click(function(e) {
-        $('#menu_privacy div').removeClass('selected');
-        var t = $(e.target);
-        t.addClass('selected');
-        $('#privacy').text(t.text());
-        var v = t.attr('val');
-        if(v == 'password') $('#password_ui').showshow();
-        else $('#password_ui').hidehide();
-    });
-    if(Hive.Exp.auth) $('#menu_privacy [val=' + Hive.Exp.auth +']').click();
-};
 Hive.init_global_handlers = function(){
     // Global event handlers
     $(window).on('resize', function(ev) {
@@ -283,16 +183,17 @@ Hive.init_global_handlers = function(){
         env.scale_set();
         var new_scale = env.scale();
         if(old_scale == new_scale) return;
-
-        u.layout_apps();
+        Hive.layout()
     });
+    Hive.layout()
+
     $(window).on('scroll', Hive.scroll);
     evs.on(document, 'keydown');
     evs.on('body', 'mousemove');
     evs.on('body', 'mousedown');
     evs.on('body', 'mouseup');
     // evs.on('body', 'click');
-    var drag_base = $('#happs');
+    var drag_base = env.apps_e;
     evs.on(drag_base, 'dragenter');
     evs.on(drag_base, 'dragleave');
     evs.on(drag_base, 'drop');
@@ -329,13 +230,47 @@ Hive.init_global_handlers = function(){
     evs.handler_set(env.Selection);
     evs.handler_set(Hive);
     env.apps_e.addClass('default');
+
+    $(window).on('beforeunload', function(){
+        // TODO-polish-editor: check undo history, or compare expr from server
+        // with current state to determine if anything is unsaved
+        if(hive_app.Apps.length == 0) return
+        return ( "If you leave this page any unsaved " +
+            "changes to your expression will be lost." )
+    })
+
+    var busy_e = $('.save .loading');
+    $(document).ajaxStart(function(){
+        busy_e.showshow();
+        // TODO: communicate to container that save is in progress
+    }).ajaxStop(function(){
+        busy_e.hidehide();
+        // TODO: communicate to container that save is in progress
+    }).ajaxError(function(ev, jqXHR, ajaxOptions){
+        // TODO-polish-upload-error: show some warning, and somehow indicate
+        // which app(s) failed to save
+    });
+
+    window.addEventListener('message', Hive.message, false)
+    $('#btn_save').click(function(){
+        var expr = Hive.state();
+        window.parent.postMessage({save: expr}, '*')
+    })
 };
-Hive.init = function(exp, page){
+
+Hive.message = function(data){
+}
+
+Hive.init = function(exp){
     // this reference must be maintained, do not assign to Exp
     env.Exp = Hive.Exp = exp;
-    Hive.edit_page = page;
+    // Hive.edit_page = page;
     if(!exp.auth) exp.auth = 'public';
     env.scale_set();
+
+    context.flags = {}
+
+    $('body').append(edit_template())
 
     Hive.init_dialogs();
     Hive.init_menus();
@@ -344,13 +279,13 @@ Hive.init = function(exp, page){
     env.apps_e = $('#happs'); // container element for all interactive apps
     env.History.init();
     hive_app.Apps.init(Hive.Exp.apps);
-    Hive.init_common();
+    // Hive.init_common();
     // TODO-cleanup: remove Selection from registered apps, and factor out
     // shared functionality into has_coords
     env.Selection = hive_app.new_app({ type : 'hive.selection' });
 
+    $('.edit.overlay').showshow()
     Hive.init_global_handlers()
-    env.layout_apps();
     setTimeout(function() { env.layout_apps(); }, 100);
 };
 
@@ -386,32 +321,6 @@ Hive.canonical_tags = function(tags_list, special) {
 Hive.set_tag_index = function(tags) {
     Hive.Exp.tags_index = tags;
 }
-// Called on load() and save()
-Hive.init_common = function(){
-    var query = location.search.slice(1);
-    if (query.length) {
-        if (query == "new_user") {
-            $("#dia_editor_help").data("dialog").open();
-        } else {
-            // otherwise query is assumed to be tag list
-            $tags = $("#tags_input");
-            var e = {target:$tags};
-            var tags = (Hive.Exp.tags || "") + " " + unescape(query);
-            Hive.set_tag_index(Hive.tag_list(tags));
-            $tags.val(tags).trigger("change",e);
-        }
-    }
-    $('title').text("Editor - " + (Hive.Exp.title || "[Untitled]"));
-    var tags = " " + $("#tags_input").val().trim() + " ";
-    env.copy_table = context.flags.copy_table || false;
-    env.gifwall = (tags.indexOf(" #Gifwall ") >= 0);
-
-    env.squish_full_bleed = env.gifwall;
-    env.show_mini_selection_border = 
-        env.gifwall || context.flags.show_mini_selection_border;
-
-    Hive.enter();
-};
 // var $style = $();
 Hive.enter = function(){
     // $style.remove();
@@ -531,45 +440,6 @@ Hive.embed_code = function(element) {
     $(element).val('');
 }; 
 
-Hive.save = function() {
-    var expr = Hive.state();
-    if(expr.name.match(/^(profile|tag)$/)) {
-        alert('The name "' + expr.name + '" is reserved.');
-        return false;
-    }
-
-    // Handle remix
-    if (expr.owner_name != context.user.name) {
-        expr.owner_name = context.user.name;
-        expr.owner = context.user.id;
-        expr.remix_parent_id = expr.id;
-        expr.id = expr._id = '';
-    }
-
-    var on_response = function(ev, ret){
-        // Hive.upload_finish();
-        if(typeof(ret) != 'object')
-            alert("Sorry, something is broken :(. Please send us feedback");
-        if(ret.error == 'overwrite') {
-            $('#expr_name').html(expr.name);
-            $('#dia_overwrite').data('dialog').open();
-            $('#save_submit').removeClass('disabled');
-        }
-        else if(ret.id) Hive.edit_page.view_expr(ret);
-    }, on_error = function(ev, ret){
-        // Hive.upload_finish();
-        if (ret.status == 403){
-            relogin(function(){ $('#btn_save').click(); });
-        }
-        $('#save_submit').removeClass('disabled');
-    };
-
-    $('#expr_save .expr').val(JSON.stringify(expr));
-    $('#expr_save').on('response', on_response)
-        .on('error', on_error).submit();
-    Hive.init_common();
-};
-
 // TODO-feature-autosave: implement 
 Hive.init_autosave = function (){
     setInterval(Hive.set_draft, 5000);
@@ -588,13 +458,7 @@ Hive.init_autosave = function (){
 Hive.state = function() {
     //Hive.Exp.domain = $('#domain').val();
     hive_app.Apps.restack(); // collapse layers of deleted apps
-    Hive.Exp.name = $('#url').val();
     Hive.Exp.apps = hive_app.Apps.state();
-    Hive.Exp.title = $('#title').val();
-    Hive.Exp.tags = $('#tags_input').val();
-    Hive.Exp.auth = $('#menu_privacy .selected').attr('val');
-    if(Hive.Exp.auth == 'password') 
-        Hive.Exp.password = $('#password').val();
 
     // get height
     var h = 0;
@@ -609,7 +473,7 @@ Hive.state = function() {
 
 // BEGIN-Events  //////////////////////////////////////////////////////
 
-global_highlight = function(showhide) {
+Hive.global_highlight = function(showhide) {
     if (env.gifwall) {
         $(".prompts .highlight").showhide(showhide);
         var fn = showhide ? "mouseover" : 'mouseout';
@@ -623,13 +487,13 @@ Hive.handler_type = 3;
 var dragging_count = 0;
 Hive.dragenter = function(ev){ 
     // hovers_active(false);
-    global_highlight(true);
+    Hive.global_highlight(true);
     dragging_count++;
     ev.preventDefault();
 };
 Hive.dragstart = function(){ 
     // hovers_active(false);
-    // global_highlight(true);
+    // Hive.global_highlight(true);
 };
 Hive.dragend = function(){
     // TODO-usability: fix disabling hover states in ui/util.hoverable
@@ -643,7 +507,7 @@ Hive.drop = Hive.dragleave = function(){
         --dragging_count;
 
     if (0 == dragging_count)
-        global_highlight(false);
+        Hive.global_highlight(false);
 };
 // TODO-feature-editor-prompts: could be used in handlers for non-pointer
 // events, like in a type to add text box handler

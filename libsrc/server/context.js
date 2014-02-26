@@ -94,7 +94,8 @@ define([
     };
 
     var get_route_args = function(arguments){
-        var args = { username: o.user.name };
+        var args = {}
+        if(o.user) args.username = o.user.name
         // All arguments after route_name are name value pairs
         for(var i = 2; i < arguments.length; i += 2)
             args[arguments[i]] = arguments[i + 1];
@@ -104,7 +105,8 @@ define([
 
     // TODO-cleanup: merge with query_attrs
     o.search_attrs = function(scope){
-        var args = { username: o.user.name };
+        var args = {}
+        if(o.user) args.username = o.user.name
         var query_args = ""
         // All arguments after route_name are prefix value pairs
         for(var i = 1; i < arguments.length; i += 2)
@@ -166,13 +168,13 @@ define([
         // var all_elements = elements.add(document.body);
 
         // Common site-wide handlers
-        find_all(dom, '*[data-class-toggle]').each(function(i, ev) {
+        find_all(dom, '*[data-class-toggle]').each(function(i, el) {
             var click_func = function(klass) {
-                return function(el) {
-                    $(ev).toggleClass(klass);
+                return function() {
+                    $(el).toggleClass(klass);
                 };
             }
-            var class_toggles = $(ev).attr('data-class-toggle');
+            var class_toggles = $(el).attr('data-class-toggle');
             if (class_toggles) {
                 class_toggles = JSON.parse(class_toggles);
             }
@@ -184,42 +186,42 @@ define([
             }
         });
         // TODO-cleanup: this is a subcase of class-toggle.
-        find_all(elements, '*[data-link-show]').each(function(i, ev) {
-            var handle = find_all(elements, $(ev).attr('data-link-show'));
+        find_all(elements, '*[data-link-show]').each(function(i, el) {
+            var handle = find_all(elements, $(el).attr('data-link-show'));
             if(!handle) throw 'missing handle';
-            handle.on('click', function(el) { 
-                $(ev).toggleshow();
+            handle.on('click', function(ev) { 
+                $(el).toggleshow();
             });
         });
 
         find_all(elements, 'form[data-route-name]').each(
-            function(i, ev){ form_handler(ev, elements) });
+            function(i, el){ form_handler(el, elements) });
 
-        find_all(elements, '.menu.drawer[data-handle]').each(function(i, ev){
-            var handle = find_all(elements, $(ev).attr('data-handle'));
+        find_all(elements, '.menu.drawer[data-handle]').each(function(i, el){
+            var handle = find_all(elements, $(el).attr('data-handle'));
             if(!handle) throw 'missing handle';
-            var parent = find_all(elements, $(ev).attr('data-parent'));
+            var parent = find_all(elements, $(el).attr('data-parent'));
             var opts = {};
             if (parent.length && parent.data('menu')) {
                 opts['group'] = parent.data('menu');
                 opts['layout_x'] = 'submenu';
                 // opts['layout'] =  'center_y';
             }
-            menu(handle, ev, opts);
+            menu(handle, el, opts);
         });
 
-        find_all(elements, '.dialog[data-handle]').each(function(i, ev){
-            var handle = find_all(elements, $(ev).attr('data-handle'));
+        find_all(elements, '.dialog[data-handle]').each(function(i, el){
+            var handle = find_all(elements, $(el).attr('data-handle'));
             if(!handle) throw 'missing handle';
-            var d = dialog.create(ev);
+            var d = dialog.create(el);
             handle.click(d.open);
         });
 
-        find_all(elements, '.hoverable').each(function(i, ev){
-            ui_util.hoverable($(ev)) });
+        find_all(elements, '.hoverable').each(function(i, el){
+            ui_util.hoverable($(el)) });
 
         js.each(o._after_render_handlers, function(handler, selector){
-            find_all(elements, selector).each(function(i,ev){ handler($(ev)) });
+            find_all(elements, selector).each(function(i,el){ handler($(el)) });
         });
 
         return elements;

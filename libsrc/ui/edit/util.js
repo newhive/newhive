@@ -16,7 +16,7 @@ define([
     ,context
     ,colors
     ,color_picker_template
-    ,Menu
+    ,menu
     ,dialog
 
     ,env
@@ -240,7 +240,7 @@ o.app_bounds = function(elements) {
 
 // wrappers
 o.hover_menu = function(handle, drawer, opts){
-    return Menu(handle, drawer, $.extend({ auto_height: false }, opts));
+    return menu(handle, drawer, $.extend({ auto_height: false }, opts));
 };
 o.show_dialog = function(jq, opts){
     var d = dialog.create(jq, opts);
