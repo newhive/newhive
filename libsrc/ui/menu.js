@@ -125,9 +125,7 @@ var menu = function(handle, drawer, options) {
         o.opened = true;
         if (!shield.parent().length) {
             shield.appendTo($("body"));
-            shield.on("click", function(ev) {
-                $.each(menu.menus, function(i,m) { m.close(true); } ) 
-            });
+            shield.on("click", function(ev) { menu.close_all(); } );
         }
 
         if( opts.group.current && (opts.group.current != o) )
@@ -263,8 +261,12 @@ var menu = function(handle, drawer, options) {
             .on('mouseleave', function(){ o.delayed_close(false) });
         drawer.mouseenter(o.cancel_close)
             .mouseleave(function(){ o.delayed_close(true) })
-            .mousemove(o.cancel_close);
+            .mousemove(o.cancel_close)
     }
+    $(drawer).find("a")
+        .on("click", function(ev) { 
+            menu.close_all(); 
+        } );
     handle.unbind('click').click(function(){
         if(o.opened && opts.default_item) opts.default_item.click();
         o.open();
@@ -290,6 +292,9 @@ var menu = function(handle, drawer, options) {
     return o;
 }
 
+menu.close_all = function() {
+    $.each(menu.menus, function(i,m) { m.close(true); } ) 
+}
 menu.menus = [];
 
 return menu;
