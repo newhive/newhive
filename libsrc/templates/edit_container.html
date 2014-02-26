@@ -1,0 +1,49 @@
+<iframe src='{ concat config.content_url "home/edit/" page_data.expr.id }'
+  id='editor'></iframe>
+
+{# dialog triggered by postMessage from edit sandbox #}
+<div id='dia_save' class='standard dialog'>
+  <div class="heading expr title">Save</div>
+  <div class='upper label medbold'>Title</div>
+  <textarea rows="1" autofocus id='title'>{exr.title}</textarea>
+
+  <div class='upper label medbold'>URL</div>
+  <div class=''>newhive.com/{user.name}/</div>
+  <div class='note'>Change the URL to "Save As"</div>
+  <input id='url' type='text' value='{expr.name|e}'>
+
+  <div class='upper label medbold'>#Tags</div>
+  <input id='tags_input' type='text' value='{expr.tags|e}'>
+  <div class='spacer'></div>
+
+  <div class="remix_label"><label>
+    <input type="checkbox">Allow others to remix this expression</label></div>
+
+  <span id='privacy' class='teal_btn upper'>Unlisted
+  </span><div class="inline drop_arrow"></div>
+
+  <form {form_attrs "expr_save"} id='expr_save' method='POST'>
+    <input type='hidden' name='expr' class='expr'>
+    <button id='save_submit' class='save black_btn upper' type='submit'>
+      <span class='label'>Save</span>{#<img
+        src='{asset "skin/edit/loading.gif"}' class='hide loading'>#}</div>
+    </button>
+  </form>
+
+  <div id='password_ui' style='display: none'>
+    <br>
+    <b>Optional password</b><br>
+    <input type='password' id='password' value=''>
+  </div>
+</div>
+<div id='menu_privacy' class='menu drawer medbold' style='width : 125px;'>
+  <div val='password' class='menu_item'>Unlisted</div>
+  <div val='public' class='menu_item'>Public</div>
+</div>
+
+<div id='dia_overwrite' class='dialog border selected center' style='width : 25em; padding : 20px'>
+ <h2>Overwrite?</h2>
+ You already have an expression at "/<span id='expr_name'></span>". Are you sure you want to replace it?<br><br>
+ <input id='save_overwrite' type='button' class='btn black rounded' value='Yes'>&nbsp; &nbsp; &nbsp; 
+ <input id='cancel_overwrite' type='button' class='btn black rounded' value='No'>
+</div>
