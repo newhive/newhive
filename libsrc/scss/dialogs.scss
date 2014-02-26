@@ -1,7 +1,7 @@
 @import "common";
 
 /* === click shield element === */
-#dialog_shield{
+#dialog_shield, #menu_shield {
   position:fixed;
   width:100%;
   height:100%;
@@ -9,7 +9,7 @@
   top: 0;
 }
 #dialog_shield.fade { background-color:black; opacity:0.33; }
-
+#menu_shield{ z-index: 3; }
 $header_font: Gibson, Helvetica, Arial, sans-serif;
 
 /* === General === */
