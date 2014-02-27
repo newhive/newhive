@@ -48,7 +48,8 @@
         "controller": "community",
         "method": "trending",
         "client_method": "profile",
-        "require_login": true
+        "require_login": true,
+        "precedence": 1
     },
     "network": {
         "page_route": "/<username>/profile/recent",
@@ -212,11 +213,6 @@
         "method": "forms_signup",
         "client_method": "new_account"
     },
-    "old_signup": {
-        "page_route": "/create_account/<key>",
-        "controller": "community",
-        "method": "old_signup"
-    },
     "signup_create": {
         "api_route": "/api/user/create",
         "controller": "user",
@@ -278,7 +274,8 @@
         "api_route": "/api/expr/view/<owner_name>/<path:expr_name>",
         "controller": "community",
         "method": "expr",
-        "client_method": "expr"
+        "client_method": "expr",
+        "precedence": -1
     },
 
     "create_expr": {
@@ -383,6 +380,12 @@
         "api_route": "/api/file/create",
         "controller": "file",
         "method": "create"
+    },
+    "file_create_content": {
+        "api_route": "/api/file/create",
+        "controller": "file",
+        "method": "create",
+        "content_domain": true
     },
 
     "empty": "-----------------------------------------",

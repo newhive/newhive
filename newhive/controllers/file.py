@@ -12,7 +12,6 @@ import threading
 class File(ModelController):
     model_name = 'File'
 
-    @auth_required
     def create(self, tdata, request, response, **args):
         """ Saves a file uploaded from the expression editor, responds
         with a JSON list of Hive.App objects.

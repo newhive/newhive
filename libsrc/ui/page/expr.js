@@ -409,7 +409,7 @@ define([
 
         if(page_data.error == 'password'){
             dialog.create(password_dia).open();
-            password_dia.find('form.site').on('response', function(ev, data) {
+            password_dia.find('form.site').on('success', function(ev, data) {
                 if(data.error) {
                     $('#dia_expr_password .error').showshow();
                     return;
@@ -481,7 +481,7 @@ define([
                 o.controller.scroll_top = 0;
             });
 
-        // $('#comment_form').unbind('response').on('response', o.comment_response);
+        // $('#comment_form').unbind('success').on('success', o.comment_response);
         var dia_comments = $("#dia_comments").data("dialog");
         dia_comments.opts.open = function(){
             $("#dia_comments textarea").focus();
@@ -501,8 +501,8 @@ define([
                     o.edit_comment($(el));
                 });
             }
-            $(el).find('form').unbind('response').
-                on('response', function(event, data) {
+            $(el).find('form').unbind('success').
+                on('success', function(event, data) {
                 o.edit_comment_response($(el), data);
             });
         });

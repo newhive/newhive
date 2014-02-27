@@ -7,13 +7,11 @@ compiled.*
 /libsrc/.webassets-cache
 /libsrc/scss/config.rb
 /libsrc/scss/.sass-cache/*
-/libsrc/*.css
 /libsrc/.cram
 /newhive/config/config.py
 /newhive/config/GA_credentials.dat
 /newhive/config/aws.py
 *.pyc
 *.DS_Store
-/newhive/.ropeproject
 /log/*.txt
 newhive.log

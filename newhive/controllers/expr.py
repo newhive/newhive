@@ -129,8 +129,15 @@ class Expr(ModelController):
 
     # the whole editor except the save dialog and upload code goes in sandbox
     def editor_sandbox(self, tdata, request, response, expr_id=None, **args):
-        tdata.context['page_data'] = {}
-        return self.serve_page(tdata, response, 'pages/editor_sandbox.html')
+        if expr_id:
+            expr_obj = self.db.Expr.fetch(expr_id)
+            if not expr_obj: return self.serve_404(tdata, request, response)
+            expr = expr_obj
+        else:
+            expr = request.form.get('expr', {})
+
+        tdata.context['expr'] = expr
+        return self.serve_page(tdata, response, 'pages/edit_sandbox.html')
 
     def snapshot(self, tdata, request, response, expr_id, **args):
         expr_obj = self.db.Expr.fetch(expr_id)
@@ -149,7 +156,7 @@ class Expr(ModelController):
         # Request must come from content_domain, as this serves untrusted content
         snapshot_mode = request.args.get('snapshot') is not None
         if expr_id:
-            # hack for overlap of /owner_name/expr_name and /expr_id routes
+            # hack for overlap of /owner_name and /expr_id routes
             expr_obj = self.db.Expr.fetch(expr_id) or self.db.Expr.named(expr_id, '')
         else:
             expr_obj = self.db.Expr.named(owner_name, expr_name)
