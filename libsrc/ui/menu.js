@@ -263,13 +263,21 @@ var menu = function(handle, drawer, options) {
             .mouseleave(function(){ o.delayed_close(true) })
             .mousemove(o.cancel_close)
     }
+    // TODO: The correct behavior is to close_all iff item is not handle.
+    // If item is handle, it should toggle open/closed state.
     $(drawer).find("a")
-        .on("click", function(ev) { 
+        .unbind('click').on("click", function(ev) { 
             menu.close_all(); 
         } );
     handle.unbind('click').click(function(){
-        if(o.opened && opts.default_item) opts.default_item.click();
-        o.open();
+        if(o.opened && opts.default_item.length) {
+            menu.close_all();
+            opts.default_item.click();
+        } else if (o.opened && !opts.hover_close) {
+            o.close();
+        } else {
+            o.open();
+        }
     });
     if(opts.focus_persist){
         drawer.find('input[type=text],input[type=password],textarea').on('click keydown', function(){
