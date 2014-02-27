@@ -535,7 +535,7 @@ class User(HasSocial):
         self.owner = self
 
     def expr_create(self, d):
-        doc = dict(owner = self.id, name = '', domain = self['sites'][0])
+        doc = dict(owner = self.id, name = '')
         doc.update(d)
         return self.db.Expr.create(doc)
 
