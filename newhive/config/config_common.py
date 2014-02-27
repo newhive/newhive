@@ -53,20 +53,24 @@ beta_testers = admins + [
 
 user_groups = { 'logged_in':set([]), 'logged_out':set(['logged_out']), 'all':set([]), 
     'admins':set(admins), 'beta_testers':set(beta_testers) }
-site_flags = { 
-    'admin': ['admins']
+site_flags = {
+    # Features
+    'show_hive_all': ['newduke','nd4']
     ,'merge_recent': ['cara', 'fatsycline']
-    ,'show_hive_all': ['newduke','nd4']
-    ,'logged': ['logged_out']
-    ,'rect_drag_drop': ['admins','nd4']
-    ,'shift_does_raise': ['newduke','nd4','abram']
-    ,'snap_crop': ['admins','nd4']
     ,'can_debug': ['admins','nd4']
+    ,'open_signup': []
+    ,'mobile_web': ['nd4']
+    # Editor
+    ,'snap_crop': ['admins','nd4']
+    ,'shift_does_raise': ['newduke','nd4','abram']
+    ,'rect_drag_drop': ['admins','nd4']
+    ,'modify_special_tags': ['admins','nd4']
     ,'show_mini_selection_border': ['admins','nd4']
     ,'copy_table': ['admins','nd4']
-    ,'open_signup': []
-    ,'modify_special_tags': ['admins','nd4']
-    ,'mobile_web': ['nd4']
+    # Admin
+    ,'admin': ['admins']
+    # Old / unused
+    ,'logged': ['logged_out']
 }
 
 site_user = 'newhive'
