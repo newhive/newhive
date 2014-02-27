@@ -33,7 +33,6 @@ define([
 
     o.mobile = function() {
         return (navigator.userAgent.match(/Android/i)
-            // || "true"//!!
             || navigator.userAgent.match(/webOS/i)
             || navigator.userAgent.match(/iPhone/i)
             || navigator.userAgent.match(/iPad/i)

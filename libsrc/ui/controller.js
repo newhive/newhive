@@ -24,6 +24,8 @@ define([
     o.init = function(route_args){
         window.c = context; // useful for debugging
         setup_google_analytics();
+        if (context.flags.mobile_web)
+            util.mobile = function() { return "true" };
         // init_history();
 
         context.server_url = context.config.server_url; // used in many templates
