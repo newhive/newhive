@@ -36,8 +36,12 @@ define([
         js.each(pages, function(m){
             if(m.init) m.init(o);
         });
-        if (util.mobile())
+        if (util.mobile()) {
             $("body").addClass('mobile');
+            $('<meta name="viewport" content="width=device-width, ' +
+                'height=device-height, initial-scale=0.5, ' +
+                'user-scalable=0"/>').appendTo($("head"));
+        }
         o.dispatch(route_args.route_name, context.page_data);
         wrapLinks();
     };
