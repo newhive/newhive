@@ -143,11 +143,11 @@ Hive.init_menus = function() {
         }
         center = u._mul([ev.clientX, ev.clientY])(env.scale());
         u.new_file(files, { center: center });
-    }).on('response', function(ev, files){ u.on_media_upload(files) });
+    }).on('success', function(ev, files){ u.on_media_upload(files) });
 
     $('#link_upload').on('with_files', function(ev, files){
         // TODO-polish: maybe create link text box first
-    }).on('response', function(ev, files){
+    }).on('success', function(ev, files){
         Hive.Exp.background.url = files[0].url;
         // TODO-polish: maybe deal with multiple files
         var file = files[0];
@@ -251,25 +251,41 @@ Hive.init_global_handlers = function(){
         // which app(s) failed to save
     });
 
-    window.addEventListener('message', Hive.message, false)
     $('#btn_save').click(function(){
         var expr = Hive.state();
         window.parent.postMessage({save: expr}, '*')
     })
 };
 
-Hive.message = function(data){
+Hive.message = function(ev){
+    var msg = ev.data
+    if(msg.init)
+        Hive.init(msg.expr, msg.context)
 }
 
-Hive.init = function(exp){
+Hive.pre_init = function(){
+    window.addEventListener('message', Hive.message, false)
+    window.parent.postMessage({ready: true}, '*')
+}
+
+Hive.init = function(exp, site_context){
     // this reference must be maintained, do not assign to Exp
     env.Exp = Hive.Exp = exp;
     // Hive.edit_page = page;
     if(!exp.auth) exp.auth = 'public';
     env.scale_set();
 
-    context.flags = {}
+    $.extend(context, site_context)
+    env.copy_table = context.flags.copy_table || false;
+    env.gifwall = $.inArray('gifwall', exp.tags_index) > -1
+    env.squish_full_bleed = env.gifwall;
+    env.show_mini_selection_border = 
+        env.gifwall || context.flags.show_mini_selection_border;
 
+    if (env.gifwall)
+        $("body").addClass("gifwall");
+    else
+        $("body").addClass("default");
     $('body').append(edit_template())
 
     Hive.init_dialogs();
@@ -280,6 +296,8 @@ Hive.init = function(exp){
     env.History.init();
     hive_app.Apps.init(Hive.Exp.apps);
     // Hive.init_common();
+    if(context.query.new_user)
+        $("#dia_editor_help").data("dialog").open();
     // TODO-cleanup: remove Selection from registered apps, and factor out
     // shared functionality into has_coords
     env.Selection = hive_app.new_app({ type : 'hive.selection' });
@@ -289,45 +307,7 @@ Hive.init = function(exp){
     setTimeout(function() { env.layout_apps(); }, 100);
 };
 
-Hive.tag_list = function(tags) {
-    tags = tags.split(" ");
-    tags = $.map(tags, function(x) {
-        return x.toLowerCase().replace(/[^a-z0-9]/gi,'');
-    });
-    u.array_delete(tags, "");
-    return tags;
-}
-Hive.canonical_tags = function(tags_list, special) {
-    // context.flags.modify_special_tags = true;
-    tags_list = $.map(tags_list, function(x, i) {
-        if (special && special.indexOf(x) >= 0) {
-            x = u.capitalize(x);
-            if (!context.flags.modify_special_tags)
-                x = "";
-        }
-        return "#" + x;
-    });
-    if (!context.flags.modify_special_tags && special && Hive.Exp.tags_index)
-        $.map(Hive.Exp.tags_index, function(x, i) {
-            if (special.indexOf(x) >= 0) {
-                x = "#" + u.capitalize(x);
-                tags_list.push(x);
-            }
-        });
-    tags_list = u.array_unique(tags_list);
-    u.array_delete(tags_list, "#");
-    return tags_list.join(" ");
-}
-Hive.set_tag_index = function(tags) {
-    Hive.Exp.tags_index = tags;
-}
-// var $style = $();
 Hive.enter = function(){
-    // $style.remove();
-    if (env.gifwall)
-        $("body").addClass("gifwall");
-    else
-        $("body").addClass("default");
 };
 
 Hive.exit = function(){

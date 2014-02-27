@@ -176,8 +176,8 @@ define([
                             function(i,el){ return $(el).text(); });
                     $("form.tag_order input[name=tag_order]").
                         val(tags.toArray().join(","));
-                    $("form.tag_order").submit().unbind("response").
-                        on("response", function(e, json) {
+                    $("form.tag_order").submit().unbind('success').
+                        on('success', function(e, json) {
                             context.page_data.ordered_count = json.tagged_ordered;
                             context.page_data.tag_list = json.tagged;
                             o.preprocess_page_data(context.page_data);

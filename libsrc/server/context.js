@@ -233,24 +233,31 @@ define([
     var submit_form = function(form){
         var opts = {};
         opts.url = form.attr('action');
-        opts.data = new FormData($(form)[0]);
         opts.success = function(data){
             // if(!file_api) input.trigger('with_files',
                 // [ data.map(function(f){ return f.url }) ]);
-            form.trigger('response', [data]);
-            form.find("*[type=submit]").
-                removeClass('disabled').prop('disabled','');
+            form.trigger('success', [data]);
         };
         opts.error = function(data){
-            // TODO: open new window with debugger
-            console.error("Server error post request: " + form.attr('action')
-                + '\n(remove form handlers to see error) $("form").unbind("submit")');
+            if(config.debug_mode){
+                // TODO: open new window with debugger
+                console.error("Server error post request: "
+                    + form.attr('action') + '\n(remove form handlers to '
+                    + 'see error) $("form").unbind("submit")'
+                )
+            }
             form.trigger('error', [data]);
         };
+        opts.complete = function(){
+            form.find("*[type=submit]").
+                removeClass('disabled').prop('disabled','')
+        }
         form.trigger('before_submit');
+        opts.data = new FormData($(form)[0]);
         upload.submit(false, opts);
         form.trigger('after_submit');
-        form.find("*[type=submit]").addClass('disabled').prop('disabled','true');
+        form.find("*[type=submit]")
+            .addClass('disabled').prop('disabled','true');
     };
 
     function form_handler(form, all){
@@ -281,7 +288,7 @@ define([
                     function(files, file_list){
                         form.trigger('with_files', [files, file_list]); },
                     function(file_records){
-                        form.trigger('response', [file_records]); }
+                        form.trigger('success', [file_records]); }
                 );
         });
 

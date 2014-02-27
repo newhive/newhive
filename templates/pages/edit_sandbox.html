@@ -16,7 +16,6 @@
 
   <script>
 curl(['ui/edit/main'], function(edit){
-    edit.init({{ expr|json }})
-})
+    edit.pre_init() })
   </script>
 {% endblock %}

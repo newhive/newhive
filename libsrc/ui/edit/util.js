@@ -34,9 +34,6 @@ o.css_coords = function(el, pos, dims){
         ,width: dims[0], height: dims[1] })
 }
 
-// TODO-refactor: move into util
-o.capitalize = function(str) { return str[0].toUpperCase() + str.slice(1); };
-
 o.rad2deg = function(angle) { return angle * (180. / Math.PI) }
 o.deg2rad = function(angle) { return angle * (Math.PI / 180.) }
 // rotate the given 2-vector counterclockwise (y-up) through angle radians
@@ -163,21 +160,6 @@ o.min = function(array){
     return Math.min.apply(Math, array);
 };
 
-o.array_unique = function(a) {
-    return a.reduce(function(p, c) {
-        if (p.indexOf(c) < 0) p.push(c);
-        return p;
-    }, []);
-};
-o.array_delete = function(arr, e) {
-    for(var n = 0; n < arr.length; n++) {
-        if(arr[n] == e) {
-            arr.splice(n, 1);
-            return true;
-        }
-    }
-    return false;
-}
 o.array_sum = function( a, b ){
     if (a.length != b.length) { throw "Arrays must be equal length" };
     rv = [];
