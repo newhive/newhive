@@ -1221,6 +1221,7 @@ class Expr(HasSocial):
     cname = 'expr'
     indexes = [
          (['owner_name', 'name'], {'unique':True})
+        ,'url'
         ,['owner', 'updated']
         ,'tags_index'
         ,'text_index'
