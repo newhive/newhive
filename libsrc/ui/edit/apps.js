@@ -992,6 +992,10 @@ Hive.App.Polygon = function(o){
         ref_points.splice(index, 1)
         o.reframe(true)
     }
+    o.pts = function(){
+        var pos = o.pos_relative()
+        return points.map(u._add(pos))
+    }
 
     // o.center = function(){
     //     return u._div(points.reduce(function(a, b){ return u._add(a)(b) })
@@ -2296,7 +2300,7 @@ Hive.init_background_dialog = function(){
 
     $('#bg_upload').on('with_files', function(ev, files){
         Hive.bg_set(files[0]);
-    }).on('response', function(ev, files){
+    }).on('success', function(ev, files){
         env.Exp.background.url = files[0].url;
     });
 };

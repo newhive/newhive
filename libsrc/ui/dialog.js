@@ -86,7 +86,8 @@ define([
             this_dia.detach();
             // Add to body to create a new z index stack
             this_dia.appendTo(document.body);
-            this_dia.find("form").unbind('response').on('response', opts.handler);
+            this_dia.find("form").unbind('success', opts.handler)
+                .on('success', opts.handler)
             this_dia.find(".error_msg").hidehide();
             this_dia.find(".success_show").hidehide();
             this_dia.find(".success_hide").showshow();

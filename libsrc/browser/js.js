@@ -69,6 +69,22 @@ o.zip = function(list1, list2) {
     return ret;
 };
 
+o.array_unique = function(a){
+    return a.reduce(function(p, c){
+        if (p.indexOf(c) < 0) p.push(c);
+        return p;
+    }, []);
+}
+o.array_delete = function(arr, e) {
+    for(var n = 0; n < arr.length; n++) {
+        if(arr[n] == e) {
+            arr.splice(n, 1);
+            return true;
+        }
+    }
+    return false;
+}
+
 o.op = {
     '+' : function(a, b) { return a + b },
     '-' : function(a, b) { return a - b },
@@ -127,6 +143,8 @@ o.parse_query = function(url){
     });
     return args;
 }
+
+o.capitalize = function(str) { return str[0].toUpperCase() + str.slice(1); };
 
 return o;
 });

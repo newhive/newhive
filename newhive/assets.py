@@ -214,7 +214,7 @@ class HiveAssets(Assets):
             "scss/dialogs.scss", "scss/community.scss",
             "scss/settings.scss", "scss/signup_flow.scss", "scss/menu.scss",
             "scss/jplayer.scss", "scss/forms.scss", "scss/overlay.scss",
-            "scss/skin.scss", "scss/edit.scss",
+            "scss/skin.scss", 'scss/edit.scss', 'scss/codemirror.css',
             filters=scss_filter,
             output='compiled.app.css',
             debug=False
@@ -230,6 +230,7 @@ class HiveAssets(Assets):
         # edit_scss = webassets.Bundle(
         #     'scss/edit.scss',
         #     'scss/codemirror.css',
+        #     'scss/overlay',
         #     filters=scss_filter,
         #     output='compiled.edit.css',
         #     debug=False
@@ -268,6 +269,12 @@ class HiveAssets(Assets):
                 output = '../lib/expr.js'
             )
             self.final_bundles.append('expr.js')
+
+            self.assets_env.register('edit.js', 'compiled.edit.js'
+                ,filters = 'yui_js'
+                ,output = '../lib/edit.js'
+            )
+            self.final_bundles.append('edit.js')
 
         # CSS for expressions, and also site pages
         minimal_scss = webassets.Bundle(

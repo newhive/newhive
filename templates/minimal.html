@@ -22,5 +22,6 @@ curl({
 
   {% block head %}{% endblock %}
 </head>
-<body>{% block body %}{% endblock %}</body>
+<body class='{% block body_class %}{% endblock %}'
+  >{% block body %}{% endblock %}</body>
 </html>
