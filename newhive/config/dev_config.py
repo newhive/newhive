@@ -4,7 +4,7 @@ database        = 'test'
 plain_port      = 1212
 ssl_port        = 1213
 debug_mode      = True
-debug_unsecure  = True
+debug_unsecure  = False
 
 # Uncomment to run as live server
 # sudo service apache2 restart
