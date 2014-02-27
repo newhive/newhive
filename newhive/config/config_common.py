@@ -66,6 +66,7 @@ site_flags = {
     ,'copy_table': ['admins','nd4']
     ,'open_signup': []
     ,'modify_special_tags': ['admins','nd4']
+    ,'mobile_web': ['nd4']
 }
 
 site_user = 'newhive'

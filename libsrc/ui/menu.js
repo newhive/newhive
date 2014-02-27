@@ -1,7 +1,12 @@
-define(['browser/jquery'], function($){
+define([
+    'browser/jquery'
+    ,'ui/util'
+    ], function($, util){
 
 function noop(){}
 
+var mobile_opts = { hover: false, hover_close: false };
+var shield = $("<div id='menu_shield'>");
 var menu = function(handle, drawer, options) {
     var handle = $(handle), drawer = $(drawer), o = { handle : handle, drawer : drawer },
         menu_items = drawer.find('.menu_item'), close_timer = false,
@@ -30,7 +35,8 @@ var menu = function(handle, drawer, options) {
             ,animate_open: false
             ,opened: false
         }, options);
-    
+    if (util.mobile()) 
+        $.extend(opts, mobile_opts);
     if(!handle.length)
         throw("menu has no handle");
     if(!drawer.length)
@@ -86,6 +92,8 @@ var menu = function(handle, drawer, options) {
         opts.close();
         handle.data('busy', false);
         handle.removeClass('active');
+        if (!menu.menus.filter(function(m) { return m.opened; } ).length)
+            shield.remove();
 
         return o;
     }
@@ -115,6 +123,11 @@ var menu = function(handle, drawer, options) {
         if(o.opened) return;
 
         o.opened = true;
+        if (!shield.parent().length) {
+            shield.appendTo($("body"));
+            shield.on("click", function(ev) { menu.close_all(); } );
+        }
+
         if( opts.group.current && (opts.group.current != o) )
             opts.group.current.close(true);
         opts.group.current = o;
@@ -127,6 +140,10 @@ var menu = function(handle, drawer, options) {
             o.do_open();
         }
 
+        if (util.mobile()) {
+            drawer.css("transform", "scale(2)");
+            drawer.css("transform-origin", "0 0");
+        }
         if(opts.layout) o.layout();
 
         opts.open();
@@ -182,53 +199,54 @@ var menu = function(handle, drawer, options) {
             // opts.offset_y = (95 - handle.outerHeight()) / 2;
             opts.offset_y = 0;
         }
+        d_size = drawer[0].getBoundingClientRect();
         // pick top of menu based on if menu would go past bottom of
         // window if below handle, or above top of window if above the handle
         if(opts.layout_x == 'submenu'){
             css_opts.left = hp.left + handle.outerWidth() + opts.offset_x;
-            css_opts.top = hp.top - drawer.outerHeight() + opts.offset_y
+            css_opts.top = hp.top - d_size.height + opts.offset_y
                 + handle.outerHeight();
             // hp.top + opts.offset_y;
         }
         else if(opts.layout == 'bottom'){
             var oy = handle.outerHeight() + opts.offset_y;
-            css_opts.top = (handle.offset().top + oy + drawer.outerHeight() > ($(window).height() + window.scrollY))
-                && (handle.offset().top - oy - drawer.outerHeight() - window.scrollY > 0) ?
-                hp.top - drawer.outerHeight() - opts.offset_y : hp.top + oy;
+            css_opts.top = (handle.offset().top + oy + d_size.height > ($(window).height() + window.scrollY))
+                && (handle.offset().top - oy - d_size.height - window.scrollY > 0) ?
+                hp.top - d_size.height - opts.offset_y : hp.top + oy;
 
             var layout_x = opts.layout_x;
             if( layout_x == 'auto' ) {
-                var drawer_right = handle.offset().left + drawer.outerWidth();
+                var drawer_right = handle.offset().left + d_size.width;
                 var window_right = $(window).width() + window.scrollX;
                 layout_x = (drawer_right > window_right) ? 'right' : 'left';
             }
             css_opts.left = ( layout_x == 'right' ?
-                hp.left - drawer.outerWidth() + handle.outerWidth() : hp.left );
+                hp.left - d_size.width + handle.outerWidth() : hp.left );
             if (opts.layout_x == "center")
-                css_opts.left += (handle.outerWidth() - drawer.outerWidth()) / 2;
+                css_opts.left += (handle.outerWidth() - d_size.width) / 2;
 
             // TODO-polish: check that the menu still fits on window
             // Namely, shift it into screen at the bottom of code
             if (drawer.hasClass("icon_set")) {
-                css_opts.left -= (drawer.outerWidth() - handle.outerWidth()) / 2;
+                css_opts.left -= (d_size.width - handle.outerWidth()) / 2;
                 // TODO-cleanup: Should prolly have option for force upward layout.
-                css_opts.top = hp.top - drawer.outerHeight() - opts.offset_y;
+                css_opts.top = hp.top - d_size.height - opts.offset_y;
             }
         }
         else if( opts.layout == 'center_y' ){
             css_opts.top = Math.max(opts.min_y, hp.top + handle.outerHeight() / 2 -
-                 drawer.outerHeight() / 2);
-            css_opts.left = hp.left - opts.offset_x - drawer.outerWidth();
+                 d_size.height / 2);
+            css_opts.left = hp.left - opts.offset_x - d_size.width;
         }
 
         var margin_y = 50;
         if(opts.auto_height) {
             var scroller = drawer.find('.items');
-            if(css_opts.top + drawer.outerHeight() > $(window).height()) {
+            if(css_opts.top + d_size.height > $(window).height()) {
                 scroller.css('max-height', $(window).height() - margin_y - css_opts.top -
-                    (drawer.outerHeight() - scroller.outerHeight()));
+                    (d_size.height - scroller.outerHeight()));
             } else if (css_opts.top < margin_y) {
-                drawer.css("max-height", drawer.outerHeight() + css_opts.top - margin_y)
+                drawer.css("max-height", d_size.height + css_opts.top - margin_y)
                 css_opts.top = 50;
             }
         }
@@ -243,11 +261,23 @@ var menu = function(handle, drawer, options) {
             .on('mouseleave', function(){ o.delayed_close(false) });
         drawer.mouseenter(o.cancel_close)
             .mouseleave(function(){ o.delayed_close(true) })
-            .mousemove(o.cancel_close);
+            .mousemove(o.cancel_close)
     }
+    // TODO: The correct behavior is to close_all iff item is not handle.
+    // If item is handle, it should toggle open/closed state.
+    $(drawer).find("a")
+        .unbind('click').on("click", function(ev) { 
+            menu.close_all(); 
+        } );
     handle.unbind('click').click(function(){
-        if(o.opened && opts.default_item) opts.default_item.click();
-        o.open();
+        if(o.opened && opts.default_item.length) {
+            menu.close_all();
+            opts.default_item.click();
+        } else if (o.opened && !opts.hover_close) {
+            o.close();
+        } else {
+            o.open();
+        }
     });
     if(opts.focus_persist){
         drawer.find('input[type=text],input[type=password],textarea').on('click keydown', function(){
@@ -270,6 +300,9 @@ var menu = function(handle, drawer, options) {
     return o;
 }
 
+menu.close_all = function() {
+    $.each(menu.menus, function(i,m) { m.close(true); } ) 
+}
 menu.menus = [];
 
 return menu;

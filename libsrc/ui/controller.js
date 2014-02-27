@@ -1,17 +1,19 @@
 define([
-    'browser/jquery',
-    'browser/js',
-    'ui/page',
-    'ui/page/pages',
-    'server/context',
-    'json!ui/routes.json',
-    //'history/history',
-    'ui/routing'
+    'browser/jquery'
+    ,'browser/js'
+    ,'ui/page'
+    ,'ui/page/pages'
+    ,'ui/util'
+    ,'server/context'
+    ,'json!ui/routes.json'
+    // ,'history/history'
+    ,'ui/routing'
 ], function(
      $
-    ,util
+    ,js
     ,page
     ,pages
+    ,util
     ,context
     ,routes
     //,history
@@ -22,6 +24,8 @@ define([
     o.init = function(route_args){
         window.c = context; // useful for debugging
         setup_google_analytics();
+        if (context.flags.mobile_web)
+            util.mobile = function() { return "true" };
         // init_history();
 
         context.server_url = context.config.server_url; // used in many templates
@@ -31,9 +35,15 @@ define([
         context.parse_query();
         routing.register_state(route_args);
         page.init(o);
-        util.each(pages, function(m){
+        js.each(pages, function(m){
             if(m.init) m.init(o);
         });
+        if (util.mobile()) {
+            $("body").addClass('mobile');
+            $('<meta name="viewport" content="width=device-width, ' +
+                'height=device-height, initial-scale=0.5, ' +
+                'user-scalable=0"/>').appendTo($("head"));
+        }
         o.dispatch(route_args.route_name, context.page_data);
         wrapLinks();
     };
