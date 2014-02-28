@@ -230,6 +230,7 @@ define([
 
     var submit_form = function(form){
         var opts = {};
+        form.trigger('before_submit');
         opts.url = form.attr('action');
         opts.data = new FormData($(form)[0]);
         opts.success = function(data){
@@ -245,7 +246,6 @@ define([
                 + '\n(remove form handlers to see error) $("form").unbind("submit")');
             form.trigger('error', [data]);
         };
-        form.trigger('before_submit');
         upload.submit(false, opts);
         form.trigger('after_submit');
         form.find("*[type=submit]").addClass('disabled').prop('disabled','true');
