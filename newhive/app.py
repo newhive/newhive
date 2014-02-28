@@ -50,7 +50,7 @@ def get_api_endpoints(api):
                 rules.append(Rule(
                     path,
                     endpoint=(
-                        getattr(api, route_obj.get('controller', 'controller')),
+                        api.get(route_obj.get('controller', 'controller')),
                         route_obj.get('method', 'empty')
                     ),
                     defaults=defaults,
@@ -58,8 +58,10 @@ def get_api_endpoints(api):
                 ))
     return rules
 
+server_env['controllers'] = {}
 api = Controllers(server_env)
-
+server_env['controllers'].update(api)
+base_controller = api.get('controller')
 rules = get_api_endpoints(api)
 routes = Map(rules, strict_slashes=False, host_matching=True,
     redirect_defaults=False)
@@ -108,7 +110,7 @@ def handle(request):
         if err:
             print "Gap in routing table!"
             print request
-            return api.controller.serve_500(request, Response(),
+            return base_controller.serve_500(request, Response(),
                 exception=e, json=False)
     except RequestRedirect as e:
         # bugbug: what's going on here anyway?
@@ -137,7 +139,7 @@ def handle(request):
     except:
         import traceback
         (blah, exception, traceback) = sys.exc_info()
-        response = api.controller.serve_500(request, Response(), exception=exception,
+        response = base_controller.serve_500(request, Response(), exception=exception,
             traceback=traceback, json=False)
     print request
     print "time %s ms" % (1000.*(now() - time_start))
@@ -148,7 +150,10 @@ def handle(request):
         yappi.print_stats(sys.stdout, yappi.SORTTYPE_TTOT, yappi.SORTORDER_DESC, 25)
         yappi.clear_stats()
 
-    response.headers.add('Access-Control-Allow-Origin', config.abs_url().strip('/'))
+    # this allows unsecure pages to make API calls to https
+    # response.headers.add('Access-Control-Allow-Origin', config.abs_url().strip('/'))
+    # TODO-security: CONSIDER. Allow pages on custom domains to make API calls
+    response.headers.add('Access-Control-Allow-Origin', '*')
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
     return response
 

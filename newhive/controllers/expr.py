@@ -61,7 +61,7 @@ class Expr(ModelController):
                 ,'file_id' : file_res.id
             })
 
-        if not res or upd['name'] != res['name'] or upd['domain'] != res['domain']:
+        if not res or upd['name'] != res['name']:
             try:
               new_expression = True
               # Handle remixed expressions
@@ -154,20 +154,26 @@ class Expr(ModelController):
         owner_name=None, expr_name=None, **args
     ):
         # Request must come from content_domain, as this serves untrusted content
-        snapshot_mode = request.args.get('snapshot') is not None
         if expr_id:
             # hack for overlap of /owner_name and /expr_id routes
             expr_obj = self.db.Expr.fetch(expr_id) or self.db.Expr.named(expr_id, '')
         else:
             expr_obj = self.db.Expr.named(owner_name, expr_name)
-        if not expr_obj: return self.serve_404(tdata, request, response)
+        return self.serve_naked(tdata, request, response, expr_obj)
+
+    def serve_naked(self, tdata, request, response, expr_obj):
+        if not expr_obj:
+            return self.serve_404(tdata, request, response)
+
         if (expr_obj.get('auth') == 'password'
             and not expr_obj.cmp_password(request.form.get('password'))
             and not expr_obj.cmp_password(request.args.get('pw'))):
             expr_obj = { 'auth': 'password' }
+
         # TODO: consider allowing analytics for content frame.
         viewport = [int(x) for x in
             request.args.get('viewport', '1000x750').split('x')]
+        snapshot_mode = request.args.get('snapshot') is not None
         tdata.context.update(
             html = self.expr_to_html(expr_obj, snapshot_mode=snapshot_mode,
                 viewport=viewport),
@@ -176,6 +182,7 @@ class Expr(ModelController):
         )
         if snapshot_mode:
             tdata.context['css'] = "body { overflow-x: hidden; }"
+
         return self.serve_page(tdata, response, 'pages/expr.html')
         
     def expr_to_html(self, exp, snapshot_mode=False, viewport=(1000, 750)):

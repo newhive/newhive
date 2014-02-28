@@ -106,7 +106,7 @@ define([
         var route = context.page_data.cards_route;
         var api_call = {
             method: 'get',
-            url: routing.page_state(route.route_args.route_name,
+            url: context.page_state(route.route_args.route_name,
                 route.route_args, route.query).api,
             dataType: 'json',
             success: add_cards,
@@ -174,10 +174,10 @@ define([
         o.fake_open(card_query['route_name'], card_query);
     };
     o.open = function(route_name, route_args, query){
-        o.open_route(routing.page_state(route_name, route_args, query));
+        o.open_route(context.page_state(route_name, route_args, query));
     };
     o.get = function(route_name, route_args, callback, query){
-        o.open_route(routing.page_state(
+        o.open_route(context.page_state(
             route_name, route_args, query), callback);
     };
     o.fake_open = function(route_name, route_args, query){
@@ -185,7 +185,7 @@ define([
         // Fallback to plane old open.
         if (! (window.history && window.history.pushState))
             return o.open(route_name, route_args);
-        var page_state = routing.page_state(route_name, route_args, query);
+        var page_state = context.page_state(route_name, route_args, query);
         history.pushState(page_state, null, page_state.page);
         context.parse_query(route_args);
     };

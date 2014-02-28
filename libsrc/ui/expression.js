@@ -8,10 +8,9 @@ define([
     'server/context',
     'browser/layout',
     'ui/jplayer',
-    'ui/controller',
     'browser/jquery/jplayer/skin',
     'browser/jquery/rotate.js'
-], function($, context, layout, jplayer, controller){
+], function($, context, layout, jplayer){
     if (typeof Hive == "undefined") Hive = {};
 
     Hive.Page = (function(){

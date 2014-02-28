@@ -1566,7 +1566,6 @@ class Expr(HasSocial):
     def create(self):
         assert map(self.has_key, ['owner', 'domain', 'name'])
         self['owner_name'] = self.db.User.fetch(self['owner'])['name']
-        self['domain'] = self['domain'].lower()
         self['random'] = random.random()
         self['views'] = 0
         self.setdefault('title', 'Untitled')

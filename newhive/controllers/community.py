@@ -1,5 +1,6 @@
 import json
 from collections import Counter
+from werkzeug import Response
 
 from newhive import mail
 from newhive.ui_strings import en as ui_str
@@ -274,14 +275,21 @@ class Community(Controller):
     def expr(self, tdata, request, id=None, owner_name=None, expr_name='', **args):
         expr = ( self.db.Expr.fetch(id) if id else
             self.db.Expr.named(owner_name, expr_name) )
-        if not expr: return None
+        if not expr:
+            if args.get('route_name') == 'user_home':
+                return self.redirect(self.response,
+                    abs_url('/' + owner_name + '/profile'))
+            return None
         return self.serve_expr(tdata, request, expr)
 
     def expr_custom_domain(self, tdata, request, path='', **args):
         url = request.host + ('/' if path else '') + path
         expr = self.db.Expr.find({'url': url})
-        if not expr: return None
-        return self.serve_expr(tdata, request, expr)
+        return self.controllers['expr'].serve_naked(
+            tdata, request, self.response, expr)
+        # page_data = self.serve_expr(tdata, request, expr)
+        # page_data['domain'] = request.host
+        # return page_data
 
     def serve_expr(self, tdata, request, expr):
         meta = {}
@@ -393,15 +401,15 @@ class Community(Controller):
             if k in pagination_args: pagination_args[k] = int(pagination_args[k])
         # Call controller with route and pagination args
         page_data = query(tdata, request, db_args=pagination_args, **kwargs)
-        owner = self.db.User.named(kwargs.get('owner_name',''))
         if not page_data:
             print request
-            # TODO-cleanup: make this less hacky
-            if kwargs.get('route_name') == 'user_home':
-                return self.redirect(response, abs_url(
-                    '/' + kwargs.get('owner_name') + '/profile'))
             return self.serve_404(tdata, request, response, json=json)
+
+        if(type(page_data) is Response):
+            return page_data
+
         if type(page_data.get('cards')) is list:
+            owner = self.db.User.named(kwargs.get('owner_name',''))
             page_data['cards_route'] = { 'route_args': kwargs,
                 'query': request.args }
             special = page_data.get('special', {})
@@ -439,6 +447,7 @@ class Community(Controller):
             for card in page_data['cards']:
                 feed = card.get('feed', [])
                 card['feed'] = map(lambda x: x.client_view(), feed)
+
         if json:
             return self.serve_json(response, page_data)
         else:
