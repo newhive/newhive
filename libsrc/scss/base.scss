@@ -21,12 +21,18 @@
     }
     */
 }
+.posbox {
+    position: relative;
+}
 .rightalign {
     position: absolute;
     right: 0px;
 }
 .rightify {
     text-align: right;
+}
+.floatright {
+    float: right;
 }
 .show_hover {
     display:none;

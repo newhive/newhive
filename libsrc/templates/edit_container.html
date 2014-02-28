@@ -9,8 +9,26 @@
 
   <div class='upper label medbold'>URL</div>
   <div class=''>newhive.com/{user.name}/</div>
-  <div class='note'>Change the URL to "Save As"</div>
+  <div class='note'>
+    Change the URL to "Save As"
+    <div class='floatright'>
+      <input type='checkbox' id='use_custom_domain'>
+      <label for='use_custom_domain'>Custom domain</label>
+    </div>
+  </div>
   <input id='url' type='text' value=''>
+
+  <div class='hide' id='custom_url_box'>
+    <div class='upper label medbold'>
+      Custom URL
+      <a href='#' id='domain_help' class='floatright'>(help)</a></div>
+    <input id='custom_url' type='text' value=''>
+  </div>
+
+  <div class="dialog iframe" id="dia_domain_help" data-handle="#domain_help">
+    {<defer}<iframe src="{config.content_url}{config.site_user}/domain-help"
+      ></iframe>{>}
+  </div>
 
   <div class='upper label medbold'>#Tags</div>
   <input id='tags_input' type='text' value=''>
