@@ -79,6 +79,8 @@ define([
         $('#tags_input').val(expr.tags)
         $('#custom_url').val(expr.url)
         if(expr.auth) $('#menu_privacy [val=' + expr.auth +']').click()
+        $('#use_custom_domain').prop('checked', expr.url ? 1 : 0).
+            trigger('change')
     }
 
     o.render = function(page_data){
@@ -92,15 +94,16 @@ define([
             expr.tags_index = list
             expr.tags = o.canonical_tags(list)
         }
-        o.update_form()
     };
 
     o.attach_handlers = function(){
         save_dialog = dialog.create('#dia_save')
-        $('#expr_save').on('success', o.success).on('error', o.error)
+        $('#expr_save').off('success error before_submit')
+            .on('success', o.success).on('error', o.error)
             .on('before_submit', o.submit)
-        $('#save_submit').on('click', o.check_url)
+        $('#save_submit').off('click').on('click', o.check_url)
         o.init_save_dialog()
+        o.update_form()
     };
 
     o.message = function(ev){
