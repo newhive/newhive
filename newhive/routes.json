@@ -54,7 +54,7 @@
         "page_route": "/<username>/profile/recent",
         "api_route": "/api/feed/recent/<username>",
         "controller": "community",
-        "method": "network",
+        "method": "network_recent",
         "client_method": "grid",
         "require_login": true
     },

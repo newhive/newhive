@@ -10,7 +10,7 @@ from newhive.controllers.controller import Controller
 class Community(Controller):
     def featured(self, tdata, request, db_args={}, **args):
         return {
-            "cards": self.db.query('#Featured', viewer=tdata.user, **db_args),
+            "cards": self.db.query('#Featured', **db_args),
             'header': ("The Hive",), 'card_type': 'expr',
             'title': "The Hive",
         }
@@ -20,7 +20,7 @@ class Community(Controller):
 
     def recent(self, tdata, request, db_args={}, **args):
         return {
-            "cards": self.db.query('#Recent', viewer=tdata.user, **db_args),
+            "cards": self.db.query('#Recent', **db_args),
             'header': ("ALL Expressions",), 'card_type': 'expr',
             'title': "NewHive - ALL",
         }
@@ -34,12 +34,13 @@ class Community(Controller):
             return self.featured(tdata, request, db_args=db_args, **args)
         return {
             "network_help": (len(user.starred_user_ids) <= 1),
+            # "cards": self.db.query('#Network', **db_args),
             "cards": user.feed_trending(**db_args),
             'header': ("Network",), 'card_type': 'expr',
             'title': "Network",
         }
 
-    def network(self, tdata, request, username=None, db_args={}, **args):
+    def network_recent(self, tdata, request, username=None, db_args={}, **args):
         user = self.db.User.named(username)
         if not user:
             user = tdata.user
@@ -79,7 +80,7 @@ class Community(Controller):
         if args.get('tag_name'): return self.expressions_tag(
             tdata, request, owner_name=owner_name, **args)
         spec = {'owner_name': owner_name}
-        cards = self.db.Expr.page(spec, viewer=tdata.user, auth='public', **db_args)
+        cards = self.db.Expr.page(spec, auth='public', **db_args)
         return self.expressions_for(tdata, cards, owner)
 
     def expressions_public(self, tdata, request, owner_name=None, db_args={}, **args):
@@ -99,7 +100,7 @@ class Community(Controller):
         profile = owner.client_view(viewer=tdata.user)
 
         result, search = self.db.query_echo("@" + owner_name + " #" + tag_name,
-            viewer=tdata.user, **db_args)
+            **db_args)
 
         data = {
             "cards": result,
@@ -116,7 +117,7 @@ class Community(Controller):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         spec = {'owner_name': owner_name}
-        cards = self.db.Expr.page(spec, viewer=tdata.user, auth='password', **db_args)
+        cards = self.db.Expr.page(spec, auth='password', **db_args)
         return {
             'cards': cards, 'owner': owner.client_view(), 'card_type':'expr',
             'title': 'Your Private Expressions',
@@ -219,7 +220,7 @@ class Community(Controller):
         spec = {'initiator_name': owner_name, 'entity_class':'Expr' }
         # ...and grab its expressions.
         cards = self.db.Expr.fetch(map(lambda en:en['entity'], 
-            self.db.Star.page(spec, viewer=tdata.user, **db_args)))
+            self.db.Star.page(spec, **db_args)))
         profile = owner.client_view(viewer=tdata.user)
         return {
             'cards': cards, 'owner': profile, 'card_type':'expr',
@@ -251,7 +252,7 @@ class Community(Controller):
         spec = {'initiator_name': owner_name, 'entity_class':'User' }
         # ...and grab its users.
         users = self.db.User.fetch(map(lambda en:en['entity'], 
-            self.db.Star.page(spec, viewer=tdata.user, **db_args)))
+            self.db.Star.page(spec, **db_args)))
         profile = owner.client_view(viewer=tdata.user)
         tags = owner.get('tags_following', [])
         return {
@@ -335,8 +336,7 @@ class Community(Controller):
     ):
         if not request.args.has_key('q'): return None
         id = request.args.get('id', None)
-        result, search = self.db.query_echo(request.args['q'],
-            viewer=tdata.user, id=id, **db_args)
+        result, search = self.db.query_echo(request.args['q'], id=id, **db_args)
         print('executed search', search)
         tags = search.get('tags', [])
         text = search.get('text', [])
@@ -397,11 +397,12 @@ class Community(Controller):
         if query is None:
             return self.serve_404(tdata, request, response, json=json)
         # Handle pagination
-        pagination_args = dfilter(request.args, ['at', 'by', 'limit', 'sort', 'order'])
+        db_args = dfilter(request.args, ['at', 'by', 'limit', 'sort', 'order'])
         for k in ['at', 'order']:
-            if k in pagination_args: pagination_args[k] = int(pagination_args[k])
+            if k in db_args: db_args[k] = int(db_args[k])
+        db_args['viewer'] = tdata.user
         # Call controller with route and pagination args
-        page_data = query(tdata, request, db_args=pagination_args, **kwargs)
+        page_data = query(tdata, request, db_args=db_args, **kwargs)
         if not page_data:
             print request
             return self.serve_404(tdata, request, response, json=json)
