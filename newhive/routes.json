@@ -48,14 +48,13 @@
         "controller": "community",
         "method": "trending",
         "client_method": "profile",
-        "require_login": true,
-        "precedence": 1
+        "require_login": true
     },
     "network": {
         "page_route": "/<username>/profile/recent",
         "api_route": "/api/feed/recent/<username>",
         "controller": "community",
-        "method": "network",
+        "method": "network_recent",
         "client_method": "grid",
         "require_login": true
     },
@@ -276,6 +275,22 @@
         "method": "expr",
         "client_method": "expr",
         "precedence": -1
+    },
+    "view_expr_custom_domain_home": {
+        "page_route": "/",
+        "api_route": "/api/expr/url",
+        "controller": "community",
+        "method": "expr_custom_domain",
+        "client_method": "expr",
+        "host": "<host>"
+    },
+    "view_expr_custom_domain": {
+        "page_route": "/<path:path>",
+        "api_route": "/api/expr/url/<path:url>",
+        "controller": "community",
+        "method": "expr_custom_domain",
+        "client_method": "expr",
+        "host": "<host>"
     },
 
     "create_expr": {

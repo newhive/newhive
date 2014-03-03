@@ -68,6 +68,8 @@ define([
         if(expr.auth == 'password') 
             expr.password = $('#password').val();
         tags_input_changed()
+        if($('#use_custom_domain').val())
+            expr.url = $('#custom_url').val()
 
         $('title').text('edit - ' + expr.title)
     }
@@ -75,11 +77,15 @@ define([
         $('#url').val(expr.name)
         $('#title').val(expr.title)
         $('#tags_input').val(expr.tags)
+        $('#custom_url').val(expr.url)
         if(expr.auth) $('#menu_privacy [val=' + expr.auth +']').click()
+        $('#use_custom_domain').prop('checked', expr.url ? 1 : 0).
+            trigger('change')
     }
 
     o.render = function(page_data){
         $('#nav').hidehide();
+        $('#site').empty().append(edit_container_template(page_data)).showshow();
 
         expr = context.page_data.expr || { auth: 'public' }
         if(context.query.tags){
@@ -88,17 +94,16 @@ define([
             expr.tags_index = list
             expr.tags = o.canonical_tags(list)
         }
-        o.update_form()
-
-        $('#site').empty().append(edit_container_template(page_data)).showshow();
     };
 
     o.attach_handlers = function(){
         save_dialog = dialog.create('#dia_save')
-        $('#expr_save').on('success', o.success).on('error', o.error)
+        $('#expr_save').off('success error before_submit')
+            .on('success', o.success).on('error', o.error)
             .on('before_submit', o.submit)
-        $('#save_submit').on('click', o.check_url)
+        $('#save_submit').off('click').on('click', o.check_url)
         o.init_save_dialog()
+        o.update_form()
     };
 
     o.message = function(ev){
@@ -199,6 +204,18 @@ define([
             if(v == 'password') $('#password_ui').showshow();
             else $('#password_ui').hidehide();
         });
+
+        $('#use_custom_domain').change(function(){
+            var use = $('#use_custom_domain').prop('checked')
+            $('#custom_url_box').showhide(use)
+        })
+
+        $('#custom_url').change(function(){
+            // strip off protocol from beginning
+            var url = $('#custom_url').val()
+                .replace(/^.{0,6}\/\//, '').toLowerCase()
+            $('#custom_url').val(url)
+        })
     }
 
     o.check_url = function(){

@@ -9,12 +9,11 @@ define([
     ,'browser/layout'
     ,'ui/jplayer'
     ,'ui/util'
-    ,'ui/controller'
 
     ,'browser/jquery/jplayer/skin'
     ,'browser/jquery/rotate.js'
     ,'browser/jquery.mobile.custom'
-], function($, context, layout, jplayer, util, controller){
+], function($, context, layout, jplayer, util){
     if (typeof Hive == "undefined") Hive = {};
 
     Hive.Page = (function(){

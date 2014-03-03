@@ -10,12 +10,15 @@ class TransactionData(utils.FixedAttrs):
     pass
 
 class Controller(object):
-    def __init__(self, db=None, jinja_env=None, assets=None, config=None):
+    def __init__(self, db=None, jinja_env=None, assets=None, config=None,
+        controllers=None
+    ):
         self.config = config
         self.db = db
         self.jinja_env = jinja_env
         self.assets = assets
         self.asset = self.assets.url
+        self.controllers = controllers
 
     def pre_dispatch(self, func, tdata, request, response, **args):
         return False
@@ -23,7 +26,6 @@ class Controller(object):
     # Dispatch calls into controller methods of the form:
     # def method(self, tdata, request, response, **args):
     def dispatch(self, handler, request, **args):
-        self.request = request
         (tdata, response) = self.pre_process(request)
         # Redirect to home if route requires login but user not logged in
         if (args.get('require_login') and not tdata.user.logged_in and
@@ -44,7 +46,7 @@ class Controller(object):
 
         response = Response()
         anon = self.db.User.new({})
-        tdata = TransactionData(user=anon, context=dict(
+        tdata = TransactionData(user=anon, request=request, context=dict(
             user=anon, config=config, debug=config.debug_mode,
             # Werkzeug provides form data as immutable dict, so it must be copied
             # fields may be left alone to mirror the request, or validated and normalized
@@ -98,7 +100,7 @@ class Controller(object):
         context.update(template=template)
         context.setdefault('icon', self.asset('skin/1/logo.png'))
         context.setdefault('meta_title', 'NewHive')
-        context.setdefault('meta_url', self.request.url)
+        context.setdefault('meta_url', tdata.request.url)
         return self.jinja_env.get_template(template).render(context)
 
     def serve_data(self, response, mime, data):

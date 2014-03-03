@@ -72,11 +72,21 @@ define([
         return "[Untitled]";
     }
 
+    o.page_state = function(route_name, args, query_args){
+        var s = routing.page_state(route_name, args, query_args)
+            server = o.config.server_url.slice(0,-1)
+        // attempt to make routing work on custom domain,
+        // foiled by history API not allowing to change domain
+        // s.page = server + s.page
+        // s.api = server + s.api
+        return s
+    }
+
     var attrs = function(route_name, args, query_args, is_form, suppress){
         if(!suppress) suppress = [];
         var attributes = suppress.indexOf('attributes') >= 0 ? [] : 
                 [ ['data-route-name', route_name] ],
-            page_state = routing.page_state(route_name, args, query_args);
+            page_state = o.page_state(route_name, args, query_args)
 
         if (is_form) {
             attributes.push(['enctype', 'multipart/form-data']);

@@ -18,6 +18,8 @@ class RoutesManager(object):
             v.update(route_name=k)
             routes_list.append(v)
         routes_list.sort(reverse=True, key=lambda r: r['precedence'])
+        for r in routes_list:
+            del r['precedence']
         return routes_list
 
 Routes = RoutesManager()

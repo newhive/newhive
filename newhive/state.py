@@ -73,6 +73,7 @@ class Database:
     def query_echo(self, q, expr_only=None, viewer=None, id=None, **args):
         args['viewer'] = viewer
         search = self.parse_query(q)
+        results = []
         if search.get('auth'):
             args['auth'] = ('public' if
                 search['auth'] == 'public' else 'password')
@@ -97,6 +98,8 @@ class Database:
                         self.User.root_user['tagged']['Featured'], **args)
                 elif feed == 'recent':
                     results = self.Expr.page({}, **args)
+                elif feed == 'trending':
+                    results = viewer.feed_trending(**args)
             elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
                 owner = None
                 if user and len(tags) == 1:
@@ -535,7 +538,7 @@ class User(HasSocial):
         self.owner = self
 
     def expr_create(self, d):
-        doc = dict(owner = self.id, name = '', domain = self['sites'][0])
+        doc = dict(owner = self.id, name = '')
         doc.update(d)
         return self.db.Expr.create(doc)
 
@@ -876,7 +879,7 @@ class User(HasSocial):
         return flat
 
     # TODO-polish merge with db.query to enable searching within feed
-    def feed_trending(self, at=0, limit=20):
+    def feed_trending(self, at=0, limit=20, viewer=None):
         at = int(at)
         limit = int(limit)
         items = self.network_feed_items(limit=500)
@@ -1221,6 +1224,7 @@ class Expr(HasSocial):
     cname = 'expr'
     indexes = [
          (['owner_name', 'name'], {'unique':True})
+        ,'url'
         ,['owner', 'updated']
         ,'tags_index'
         ,'text_index'
@@ -1565,7 +1569,6 @@ class Expr(HasSocial):
     def create(self):
         assert map(self.has_key, ['owner', 'domain', 'name'])
         self['owner_name'] = self.db.User.fetch(self['owner'])['name']
-        self['domain'] = self['domain'].lower()
         self['random'] = random.random()
         self['views'] = 0
         self.setdefault('title', 'Untitled')
