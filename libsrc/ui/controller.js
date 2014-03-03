@@ -8,6 +8,8 @@ define([
     ,'json!ui/routes.json'
     // ,'history/history'
     ,'ui/routing'
+
+    // ,'browser/jquery.mobile.custom'
 ], function(
      $
     ,js
@@ -42,7 +44,7 @@ define([
             $("body").addClass('mobile');
             $('<meta name="viewport" content="width=device-width, ' +
                 'height=device-height, initial-scale=0.5, ' +
-                'user-scalable=0"/>').appendTo($("head"));
+                'user-scalable=1"/>').appendTo($("head"));
         }
         o.dispatch(route_args.route_name, context.page_data);
         wrapLinks();

@@ -2,8 +2,10 @@ define([
     'browser/jquery',
     'server/context',
     'browser/layout',
+    'ui/util',
     'ui/menu',
     'ui/dialog',
+
     'sj!templates/activity.html',
     'sj!templates/social_overlay.html',
     'sj!templates/edit_btn.html',
@@ -12,8 +14,10 @@ define([
     $,
     context,
     browser_layout,
+    util,
     menu,
     dialog,
+
     activity_template,
     social_overlay_template,
     edit_btn_template,
@@ -24,7 +28,7 @@ define([
         overlay_columns = 0, wide_overlay = false,
         animation_timeout = undefined, last_found = -1;
     o.cache_offsets = [1, -1, 2];
-    o.anim_duration = 400;
+    o.anim_duration = (util.mobile()) ? 0 : 400;
 
     // pagination functions here
     o.set_page = function(page){
@@ -781,6 +785,8 @@ define([
             $('#page_prev').hidehide();
         } else if(msg == 'hide') {
             $('.page_btn').hidehide();
+        } else if(msg == 'prev' || msg == 'next') {
+            o.navigate_page((msg == "prev") ? -1 : 1);
         }
 
         // should reflect whether left or right page_btn should be visible if
