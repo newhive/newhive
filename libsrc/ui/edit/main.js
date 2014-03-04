@@ -113,15 +113,54 @@ Hive.init_menus = function() {
     $('#embed_done').click(function() { Hive.embed_code('#embed_code'); embed_menu.close(); });
 
     u.hover_menu('.insert_shape', '#menu_shape');
-    $('#shape_rectangle').click(function(e) {
+    $('#menu_shape .rect').click(function(e) {
         hive_app.new_app({ type : 'hive.rectangle', content :
             { color : colors[24], 'border-color' : 'black', 'border-width' : 0,
                 'border-style' : 'solid', 'border-radius' : 0 } });
     });
-    $('#shape_sketch').click(function(e) {
+    $('#menu_shape .sketch').click(function(e) {
         hive_app.new_app({ type: 'hive.sketch', dimensions: [700, 700 / 1.6]
             ,content: { brush: 'simple', brush_size: 10 } });
     });
+    // polygon shapes
+    var poly = hive_app.App.Polygon
+    Hive.template_triangle = { // triangle
+        "type":"hive.polygon",
+        "points":[[50,0],[100, 100*Math.sqrt(3)/2],[0, 100*Math.sqrt(3)/2]]
+    }
+    Hive.template_pentagram = $.extend({}, Hive.template_triangle, {
+        points: js.range(10).map(function(i){
+            var d = ((i == 0 ? 0 : Math.PI*2*i/10) + Math.PI/10)
+                ,o = [47.705200572253005, 45.72550799853835] // dims/2
+                ,r = i%2*30+20
+                ,p = [Math.cos(d), Math.sin(d)]
+            return u._add(o)( u._mul(p)(r) )
+        })
+    })
+    Hive.template_hexagon = $.extend({}, Hive.template_triangle, {
+        points: js.range(6).map(function(i){
+            var d = (i == 0 ? 0 : Math.PI*2*i/6)
+                ,o = [50.5, 43.80127018922194] // dims/2
+                ,p = [Math.cos(d), Math.sin(d)]
+            return u._add(o)( u._mul(p)(50) )
+        })
+    })
+    $('#menu_shape .triangle').click(function(){
+        poly.mode(Hive.template_triangle)
+        poly.focus()
+    })
+    $('#menu_shape .pentagram').click(function(){
+        poly.mode(Hive.template_pentagram)
+        poly.focus()
+    })
+    $('#menu_shape .hexagon').click(function(){
+        poly.mode(Hive.template_hexagon)
+        poly.focus()
+    })
+    $('#menu_shape .free_form').click(function(){
+        poly.mode(false)
+        poly.focus()
+    })
 
     u.hover_menu('.insert_file', '#menu_file');
 

@@ -1081,7 +1081,6 @@ Hive.App.Polygon = function(o){
 
     o.add_to('resize_start', function(){
         o.transform_start(0)
-        // history_point = env.History.saver(o.points, o.points_set, 'resize')
     })
     var _resize = o.resize, _resize_end = o.resize_end
     o.resize = function(delta){
@@ -1097,10 +1096,6 @@ Hive.App.Polygon = function(o){
         o.transform_start(0)
         o.reframe()
     }
-    // o.after_resize = function(){
-    //     history_point.save()
-    //     return true
-    // }
 
     o.set_css = function(props, no_reframe) {
         poly_el.css(props)
@@ -1258,7 +1253,7 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         return u._mul(1 / env.scale())([ev.clientX, ev.clientY]) }
 
     var from_template = function(){
-        var s = template.state()
+        var s = (template.state && template.state()) || template
         delete s.position
         delete s.id
         delete s.z

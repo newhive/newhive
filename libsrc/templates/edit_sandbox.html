@@ -72,8 +72,17 @@
 </div>
 
 <div id='menu_shape' class='menu drawer medbold'>
-  <div id='shape_sketch' class='menu_item'>Sketch</div>
-  <div id='shape_rectangle' class='menu_item default'>Rectangle</div>
+  {<if flags.shapes}
+    <div class='menu_item hexagon'>Hexagon</div>
+    <div class='menu_item pentagram'>Star</div>
+  {>}
+  <div class='menu_item sketch'>Sketch</div>
+  {<if flags.shapes}
+    <div class='menu_item free_form'>Free form</div>
+    {#<div class='menu_item line'>Line</div>#}
+    <div class='menu_item triangle'>Triangle</div>
+  {>}
+  <div class='menu_item default rect'>Rectangle</div>
 </div>
 
 <div id='menu_file' class='menu drawer medbold'>
