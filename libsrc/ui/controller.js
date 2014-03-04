@@ -36,16 +36,17 @@ define([
 
         context.parse_query();
         routing.register_state(route_args);
-        page.init(o);
-        js.each(pages, function(m){
-            if(m.init) m.init(o);
-        });
         if (util.mobile()) {
             $("body").addClass('mobile');
             $('<meta name="viewport" content="width=device-width, ' +
                 'height=device-height, initial-scale=0.5, ' +
                 'user-scalable=1"/>').appendTo($("head"));
+            context.flags.mobile = true;
         }
+        page.init(o);
+        js.each(pages, function(m){
+            if(m.init) m.init(o);
+        });
         o.dispatch(route_args.route_name, context.page_data);
         wrapLinks();
     };

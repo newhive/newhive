@@ -24,17 +24,20 @@ define([
         o.send_top = function(msg){
             if(last_message == msg) return;
             window.parent.postMessage(msg, '*');
-            last_message = msg;
+            console.log("send_top " + msg);
+            // These messages are NOT idempotent
+            if (msg != "next" && msg != "prev")
+                last_message = msg;
         };
         
-        o.paging_sent = false;
-        o.page = function(direction){
-            // if(o.paging_sent) return;
-            // o.paging_sent = true;
-            o.send_top(direction);
-        };
-        o.page_next = function(){ o.page('next') },
-        o.page_prev = function(){ o.page('prev') };
+        // o.paging_sent = false;
+        // o.page = function(direction){
+        //     if(o.paging_sent) return;
+        //     o.paging_sent = true;
+        //     o.send_top(direction);
+        // };
+        o.page_next = function(){ o.send_top('next') },
+        o.page_prev = function(){ o.send_top('prev') };
 
         // o.layout_parent = function(){
         //     o.send_top('layout=' + $(window).width() + ',' + $(window).height());

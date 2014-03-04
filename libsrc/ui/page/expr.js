@@ -28,7 +28,7 @@ define([
         overlay_columns = 0, wide_overlay = false,
         animation_timeout = undefined, last_found = -1;
     o.cache_offsets = [1, -1, 2];
-    o.anim_duration = (util.mobile()) ? 0 : 400;
+    o.anim_duration = (util.mobile()) ? 400 : 400;
 
     // pagination functions here
     o.set_page = function(page){
@@ -714,6 +714,7 @@ define([
     o.page_prev = function() { o.navigate_page(-1); };
     o.page_next = function() { o.navigate_page(1); };
     o.navigate_page = function(offset){
+        console.log("navigate_page " + offset);
         var page_data = context.page_data;
         if (page_data.cards != undefined) {
             var len = page_data.cards.length
@@ -757,17 +758,23 @@ define([
     };
     // Handles messages from PostMessage (from other frames)
     o.handle_message = function(m){
-        if (m.data == "expr_click") {
+        var msg = m.data;
+        if (msg == "expr_click") {
             popup = $('#social_overlay');
             if (popup.css('display') != 'none')
                 o.social_toggle();
             return
+        } else if(msg == 'prev' || msg == 'next') {
+            o.navigate_page((msg == "prev") ? -1 : 1);
+        } else {
+            o.page_btn_handle(msg);
         }
-        else o.page_btn_handle(m.data);
     };
 
     var page_btn_state = '';
     o.page_btn_handle = function(msg){
+        if(util.mobile())
+            return
         if (!msg)
             msg = page_btn_state;
         // don't render the page buttons if there is nothing to page through!
@@ -785,8 +792,6 @@ define([
             $('#page_prev').hidehide();
         } else if(msg == 'hide') {
             $('.page_btn').hidehide();
-        } else if(msg == 'prev' || msg == 'next') {
-            o.navigate_page((msg == "prev") ? -1 : 1);
         }
 
         // should reflect whether left or right page_btn should be visible if

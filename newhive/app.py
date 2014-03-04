@@ -58,6 +58,8 @@ def get_api_endpoints(api):
                 ))
     return rules
 
+# Create an empty, reference dict so all created controllers will have
+# a reference to all controllers upon creation.
 server_env['controllers'] = {}
 api = Controllers(server_env)
 server_env['controllers'].update(api)
