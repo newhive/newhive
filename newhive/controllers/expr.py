@@ -265,6 +265,23 @@ class Expr(ModelController):
             else:
                 encoded_content = cgi.escape(app.get('content',''), quote=True)
                 html = '%s' % (app.get('content',''))
+        elif type == 'hive.polygon':
+            html = (
+                  "<svg xmlns='http://www.w3.org/2000/svg'"
+                + " viewbox='0 0 %f %f" % (
+                    app['dimensions'][0], app['dimensions'][1] )
+                + "'>"
+                + "<filter id='%s_blur'" % app.get('id','')
+                + " filterUnits='userSpaceOnUse'><feGaussianBlur stdDeviation='"
+                + "%f'></filter>" % app.get('blur', 0)
+                + "<polygon points='"
+                + ' '.join( map( lambda p: "%f %f" % (p[0], p[1]),
+                    app.get('points', []) ) )
+                + "' style='filter:url(#%s_blur)'/></svg>" % app.get('id','')
+            )
+            style = app.get('style', {})
+            more_css = 'fill:%s;stroke:%s' % (
+                style.get('fill',''), style.get('stroke',''))
         else:
             html = content
 
