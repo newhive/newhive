@@ -1,15 +1,15 @@
 @import "common";
 
 /* === click shield element === */
-#dialog_shield{
+.dialog_shield, #menu_shield {
   position:fixed;
   width:100%;
   height:100%;
   z-index: 200;
   top: 0;
 }
-#dialog_shield.fade { background-color:black; opacity:0.33; }
-
+.dialog_shield.fade { background-color:black; opacity:0.33; }
+#menu_shield{ z-index: 3; }
 $header_font: Gibson, Helvetica, Arial, sans-serif;
 
 /* === General === */
@@ -20,8 +20,9 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
     z-index: 201;
     width: 500px;
     background-color : white;
+    @include box-sizing(border-box);
     &.standard {
-        width: 440px;
+        width: 480px;
         padding: 20px;
         .title { margin-bottom: 20px; }
         .error_msg { margin-bottom: 10px; }
@@ -77,7 +78,7 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
         font-size: 17px;
         input { margin-right: 5px; }
     }
-    .submit, button[type=submit] { float: right; }
+    .submit { float: right; }
 }
 
 .btn_dialog_close, #btn_dialog_close {
@@ -86,7 +87,7 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
 }
 .btn_dialog_close:hover, #btn_dialog_close:hover {background-image: asset_url("skin/1/close-hover.png")}
 
-#dia_editor_help {
+.dialog.iframe {
     width: 90%;
     height: 60%;
     // max-width: 1000px;
@@ -98,7 +99,7 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
 
 #dia_delete_ok {
     padding: 20px;
-    width: 280px;
+    width: 320px;
     .title {margin-bottom: 15px;}
     // button[type=submit] {
     //     float: right;
@@ -108,7 +109,7 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
     button[type=cancel] { float: left; }
 }
 #dia_share {
-    width: 440px;
+    width: 480px;
     padding: 20px;
     hr { margin-bottom: 20px; }
     textarea, input[type=text] {
@@ -127,7 +128,7 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
 #dia_recover {
 }
 #dia_embed {
-    width: 440px;
+    width: 480px;
     padding: 20px;
     // textarea, input[type=text] {
     //     width: 100%;
@@ -147,7 +148,7 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
 }
 #dia_mail {
     // Total width = 480px
-    width: 440px;
+    width: 480px;
     padding: 20px;
     .username {
         text-transform: inherit;
@@ -161,87 +162,8 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
     }
 }
 #dia_delete {
-    width: 240px;
+    width: 280px;
     input { background-color: $color_highlight; }
-}
-
-
-/* Referral Dialog */
-#dia_referral {
-    width: 490px;
-    padding: 20px 40px 20px 50px;
-    text-align: left;
-}
-#dia_referral h3 {
-  margin: 20px 0;
-}
-#referral_count { color: red; }
-#dia_referral input[type="text"], #dia_referral textarea { width: 150px; float: left; }
-#dia_referral input[type="submit"] { 
-    float: right; 
-    font-size: 18px; 
-    margin: 5px 12px; 
-}
-
-#dia_referral .line.first { margin-top: 27px; }
-
-#dia_referral .medbold { line-height: 1em; }
-#dia_referral .label .small { font-size: 12px; font-weight: normal }
-
-/* Editor browser warning dialog 
-#editor_browsers, #ie_warning {
-    padding: 20px 50px;
-    text-align: center;
-}
-#editor_browsers h1, #ie_warning h1{
-    font-family: Lobster, serif;
-    font-weight: normal;
-    color: red;
-    margin: 8px 0 0 0;
-    font-size: 38px;
-}
-#editor_browsers h2, #ie_warning h2{
-    font-family: Helvetica, Arial, sans-serif;
-    font-size: 18px;
-    margin: 0;
-}
-
-#editor_browsers h3, #ie_warning h3{
-    font-size: 25px;
-    margin: 20px 0;
-}
-#editor_browsers a {
-    text-decoration: underline;
-}
-*/
-
-/* signup thank-you dialog */
-#signup_thank_you {
-    width: 400px;
-    padding: 20px 50px;
-    margin: 0;
-}
-
-#signup_thank_you h1 {
-    font-family: League Gothic, sans-serif;
-    font-weight: normal;
-    font-size: 62px;
-    color: #13A507;
-    margin: 20px
-}
-
-#signup_thank_you h3 {
-    margin-top: 10px;
-}
-
-#signup_thank_you h4 {
-    margin-top: 10px;
-    font-family: $header_font;
-    font-size: 20px;
-}
-
-#signup_thank_you h4 a:hover {
-    color: #419DD6;
 }
 
 #dia_TOS {
@@ -332,7 +254,7 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
 }
 
 .dialog.login {
-    width: 220px;
+    width: 260px;
     padding: 20px;
     .title { margin-bottom: 10px; }
 }
@@ -355,7 +277,7 @@ form.login {
 }
 
 #dia_expr_password {
-    width: 290px;
+    width: 350px;
     padding: 30px;
     input[type=password] { width: 100%; }
 }

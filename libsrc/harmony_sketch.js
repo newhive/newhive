@@ -82,8 +82,8 @@ function init()
     if (!brush) set_brush('chrome');
     
     window.addEventListener('mousemove', onWindowMouseMove, false);
-    window.addEventListener('keydown', onWindowKeyDown, false);
-    window.addEventListener('keyup', onWindowKeyUp, false);
+    // window.addEventListener('keydown', onWindowKeyDown, false);
+    // window.addEventListener('keyup', onWindowKeyUp, false);
     window.addEventListener('blur', onWindowBlur, false);
     
     document.addEventListener('mouseout', onDocumentMouseOut, false);

@@ -34,8 +34,10 @@ class Expr(ModelController):
         if not expr: raise ValueError('Missing or malformed expr')
 
         res = self.db.Expr.fetch(expr.id)
-        allowed_attributes = ['name', 'domain', 'title', 'apps', 'dimensions',
-            'auth', 'password', 'tags', 'background', 'thumb', 'images', 'remix_parent_id']
+        allowed_attributes = [
+            'name', 'url', 'title', 'apps', 'dimensions', 'auth', 'password',
+            'tags', 'background', 'thumb', 'images', 'remix_parent_id'
+        ]
         # TODO: fixed expressions, styles, and scripts, need to be done right
         # if tdata.user.is_admin:
         #     allowed_attributes.extend(['fixed_width', 'script', 'style'])
@@ -61,7 +63,7 @@ class Expr(ModelController):
                 ,'file_id' : file_res.id
             })
 
-        if not res or upd['name'] != res['name'] or upd['domain'] != res['domain']:
+        if not res or upd['name'] != res['name']:
             try:
               new_expression = True
               # Handle remixed expressions
@@ -127,6 +129,18 @@ class Expr(ModelController):
         res['id'] = res.id
         return self.serve_json(response, res)
 
+    # the whole editor except the save dialog and upload code goes in sandbox
+    def editor_sandbox(self, tdata, request, response, expr_id=None, **args):
+        if expr_id:
+            expr_obj = self.db.Expr.fetch(expr_id)
+            if not expr_obj: return self.serve_404(tdata, request, response)
+            expr = expr_obj
+        else:
+            expr = request.form.get('expr', {})
+
+        tdata.context['expr'] = expr
+        return self.serve_page(tdata, response, 'pages/edit_sandbox.html')
+
     def snapshot(self, tdata, request, response, expr_id, **args):
         expr_obj = self.db.Expr.fetch(expr_id)
         if expr_obj.private and tdata.user.id != expr_obj.owner.id:
@@ -139,22 +153,29 @@ class Expr(ModelController):
         return self.serve_404(tdata, request, response)
 
     def fetch_naked(self, tdata, request, response, expr_id=None,
-        owner_name=None, expr_name=None
+        owner_name=None, expr_name=None, **args
     ):
         # Request must come from content_domain, as this serves untrusted content
-        snapshot_mode = request.args.get('snapshot') is not None
         if expr_id:
-            # hack for overlap of /owner_name/expr_name and /expr_id routes
+            # hack for overlap of /owner_name and /expr_id routes
             expr_obj = self.db.Expr.fetch(expr_id) or self.db.Expr.named(expr_id, '')
         else:
             expr_obj = self.db.Expr.named(owner_name, expr_name)
-        if not expr_obj: return self.serve_404(tdata, request, response)
-        if expr_obj.get('auth') == 'password' and not expr_obj.cmp_password(
-            request.form.get('password')): 
+        return self.serve_naked(tdata, request, response, expr_obj)
+
+    def serve_naked(self, tdata, request, response, expr_obj):
+        if not expr_obj:
+            return self.serve_404(tdata, request, response)
+
+        if (expr_obj.get('auth') == 'password'
+            and not expr_obj.cmp_password(request.form.get('password'))
+            and not expr_obj.cmp_password(request.args.get('pw'))):
             expr_obj = { 'auth': 'password' }
+
         # TODO: consider allowing analytics for content frame.
         viewport = [int(x) for x in
             request.args.get('viewport', '1000x750').split('x')]
+        snapshot_mode = request.args.get('snapshot') is not None
         tdata.context.update(
             html = self.expr_to_html(expr_obj, snapshot_mode=snapshot_mode,
                 viewport=viewport),
@@ -163,6 +184,7 @@ class Expr(ModelController):
         )
         if snapshot_mode:
             tdata.context['css'] = "body { overflow-x: hidden; }"
+
         return self.serve_page(tdata, response, 'pages/expr.html')
         
     def expr_to_html(self, exp, snapshot_mode=False, viewport=(1000, 750)):
@@ -243,6 +265,23 @@ class Expr(ModelController):
             else:
                 encoded_content = cgi.escape(app.get('content',''), quote=True)
                 html = '%s' % (app.get('content',''))
+        elif type == 'hive.polygon':
+            html = (
+                  "<svg xmlns='http://www.w3.org/2000/svg'"
+                + " viewbox='0 0 %f %f" % (
+                    app['dimensions'][0], app['dimensions'][1] )
+                + "'>"
+                + "<filter id='%s_blur'" % app.get('id','')
+                + " filterUnits='userSpaceOnUse'><feGaussianBlur stdDeviation='"
+                + "%f'></filter>" % app.get('blur', 0)
+                + "<polygon points='"
+                + ' '.join( map( lambda p: "%f %f" % (p[0], p[1]),
+                    app.get('points', []) ) )
+                + "' style='filter:url(#%s_blur)'/></svg>" % app.get('id','')
+            )
+            style = app.get('style', {})
+            more_css = 'fill:%s;stroke:%s' % (
+                style.get('fill',''), style.get('stroke',''))
         else:
             html = content
 

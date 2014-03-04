@@ -76,9 +76,12 @@ body.edit {
 }
 #happs {
     position: absolute;
-    left: 0;
-    top: 0;
+    left: 0; top: 0; right:0; bottom: 0;
     z-index: 3;
+
+    // currently selection always gets events, but they can be intercepted
+    &.default .drag { cursor: move; }
+    &.draw { cursor: crosshair; }
 }
 
 .edit.overlay {
@@ -132,7 +135,9 @@ body.edit {
     font-size: 32px;
     font-weight: 700;
 }
-.ehapp, .ehapp > * { position : absolute; }
+.ehapp, .ehapp > * {
+    position : absolute;
+}
 // .ehapp { @include box-sizing( border-box ); }
 .ehapp .highlight {
     width: 100%;
@@ -164,8 +169,21 @@ body.edit {
 .app_select { position : absolute; }
 
 .content { z-index : 2 }
-/* it would be nice to make all .content 100%x100%, but that distorts new images */
-.content.rectangle { width : 100%; height : 100%; }
+/* it would be nice to make all .content 100%x100%, but that distorts newn images */
+.ehapp.rectangle {
+    pointer-events: none;
+    .content {
+        width : 100%; height : 100%;
+        pointer-events: visible;
+    }
+}
+.ehapp.svg {
+    pointer-events: none;
+    .content {
+        width : 100%; height : 100%;
+        * { pointer-events: visible }
+    }
+}
 .content.sketch { width : 100%; height : 100%; } 
 .content.code {
     width: 100%; height: 100%;
@@ -175,31 +193,43 @@ body.edit {
     font-family: Bitstream Mono, fixed;
 }
 
+.drawer { background-color : white; }
+
 .controls_src { display : none; }
-.drag { cursor : move; }
 
 .controls {
     position:absolute;
     width:0; height:0;
     z-index: 4;
-}
-.control { position : absolute; cursor : default; z-index : 1 }
-.control.resize_v { cursor : s-resize; }
-.control.resize_h { cursor : ew-resize; }
-.control.resize { cursor : se-resize; }
-.control.stack img { display : inline-block; margin-left : 5px; }
-.control.drawer { position : absolute; text-align : left; background-color : white; display : none; }
-.drawer { background-color : white; }
 
-.control.stack { white-space : nowrap; }
-.control.buttons {
-    pointer-events: none;
-    * { pointer-events: auto; }
-    .button {
-        margin-right: 4px;
-        float: left;
+    .control { position : absolute; cursor : default; z-index : 1 }
+
+    .resize_v { cursor : ns-resize; }
+    .resize_h { cursor : ew-resize; }
+    .resize { cursor : se-resize; }
+    .stack img { display : inline-block; margin-left : 5px; }
+    .control.drawer {
+        text-align: left;
+        display: none;
+    }
+    .point {
+        background-color: $color_selected;
+        margin: -7px 0 0 -7px;
+        width: 14px; height:14px;
+        border-radius: 7px;
+    }
+
+    .stack { white-space : nowrap; }
+    .buttons {
+        pointer-events: none;
+        * { pointer-events: auto; }
+        .button {
+            margin-right: 4px;
+            float: left;
+        }
     }
 }
+
 .drawer.brush .option:hover { background-color: $color_selected; }
 .drawer.brush .option.selected { background-color: $color_pale_yellow; }
 .control .button, .control .option { cursor : default; }
@@ -249,26 +279,6 @@ body.edit {
 
 textarea.code {
     font-family: monospace;
-}
-
-.code_editor{
-    width: auto;
-    h2 {
-        margin: 10px 0 0 5px;
-    }
-    p {
-        margin: 0 0 0 5px;
-    }
-    .small_text {
-        font-size: 12px;
-        color: $color_grey_medium;
-    }
-    textarea {
-        margin-top: 10px;
-        width: 600px;
-        min-height: 200px;
-        font-size: 14px;
-    }
 }
 
 #menu_image {
@@ -327,7 +337,7 @@ textarea.code {
 }
 
 #dia_edit_bg {
-    width: 560px;
+    width: 600px;
     padding: 20px;
 
     .small_text { font-size : x-small; }
@@ -338,12 +348,6 @@ textarea.code {
     #bg_opacity_label { margin : 5px; }
     #bg_opacity { font-size : xx-small; }
 }
-
-#btn_thumbnail_wrapper { padding-top: 8px; }
-#btn_thumbnail_text { float: left; margin-right: 5px; font-weight : bold; cursor : default; }
-#dia_thumbnail { width : 823px; max-height : 480px; overflow : auto; }
-#dia_thumbnail .thumb { float : left; margin : 5px; width : 190px; height : 190px; overflow : hidden; position : relative; }
-#dia_thumbnail .thumb img { width: 190px; height: 190px; }
 
 .menu.embed { padding: 10px; }
 .embed_box { margin: 8px 0; width: 250px; height: 4.5em; resize: none; }
@@ -363,8 +367,6 @@ input, textarea { font-size : inherit; }
 .fontsize .option:hover { background-color : $color_selected; color : $color_0; }
 .drawer.fontname .option:hover { background-color : $color_selected; }
 
-.dialogue_handle { background-color : $color_selected; }
-
 .hive_selection {
     background: $color_light_grey;
 }
@@ -372,4 +374,5 @@ input, textarea { font-size : inherit; }
     min-width: 100%;
     word-wrap: normal;
 }
+
 }

@@ -11,13 +11,20 @@ class User(ModelController):
         return self.serve_json(response, resp)
 
     def login(self, tdata, request, response, **args):
-        authed = auth.handle_login(self.db, request, response)
         error = False
-        if type(authed) == self.db.User.entity: 
-            resp = authed.client_view()
-        else: 
-            resp = { 'error': 'Incorrect username or password.' }
-            error = "login"
+        if tdata.user.logged_in:
+            resp = tdata.user.client_view()
+        else:
+            authed = auth.handle_login(self.db, request, response)
+            if type(authed) == self.db.User.entity: 
+                resp = authed.client_view()
+            else: 
+                resp = { 'error': 'Incorrect username or password.' }
+                error = "login"
+
+        if request.args.get('json') or request.form.get('json'):
+            return self.serve_json(response, resp)
+
         query = ""
         if error:
             query = "#error=" + error
@@ -57,7 +64,7 @@ class User(ModelController):
         new_order += old_order[len(new_order) + deletes:]
 
         # remove the tag on owned expression
-        if tag_name not in ['remixed']:
+        if tag_name not in ['remixed', 'Gifwall']:
             removed = set(old_order) - set(new_order)
             for expr_id in removed:
                 expr = self.db.Expr.fetch(expr_id)

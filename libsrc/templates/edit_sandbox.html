@@ -17,44 +17,10 @@
   ></div
 ></div>
 
-<div class="dialog" id="dia_editor_help" data-handle="#btn_help">
+<div class="dialog iframe" id="dia_editor_help" data-handle="#btn_help">
   {<defer}
     <iframe src="{config.content_url}{config.site_user}/default-instructional"></iframe>
   {>}
-</div>
-<div id='dia_save' class='standard dialog' data-handle="#btn_save">
-  <div class="heading expr title">Save</div>
-  <div class='upper label medbold'>Title</div>
-  <textarea rows="1" autofocus id='title'>{exr.title}</textarea>
-
-  <div class='upper label medbold'>URL</div>
-  <div class=''>newhive.com/{user.name}/</div>
-  <div class='note'>Change the URL to "Save As"</div>
-  <input id='url' type='text' value='{expr.name|e}'>
-
-  <div class='upper label medbold'>#Tags</div>
-  <input id='tags_input' type='text' value='{expr.tags|e}'>
-  <div class='spacer'></div>
-
-  <div class="remix_label"><label>
-    <input type="checkbox">Allow others to remix this expression</label></div>
-
-  <span id='privacy' class='teal_btn upper'>Unlisted
-  </span><div class="inline drop_arrow"></div>
-
-  <div id='save_submit' class='save black_btn upper'>
-    <span class='label'>Save</span>{#<img
-    src='{asset "skin/edit/loading.gif"}' class='hide loading'>#}</div>
-
-  <div id='password_ui' style='display: none'>
-    <br>
-    <b>Optional password</b><br>
-    <input type='password' id='password' value=''>
-  </div>
-</div>
-<div id='menu_privacy' class='menu drawer medbold' style='width : 125px;'>
-  <div val='password' class='menu_item'>Unlisted</div>
-  <div val='public' class='menu_item'>Public</div>
 </div>
 
 <div class='app_btns edit nav overlay panel'
@@ -106,8 +72,17 @@
 </div>
 
 <div id='menu_shape' class='menu drawer medbold'>
-  <div id='shape_sketch' class='menu_item'>Sketch</div>
-  <div id='shape_rectangle' class='menu_item default'>Rectangle</div>
+  {<if flags.shapes}
+    <div class='menu_item hexagon'>Hexagon</div>
+    <div class='menu_item pentagram'>Star</div>
+  {>}
+  <div class='menu_item sketch'>Sketch</div>
+  {<if flags.shapes}
+    <div class='menu_item free_form'>Free form</div>
+    {#<div class='menu_item line'>Line</div>#}
+    <div class='menu_item triangle'>Triangle</div>
+  {>}
+  <div class='menu_item default rect'>Rectangle</div>
 </div>
 
 <div id='menu_file' class='menu drawer medbold'>
@@ -228,14 +203,11 @@
  ></div
 ></div>
 
-<div id='controls_rounding' class='controls_src'>
-  <img class='button rounding hoverable tip_N'
-    src='{asset "skin/edit/rounded_corners.png"}' title='corner rounding'
-></div>
-
 <div id='controls_rectangle' class='controls_src'>
  <div class='control buttons'
   ><img class='button color hoverable' src='{asset "skin/edit/color.png"}' title="color"
+  ><img class='button rounding hoverable tip_N'
+    src='{asset "skin/edit/rounded_corners.png"}' title='corner rounding'
  ></div
 ></div>
 
@@ -310,13 +282,6 @@
  <div id='color_pick' style='float : right; position : relative;'></div>
 </div>
 
-<div id='dia_overwrite' class='dialog border selected center' style='width : 25em; padding : 20px'>
- <h2>Overwrite?</h2>
- You already have an expression at "/<span id='expr_name'></span>". Are you sure you want to replace it?<br><br>
- <input id='save_overwrite' type='button' class='btn black rounded' value='Yes'>&nbsp; &nbsp; &nbsp; 
- <input id='cancel_overwrite' type='button' class='btn black rounded' value='No'>
-</div>
-
 <div class='editor_overlay hide'>
   <div class='inset'></div>
 </div>
@@ -338,7 +303,7 @@
 
 <form {form_attrs "file_create"} method='POST' id='media_upload'>
   <input type='file' id='media_input' name='files'
-    data-drop-area='#grid_guide' multiple>
+    data-drop-area='#happs' multiple>
 </form>
 
 <form {form_attrs "file_create"} method='POST' class='hide' id='bg_upload'>
@@ -347,8 +312,4 @@
 
 <form {form_attrs "file_create"} method='POST' class='hide' id='link_upload'>
   <input type='file' id='link_input' name='files'>
-</form>
-
-<form {form_attrs "expr_save"} id='expr_save' method='POST' class='hide'>
-  <input type='hidden' name='expr' class='expr'>
 </form>

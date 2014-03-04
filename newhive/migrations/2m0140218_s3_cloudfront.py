@@ -32,11 +32,11 @@ def fixup_expr_assets(expr, dryrun=True, force=False):
         fixup_assets_s3(app, ['url', 'content'])
     background = expr.get('background')
     if background:
-	fixup_assets_s3(background, ['url'])
+        fixup_assets_s3(background, ['url'])
         if not dryrun:
             expr.update(background=background,updated=False)
     if not dryrun:
-        expr.update(apps=apps,updated=False)
+        expr.update(apps=apps,background=background,updated=False)
     return True;
 
 def fixup_file_assets(f, dryrun=True, force=False):

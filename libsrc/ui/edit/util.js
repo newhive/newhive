@@ -16,7 +16,7 @@ define([
     ,context
     ,colors
     ,color_picker_template
-    ,Menu
+    ,menu
     ,dialog
 
     ,env
@@ -25,8 +25,29 @@ define([
 var o = {}
     ,bound = js.bound;
 
-// TODO-refactor: move into util
-o.capitalize = function(str) { return str[0].toUpperCase() + str.slice(1); };
+o.is_ctrl = function(ev){
+    return (ev.ctrlKey || ev.metaKey);
+}
+
+o.css_coords = function(el, pos, dims){
+    return el.css({ left: pos[0], top: pos[1]
+        ,width: dims[0], height: dims[1] })
+}
+
+o.rad2deg = function(angle) { return angle * (180. / Math.PI) }
+o.deg2rad = function(angle) { return angle * (Math.PI / 180.) }
+// rotate the given 2-vector counterclockwise (y-up) through angle radians
+o.rotate = function(pt, angle) {
+    var cos = Math.cos(angle);
+    var sin = Math.sin(angle);
+    var res = [];
+    res[0] = pt[0]*cos - pt[1]*sin;
+    res[1] = pt[1]*cos + pt[0]*sin;
+    return res;
+}
+o.rotate_about = function(pt, cent, angle) {
+    return o._add(cent)(o.rotate(o._sub(pt)(cent), angle));
+}
 
 // Return -1 if x < 0, 1 if x > 0, or 0 if x == 0.
 o._sign = function(x) {
@@ -50,21 +71,12 @@ o._apply = function(func, scale) {
     }
 };
 
-o._mul = function(scale) {
-    return o._apply(function(x, y){ return x * y; }, scale);
-};
-o._add = function(scale) {
-    return o._apply(function(x, y){ return x + y; }, scale);
-};
-o._div = function(scale) {
-    return o._apply(function(x, y){ return x / y; }, scale);
-};
-o._sub = function(scale) {
-    return o._apply(function(a, b) { return a - b; }, scale);
-};
-o._inv = function(l){
-    return l.map(function(x){ return 1/x; });
-};
+o._mul = function(scale){ return o._apply(js.op['*'], scale) }
+o._add = function(scale){ return o._apply(js.op['+'], scale) }
+o._div = function(scale){ return o._apply(js.op['/'], scale) }
+o._sub = function(scale){ return o._apply(js.op['-'], scale) }
+o._inv = function(l){ return l.map(function(x){ return 1/x; }) }
+
 // Linear interpolation
 // Return a value that is alpha (scalar) of the way between old_val
 // and new_val.  The values can be numbers or equal-length vectors.
@@ -77,6 +89,20 @@ o._lerp = function(alpha, old_val, new_val) {
         }, old_val)(new_val);
     }
 };
+
+o.points_rect = function(ps){
+    var f = {
+        x: Infinity ,width: -Infinity
+        ,y: Infinity ,height: -Infinity
+    }
+    ps.map(function(p){
+        f.x = Math.min(f.x, p[0])
+        f.width = Math.max(f.width, p[0])
+        f.y = Math.min(f.y, p[1])
+        f.height = Math.max(f.height, p[1])
+    })
+    return f
+}
 
 // Returns the nonnegative (nonoverlapping) distance btw two intervals.
 o.interval_dist = function(a, b) {
@@ -124,7 +150,9 @@ o.array_equals = function(a, b) {
   }
   return true;
 }
-
+o.nth = function(array, n) {
+    return array.map(function(x) { return x[n] })
+}
 o.max = function(array){
     return Math.max.apply(Math, array);
 };
@@ -132,21 +160,6 @@ o.min = function(array){
     return Math.min.apply(Math, array);
 };
 
-o.array_unique = function(a) {
-    return a.reduce(function(p, c) {
-        if (p.indexOf(c) < 0) p.push(c);
-        return p;
-    }, []);
-};
-o.array_delete = function(arr, e) {
-    for(var n = 0; n < arr.length; n++) {
-        if(arr[n] == e) {
-            arr.splice(n, 1);
-            return true;
-        }
-    }
-    return false;
-}
 o.array_sum = function( a, b ){
     if (a.length != b.length) { throw "Arrays must be equal length" };
     rv = [];
@@ -159,6 +172,12 @@ o.array_sum = function( a, b ){
 // used for app id
 o.random_str = function(){ return Math.random().toString(16).slice(2); };
 
+o.polygon = function(sides){
+    js.range(sides - 1).map(function(i){
+        var a = i == 0 ? 0 : Math.PI * 2 / i
+        return [Math.cos(a), Math.sin(a)]
+    })
+}
 
 //// BEGIN-editor-refactor belongs in editor specific utils
 o.region_from_app = function(app) {
@@ -203,7 +222,7 @@ o.app_bounds = function(elements) {
 
 // wrappers
 o.hover_menu = function(handle, drawer, opts){
-    return Menu(handle, drawer, $.extend({ auto_height: false }, opts));
+    return menu(handle, drawer, $.extend({ auto_height: false }, opts));
 };
 o.show_dialog = function(jq, opts){
     var d = dialog.create(jq, opts);
@@ -356,7 +375,8 @@ o.new_file = function(files, opts, app_opts, filter) {
 env.layout_apps = o.layout_apps = function(){
     env.scale_set();
     $.map(env.Apps, function(a){ a.layout() });
-    if(env.Selection.controls) env.Selection.controls.layout();
+    // handled by App.layout
+    // if(env.Selection.controls) env.Selection.controls.layout();
 
     var zoom = 100*env.zoom();
     var padding_left = (zoom == 100) ? "30px" : zoom + "%";
@@ -582,8 +602,16 @@ o.append_color_picker = function(container, callback, init_color, opts){
         manual_input = div.find('.color_input'),
         pickers = div.find('.color_select');
 
-    var to_rgb = function(c) {
-        return $.map($('<div>').css('color', c).css('color')
+    var color_probe = $('#color_probe'), color_probe_0 = $('<div>')
+    if(!color_probe.length)
+        color_probe = $("<div id='color_probe'>").appendTo('body')
+    var normalize = function(c){
+        return color_probe_0.css('color', '').css('color', c).css('color') }
+    var to_rgb = function(c){
+        var c = normalize(c)
+        if(!c) return
+        // this handles color names like "blue"
+        return $.map(getComputedStyle(color_probe.css('color', c)[0]).color
             .replace(/[^\d,]/g,'').split(','), function(v){ return parseInt(v) });
     }, to_hex = function(color){
         if (typeof(color) == "string") color = to_rgb(color);
@@ -603,12 +631,14 @@ o.append_color_picker = function(container, callback, init_color, opts){
         }).on('mousedown', function(e){ e.preventDefault()});
     });
 
-    var hex_changed = false;
     o.update_hex = function() {
-        if (!hex_changed) return;
-        hex_changed = false;
         var v = manual_input.val();
-        var c = $('<div>').css('color', v).css('color');
+        var c = normalize(v)
+        if(!c){
+            c = normalize('#'+v)
+            if(!c) return
+        }
+        o.set_color(c, true)
         callback(c, to_rgb(c));
     };
 
@@ -619,12 +649,21 @@ o.append_color_picker = function(container, callback, init_color, opts){
         shades.css('background-color', 'rgb(' + hsvToRgb(hsv[0], 1, 1).join(',') + ')');
         calc_color();
     };
+    div.bind('mousewheel', function(e){
+        // initialize()
+        var amt = e.originalEvent.wheelDelta / 40
+        if(!amt) return
+        hsv[0] = js.bound(hsv[0] + amt/100, 0, 1)
+        calc_color()
+        e.preventDefault()
+    })
 
-    o.set_color = function(color){
+
+    o.set_color = function(color, manual){
         var rgb = to_rgb(color);
         hsv = rgbToHsv(rgb[0], rgb[1], rgb[2]);
         shades.css('background-color', 'rgb(' + hsvToRgb(hsv[0], 1, 1).join(',') + ')');
-        manual_input.val(to_hex(color));
+        if(rgb && !manual) manual_input.val(to_hex(color));
     };
 
     var get_shade = function(e) {
@@ -687,13 +726,7 @@ o.append_color_picker = function(container, callback, init_color, opts){
     bar.click(get_hue).drag(get_hue);
     o.set_color(init_color);
 
-    // Prevent unwanted nudging of app when moving cursor in manual_input
-    manual_input.on('mousedown keydown', function(e){
-        hex_changed = true;
-        e.stopPropagation();
-    });
-
-    manual_input.blur(o.update_hex).keypress(function(e){
+    manual_input.on('keyup input paste', function(e){
         if(e.keyCode == 13) {
             if (opts && opts.field_to_focus){
                 opts.field_to_focus.focus();
@@ -701,6 +734,7 @@ o.append_color_picker = function(container, callback, init_color, opts){
                 manual_input.blur();
             }
         }
+        o.update_hex()
     });
 
     // if (opts.iframe){
@@ -724,21 +758,6 @@ o.sel = function(n) {
 }
 
 o.foc = function(n){ env.Selection.update([env.Apps[n]]) };
-
-o.rect_test = function(w, h){
-    if(!w) w = 20;
-    if(!h) h = 20;
-    js.range(w).map(function(x){
-        js.range(h).map(function(y){
-            Hive.App({
-                position: [x*50, y*50],
-                dimensions: [48, 48],
-                type: 'hive.rectangle',
-                content: {color:colors[(x+y)%36]}
-            })
-        })
-    });
-};
 
 // Rejigger the selected elements into their "best"
 // snapped positions (and sizes TBD)

@@ -99,7 +99,7 @@ define([
                 });
             });
             context.after_render.add('.invite_form', function(e){
-                e.on('response', function(e, data){
+                e.on('success', function(e, data){
                     if(data){ // success
                         $('.request_invite').hidehide();
                         $('.request_sent').removeClass('hide');
@@ -114,7 +114,7 @@ define([
             // login_form already rendered in overlay_template()
             // login can't set cookies from cross-domain request
             // so must be done synchronously
-            // $('#login_form').on('response', function(e, data){
+            // $('#login_form').on('success', function(e, data){
             //     if(data){
             //         context.user = data;
             //         init_overlays();
@@ -126,7 +126,7 @@ define([
             // });
         } else {
             $('#logout_btn').click(function(){ $('#logout_form').submit(); });
-            $('#logout_form').bind('response', o.on_logout);
+            $('#logout_form').bind('success', o.on_logout);
 
             /// notification count and activity menu code
 
@@ -152,7 +152,7 @@ define([
                 }
             };
             update_activity(context.user);
-            $('#activity_form').on('response', function(e, data){
+            $('#activity_form').on('success', function(e, data){
                 update_activity(data);
             });
             setInterval(function(){$('#activity_form').submit() }, 180000);
@@ -344,7 +344,7 @@ define([
                 e.preventDefault();
             });
         }
-        $(".user_action_bar form.follow").unbind('response').on('response', 
+        $(".user_action_bar form.follow").unbind('success').on('success', 
             function(event, json) {
                 follow_response($(this), json); 
         });
@@ -446,7 +446,7 @@ define([
         $('#header span').text("#" + tag_name);
         // var top_context = { "tagnum": 0, "item": tag_name };
         // $('#header span').text(header_prefix).append(tag_card_template(top_context));
-        $('#follow_tag_form').on('response', o.tag_response);
+        $('#follow_tag_form').on('success', o.tag_response);
     }
 
     o.tag_response = function (e, json){
@@ -474,7 +474,7 @@ define([
                 {owner_name: context.user.name });
             return false;
         });
-        $('#user_settings_form').on('response', function(e, data){
+        $('#user_settings_form').on('success', function(e, data){
             if(data.error) alert(data.error);
             else {
                 o.controller.open('expressions_public',
@@ -494,9 +494,9 @@ define([
     o.user_update = function(page_data){
         $('#site').empty().append(profile_edit_template(page_data));
         
-        $('#thumb_form').on('response',
+        $('#thumb_form').on('success',
             on_file_upload('#profile_thumb', '#thumb_id_input'));
-        $('#bg_form').on('response',
+        $('#bg_form').on('success',
             on_file_upload('#profile_bg', '#bg_id_input'));
         // Click-through help text to appropriate handler
         $(".help_bar").on("click", function(e) {
@@ -508,7 +508,7 @@ define([
                 {owner_name: context.user.name });
             return false;
         });
-        $('#user_update_form').on('response', function(e, data){
+        $('#user_update_form').on('success', function(e, data){
             if(data.error) alert(data.error);
             else {
                 o.controller.open('expressions_public',
@@ -561,7 +561,7 @@ define([
                             text(d.error);
                 };
                 show_error(page_data);
-                $('#user_settings_form').on('response', function(e, json) {
+                $('#user_settings_form').on('success', function(e, json) {
                     if(json.error)
                         show_error(json);   
                     else 

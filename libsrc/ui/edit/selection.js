@@ -34,6 +34,7 @@ o.Selection = function(o) {
         return (drag_target == o) ? elements.slice() : [drag_target]; 
     };
     o.add_to_collection = false;
+    o.is_selection = true;
     o.make_controls = [];
     o.handler_type = 2;
 
@@ -45,44 +46,56 @@ o.Selection = function(o) {
 
     // BEGIN-event-handlers
 
-    o.is_multi = function(ev) { return !env.gifwall && (ev.shiftKey || ev.ctrlKey); }
+    o.is_multi = function(ev){
+        return !env.gifwall && (ev.shiftKey || u.is_ctrl(ev));
+    }
 
-    // mousedown comes from body, click comes from app div. Binding clicks
-    // from app div prevents deselecting everything else at the start of a
-    // group drag operation
-    o.click = o.mousedown = function(ev){
+    var app_clicking
+    o.mousedown = function(ev){
+        // mousedown comes from body,
+        // if mousedown on app or controls, store app in app_clicking,
+        // if mousedown was not on selected app or controls, unselect all
+        ev.stopPropagation()
+        app_clicking = ev.data
+
+        if(!o.count() || o.is_multi(ev) || ev.data)
+            return
+
+        var hit = false
+        o.each(function(i, el){
+            if( el.controls && $.contains(el.controls.div.get(0), ev.target) )
+                hit = true
+        })
+        if(o.controls && $.contains(o.controls.div.get(0), ev.target))
+            hit = true
+        if(!hit)
+            o.unfocus()
+    }
+
+    o.mouseup = function(ev){
+        // Select or deselect an app. Mouseup comes from app div.
+
+        var app_clicked = app_clicking
+        app_clicking = false
+        if(o.dragging) return
+
         var app = ev.data;
-        if(app){
-            if (context.flags.shift_does_raise && ev.shiftKey) {
-                if (ev.ctrlKey)
-                    app.stack_bottom();
-                else
-                    app.stack_top();
-                return;
-            }
-            if(o.is_multi(ev)){
-                if(o.selected(app)) o.unfocus(app);
-                else o.push(app);
-            }
-            else o.update([ app ]);
+        // must be mouseup on an app that was mousedowned
+        if(!app || app != app_clicked) return
+
+        if (context.flags.shift_does_raise && ev.shiftKey) {
+            if(u.is_ctrl(ev))
+                app.stack_bottom()
+            else
+                app.stack_top()
+            return
         }
-        else {
-            // unfocus all apps if click was not on an app
-            if(!o.count() || o.is_multi(ev))
-                return;
-            var hit = false;
-            o.each(function(i, el){
-                if( $.contains(el.div.get(0), ev.target) || (
-                    el.controls &&
-                        $.contains(el.controls.div.get(0), ev.target)
-                ) ) hit = true;
-            });
-            if(o.controls && $.contains(o.controls.div.get(0), ev.target))
-                hit = true;
-            if(!hit) o.unfocus();
-            return true;
+        if(o.is_multi(ev)){
+            if(o.selected(app)) o.unfocus(app);
+            else o.push(app)
         }
-    };
+        else o.update([ app ])
+    }
 
     var dragging = false, drag_target;
     o.drag_target = function(){ return drag_target; };
@@ -90,19 +103,21 @@ o.Selection = function(o) {
         o.dragging = true;
         var app = ev.data;
         if(app){
-            $("#controls").hidehide();
             // If target is in selection, drag whole selection
             if(elements.indexOf(ev.data) >= 0)
                 drag_target = o;
             else
                 drag_target = ev.data;
+            // TODO-cleanup-controls remove true branch
+            if(elements.length == 1) elements[0].hide_controls()
+            else o.hide_controls()
             o.move_start();
             return;
         } else if(env.gifwall) {
             o.dragging = false;
             return;
         }
-        o.offset = $('#happs').offset().left;
+        o.offset = env.apps_e.offset().left;
         u.reset_sensitivity();
 
         o.new_selection = [];
@@ -113,7 +128,7 @@ o.Selection = function(o) {
         $(document.body).append(o.div);
         o.div.append(o.select_box);
         o.start = [ev.pageX, ev.pageY];
-        if (ev.shiftKey || ev.ctrlKey){
+        if (ev.shiftKey || u.is_ctrl(ev)){
             o.initial_elements = elements.slice();
         } else {
             o.initial_elements = [];
@@ -122,15 +137,17 @@ o.Selection = function(o) {
     };
     o.drag = function(ev, dd){
         if (!o.dragging) return;
+        ev.stopPropagation()
 
         var delta = [dd.deltaX, dd.deltaY];
         o.sensitivity = u.calculate_sensitivity(delta);
         var app = ev.data;
         if(app){
             o.move_handler(ev, delta);
-            return;
+            return
         }
 
+        if(!o.start) return;
         o.drag_dims = [Math.abs(dd.deltaX), Math.abs(dd.deltaY)];
         o.drag_pos = [dd.deltaX < 0 ? ev.pageX : o.start[0],
             dd.deltaY < 0 ? ev.pageY : o.start[1]];
@@ -140,12 +157,14 @@ o.Selection = function(o) {
     };
     o.dragend = function (ev, dd) {
         o.dragging = false;
-        $("#controls").showshow();
+        // TODO-cleanup-controls remove true branch
+        if(elements.length == 1) elements[0].show_controls()
+        else o.show_controls()
 
         var app = ev.data;
         if(app){
             o.move_end();
-            return;
+            return false;
         }
 
         if(!o.drag_dims) return;
@@ -153,6 +172,7 @@ o.Selection = function(o) {
         if(o.pos) o.update_focus();
         if(o.div) o.div.remove();
         o.update(elements);
+        return false;
     }
     o.update_focus = function(event){
         var s = env.scale();
@@ -273,6 +293,10 @@ o.Selection = function(o) {
         if(axis_lock)
             delta[ Math.abs(delta[0]) > Math.abs(delta[1]) ? 1 : 0 ] = 0;
         var pos = u._add(ref_pos)(delta);
+        var off = [0, 0];
+        if (o != drag_target)
+            off = u._sub(drag_target.min_pos())(drag_target.pos_relative());
+        pos = u._add(pos)(off);
         // TODO-feature-snap: check key shortcut to turn off snapping
         if(!env.no_snap){
             var excludes = {};
@@ -285,10 +309,11 @@ o.Selection = function(o) {
                 guide_1: !env.gifwall && (!full_apps.length || coord_full == 0),
                 sensitivity: o.sensitivity, });
         }
+        pos = u._sub(pos)(off);
         if (full_apps.length)
             o.pushing_move(pos);
         drag_target.pos_relative_set(pos);
-        o.layout();
+        //o.layout();
     };
     o.move_handler = function(ev, delta){
         delta = u._div(delta)(env.scale());
@@ -305,8 +330,41 @@ o.Selection = function(o) {
             o.update(prev_selection);
             full_apps = [];
         }
+        o.layout();
     };
 
+    hive_app.App.has_rotate(o);
+    var angle = 0, rotation_refs;
+    o.angle = function(){ return 0; };
+    o.rotate_start = function(ref_angle) {
+        angle = ref_angle;
+        rotation_refs = []
+        o.each(function(i, el) {
+            if(el.rotate_start)
+                el.rotate_start(ref_angle)
+            rotation_refs[i] = {
+                 ref_angle: el.angle()
+                ,ref_cen: el.cent_pos()
+                ,ref_pos: u._sub(el.pos_relative())(el.cent_pos())
+            }
+        })
+    }
+    o.angle_set = function(a) {
+        a -= angle;
+        var sel_cent = o.cent_pos();
+        o.each(function(i, el) {
+            if(el.angle_set)
+                el.angle_set(rotation_refs[i].ref_angle + a);
+            var cent = u.rotate_about(rotation_refs[i].ref_cen,
+                sel_cent, u.deg2rad(a));
+            el.pos_relative_set(u._add(rotation_refs[i].ref_pos)(cent));
+        });
+    }
+    o.rotate_end = function(){
+        elements.map(function(a){
+            if(a.rotate_end) a.rotate_end()
+        })
+    }
     hive_app.App.has_resize(o);
     var ref_dims, _resize = o.resize;
     o.before_resize = function() {
@@ -355,11 +413,9 @@ o.Selection = function(o) {
     o.app_select = function(app, multi) {
         if(multi){
             app.unfocus();
-            evs.handler_del(app);
         }
         else{
             app.focus();
-            evs.handler_set(app);
             // TODO-feature for sketch and geometry apps: evs.handler_set(o.type)
             // depends on defining app specific but instance unspecific creation
             // handlers on app type constructors
@@ -377,6 +433,10 @@ o.Selection = function(o) {
     o.update = function(apps){
         apps = $.grep(apps || elements, function(e){ return ! e.deleted; });
         var multi = o.dragging || (apps.length > 1);
+
+        // TODO-feature, TODO-cleanup-controls: do not make
+        // distinction between selecting single and multiple apps.
+        // Show controls which apply to all objects in the selection
 
         // Previously unfocused elements that should be focused
         $.each(apps, function(i, el){ o.app_select(el, multi); });
@@ -399,12 +459,9 @@ o.Selection = function(o) {
         // if(apps.length <= 1 && o.controls)
         //     o.controls.remove();
         if(!o.dragging && apps.length == 1) {
-            // TODO-feature: this code should always run, and it should create
-            // controls which apply to all objects in the selection
-            Controls(o, false, apps[0]);
+            Controls(apps[0], false);
             if (env.gifwall && context.flags.show_mini_selection_border)
                 o.controls.div.find(".select_border").hidehide();
-            o.controls.layout();
         }
         if(apps.length == 0) {
             evs.handler_del({handler_type: 0}); 
@@ -433,19 +490,23 @@ o.Selection = function(o) {
     // position and dimension methods
 
     o.update_relative_coords = function(){
-        var bounds = o.bounds();
-        _pos_relative_set([bounds.left, bounds.top]);
-        o.dims_relative_set([bounds.right - bounds.left,
-            bounds.bottom - bounds.top]);
+        var bounds = o.bounds(), _pos = [bounds.left, bounds.top]
+            ,_dims = [bounds.right - bounds.left, bounds.bottom - bounds.top];
+        o.no_layout = true;
+        if (!u.array_equals(_pos, o.pos_relative()))
+            _pos_relative_set(_pos);
+        if (!u.array_equals(_dims, o.dims_relative()))
+            o.dims_relative_set(_dims);
+        o.no_layout = false;
         _positions = elements.map(function(a){
-            return u._sub(a.pos_relative())(o.pos_relative());
+            return u._sub(a.pos_relative())(_pos);
         });
         _scales = elements.map(function(a){
-            return u._div(a.dims_relative())(o.dims_relative());
+            return u._div(a.dims_relative())(_dims);
         });
     };
 
-    var _pos_relative = o.pos_relative, _pos_relative_set = o.pos_relative_set;
+    var _pos_relative_set = o.pos_relative_set;
     o.pos_relative_set = function(pos){
         o.each(function(i, a){
             a.pos_relative_set(u._add(pos)(_positions[i]));
@@ -490,6 +551,7 @@ o.Selection = function(o) {
         env.History.begin();
         $.each(sel, function(i, el){ el.remove() });
         env.History.group('delete group');
+        env.layout_apps() // in case scrollbar visibility changed
     };
 
     o.get_stack = function(){
@@ -514,24 +576,30 @@ o.Selection = function(o) {
     });
 
     o.layout = function(){
-        o.controls && o.controls.layout();
+        if (o.no_layout)
+            return;
+        if (o.controls)
+            o.controls.layout();
     }
 
     o.keydown = Funcs(function(ev){ 
         // ctrl+[shift+]a to select all or none
-        if( ev.keyCode == 65 && ev.ctrlKey ){
+        if( ev.keyCode == 65 && u.is_ctrl(ev) ){
             o.select( ev.shiftKey ? [] : hive_app.Apps.all() );
             return false;
         }
 
         var handlers = {
-            27: function(){ o.unfocus() },             // esc
-            46: function(){ o.remove() },              // del
-            66: function(){ o.stack_bottom() },        // b
-            84: function(){ o.stack_top() },           // t
+            27: function(){ // esc
+                    if(elements.length) o.unfocus()
+                    else return true
+                },
+            46: function(){ o.remove() }, // del
+            66: function(){ o.stack_bottom() }, // b
+            84: function(){ o.stack_top() }, // t
         }
         if(handlers[ev.keyCode]){
-            handlers[ev.keyCode]();
+            if(handlers[ev.keyCode]()) return;
             return false;
         }
 

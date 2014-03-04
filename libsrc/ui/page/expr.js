@@ -2,8 +2,10 @@ define([
     'browser/jquery',
     'server/context',
     'browser/layout',
+    'ui/util',
     'ui/menu',
     'ui/dialog',
+
     'sj!templates/activity.html',
     'sj!templates/social_overlay.html',
     'sj!templates/edit_btn.html',
@@ -12,8 +14,10 @@ define([
     $,
     context,
     browser_layout,
+    util,
     menu,
     dialog,
+
     activity_template,
     social_overlay_template,
     edit_btn_template,
@@ -24,7 +28,7 @@ define([
         overlay_columns = 0, wide_overlay = false,
         animation_timeout = undefined, last_found = -1;
     o.cache_offsets = [1, -1, 2];
-    o.anim_duration = 400;
+    o.anim_duration = (util.mobile()) ? 0 : 400;
 
     // pagination functions here
     o.set_page = function(page){
@@ -409,7 +413,7 @@ define([
 
         if(page_data.error == 'password'){
             dialog.create(password_dia).open();
-            password_dia.find('form.site').on('response', function(ev, data) {
+            password_dia.find('form.site').on('success', function(ev, data) {
                 if(data.error) {
                     $('#dia_expr_password .error').showshow();
                     return;
@@ -481,7 +485,7 @@ define([
                 o.controller.scroll_top = 0;
             });
 
-        // $('#comment_form').unbind('response').on('response', o.comment_response);
+        // $('#comment_form').unbind('success').on('success', o.comment_response);
         var dia_comments = $("#dia_comments").data("dialog");
         dia_comments.opts.open = function(){
             $("#dia_comments textarea").focus();
@@ -501,8 +505,8 @@ define([
                     o.edit_comment($(el));
                 });
             }
-            $(el).find('form').unbind('response').
-                on('response', function(event, data) {
+            $(el).find('form').unbind('success').
+                on('success', function(event, data) {
                 o.edit_comment_response($(el), data);
             });
         });
@@ -781,6 +785,8 @@ define([
             $('#page_prev').hidehide();
         } else if(msg == 'hide') {
             $('.page_btn').hidehide();
+        } else if(msg == 'prev' || msg == 'next') {
+            o.navigate_page((msg == "prev") ? -1 : 1);
         }
 
         // should reflect whether left or right page_btn should be visible if
