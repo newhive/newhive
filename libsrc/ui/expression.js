@@ -29,8 +29,8 @@ define([
         
         o.paging_sent = false;
         o.page = function(direction){
-            if(o.paging_sent) return;
-            o.paging_sent = true;
+            // if(o.paging_sent) return;
+            // o.paging_sent = true;
             o.send_top(direction);
         };
         o.page_next = function(){ o.page('next') },
