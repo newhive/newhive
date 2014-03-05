@@ -72,6 +72,7 @@ site_flags = {
     # Old / unused
     ,'logged': ['logged_out']
     ,'shapes': ['admins']
+    ,'button_options': ['admins']
 }
 
 site_user = 'newhive'
