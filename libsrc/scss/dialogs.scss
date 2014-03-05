@@ -266,7 +266,6 @@ form.login {
         &[name=secret] { margin-bottom: 10px; }
     }
     .password_recovery {
-        font-size: 12px;
         color: black;
         margin-right: 15px;
         float: left;
@@ -437,8 +436,7 @@ form.login {
     .remix_label {
         font-family: Arial;
         input { margin-right: 10px; }
-        margin-bottom: 30px;
-        margin-top: 15px;
+        margin: 15px 0;
     }
     .note { color: $color_grey_medium }
     div.drop_arrow { 
@@ -455,6 +453,14 @@ form.login {
     }
     span.teal_btn { cursor: default; }
     #password { width:300px; }
+
+    .button_options {
+        margin: 15px 0 30px;
+        img {
+            width: 30px;
+            vertical-align: middle
+        }
+    }
 }
 #menu_privacy .selected { display : none; }
 

@@ -36,6 +36,11 @@ define([
             return entityMap[s];
         });
     };
+
+    o.location = function(context){ return window.location.toString() }
+
+    o.param = function(context, v){
+        return window.encodeURIComponent(v) }
     
     o.defer = function(context, block){
         return '<div class="defer" data-content="' + escapeHtml(block(context)) + '"></div>';

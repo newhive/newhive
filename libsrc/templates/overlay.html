@@ -1,8 +1,9 @@
-<div class='overlay panel nav {<if query.clean}clean{>}' id='content_btns'>
-  {# edit expression #}
+<div class='overlay panel nav {<if query.clean}hide{>}' id='content_btns'>
+  {# expression specific #}
+  <span class='expr_actions'></span>{# no \n #}
   <span class='hide edit_ui'></span>{# no \n #}
   {# create or signup/login #}
-  {<unless user.logged_in}
+  {#{<unless user.logged_in}
     <span class='signup'>
       {<if flags.open_signup}
         <a {anchor_attrs "signup"} class='signup_btn text_btn btn menu_item'
@@ -13,18 +14,18 @@
       <span class='red_spacer'></span>
       <span class='login_btn text_btn left_border btn menu_item'>Log in</span>
     </span>
-  {>}
-  {<if user.logged_in}<a {anchor_attrs "create_expr"}
-    ><div class='create icon btn hoverable'></div></a>{>}
+  {>}#}
+  <a {anchor_attrs "create_expr"} title='create'
+    class='needs_login create item btn hoverable'></a>
   {# + button to open overlay #}
-  <div class='social_btn icon btn hide hoverable'></div>
+  <div class='social_btn item btn hide hoverable'></div>
 </div>
 {<if (not flags.mobile)}
   <div class='social overlay page_btn' id='page_prev'></div>
   <div class='social overlay page_btn' id='page_next'></div>
 {>}
 {# hive logo button #}
-<div id='logo' class='overlay nav logo icon left right {<if query.clean}clean{>}'></div>
+<div id='logo' class='overlay nav logo icon left right {<if query.clean}hide{>}'></div>
 
 {# menu: logo #}
 <div id='logo_menu' class='menu drawer' data-handle='#logo'>
@@ -41,8 +42,12 @@
       class='menu_item hoverable'>{user.name|e}</a>
     <a {anchor_attrs "home"} class='menu_item default hoverable'>Network</a>
   {>}{<else}
-    <a href="/{config.site_user}/about"><div class='menu_item'>About NewHive</div></a>
-    <a href="/"><div class='menu_item default'>The Hive</div></a>
+    <a {anchor_attrs "signup"} class='menu_item'>Sign Up</a>
+    <div class='login_btn menu_item'>Log in</div>
+    <a {anchor_attrs "view_expr"
+      "owner_name" config.site_user "expr_name" "about"}
+      class='menu_item'>About NewHive</a>
+    <a {anchor_attrs "home"} class='menu_item default'>The Hive</a>
   {>}
 </div>
 
@@ -54,63 +59,12 @@
   <form id='notification_reset' {form_attrs "notification_reset"}></form>
   <form id='activity_form' {form_attrs "activity"}></form>
 {>}{<else}
-  <div id='login_menu' class='dialog login' data-handle='#login_btn'>
+  <div id='dia_login' class='dialog login' data-handle='.login_btn'>
     {#<a href="{facebook_authentication_url}" target="_top"
       <img src='{"skin/1/fb_sign_in.png"|asset_url}' style='margin: 2px 0 2px -4px;'>
     </a>#}
     <div class="title">Log in:</div>
     {|templates/login_form.html}
-  </div>
-{>}
-
-{# Dialog: Login or Join #}
-{<unless user.logged_in}
-  <div id='dia_login_or_join' class='dialog hide' data-handle='#sign_up_btn'>
-    <div class="centered"><img src='{asset "skin/site/newhive_dialog_logo.png"}'></div>
-    <div class="small heading centered">
-      NewHive is your blank canvas.<br>
-      It’s freedom of expression on the web.
-
-      {<if flags.open_signup}
-        <div class='spacer'></div>
-        <h3><a {anchor_attrs "signup"}
-          class='title line2'>Signup for account</a></h3>
-        or<br>
-      {>}
-      {<else}</div>{>} {# (hack) conditionally put following inside this tag #}
-
-    <div class="column {<if flags.open_signup}center{>}{<else}left{>}">
-      <h3>
-        {#<span class="title line1">Have an account?</span><br/>#}
-        <span class="title line2">Log in:</span>
-      </h3>
-      {|templates/login_form.html}
-    </div>
-    {<if flags.open_signup}</div>{>}
-
-    <div class="column right {<if flags.open_signup}hide{>}">
-      <h3>
-        {#<span class="title line1">Need an account?</span><br/>#}
-        <span class="title line2">Request Invite:</span>
-      </h3>
-      {|templates/request_invite_form.html}
-    </div>
-
-  </div>
-
-  <div id="dia_recover" class="standard dialog" data-handle='.password_recovery'>
-    <div class="error title expr">Reset your password:</div>
-    <div class="subheading error_msg"></div>
-    {<vcenter "success_show heading pointer"}
-      <div class="centered">A password reset link was sent to your email.</div>
-    {>}
-    <div class="success_hide">
-      <form { form_attrs "password_recover" } id='form_password_recover' method='POST'>
-        <div class="form_text">Enter your email address.</div>
-        <input autofocus placeholder="Email" type="text" name="email">
-        <button type="submit" class="submit teal_btn upper">Enter</button>
-      </form>
-    </div>
   </div>
 {>}
 

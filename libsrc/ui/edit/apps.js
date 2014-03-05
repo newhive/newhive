@@ -2015,7 +2015,8 @@ Hive.App.has_rotate = function(o) {
     o.angle = function(){ return angle; };
     o.angle_set = function(a){
         angle = a;
-        o.content_element.rotate(a);
+        if(o.content_element)
+            o.content_element.rotate(a);
         if(o.controls && o.controls.multiselect)
             o.controls.select_box.rotate(a);
     }

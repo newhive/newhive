@@ -70,6 +70,13 @@ define([
         tags_input_changed()
         if($('#use_custom_domain').val())
             expr.url = $('#custom_url').val()
+        expr.container = {}
+        $('.button_options input').each(function(i, el){
+            el = $(el)
+            var btn = el.attr('name')
+            if(el.prop('checked'))
+                expr.container[btn] = true
+        })
 
         $('title').text('edit - ' + expr.title)
     }
@@ -81,6 +88,8 @@ define([
         if(expr.auth) $('#menu_privacy [val=' + expr.auth +']').click()
         $('#use_custom_domain').prop('checked', expr.url ? 1 : 0).
             trigger('change')
+        for(var btn in (expr.container || {}))
+            $('[name=' + btn + ']').prop('checked', expr.container[btn])
     }
 
     o.render = function(page_data){
