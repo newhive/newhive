@@ -373,6 +373,14 @@ Hive.App = function(init_state, opts) {
         return [curr[0].slice(), curr[1].slice()];
     }
 
+    o.centroid = function() {
+        return u._mul(env.scale())(o.centroid_relative()) }
+    o.centroid_relative = function(){
+        var ps = o.pts()
+            ,sum = ps.reduce(function(p1, p2){ return u._add(p1)(p2) })
+        return u._div(sum)(ps.length)
+    }
+
     // END-coords
 
     o.center_weird = function(offset) {
@@ -433,6 +441,7 @@ Hive.App = function(init_state, opts) {
         }
         $highlight.showhide(opts.on);
     }
+    // TODO-cleanup-history: use state instead
     o.state_relative = function(){ return {
         position: _pos.slice(),
         dimensions: _dims.slice()
@@ -1043,7 +1052,7 @@ Hive.App.Polygon = function(o){
         ref_points = o.points()
         ref_pos = o.pos_relative()
         ref_dims = o.dims_relative()
-        ref_center = u._mul(.5)(ref_dims)
+        ref_center = u._sub(o.centroid_relative())(ref_pos)
         ref_stroke_width = stroke_width()
     }
     o.point_update = function(i, p, display_only){
@@ -1999,30 +2008,39 @@ Hive.has_scale = function(o){
 };
 
 Hive.App.has_rotate = function(o) {
+    // TODO-cleanup-selection: move into selection
+
+    var app = o
     var angle = o.init_state.angle ? o.init_state.angle : 0;
     o.angle = function(){ return angle; };
     o.angle_set = function(a){
         angle = a;
-        o.content_element.rotate(a);
+        if(o.content_element)
+            o.content_element.rotate(a);
         if(o.controls && o.controls.multiselect)
             o.controls.select_box.rotate(a);
     }
     o.load.add(function() { if(o.angle()) o.angle_set(o.angle()) });
 
-    var _state = o.state;
-    o.state = function(){
-        var s = _state();
+    var _sr = o.state_relative, _srs = o.state_relative_set
+    o.state_relative = function(){
+        var s = _sr();
         if(angle) s.angle = angle;
         return s;
     };
+    o.state_relative_set = function(s){
+        _srs(s)
+        if(s.angle)
+            o.angle_set(s.angle)
+    }
 
     function controls(o) {
-        var common = $.extend({}, o), refAngle = null, offsetAngle = null;
+        var common = $.extend({}, o), ref_angle = null, offsetAngle = null,
+            ref_centroid;
 
         o.getAngle = function(e) {
-            var cpos = o.app.pos_center();
-            var x = e.pageX - cpos[0];
-            var y = e.pageY - cpos[1];
+            var x = e.pageX - ref_centroid[0];
+            var y = e.pageY - ref_centroid[1];
             return Math.atan2(y, x) * 180 / Math.PI;
         }
 
@@ -2035,7 +2053,7 @@ Hive.App.has_rotate = function(o) {
         }
 
         o.rotate = function(a){
-            o.app.angle_set(a);
+            app.angle_set(a);
         };
 
         o.rotateHandle = $("<img class='control rotate hoverable drag' title='Rotate'>")
@@ -2045,27 +2063,30 @@ Hive.App.has_rotate = function(o) {
         var angleRound = function(a) { return Math.round(a / 45)*45; },
             history_point;
         o.rotateHandle.drag('start', function(e, dd) {
-                refAngle = angle;
+                ref_centroid = app.centroid()
+                ref_angle = angle;
                 offsetAngle = o.getAngle(e);
-                o.app.hide_controls()
-                if (o.app.rotate_start)
-                    o.app.rotate_start(refAngle);
-                history_point = env.History.saver(
-                    o.app.angle, o.app.angle_set, 'rotate');
+                app.hide_controls()
+                if (app.rotate_start)
+                    app.rotate_start(ref_angle);
+                if(!app.is_selection)
+                    history_point = env.History.saver(
+                        app.angle, app.angle_set, 'rotate');
             })
             .drag(function(e, dd) {
-                var a = o.getAngle(e) - offsetAngle + refAngle;
+                var a = o.getAngle(e) - offsetAngle + ref_angle;
                 if( e.shiftKey && Math.abs(a - angleRound(a)) < 10 )
                     a = angleRound(a);
-                o.app.angle_set(a);
+                app.angle_set(a);
             })
             .drag('end', function(){
-                if(o.app.rotate_end) o.app.rotate_end();
-                history_point.save();
+                if(app.rotate_end) app.rotate_end();
                 env.Selection.update_relative_coords();
-                o.app.show_controls()
+                app.show_controls()
+                if(!app.is_selection)
+                    history_point.save()
             })
-            .dblclick(function(){ o.app.angle_set(0); });
+            .dblclick(function(){ app.angle_set(0); });
 
         return o;
     }

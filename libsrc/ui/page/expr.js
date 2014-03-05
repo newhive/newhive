@@ -9,6 +9,7 @@ define([
     'sj!templates/activity.html',
     'sj!templates/social_overlay.html',
     'sj!templates/edit_btn.html',
+    'sj!templates/expr_actions.html',
     'sj!templates/comment.html'
 ], function(
     $,
@@ -21,6 +22,7 @@ define([
     activity_template,
     social_overlay_template,
     edit_btn_template,
+    expr_actions_template,
     comment_template
 ) {
     var o = {}, 
@@ -28,7 +30,7 @@ define([
         overlay_columns = 0, wide_overlay = false,
         animation_timeout = undefined, last_found = -1;
     o.cache_offsets = [1, -1, 2];
-    o.anim_duration = (util.mobile()) ? 0 : 400;
+    o.anim_duration = (util.mobile()) ? 400 : 400;
 
     // pagination functions here
     o.set_page = function(page){
@@ -57,13 +59,6 @@ define([
         $("#social_plus").click(o.social_toggle);
         window.addEventListener('message', o.handle_message, false);
     };
-    o.exit = function(){
-        o.last_found = -1;
-        hide_exprs();
-        o.hide_panel();
-        $('#site').showshow();
-        $('.page_btn').hidehide();
-    };
 
     o.hide_panel = function(){
         $("#signup_create").hidehide();
@@ -71,7 +66,7 @@ define([
         $("#signup_create .signup").addClass("hide");
         $("#signup_create .create").addClass("hide");
         $(".panel .social_btn").addClass("hide");
-        $(".panel .edit_ui .icon").hidehide();
+        $(".panel .edit_ui").hidehide();
     }
 
     o.resize = function(){
@@ -98,8 +93,10 @@ define([
         }
     };
     var resize_icon = function(el) {
-        if (el.find(".counts").text().length > 0)
-            el.width(Math.min(90, 90 + el.find(".counts").width()));
+        var count = el.find('.counts')
+        if(!count.length) return
+        if (count.text().length > 0)
+            el.width(Math.min(90, 90 + count.width()));
         else
             el.width(60);
      };
@@ -116,6 +113,8 @@ define([
         $('#site').hidehide();
         $("#popup_content").remove();
         $("#dia_comments").remove();
+        $('#content_btns .expr_actions').replaceWith(
+            expr_actions_template(page_data))
         $('#social_overlay').append(
             social_overlay_template(context.page_data));
         $('#popup_content .counts_icon').each(function(i, el) {
@@ -130,9 +129,9 @@ define([
             " frameborder='0' vspace='0' hspace='0'></iframe>");
 
         // Set toggle state for love, broadcast, comment
-        o.action_set_state($("#love_icon"), o.action_get_state("loves"));
-        o.action_set_state($("#broadcast_icon"), o.action_get_state("broadcast"));
-        o.action_set_state($("#comment_icon"), o.action_get_state("comment"));
+        o.action_set_state($(".love_btn"), o.action_get_state("love"));
+        o.action_set_state($(".republish_btn"), o.action_get_state("republish"));
+        o.action_set_state($(".comment_btn"), o.action_get_state("comment"));
 
         if (page_data.cards == undefined) {
             // In case of direct link with no context,
@@ -170,6 +169,12 @@ define([
         o.hide_panel();
         $("#content_btns").showshow();
         $(".social_btn").removeClass("hide");
+
+        var show_edit = false
+        if(page_data.expr.tags
+            && page_data.expr.tags.indexOf("remix") >= 0
+        ) page_data.remix = true;
+
         if (!context.user.logged_in) {
             $("#signup_create").showshow();
             $("#signup_create .signup").removeClass("hide");
@@ -177,16 +182,12 @@ define([
         } else {
             $("#signup_create").showshow();
             $("#signup_create .create").removeClass("hide");
-            if (context.user.id == o.expr.owner.id) {
-                page_data.remix = false;
-                $('#content_btns .edit_ui').replaceWith(edit_btn_template(page_data));
-                $('#content_btns .edit_ui .icon').showshow();
-            } else if (page_data.expr.tags &&
-                page_data.expr.tags.indexOf("remix") >= 0) {
-                page_data.remix = true;
-                $('#content_btns .edit_ui').replaceWith(edit_btn_template(page_data));
-                $('#content_btns .edit_ui .icon').showshow();
+
+            if(context.user.id == o.expr.owner.id){
+                page_data.remix = false
+                show_edit = true
             }
+
             $('#dia_delete_ok').each(function(i, e){
                 $(e).data('dialog').opts.handler = function(e, data){
                     o.controller.open('expressions_public',
@@ -194,6 +195,18 @@ define([
                 }
             });
         }
+        if(show_edit || page_data.remix)
+            $('#content_btns .edit_ui').replaceWith(
+                edit_btn_template(page_data) )
+    }
+
+    o.exit = function(){
+        o.last_found = -1;
+        hide_exprs();
+        o.hide_panel();
+        $('#site').showshow();
+        $('.page_btn').hidehide();
+        $('#content_btns .expr_actions').hide()
     };
 
     // Check to see if tags overflows its bounds.
@@ -496,6 +509,8 @@ define([
             $("#dia_comments input[type=submit]").prop('disabled', true);
         });
 
+        $('.expr_actions .comment_btn').click(dia_comments.open)
+
         $(".feed_item").each(function(i, el) {
             edit_button = $(el).find('button[name=edit]');
             delete_button = $(el).find('button[name=delete]');
@@ -511,23 +526,16 @@ define([
             });
         });
 
-        $("#love_icon").unbind('click').click(function (event) {
-            o.social_btn_click(event, $(this), "loves"); });
-        $("#broadcast_icon").click(function (event) {
-            o.social_btn_click(event, $(this), "broadcast"); });
+        $(".love_btn").unbind('click').click(function(){
+            o.social_btn_click("love") })
+        $(".republish_btn").click(function(){
+            o.social_btn_click("republish") })
 
         $('.page_btn').bind_once('mouseenter', function(event){
             o.page_btn_animate($(this), "in");
         }).bind_once('mouseleave', function(e) {
             o.page_btn_animate($(this), "out");
         });
-
-        try {
-            var d = dialog.create($("#dia_login_or_join"));
-            $(".overlay .signup_btn").unbind('click').click(d.open);
-            d = dialog.create($("#login_menu"));
-            $(".overlay .login_btn").unbind('click').click(d.open);
-        } catch(err) {;}
     };
 
     o.page_btn_animate = function (el, into) {
@@ -568,14 +576,13 @@ define([
         });
     };
 
-    o.social_btn_click = function(e, el, btn) {
+    o.social_btn_click = function(btn) {
         if (!context.user.logged_in)
             return;
 
-        var el_drawer = $("[data-handle=#" + el.prop("id") + "]");
-        // var el_form = el.parent();
-        var el_form = $("form." + ((btn == "loves") ? "love" : "republish"));
-        var el_counts = el.find($(".counts"));
+        var el_drawer = $('#' + btn + '_menu')
+        var el = $('.' + btn + '_btn')
+        var el_form = $("form." + btn)
 
         // Toggle the state on the server
         // own_item is the toggled state, thus the opposite of current.
@@ -591,7 +598,7 @@ define([
         } else {
             items = [o.fake_item(btn)].concat(items);
         }
-        if (btn == "loves") 
+        if (btn == "love") 
             o.expr.loves = items;
         else
             o.expr.broadcast = items;
@@ -606,14 +613,14 @@ define([
         count += ((own_item) ? 1 : -1);
         count = (count) ? ("" + count) : "";
         el_counts.text(count);
-        resize_icon(el);
+        resize_icon(el.filter('.counts_icon'));
         o.action_set_state(el, own_item);
     };
 
     var get_items = function(btn){
-        d = { "loves": o.expr.loves,
+        d = { "love": o.expr.loves,
               "comment": o.expr.comments,
-              "broadcast": o.expr.broadcast  };
+              "republish": o.expr.broadcast  };
         return d[btn] ? d[btn] : [];
     };
     o.action_get_state = function(btn){
@@ -636,8 +643,8 @@ define([
     o.fake_item = function(btn) {
         return {
             entity_class: "Expr",
-            action:  (btn == "loves") ? "Love" : "Broadcast",
-            class_name:  (btn == "loves") ? "Star" : "Broadcast",
+            action:  (btn == "love") ? "Love" : "Broadcast",
+            class_name:  (btn == "love") ? "Star" : "Broadcast",
             initiator_name:  context.user.name,
             initiator_thumb_small:  context.user.thumb_small
         };
@@ -693,7 +700,7 @@ define([
             // update count and highlight state
             $(".counts_icon.comment").find(".counts").text(json.comments.length);
             resize_icon($("#social_overlay .counts_icon.comment"));
-            o.action_set_state($("#comment_icon"), o.action_get_state("comment"));
+            o.action_set_state($(".comment_btn"), o.action_get_state("comment"));
         }
         // TODO-cleanup: merge somehow with existing code to update activity menu
         if (json.user != undefined) {
@@ -757,17 +764,23 @@ define([
     };
     // Handles messages from PostMessage (from other frames)
     o.handle_message = function(m){
-        if (m.data == "expr_click") {
+        var msg = m.data;
+        if (msg == "expr_click") {
             popup = $('#social_overlay');
             if (popup.css('display') != 'none')
                 o.social_toggle();
             return
+        } else if(msg == 'prev' || msg == 'next') {
+            o.navigate_page((msg == "prev") ? -1 : 1);
+        } else {
+            o.page_btn_handle(msg);
         }
-        else o.page_btn_handle(m.data);
     };
 
     var page_btn_state = '';
     o.page_btn_handle = function(msg){
+        if(util.mobile())
+            return
         if (!msg)
             msg = page_btn_state;
         // don't render the page buttons if there is nothing to page through!
@@ -785,8 +798,6 @@ define([
             $('#page_prev').hidehide();
         } else if(msg == 'hide') {
             $('.page_btn').hidehide();
-        } else if(msg == 'prev' || msg == 'next') {
-            o.navigate_page((msg == "prev") ? -1 : 1);
         }
 
         // should reflect whether left or right page_btn should be visible if

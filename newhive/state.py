@@ -1717,7 +1717,7 @@ class Expr(HasSocial):
         counts['Views'] = self.views
         counts['Comment'] = self.comment_count
         expr = dfilter(self, ['name', 'title', 'feed', 'created',
-            'updated', 'password'])
+            'updated', 'password', 'container'])
         dict.update(expr, {
             'tags': self.get('tags_index'),
             'id': self.id,
@@ -1825,7 +1825,10 @@ class File(Entity):
         return self._file
 
     def download(self):
-        try: response = urllib.urlopen(self['url'])
+        url = self['url']
+        if url.startswith("//"):
+            url = "http:" + url
+        try: response = urllib.urlopen(url)
         except:
             print 'urlopen fail for ' + self.id + ': ' + json.dumps(self.get('url'))
             return False

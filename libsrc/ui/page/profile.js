@@ -78,12 +78,6 @@ define([
         }).on('mouseleave', function(event){
             card_animate($(this), "out");
         });
-        if (!context.user.logged_in) {
-            var d = dialog.create($("#dia_login_or_join"));
-            $(".overlay .signup_btn").unbind('click').click(d.open);
-            d = dialog.create($("#login_menu"));
-            $(".overlay .login_btn").unbind('click').click(d.open);
-        }
         // $(".tags.nav_button").unbind('click').click(show_hide_tags);
         $(".tag_list_container .expander").unbind('click').on('click', function(ev) {
             toggle_more_tags();

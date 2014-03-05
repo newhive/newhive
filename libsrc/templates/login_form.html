@@ -3,15 +3,17 @@
    should be callable from unsecure frame, thus pure POST, not AJAX
   #}
 <form class="login" action='{config.secure_server}api/user/login' method='POST' id='login_form'>
-  <div class="field username">
-      <input id='username' type='text' name='username' value='{user.name}' placeholder='username or email'>
-  </div>
-  <div class="field password">
-    <input type='password' name='secret' placeholder='password'><br>
-  </div>
-  <div class='login error error_msg {<unless error.login}hide{>}'>This username / email or password isn't matching :-/</div>
-  <div class='field login'>
+  <div class="field username"><input type='text' class='username'
+    name='username' value='{user.name}' placeholder='USERNAME OR EMAIL'></div>
+  <div class="field password"><input type='password' class='secret'
+    name='secret' placeholder='PASSWORD'></div>
+  <div class='login error error_msg {<unless error.login}hide{>}'>
+    This username / email or password isn't matching :-/<br>
     <a href="#" class='password_recovery'>Forgot password?</a>
+  </div>
+  <br>
+  <div class='field login'>
+    <a {anchor_attrs "signup"} class='teal_btn floatleft signup'>SIGN UP</a>
     <input type='submit' class='upper teal_btn' value='Enter'>
   </div>
   <input type='hidden' name='from' value=''>

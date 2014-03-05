@@ -58,6 +58,8 @@ def get_api_endpoints(api):
                 ))
     return rules
 
+# Create an empty, reference dict so all created controllers will have
+# a reference to all controllers upon creation.
 server_env['controllers'] = {}
 api = Controllers(server_env)
 server_env['controllers'].update(api)
@@ -80,6 +82,7 @@ def split_domain(url):
 @Request.application
 def handle(request):
     time_start = now()
+    print(request)
     environ = copy.copy(request.environ)
     prefix, site = split_domain(environ['HTTP_HOST'])
     environ['HTTP_HOST'] = site
@@ -141,7 +144,7 @@ def handle(request):
         (blah, exception, traceback) = sys.exc_info()
         response = base_controller.serve_500(request, Response(), exception=exception,
             traceback=traceback, json=False)
-    print request
+
     print "time %s ms" % (1000.*(now() - time_start))
     if stats and yappi.is_running():
         # statprof.stop()

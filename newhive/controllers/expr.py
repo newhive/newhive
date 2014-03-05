@@ -36,7 +36,8 @@ class Expr(ModelController):
         res = self.db.Expr.fetch(expr.id)
         allowed_attributes = [
             'name', 'url', 'title', 'apps', 'dimensions', 'auth', 'password',
-            'tags', 'background', 'thumb', 'images', 'remix_parent_id'
+            'tags', 'background', 'thumb', 'images', 'remix_parent_id',
+            'container'
         ]
         # TODO: fixed expressions, styles, and scripts, need to be done right
         # if tdata.user.is_admin:
