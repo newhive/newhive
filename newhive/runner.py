@@ -4,11 +4,6 @@ db = state.Database(config)
 import time, threading
 from newhive.utils import now, time_u
 
-def run_resampler():
-    image_resampler = ImageScalerRunner(
-        print_frequency=50,thread_limit=20,continuous=True)
-    image_resampler.run()
-    
 class Runner(object):
     """Continuously process work"""
     def __init__(self, **args):
