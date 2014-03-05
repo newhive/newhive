@@ -296,10 +296,11 @@ class Community(Controller):
     def serve_expr(self, tdata, request, expr):
         meta = {}
         resp = {
-            'expr_id': expr.id,
-            'content_url': abs_url(domain=self.config.content_domain, 
-                secure=request.is_secure) + expr.id,
-            'expr': expr.client_view(viewer=tdata.user, activity=10)
+            'expr_id': expr.id
+            ,'content_url': abs_url(domain=self.config.content_domain, 
+                secure=request.is_secure) + expr.id
+            ,'expr': expr.client_view(viewer=tdata.user, activity=10)
+            ,'title': expr.get('title', '[Untitled]')
         }
 
         if (not tdata.user.can_view(expr)
@@ -406,6 +407,7 @@ class Community(Controller):
         if not page_data:
             print request
             return self.serve_404(tdata, request, response, json=json)
+        page_data.setdefault('title', 'NewHive')
 
         if(type(page_data) is Response):
             return page_data
@@ -457,8 +459,5 @@ class Community(Controller):
             if page_data.get('meta'):
                 tdata.context.update(page_data['meta'])
                 del page_data['meta']
-            if page_data.get('expr'):
-                tdata.context.update(meta_title=page_data.get('expr').get('title'))
-            tdata.context.update(meta_url=request.url)
 
             return self.serve_loader_page('pages/main.html', tdata, request, response)

@@ -79,9 +79,10 @@ define([
         // $('#login_form').submit(o.login);
         $('#login_form [name=from]').val(window.location);
         if(!context.user.logged_in){
-            o.login_dialog = dialog.create('#login_menu',  
-                { open: function(){ $("#login_menu input[name=username]").focus(); },
-                  handler: function(e, json) {
+            o.login_dialog = dialog.create('#dia_login', {
+                open: function(){
+                    $("#login_form .username").focus(); },
+                handler: function(e, json) {
                     if (json.error != undefined) {
                         $('#login_form .error_msg').text(json.error).showshow().fadeIn("slow");
                     } else {
@@ -89,7 +90,12 @@ define([
                         o.on_login();
                     } }
                 } );
-            $('.login_btn').click(o.login_dialog.open);
+            $('#login_form .signup').click(function(){
+                context.login_form = {
+                    username: $("#login_form [name=username]").val()
+                    ,secret: $("#login_form [name=secret]").val()
+                }
+            })
 
             // request invite form handlers. This form also appears on home page,
             // so this applies to both, and must be done after the top level render
@@ -110,20 +116,6 @@ define([
                     }
                 });
             });
-
-            // login_form already rendered in overlay_template()
-            // login can't set cookies from cross-domain request
-            // so must be done synchronously
-            // $('#login_form').on('success', function(e, data){
-            //     if(data){
-            //         context.user = data;
-            //         init_overlays();
-            //         o.controller.refresh();
-            //         $('#login_menu').data('dialog').close();
-            //     } else {
-            //         $('#login_form .error').showshow();
-            //     }
-            // });
         } else {
             $('#logout_btn').click(function(){ $('#logout_form').submit(); });
             $('#logout_form').bind('success', o.on_logout);
@@ -229,6 +221,7 @@ define([
         if(context.error == "login" && o.login_dialog){
             o.login_dialog.open();
             $('#login_form .error_msg').showshow().fadeIn("slow");
+            delete context.error
         }
         if (context.page != new_page) {
             if (context.page && context.page.exit) 
@@ -340,8 +333,9 @@ define([
         });
         if (!context.user.logged_in) {
             $(".needs_login").unbind("click").click(function(e) {
-                $("#dia_login_or_join").data("dialog").open();
-                e.preventDefault();
+                o.login_dialog.open();
+                e.preventDefault()
+                return false
             });
         }
         $(".user_action_bar form.follow").unbind('success').on('success', 

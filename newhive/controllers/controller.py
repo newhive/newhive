@@ -99,8 +99,6 @@ class Controller(object):
         context = tdata.context
         context.update(template=template)
         context.setdefault('icon', self.asset('skin/1/logo.png'))
-        context.setdefault('meta_title', 'NewHive')
-        context.setdefault('meta_url', tdata.request.url)
         return self.jinja_env.get_template(template).render(context)
 
     def serve_data(self, response, mime, data):

@@ -36,7 +36,8 @@ class Expr(ModelController):
         res = self.db.Expr.fetch(expr.id)
         allowed_attributes = [
             'name', 'url', 'title', 'apps', 'dimensions', 'auth', 'password',
-            'tags', 'background', 'thumb', 'images', 'remix_parent_id'
+            'tags', 'background', 'thumb', 'images', 'remix_parent_id',
+            'container'
         ]
         # TODO: fixed expressions, styles, and scripts, need to be done right
         # if tdata.user.is_admin:
@@ -96,9 +97,9 @@ class Expr(ModelController):
                 # remix_expr.save(updated=False)
 
               tdata.user.flag('expr_new')
-              if tdata.user.get('flags').get('add_invites_on_save'):
-                  tdata.user.unflag('add_invites_on_save')
-                  tdata.user.give_invites(5)
+              #if tdata.user.get('flags').get('add_invites_on_save'):
+              #    tdata.user.unflag('add_invites_on_save')
+              #    tdata.user.give_invites(5)
             except DuplicateKeyError:
                 if expr.get('overwrite'):
                     self.db.Expr.named(tdata.user['name'], upd['name']).delete()

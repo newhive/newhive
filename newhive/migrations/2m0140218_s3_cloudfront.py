@@ -31,7 +31,10 @@ def fixup_expr_assets(expr, dryrun=True, force=False):
     for app in apps:
         fixup_assets_s3(app, ['url', 'content'])
     background = expr.get('background')
-    fixup_assets_s3(background, ['url'])
+    if background:
+        fixup_assets_s3(background, ['url'])
+        if not dryrun:
+            expr.update(background=background,updated=False)
     if not dryrun:
         expr.update(apps=apps,background=background,updated=False)
     return True;
