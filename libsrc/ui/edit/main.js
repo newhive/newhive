@@ -292,19 +292,23 @@ Hive.init_global_handlers = function(){
 
     $('#btn_save').click(function(){
         var expr = Hive.state();
-        window.parent.postMessage({save: expr}, '*')
+        Hive.send({save: expr})
     })
 };
 
-Hive.message = function(ev){
+Hive.receive = function(ev){
     var msg = ev.data
     if(msg.init)
         Hive.init(msg.expr, msg.context)
+    if(msg.focus)
+        window.focus()
 }
+Hive.send = function(m){
+    window.parent.postMessage(m, '*') }
 
 Hive.pre_init = function(){
-    window.addEventListener('message', Hive.message, false)
-    window.parent.postMessage({ready: true}, '*')
+    window.addEventListener('message', Hive.receive, false)
+    Hive.send({ready: true})
 }
 
 Hive.init = function(exp, site_context){
