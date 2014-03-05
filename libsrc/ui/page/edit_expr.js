@@ -25,7 +25,7 @@ define([
 
     o.enter = function(){
         $("body").addClass("edit");
-        window.addEventListener('message', o.message, false);
+        window.addEventListener('message', o.sandbox_receive, false);
     };
     
     o.exit = function(){
@@ -86,6 +86,7 @@ define([
     o.render = function(page_data){
         $('#nav').hidehide();
         $('#site').empty().append(edit_container_template(page_data)).showshow();
+        $('#editor').focus()
 
         expr = context.page_data.expr || { auth: 'public' }
         if(context.query.tags){
@@ -97,7 +98,10 @@ define([
     };
 
     o.attach_handlers = function(){
-        save_dialog = dialog.create('#dia_save')
+        save_dialog = dialog.create('#dia_save', {close: function(){
+            o.sandbox_send({focus:1}) }})
+        $('#editor').on('mouseover', function(){
+            o.sandbox_send({focus:1}) })
         $('#expr_save').off('success error before_submit')
             .on('success', o.success).on('error', o.error)
             .on('before_submit', o.submit)
@@ -106,7 +110,7 @@ define([
         o.update_form()
     };
 
-    o.message = function(ev){
+    o.sandbox_receive = function(ev){
         var msg = ev.data
         if(msg.save){
             expr = msg.save
@@ -125,13 +129,13 @@ define([
         // TODO: receive message for upload start and stop, for showing
         // a warning when save is attempted
     }
+    o.sandbox_send = function(m){
+        $('#editor')[0].contentWindow.postMessage(m, '*') }
 
     o.edit_expr = function(){
         // pass context from server to editor
         var edit_context = js.dfilter(context, ['user', 'flags', 'query'])
-
-        $('#editor')[0].contentWindow.postMessage({ init: true,
-            expr: expr, context: edit_context}, '*')
+        o.sandbox_send({ init: true, expr: expr, context: edit_context})
     }
 
     o.view_expr = function(expr){
