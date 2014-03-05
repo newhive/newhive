@@ -4,13 +4,16 @@
     via postMessage.
 */
 define([
-    'browser/jquery',
-    'server/context',
-    'browser/layout',
-    'ui/jplayer',
-    'browser/jquery/jplayer/skin',
-    'browser/jquery/rotate.js'
-], function($, context, layout, jplayer){
+    'browser/jquery'
+    ,'server/context'
+    ,'browser/layout'
+    ,'ui/jplayer'
+    ,'ui/util'
+
+    ,'browser/jquery/jplayer/skin'
+    ,'browser/jquery/rotate.js'
+    ,'browser/jquery.mobile.custom'
+], function($, context, layout, jplayer, util){
     if (typeof Hive == "undefined") Hive = {};
 
     Hive.Page = (function(){
@@ -21,17 +24,20 @@ define([
         o.send_top = function(msg){
             if(last_message == msg) return;
             window.parent.postMessage(msg, '*');
-            last_message = msg;
+            console.log("send_top " + msg);
+            // These messages are NOT idempotent
+            if (msg != "next" && msg != "prev")
+                last_message = msg;
         };
         
-        o.paging_sent = false;
-        o.page = function(direction){
-            if(o.paging_sent) return;
-            o.paging_sent = true;
-            o.send_top(direction);
-        };
-        o.page_next = function(){ o.page('next') },
-        o.page_prev = function(){ o.page('prev') };
+        // o.paging_sent = false;
+        // o.page = function(direction){
+        //     if(o.paging_sent) return;
+        //     o.paging_sent = true;
+        //     o.send_top(direction);
+        // };
+        o.page_next = function(){ o.send_top('next') },
+        o.page_prev = function(){ o.send_top('prev') };
 
         // o.layout_parent = function(){
         //     o.send_top('layout=' + $(window).width() + ',' + $(window).height());
@@ -64,6 +70,14 @@ define([
             $(window).resize(layout.place_apps)
                  .click(function(){ o.send_top('focus'); });
             $(window).on("scroll", layout.on_scroll);
+            if (util.mobile()) {
+                $(document).on("swipe", function(ev) {
+                    if (ev.swipestart.coords[0] > ev.swipestop.coords[0])
+                        o.page_next()
+                    else
+                        o.page_prev()
+                })
+            }
         };
         
         o.margin = function () {

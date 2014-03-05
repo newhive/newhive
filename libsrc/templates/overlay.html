@@ -19,9 +19,10 @@
   {# + button to open overlay #}
   <div class='social_btn icon btn hide hoverable'></div>
 </div>
-<div class='social overlay page_btn' id='page_prev'></div>
-<div class='social overlay page_btn' id='page_next'></div>
-
+{<if (not flags.mobile)}
+  <div class='social overlay page_btn' id='page_prev'></div>
+  <div class='social overlay page_btn' id='page_next'></div>
+{>}
 {# hive logo button #}
 <div id='logo' class='overlay nav logo icon left right {<if query.clean}clean{>}'></div>
 
