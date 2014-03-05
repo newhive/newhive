@@ -714,7 +714,6 @@ define([
     o.page_prev = function() { o.navigate_page(-1); };
     o.page_next = function() { o.navigate_page(1); };
     o.navigate_page = function(offset){
-        console.log("navigate_page " + offset);
         var page_data = context.page_data;
         if (page_data.cards != undefined) {
             var len = page_data.cards.length

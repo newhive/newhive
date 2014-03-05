@@ -24,7 +24,6 @@ define([
         o.send_top = function(msg){
             if(last_message == msg) return;
             window.parent.postMessage(msg, '*');
-            console.log("send_top " + msg);
             // These messages are NOT idempotent
             if (msg != "next" && msg != "prev")
                 last_message = msg;
