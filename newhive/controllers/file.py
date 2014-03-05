@@ -4,6 +4,7 @@ from werkzeug.http import parse_options_header
 from PIL import Image
 import threading
 
+from newhive import config
 from newhive.utils import lget
 from newhive.controllers.controller import ModelController, auth_required
 from PIL import Image
@@ -56,7 +57,7 @@ class File(ModelController):
     def delete(self, request, response):
         res = self.db.File.fetch(request.form.get('id'))
         if res: res.delete()
-        return True
+        return Truei
 
 def create_file(owner, file, url=None, args={}):
     # Supported mime types.  First try to find exact match to full mime
@@ -110,7 +111,7 @@ def _handle_image(file_record, args):
         return {}
 
     # Defer resampling to another machine
-    if self.config.live_server:
+    if config.live_server:
         return { 'resample_time': 0 }
 
     # resample image by powers of root 2, until < 100 pixels
