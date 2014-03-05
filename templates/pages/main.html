@@ -2,9 +2,7 @@
 
 {% if 'home' %}
   {% block meta %}
-    {% set description = ("We believe that your life is a blank canvas + you decide what goes on it. NewHive is your radically simple, DIY self publishing tool."
-      if page_data.expr else "") 
-    %}
+    {% set description = ("" if page_data.expr else "We believe that your life is a blank canvas + you decide what goes on it. NewHive is your radically simple, DIY self publishing tool.") %}
     <meta name="description" content="{{meta_description}}">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="@newhive">
@@ -13,8 +11,8 @@
     <meta name="twitter:image:src" content=
       '{{ img_url if img_url else 'skin/1/logo_medium.png'|asset_url }}'>
     <meta property="og:url" content='{{url}}'>
-    <meta property="og:title" content='{{title}}'>
-    <meta name="twitter:title" content='{{title}}'>
+    <meta property="og:title" content='{{page_data.title|e}}'>
+    <meta name="twitter:title" content='{{page_data.title|e}}'>
     <meta property="og:description" content='{{description}}'>
     <meta property="twitter:description" content='{{description}}'>
     
