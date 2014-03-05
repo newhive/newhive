@@ -39,7 +39,7 @@ define([], function () {
 				if (x.status < 400 && x.responseText != "") {
 					callback(x.responseText);
 				}
-				else {
+				else if (errback){
 					errback(new Error('fetchText() failed. status: ' + x.statusText));
 				}
 			}
