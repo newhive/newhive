@@ -1825,7 +1825,10 @@ class File(Entity):
         return self._file
 
     def download(self):
-        try: response = urllib.urlopen(self['url'])
+        url = self['url']
+        if url.startswith("//"):
+            url = "http:" + url
+        try: response = urllib.urlopen(url)
         except:
             print 'urlopen fail for ' + self.id + ': ' + json.dumps(self.get('url'))
             return False

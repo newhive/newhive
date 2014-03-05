@@ -33,6 +33,12 @@ from datetime import datetime
 import time
 
 
+# TODO-for-the-love-god: move this code into the runner framework, massive cleanup.
+# def start_snapshots(query_and=False):
+
+
+
+
 urls = ["http://tnh.me/50f60b796d902242fd02a754",
 "http://tnh.me/50f737d36d902248910accfe"]
 expr_ids = ["50f60b796d902242fd02a754",
