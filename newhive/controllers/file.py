@@ -110,7 +110,7 @@ def _handle_image(file_record, args):
         return {}
 
     # Defer resampling to another machine
-    if config.live_server:
+    if self.config.live_server:
         return { 'resample_time': 0 }
 
     # resample image by powers of root 2, until < 100 pixels
