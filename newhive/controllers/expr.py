@@ -281,8 +281,7 @@ class Expr(ModelController):
                 + "' style='filter:url(#%s_blur)'/></svg>" % app.get('id','')
             )
             style = app.get('style', {})
-            more_css = 'fill:%s;stroke:%s' % (
-                style.get('fill',''), style.get('stroke',''))
+            more_css = ';'.join([ k+':'+str(v) for k,v in style.items()])
         else:
             html = content
 
