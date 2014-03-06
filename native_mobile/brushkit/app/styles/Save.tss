@@ -1,0 +1,135 @@
+"#save_window": {
+	layout:"composite"
+}
+
+"#top_nav": {
+	layout:"composite",
+	top:"40dp",
+	left:"0dp",
+	height: "24dp"
+}
+
+"#form_elems_view": {
+	layout:"vertical",
+	top:"80dp",
+	left: "20dp"
+}
+
+
+"#image_back": {
+	left:"20dp",
+	top:"0dp",
+	height:"24dp"
+}
+
+"#label_save": {
+	top:"0dp",
+	font: {
+		fontSize:"24dp",
+		fontWeight:"bold"
+	},
+	color:"#000"
+}
+
+
+"#remix_view": {
+	top: "40dp",
+	height: "40dp"
+}
+
+"#public_view": {
+	top: "20dp",
+	height: "40dp"
+}
+
+".btn_label": {
+	left:"0dp"
+}
+".btn": {
+	right:"20dp"
+}
+
+
+"TextField" : {
+	left: "0dp",
+	width:'80%',
+	height:'32dp',
+	backgroundColor: "#eee",
+	borderWidth:1,
+	borderColor:"#464646",
+	color:"#000",
+	textAlign:"left",
+	font: {
+		fontSize: "18dp",
+		fontWeight: "bold"
+	}
+}
+
+
+
+"#tf_title": {
+	top:"20dp"
+}
+"#tf_url": {
+	top:"40dp"
+}
+"#tf_tags": {
+	top:"10dp"
+}
+
+
+
+"#buttons_view": {
+	layout:"composite",
+	bottom:"0dp",
+	height:"25%",
+	zIndex:10
+}
+
+"#btn_public": {
+	width: "50%",
+	height:"49%",
+	left:"0dp",
+	top:"0dp",
+	color:"#fff",
+	borderColor:"fff",
+	borderWidth: "1dp",
+	backgroundColor: "transparent",
+	backgroundImage: "/images/bg_orange_slice.png",
+	backgroundSelectedImage:'/images/bg_grey_slice_inactive.png',
+	font: {
+		fontSize: "20dp",
+		fontWeight: "bold"
+	}
+}
+"#btn_private": {
+	width: "50%",
+	height:"49%",
+	right:"0dp",	
+	top:"0dp",
+	color:"#fff",
+	borderColor:"fff",
+	borderWidth: "1dp",
+	backgroundColor: "transparent",
+	backgroundImage: "/images/bg_orange_slice.png",
+	backgroundSelectedImage:'/images/bg_grey_slice_inactive.png',
+	font: {
+		fontSize: "20dp",
+		fontWeight: "bold"
+	}
+}
+"#btn_save": {
+	width: "100%",
+	height:"49%",	
+	bottom:"0dp",
+	color:"#fff",
+	borderColor:"fff",
+	borderWidth: "1dp",
+	backgroundColor: "transparent",
+	backgroundImage: "/images/bg_orange_slice.png",
+	backgroundSelectedImage:'/images/bg_grey_slice_inactive.png',
+	font: {
+		fontSize: "20dp",
+		fontWeight: "bold"
+	}
+}

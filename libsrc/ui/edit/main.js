@@ -270,21 +270,13 @@ Hive.init_global_handlers = function(){
     evs.handler_set(Hive);
     env.apps_e.addClass('default');
 
-    $(window).on('beforeunload', function(){
-        // TODO-polish-editor: check undo history, or compare expr from server
-        // with current state to determine if anything is unsaved
-        if(hive_app.Apps.length == 0) return
-        return ( "If you leave this page any unsaved " +
-            "changes to your expression will be lost." )
-    })
-
     var busy_e = $('.save .loading');
     $(document).ajaxStart(function(){
         busy_e.showshow();
-        // TODO: communicate to container that save is in progress
+        Hive.send({save_safe: false})
     }).ajaxStop(function(){
         busy_e.hidehide();
-        // TODO: communicate to container that save is in progress
+        Hive.send({save_safe: true})
     }).ajaxError(function(ev, jqXHR, ajaxOptions){
         // TODO-polish-upload-error: show some warning, and somehow indicate
         // which app(s) failed to save
@@ -324,6 +316,13 @@ Hive.init = function(exp, site_context){
     env.squish_full_bleed = env.gifwall;
     env.show_mini_selection_border = 
         env.gifwall || context.flags.show_mini_selection_border;
+
+    var exit_safe = true
+    env.exit_safe_set = function(v){
+        if(v == exit_safe) return
+        Hive.send({exit_safe: v})
+        exit_safe = v
+    }
 
     if (env.gifwall)
         $("body").addClass("gifwall");

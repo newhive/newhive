@@ -58,6 +58,7 @@ o.History.init = function(){
         o.push({ undo: undo, redo: redo, name: action_name });
         o.current += 1;
         o.update_btn_titles();
+        env.exit_safe_set(false)
     };
 
     o.undo = function(){
@@ -66,6 +67,7 @@ o.History.init = function(){
         o.current -= 1;
         o.update_btn_titles();
         env.layout_apps();
+        env.exit_safe_set(o.current == -1)
         return false;
     };
 

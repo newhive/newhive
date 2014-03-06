@@ -1,0 +1,90 @@
+
+".content_tile": {
+}
+"#textfields_view": {
+	layout: "vertical",
+	width: Titanium.UI.FILL,
+	height: "190dp",
+	top:'40dp',
+	backgroundColor: "transparent",
+	backgroundImage: "/images/bg_slice_grey_h120.png",
+	backgroundRepeat: true,
+	zIndex:'10'
+}
+"TextField": {
+	top:"18dp",
+	width:'70%',
+	height:'32dp',
+	backgroundColor: "#eee",
+	borderWidth:1,
+	borderColor:"#464646",
+	color:"#fa562d",
+	textAlign:"center",
+	font: {
+		fontSize: "18dp",
+		fontWeight: "bold"
+	}
+}
+
+"#button_view": {
+	width: Titanium.UI.FILL,
+	height: "80dp",
+	bottom:'0dp',
+	backgroundColor: "transparent",
+	zIndex:"10"
+}
+"#submit": {
+	width: Titanium.UI.FILL,
+	height:"80dp",	
+	bottom:"0dp",
+	color:"#fff",
+	backgroundColor: "transparent",
+	backgroundImage: "/images/bg_orange_slice.png",
+	backgroundSelectedImage:'/images/bg_grey_slice_inactive.png',
+	font: {
+		fontSize: "20dp",
+		fontWeight: "bold"
+	}
+}
+"#blank_view": {
+	layout:"composite",
+	backgroundColor: "#ffffff",
+	width: Titanium.UI.FILL,
+	height: Titanium.UI.FILL,
+	top:'10dp',
+	zIndex:'1'
+}
+"#watermark": {
+	height:"70%",
+	opacity:"0.4"
+}
+"#error_message": {
+	top:"10dp",
+	opacity:"0",
+	color:"#333333",
+	textAlign:"center",
+	font: {
+		fontSize: "18dp"
+	}
+}
+"#retrieve_password":{
+	top:"10dp",
+	width:"70%",
+	height:"32dp",
+	opacity:"0",
+	color:"#fa562d",
+	textAlign:"center",
+	backgroundColor:"#eee",
+	borderColor:"333",
+	borderRadius:"1dp",
+	font: {
+		fontSize: "18dp"
+	}
+}
+
+
+
+
+
+
+

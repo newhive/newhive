@@ -57,6 +57,10 @@ define([
     }
     o.submit = function(){
         o.update_expr()
+        // TODO-polish-edit-save: consider allowing save dialog to open before
+        // files are saved, and showing warning here if unfinished
+        // if(!o.save_safe && )
+        o.controller.set_exit_warning(false)
         $('#expr_save .expr').val(JSON.stringify(expr))
     }
 
@@ -104,6 +108,13 @@ define([
             expr.tags_index = list
             expr.tags = o.canonical_tags(list)
         }
+
+        o.controller.set_exit_warning(
+            "If you leave this page any unsaved "
+                + "changes to your expression will be lost."
+            , function(){ return o.exit_safe } )
+        o.exit_safe = true
+        // o.save_safe = true
     };
 
     o.attach_handlers = function(){
@@ -135,8 +146,9 @@ define([
             save_dialog.open()
         }
         if(msg.ready) o.edit_expr()
-        // TODO: receive message for upload start and stop, for showing
-        // a warning when save is attempted
+        if(typeof msg.exit_safe != 'undefined')
+            o.exit_safe = msg.exit_safe
+        // if(msg.save_safe) o.save_safe = msg.exit_safe
     }
     o.sandbox_send = function(m){
         $('#editor')[0].contentWindow.postMessage(m, '*') }

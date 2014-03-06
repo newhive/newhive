@@ -1,0 +1,15 @@
+<Alloy>
+	<Tab id="consumeTab" title="Consume" icon="">
+		<Window title="Consume" id="consumeWindow">
+			<ScrollableView>
+				<WebView id="thing1" url="http://tnh.me/5303c8c2ff30d90fac37e73f" />
+				<WebView id="thing2" url="http://tnh.me/5302c761082d772a09f40337" />
+				<WebView id="thing3" url="http://tnh.me/52fd51df082d7707e2375ca4" />
+				<WebView id="thing4" url="http://tnh.me/52fd6abb082d77748b0c8ca1" />
+			</ScrollableView>
+		</Window>
+	</Tab>
+</Alloy>
+
+
+
