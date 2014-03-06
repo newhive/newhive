@@ -108,6 +108,7 @@ define([
     o.render = function(page_data){
         // TODO: should the HTML render on page load? Or delayed?
         o.expr = page_data.expr;
+        o.page_data = page_data;
 
         $('title').text(o.expr.title);
         $('#site').hidehide();
@@ -116,7 +117,7 @@ define([
         $('#content_btns .expr_actions').replaceWith(
             expr_actions_template(page_data))
         $('#social_overlay').append(
-            social_overlay_template(context.page_data));
+            social_overlay_template(page_data));
         $('#popup_content .counts_icon').each(function(i, el) {
             resize_icon($(this));
         });
@@ -133,29 +134,7 @@ define([
         o.action_set_state($(".republish_btn"), o.action_get_state("republish"));
         o.action_set_state($(".comment_btn"), o.action_get_state("comment"));
 
-        if (page_data.cards == undefined) {
-            // In case of direct link with no context,
-            // fetch cards from q param, or the default context, @owner
-
-            var set_cards = function(data){
-                page_data.cards = data.cards };
-
-            if(context.query.q){
-                var query = {q: context.query.q, id: o.expr.id };
-                o.controller.get('search', {}, set_cards, query);
-                context.page_data.cards_route = {
-                    query: query,
-                    route_args: { route_name: 'search' }
-                };
-            }
-            else {
-                o.controller.get('expressions_public', {
-                    owner_name: page_data.expr.owner.name }, set_cards)
-                context.page_data.cards_route = {
-                    route_args: { route_name: 'expressions_public' }
-                };
-            }
-        }
+        fetch_cards();
 
         var found = find_card(o.expr.id);
         if (found >= 0) {
@@ -241,6 +220,43 @@ define([
         }
     };
 
+    var fetch_cards = function () {
+        var page_data = o.page_data;
+        if (page_data.cards == undefined) {
+            // In case of direct link with no context,
+            // fetch cards from q param, or the default context, @owner
+
+            var set_cards = function(data){
+                page_data.cards = data.cards };
+
+            if(context.query.q){
+                var query = {q: context.query.q, id: o.expr.id };
+                o.controller.get('search', {}, set_cards, query);
+                context.page_data.cards_route = {
+                    query: query,
+                    route_args: { route_name: 'search' }
+                };
+            }
+            else {
+                o.controller.get('expressions_public', {
+                    owner_name: page_data.expr.owner.name }, set_cards)
+                context.page_data.cards_route = {
+                    route_args: { route_name: 'expressions_public' }
+                };
+            }
+        }
+    };
+    var id_from_card_count = function(n, fetch){
+        var page_data = o.page_data;
+        fetch = util.default(fetch, true);
+        // No data for card n.
+        if (!page_data.cards || !page_data.cards[n]) {
+            if (fetch)
+                fetch_cards();
+            return "";
+        }
+        return page_data.cards[n].id;
+    };
     var find_card = function(expr_id){
         var found = -1;
         var page_data = context.page_data;
@@ -356,12 +372,48 @@ define([
         var anim_direction = 0;
         if (o.last_found >= 0 && found >= 0) {
             var dir = found - o.last_found;
-            if (Math.abs(dir) > 5)
+            if (Math.abs(dir) > 1)
                 dir *= -1;
             anim_direction = (dir > 0) ? 1 : -1;
         }
         o.last_found = found;
-        if (anim_direction == 0 || expr_curr.length != 1 || o.animation_timeout != undefined) {
+        o.animating = false;
+        if (0 && util.mobile() && found > 0) {
+            frames = [ found - 1, found, found + 1 ];
+            frames = frames.map(function(v) {
+                return o.get_expr(id_from_card_count(v));
+            })
+            $('#exprs .expr').addClass('.expr_hidden');
+            var x = 0, win_width = $(window).width(), scroll_goal=-1;
+            for (var i = 0; i < 3; ++i) {
+                if (frames[i].length) {
+                    frames[i].css("left", x).showshow().removeClass('.expr_hidden');
+                    if (i == 1)
+                        scroll_goal = x;
+                    x += win_width;
+                }
+            }
+            if (scroll_goal > 0) {
+                $("#exprs").css("overflow-x","auto").scrollLeft(scroll_goal);
+                // $('#exprs .expr .expr_hidden').hidehide();
+                $('#exprs .expr.expr_hidden').remove();
+                $("#exprs").unbind("scroll").on("scroll", function (ev) {
+                    if (o.animating) {
+                        ev.currentTarget.scrollLeft = scroll_goal;
+                        return;
+                    }
+                    var x = ev.currentTarget.scrollLeft;
+                    if (scroll_goal - x > win_width / 3) {
+                        o.navigate_page(-1);
+                    } else if (x - scroll_goal > win_width / 3) {
+                        o.navigate_page(1);
+                    }
+                });
+            }
+        } else if (anim_direction == 0
+            || expr_curr.length != 1
+            || o.animation_timeout != undefined
+        ) {
             contentFrame.css({
                 'left': 0,
                 'top': -contentFrame.height() + 'px',
@@ -721,15 +773,20 @@ define([
     o.page_prev = function() { o.navigate_page(-1); };
     o.page_next = function() { o.navigate_page(1); };
     o.navigate_page = function(offset){
+        o.animating = true;
         var page_data = context.page_data;
         if (page_data.cards != undefined) {
             var len = page_data.cards.length
             var found = find_card(page_data.expr_id);
             // TODO: do we need error handling?
             if (found >= 0) {
-                // TODO: need to asynch fetch more expressions and concat to cards.
+                var orig_found = found;
                 found = (found + len + offset) % len;
-                if (offset > 0 && found + 5 > len) {
+                debug("navigate (" + offset + ") to " + found);
+                if ((offset < 0 && found > orig_found) 
+                    || (offset > 0 && found + 5 > len))
+                {
+                    // Async fetch more expressions and concat to cards.
                     on_scroll_add_page();
                 }
                 // Cache upcoming expressions

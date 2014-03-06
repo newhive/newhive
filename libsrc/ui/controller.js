@@ -26,7 +26,7 @@ define([
     o.init = function(route_args){
         window.c = context; // useful for debugging
         setup_google_analytics();
-        if (context.flags.mobile_web)
+        if (!util.mobile() && context.flags.mobile_web)
             util.mobile = function() { return "true" };
         // init_history();
 
@@ -41,7 +41,7 @@ define([
             $('<meta name="viewport" content="width=device-width, ' +
                 'height=device-height, initial-scale=0.5, ' +
                 'user-scalable=1"/>').appendTo($("head"));
-            context.flags.mobile = true;
+            context.flags.mobile = util.mobile();
         }
         page.init(o);
         js.each(pages, function(m){
