@@ -1,0 +1,64 @@
+"#compose_window": {
+	layout:"composite"
+}
+
+"#scroll_view": {
+	top:"8%",
+	height:"67%",
+	zIndex:1
+}
+
+"#buttons_view": {
+	layout:"composite",
+	bottom:"0dp",
+	height:"25%",
+	zIndex:10
+}
+
+"#select": {
+	width: "50%",
+	height:"49%",
+	left:"0dp",
+	top:"0dp",
+	color:"#fff",
+	borderColor:"fff",
+	borderWidth: "1dp",
+	backgroundColor: "transparent",
+	backgroundImage: "/images/bg_orange_slice.png",
+	backgroundSelectedImage:'/images/bg_grey_slice_inactive.png',
+	font: {
+		fontSize: "20dp",
+		fontWeight: "bold"
+	}
+}
+"#take": {
+	width: "50%",
+	height:"49%",
+	right:"0dp",	
+	top:"0dp",
+	color:"#fff",
+	borderColor:"fff",
+	borderWidth: "1dp",
+	backgroundColor: "transparent",
+	backgroundImage: "/images/bg_orange_slice.png",
+	backgroundSelectedImage:'/images/bg_grey_slice_inactive.png',
+	font: {
+		fontSize: "20dp",
+		fontWeight: "bold"
+	}
+}
+"#save": {
+	width: "100%",
+	height:"49%",	
+	bottom:"0dp",
+	color:"#fff",
+	borderColor:"fff",
+	borderWidth: "1dp",
+	backgroundColor: "transparent",
+	backgroundImage: "/images/bg_orange_slice.png",
+	backgroundSelectedImage:'/images/bg_grey_slice_inactive.png',
+	font: {
+		fontSize: "20dp",
+		fontWeight: "bold"
+	}
+}

@@ -1,0 +1,10 @@
+<Alloy>
+	<Window id="create_window">
+		<ImageView id="logo" image="/images/logo_with_name.png"></ImageView>
+		
+		<ImageView id="create_icon" image="/images/create_page.png"></ImageView>
+		
+		<Button id="select">Select</Button>
+		<Button id="take">Take</Button>
+	</Window>
+</Alloy>
