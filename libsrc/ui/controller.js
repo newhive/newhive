@@ -137,6 +137,7 @@ define([
     o.open_route = function(page_state, callback, push_state) {
         if(o.exit_warning && !o.exit_condition() && !confirm(o.exit_warning))
             return;
+        o.set_exit_warning(false)
 
         context.query;
 
