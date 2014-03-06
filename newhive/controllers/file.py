@@ -57,7 +57,7 @@ class File(ModelController):
     def delete(self, request, response):
         res = self.db.File.fetch(request.form.get('id'))
         if res: res.delete()
-        return Truei
+        return True
 
 def create_file(owner, file, url=None, args={}):
     # Supported mime types.  First try to find exact match to full mime
