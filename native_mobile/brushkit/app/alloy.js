@@ -77,7 +77,7 @@ function showHiveCamera() {
 	
 		success:function(event)
 		{
-			photo = Alloy.createModel('photo');
+			photo = Alloy.createModel('photos');
 			photo.set('photo_blob', event.media);
 			photo.save();
 			photosCollection.add(photo);
@@ -113,11 +113,11 @@ function showHiveCamera() {
 			a.show();
 		},
 		saveToPhotoGallery:false,
-		allowEditing:false,
+		allowEditing:true,
 		animated:true,
-		showControls:false,
-		overlay:camera_button_view,
-		autohide:false,
+		showControls:true,
+		/*overlay:camera_button_view,*/
+		autohide:true,
 		transform:camera_2d_matrix,
 		mediaTypes:[Ti.Media.MEDIA_TYPE_VIDEO,Ti.Media.MEDIA_TYPE_PHOTO]
 	});
