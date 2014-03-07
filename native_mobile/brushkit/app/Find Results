@@ -1,0 +1,364 @@
+Searching 1384 files for "Photos"
+
+/Users/viciousesque/Documents/VICBIZ/SMALLBORE/CLIENTS/NEW_HIVE/newhive/native_mobile/brushkit/app/alloy.js:
+   16  Titanium.App.Properties.setBool('is_test', true);
+   17  
+   18: var photosCollection = Alloy.Collections.instance('Photos');
+   19  
+   20  //192.168.1.147:5000
+   ..
+   81  			photo.set('photo_blob', event.media);
+   82  			photo.save();
+   83: 			photosCollection.add(photo);
+   84  
+   85  			var compose = Alloy.createController('Compose'); 
+   ..
+  133  				photo.set('photo_blob', event.media);
+  134  				photo.save();
+  135: 				photosCollection.add(photo);
+  136  
+  137  				var compose = Alloy.createController('Compose'); 
+  ...
+  244  
+  245  //TOSS MAYBE?
+  246: function createSmallPhotos() {
+  247: 	photosCollection.each(function(p){
+  248  		if(p.get('photo_small') == null){
+  249  			var lg_img = p.get('photo_blob');
+
+/Users/viciousesque/Documents/VICBIZ/SMALLBORE/CLIENTS/NEW_HIVE/newhive/native_mobile/brushkit/app/controllers/Compose.js:
+    1: var photosCollection = Alloy.Collections.Photos;
+    2  
+    3  
+    .
+    5  	$.scroll_view.removeAllChildren();
+    6  	
+    7: 	//var photo_data = photosCollection.at(0);
+    8: 	photosCollection.each(function(p, index){
+    9  		if(p != undefined){
+   10  			var img = p.get('photo_blob');
+   ..
+   16  			
+   17  			//add listener to last elem to scroll to bottom of scroll_view
+   18: 			if((index+1) == photosCollection.length){
+   19  				img_view.addEventListener('postlayout', function(){
+   20  					$.scroll_view.scrollToBottom();
+
+/Users/viciousesque/Documents/VICBIZ/SMALLBORE/CLIENTS/NEW_HIVE/newhive/native_mobile/brushkit/app/controllers/Save.js:
+    1  
+    2: var photosCollection = Alloy.Collections.Photos;
+    3  
+    4  function publishExrpession(){
+    5  	var apps = new Array();
+    6: 	photosCollection.each(function(p, index) {
+    7  		var h = 1188;
+    8  		var n_y = h*index;
+    .
+   44  
+   45  		//remove all the photo models from the collection to start the next expression fresh
+   46: 		photosCollection.reset();
+   47  
+   48  		var creator = Alloy.createController('Create'); 
+
+/Users/viciousesque/Documents/VICBIZ/SMALLBORE/CLIENTS/NEW_HIVE/newhive/native_mobile/brushkit/app/models/Photo.js:
+   13  		"adapter": {
+   14  			"type": "sql",
+   15: 			"collection_name": "photos",
+   16  			"idAttribute": "id",
+   17  			"db_name": "newhive",
+
+/Users/viciousesque/Documents/VICBIZ/SMALLBORE/CLIENTS/NEW_HIVE/newhive/native_mobile/brushkit/build/android/bin/assets/Resources/app.js:
+   49              photo.set("photo_blob", event.media);
+   50              photo.save();
+   51:             photosCollection.add(photo);
+   52              var compose = Alloy.createController("Compose");
+   53              compose.getView("compose_window").open();
+   ..
+   85                  photo.set("photo_blob", event.media);
+   86                  photo.save();
+   87:                 photosCollection.add(photo);
+   88                  var compose = Alloy.createController("Compose");
+   89                  compose.getView("compose_window").open();
+   ..
+  170  }
+  171  
+  172: function createSmallPhotos() {
+  173:     photosCollection.each(function(p) {
+  174          if (null == p.get("photo_small")) {
+  175              var lg_img = p.get("photo_blob");
+  ...
+  199  Titanium.App.Properties.setBool("is_test", true);
+  200  
+  201: var photosCollection = Alloy.Collections.instance("Photo");
+  202  
+  203  Titanium.App.Properties.setString("base_url_ssl", "https://dev.newhive.com/");
+
+/Users/viciousesque/Documents/VICBIZ/SMALLBORE/CLIENTS/NEW_HIVE/newhive/native_mobile/brushkit/build/android/bin/assets/Resources/alloy/controllers/Compose.js:
+   90      exports.destroy = function() {};
+   91      _.extend($, $.__views);
+   92:     var photosCollection = Alloy.Collections.Photo;
+   93      $.compose_window.addEventListener("focus", function() {
+   94          $.scroll_view.removeAllChildren();
+   95:         photosCollection.each(function(p, index) {
+   96              if (void 0 != p) {
+   97                  var img = p.get("photo_blob");
+   ..
+  100                      width: "99%"
+  101                  });
+  102:                 index + 1 == photosCollection.length && img_view.addEventListener("postlayout", function() {
+  103                      $.scroll_view.scrollToBottom();
+  104                  });
+
+/Users/viciousesque/Documents/VICBIZ/SMALLBORE/CLIENTS/NEW_HIVE/newhive/native_mobile/brushkit/build/android/bin/assets/Resources/alloy/controllers/Save.js:
+    2      function publishExrpession() {
+    3          var apps = new Array();
+    4:         photosCollection.each(function(p, index) {
+    5              var h = 1188;
+    6              var n_y = h * index;
+    .
+   33              res = JSON.parse(this.responseText);
+   34              Ti.API.info("the res: " + this.responseText);
+   35:             photosCollection.reset();
+   36              var creator = Alloy.createController("Create");
+   37              creator.getView("create_window").open();
+   ..
+  218      exports.destroy = function() {};
+  219      _.extend($, $.__views);
+  220:     var photosCollection = Alloy.Collections.Photo;
+  221      $.image_back.addEventListener("click", function() {
+  222          var comp = Alloy.createController("Compose");
+
+/Users/viciousesque/Documents/VICBIZ/SMALLBORE/CLIENTS/NEW_HIVE/newhive/native_mobile/brushkit/build/android/bin/assets/Resources/alloy/models/Photo.js:
+   11          adapter: {
+   12              type: "sql",
+   13:             collection_name: "photos",
+   14              idAttribute: "id",
+   15              db_name: "newhive",
+
+/Users/viciousesque/Documents/VICBIZ/SMALLBORE/CLIENTS/NEW_HIVE/newhive/native_mobile/brushkit/build/iphone/assets/app_js:
+    1: function showHiveCamera(){var e=Titanium.UI.createButton({right:0,bottom:0,width:"70%",height:"23%",backgroundImage:"/images/bg_orange_slice.png",backgroundSelectedImage:"/images/bg_grey_slice_inactive.png",backgroundRepeat:!0,color:"#444",selectedColor:"#fff",font:{fontWeight:"bold",fontSize:"22dp"}}),o=Titanium.UI.createButton({left:0,bottom:0,width:"30%",height:"23%",backgroundImage:"/images/bg_slice_grey_flat.png",backgroundSelectedImage:"/images/bg_slice_grey_flat_inactive.png",backgroundRepeat:!0,color:"#444",selectedColor:"#fff",font:{fontWeight:"bold",fontSize:"22dp"}});e.addEventListener("click",function(){Titanium.API.log("info","Click-click!"),Titanium.Media.takePicture()}),o.addEventListener("click",function(){Titanium.API.log("info","Cancel!"),Titanium.Media.hideCamera()});var t=Titanium.UI.createView();t.add(e),t.add(o);var i=Titanium.UI.create2DMatrix({scale:1});Titanium.Media.showCamera({success:function(e){photo=Alloy.createModel("photo"),photo.set("photo_blob",e.media),photo.save(),photosCollection.add(photo);var o=Alloy.createController("Compose");o.getView("compose_window").open(),Titanium.Media.hideCamera(),uploadImage(photo)},cancel:function(){var e=Alloy.createController("Compose");e.getView("compose_window").open(),Titanium.Media.hideCamera()},error:function(e){var o=Titanium.UI.createAlertDialog({title:"Camera"});o.setMessage(e.code==Titanium.Media.NO_CAMERA?"Please run this test on device":"Unexpected error: "+e.code),o.show()},saveToPhotoGallery:!1,allowEditing:!1,animated:!0,showControls:!1,overlay:t,autohide:!1,transform:i,mediaTypes:[Ti.Media.MEDIA_TYPE_VIDEO,Ti.Media.MEDIA_TYPE_PHOTO]})}function showHiveGallery(){Titanium.Media.openPhotoGallery({success:function(e){if(e.mediaType==Ti.Media.MEDIA_TYPE_PHOTO){photo=Alloy.createModel("photo"),photo.set("photo_blob",e.media),photo.save(),photosCollection.add(photo);var o=Alloy.createController("Compose");o.getView("compose_window").open(),uploadImage(photo)}else alert("Sorry, only image uploads allowed at this time.")},cancel:function(){}})}function checkLogin(){var e=Titanium.App.Properties.getString("base_url_ssl"),o=e+"api/user/login",t=Ti.Network.createHTTPClient();t.onload=function(){Ti.API.info("checkLogin New Hive response: "+this.responseText);try{JSON.parse(this.responseText)}catch(e){var o=Alloy.createController("Login");return void o.getView("login_window").open()}if(res=JSON.parse(this.responseText),res.logged_in){Ti.API.info("login success! "+res.name),Ti.App.current_user_name=res.name,Ti.App.current_user_id=res.id;var t=Alloy.createController("Create");t.getView("create_window").open()}else{var o=Alloy.createController("Login");o.getView("login_window").open()}},t.open("POST",o),t.setRequestHeader("Content-Type","application/json"),t.setRequestHeader("Accepts","application/json");var i={client:"mobile",json:"true"};t.send(i)}function uploadImage(e){var o=e.get("photo_blob"),t=o.width>o.height?"landscape":"portrait",i=1e3,a=.5;a="portrait"==t?i/o.height:i/o.width,reduce_w=o.width*a,reduce_h=o.height*a,Ti.API.info("BEFORE reducing: "+o.length),small_photo=ImageFactory.imageAsResized(o,{width:reduce_w,height:reduce_h,quality:ImageFactory.QUALITY_MEDIUM});var n=Titanium.App.Properties.getString("base_url_ssl"),r=n+"api/file/create",l=Ti.Network.createHTTPClient();l.onload=function(){try{JSON.parse(this.responseText)}catch(o){return void alert("upload failed.")}res=JSON.parse(this.responseText)[0],e.set("new_hive_id",res.id),Ti.API.info("the res id: "+res.id),e.save()},l.open("POST",r),l.setRequestHeader("Content-Type","application/json"),l.setRequestHeader("Accepts","application/json");var s={client:"mobile",json:"true",file:small_photo};l.send(s)}function createSmallPhotos(){photosCollection.each(function(e){if(null==e.get("photo_small")){var o=e.get("photo_blob"),t=o.width>o.height?"landscape":"portrait",i=1e3,a=.5;a="portrait"==t?i/o.height:i/o.width,reduce_w=o.width*a,reduce_h=o.height*a,Ti.API.info("BEFORE reducing: "+o.length),small_photo=ImageFactory.imageAsResized(o,{width:reduce_w,height:reduce_h,quality:ImageFactory.QUALITY_MEDIUM}),Ti.API.info("AFTER reducing: "+small_photo.length),e.set("photo_small",small_photo),e.save()}})}var Alloy=require("alloy"),_=Alloy._,Backbone=Alloy.Backbone,ImageFactory=require("ti.imagefactory");Titanium.App.Properties.setBool("is_test",!0);var photosCollection=Alloy.Collections.instance("Photos");Titanium.App.Properties.setString("base_url_ssl","https://dev.newhive.com/"),Titanium.App.Properties.setString("base_url","http://dev.newhive.com/"),Alloy.createController("index");
+
+/Users/viciousesque/Documents/VICBIZ/SMALLBORE/CLIENTS/NEW_HIVE/newhive/native_mobile/brushkit/build/iphone/assets/alloy/controllers/Compose_js:
+    1: function Controller(){require("alloy/controllers/BaseController").apply(this,Array.prototype.slice.call(arguments)),this.__controllerPath="Compose",arguments[0]?arguments[0].__parentSymbol:null,arguments[0]?arguments[0].$model:null,arguments[0]?arguments[0].__itemTemplate:null;var t=this,e={};t.__views.compose_window=Ti.UI.createWindow({backgroundColor:"white",layout:"composite",font:{fontSize:"20dp"},id:"compose_window"}),t.__views.compose_window&&t.addTopLevelView(t.__views.compose_window),t.__views.scroll_view=Ti.UI.createScrollView({top:"8%",height:"67%",zIndex:1,id:"scroll_view",layout:"vertical"}),t.__views.compose_window.add(t.__views.scroll_view),t.__views.buttons_view=Ti.UI.createView({layout:"composite",bottom:"0dp",height:"25%",zIndex:10,id:"buttons_view"}),t.__views.compose_window.add(t.__views.buttons_view),t.__views.select=Ti.UI.createButton({width:"50%",height:"49%",left:"0dp",top:"0dp",color:"#fff",borderColor:"fff",borderWidth:"1dp",backgroundColor:"transparent",backgroundImage:"/images/bg_orange_slice.png",backgroundSelectedImage:"/images/bg_grey_slice_inactive.png",font:{fontSize:"20dp",fontWeight:"bold"},title:"Select",id:"select"}),t.__views.buttons_view.add(t.__views.select),t.__views.take=Ti.UI.createButton({width:"50%",height:"49%",right:"0dp",top:"0dp",color:"#fff",borderColor:"fff",borderWidth:"1dp",backgroundColor:"transparent",backgroundImage:"/images/bg_orange_slice.png",backgroundSelectedImage:"/images/bg_grey_slice_inactive.png",font:{fontSize:"20dp",fontWeight:"bold"},title:"Take",id:"take"}),t.__views.buttons_view.add(t.__views.take),t.__views.save=Ti.UI.createButton({width:"100%",height:"49%",bottom:"0dp",color:"#fff",borderColor:"fff",borderWidth:"1dp",backgroundColor:"transparent",backgroundImage:"/images/bg_orange_slice.png",backgroundSelectedImage:"/images/bg_grey_slice_inactive.png",font:{fontSize:"20dp",fontWeight:"bold"},title:"Save",id:"save"}),t.__views.buttons_view.add(t.__views.save),e.destroy=function(){},_.extend(t,t.__views);var i=Alloy.Collections.Photos;t.compose_window.addEventListener("focus",function(){t.scroll_view.removeAllChildren(),i.each(function(e,r){if(void 0!=e){var o=e.get("photo_blob"),n=Ti.UI.createImageView({image:o,width:"99%"});r+1==i.length&&n.addEventListener("postlayout",function(){t.scroll_view.scrollToBottom()}),t.scroll_view.add(n)}})}),t.select.addEventListener("click",function(){showHiveGallery()}),t.take.addEventListener("click",function(){showHiveCamera()}),t.save.addEventListener("click",function(){var t=Alloy.createController("Save");t.getView("save_window").open()}),_.extend(t,e)}var Alloy=require("alloy"),Backbone=Alloy.Backbone,_=Alloy._;module.exports=Controller;
+
+/Users/viciousesque/Documents/VICBIZ/SMALLBORE/CLIENTS/NEW_HIVE/newhive/native_mobile/brushkit/build/iphone/assets/alloy/controllers/Save_js:
+    1: function Controller(){function e(){var e=new Array;o.each(function(t,i){var o=1188,r=o*i;e.push({file_id:t.get("new_hive_id"),z:i,dimensions:[1e3,1188],position:[0,r],type:"hive.image"})});var i={tags:t.tf_tags.value,name:t.tf_url.value,auth:"public",title:t.tf_title.value,apps:e};Ti.API.info("here is your exp json: "+JSON.stringify(i));var r=Titanium.App.Properties.getString("base_url_ssl"),n=r+"api/expr/save",s=Ti.Network.createHTTPClient();s.onload=function(){try{JSON.parse(this.responseText)}catch(e){return void alert("upload failed.")}res=JSON.parse(this.responseText),Ti.API.info("the res: "+this.responseText),o.reset();var t=Alloy.createController("Create");t.getView("create_window").open();var i=Titanium.App.Properties.getString("base_url"),r=i+Ti.App.current_user_name+"/"+res.name;Ti.Platform.openURL(r)},s.open("POST",n),s.setRequestHeader("Content-Type","application/json"),s.setRequestHeader("Accepts","application/json");var a={client:"mobile",json:"true",expr:JSON.stringify(i)};s.send(a)}require("alloy/controllers/BaseController").apply(this,Array.prototype.slice.call(arguments)),this.__controllerPath="Save",arguments[0]?arguments[0].__parentSymbol:null,arguments[0]?arguments[0].$model:null,arguments[0]?arguments[0].__itemTemplate:null;var t=this,i={};t.__views.save_window=Ti.UI.createWindow({backgroundColor:"white",layout:"composite",font:{fontSize:"20dp"},id:"save_window"}),t.__views.save_window&&t.addTopLevelView(t.__views.save_window),t.__views.top_nav=Ti.UI.createView({layout:"composite",top:"40dp",left:"0dp",height:"24dp",id:"top_nav"}),t.__views.save_window.add(t.__views.top_nav),t.__views.image_back=Ti.UI.createImageView({left:"20dp",top:"0dp",height:"24dp",id:"image_back",image:"/images/arrow_back.png"}),t.__views.top_nav.add(t.__views.image_back),t.__views.label_save=Ti.UI.createLabel({top:"0dp",font:{fontSize:"24dp",fontWeight:"bold"},color:"#000",text:"Save",id:"label_save"}),t.__views.top_nav.add(t.__views.label_save),t.__views.form_elems_view=Ti.UI.createView({layout:"vertical",top:"80dp",left:"20dp",id:"form_elems_view"}),t.__views.save_window.add(t.__views.form_elems_view),t.__views.tf_title=Ti.UI.createTextField({left:"0dp",width:"80%",height:"32dp",backgroundColor:"#eee",borderWidth:1,borderColor:"#464646",color:"#000",textAlign:"left",font:{fontSize:"18dp",fontWeight:"bold"},top:"20dp",id:"tf_title",hintText:"TITLE"}),t.__views.form_elems_view.add(t.__views.tf_title),t.__views.tf_url=Ti.UI.createTextField({left:"0dp",width:"80%",height:"32dp",backgroundColor:"#eee",borderWidth:1,borderColor:"#464646",color:"#000",textAlign:"left",font:{fontSize:"18dp",fontWeight:"bold"},top:"40dp",id:"tf_url",hintText:"URL"}),t.__views.form_elems_view.add(t.__views.tf_url),t.__views.tf_tags=Ti.UI.createTextField({left:"0dp",width:"80%",height:"32dp",backgroundColor:"#eee",borderWidth:1,borderColor:"#464646",color:"#000",textAlign:"left",font:{fontSize:"18dp",fontWeight:"bold"},top:"10dp",id:"tf_tags",hintText:"#TAGS"}),t.__views.form_elems_view.add(t.__views.tf_tags),t.__views.remix_view=Ti.UI.createView({top:"40dp",height:"40dp",id:"remix_view"}),t.__views.form_elems_view.add(t.__views.remix_view),t.__views.__alloyId3=Ti.UI.createLabel({left:"0dp",text:"Allow Others to Remix",id:"__alloyId3"}),t.__views.remix_view.add(t.__views.__alloyId3),t.__views.remix_switch=Ti.UI.createSwitch({right:"20dp",value:!0,id:"remix_switch"}),t.__views.remix_view.add(t.__views.remix_switch),t.__views.public_view=Ti.UI.createView({top:"20dp",height:"40dp",id:"public_view"}),t.__views.form_elems_view.add(t.__views.public_view),t.__views.__alloyId4=Ti.UI.createLabel({left:"0dp",text:"Is Public",id:"__alloyId4"}),t.__views.public_view.add(t.__views.__alloyId4),t.__views.public_switch=Ti.UI.createSwitch({right:"20dp",value:!0,id:"public_switch"}),t.__views.public_view.add(t.__views.public_switch),t.__views.buttons_view=Ti.UI.createView({layout:"composite",bottom:"0dp",height:"25%",zIndex:10,id:"buttons_view"}),t.__views.save_window.add(t.__views.buttons_view),t.__views.btn_save=Ti.UI.createButton({width:"100%",height:"49%",bottom:"0dp",color:"#fff",borderColor:"fff",borderWidth:"1dp",backgroundColor:"transparent",backgroundImage:"/images/bg_orange_slice.png",backgroundSelectedImage:"/images/bg_grey_slice_inactive.png",font:{fontSize:"20dp",fontWeight:"bold"},title:"Save",id:"btn_save"}),t.__views.buttons_view.add(t.__views.btn_save),i.destroy=function(){},_.extend(t,t.__views);var o=Alloy.Collections.Photos;t.image_back.addEventListener("click",function(){var e=Alloy.createController("Compose");e.getView("compose_window").open()}),t.btn_save.addEventListener("click",function(){var i=t.tf_title.value,o=t.tf_url.value;return t.tf_tags.value,""==i?void alert("Please provide a title for your new expression."):(""==o&&(o=i.replace(/[^0-9a-zA-Z]/g,"-").replace(/--+/g,"-").replace(/-$/,"").toLowerCase(),alert(o)),void e())}),t.tf_title.addEventListener("change",function(){var e=t.tf_title.value;url=e.replace(/[^0-9a-zA-Z]/g,"-").replace(/--+/g,"-").replace(/-$/,"").toLowerCase(),t.tf_url.value=url}),t.save_window.addEventListener("click",function(){t.tf_title.blur(),t.tf_url.blur(),t.tf_tags.blur()}),t.save_window.addEventListener("focus",function(){t.tf_title.focus()}),t.tf_title.addEventListener("click",function(e){e.cancelBubble=!0}),t.tf_url.addEventListener("click",function(e){e.cancelBubble=!0}),t.tf_tags.addEventListener("click",function(e){e.cancelBubble=!0}),_.extend(t,i)}var Alloy=require("alloy"),Backbone=Alloy.Backbone,_=Alloy._;module.exports=Controller;
+
+/Users/viciousesque/Documents/VICBIZ/SMALLBORE/CLIENTS/NEW_HIVE/newhive/native_mobile/brushkit/build/iphone/assets/alloy/models/Photo_js:
+    1: exports.definition={config:{columns:{photo_blob:"blob",new_hive_id:"text",lat:"numeric","long":"numeric",id:"INTEGER PRIMARY KEY AUTOINCREMENT"},defaults:{},adapter:{type:"sql",collection_name:"photos",idAttribute:"id",db_name:"newhive",db_file:"/newhive.sqlite",remoteBackup:!1}},extendModel:function(e){return _.extend(e.prototype,{}),e},extendCollection:function(e){return _.extend(e.prototype,{}),e}};var Alloy=require("alloy"),_=require("alloy/underscore")._,model,collection;model=Alloy.M("Photo",exports.definition,[]),collection=Alloy.C("Photo",exports.definition,model),exports.Model=model,exports.Collection=collection;
+
+/Users/viciousesque/Documents/VICBIZ/SMALLBORE/CLIENTS/NEW_HIVE/newhive/native_mobile/brushkit/build/iphone/assets/alloy/models/Photos_js:
+    1: exports.definition={config:{columns:{photo_blob:"blob",lat:"numeric","long":"numeric",id:"INTEGER PRIMARY KEY AUTOINCREMENT"},defaults:{},adapter:{type:"sql",collection_name:"photos",idAttribute:"id",db_name:"newhive",db_file:"/newhive.sqlite",remoteBackup:!1}},extendModel:function(e){return _.extend(e.prototype,{}),e},extendCollection:function(e){return _.extend(e.prototype,{}),e}};var Alloy=require("alloy"),_=require("alloy/underscore")._,model,collection;model=Alloy.M("Photos",exports.definition,[]),collection=Alloy.C("Photos",exports.definition,model),exports.Model=model,exports.Collection=collection;
+
+/Users/viciousesque/Documents/VICBIZ/SMALLBORE/CLIENTS/NEW_HIVE/newhive/native_mobile/brushkit/build/iphone/Classes/ApplicationRouting.m:
+ 4509  		[NSNumber numberWithInteger:12], @"alloy/controllers/index_js",
+ 4510  		[NSNumber numberWithInteger:13], @"alloy/models/Photo_js",
+ 4511: 		[NSNumber numberWithInteger:14], @"alloy/models/Photos_js",
+ 4512  		[NSNumber numberWithInteger:15], @"alloy/styles/Compose_js",
+ 4513  		[NSNumber numberWithInteger:16], @"alloy/styles/Consume_js",
+
+/Users/viciousesque/Documents/VICBIZ/SMALLBORE/CLIENTS/NEW_HIVE/newhive/native_mobile/brushkit/build/iphone/Classes/MediaModule.m:
+  785  -(NSArray*)availablePhotoMediaTypes
+  786  {
+  787: 	NSArray* photoSourceTypes = [UIImagePickerController availableMediaTypesForSourceType: UIImagePickerControllerSourceTypePhotoLibrary];
+  788: 	return photoSourceTypes==nil ? [NSArray arrayWithObject:(NSString*)kUTTypeImage] : photoSourceTypes;
+  789  }
+  790  
+  791  -(NSArray*)availablePhotoGalleryMediaTypes
+  792  {
+  793: 	NSArray* albumSourceTypes = [UIImagePickerController availableMediaTypesForSourceType: UIImagePickerControllerSourceTypeSavedPhotosAlbum];
+  794  	return albumSourceTypes==nil ? [NSArray arrayWithObject:(NSString*)kUTTypeImage] : albumSourceTypes;
+  795  }
+  ...
+ 1087  			UIImage * savedImage = [blob image];
+ 1088  			if (savedImage == nil) return;
+ 1089: 			UIImageWriteToSavedPhotosAlbum(savedImage, self, @selector(saveCompletedForImage:error:contextInfo:), [saveCallbacks retain]);
+ 1090  		}
+ 1091  		else if ([mime hasPrefix:@"video/"])
+ ....
+ 1123                  }
+ 1124              }
+ 1125: 			UISaveVideoAtPathToSavedPhotosAlbum(filePath, self, @selector(saveCompletedForVideo:error:contextInfo:), [saveCallbacks retain]);
+ 1126  		}
+ 1127  	}
+ ....
+ 1134  			NSData *data = [NSData dataWithContentsOfFile:[file path]];
+ 1135  			UIImage *image = [[[UIImage alloc] initWithData:data] autorelease];
+ 1136: 			UIImageWriteToSavedPhotosAlbum(image, self, @selector(saveCompletedForImage:error:contextInfo:), [saveCallbacks retain]);
+ 1137  		}
+ 1138  		else if ([mime hasPrefix:@"video/"])
+ 1139  		{
+ 1140: 			UISaveVideoAtPathToSavedPhotosAlbum([file path], self, @selector(saveCompletedForVideo:error:contextInfo:), [saveCallbacks retain]);
+ 1141  		}
+ 1142  	}
+ ....
+ 1405  		{
+ 1406  			NSString *tempFilePath = [mediaURL absoluteString];
+ 1407: 			UISaveVideoAtPathToSavedPhotosAlbum(tempFilePath, nil, nil, NULL);
+ 1408  		}
+ 1409  		UIImage *thumbnailImage = [editingInfo objectForKey:UIImagePickerControllerOriginalImage];
+ ....
+ 1422  			{
+ 1423  				UIImage *image = [editingInfo objectForKey:UIImagePickerControllerOriginalImage];
+ 1424: 				UIImageWriteToSavedPhotosAlbum(image, nil, nil, NULL);
+ 1425  			}
+ 1426  		}
+ ....
+ 1460  			if (saveToRoll)
+ 1461  			{
+ 1462: 				UIImageWriteToSavedPhotosAlbum(resultImage, nil, nil, NULL);
+ 1463  			}
+ 1464  		}
+
+/Users/viciousesque/Documents/VICBIZ/SMALLBORE/CLIENTS/NEW_HIVE/newhive/native_mobile/brushkit/Resources/android/app.js:
+   49              photo.set("photo_blob", event.media);
+   50              photo.save();
+   51:             photosCollection.add(photo);
+   52              var compose = Alloy.createController("Compose");
+   53              compose.getView("compose_window").open();
+   ..
+   85                  photo.set("photo_blob", event.media);
+   86                  photo.save();
+   87:                 photosCollection.add(photo);
+   88                  var compose = Alloy.createController("Compose");
+   89                  compose.getView("compose_window").open();
+   ..
+  170  }
+  171  
+  172: function createSmallPhotos() {
+  173:     photosCollection.each(function(p) {
+  174          if (null == p.get("photo_small")) {
+  175              var lg_img = p.get("photo_blob");
+  ...
+  199  Titanium.App.Properties.setBool("is_test", true);
+  200  
+  201: var photosCollection = Alloy.Collections.instance("Photo");
+  202  
+  203  Titanium.App.Properties.setString("base_url_ssl", "https://dev.newhive.com/");
+
+/Users/viciousesque/Documents/VICBIZ/SMALLBORE/CLIENTS/NEW_HIVE/newhive/native_mobile/brushkit/Resources/android/alloy/controllers/Compose.js:
+   90      exports.destroy = function() {};
+   91      _.extend($, $.__views);
+   92:     var photosCollection = Alloy.Collections.Photo;
+   93      $.compose_window.addEventListener("focus", function() {
+   94          $.scroll_view.removeAllChildren();
+   95:         photosCollection.each(function(p, index) {
+   96              if (void 0 != p) {
+   97                  var img = p.get("photo_blob");
+   ..
+  100                      width: "99%"
+  101                  });
+  102:                 index + 1 == photosCollection.length && img_view.addEventListener("postlayout", function() {
+  103                      $.scroll_view.scrollToBottom();
+  104                  });
+
+/Users/viciousesque/Documents/VICBIZ/SMALLBORE/CLIENTS/NEW_HIVE/newhive/native_mobile/brushkit/Resources/android/alloy/controllers/Save.js:
+    2      function publishExrpession() {
+    3          var apps = new Array();
+    4:         photosCollection.each(function(p, index) {
+    5              var h = 1188;
+    6              var n_y = h * index;
+    .
+   33              res = JSON.parse(this.responseText);
+   34              Ti.API.info("the res: " + this.responseText);
+   35:             photosCollection.reset();
+   36              var creator = Alloy.createController("Create");
+   37              creator.getView("create_window").open();
+   ..
+  218      exports.destroy = function() {};
+  219      _.extend($, $.__views);
+  220:     var photosCollection = Alloy.Collections.Photo;
+  221      $.image_back.addEventListener("click", function() {
+  222          var comp = Alloy.createController("Compose");
+
+/Users/viciousesque/Documents/VICBIZ/SMALLBORE/CLIENTS/NEW_HIVE/newhive/native_mobile/brushkit/Resources/android/alloy/models/Photo.js:
+   11          adapter: {
+   12              type: "sql",
+   13:             collection_name: "photos",
+   14              idAttribute: "id",
+   15              db_name: "newhive",
+
+/Users/viciousesque/Documents/VICBIZ/SMALLBORE/CLIENTS/NEW_HIVE/newhive/native_mobile/brushkit/Resources/iphone/app.js:
+   49              photo.set("photo_blob", event.media);
+   50              photo.save();
+   51:             photosCollection.add(photo);
+   52              var compose = Alloy.createController("Compose");
+   53              compose.getView("compose_window").open();
+   ..
+   85                  photo.set("photo_blob", event.media);
+   86                  photo.save();
+   87:                 photosCollection.add(photo);
+   88                  var compose = Alloy.createController("Compose");
+   89                  compose.getView("compose_window").open();
+   ..
+  170  }
+  171  
+  172: function createSmallPhotos() {
+  173:     photosCollection.each(function(p) {
+  174          if (null == p.get("photo_small")) {
+  175              var lg_img = p.get("photo_blob");
+  ...
+  199  Titanium.App.Properties.setBool("is_test", true);
+  200  
+  201: var photosCollection = Alloy.Collections.instance("Photos");
+  202  
+  203  Titanium.App.Properties.setString("base_url_ssl", "https://dev.newhive.com/");
+
+/Users/viciousesque/Documents/VICBIZ/SMALLBORE/CLIENTS/NEW_HIVE/newhive/native_mobile/brushkit/Resources/iphone/alloy/controllers/Compose.js:
+   90      exports.destroy = function() {};
+   91      _.extend($, $.__views);
+   92:     var photosCollection = Alloy.Collections.Photos;
+   93      $.compose_window.addEventListener("focus", function() {
+   94          $.scroll_view.removeAllChildren();
+   95:         photosCollection.each(function(p, index) {
+   96              if (void 0 != p) {
+   97                  var img = p.get("photo_blob");
+   ..
+  100                      width: "99%"
+  101                  });
+  102:                 index + 1 == photosCollection.length && img_view.addEventListener("postlayout", function() {
+  103                      $.scroll_view.scrollToBottom();
+  104                  });
+
+/Users/viciousesque/Documents/VICBIZ/SMALLBORE/CLIENTS/NEW_HIVE/newhive/native_mobile/brushkit/Resources/iphone/alloy/controllers/Save.js:
+    2      function publishExrpession() {
+    3          var apps = new Array();
+    4:         photosCollection.each(function(p, index) {
+    5              var h = 1188;
+    6              var n_y = h * index;
+    .
+   33              res = JSON.parse(this.responseText);
+   34              Ti.API.info("the res: " + this.responseText);
+   35:             photosCollection.reset();
+   36              var creator = Alloy.createController("Create");
+   37              creator.getView("create_window").open();
+   ..
+  218      exports.destroy = function() {};
+  219      _.extend($, $.__views);
+  220:     var photosCollection = Alloy.Collections.Photos;
+  221      $.image_back.addEventListener("click", function() {
+  222          var comp = Alloy.createController("Compose");
+
+/Users/viciousesque/Documents/VICBIZ/SMALLBORE/CLIENTS/NEW_HIVE/newhive/native_mobile/brushkit/Resources/iphone/alloy/models/Photo.js:
+   11          adapter: {
+   12              type: "sql",
+   13:             collection_name: "photos",
+   14              idAttribute: "id",
+   15              db_name: "newhive",
+
+/Users/viciousesque/Documents/VICBIZ/SMALLBORE/CLIENTS/NEW_HIVE/newhive/native_mobile/brushkit/Resources/iphone/alloy/models/Photos.js:
+   10          adapter: {
+   11              type: "sql",
+   12:             collection_name: "photos",
+   13              idAttribute: "id",
+   14              db_name: "newhive",
+   ..
+   29  var Alloy = require("alloy"), _ = require("alloy/underscore")._, model, collection;
+   30  
+   31: model = Alloy.M("Photos", exports.definition, []);
+   32  
+   33: collection = Alloy.C("Photos", exports.definition, model);
+   34  
+   35  exports.Model = model;
+
+82 matches across 24 files

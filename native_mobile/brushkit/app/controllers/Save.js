@@ -1,5 +1,5 @@
 
-var photosCollection = Alloy.Collections.Photos;
+//var photosCollection = Alloy.Collections.Photos;
 
 function publishExrpession(){
 	var apps = new Array();

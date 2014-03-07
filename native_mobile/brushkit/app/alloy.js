@@ -229,6 +229,7 @@ function uploadImage(photo_model) {
 		
 		res = JSON.parse(this.responseText)[0];
 		photo_model.set('new_hive_id', res.id);
+		alert("the res id: "+ res.id);
 		Ti.API.info("the res id: "+ res.id);
 		photo_model.save();
 	};
@@ -241,32 +242,5 @@ function uploadImage(photo_model) {
 	var params = {client : 'mobile', json: 'true', file: small_photo};
 	xhr.send(params);
 }
-
-//TOSS MAYBE?
-function createSmallPhotos() {
-	photosCollection.each(function(p){
-		if(p.get('photo_small') == null){
-			var lg_img = p.get('photo_blob');
-			var orientation = (lg_img.width > lg_img.height) ? 'landscape' : 'portrait';
-			var max_length = 1000;
-			var reduce_pct = 0.5;
-
-			if(orientation == 'portrait'){
-				reduce_pct = (max_length/lg_img.height);
-			}else {
-				reduce_pct = (max_length/lg_img.width);
-			}
-
-			reduce_w = lg_img.width*reduce_pct;
-			reduce_h = lg_img.height*reduce_pct;
-			Ti.API.info('BEFORE reducing: ' + lg_img.length);
-			small_photo = ImageFactory.imageAsResized(lg_img, {width:reduce_w,height:reduce_h,quality:ImageFactory.QUALITY_MEDIUM});
-			Ti.API.info('AFTER reducing: ' + small_photo.length);
-			p.set('photo_small', small_photo);
-			p.save();
-		}
-	});
-}
-
 
 

@@ -35,12 +35,10 @@ function doLogin(e) {
 		if(res.logged_in){
 			Ti.API.info('login success! '+ res.name);
 			
-			Ti.App.current_user_name = res.name;
-			
 			$.textfieldUsername.blur();
 			$.textfieldPwd.blur();
 			
-			Ti.App.current_user_name = res.login;
+			Ti.App.current_user_name = res.name;
 			Ti.App.current_user_id = res.id;
 			
 			var creator = Alloy.createController('Create'); 
