@@ -1,0 +1,18 @@
+<Alloy>
+	<Window id="login_window" title="Login" class="login" layout="composite">
+		<View id="textfields_view" class="content_tile">
+			<TextField id="textfieldUsername" class='textfield-username' hintText='username'/>
+			<TextField id="textfieldPwd" class='textfield-pwd' hintText='password'/>
+			<Label id="error_message">Unrecongized username or password.</Label>
+			<Label id="retrieve_password">  Retrieve password.  </Label>
+		</View>
+		
+		<View id="button_view" class="content_tile">
+			<Button id='submit' title="Login" onClick="doLogin" />
+		</View>
+		
+		<View id="blank_view" class="content_tile">
+			<ImageView id="watermark" image="/images/logo.png"></ImageView>
+		</View>
+	</Window>
+</Alloy>	

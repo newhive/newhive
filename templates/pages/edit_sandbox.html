@@ -1,0 +1,21 @@
+{% extends "minimal.html" %}
+
+{% block body_class %} edit default{% endblock %}
+
+{% block head %}
+  {{ super() }}
+  {% for item in asset_bundle('app.css') %}
+    <link rel='stylesheet' type='text/css' href='{{ item }}'>
+  {% endfor %}
+
+  {% if not debug %}
+    {% for item in asset_bundle('edit.js') %}
+      <script src='{{item}}'></script>
+    {% endfor %}
+  {% endif %}
+
+  <script>
+curl(['ui/edit/main'], function(edit){
+    edit.pre_init() })
+  </script>
+{% endblock %}

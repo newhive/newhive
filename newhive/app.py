@@ -29,66 +29,42 @@ def get_api_endpoints(api):
     routes = Routes.get_routes()
     rules = []
 
-    for route_name, route_obj in routes.items():
+    def default_route_args(route):
+        route = dict(route)
+        for k in ['page_route', 'api_route', 'method', 'controller']:
+            if route.has_key(k): del route[k]
+        return route
+
+    for route_obj in routes:
         # Add page routes (for HTTP and HTTPS)
-        if route_obj.get('page_route'):
-            defaults=dict(route_obj)
-            if defaults.has_key('page_route'): del defaults['page_route']
-            if defaults.has_key('api_route'): del defaults['api_route']
-            if defaults.has_key('method'): del defaults['method']
-            if defaults.has_key('controller'): del defaults['controller']
-            defaults.update({'route_name': route_name})
+        for route_type in ['page_route', 'api_route']:
+            path = route_obj.get(route_type)
+            if not path: continue
+
+            defaults = default_route_args(route_obj)
+            if route_type == 'api_route':
+                defaults['json'] = True
             for secure in (False, True):
+                host = route_obj.get( 'host', url_host(secure=secure,
+                    on_main_domain=not route_obj.get('content_domain')) )
                 rules.append(Rule(
-                    route_obj['page_route'],
+                    path,
                     endpoint=(
-                        getattr(api, route_obj.get('controller', 'controller')),
+                        api.get(route_obj.get('controller', 'controller')),
                         route_obj.get('method', 'empty')
                     ),
                     defaults=defaults,
-                    # defaults={'route_name': route_name, 
-                    #     'require_login': route_obj.get('require_login')},
-                    host=url_host(secure=secure)
-                ))
-
-        # And API routes
-        if route_obj.get('api_route'):
-            defaults=dict(route_obj)
-            if defaults.has_key('page_route'): del defaults['page_route']
-            if defaults.has_key('api_route'): del defaults['api_route']
-            if defaults.has_key('method'): del defaults['method']
-            if defaults.has_key('controller'): del defaults['controller']
-            defaults.update({'json':True, 'route_name': route_name,
-                'require_login': route_obj.get('require_login')})
-            for secure in (False, True):
-                rules.append(Rule(
-                    route_obj['api_route'],
-                    endpoint=(getattr(api,route_obj['controller']),
-                        route_obj['method']),
-                    defaults=defaults,
-                    # defaults={'json':True, 'route_name': route_name,
-                    #     'require_login': route_obj.get('require_login')},
-                    host=url_host(secure=secure)
+                    host=host
                 ))
     return rules
 
+# Create an empty, reference dict so all created controllers will have
+# a reference to all controllers upon creation.
+server_env['controllers'] = {}
 api = Controllers(server_env)
-
-# rules tuples are (routing_str, endpoint)
-# the endpoints are (Controller, method_str) tuples
-# TODO-cleanup: move these to routes.json
-# rules_tuples = [
-#     ('/home/streamified_test', (api.user, 'streamified_test')),
-#     ('/home/streamified_login', (api.user, 'streamified_login')),
-# ]
-# for rule in rules_tuples:
-#     rules.extend(make_routing_rules(rule[0], endpoint=rule[1]))
+server_env['controllers'].update(api)
+base_controller = api.get('controller')
 rules = get_api_endpoints(api)
-# Add catch-all routes last
-rules.extend(make_routing_rules('/<expr_id>',
-    endpoint=(api.expr, 'fetch_naked'), on_main_domain=False))
-rules.extend(make_routing_rules('/<owner_name>/<path:expr_name>',
-    endpoint=(api.expr, 'fetch_naked'), on_main_domain=False))
 routes = Map(rules, strict_slashes=False, host_matching=True,
     redirect_defaults=False)
 
@@ -106,6 +82,7 @@ def split_domain(url):
 @Request.application
 def handle(request):
     time_start = now()
+    print(request)
     environ = copy.copy(request.environ)
     prefix, site = split_domain(environ['HTTP_HOST'])
     environ['HTTP_HOST'] = site
@@ -136,7 +113,7 @@ def handle(request):
         if err:
             print "Gap in routing table!"
             print request
-            return api.controller.serve_500(request, Response(),
+            return base_controller.serve_500(request, Response(),
                 exception=e, json=False)
     except RequestRedirect as e:
         # bugbug: what's going on here anyway?
@@ -165,9 +142,9 @@ def handle(request):
     except:
         import traceback
         (blah, exception, traceback) = sys.exc_info()
-        response = api.controller.serve_500(request, Response(), exception=exception,
+        response = base_controller.serve_500(request, Response(), exception=exception,
             traceback=traceback, json=False)
-    print request
+
     print "time %s ms" % (1000.*(now() - time_start))
     if stats and yappi.is_running():
         # statprof.stop()
@@ -176,7 +153,10 @@ def handle(request):
         yappi.print_stats(sys.stdout, yappi.SORTTYPE_TTOT, yappi.SORTORDER_DESC, 25)
         yappi.clear_stats()
 
-    response.headers.add('Access-Control-Allow-Origin', config.abs_url().strip('/'))
+    # this allows unsecure pages to make API calls to https
+    # response.headers.add('Access-Control-Allow-Origin', config.abs_url().strip('/'))
+    # TODO-security: CONSIDER. Allow pages on custom domains to make API calls
+    response.headers.add('Access-Control-Allow-Origin', '*')
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
     return response
 

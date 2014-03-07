@@ -1,0 +1,44 @@
+"#create_window": {
+	layout:"composite"
+}
+
+"#logo": {
+	top:"40dp"
+}
+
+"#create_icon": {
+	top:"200dp"
+}
+
+"#select": {
+	width: "50%",
+	height:"80dp",
+	left:"0dp",
+	bottom:"0dp",
+	color:"#fff",
+	borderColor:"fff",
+	borderWidth: "1dp",
+	backgroundColor: "transparent",
+	backgroundImage: "/images/bg_orange_slice.png",
+	backgroundSelectedImage:'/images/bg_grey_slice_inactive.png',
+	font: {
+		fontSize: "20dp",
+		fontWeight: "bold"
+	}
+}
+"#take": {
+	width: "50%",
+	height:"80dp",
+	right:"0dp",	
+	bottom:"0dp",
+	color:"#fff",
+	borderColor:"fff",
+	borderWidth: "1dp",
+	backgroundColor: "transparent",
+	backgroundImage: "/images/bg_orange_slice.png",
+	backgroundSelectedImage:'/images/bg_grey_slice_inactive.png',
+	font: {
+		fontSize: "20dp",
+		fontWeight: "bold"
+	}
+}

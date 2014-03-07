@@ -54,6 +54,10 @@
     }
 }
 
+#site {
+    width:100%; height:100%;
+}
+
 #exprs {
     position:absolute; left: 0; bottom: 0;
     z-index: 1;
@@ -66,6 +70,7 @@
 
     .expr {
         width:100%; height:100%; position:absolute; left: 0; top:0;
+        display: block;
         background-color: white;
     }
 }
@@ -610,6 +615,8 @@ body {
             }
         }
     }
+
+    #editor { display: block; width:100%; height:100%; }
 }
 
 .tag_label {

@@ -4,6 +4,7 @@ from werkzeug.http import parse_options_header
 from PIL import Image
 import threading
 
+from newhive import config
 from newhive.utils import lget
 from newhive.controllers.controller import ModelController, auth_required
 from PIL import Image
@@ -12,7 +13,6 @@ import threading
 class File(ModelController):
     model_name = 'File'
 
-    @auth_required
     def create(self, tdata, request, response, **args):
         """ Saves a file uploaded from the expression editor, responds
         with a JSON list of Hive.App objects.
@@ -108,16 +108,18 @@ def _handle_image(file_record, args):
     if args.get('thumb'):
         thumb_file = file_record.set_thumb(222, 222)
         file_record.set_thumb(70, 70, file=thumb_file)
+        return {}
+
+    # Defer resampling to another machine
+    if config.live_server:
+        return { 'resample_time': 0 }
 
     # resample image by powers of root 2, until < 100 pixels
     # THIS MUST be done after synchronous thumb generation
     # to not create a conflict with the tmpfile descriptor
-    if True:
-        t = threading.Thread(target=file_record.set_resamples)
-        t.daemon = True
-        t.start()
-    else:
-        file_record.set_resamples()
+    t = threading.Thread(target=file_record.set_resamples)
+    t.daemon = True
+    t.start()
 
     return {}
 

@@ -64,7 +64,7 @@ class User(ModelController):
         new_order += old_order[len(new_order) + deletes:]
 
         # remove the tag on owned expression
-        if tag_name not in ['remixed']:
+        if tag_name not in ['remixed', 'Gifwall']:
             removed = set(old_order) - set(new_order)
             for expr_id in removed:
                 expr = self.db.Expr.fetch(expr_id)
@@ -588,7 +588,7 @@ class User(ModelController):
                 contact = self.db.Contact.find({'referral_id': referral.id})
                 if contact: contact.update(user_created=user.id)
 
-        user.give_invites(config.initial_invite_count)
+        #user.give_invites(config.initial_invite_count)
         if args.has_key('thumb_file_id'):
             file = self.db.File.fetch(args.get('thumb_file_id'))
             if file:

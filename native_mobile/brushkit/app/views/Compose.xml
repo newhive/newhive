@@ -1,0 +1,13 @@
+<Alloy>
+	<Window id="compose_window">
+		<ScrollView id="scroll_view" layout="vertical">
+			
+		</ScrollView>
+		
+		<View id="buttons_view">
+			<Button id="select">Select</Button>
+			<Button id="take">Take</Button>
+			<Button id="save">Save</Button>
+		</View>
+	</Window>
+</Alloy>

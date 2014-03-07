@@ -36,7 +36,7 @@
           <a class='nav_button inline tags'
               {<if (or (eq route_name "expressions_tag_private")
                        (eq route_name "expressions_public_grid_tags"))}
-                { anchor_attrs "expressions_tag" "owner_name" user.name 
+                { anchor_attrs "expressions_tag" "owner_name" owner.name 
                 "tag_name" tag_selected}>
               {>}{<else}
                 { anchor_attrs "expressions_public_tags" "owner_name" owner.name }>

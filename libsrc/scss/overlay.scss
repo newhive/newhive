@@ -5,10 +5,10 @@
 
 .red_spacer {
     border-left: 2px solid red;
-    // height: 14px;
-    font-size: 13px;
-    margin-left: -2px;
-    margin-right: 3px;
+    display: inline-block;
+    height: 14px;
+    width: 0;
+    margin-right: -4px;
 }
 
 .page_btn {
@@ -83,12 +83,14 @@
     &.panel {
         height: 44px;
 
-        .icon {
+        .item {
             position: static;
             display: inline-block;
+            &:hover, &.active { background-color: black; }
+        }
+        .icon, .item {
             height: 44px; width: 44px;
             background-size: 44px 44px;
-            &:hover, &.active { background-color: black; }
         }
 
         .text_btn {
@@ -246,7 +248,6 @@
             }
             &.on.active {
                 background-color: $color_selected;
-                background-image: none;
             }
         }
     }
@@ -288,7 +289,7 @@ $action: love comment republish;
             }
             .show_hover {
                 // TODO-polish: understand why this is needed.
-                width: 89px;
+                // width: 89px;
                 position: absolute;
                 right: 8px;
                 top: 5px;
@@ -355,6 +356,7 @@ $action: love comment republish;
 // TODO-cleanup: merge with &.comment above.
 #dia_comments {
     padding: 23px;
+    width: 546px;
     .title { margin-bottom: 15px; }
     .activity {
         max-height: 450px;

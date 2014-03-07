@@ -79,9 +79,10 @@ define([
         // $('#login_form').submit(o.login);
         $('#login_form [name=from]').val(window.location);
         if(!context.user.logged_in){
-            o.login_dialog = dialog.create('#login_menu',  
-                { open: function(){ $("#login_menu input[name=username]").focus(); },
-                  handler: function(e, json) {
+            o.login_dialog = dialog.create('#dia_login', {
+                open: function(){
+                    $("#login_form .username").focus(); },
+                handler: function(e, json) {
                     if (json.error != undefined) {
                         $('#login_form .error_msg').text(json.error).showshow().fadeIn("slow");
                     } else {
@@ -89,7 +90,12 @@ define([
                         o.on_login();
                     } }
                 } );
-            $('.login_btn').click(o.login_dialog.open);
+            $('#login_form .signup').click(function(){
+                context.login_form = {
+                    username: $("#login_form [name=username]").val()
+                    ,secret: $("#login_form [name=secret]").val()
+                }
+            })
 
             // request invite form handlers. This form also appears on home page,
             // so this applies to both, and must be done after the top level render
@@ -99,7 +105,7 @@ define([
                 });
             });
             context.after_render.add('.invite_form', function(e){
-                e.on('response', function(e, data){
+                e.on('success', function(e, data){
                     if(data){ // success
                         $('.request_invite').hidehide();
                         $('.request_sent').removeClass('hide');
@@ -110,23 +116,9 @@ define([
                     }
                 });
             });
-
-            // login_form already rendered in overlay_template()
-            // login can't set cookies from cross-domain request
-            // so must be done synchronously
-            // $('#login_form').on('response', function(e, data){
-            //     if(data){
-            //         context.user = data;
-            //         init_overlays();
-            //         o.controller.refresh();
-            //         $('#login_menu').data('dialog').close();
-            //     } else {
-            //         $('#login_form .error').showshow();
-            //     }
-            // });
         } else {
             $('#logout_btn').click(function(){ $('#logout_form').submit(); });
-            $('#logout_form').bind('response', o.on_logout);
+            $('#logout_form').bind('success', o.on_logout);
 
             /// notification count and activity menu code
 
@@ -152,7 +144,7 @@ define([
                 }
             };
             update_activity(context.user);
-            $('#activity_form').on('response', function(e, data){
+            $('#activity_form').on('success', function(e, data){
                 update_activity(data);
             });
             setInterval(function(){$('#activity_form').submit() }, 180000);
@@ -229,6 +221,7 @@ define([
         if(context.error == "login" && o.login_dialog){
             o.login_dialog.open();
             $('#login_form .error_msg').showshow().fadeIn("slow");
+            delete context.error
         }
         if (context.page != new_page) {
             if (context.page && context.page.exit) 
@@ -340,11 +333,12 @@ define([
         });
         if (!context.user.logged_in) {
             $(".needs_login").unbind("click").click(function(e) {
-                $("#dia_login_or_join").data("dialog").open();
-                e.preventDefault();
+                o.login_dialog.open();
+                e.preventDefault()
+                return false
             });
         }
-        $(".user_action_bar form.follow").unbind('response').on('response', 
+        $(".user_action_bar form.follow").unbind('success').on('success', 
             function(event, json) {
                 follow_response($(this), json); 
         });
@@ -446,7 +440,7 @@ define([
         $('#header span').text("#" + tag_name);
         // var top_context = { "tagnum": 0, "item": tag_name };
         // $('#header span').text(header_prefix).append(tag_card_template(top_context));
-        $('#follow_tag_form').on('response', o.tag_response);
+        $('#follow_tag_form').on('success', o.tag_response);
     }
 
     o.tag_response = function (e, json){
@@ -474,7 +468,7 @@ define([
                 {owner_name: context.user.name });
             return false;
         });
-        $('#user_settings_form').on('response', function(e, data){
+        $('#user_settings_form').on('success', function(e, data){
             if(data.error) alert(data.error);
             else {
                 o.controller.open('expressions_public',
@@ -494,9 +488,9 @@ define([
     o.user_update = function(page_data){
         $('#site').empty().append(profile_edit_template(page_data));
         
-        $('#thumb_form').on('response',
+        $('#thumb_form').on('success',
             on_file_upload('#profile_thumb', '#thumb_id_input'));
-        $('#bg_form').on('response',
+        $('#bg_form').on('success',
             on_file_upload('#profile_bg', '#bg_id_input'));
         // Click-through help text to appropriate handler
         $(".help_bar").on("click", function(e) {
@@ -508,7 +502,7 @@ define([
                 {owner_name: context.user.name });
             return false;
         });
-        $('#user_update_form').on('response', function(e, data){
+        $('#user_update_form').on('success', function(e, data){
             if(data.error) alert(data.error);
             else {
                 o.controller.open('expressions_public',
@@ -561,7 +555,7 @@ define([
                             text(d.error);
                 };
                 show_error(page_data);
-                $('#user_settings_form').on('response', function(e, json) {
+                $('#user_settings_form').on('success', function(e, json) {
                     if(json.error)
                         show_error(json);   
                     else 

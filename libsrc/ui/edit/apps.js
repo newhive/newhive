@@ -6,6 +6,7 @@ define([
     ,'browser/layout'
     ,'ui/util'
     ,'ui/colors'
+    ,'ui/codemirror/main'
 
     ,'./env'
     ,'./util'
@@ -21,6 +22,7 @@ define([
     ,layout
     ,ui_util
     ,colors
+    ,codemirror
 
     ,env
     ,u
@@ -75,7 +77,7 @@ env.new_app = Hive.new_app = function(s, opts) {
         env.layout_apps() // in case scrollbar visibility changed
     };
     var app = Hive.App(s, opts);
-    if (!env.gifwall)
+    if (!env.gifwall && app.add_to_collection)
         env.History.save(app._remove, app._unremove, 'create');
     return app;
 };
@@ -89,7 +91,7 @@ env.Apps = Hive.Apps = (function(){
     o.state = function() {
         return $.map(o.all(), function(app) { return app.state(); });
     };
-    
+
     var stack = []
     u.has_shuffle(stack);
     o.restack = function(){
@@ -153,6 +155,14 @@ Hive.App = function(init_state, opts) {
     o.type = Hive.appTypes[init_state.type];
     o.id = init_state.id || u.random_str();
     o.handler_type = 0;
+
+    o.css_state = {};
+    o.content = function(content) { return $.extend({}, o.css_state); };
+    o.set_css = function(props) {
+        o.content_element.css(props);
+        $.extend(o.css_state, props);
+        if(o.controls) o.controls.layout();
+    }
 
     // Chain "more_method" onto an existing "method" (or noop if method 
     // does not exist)
@@ -365,6 +375,14 @@ Hive.App = function(init_state, opts) {
         return [curr[0].slice(), curr[1].slice()];
     }
 
+    o.centroid = function() {
+        return u._mul(env.scale())(o.centroid_relative()) }
+    o.centroid_relative = function(){
+        var ps = o.pts()
+            ,sum = ps.reduce(function(p1, p2){ return u._add(p1)(p2) })
+        return u._div(sum)(ps.length)
+    }
+
     // END-coords
 
     o.center_weird = function(offset) {
@@ -425,6 +443,7 @@ Hive.App = function(init_state, opts) {
         }
         $highlight.showhide(opts.on);
     }
+    // TODO-cleanup-history: use state instead
     o.state_relative = function(){ return {
         position: _pos.slice(),
         dimensions: _dims.slice()
@@ -588,11 +607,13 @@ Hive.App.RawHtml = function(o) {
 };
 Hive.registerApp(Hive.App.RawHtml, 'hive.raw_html');
 
-Hive.App.Script = function(o){
-    o.content = function(){ return o.content_element.html(); };
+Hive.App.Code = function(o){
+    Hive.App.has_resize(o);
+
+    o.content = function(){ return o.editor.getValue() }
 
     o.run = function(){
-        o.script_element.html(o.content_element.val()).remove().appendTo('body');
+        o.code_element.html(o.content_element.val()).remove().appendTo('body');
     };
 
     function controls(o) {
@@ -603,16 +624,18 @@ Hive.App.Script = function(o){
     o.make_controls.push(controls);
     Hive.App.has_shield(o);
 
-    o.focus.add(function(){ o.content_element.focus() });
-    o.unfocus.add(function(){ o.content_element.blur() });
+    o.focus.add(function(){ o.editor.focus() });
+    // o.unfocus.add(function(){ o.editor.blur() });
 
-    o.content_element = $('<textarea>').addClass('content code drag').appendTo(o.div);
-    o.script_element = $('<script>').html(o.init_state.content);
+    // o.content_element = $('<textarea>').addClass('content code drag').appendTo(o.div);
+    o.editor = codemirror(o.div[0])
+    o.content_element
+    o.code_element = $('<script>').html(o.init_state.content);
     o.load();
 
     return o;
 };
-Hive.registerApp(Hive.App.Script, 'hive.script');
+Hive.registerApp(Hive.App.Code, 'hive.code');
 
 Hive.App.Image = function(o) {
     o.is_image = true;
@@ -856,6 +879,7 @@ Hive.App.Image = function(o) {
 
     Hive.App.has_rotate(o);
     Hive.App.has_opacity(o);
+    Hive.App.has_border_radius(o);
 
     o.img = $();
     o.state_update(o.init_state);
@@ -870,24 +894,21 @@ Hive.App.Rectangle = function(o) {
     Hive.App.has_resize(o);
     var common = $.extend({}, o);
 
-    var state = {};
-    o.content = function(content) { return $.extend({}, state); };
+    o.css_state = o.css_state || {};
+    o.content = function(content) { return $.extend({}, o.css_state); };
     o.set_css = function(props) {
         props['background-color'] = props.color || props['background-color'];
         props['box-sizing'] = 'border-box';
         o.content_element.css(props);
-        $.extend(state, props);
+        $.extend(o.css_state, props);
         if(o.controls) o.controls.layout();
     }
     o.css_setter = function(css_prop) { return function(v) {
         var ps = {}; ps[css_prop] = v; o.set_css(ps);
     } }
 
-    o.color = function(){ return state.color };
+    o.color = function(){ return o.css_state.color };
     o.color_set = o.css_setter('color');
-
-    o.border_radius = function(){ return parseInt(state['border-radius']) };
-    o.border_radius_set = function(v){ o.set_css({'border-radius':v+'px'}); };
 
     o.make_controls.push(function(o){
         o.addControls($('#controls_rectangle'));
@@ -895,13 +916,8 @@ Hive.App.Rectangle = function(o) {
 
     Hive.App.has_rotate(o);
     Hive.App.has_color(o);
+    Hive.App.has_border_radius(o);
     Hive.App.has_opacity(o);
-    var history_point;
-    Hive.App.has_slider_menu(o, '.rounding', o.border_radius_set, o.border_radius,
-        function(){ history_point = env.History.saver(
-            o.border_radius, o.border_radius_set, 'border radius'); },
-        function(){ history_point.save() }
-    );
 
     o.div.addClass('rectangle')
     o.content_element = $("<div class='content drag'>").appendTo(o.div);
@@ -991,6 +1007,10 @@ Hive.App.Polygon = function(o){
         ref_points.splice(index, 1)
         o.reframe(true)
     }
+    o.pts = function(){
+        var pos = o.pos_relative()
+        return points.map(u._add(pos))
+    }
 
     // o.center = function(){
     //     return u._div(points.reduce(function(a, b){ return u._add(a)(b) })
@@ -1038,7 +1058,7 @@ Hive.App.Polygon = function(o){
         ref_points = o.points()
         ref_pos = o.pos_relative()
         ref_dims = o.dims_relative()
-        ref_center = u._mul(.5)(ref_dims)
+        ref_center = u._sub(o.centroid_relative())(ref_pos)
         ref_stroke_width = stroke_width()
     }
     o.point_update = function(i, p, display_only){
@@ -1076,7 +1096,6 @@ Hive.App.Polygon = function(o){
 
     o.add_to('resize_start', function(){
         o.transform_start(0)
-        // history_point = env.History.saver(o.points, o.points_set, 'resize')
     })
     var _resize = o.resize, _resize_end = o.resize_end
     o.resize = function(delta){
@@ -1092,10 +1111,6 @@ Hive.App.Polygon = function(o){
         o.transform_start(0)
         o.reframe()
     }
-    // o.after_resize = function(){
-    //     history_point.save()
-    //     return true
-    // }
 
     o.set_css = function(props, no_reframe) {
         poly_el.css(props)
@@ -1130,9 +1145,6 @@ Hive.App.Polygon = function(o){
         o.transform_start(0)
         o.reframe(true)
     }
-
-    // o.border_radius = function(){ return parseInt(state['border-radius']) };
-    // o.border_radius_set = function(v){ o.set_css({'border-radius':v+'px'}); };
 
     o.make_controls.push(function(o){
         o.addControls($('#controls_path'));
@@ -1182,6 +1194,7 @@ Hive.App.Polygon = function(o){
         }
     )
     Hive.App.has_opacity(o);
+    // Hive.App.has_border_radius(o);
 
     if(!points.length)
         points.push.apply(points, [ [0, 0], [50, 100], [100, 0] ])
@@ -1255,7 +1268,7 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         return u._mul(1 / env.scale())([ev.clientX, ev.clientY]) }
 
     var from_template = function(){
-        var s = template.state()
+        var s = (template.state && template.state()) || template
         delete s.position
         delete s.id
         delete s.z
@@ -1283,13 +1296,14 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
     handle_template.dragstart = function(ev, dd){
         // absolutely no idea why this is being called twice
         ev.stopPropagation()
-        if(creating) return 
+        if(creating) return
         var s = from_template()
         s.position = pos(ev)
         creating = template = Hive.new_app(s, {no_select: 1})
     }
     handle_template.drag = function(ev, dd){
         no_click = true
+        // TODO-merge-conflict?
         if(!creating) return
         creating.dims_set([dd.deltaX, dd.deltaY])
     }
@@ -1536,7 +1550,7 @@ Hive.registerApp(Hive.App.Audio, 'hive.audio');
 
 // TODO-refactor: move into app_modifiers
 
-Hive.App.has_nudge = function(o){
+Hive.App.has_nudge = function(o, condition){
     // TODO-bugbug: implement undo/redo of this. Because nudge is naturally
     // called repeatedly, this should create a special collapsable history
     // point that automatically merges into the next history point if it's the
@@ -1595,7 +1609,7 @@ Hive.App.has_nudge = function(o){
             , 39: nudge([1,0])  // Right
             , 40: nudge([0,1])  // Down
         }
-        if(handlers[ev.keyCode]){
+        if(handlers[ev.keyCode] && condition()){
             handlers[ev.keyCode]();
             return false;
         }
@@ -1788,10 +1802,10 @@ Hive.App.has_image_drop = function(o) {
         var file = files[0];
         // TODO-dnd: have fit depend on where the object was dropped relative
         // to image center
-        var init_state = { 
+        var init_state = $.extend(o.init_state, {
             position: o.pos_relative(), 
             dimensions: o.dims_relative(),
-            fit: 2 };
+            fit: 2 });
         env.History.begin();
         app = u.new_file(files, init_state,
             { load:load, position: true })[0];
@@ -1803,7 +1817,20 @@ Hive.App.has_image_drop = function(o) {
     upload.drop_target(o.content_element, on_files, u.on_media_upload);
     return o;
 };
-
+Hive.App.has_border_radius = function(o) {
+    var history_point;
+    o.border_radius = function(){ return parseInt(o.css_state['border-radius']) };
+    o.border_radius_set = function(v){ o.set_css({'border-radius':v+'px'}); };
+    o.make_controls.push(function(o){
+        // o.addControls($('#controls_rounding'));
+        o.addButton($('#controls_rounding .rounding'));
+    });
+    Hive.App.has_slider_menu(o, '.rounding', o.border_radius_set, o.border_radius,
+        function(){ history_point = env.History.saver(
+            o.border_radius, o.border_radius_set, 'border radius'); },
+        function(){ history_point.save() }
+    );
+}
 Hive.App.has_resize = function(o) {
     var dims_ref, history_point;
     o.dims_ref_set = function(){ dims_ref = o.dims(); };
@@ -1990,30 +2017,39 @@ Hive.has_scale = function(o){
 };
 
 Hive.App.has_rotate = function(o) {
+    // TODO-cleanup-selection: move into selection
+
+    var app = o
     var angle = o.init_state.angle ? o.init_state.angle : 0;
     o.angle = function(){ return angle; };
     o.angle_set = function(a){
         angle = a;
-        o.content_element.rotate(a);
+        if(o.content_element)
+            o.content_element.rotate(a);
         if(o.controls && o.controls.multiselect)
             o.controls.select_box.rotate(a);
     }
     o.load.add(function() { if(o.angle()) o.angle_set(o.angle()) });
 
-    var _state = o.state;
-    o.state = function(){
-        var s = _state();
+    var _sr = o.state_relative, _srs = o.state_relative_set
+    o.state_relative = function(){
+        var s = _sr();
         if(angle) s.angle = angle;
         return s;
     };
+    o.state_relative_set = function(s){
+        _srs(s)
+        if(s.angle)
+            o.angle_set(s.angle)
+    }
 
     function controls(o) {
-        var common = $.extend({}, o), refAngle = null, offsetAngle = null;
+        var common = $.extend({}, o), ref_angle = null, offsetAngle = null,
+            ref_centroid;
 
         o.getAngle = function(e) {
-            var cpos = o.app.pos_center();
-            var x = e.pageX - cpos[0];
-            var y = e.pageY - cpos[1];
+            var x = e.pageX - ref_centroid[0];
+            var y = e.pageY - ref_centroid[1];
             return Math.atan2(y, x) * 180 / Math.PI;
         }
 
@@ -2026,7 +2062,7 @@ Hive.App.has_rotate = function(o) {
         }
 
         o.rotate = function(a){
-            o.app.angle_set(a);
+            app.angle_set(a);
         };
 
         o.rotateHandle = $("<img class='control rotate hoverable drag' title='Rotate'>")
@@ -2036,27 +2072,30 @@ Hive.App.has_rotate = function(o) {
         var angleRound = function(a) { return Math.round(a / 45)*45; },
             history_point;
         o.rotateHandle.drag('start', function(e, dd) {
-                refAngle = angle;
+                ref_centroid = app.centroid()
+                ref_angle = angle;
                 offsetAngle = o.getAngle(e);
-                o.app.hide_controls()
-                if (o.app.rotate_start)
-                    o.app.rotate_start(refAngle);
-                history_point = env.History.saver(
-                    o.app.angle, o.app.angle_set, 'rotate');
+                app.hide_controls()
+                if (app.rotate_start)
+                    app.rotate_start(ref_angle);
+                if(!app.is_selection)
+                    history_point = env.History.saver(
+                        app.angle, app.angle_set, 'rotate');
             })
             .drag(function(e, dd) {
-                var a = o.getAngle(e) - offsetAngle + refAngle;
+                var a = o.getAngle(e) - offsetAngle + ref_angle;
                 if( e.shiftKey && Math.abs(a - angleRound(a)) < 10 )
                     a = angleRound(a);
-                o.app.angle_set(a);
+                app.angle_set(a);
             })
             .drag('end', function(){
-                if(o.app.rotate_end) o.app.rotate_end();
-                history_point.save();
+                if(app.rotate_end) app.rotate_end();
                 env.Selection.update_relative_coords();
-                o.app.show_controls()
+                app.show_controls()
+                if(!app.is_selection)
+                    history_point.save()
             })
-            .dblclick(function(){ o.app.angle_set(0); });
+            .dblclick(function(){ app.angle_set(0); });
 
         return o;
     }
@@ -2228,6 +2267,11 @@ Hive.App.has_color = function(o, name){
     if(!name) name = 'color'
     var color_drawer, getter = o[name], setter = o[name + '_set']
     function controls(o) {
+        var common = $.extend({}, o);
+
+        // o.addButton($('#controls_misc .drawer.color'));
+        // o.addButton($('#controls_misc .button.color'));
+        // o.c.color = o.div.find('.button.color');
         color_drawer = o.addButton($('#controls_misc .drawer.color'));
         o.c.color = o.div.find('.button.'+ name);
 
@@ -2242,7 +2286,6 @@ Hive.App.has_color = function(o, name){
             ,close: function(){ history_point.save() }
         });
         return o;
-
     }
     o.make_controls.push(controls);
 }
@@ -2282,7 +2325,7 @@ Hive.init_background_dialog = function(){
 
     $('#bg_upload').on('with_files', function(ev, files){
         Hive.bg_set(files[0]);
-    }).on('response', function(ev, files){
+    }).on('success', function(ev, files){
         env.Exp.background.url = files[0].url;
     });
 };

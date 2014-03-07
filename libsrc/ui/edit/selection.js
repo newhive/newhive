@@ -31,7 +31,8 @@ o.Selection = function(o) {
     o.count = function(){ return elements.length; };
     o.each = function(fn){ $.each(elements, fn) };
     o.get_targets = function(){
-        return (drag_target == o) ? elements.slice() : [drag_target]; 
+        return (!drag_target || drag_target == o) ?
+            elements.slice() : [drag_target]; 
     };
     o.add_to_collection = false;
     o.is_selection = true;
@@ -100,6 +101,7 @@ o.Selection = function(o) {
     var dragging = false, drag_target;
     o.drag_target = function(){ return drag_target; };
     o.dragstart = function(ev, dd){
+        if(o.dragging) return
         o.dragging = true;
         var app = ev.data;
         if(app){
@@ -156,6 +158,7 @@ o.Selection = function(o) {
         o.update_focus(ev);
     };
     o.dragend = function (ev, dd) {
+        if(!o.dragging) return;
         o.dragging = false;
         // TODO-cleanup-controls remove true branch
         if(elements.length == 1) elements[0].show_controls()
@@ -333,29 +336,40 @@ o.Selection = function(o) {
         o.layout();
     };
 
+    o.centroid_relative = function(){
+        // centroids of selected apps
+        return u._div( elements.map(function(a){ return a.centroid_relative() })
+            .reduce(function(p1, p2){ return u._add(p1)(p2) }) )
+            (elements.length)
+    }
+
     hive_app.App.has_rotate(o);
-    var angle = 0, rotation_refs;
+    var ref_angle = 0, ref_center, rotation_refs
     o.angle = function(){ return 0; };
-    o.rotate_start = function(ref_angle) {
-        angle = ref_angle;
+    o.rotate_start = function(angle) {
+        ref_angle = angle;
+        ref_center = o.centroid_relative()
         rotation_refs = []
         o.each(function(i, el) {
             if(el.rotate_start)
                 el.rotate_start(ref_angle)
+            var centroid = el.centroid_relative()
             rotation_refs[i] = {
                  ref_angle: el.angle()
-                ,ref_cen: el.cent_pos()
-                ,ref_pos: u._sub(el.pos_relative())(el.cent_pos())
+                ,ref_cen: centroid
+                ,ref_pos: u._sub(el.pos_relative())(centroid)
             }
         })
+        env.History.change_start()
     }
     o.angle_set = function(a) {
-        a -= angle;
-        var sel_cent = o.cent_pos();
+        a -= ref_angle;
         o.each(function(i, el) {
-            el.angle_set(rotation_refs[i].ref_angle + a);
+            if(el.angle_set)
+                el.angle_set(rotation_refs[i].ref_angle + a);
             var cent = u.rotate_about(rotation_refs[i].ref_cen,
-                sel_cent, u.deg2rad(a));
+                    ref_center, u.deg2rad(a))
+                ,new_pos = u._sub(el.pos_relative())(el.centroid_relative())
             el.pos_relative_set(u._add(rotation_refs[i].ref_pos)(cent));
         });
     }
@@ -363,6 +377,7 @@ o.Selection = function(o) {
         elements.map(function(a){
             if(a.rotate_end) a.rotate_end()
         })
+        env.History.change_end('rotate')
     }
     hive_app.App.has_resize(o);
     var ref_dims, _resize = o.resize;
@@ -489,15 +504,19 @@ o.Selection = function(o) {
     // position and dimension methods
 
     o.update_relative_coords = function(){
-        var bounds = o.bounds();
-        _pos_relative_set([bounds.left, bounds.top]);
-        o.dims_relative_set([bounds.right - bounds.left,
-            bounds.bottom - bounds.top]);
+        var bounds = o.bounds(), _pos = [bounds.left, bounds.top]
+            ,_dims = [bounds.right - bounds.left, bounds.bottom - bounds.top];
+        o.no_layout = true;
+        if (!u.array_equals(_pos, o.pos_relative()))
+            _pos_relative_set(_pos);
+        if (!u.array_equals(_dims, o.dims_relative()))
+            o.dims_relative_set(_dims);
+        o.no_layout = false;
         _positions = elements.map(function(a){
-            return u._sub(a.pos_relative())(o.pos_relative());
+            return u._sub(a.pos_relative())(_pos);
         });
         _scales = elements.map(function(a){
-            return u._div(a.dims_relative())(o.dims_relative());
+            return u._div(a.dims_relative())(_dims);
         });
     };
 
@@ -566,12 +585,16 @@ o.Selection = function(o) {
     var parent = o;
     o.make_controls.push(function(o){
         o.padding = 7;
-        o.div.drag(parent.move_handler).drag('start', parent.move_start)
-            .drag('end', parent.move_end);
+        // TODO-cleanup-selection: add this back after app controls is moved into selection
+        // o.div.drag(parent.move_handler).drag('start', parent.move_start)
+        //     .drag('end', parent.move_end);
     });
 
     o.layout = function(){
-        o.controls && o.controls.layout();
+        if (o.no_layout)
+            return;
+        if (o.controls)
+            o.controls.layout();
     }
 
     o.keydown = Funcs(function(ev){ 
@@ -600,7 +623,8 @@ o.Selection = function(o) {
         if(o.controls)
             o.controls.layout();
     });
-    hive_app.App.has_nudge(o);
+    hive_app.App.has_nudge(o, function(){ return elements.length > 0 })
+    // prevent selection keyhandler from eating events when nothing is selected
     return o;
 };
 hive_app.registerApp(o.Selection, 'hive.selection');

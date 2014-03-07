@@ -13,6 +13,14 @@
 {% endblock %}
 
 {% block body %}
+  {% if domain %}
+    <a href='//newhive.com/{{ expr.owner_name }}/{{ expr.name }}'
+      target='_top'><div id='hive_logo'></div></a>
+    {#<div class='menu drawer' data-handle='#hive_logo'>
+        <div class='menu item'>{{ expr.title|e }} on NewHive</div></a>
+      <a href='//newhive.com'><div class='menu item default'>NewHive</div></a>
+    </div>#}
+  {% endif %} 
   {% include 'page_parts/expr_body.html' %}
   <script>
     curl(['ui/expression'], function(expression) {
