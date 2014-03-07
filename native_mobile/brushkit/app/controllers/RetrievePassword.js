@@ -38,6 +38,7 @@ function doSubmit(e) {
 	
 	xhr.open('POST', url);
 	
+
 	xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 	xhr.setRequestHeader("Accepts","application/json");
 	
