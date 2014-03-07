@@ -628,7 +628,7 @@ Hive.App.Code = function(o){
     // o.unfocus.add(function(){ o.editor.blur() });
 
     // o.content_element = $('<textarea>').addClass('content code drag').appendTo(o.div);
-    o.editor = codemirror(o.div[0])
+    o.editor = CodeMirror(o.div[0])
     o.content_element
     o.code_element = $('<script>').html(o.init_state.content);
     o.load();
