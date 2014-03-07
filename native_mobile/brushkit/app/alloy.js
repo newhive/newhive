@@ -210,7 +210,13 @@ function uploadImage(photo_model) {
 	reduce_w = lg_img.width*reduce_pct;
 	reduce_h = lg_img.height*reduce_pct;
 	Ti.API.info('BEFORE reducing: ' + lg_img.length);
-	small_photo = ImageFactory.imageAsResized(lg_img, {width:reduce_w,height:reduce_h,quality:ImageFactory.QUALITY_MEDIUM});
+	small_photo = ImageFactory.imageAsResized(lg_img,
+		{
+			width:reduce_w,
+			height:reduce_h,
+			format:ImageFactory.JPEG,
+			quality:0.8
+		});
 	
 	//Prepare xhr request
 	var BASE_URL = Titanium.App.Properties.getString('base_url_ssl');
@@ -227,19 +233,20 @@ function uploadImage(photo_model) {
 			return;
 		}
 		
+		Ti.API.info("the uploadImage response: "+ this.responseText);
 		res = JSON.parse(this.responseText)[0];
-		photo_model.set('new_hive_id', res.id);
 		alert("the res id: "+ res.id);
+		photo_model.set('new_hive_id', res.id);
 		Ti.API.info("the res id: "+ res.id);
 		photo_model.save();
 	};
 	
 	xhr.open('POST', url);
 	
-	xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
-	xhr.setRequestHeader("Accepts","application/json");
+	//xhr.setRequestHeader('Content-Type', 'multipart/form-data')
+	//xhr.setRequestHeader("Accepts","application/json");
 	
-	var params = {client : 'mobile', json: 'true', file: small_photo};
+	var params = {client : 'mobile',  file: small_photo};
 	xhr.send(params);
 }
 
