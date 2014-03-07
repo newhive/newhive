@@ -4,7 +4,7 @@ Ti.API.info('LOADING LOGIN PAGE');
 
 function doLogin(e) {
 	var BASE_URL = Titanium.App.Properties.getString('base_url_ssl');
-	var url = BASE_URL + 'api/user/login';
+	var url = BASE_URL + 'api/user/login?json=true';
 	var xhr = Ti.Network.createHTTPClient();
 	var username = $.textfieldUsername.value;
 	var pwd = $.textfieldPwd.value;

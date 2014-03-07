@@ -162,9 +162,8 @@ function checkLogin() {
 		    JSON.parse(this.responseText);
 		} catch(error) {
 		    var login = Alloy.createController('Login');
-			login.getView('login_window').open();
-			
-			return;
+		    login.getView('login_window').open();
+		    return;
 		}
 		
 		res = JSON.parse(this.responseText);
