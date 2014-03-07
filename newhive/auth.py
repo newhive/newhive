@@ -55,12 +55,13 @@ def new_session(db, user, request, response):
     #    secure_secret = str
 
     expires = request.form.get('expires', False)
-    session = db.Session.create(dict(
+    session_data = dict(
          user = user.id
         ,active = True
         ,expires = expires
-        ))
-    session.update(dfilter(request.form, ['remember', 'client']))
+        )
+    session_data.update(dfilter(request.form, ['remember', 'client']))
+    session = db.Session.create(session_data)
     set_secret(session, True, response)
     set_secret(session, False, response)
     set_cookie(response, 'identity', session.id, expires = expires)
