@@ -1,6 +1,6 @@
 from werkzeug import exceptions
 from newhive import config, oauth
-from newhive.utils import junkstr, set_cookie, get_cookie, rm_cookie
+from newhive.utils import junkstr, set_cookie, get_cookie, rm_cookie, dfilter
 from newhive.oauth import FacebookClient, FlowExchangeError
 import newhive.ui_strings.en as ui
 
@@ -55,12 +55,13 @@ def new_session(db, user, request, response):
     #    secure_secret = str
 
     expires = request.form.get('expires', False)
-    session = db.Session.create(dict(
+    session_data = dict(
          user = user.id
         ,active = True
-        ,remember = request.form.get('remember', False)
         ,expires = expires
-        ))
+        )
+    session_data.update(dfilter(request.form, ['remember', 'client']))
+    session = db.Session.create(session_data)
     set_secret(session, True, response)
     set_secret(session, False, response)
     set_cookie(response, 'identity', session.id, expires = expires)
