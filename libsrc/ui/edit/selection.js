@@ -623,7 +623,8 @@ o.Selection = function(o) {
         if(o.controls)
             o.controls.layout();
     });
-    hive_app.App.has_nudge(o);
+    hive_app.App.has_nudge(o, function(){ return elements.length > 0 })
+    // prevent selection keyhandler from eating events when nothing is selected
     return o;
 };
 hive_app.registerApp(o.Selection, 'hive.selection');

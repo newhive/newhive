@@ -1541,7 +1541,7 @@ Hive.registerApp(Hive.App.Audio, 'hive.audio');
 
 // TODO-refactor: move into app_modifiers
 
-Hive.App.has_nudge = function(o){
+Hive.App.has_nudge = function(o, condition){
     // TODO-bugbug: implement undo/redo of this. Because nudge is naturally
     // called repeatedly, this should create a special collapsable history
     // point that automatically merges into the next history point if it's the
@@ -1600,7 +1600,7 @@ Hive.App.has_nudge = function(o){
             , 39: nudge([1,0])  // Right
             , 40: nudge([0,1])  // Down
         }
-        if(handlers[ev.keyCode]){
+        if(handlers[ev.keyCode] && condition()){
             handlers[ev.keyCode]();
             return false;
         }
