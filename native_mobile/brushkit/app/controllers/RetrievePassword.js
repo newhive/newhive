@@ -38,7 +38,7 @@ function doSubmit(e) {
 	
 	xhr.open('POST', url);
 	
-	xhr.setRequestHeader("Content-Type", "application/json");
+	xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
 	xhr.setRequestHeader("Accepts","application/json");
 	
 	var params = {email : email, client : 'mobile', json: 'true'};
