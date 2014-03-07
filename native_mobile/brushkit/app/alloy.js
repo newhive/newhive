@@ -185,7 +185,8 @@ function checkLogin() {
 	
 	xhr.open('POST', url);
 	
-	xhr.setRequestHeader("Content-Type", "application/json");
+	// xhr.setRequestHeader("Content-Type", "application/json");
+	xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
 	xhr.setRequestHeader("Accepts","application/json");
 	
 	var params = {client : 'mobile', json: 'true'};
@@ -235,7 +236,7 @@ function uploadImage(photo_model) {
 	
 	xhr.open('POST', url);
 	
-	xhr.setRequestHeader("Content-Type", "application/json");
+	xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
 	xhr.setRequestHeader("Accepts","application/json");
 	
 	var params = {client : 'mobile', json: 'true', file: small_photo};
