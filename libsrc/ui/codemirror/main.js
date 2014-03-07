@@ -1,5 +1,6 @@
 define([
     './codemirror'
+    
     ,'js!./addon/edit/matchbrackets.js'
     ,'js!./addon/comment/continuecomment.js'
     ,'js!./addon/comment/comment.js'

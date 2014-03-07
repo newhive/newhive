@@ -6,6 +6,7 @@ define([
     ,'browser/layout'
     ,'ui/util'
     ,'ui/colors'
+    ,'ui/codemirror/main'
 
     ,'./env'
     ,'./util'
@@ -21,6 +22,7 @@ define([
     ,layout
     ,ui_util
     ,colors
+    ,codemirror
 
     ,env
     ,u
@@ -605,11 +607,13 @@ Hive.App.RawHtml = function(o) {
 };
 Hive.registerApp(Hive.App.RawHtml, 'hive.raw_html');
 
-Hive.App.Script = function(o){
-    o.content = function(){ return o.content_element.html(); };
+Hive.App.Code = function(o){
+    Hive.App.has_resize(o);
+
+    o.content = function(){ return o.editor.getValue() }
 
     o.run = function(){
-        o.script_element.html(o.content_element.val()).remove().appendTo('body');
+        o.code_element.html(o.content_element.val()).remove().appendTo('body');
     };
 
     function controls(o) {
@@ -620,16 +624,18 @@ Hive.App.Script = function(o){
     o.make_controls.push(controls);
     Hive.App.has_shield(o);
 
-    o.focus.add(function(){ o.content_element.focus() });
-    o.unfocus.add(function(){ o.content_element.blur() });
+    o.focus.add(function(){ o.editor.focus() });
+    // o.unfocus.add(function(){ o.editor.blur() });
 
-    o.content_element = $('<textarea>').addClass('content code drag').appendTo(o.div);
-    o.script_element = $('<script>').html(o.init_state.content);
+    // o.content_element = $('<textarea>').addClass('content code drag').appendTo(o.div);
+    o.editor = codemirror(o.div[0])
+    o.content_element
+    o.code_element = $('<script>').html(o.init_state.content);
     o.load();
 
     return o;
 };
-Hive.registerApp(Hive.App.Script, 'hive.script');
+Hive.registerApp(Hive.App.Code, 'hive.code');
 
 Hive.App.Image = function(o) {
     o.is_image = true;
