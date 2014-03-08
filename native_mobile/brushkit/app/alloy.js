@@ -77,8 +77,10 @@ function showHiveCamera() {
 	
 		success:function(event)
 		{
+			small_image = reduceImageSize(event.media);
+
 			photo = Alloy.createModel('photos');
-			photo.set('photo_blob', event.media);
+			photo.set('photo_blob', small_image);
 			photo.save();
 			photosCollection.add(photo);
 
@@ -129,13 +131,16 @@ function showHiveGallery(){
 		{
 			//checking if it is photo
 			if(event.mediaType == Ti.Media.MEDIA_TYPE_PHOTO) {
-				photo = Alloy.createModel('photo');
-				photo.set('photo_blob', event.media);
+				small_image = reduceImageSize(event.media);
+
+				photo = Alloy.createModel('photos');
+				photo.set('photo_blob', small_image);
 				photo.save();
 				photosCollection.add(photo);
 
 				var compose = Alloy.createController('Compose'); 
 				compose.getView('compose_window').open();
+				Titanium.Media.hideCamera();
 
 				uploadImage(photo);
 			}   else {
@@ -193,9 +198,8 @@ function checkLogin() {
 	xhr.send(params);
 }
 
-function uploadImage(photo_model) {
-	var lg_img = photo_model.get('photo_blob');
 
+function reduceImageSize(lg_img){
 	//first, smallify the image
 	var orientation = (lg_img.width > lg_img.height) ? 'landscape' : 'portrait';
 	var max_length = 1000;
@@ -218,6 +222,12 @@ function uploadImage(photo_model) {
 			quality:0.8
 		});
 	
+	Ti.API.info('AFTER reducing: ' + small_photo.length);
+
+	return small_photo;
+}
+
+function uploadImage(photo_model) {
 	//Prepare xhr request
 	var BASE_URL = Titanium.App.Properties.getString('base_url_ssl');
 	var url = BASE_URL + 'api/file/create';
@@ -242,10 +252,7 @@ function uploadImage(photo_model) {
 	};
 	
 	xhr.open('POST', url);
-	
-	//xhr.setRequestHeader('Content-Type', 'multipart/form-data')
-	//xhr.setRequestHeader("Accepts","application/json");
-	
+	small_photo = photo_model.get('photo_blob');
 	var params = {client : 'mobile',  file: small_photo};
 	xhr.send(params);
 }
