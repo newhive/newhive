@@ -17,6 +17,16 @@ function doLogin(e) {
 		//alt pwd: mytCailfac6
 	}
 	
+	if(Titanium.App.Properties.getBool('is_test') == true){
+		xhr.validatesSecureCertificate = false;
+	}
+
+	xhr.open('POST', url);
+	
+	var params = {username : username, secret : pwd, client : 'mobile', json: 'true'};
+	Ti.API.info('send them params: '+ username + ', '+ pwd);
+	xhr.send(params);
+
 	xhr.onload = function(){
 		Ti.API.info(this.responseText);
 		Ti.API.info('this the login response');
@@ -51,15 +61,6 @@ function doLogin(e) {
 		};
 	};
 	
-	xhr.open('POST', url);
-	
-
-	xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-	xhr.setRequestHeader("Accepts","application/json");
-	
-	var params = {username : username, secret : pwd, client : 'mobile', json: 'true'};
-	Ti.API.info('send them params: '+ username + ', '+ pwd);
-	xhr.send(params);
 }
 
 $.textfieldUsername.addEventListener('focus', function(){

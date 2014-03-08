@@ -53,6 +53,10 @@ function publishExrpession(){
 		Ti.Platform.openURL(viewingURL);
 	};
 	
+	if(Titanium.App.Properties.getBool('is_test') == true){
+		xhr.validatesSecureCertificate = false;
+	}
+
 	xhr.open('POST', url);
 	
 	xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')

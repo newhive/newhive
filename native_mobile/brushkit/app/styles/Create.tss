@@ -15,12 +15,10 @@
 	height:"80dp",
 	left:"0dp",
 	bottom:"0dp",
-	color:"#fff",
-	borderColor:"fff",
+	color:"#000000",
+	borderColor:"#3e3e3e",
 	borderWidth: "1dp",
-	backgroundColor: "transparent",
-	backgroundImage: "/images/bg_orange_slice.png",
-	backgroundSelectedImage:'/images/bg_grey_slice_inactive.png',
+	backgroundColor: "#aef0e8",
 	font: {
 		fontSize: "20dp",
 		fontWeight: "bold"
@@ -31,12 +29,10 @@
 	height:"80dp",
 	right:"0dp",	
 	bottom:"0dp",
-	color:"#fff",
-	borderColor:"fff",
+	color:"#000000",
+	borderColor:"#3e3e3e",
 	borderWidth: "1dp",
-	backgroundColor: "transparent",
-	backgroundImage: "/images/bg_orange_slice.png",
-	backgroundSelectedImage:'/images/bg_grey_slice_inactive.png',
+	backgroundColor: "#aef0e8",
 	font: {
 		fontSize: "20dp",
 		fontWeight: "bold"
