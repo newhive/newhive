@@ -96,13 +96,13 @@ o.History.init = function(){
     // needed to change the state
     o.saver = function(getter, setter, name){
         var o2 = { name: name };
-        o2.old_state = getter();
+        o2.old_state = getter("history");
 
         o2.save = function(){
-            o2.new_state = getter();
+            o2.new_state = getter(o2.old_state, "history");
             o.save(
-                function(){ setter(o2.old_state) },
-                function(){ setter(o2.new_state) },
+                function(){ setter(o2.old_state, "history") },
+                function(){ setter(o2.new_state, "history") },
                 o2.name
             );
         };

@@ -299,7 +299,7 @@ o.Selection = function(o) {
         var off = [0, 0];
         if (o != drag_target)
             off = u._sub(drag_target.min_pos())(drag_target.pos_relative());
-        pos = u._add(pos)(off);
+        // pos = u._add(pos)(off);
         // TODO-feature-snap: check key shortcut to turn off snapping
         if(!env.no_snap){
             var excludes = {};
@@ -345,7 +345,11 @@ o.Selection = function(o) {
 
     hive_app.App.has_rotate(o);
     var ref_angle = 0, ref_center, rotation_refs
-    o.angle = function(){ return 0; };
+    o.angle = function(){ 
+        if (elements.length == 1 && typeof(elements[0].angle) == "function")
+            return elements[0].angle();
+        return 0; 
+    };
     o.rotate_start = function(angle) {
         ref_angle = angle;
         ref_center = o.centroid_relative()
@@ -380,13 +384,17 @@ o.Selection = function(o) {
         env.History.change_end('rotate')
     }
     hive_app.App.has_resize(o);
-    var ref_dims, _resize = o.resize;
+    var ref_dims, _ref_dims, _resize = o.resize;
     o.before_resize = function() {
         o.each(function(i, a) { 
             if (a.before_resize) a.before_resize(); });
 
         drag_target = o;
         ref_dims = o.dims_relative();
+        if (elements.length == 1 && !elements[0].get_aspect()) {
+            _ref_dims = elements[0].dims();
+            elements[0].dims_ref_set();
+        }
         env.History.change_start();
     }
     o.after_resize = function() {
@@ -399,8 +407,12 @@ o.Selection = function(o) {
         drag_target = ref_dims = undefined;
     }
     o.resize = function(delta){
-        _resize(delta);
+        var dims = _resize(delta);
         if(!ref_dims) return;
+        if (elements.length == 1 && !elements[0].get_aspect()) {
+            // return elements[0].dims_set(u_add.dims);
+            return elements[0].resize(delta);
+        }
 
         var new_dims = o.dims_relative(),
             scale_by = Math.max( new_dims[0] / ref_dims[0],
@@ -418,6 +430,10 @@ o.Selection = function(o) {
         o.layout();
     };
     o.get_aspect = function() {
+        if (elements.length == 1 && !elements[0].get_aspect()) {
+            return false;
+        }
+
         var dims = o.dims();
         return dims[0] / dims[1];
     };
@@ -447,6 +463,7 @@ o.Selection = function(o) {
     o.update = function(apps){
         apps = $.grep(apps || elements, function(e){ return ! e.deleted; });
         var multi = o.dragging || (apps.length > 1);
+        multi = multi || (apps.length == 1 && apps[0].sel_controls);
 
         // TODO-feature, TODO-cleanup-controls: do not make
         // distinction between selecting single and multiple apps.
@@ -466,13 +483,22 @@ o.Selection = function(o) {
         o.update_relative_coords();
 
         if (o.controls) o.controls.remove();
+        var sel_controls = u.union.apply(null, 
+            elements.map(function(app) {
+                return app.sel_controls || []; })
+        )
+        o.make_controls = o.base_controls.slice();
+        sel_controls.map(function(f) {
+            if (typeof(f) == "function")
+                f(o);
+        })
         if(!o.dragging && multi) {
             Controls(o, false);
             o.controls.layout();
         }
         // if(apps.length <= 1 && o.controls)
         //     o.controls.remove();
-        if(!o.dragging && apps.length == 1) {
+        if(!o.dragging && apps.length == 1 && !multi) {
             Controls(apps[0], false);
             if (env.gifwall && context.flags.show_mini_selection_border)
                 o.controls.div.find(".select_border").hidehide();
@@ -490,7 +516,7 @@ o.Selection = function(o) {
         o.update(elements.concat([element]));
     };
     o.select = function(app_or_apps){
-        return o.update($.isArray(app_or_apps) ? app_or_apps : [app_or_apps]);
+        return o.update((!app_or_apps || $.isArray(app_or_apps)) ? app_or_apps : [app_or_apps]);
     };
     o.selected = function(app){
         return $.inArray(app, elements) != -1;
@@ -533,6 +559,13 @@ o.Selection = function(o) {
     };
     o.bounds = function() { 
         return u.app_bounds(elements);
+    };
+    // Overridden so as to take place in un-rotated space
+    o.min_pos = function() {
+        return o.pos_relative();
+    };
+    o.max_pos = function() {
+        return u._add(o.pos_relative())(o.dims_relative());
     };
 
     // END-coords
@@ -624,6 +657,48 @@ o.Selection = function(o) {
             o.controls.layout();
     });
     hive_app.App.has_nudge(o);
+    
+    // Set up delegate functions for controls
+    o.base_controls = o.make_controls.slice();
+    // var old_elements;
+    var delegate_fn = function(fn_name) {
+        return function() {
+            var args = $.makeArray(arguments), res = "undefined"
+                ,from_history = (args.slice(-1)[0] == "history")
+                ,apps = elements.slice();
+            if (from_history) {
+                args.pop();
+                if (args.length) {
+                    args = args[0].slice();
+                    apps = args.shift();
+                }
+            }
+            // if (apps.length == 0)
+            //     apps = old_elements.slice();
+            all_res = apps.map(function(app, i) {
+                if (typeof(app[fn_name]) == "function") {
+                    var applied = args;
+                    if (from_history)
+                        applied = [args[i]];
+                    var _res = app[fn_name].apply(null, applied);
+                    if (res == "undefined") res = _res;
+                    if (res != _res) res = undefined;
+                    return _res;
+                }
+                return undefined;
+            });
+            if (from_history) {
+                all_res.unshift(apps);
+                return all_res;
+            }
+            return res;
+        }
+    }
+    var delegates = ["color", "color_set", "opacity", "opacity_set"
+        ,"border_radius", "border_radius_set"];
+    delegates.map(function(fn_name) {
+        o[fn_name] = delegate_fn(fn_name);
+    });
     return o;
 };
 hive_app.registerApp(o.Selection, 'hive.selection');
