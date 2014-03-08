@@ -634,7 +634,7 @@ Hive.App.Code = function(o){
 
     // o.content_element = $('<textarea>').addClass('content code drag').appendTo(o.div);
     o.editor = CodeMirror(o.div[0])
-    o.content_element = $(o.editor.getWrapperElement())
+    o.content_element = $(o.editor.getWrapperElement()).addClass('content')
     o.code_element = $('<script>').html(o.init_state.content)
     o.load()
 
