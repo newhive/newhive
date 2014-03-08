@@ -5,4 +5,4 @@ define([
     // ,'js!./addon/comment/comment.js'
     // ,'js!./mode/javascript/javascript.js'
     // ,'js!./mode/css/css.js'
-], function(){ return CodeMirror })
+], function(){ return 1 })
