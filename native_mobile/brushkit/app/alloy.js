@@ -158,6 +158,19 @@ function checkLogin() {
 	var BASE_URL = Titanium.App.Properties.getString('base_url_ssl');
 	var url = BASE_URL + 'api/user/login';
 	var xhr = Ti.Network.createHTTPClient();
+	
+	if(Titanium.App.Properties.getBool('is_test') == true){
+		xhr.validatesSecureCertificate = false;
+	}
+
+	xhr.open('POST', url);
+
+	var params = {client : 'mobile', json: 'true'};
+	xhr.send(params);
+
+	xhr.onerror = function(e) {
+		Ti.API.info('Check Login Error: '+ e.error);
+	};
 
 	xhr.onload = function(){
 		Ti.API.info("checkLogin New Hive response: "+ this.responseText);
@@ -187,15 +200,6 @@ function checkLogin() {
 			login.getView('login_window').open();
 		};
 	};
-	
-	xhr.open('POST', url);
-	
-	// xhr.setRequestHeader("Content-Type", "application/json");
-	xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
-	xhr.setRequestHeader("Accepts","application/json");
-	
-	var params = {client : 'mobile', json: 'true'};
-	xhr.send(params);
 }
 
 
@@ -251,6 +255,11 @@ function uploadImage(photo_model) {
 		photo_model.save();
 	};
 	
+
+	if(Titanium.App.Properties.getBool('is_test') == true){
+		xhr.validatesSecureCertificate = false;
+	}
+
 	xhr.open('POST', url);
 	small_photo = photo_model.get('photo_blob');
 	var params = {client : 'mobile',  file: small_photo};
