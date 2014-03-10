@@ -77,10 +77,13 @@ function showHiveCamera() {
 	
 		success:function(event)
 		{
-			small_image = reduceImageSize(event.media);
+			small_image_obj = reduceImageSize(event.media);
+
 
 			photo = Alloy.createModel('photos');
-			photo.set('photo_blob', small_image);
+			photo.set('photo_blob', small_image_obj.image);
+			photo.set('width', small_image_obj.width);
+			photo.set('height', small_image_obj.height);
 			photo.save();
 			photosCollection.add(photo);
 
@@ -115,7 +118,7 @@ function showHiveCamera() {
 			a.show();
 		},
 		saveToPhotoGallery:false,
-		allowEditing:true,
+		allowEditing:false,
 		animated:true,
 		showControls:true,
 		/*overlay:camera_button_view,*/
@@ -131,10 +134,12 @@ function showHiveGallery(){
 		{
 			//checking if it is photo
 			if(event.mediaType == Ti.Media.MEDIA_TYPE_PHOTO) {
-				small_image = reduceImageSize(event.media);
+				small_image_obj = reduceImageSize(event.media);
 
 				photo = Alloy.createModel('photos');
-				photo.set('photo_blob', small_image);
+				photo.set('photo_blob', small_image_obj.image);
+				photo.set('width', small_image_obj.width);
+				photo.set('height', small_image_obj.height);
 				photo.save();
 				photosCollection.add(photo);
 
@@ -206,6 +211,10 @@ function checkLogin() {
 function reduceImageSize(lg_img){
 	//first, smallify the image
 	var orientation = (lg_img.width > lg_img.height) ? 'landscape' : 'portrait';
+	Ti.API.info('ORIENTATION: ' + orientation);
+	Ti.API.info('width: ' + lg_img.width);
+	Ti.API.info('height: ' + lg_img.height);
+
 	var max_length = 1000;
 	var reduce_pct = 0.5;
 
@@ -225,10 +234,15 @@ function reduceImageSize(lg_img){
 			format:ImageFactory.JPEG,
 			quality:0.8
 		});
-	
 	Ti.API.info('AFTER reducing: ' + small_photo.length);
 
-	return small_photo;
+	small_photo_obj = {
+		image: small_photo,
+		width: reduce_w,
+		height: reduce_h
+	}
+
+	return small_photo_obj;
 }
 
 function uploadImage(photo_model) {

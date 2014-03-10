@@ -4,12 +4,13 @@
 function publishExrpession(){
 	var apps = new Array();
 	photosCollection.each(function(p, index) {
-		var h = 1188;
+		var w= p.get('width');
+		var h = p.get('height');
 		var n_y = h*index;
 		apps.push({
 			"file_id": p.get('new_hive_id'),
 			"z": index,
-			"dimensions": [1000, 1188],
+			"dimensions": [w, h],
 			"position":[0,n_y],
 			"type": "hive.image"
 		});

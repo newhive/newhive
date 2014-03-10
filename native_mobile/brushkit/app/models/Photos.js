@@ -4,6 +4,8 @@ exports.definition = {
         "columns" : {
             "photo_blob" : "blob",
             "new_hive_id": "text",
+            "width": "numeric",
+            "height": "numeric",
             "lat" : "numeric",
             "long" : "numeric",
             "id" : "INTEGER PRIMARY KEY AUTOINCREMENT"
