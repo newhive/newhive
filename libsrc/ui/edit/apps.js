@@ -857,7 +857,7 @@ Hive.App.Image = function(o) {
     o.layout = function() {
         _layout();
         var dims = o.dims(), scale_x = o.init_state.scale_x || 1;
-        o.img.css('width', scale_x * dims[0] + 'px');
+        o.img.css('width', scale_x * dims[0] + 'px').css('height', 'auto');
         var offset = o.offset();
         if (offset) {
             o.img.css({"margin-left": offset[0], "margin-top": offset[1]});
@@ -2036,7 +2036,7 @@ Hive.App.has_rotate = function(o) {
         if(o.controls && o.controls.multiselect)
             o.controls.select_box.rotate(a);
     }
-    o.load.add(function() { if(o.angle()) o.angle_set(o.angle()) });
+    o.load.add(function() { o.angle_set(o.angle()) });
 
     var _sr = o.state_relative, _srs = o.state_relative_set
     o.state_relative = function(){

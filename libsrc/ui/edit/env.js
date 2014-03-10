@@ -131,6 +131,8 @@ o.History.init = function(){
                 apps = env.Apps.all();
         }
         save_targets = apps.slice();
+        if (save_targets[0] && save_targets[0].is_selection)
+            save_targets = env.Selection.get_targets();
         old_states = get_states();
     };
     o.change_end = function(name){

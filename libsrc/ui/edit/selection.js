@@ -406,32 +406,44 @@ o.Selection = function(o) {
 
         drag_target = ref_dims = undefined;
     }
-    o.resize = function(delta){
-        var dims = _resize(delta);
-        if(!ref_dims) return;
-        if (elements.length == 1 && !elements[0].get_aspect()) {
-            // return elements[0].dims_set(u_add.dims);
-            return elements[0].resize(delta);
+    var _dims_relative_set = o.dims_relative_set;
+    // Multiselect doesn't handle non-aspect-preserving resize. Delegate it.
+    var delegate_dims_set = function() {
+        return (ref_dims && elements.length == 1 && !elements[0].get_aspect()) }
+    o.dims_relative_set = function(new_dims) {
+        if (delegate_dims_set())
+            return;
+        var new_ref = ref_dims;
+        if (!new_ref) {
+            new_ref = o.dims_relative();
         }
-
-        var new_dims = o.dims_relative(),
-            scale_by = Math.max( new_dims[0] / ref_dims[0],
-                new_dims[1] / ref_dims[1] );
+        var scale_by = Math.max( new_dims[0] / new_ref[0],
+            new_dims[1] / new_ref[1] );
 
         o.each(function(i, a){
             a.pos_relative_set( 
                 u._add(u._mul(scale_by)(_positions[i]))(o.pos_relative()) );
-            a.dims_relative_set( u._mul(scale_by)(u._mul(ref_dims)(_scales[i])) );
+            a.dims_relative_set( u._mul(scale_by)(u._mul(new_ref)(_scales[i])) );
         });
 
         var bounds = o.bounds();
-        o.dims_relative_set([bounds.right - bounds.left, bounds.bottom - bounds.top]);
+        _dims_relative_set([bounds.right - bounds.left, bounds.bottom - bounds.top]);
+        o.update_relative_coords();
 
-        o.layout();
+        // o.layout();
+    }
+    o.resize = function(delta){
+        var dims = _resize(delta);
+        if(!ref_dims) return;
+        if (delegate_dims_set()) {
+            // return elements[0].dims_set(u_add.dims);
+            return elements[0].resize(delta);
+        }
+
     };
     o.get_aspect = function() {
         if (elements.length == 1 && !elements[0].get_aspect()) {
-            return false;
+            return elements[0].get_aspect();
         }
 
         var dims = o.dims();
@@ -536,7 +548,7 @@ o.Selection = function(o) {
         if (!u.array_equals(_pos, o.pos_relative()))
             _pos_relative_set(_pos);
         if (!u.array_equals(_dims, o.dims_relative()))
-            o.dims_relative_set(_dims);
+            _dims_relative_set(_dims);
         o.no_layout = false;
         _positions = elements.map(function(a){
             return u._sub(a.pos_relative())(_pos);
@@ -658,7 +670,10 @@ o.Selection = function(o) {
     });
     
     // Set up delegate functions for controls
-    o.base_controls = o.make_controls.slice();
+    o.load = function() {
+        o.base_controls = o.make_controls.slice();
+    }
+    setTimeout(o.load, 1);
     // var old_elements;
     var delegate_fn = function(fn_name) {
         return function() {
@@ -679,10 +694,12 @@ o.Selection = function(o) {
                     var applied = args;
                     if (from_history)
                         applied = [args[i]];
-                    var _res = app[fn_name].apply(null, applied);
-                    if (res == "undefined") res = _res;
-                    if (res != _res) res = undefined;
-                    return _res;
+                    if (typeof(app[fn_name]) == "function") {
+                        var _res = app[fn_name].apply(null, applied);
+                        if (res == "undefined") res = _res;
+                        if (res != _res) res = undefined;
+                        return _res;
+                    }
                 }
                 return undefined;
             });
