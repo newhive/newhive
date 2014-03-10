@@ -68,12 +68,14 @@ define([
         });
     };
 
-	o.on = function(element, event_name, data){
+	o.on = function(element, event_name, data, drag_opts){
+        // Nasty Hack:
         // this assumes mousedown is handled elsewhere, and canceled
-        // which allows for separate mousedown and dragstart handlers 
-        if(event_name == 'dragstart')
-            $(element).drag('start', event_bubbler(event_name, data),
-                {bubble_mousedown: true})
+        // which allows for separate mousedown and dragstart handlers
+        // also passes awkward opts parameter to drag handlers
+        if(event_name.indexOf('drag') == 0)
+            $(element).drag(event_name, event_bubbler(event_name, data),
+                $.extend({bubble_mousedown: true}, drag_opts))
 		$(element).on(event_name, event_bubbler(event_name, data));
 		return o;
 	};

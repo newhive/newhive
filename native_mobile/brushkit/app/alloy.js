@@ -77,10 +77,13 @@ function showHiveCamera() {
 	
 		success:function(event)
 		{
-			small_image = reduceImageSize(event.media);
+			small_image_obj = reduceImageSize(event.media);
+
 
 			photo = Alloy.createModel('photos');
-			photo.set('photo_blob', small_image);
+			photo.set('photo_blob', small_image_obj.image);
+			photo.set('width', small_image_obj.width);
+			photo.set('height', small_image_obj.height);
 			photo.save();
 			photosCollection.add(photo);
 
@@ -115,7 +118,7 @@ function showHiveCamera() {
 			a.show();
 		},
 		saveToPhotoGallery:false,
-		allowEditing:true,
+		allowEditing:false,
 		animated:true,
 		showControls:true,
 		/*overlay:camera_button_view,*/
@@ -131,10 +134,12 @@ function showHiveGallery(){
 		{
 			//checking if it is photo
 			if(event.mediaType == Ti.Media.MEDIA_TYPE_PHOTO) {
-				small_image = reduceImageSize(event.media);
+				small_image_obj = reduceImageSize(event.media);
 
 				photo = Alloy.createModel('photos');
-				photo.set('photo_blob', small_image);
+				photo.set('photo_blob', small_image_obj.image);
+				photo.set('width', small_image_obj.width);
+				photo.set('height', small_image_obj.height);
 				photo.save();
 				photosCollection.add(photo);
 
@@ -158,6 +163,19 @@ function checkLogin() {
 	var BASE_URL = Titanium.App.Properties.getString('base_url_ssl');
 	var url = BASE_URL + 'api/user/login';
 	var xhr = Ti.Network.createHTTPClient();
+	
+	if(Titanium.App.Properties.getBool('is_test') == true){
+		xhr.validatesSecureCertificate = false;
+	}
+
+	xhr.open('POST', url);
+
+	var params = {client : 'mobile', json: 'true'};
+	xhr.send(params);
+
+	xhr.onerror = function(e) {
+		Ti.API.info('Check Login Error: '+ e.error);
+	};
 
 	xhr.onload = function(){
 		Ti.API.info("checkLogin New Hive response: "+ this.responseText);
@@ -187,21 +205,16 @@ function checkLogin() {
 			login.getView('login_window').open();
 		};
 	};
-	
-	xhr.open('POST', url);
-	
-	// xhr.setRequestHeader("Content-Type", "application/json");
-	xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
-	xhr.setRequestHeader("Accepts","application/json");
-	
-	var params = {client : 'mobile', json: 'true'};
-	xhr.send(params);
 }
 
 
 function reduceImageSize(lg_img){
 	//first, smallify the image
 	var orientation = (lg_img.width > lg_img.height) ? 'landscape' : 'portrait';
+	Ti.API.info('ORIENTATION: ' + orientation);
+	Ti.API.info('width: ' + lg_img.width);
+	Ti.API.info('height: ' + lg_img.height);
+
 	var max_length = 1000;
 	var reduce_pct = 0.5;
 
@@ -221,10 +234,15 @@ function reduceImageSize(lg_img){
 			format:ImageFactory.JPEG,
 			quality:0.8
 		});
-	
 	Ti.API.info('AFTER reducing: ' + small_photo.length);
 
-	return small_photo;
+	small_photo_obj = {
+		image: small_photo,
+		width: reduce_w,
+		height: reduce_h
+	}
+
+	return small_photo_obj;
 }
 
 function uploadImage(photo_model) {
@@ -251,6 +269,11 @@ function uploadImage(photo_model) {
 		photo_model.save();
 	};
 	
+
+	if(Titanium.App.Properties.getBool('is_test') == true){
+		xhr.validatesSecureCertificate = false;
+	}
+
 	xhr.open('POST', url);
 	small_photo = photo_model.get('photo_blob');
 	var params = {client : 'mobile',  file: small_photo};

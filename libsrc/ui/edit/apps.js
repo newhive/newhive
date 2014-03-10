@@ -507,8 +507,8 @@ Hive.App = function(init_state, opts) {
         o.apps.add(o); // add to apps collection
     // TODO-cleanup-events: attach app object to these events on app div without
     // creating duplicate event handlers, allowing for easier overriding
-    evs.on(o.div, 'dragstart', o, {bubble_mousedown: true})
-        .on(o.div, 'drag', o)
+    evs.on(o.div, 'dragstart', o, {bubble_mousedown: true, handle: '.drag'})
+        .on(o.div, 'drag', o, {handle: '.drag'})
         .on(o.div, 'dragend', o)
         .on(o.div, 'mousedown', o)
         .on(o.div, 'mouseup', o)
@@ -613,25 +613,30 @@ Hive.App.Code = function(o){
     o.content = function(){ return o.editor.getValue() }
 
     o.run = function(){
-        o.code_element.html(o.content_element.val()).remove().appendTo('body');
-    };
+        o.code_element.html(o.content()).remove().appendTo('body');
+    }
 
     function controls(o) {
         o.addControls($('#controls_script'));
         o.div.find('.code').click(o.app.run);
         return o;
     }
-    o.make_controls.push(controls);
-    Hive.App.has_shield(o);
+    o.make_controls.push(controls)
+    Hive.App.has_shield(o)
 
-    o.focus.add(function(){ o.editor.focus() });
-    // o.unfocus.add(function(){ o.editor.blur() });
+    o.focus.add(function(){
+        o.editor.focus()
+        o.content_element.removeClass('drag')
+    })
+    o.unfocus.add(function(){
+         o.content_element.addClass('drag')
+    })
 
     // o.content_element = $('<textarea>').addClass('content code drag').appendTo(o.div);
     o.editor = CodeMirror(o.div[0])
-    o.content_element
-    o.code_element = $('<script>').html(o.init_state.content);
-    o.load();
+    o.content_element = $(o.editor.getWrapperElement()).addClass('content')
+    o.code_element = $('<script>').html(o.init_state.content)
+    o.load()
 
     return o;
 };

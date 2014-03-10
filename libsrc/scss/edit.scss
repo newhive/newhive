@@ -224,6 +224,8 @@ body.edit {
             float: left;
         }
     }
+
+    .drag { cursor: move; }
 }
 
 .drawer.brush .option:hover { background-color: $color_selected; }
