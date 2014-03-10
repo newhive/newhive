@@ -6,6 +6,7 @@ define([
     ,'browser/layout'
     ,'ui/util'
     ,'ui/colors'
+    ,'ui/codemirror/main'
 
     ,'./env'
     ,'./util'
@@ -21,6 +22,7 @@ define([
     ,layout
     ,ui_util
     ,colors
+    ,codemirror
 
     ,env
     ,u
@@ -605,11 +607,13 @@ Hive.App.RawHtml = function(o) {
 };
 Hive.registerApp(Hive.App.RawHtml, 'hive.raw_html');
 
-Hive.App.Script = function(o){
-    o.content = function(){ return o.content_element.html(); };
+Hive.App.Code = function(o){
+    Hive.App.has_resize(o);
+
+    o.content = function(){ return o.editor.getValue() }
 
     o.run = function(){
-        o.script_element.html(o.content_element.val()).remove().appendTo('body');
+        o.code_element.html(o.content_element.val()).remove().appendTo('body');
     };
 
     function controls(o) {
@@ -620,16 +624,18 @@ Hive.App.Script = function(o){
     o.make_controls.push(controls);
     Hive.App.has_shield(o);
 
-    o.focus.add(function(){ o.content_element.focus() });
-    o.unfocus.add(function(){ o.content_element.blur() });
+    o.focus.add(function(){ o.editor.focus() });
+    // o.unfocus.add(function(){ o.editor.blur() });
 
-    o.content_element = $('<textarea>').addClass('content code drag').appendTo(o.div);
-    o.script_element = $('<script>').html(o.init_state.content);
+    // o.content_element = $('<textarea>').addClass('content code drag').appendTo(o.div);
+    o.editor = CodeMirror(o.div[0])
+    o.content_element
+    o.code_element = $('<script>').html(o.init_state.content);
     o.load();
 
     return o;
 };
-Hive.registerApp(Hive.App.Script, 'hive.script');
+Hive.registerApp(Hive.App.Code, 'hive.code');
 
 Hive.App.Image = function(o) {
     o.is_image = true;
@@ -1293,6 +1299,7 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
     }
 
     handle_template.dragstart = function(ev, dd){
+        // absolutely no idea why this is being called twice
         ev.stopPropagation()
         if(creating) return
         var s = from_template()
@@ -1301,6 +1308,8 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
     }
     handle_template.drag = function(ev, dd){
         no_click = true
+        // TODO-merge-conflict?
+        if(!creating) return
         creating.dims_set([dd.deltaX, dd.deltaY])
     }
     handle_template.dragend = function(ev, dd){
@@ -1546,7 +1555,7 @@ Hive.registerApp(Hive.App.Audio, 'hive.audio');
 
 // TODO-refactor: move into app_modifiers
 
-Hive.App.has_nudge = function(o){
+Hive.App.has_nudge = function(o, condition){
     // TODO-bugbug: implement undo/redo of this. Because nudge is naturally
     // called repeatedly, this should create a special collapsable history
     // point that automatically merges into the next history point if it's the
@@ -1605,7 +1614,7 @@ Hive.App.has_nudge = function(o){
             , 39: nudge([1,0])  // Right
             , 40: nudge([0,1])  // Down
         }
-        if(handlers[ev.keyCode]){
+        if(handlers[ev.keyCode] && condition()){
             handlers[ev.keyCode]();
             return false;
         }

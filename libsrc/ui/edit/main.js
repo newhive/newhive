@@ -5,7 +5,6 @@ define([
     ,'browser/js'
 
     ,'ui/menu'
-    ,'ui/codemirror'
     ,'ui/dialog'
     ,'ui/util'
     ,'server/context'
@@ -30,7 +29,6 @@ define([
     ,js
 
     ,Menu
-    ,CodeMirror
     ,dialog
     ,ui_util
     ,context

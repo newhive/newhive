@@ -1,5 +1,5 @@
 
-var photosCollection = Alloy.Collections.Photos;
+//var photosCollection = Alloy.Collections.Photos;
 
 function publishExrpession(){
 	var apps = new Array();
@@ -21,7 +21,7 @@ function publishExrpession(){
 		"auth": "public",
 		"title": $.tf_title.value,
 		"apps": apps
-	}
+	};
 
 	Ti.API.info("here is your exp json: "+ JSON.stringify(exp));
 
@@ -55,7 +55,7 @@ function publishExrpession(){
 	
 	xhr.open('POST', url);
 	
-	xhr.setRequestHeader("Content-Type", "application/json");
+	xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
 	xhr.setRequestHeader("Accepts","application/json");
 	
 	var params = {client : 'mobile', json: 'true', expr: JSON.stringify(exp)};

@@ -4,7 +4,7 @@ Ti.API.info('LOADING LOGIN PAGE');
 
 function doLogin(e) {
 	var BASE_URL = Titanium.App.Properties.getString('base_url_ssl');
-	var url = BASE_URL + 'api/user/login';
+	var url = BASE_URL + 'api/user/login?json=true';
 	var xhr = Ti.Network.createHTTPClient();
 	var username = $.textfieldUsername.value;
 	var pwd = $.textfieldPwd.value;
@@ -35,12 +35,10 @@ function doLogin(e) {
 		if(res.logged_in){
 			Ti.API.info('login success! '+ res.name);
 			
-			Ti.App.current_user_name = res.name;
-			
 			$.textfieldUsername.blur();
 			$.textfieldPwd.blur();
 			
-			Ti.App.current_user_name = res.login;
+			Ti.App.current_user_name = res.name;
 			Ti.App.current_user_id = res.id;
 			
 			var creator = Alloy.createController('Create'); 
@@ -55,7 +53,8 @@ function doLogin(e) {
 	
 	xhr.open('POST', url);
 	
-	xhr.setRequestHeader("Content-Type", "application/json");
+
+	xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 	xhr.setRequestHeader("Accepts","application/json");
 	
 	var params = {username : username, secret : pwd, client : 'mobile', json: 'true'};

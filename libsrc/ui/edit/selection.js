@@ -656,7 +656,6 @@ o.Selection = function(o) {
         if(o.controls)
             o.controls.layout();
     });
-    hive_app.App.has_nudge(o);
     
     // Set up delegate functions for controls
     o.base_controls = o.make_controls.slice();
@@ -699,6 +698,10 @@ o.Selection = function(o) {
     delegates.map(function(fn_name) {
         o[fn_name] = delegate_fn(fn_name);
     });
+
+    // prevent selection keyhandler from eating events when nothing is selected
+    hive_app.App.has_nudge(o, function(){ return elements.length > 0 })
+
     return o;
 };
 hive_app.registerApp(o.Selection, 'hive.selection');

@@ -1,4 +1,4 @@
-var photosCollection = Alloy.Collections.Photos;
+//var photosCollection = Alloy.Collections.Photos;
 
 
 $.compose_window.addEventListener('focus', function() {
