@@ -282,6 +282,17 @@ class Expr(ModelController):
             )
             style = app.get('style', {})
             more_css = ';'.join([ k+':'+str(v) for k,v in style.items()])
+        elif type == 'hive.code':
+            tag = 'script'
+            ctype = app.get('code_type', 'js')
+            if ctype == 'js':
+                if app.get('url'):
+                    html = "<script src='%s'></script>" % app.get('url')
+                else:
+                    html = "<script>%s</script>" % app.get('content')
+            if ctype == 'css':
+                # TODO-feature-css-url: if app['url'], put <link> tag in head
+                html =  '<style>%s<style>' % app.get('content')
         else:
             html = content
 
