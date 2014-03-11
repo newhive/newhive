@@ -70,3 +70,8 @@ $.close.addEventListener('click',function(){
 });
 
 
+$.image_back.addEventListener('click', function(){
+	var login = Alloy.createController('Login');
+	login.getView('login_window').open();
+});
+
