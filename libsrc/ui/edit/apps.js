@@ -329,6 +329,11 @@ Hive.App = function(init_state, opts) {
         _dims = dims.slice();
         o.layout();
     };
+    o.bounds_relative_set = function(pos, dims) {
+        _pos = pos.slice();
+        _dims = dims.slice();
+        o.layout();
+    }
     o.pos_center_relative = function(){
         var dims = o.dims_relative();
         var pos = o.pos_relative();

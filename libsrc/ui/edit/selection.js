@@ -535,18 +535,13 @@ o.Selection = function(o) {
     o.update_relative_coords = function(){
         var bounds = o.bounds(), _pos = [bounds.left, bounds.top]
             ,_dims = [bounds.right - bounds.left, bounds.bottom - bounds.top];
-        // o.no_layout = true;
-        if (!u.array_equals(_pos, o.pos_relative()))
-            _pos_relative_set(_pos);
-        if (!u.array_equals(_dims, o.dims_relative()))
-            _dims_relative_set(_dims);
-        // o.no_layout = false;
         _positions = elements.map(function(a){
             return u._sub(a.pos_relative())(_pos);
         });
         _scales = elements.map(function(a){
             return u._div(a.dims_relative())(_dims);
         });
+        o.bounds_relative_set(_pos, _dims);
     };
 
     var _pos_relative_set = o.pos_relative_set;
@@ -558,7 +553,7 @@ o.Selection = function(o) {
         var bounds = o.bounds();
         _pos_relative_set([bounds.left, bounds.top]);
 
-        o.layout();
+        // o.layout();
     };
     o.bounds = function() { 
         return u.app_bounds(elements);
@@ -699,7 +694,7 @@ o.Selection = function(o) {
         }
     }
     var delegates = ["color", "color_set", "opacity", "opacity_set"
-        ,"border_radius", "border_radius_set"];
+        ,"border_radius", "border_radius_set", "link"];
     delegates.map(function(fn_name) {
         o[fn_name] = delegate_fn(fn_name);
     });
