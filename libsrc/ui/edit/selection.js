@@ -488,8 +488,8 @@ o.Selection = function(o) {
             elements.map(function(app) {
                 return app.sel_controls || []; })
         )
-        if (apps.length == 1)
-            u.union(sel_controls, apps[0].single_controls);
+        if (elements.length == 1)
+            sel_controls = u.union(sel_controls, apps[0].single_controls);
         sel_controls.map(function(f) {
             if (typeof(f) == "function")
                 f(o);
@@ -498,8 +498,8 @@ o.Selection = function(o) {
             Controls(o, false);
             o.controls.layout();
         }
-        // if(!o.dragging && apps.length == 1 && !multi) {
-        //     Controls(apps[0], false);
+        // if(!o.dragging && elements.length == 1 && !multi) {
+        //     Controls(elements[0], false);
         //     if (env.gifwall && context.flags.show_mini_selection_border)
         //         o.controls.div.find(".select_border").hidehide();
         // }

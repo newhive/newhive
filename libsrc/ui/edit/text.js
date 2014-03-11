@@ -92,6 +92,8 @@ o.Text = function(o) {
 
     o.refresh_size = function() {
         o.resize_h([o.calcWidth(), o.dims()[1]]);
+        if (env.Selection.selected(o)) 
+            env.Selection.update_relative_coords();
     };
 
     hive_app.has_scale(o);
@@ -119,11 +121,14 @@ o.Text = function(o) {
             dims = dims.slice();
             dims[0] = Math.max(dims[0], o.calcWidth() / env.scale());
             _dims_relative_set(dims);
+            return;
         }
-        if (!dims_ref) return;
-
-        var scale_by = o.dims()[0] / dims_ref[0];
-        o.scale_set(scale_ref * scale_by);
+        var new_scale;
+        if (dims_ref)
+            new_scale = scale_ref * o.dims()[0] / dims_ref[0];
+        else
+            new_scale = o.scale() * o.dims_relative()[0] / old_dims[0];
+        o.scale_set(new_scale);
     }
     
     var _load = o.load;

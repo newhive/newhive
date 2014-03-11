@@ -155,7 +155,8 @@ Hive.App = function(init_state, opts) {
     o.type = Hive.appTypes[init_state.type];
     o.id = init_state.id || u.random_str();
     o.handler_type = 0;
-    o.sel_controls = o.single_controls = [];
+    o.sel_controls = [];
+    o.single_controls = [];
 
     o.css_state = {};
     o.content = function(content) { return $.extend({}, o.css_state); };
