@@ -373,6 +373,9 @@ Hive.exit = function(){
 
 // Matches youtube and vimeo URLs, any URL pointing to an image, and
 // creates the appropriate App state to be passed to hive_app.new_app.
+//
+// TODO-feature-html-embed: iterate over each element, and do something
+// reasonable
 Hive.embed_code = function(element) {
     var c = $(element).val().trim(), app
     var v = "", more_args = "", start = 0;
@@ -445,6 +448,14 @@ Hive.embed_code = function(element) {
             , type: 'POST'
         });
         return;
+    }
+
+    var el = $(c).eq(0)
+    if(el.is('script')){
+        app = { type: 'hive.code', content: el.html(), code_type: 'js' }
+    }
+    else if(el.is('style')){
+        app = { type: 'hive.code', content: el.html(), code_type: 'css' }
     }
 
     else {
