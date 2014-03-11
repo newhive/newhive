@@ -199,7 +199,21 @@
 
 <div id='controls_script' class='controls_src'>
  <div class='control buttons'
-  ><img class='button code' title='run' src='{asset "skin/edit/opacity.png"}'
+  ><a href='#' title='execute'><div class='button bg exec' title='run'
+    >!</div></a
+
+  {# removing for now, too much work to add code editor to view mode
+  ><a href='#' title='options'><div class='button bg opts' title='run'
+    >...</div></a
+
+  ><div class='control menu drawer opts' data-handle='.button.opts'>
+    <div id='text_default' class='menu_item default'>
+      <label><input type='checkbox' class='show_in_view'
+        >Show when viewing</label>
+    </div>
+  </div
+  #}
+  
  ></div
 ></div>
 
