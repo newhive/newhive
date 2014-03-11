@@ -4,11 +4,8 @@
 "#textfields_view": {
 	layout: "vertical",
 	width: Titanium.UI.FILL,
-	height: "190dp",
+	height:Titanium.UI.SIZE,
 	top:'40dp',
-	backgroundColor: "transparent",
-	backgroundImage: "/images/bg_slice_grey_h120.png",
-	backgroundRepeat: true,
 	zIndex:'10'
 }
 "TextField": {
@@ -47,7 +44,7 @@
 }
 "#blank_view": {
 	layout:"composite",
-	backgroundColor: "#ffffff",
+	backgroundColor: "transparent",
 	width: Titanium.UI.FILL,
 	height: Titanium.UI.FILL,
 	top:'10dp',
@@ -58,27 +55,30 @@
 	opacity:"0.4"
 }
 "#error_message": {
-	top:"10dp",
-	opacity:"0",
-	color:"#333333",
+	top:"20dp",
+	width:"80%",
+	opacity:0,
 	textAlign:"center",
 	font: {
-		fontSize: "18dp"
-	}
+		fontSize:"20dp"
+	},
+	color:"#000",
+	zIndex: 10
 }
+
 "#retrieve_password":{
-	top:"10dp",
+	top:"20dp",
 	width:"70%",
-	height:"32dp",
-	opacity:"0",
-	color:"#fa562d",
-	textAlign:"center",
-	backgroundColor:"#eee",
-	borderColor:"333",
-	borderRadius:"1dp",
+	height: "40dp",
+	color:"#000000",
+	borderColor:"#3e3e3e",
+	backgroundColor: "#aef0e8",
 	font: {
-		fontSize: "18dp"
-	}
+		fontSize: "20dp",
+		fontWeight: "bold"
+	},
+	opacity: 0,
+	zIndex: 10
 }
 
 
