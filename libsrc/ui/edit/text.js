@@ -113,6 +113,12 @@ o.Text = function(o) {
     var _dims_relative_set = o.dims_relative_set;
     o.dims_relative_set = function(dims) {
         _dims_relative_set(dims);
+        if (dims[1] == o.dims_relative()[1]) {
+            // Horizontal resize limited by content element.
+            dims = dims.slice();
+            dims[0] = Math.max(dims[0], o.calcWidth() / env.scale());
+            _dims_relative_set(dims);
+        }
         if (!dims_ref) return;
 
         var scale_by = o.dims()[0] / dims_ref[0];
