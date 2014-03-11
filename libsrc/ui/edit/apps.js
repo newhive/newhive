@@ -155,6 +155,7 @@ Hive.App = function(init_state, opts) {
     o.type = Hive.appTypes[init_state.type];
     o.id = init_state.id || u.random_str();
     o.handler_type = 0;
+    o.sel_controls = [];
 
     o.css_state = {};
     o.content = function(content) { return $.extend({}, o.css_state); };
@@ -554,13 +555,13 @@ Hive.App.Html = function(o) {
         o.shield();
     }
 
-    function controls(o) {
-        o.addControls($('#controls_html'));
-        // TODO: create interface for editing HTML
-        // d.find('.render').click(o.app.toggle_render);
-        return o;
-    }
-    o.make_controls.push(controls);
+    // function controls(o) {
+    //     o.addControls($('#controls_html'));
+    //     // TODO: create interface for editing HTML
+    //     // d.find('.render').click(o.app.toggle_render);
+    //     return o;
+    // }
+    // o.make_controls.push(controls);
     Hive.App.has_opacity(o)
 
     setTimeout(function(){ o.load(); }, 100);
@@ -569,43 +570,47 @@ Hive.App.Html = function(o) {
 };
 Hive.registerApp(Hive.App.Html, 'hive.html');
 
-Hive.App.RawHtml = function(o) {
-    Hive.App.has_resize(o);
-    o.content = function() { return o.content_element[0].outerHTML; };
-    o.content_element = $(o.init_state.content).addClass('content');
-    o.div.append(o.content_element);
+// Deprecated
+// Hive.App.RawHtml = function(o) {
+//     Hive.App.has_resize(o);
+//     o.content = function() { return o.content_element[0].outerHTML; };
+//     o.get_content = function() { o.content_element; }
+//     o.set_content = function(new_content) { o.content_element.html(new_content); }
+//     o.content_element = $(o.init_state.content).addClass('content');
+//     o.div.append(o.content_element);
 
-    var controls = function(o){
-        o.addControls($('#controls_raw_html'));
-        o.div.find('.edit').click(function(){
-            var dia = $($('#dia_edit_code')[0].outerHTML);
-            u.show_dialog(dia, {
-                fade: false,
-                close: function() {
-                    var new_content = dia.find('textarea').val();
-                    o.app.content_element.html(new_content);
-                },
-                open: function() {
-                    dia.find('textarea').val(o.app.content_element.html());
-                }
-            });
-        });
-        //var inner = o.app.content_element.children();
-        //var width = inner.width();
-        //if (width < 100) width = 40;
-        //var height = inner.height();
-        //if (height < 100) height = 40;
-        //o.app.dims_set([width, height]);
+//     var controls = function(o){
+//         o.addControls($('#controls_raw_html'));
+//         o.div.find('.edit').click(function(){
+//             var dia = $($('#dia_edit_code')[0].outerHTML);
+//             u.show_dialog(dia, {
+//                 fade: false,
+//                 close: function() {
+//                     var new_content = dia.find('textarea').val();
+//                     o.app.set_content(new_content);
+//                 },
+//                 open: function() {
+//                     dia.find('textarea').val(o.app.get_content().html());
+//                 }
+//             });
+//         });
+//         //var inner = o.app.content_element.children();
+//         //var width = inner.width();
+//         //if (width < 100) width = 40;
+//         //var height = inner.height();
+//         //if (height < 100) height = 40;
+//         //o.app.dims_set([width, height]);
 
-        return o;
-    };
-    o.make_controls.push(controls);
+//         return o;
+//     };
+//     o.make_controls.push(controls);
+//     o.sel_controls = o.sel_controls.concat([ controls ]);
 
-    setTimeout(function(){ o.load(); }, 100);
+//     setTimeout(function(){ o.load(); }, 100);
 
-    return o;
-};
-Hive.registerApp(Hive.App.RawHtml, 'hive.raw_html');
+//     return o;
+// };
+// Hive.registerApp(Hive.App.RawHtml, 'hive.raw_html');
 
 Hive.App.Code = function(o){
     Hive.App.has_resize(o);
@@ -915,19 +920,14 @@ Hive.App.Rectangle = function(o) {
     o.color = function(){ return o.css_state.color };
     o.color_set = o.css_setter('color');
 
-    o.make_controls.push(function(o){
-        o.addControls($('#controls_rectangle'));
-    });
+    // o.make_controls.push(function(o){
+    //     o.addControls($('#controls_rectangle'));
+    // });
 
     Hive.App.has_rotate(o);
     Hive.App.has_color(o);
     Hive.App.has_border_radius(o);
     Hive.App.has_opacity(o);
-    o.sel_controls = [
-        Hive.App.has_color
-        ,Hive.App.has_border_radius
-        ,Hive.App.has_opacity
-    ];
 
     o.div.addClass('rectangle')
     o.content_element = $("<div class='content drag'>").appendTo(o.div);
@@ -1830,6 +1830,7 @@ Hive.App.has_image_drop = function(o) {
 Hive.App.has_border_radius = function(o) {
     var history_point;
     if (!o.is_selection) {
+        o.sel_controls.push(Hive.App.has_border_radius);
         o.border_radius = function(){ return parseInt(o.css_state['border-radius']) };
         o.border_radius_set = function(v){ o.set_css({'border-radius':v+'px'}); };
     }
@@ -2032,27 +2033,30 @@ Hive.App.has_rotate = function(o) {
     // TODO-cleanup-selection: move into selection
 
     var app = o
-    var angle = o.init_state.angle ? o.init_state.angle : 0;
-    o.angle = function(){ return angle; };
-    o.angle_set = function(a){
-        angle = a;
-        if(o.content_element)
-            o.content_element.rotate(a);
-        if(o.controls && o.controls.multiselect)
-            o.controls.select_box.rotate(a);
-    }
-    o.load.add(function() { o.angle_set(o.angle()) });
+    if (!o.is_selection) {
+        o.sel_controls.push(Hive.App.has_rotate);
+        var angle = o.init_state.angle ? o.init_state.angle : 0;
+        o.angle = function(){ return angle; };
+        o.angle_set = function(a){
+            angle = a;
+            if(o.content_element)
+                o.content_element.rotate(a);
+            if(o.controls && o.controls.multiselect)
+                o.controls.select_box.rotate(a);
+        }
+        o.load.add(function() { o.angle_set(o.angle()) });
 
-    var _sr = o.state_relative, _srs = o.state_relative_set
-    o.state_relative = function(){
-        var s = _sr();
-        if(angle) s.angle = angle;
-        return s;
-    };
-    o.state_relative_set = function(s){
-        _srs(s)
-        if(s.angle)
-            o.angle_set(s.angle)
+        var _sr = o.state_relative, _srs = o.state_relative_set
+        o.state_relative = function(){
+            var s = _sr();
+            if(angle) s.angle = angle;
+            return s;
+        };
+        o.state_relative_set = function(s){
+            _srs(s)
+            if(s.angle)
+                o.angle_set(s.angle)
+        }
     }
 
     function controls(o) {
@@ -2186,6 +2190,9 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end) {
 }
 
 Hive.App.has_align = function(o) {
+    if (!o.is_selection) {
+        o.sel_controls.push( Hive.App.has_align );
+    }
     function controls(o) {
         var common = $.extend({}, o);
 
@@ -2218,12 +2225,16 @@ Hive.App.has_align = function(o) {
                   case "+alignFull":
                     pos[coord] = 0;
                     dims[coord] = width;
-                    var aspect = o.app.get_aspect();
+                    var app = o.app;
+                    var aspect = app.get_aspect();
                     if (aspect) {
                         if (!coord) aspect = 1 / aspect;
                         dims[1 - coord] = width * aspect;
+                    } else if (app.is_selection && app.count() == 1) {
+                        app = app.elements()[0];
+                        dims[1 - coord] = app.dims_relative()[1 - coord];
                     }
-                    o.app.dims_relative_set(dims);
+                    app.dims_relative_set(dims);
                     break;
                 }
                 o.app.pos_relative_set(pos);
@@ -2238,6 +2249,7 @@ Hive.App.has_align = function(o) {
     
 Hive.App.has_opacity = function(o) {
     if (!o.is_selection) {
+        o.sel_controls.push( Hive.App.has_opacity );
         var opacity = o.init_state.opacity === undefined ? 1 : o.init_state.opacity;
         o.opacity = function(){ return opacity; };
         o.opacity_set = function(s){
@@ -2279,6 +2291,9 @@ Hive.App.has_opacity = function(o) {
 Hive.App.has_color = function(o, name){
     if(!name) name = 'color'
     var color_drawer, getter = o[name], setter = o[name + '_set']
+    if (!o.is_selection) {
+        o.sel_controls.push( Hive.App.has_color );
+    }
     function controls(o) {
         var common = $.extend({}, o);
 

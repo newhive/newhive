@@ -35,6 +35,7 @@ o.Selection = function(o) {
             elements.slice() : [drag_target]; 
     };
     o.add_to_collection = false;
+    o.has_align = false;
     o.is_selection = true;
     o.make_controls = [];
     o.handler_type = 2;
@@ -110,9 +111,7 @@ o.Selection = function(o) {
                 drag_target = o;
             else
                 drag_target = ev.data;
-            // TODO-cleanup-controls remove true branch
-            if(elements.length == 1) elements[0].hide_controls()
-            else o.hide_controls()
+            o.hide_controls()
             o.move_start();
             return;
         } else if(env.gifwall) {
@@ -160,9 +159,7 @@ o.Selection = function(o) {
     o.dragend = function (ev, dd) {
         if(!o.dragging) return;
         o.dragging = false;
-        // TODO-cleanup-controls remove true branch
-        if(elements.length == 1) elements[0].show_controls()
-        else o.show_controls()
+        o.show_controls()
 
         var app = ev.data;
         if(app){
@@ -343,7 +340,7 @@ o.Selection = function(o) {
             (elements.length)
     }
 
-    hive_app.App.has_rotate(o);
+    // hive_app.App.has_rotate(o);
     var ref_angle = 0, ref_center, rotation_refs
     o.angle = function(){ 
         if (elements.length == 1 && typeof(elements[0].angle) == "function")
@@ -391,7 +388,7 @@ o.Selection = function(o) {
 
         drag_target = o;
         ref_dims = o.dims_relative();
-        if (elements.length == 1 && !elements[0].get_aspect()) {
+        if (delegate_dims_set()) {
             _ref_dims = elements[0].dims();
             elements[0].dims_ref_set();
         }
@@ -428,7 +425,8 @@ o.Selection = function(o) {
 
         var bounds = o.bounds();
         _dims_relative_set([bounds.right - bounds.left, bounds.bottom - bounds.top]);
-        o.update_relative_coords();
+        if (!ref_dims)
+            o.update_relative_coords();
 
         // o.layout();
     }
@@ -474,12 +472,7 @@ o.Selection = function(o) {
 
     o.update = function(apps){
         apps = $.grep(apps || elements, function(e){ return ! e.deleted; });
-        var multi = o.dragging || (apps.length > 1);
-        multi = multi || (apps.length == 1 && apps[0].sel_controls);
-
-        // TODO-feature, TODO-cleanup-controls: do not make
-        // distinction between selecting single and multiple apps.
-        // Show controls which apply to all objects in the selection
+        var multi = true;
 
         // Previously unfocused elements that should be focused
         $.each(apps, function(i, el){ o.app_select(el, multi); });
@@ -494,6 +487,7 @@ o.Selection = function(o) {
 
         o.update_relative_coords();
 
+        // Show controls which apply to all objects in the selection
         if (o.controls) o.controls.remove();
         var sel_controls = u.union.apply(null, 
             elements.map(function(app) {
@@ -508,15 +502,16 @@ o.Selection = function(o) {
             Controls(o, false);
             o.controls.layout();
         }
-        // if(apps.length <= 1 && o.controls)
-        //     o.controls.remove();
-        if(!o.dragging && apps.length == 1 && !multi) {
-            Controls(apps[0], false);
-            if (env.gifwall && context.flags.show_mini_selection_border)
-                o.controls.div.find(".select_border").hidehide();
-        }
+        // if(!o.dragging && apps.length == 1 && !multi) {
+        //     Controls(apps[0], false);
+        //     if (env.gifwall && context.flags.show_mini_selection_border)
+        //         o.controls.div.find(".select_border").hidehide();
+        // }
+        if (env.gifwall && context.flags.show_mini_selection_border)
+            o.controls.div.find(".select_border").hidehide();
         if(apps.length == 0) {
             evs.handler_del({handler_type: 0}); 
+            if (o.controls) o.controls.remove();
         }
     };
 
@@ -698,8 +693,8 @@ o.Selection = function(o) {
                         var _res = app[fn_name].apply(null, applied);
                         if (res == "undefined") res = _res;
                         if (res != _res) res = undefined;
-                        return _res;
                     }
+                    return _res;
                 }
                 return undefined;
             });
