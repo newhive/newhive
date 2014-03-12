@@ -427,14 +427,11 @@ o.Selection = function(o) {
         _dims_relative_set([bounds.right - bounds.left, bounds.bottom - bounds.top]);
         if (!ref_dims)
             o.update_relative_coords();
-
-        // o.layout();
     }
     o.resize = function(delta){
         var dims = _resize(delta);
         if(!ref_dims) return;
         if (delegate_dims_set()) {
-            // return elements[0].dims_set(u_add.dims);
             return elements[0].resize(delta);
         }
 
@@ -451,19 +448,16 @@ o.Selection = function(o) {
     // END-event-handlers
 
     o.app_select = function(app, multi) {
-        if(multi){
+        if(multi) {
             app.unfocus();
-        }
-        else{
+        } else {
             app.focus();
             // TODO-feature for sketch and geometry apps: evs.handler_set(o.type)
             // depends on defining app specific but instance unspecific creation
             // handlers on app type constructors
         }
-        // Controls(app, multi || context.flags.show_mini_selection_border);
-        if (multi || env.show_mini_selection_border)
-            Controls(app, true);
-        // Controls(app, multi);
+        // Add mini-border
+        Controls(app, true);
     };
     o.app_unselect = function(app) {
         app.unfocus();
@@ -475,7 +469,7 @@ o.Selection = function(o) {
         var multi = true;
 
         // Previously unfocused elements that should be focused
-        $.each(apps, function(i, el){ o.app_select(el, multi); });
+        $.each(apps, function(i, el){ o.app_select(el, apps.length > 1); });
         // Previously focused elements that should be unfocused
         o.each(function(i, el){
             if($.inArray(el, apps) == -1) {
@@ -489,11 +483,13 @@ o.Selection = function(o) {
 
         // Show controls which apply to all objects in the selection
         if (o.controls) o.controls.remove();
+        o.make_controls = o.base_controls.slice();
         var sel_controls = u.union.apply(null, 
             elements.map(function(app) {
                 return app.sel_controls || []; })
         )
-        o.make_controls = o.base_controls.slice();
+        if (elements.length == 1)
+            sel_controls = u.union(sel_controls, apps[0].single_controls);
         sel_controls.map(function(f) {
             if (typeof(f) == "function")
                 f(o);
@@ -502,8 +498,8 @@ o.Selection = function(o) {
             Controls(o, false);
             o.controls.layout();
         }
-        // if(!o.dragging && apps.length == 1 && !multi) {
-        //     Controls(apps[0], false);
+        // if(!o.dragging && elements.length == 1 && !multi) {
+        //     Controls(elements[0], false);
         //     if (env.gifwall && context.flags.show_mini_selection_border)
         //         o.controls.div.find(".select_border").hidehide();
         // }
@@ -539,18 +535,13 @@ o.Selection = function(o) {
     o.update_relative_coords = function(){
         var bounds = o.bounds(), _pos = [bounds.left, bounds.top]
             ,_dims = [bounds.right - bounds.left, bounds.bottom - bounds.top];
-        o.no_layout = true;
-        if (!u.array_equals(_pos, o.pos_relative()))
-            _pos_relative_set(_pos);
-        if (!u.array_equals(_dims, o.dims_relative()))
-            _dims_relative_set(_dims);
-        o.no_layout = false;
         _positions = elements.map(function(a){
             return u._sub(a.pos_relative())(_pos);
         });
         _scales = elements.map(function(a){
             return u._div(a.dims_relative())(_dims);
         });
+        o.bounds_relative_set(_pos, _dims);
     };
 
     var _pos_relative_set = o.pos_relative_set;
@@ -562,7 +553,7 @@ o.Selection = function(o) {
         var bounds = o.bounds();
         _pos_relative_set([bounds.left, bounds.top]);
 
-        o.layout();
+        // o.layout();
     };
     o.bounds = function() { 
         return u.app_bounds(elements);
@@ -669,7 +660,6 @@ o.Selection = function(o) {
         o.base_controls = o.make_controls.slice();
     }
     setTimeout(o.load, 1);
-    // var old_elements;
     var delegate_fn = function(fn_name) {
         return function() {
             var args = $.makeArray(arguments), res = "undefined"
@@ -682,8 +672,6 @@ o.Selection = function(o) {
                     apps = args.shift();
                 }
             }
-            // if (apps.length == 0)
-            //     apps = old_elements.slice();
             all_res = apps.map(function(app, i) {
                 if (typeof(app[fn_name]) == "function") {
                     var applied = args;
@@ -706,7 +694,9 @@ o.Selection = function(o) {
         }
     }
     var delegates = ["color", "color_set", "opacity", "opacity_set"
-        ,"border_radius", "border_radius_set"];
+        ,"border_radius", "border_radius_set", "link"
+        ,"stroke_width", "stroke_width_set", "stroke_update", "reframe"
+        ,"blur", "blur_set", "stroke", "stroke_set"];
     delegates.map(function(fn_name) {
         o[fn_name] = delegate_fn(fn_name);
     });
