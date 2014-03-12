@@ -116,6 +116,7 @@ o.Text = function(o) {
     o.dims_relative_set = function(dims) {
         var old_dims = o.dims_relative();
         _dims_relative_set(dims);
+        if (!o.initialized) return;
         if (dims[1] == old_dims[1]) {
             // Horizontal resize limited by content element.
             dims = dims.slice();

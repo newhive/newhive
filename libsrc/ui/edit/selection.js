@@ -694,7 +694,9 @@ o.Selection = function(o) {
         }
     }
     var delegates = ["color", "color_set", "opacity", "opacity_set"
-        ,"border_radius", "border_radius_set", "link"];
+        ,"border_radius", "border_radius_set", "link"
+        ,"stroke_width", "stroke_width_set", "stroke_update", "reframe"
+        ,"blur", "blur_set", "stroke", "stroke_set"];
     delegates.map(function(fn_name) {
         o[fn_name] = delegate_fn(fn_name);
     });
