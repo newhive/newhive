@@ -92,6 +92,8 @@ o.Text = function(o) {
 
     o.refresh_size = function() {
         o.resize_h([o.calcWidth(), o.dims()[1]]);
+        if (env.Selection.selected(o)) 
+            env.Selection.update_relative_coords();
     };
 
     hive_app.has_scale(o);
@@ -112,11 +114,22 @@ o.Text = function(o) {
     }
     var _dims_relative_set = o.dims_relative_set;
     o.dims_relative_set = function(dims) {
+        var old_dims = o.dims_relative();
         _dims_relative_set(dims);
-        if (!dims_ref) return;
-
-        var scale_by = o.dims()[0] / dims_ref[0];
-        o.scale_set(scale_ref * scale_by);
+        if (!o.initialized) return;
+        if (dims[1] == old_dims[1]) {
+            // Horizontal resize limited by content element.
+            dims = dims.slice();
+            dims[0] = Math.max(dims[0], o.calcWidth() / env.scale());
+            _dims_relative_set(dims);
+            return;
+        }
+        var new_scale;
+        if (dims_ref)
+            new_scale = scale_ref * o.dims()[0] / dims_ref[0];
+        else
+            new_scale = o.scale() * o.dims_relative()[0] / old_dims[0];
+        o.scale_set(new_scale);
     }
     
     var _load = o.load;
@@ -140,14 +153,16 @@ o.Text = function(o) {
 
     function controls(o) {
         var common = $.extend({}, o), d = o.div;
+        // These controls can only ever apply to a single app.
+        var app = o.app.elements()[0];
 
         o.addControls($('#controls_text'));
 
         var link_open = function(){
-            var link = o.app.rte.get_link();
+            var link = app.rte.get_link();
         }
         o.link_menu = o.append_link_picker(d.find('.buttons'),
-                        {open: link_open, field_to_focus: o.app.content_element});
+                        {open: link_open, field_to_focus: app.content_element});
 
         var cmd_buttons = function(query, func) {
             $(query).each(function(i, e) {
@@ -160,10 +175,10 @@ o.Text = function(o) {
         o.color_picker = u.append_color_picker(
             d.find('.drawer.color'),
             function(v) {
-                o.app.rte.exec_command('+foreColor', v);
+                app.rte.exec_command('+foreColor', v);
             },
             undefined,
-            {field_to_focus: o.app.content_element, iframe: true}
+            {field_to_focus: app.content_element, iframe: true}
         );
         o.color_menu = o.hover_menu(
             d.find('.button.color'),
@@ -173,9 +188,9 @@ o.Text = function(o) {
                 open: function(){
                     // Update current color. Range should usually exist, but
                     // better to do nothing than throw error if not
-                    var range = o.app.rte.getRange();
+                    var range = app.rte.getRange();
                     if (range){
-                        var current_color = $(o.app.rte.getRange().getContainerElement()).css('color');
+                        var current_color = $(app.rte.getRange().getContainerElement()).css('color');
                         o.color_picker.set_color(current_color);
                     }
                 },
@@ -193,18 +208,21 @@ o.Text = function(o) {
             $(el).on('mousedown', function(e) {
                 e.preventDefault();
             }).click(function(){
-                o.app.rte.exec_command($(el).attr('cmd'), $(el).attr('val'));
+                app.rte.exec_command($(el).attr('cmd'), $(el).attr('val'));
             });
         });
 
         o.select_box.click(function(e){
             e.stopPropagation();
-            o.app.edit_mode(false);
+            app.edit_mode(false);
         });
 
         return o;
     }
-    o.make_controls.push(controls);
+    o.single_controls.push(function(o) {
+        o.make_controls.push(controls);
+    })
+    // o.make_controls.push(controls);
 
     o.div.addClass('text');
     if(!o.init_state.dimensions) o.dims_set([ 300, 20 ]);

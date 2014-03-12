@@ -179,16 +179,12 @@
 
 <div id='controls_image' class='controls_src'>
  <div class='control buttons'
+  {# Link belongs in controls_misc #}
   ><img class='button link hoverable tip_W' src='{asset "skin/edit/link.png"}' title='link'
   ><img class='button set_bg hoverable' src='{asset "skin/edit/fullscreen.png"}' title='make background'
  ></div
 ></div>
 
-<div id='controls_html' class='controls_src'>
- <div class='control buttons'
-  ><img class='button opacity tip_N' title='opacity' src='{asset "skin/edit/opacity.png"}'
- ></div
-></div>
 {# Unused? Missing png.
   <div id='controls_raw_html' class='controls_src'>
    <div class='control buttons'
@@ -243,11 +239,14 @@
     src='{asset "skin/edit/resize_h.png"}' title="resize">
   <img class='control drag resize_v hoverable tip_S' 
     src='{asset "skin/edit/resize_v.png"}' title="resize">
+  
   <img class='button color hoverable' src='{asset "skin/edit/color.png"}' title="color">
+  <div class='control drawer color border'></div>
+
   <img class='button opacity tip_N hoverable' 
     src='{asset "skin/edit/opacity.png"}' title='opacity'>
-  <div class='control drawer color border'></div>
-  <img class='button align' src='{asset "skin/edit/justify.png"}'>
+  
+  <img class='button align' src='{asset "skin/edit/justify.png"}' title='alignment'>
   <div class='control drawer border align'>
    <div><nobr>
     <img class='option small hoverable' cmd='+alignLeft'    src='{asset "skin/edit/justify_left.png"}'>
@@ -258,6 +257,12 @@
     <img class='option small hoverable' cmd='+alignFull'    src='{asset "skin/edit/justify_full.png"}'>
    </div>
   </div>
+
+  {# polygon #}
+  <img class='button blank stroke-width hoverable tip_N' src='{asset "skin/edit/border_width.png"}' title='stroke width'
+  ><img class='button stroke hoverable tip_N' src='{asset "skin/edit/border_color.png"}' title='stroke color'
+  ><img class='button blur hoverable tip_N' src='{asset "skin/edit/border_color.png"}' title='gaussian blur'>
+
 </div>
 
 <div id='controls_sketch' class='controls_src'>
