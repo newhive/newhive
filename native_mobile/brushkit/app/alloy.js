@@ -79,7 +79,6 @@ function showHiveCamera() {
 		{
 			small_image_obj = reduceImageSize(event.media);
 
-
 			photo = Alloy.createModel('photos');
 			photo.set('photo_blob', small_image_obj.image);
 			photo.set('width', small_image_obj.width);
@@ -208,25 +207,25 @@ function checkLogin() {
 }
 
 
-function reduceImageSize(lg_img){
-	//first, smallify the image
-	var orientation = (lg_img.width > lg_img.height) ? 'landscape' : 'portrait';
-	Ti.API.info('ORIENTATION: ' + orientation);
+function reduceImageSize(lg_img) {
 	Ti.API.info('width: ' + lg_img.width);
 	Ti.API.info('height: ' + lg_img.height);
 
 	var max_length = 1000;
-	var reduce_pct = 0.5;
 
-	if(orientation == 'portrait'){
-		reduce_pct = (max_length/lg_img.height);
-	}else {
-		reduce_pct = (max_length/lg_img.width);
-	}
+	reduce_pct = max_length/lg_img.width;
 
-	reduce_w = lg_img.width*reduce_pct;
-	reduce_h = lg_img.height*reduce_pct;
+	Ti.API.info('this is the REDUCE_PCT: '+ reduce_pct);
+
+	reduce_w = Math.floor(lg_img.width*reduce_pct);
+	reduce_h = Math.floor(lg_img.height*reduce_pct);
+
+
+	Ti.API.info('New Reduce Width: ' + reduce_w);
+	Ti.API.info('New Reduce Height: ' + reduce_h);
 	Ti.API.info('BEFORE reducing: ' + lg_img.length);
+
+
 	small_photo = ImageFactory.imageAsResized(lg_img,
 		{
 			width:reduce_w,
