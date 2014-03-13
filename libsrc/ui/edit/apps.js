@@ -636,12 +636,12 @@ Hive.App.Code = function(o){
     })
     o.unfocus.add(function(){
          o.content_element.addClass('drag')
+         o.editor.getInputField().blur()
     })
 
-    // o.content_element = $('<textarea>').addClass('content code drag').appendTo(o.div);
-    o.editor = CodeMirror(o.div[0])
-    o.editor.setValue(o.init_state.content || '')
-    o.content_element = $(o.editor.getWrapperElement()).addClass('content')
+    keymap = {
+        'Ctrl-/': function(cm){ cm.execCommand('toggleComment') }
+    }
 
     if(!o.init_state.code_type)
         o.init_state.code_type = 'js'
@@ -649,6 +649,13 @@ Hive.App.Code = function(o){
         o.code_element = $('<script>')
     if(o.init_state.code_type == 'css')
         o.code_element = $('<style>')
+
+    // o.content_element = $('<textarea>').addClass('content code drag').appendTo(o.div);
+    var mode = o.init_state.code_type
+    if(mode == 'js') mode = 'javascript'
+    o.editor = CodeMirror(o.div[0], { extraKeys: keymap ,mode: mode })
+    o.editor.setValue(o.init_state.content || '')
+    o.content_element = $(o.editor.getWrapperElement()).addClass('content')
 
     o.load()
 
