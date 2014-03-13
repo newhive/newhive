@@ -1,9 +1,6 @@
 <div class='overlay panel nav {<if query.clean}hide{>}' id='content_btns'>
-  {# expression specific #}
-  <span class='expr_actions'></span>{# no \n #}
-  <span class='hide edit_ui'></span>{# no \n #}
   {# create or signup/login #}
-  {#{<unless user.logged_in}
+  {<unless user.logged_in}
     <span class='signup'>
       {<if flags.open_signup}
         <a {anchor_attrs "signup"} class='signup_btn text_btn btn menu_item'
@@ -14,13 +11,16 @@
       <span class='red_spacer'></span>
       <span class='login_btn text_btn left_border btn menu_item'>Log in</span>
     </span>
-  {>}#}
-  <a {anchor_attrs "create_expr"} title='create page'
+  {>}
+  {# expression specific #}
+  <span class='expr_actions'></span>{# no \n #}
+  <span class='hide edit_ui'></span>{# no \n #}
+  <a {anchor_attrs "create_expr"} title='create'
     class='needs_login create item btn hoverable'></a>
   {# + button to open overlay #}
   <div class='social_btn item btn hide hoverable'></div>
 </div>
-{<if (or (eq flags.mobile "true") (not flags.mobile))}
+{<if (not flags.mobile)}
   <div class='social overlay page_btn' id='page_prev'></div>
   <div class='social overlay page_btn' id='page_next'></div>
 {>}
