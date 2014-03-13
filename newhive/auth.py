@@ -1,6 +1,6 @@
 from werkzeug import exceptions
 from newhive import config, oauth
-from newhive.utils import junkstr, set_cookie, get_cookie, rm_cookie
+from newhive.utils import junkstr, set_cookie, get_cookie, rm_cookie, dfilter
 from newhive.oauth import FacebookClient, FlowExchangeError
 import newhive.ui_strings.en as ui
 
