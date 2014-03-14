@@ -112,9 +112,9 @@ Hive.init_menus = function() {
 
     u.hover_menu('.insert_shape', '#menu_shape');
     $('#menu_shape .rect').click(function(e) {
-        hive_app.new_app({ type : 'hive.rectangle', content :
+        hive_app.new_app({ type : 'hive.rectangle', css_state :
             { color : colors[24], 'border-color' : 'black', 'border-width' : 0,
-                'border-style' : 'solid', 'border-radius' : 0 } });
+                'border-style' : 'solid' } });
     });
     $('#menu_shape .sketch').click(function(e) {
         hive_app.new_app({ type: 'hive.sketch', dimensions: [700, 700 / 1.6]
@@ -130,7 +130,7 @@ Hive.init_menus = function() {
         points: js.range(10).map(function(i){
             var d = ((i == 0 ? 0 : Math.PI*2*i/10) + Math.PI/10)
                 ,o = [47.705200572253005, 45.72550799853835] // dims/2
-                ,r = i%2*30+20
+                ,r = (i % 2) ? 50 : 19.0983005625
                 ,p = [Math.cos(d), Math.sin(d)]
             return u._add(o)( u._mul(p)(r) )
         })
@@ -241,21 +241,13 @@ Hive.init_global_handlers = function(){
 
     // The plus button needs to be clickable, but pass other events through
     $(".prompts .plus_btn").add($(".prompts .hint"))
-        .on("dragenter",function(ev) { 
-            drag_base.trigger(ev);
-            return false;
-        })
-        .on("dragleave",function(ev) { 
-            drag_base.trigger(ev);
-            return false;
-        })
-        .on('dragenter dragover', function(ev){
-            ev.preventDefault();
-        })
-        .on("drop",function(ev) {
+        .on("drop dragenter dragleave",function(ev) { 
             ev.preventDefault();
             drag_base.trigger(ev);
             return false;
+        })
+        .on('dragover', function(ev){
+            ev.preventDefault();
         })
         .on("mouseenter", function(ev){
             drag_base.trigger("dragenter");
@@ -453,9 +445,19 @@ Hive.embed_code = function(element) {
     var el = $(c).eq(0)
     if(el.is('script')){
         app = { type: 'hive.code', content: el.html(), code_type: 'js' }
+        var url = el.attr('src')
+        if(url){
+            app.url = url
+            delete app.content
+        }
     }
     else if(el.is('style')){
         app = { type: 'hive.code', content: el.html(), code_type: 'css' }
+        var url = el.attr('href')
+        if(url){
+            app.url = url
+            delete app.content
+        }
     }
 
     else {
@@ -521,6 +523,7 @@ Hive.dragenter = function(ev){
     Hive.global_highlight(true);
     dragging_count++;
     ev.preventDefault();
+    return false;
 };
 Hive.dragstart = function(){ 
     // hovers_active(false);
@@ -539,6 +542,7 @@ Hive.drop = Hive.dragleave = function(){
 
     if (0 == dragging_count)
         Hive.global_highlight(false);
+    return false;
 };
 // TODO-feature-editor-prompts: could be used in handlers for non-pointer
 // events, like in a type to add text box handler

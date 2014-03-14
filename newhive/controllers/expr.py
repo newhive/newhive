@@ -199,14 +199,17 @@ class Expr(ModelController):
         html_for_app = partial(self.html_for_app, scale=expr_scale,
             snapshot_mode=snapshot_mode)
         app_html = map(html_for_app, exp.get('apps', []))
-        if exp.has_key('dimensions') and 'gifwall' not in exp.get('tags_index',[]):
-            app_html.append("<div id='expr_spacer' class='happ' style='top: {}px;'></div>".format(exp['dimensions'][1]))
+        # if exp.has_key('dimensions') and 'gifwall' not in exp.get('tags_index',[]):
+        #     app_html.append("<div id='expr_spacer' class='happ' style='top: {}px;'></div>".format(exp['dimensions'][1]))
         return ''.join(app_html)
 
     def html_for_app(self, app, scale=1, snapshot_mode=False):
         content = app.get('content', '')
         more_css = ''
         type = app.get('type')
+        if type != 'hive.rectangle':
+            c = app.get('css_state', {})
+            more_css = ';'.join([p + ':' + str(c[p]) for p in c])
         if type == 'hive.image':
             media = self.db.File.fetch(app.get('file_id'))
             if media: content = media.get_resample(
@@ -292,7 +295,7 @@ class Expr(ModelController):
                     html = "<script>%s</script>" % app.get('content')
             if ctype == 'css':
                 # TODO-feature-css-url: if app['url'], put <link> tag in head
-                html =  '<style>%s<style>' % app.get('content')
+                html =  '<style>%s</style>' % app.get('content')
         else:
             html = content
 
