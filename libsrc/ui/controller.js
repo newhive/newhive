@@ -9,7 +9,7 @@ define([
     // ,'history/history'
     ,'ui/routing'
 
-    // ,'browser/jquery.mobile.custom'
+    ,'browser/jquery.mobile.custom'
 ], function(
      $
     ,js
@@ -41,6 +41,7 @@ define([
             $('<meta name="viewport" content="width=device-width, ' +
                 'height=device-height, initial-scale=0.5, ' +
                 'user-scalable=1"/>').appendTo($("head"));
+            $.event.special.swipe.horizontalDistanceThreshold = 200;
             context.flags.mobile = util.mobile();
         }
         page.init(o);
