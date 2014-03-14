@@ -29,7 +29,7 @@ class Snapshots(object):
         host = utils.url_host(on_main_domain=False,secure=False)
         # host = "localhost:3737"
         # url = 'http://' + host + ExpressionSnapshotURI(expr_id)
-        if len(pw) > 0:
+        if isinstance(pw, basestring) and len(pw) > 0:
             host = utils.url_host(on_main_domain=False,secure=True)
             url = 'https://' + host + '/' + expr_id + '?snapshot&' + urllib.urlencode({'pw': pw})
         else:
