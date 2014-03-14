@@ -1,8 +1,3 @@
-$.submit.addEventListener('click', function(e){
-	doSubmit(e);
-});
-
-
 
 function doSubmit(e) {
 	var BASE_URL = Titanium.App.Properties.getString('base_url_ssl');
@@ -12,7 +7,17 @@ function doSubmit(e) {
 	
 	Ti.API.info('email value: ' + email);
 	Ti.API.info('request headers'+ xhr.getUsername());
+		
+	xhr.open('POST', url);
 	
+	var params = {email : email, client : 'mobile', json: 'true'};
+	Ti.API.info('send them params: '+ url);
+	xhr.send(params);
+
+	xhr.onerror = function(e){
+		alert(e.error);
+	};
+
 	xhr.onload = function(){
 		Ti.API.info(this.responseText);
 		//if NOT json do nothing
@@ -23,26 +28,50 @@ function doSubmit(e) {
 		}
 		
 		res = JSON.parse(this.responseText);
-		
-	 	/*
-		if(res.logged_in){
-			Ti.API.info('retrieval success! '+ res);
-			//$.retrieve_password_window.close();
-		}else{
-			Ti.API.info('you failed');
-			$.error_message.opacity = 1;
-			$.retrieve_password.opacity = 1;
-		};
-		*/
-	};
-	
-	xhr.open('POST', url);
-	
 
-	xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-	xhr.setRequestHeader("Accepts","application/json");
-	
-	var params = {email : email, client : 'mobile', json: 'true'};
-	Ti.API.info('send them params: '+ url);
-	xhr.send(params);
+		if(res.error){
+			Ti.API.info('this is error: '+ res.error);
+			$.fail.setText(res.error);
+			$.fail_view.opacity = 1;
+		} else {
+			$.success_view.opacity = 1;
+		}
+	};
 }
+
+$.submit.addEventListener('click', function(e){
+	$.success_view.opacity = 0;
+	$.fail_view.opacity = 0;
+
+	$.fail.setText('');
+
+	doSubmit(e);
+});
+
+
+$.retrieve_password_window.addEventListener('click', function()  {
+	$.textfield_email.blur();
+});
+
+$.retrieve_password_window.addEventListener('focus', function(){
+	$.textfield_email.focus();
+});
+
+$.textfield_email.addEventListener('click',function(e){
+	e.cancelBubble = true;
+});
+
+$.close.addEventListener('click',function(){
+	$.success_view.opacity = 0;
+	$.fail_view.opacity = 0;
+
+	var login = Alloy.createController('Login');
+	login.getView('login_window').open();
+});
+
+
+$.image_back.addEventListener('click', function(){
+	var login = Alloy.createController('Login');
+	login.getView('login_window').open();
+});
+
