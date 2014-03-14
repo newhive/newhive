@@ -116,9 +116,9 @@ o.History.init = function(){
     };
 
     //// BEGIN-Utility functions
-    var old_states, save_targets;
+    var old_states = [], save_targets = [];
     var get_states = function(){
-        return save_targets.map(function(a){ return a.state_relative(); }) 
+        return save_targets.slice(-1)[0].map(function(a){ return a.state_relative(); }) 
     };
     // apps == true: save all state
     // apps == false: save selection state
@@ -130,14 +130,15 @@ o.History.init = function(){
             else
                 apps = env.Apps.all();
         }
-        save_targets = apps.slice();
-        if (save_targets[0] && save_targets[0].is_selection)
-            save_targets = env.Selection.get_targets();
-        old_states = get_states();
+        var targets = apps.slice();
+        if (targets[0] && targets[0].is_selection)
+            targets = env.Selection.get_targets();
+        save_targets.push(targets);
+        old_states.push(get_states());
     };
     o.change_end = function(name){
-        var targets = save_targets.slice(), new_states = get_states(),
-            start_states = old_states.slice();
+        var new_states = get_states(), targets = save_targets.pop().slice(), 
+            start_states = old_states.pop().slice();
         o.save(
             function(){ $.each(targets, function(i, a){
                 a.state_relative_set(start_states[i]) }) },
@@ -145,7 +146,6 @@ o.History.init = function(){
                 a.state_relative_set(new_states[i]) }) },
             name
         );
-        save_targets = old_states = undefined;
     };
     ///////////////
 
