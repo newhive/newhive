@@ -295,7 +295,7 @@ class Expr(ModelController):
                     html = "<script>%s</script>" % app.get('content')
             if ctype == 'css':
                 # TODO-feature-css-url: if app['url'], put <link> tag in head
-                html =  '<style>%s<style>' % app.get('content')
+                html =  '<style>%s</style>' % app.get('content')
         else:
             html = content
 
