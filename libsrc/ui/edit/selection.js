@@ -35,6 +35,7 @@ o.Selection = function(o) {
             elements.slice() : [drag_target]; 
     };
     o.add_to_collection = false;
+    o.has_align = false;
     o.is_selection = true;
     o.make_controls = [];
     o.handler_type = 2;
@@ -110,9 +111,7 @@ o.Selection = function(o) {
                 drag_target = o;
             else
                 drag_target = ev.data;
-            // TODO-cleanup-controls remove true branch
-            if(elements.length == 1) elements[0].hide_controls()
-            else o.hide_controls()
+            o.hide_controls()
             o.move_start();
             return;
         } else if(env.gifwall) {
@@ -160,9 +159,7 @@ o.Selection = function(o) {
     o.dragend = function (ev, dd) {
         if(!o.dragging) return;
         o.dragging = false;
-        // TODO-cleanup-controls remove true branch
-        if(elements.length == 1) elements[0].show_controls()
-        else o.show_controls()
+        o.show_controls()
 
         var app = ev.data;
         if(app){
@@ -343,7 +340,7 @@ o.Selection = function(o) {
             (elements.length)
     }
 
-    hive_app.App.has_rotate(o);
+    // hive_app.App.has_rotate(o);
     var ref_angle = 0, ref_center, rotation_refs
     o.angle = function(){ 
         if (elements.length == 1 && typeof(elements[0].angle) == "function")
@@ -391,7 +388,7 @@ o.Selection = function(o) {
 
         drag_target = o;
         ref_dims = o.dims_relative();
-        if (elements.length == 1 && !elements[0].get_aspect()) {
+        if (delegate_dims_set()) {
             _ref_dims = elements[0].dims();
             elements[0].dims_ref_set();
         }
@@ -428,15 +425,13 @@ o.Selection = function(o) {
 
         var bounds = o.bounds();
         _dims_relative_set([bounds.right - bounds.left, bounds.bottom - bounds.top]);
-        o.update_relative_coords();
-
-        // o.layout();
+        if (!ref_dims)
+            o.update_relative_coords();
     }
     o.resize = function(delta){
         var dims = _resize(delta);
         if(!ref_dims) return;
         if (delegate_dims_set()) {
-            // return elements[0].dims_set(u_add.dims);
             return elements[0].resize(delta);
         }
 
@@ -453,19 +448,16 @@ o.Selection = function(o) {
     // END-event-handlers
 
     o.app_select = function(app, multi) {
-        if(multi){
+        if(multi) {
             app.unfocus();
-        }
-        else{
+        } else {
             app.focus();
             // TODO-feature for sketch and geometry apps: evs.handler_set(o.type)
             // depends on defining app specific but instance unspecific creation
             // handlers on app type constructors
         }
-        // Controls(app, multi || context.flags.show_mini_selection_border);
-        if (multi || env.show_mini_selection_border)
-            Controls(app, true);
-        // Controls(app, multi);
+        // Add mini-border
+        Controls(app, true);
     };
     o.app_unselect = function(app) {
         app.unfocus();
@@ -474,15 +466,10 @@ o.Selection = function(o) {
 
     o.update = function(apps){
         apps = $.grep(apps || elements, function(e){ return ! e.deleted; });
-        var multi = o.dragging || (apps.length > 1);
-        multi = multi || (apps.length == 1 && apps[0].sel_controls);
-
-        // TODO-feature, TODO-cleanup-controls: do not make
-        // distinction between selecting single and multiple apps.
-        // Show controls which apply to all objects in the selection
+        var multi = true;
 
         // Previously unfocused elements that should be focused
-        $.each(apps, function(i, el){ o.app_select(el, multi); });
+        $.each(apps, function(i, el){ o.app_select(el, apps.length > 1); });
         // Previously focused elements that should be unfocused
         o.each(function(i, el){
             if($.inArray(el, apps) == -1) {
@@ -494,12 +481,15 @@ o.Selection = function(o) {
 
         o.update_relative_coords();
 
+        // Show controls which apply to all objects in the selection
         if (o.controls) o.controls.remove();
+        o.make_controls = o.base_controls.slice();
         var sel_controls = u.union.apply(null, 
             elements.map(function(app) {
                 return app.sel_controls || []; })
         )
-        o.make_controls = o.base_controls.slice();
+        if (elements.length == 1)
+            sel_controls = u.union(sel_controls, apps[0].single_controls);
         sel_controls.map(function(f) {
             if (typeof(f) == "function")
                 f(o);
@@ -508,15 +498,16 @@ o.Selection = function(o) {
             Controls(o, false);
             o.controls.layout();
         }
-        // if(apps.length <= 1 && o.controls)
-        //     o.controls.remove();
-        if(!o.dragging && apps.length == 1 && !multi) {
-            Controls(apps[0], false);
-            if (env.gifwall && context.flags.show_mini_selection_border)
-                o.controls.div.find(".select_border").hidehide();
-        }
+        // if(!o.dragging && elements.length == 1 && !multi) {
+        //     Controls(elements[0], false);
+        //     if (env.gifwall && context.flags.show_mini_selection_border)
+        //         o.controls.div.find(".select_border").hidehide();
+        // }
+        if (env.gifwall && context.flags.show_mini_selection_border)
+            o.controls.div.find(".select_border").hidehide();
         if(apps.length == 0) {
             evs.handler_del({handler_type: 0}); 
+            if (o.controls) o.controls.remove();
         }
     };
 
@@ -544,18 +535,13 @@ o.Selection = function(o) {
     o.update_relative_coords = function(){
         var bounds = o.bounds(), _pos = [bounds.left, bounds.top]
             ,_dims = [bounds.right - bounds.left, bounds.bottom - bounds.top];
-        o.no_layout = true;
-        if (!u.array_equals(_pos, o.pos_relative()))
-            _pos_relative_set(_pos);
-        if (!u.array_equals(_dims, o.dims_relative()))
-            _dims_relative_set(_dims);
-        o.no_layout = false;
         _positions = elements.map(function(a){
             return u._sub(a.pos_relative())(_pos);
         });
         _scales = elements.map(function(a){
             return u._div(a.dims_relative())(_dims);
         });
+        o.bounds_relative_set(_pos, _dims);
     };
 
     var _pos_relative_set = o.pos_relative_set;
@@ -567,7 +553,7 @@ o.Selection = function(o) {
         var bounds = o.bounds();
         _pos_relative_set([bounds.left, bounds.top]);
 
-        o.layout();
+        // o.layout();
     };
     o.bounds = function() { 
         return u.app_bounds(elements);
@@ -674,7 +660,6 @@ o.Selection = function(o) {
         o.base_controls = o.make_controls.slice();
     }
     setTimeout(o.load, 1);
-    // var old_elements;
     var delegate_fn = function(fn_name) {
         return function() {
             var args = $.makeArray(arguments), res = "undefined"
@@ -687,8 +672,6 @@ o.Selection = function(o) {
                     apps = args.shift();
                 }
             }
-            // if (apps.length == 0)
-            //     apps = old_elements.slice();
             all_res = apps.map(function(app, i) {
                 if (typeof(app[fn_name]) == "function") {
                     var applied = args;
@@ -698,8 +681,8 @@ o.Selection = function(o) {
                         var _res = app[fn_name].apply(null, applied);
                         if (res == "undefined") res = _res;
                         if (res != _res) res = undefined;
-                        return _res;
                     }
+                    return _res;
                 }
                 return undefined;
             });
@@ -711,7 +694,9 @@ o.Selection = function(o) {
         }
     }
     var delegates = ["color", "color_set", "opacity", "opacity_set"
-        ,"border_radius", "border_radius_set"];
+        ,"border_radius", "border_radius_set", "link"
+        ,"stroke_width", "stroke_width_set", "stroke_update", "reframe"
+        ,"blur", "blur_set", "stroke", "stroke_set"];
     delegates.map(function(fn_name) {
         o[fn_name] = delegate_fn(fn_name);
     });

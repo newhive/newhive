@@ -19,7 +19,8 @@
 "#image_back": {
 	left:"20dp",
 	top:"0dp",
-	height:"24dp"
+	width: "30dp",
+	height:"30dp"
 }
 
 "#label_save": {

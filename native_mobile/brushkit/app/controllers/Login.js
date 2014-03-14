@@ -14,7 +14,7 @@ function doLogin(e) {
 	if(Titanium.App.Properties.getBool('is_test') && username == ''){
 		username = 'viciousesque';
 		pwd = 'trueman';
-		//alt pwd: mytCailfac6
+		//alt pwd: 		
 	}
 	
 	if(Titanium.App.Properties.getBool('is_test') == true){
@@ -70,20 +70,31 @@ $.textfieldUsername.addEventListener('focus', function(){
 
 
 $.retrieve_password.addEventListener('click', function(){
-	/*var retrievePasswordController = Alloy.createController('RetrievePassword', {
-	    parentTab : args.parentTab
-	});
-	
-	args.parentTab.open(retrievePasswordController.getView());
+	var retrieve = Alloy.createController('RetrievePassword'); 
+	retrieve.getView('retrieve_password_window').open();
 	
 	$.error_message.opacity = "0";
 	$.retrieve_password.opacity = "0";
 	
 	$.textfieldUsername.value = "";
-	$.textfieldPwd.value = "";*/
+	$.textfieldPwd.value = "";
 });
 
+$.login_window.addEventListener('click', function()  {
+	$.textfieldUsername.blur();
+	$.textfieldPwd.blur();
+});
 
+$.login_window.addEventListener('focus', function(){
+	$.textfieldUsername.focus();
+});
+
+$.textfieldPwd.addEventListener('click',function(e){
+	e.cancelBubble = true;
+});
+$.textfieldUsername.addEventListener('click',function(e){
+	e.cancelBubble = true;
+});
 
 
 

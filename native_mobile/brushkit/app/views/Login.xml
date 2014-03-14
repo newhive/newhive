@@ -4,7 +4,7 @@
 			<TextField id="textfieldUsername" class='textfield-username' hintText='username'/>
 			<TextField id="textfieldPwd" class='textfield-pwd' hintText='password'/>
 			<Label id="error_message">Unrecongized username or password.</Label>
-			<Label id="retrieve_password">  Retrieve password.  </Label>
+			<Button id="retrieve_password">Retrieve password</Button>
 		</View>
 		
 		<View id="button_view" class="content_tile">

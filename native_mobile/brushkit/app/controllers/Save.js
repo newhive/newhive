@@ -3,23 +3,36 @@
 
 function publishExrpession(){
 	var apps = new Array();
+	var i_y = 0;
 	photosCollection.each(function(p, index) {
 		var w= p.get('width');
 		var h = p.get('height');
-		var n_y = h*index;
+
+		pb = p.get('photo_blob');
+		Ti.API.info("TEST THE HEIGHT, the blob.height: "+ pb.height + ", and stored height: " + h);
+
 		apps.push({
 			"file_id": p.get('new_hive_id'),
 			"z": index,
 			"dimensions": [w, h],
-			"position":[0,n_y],
+			"position":[0,i_y],
 			"type": "hive.image"
 		});
+
+		i_y+=h;
 	});
 
+	//set is public/private
+	var auth = $.public_switch.value ? "public" : "private";
+
+	//set is remixable
+	var remixable = $.remix_switch.value ? " #remix" : "";
+	tags = $.tf_tags.value + remixable;
+
 	var exp = {
-		"tags": $.tf_tags.value,
+		"tags": tags,
 		"name": $.tf_url.value,
-		"auth": "public",
+		"auth": auth,
 		"title": $.tf_title.value,
 		"apps": apps
 	};
