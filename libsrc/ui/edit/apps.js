@@ -166,6 +166,9 @@ Hive.App = function(init_state, opts) {
         $.extend(o.css_state, props);
         if(o.controls) o.controls.layout();
     }
+    o.css_setter = function(css_prop) { return function(v) {
+        var ps = {}; ps[css_prop] = v; o.set_css(ps);
+    } }
 
     // Chain "more_method" onto an existing "method" (or noop if method 
     // does not exist)
@@ -445,9 +448,10 @@ Hive.App = function(init_state, opts) {
         if (0 == $highlight.length) {
             if (env.gifwall)
                 $highlight = $("<div class='highlight_box hide'\
-                    ><div class='highlight'></div></div>").appendTo(o.div);
+                    ><div class='highlight'></div></div>")
             else
-                $highlight = $("<div class='highlight hide'></div>").appendTo(o.div);
+                $highlight = $("<div class='highlight hide'></div>")
+            $highlight.appendTo(o.content_element || o.div)
         }
         $highlight.showhide(opts.on);
     }
@@ -471,6 +475,8 @@ Hive.App = function(init_state, opts) {
             id: o.id
         });
         if(o.content) s.content = o.content()
+        if(Object.keys(o.css_state).length)
+            s.css_state = $.extend({}, o.css_state);
         return $.extend({}, s);
     };
     o.state_update = function(s){
@@ -505,10 +511,12 @@ Hive.App = function(init_state, opts) {
 
     // initialize
 
-    o.div = $('<div class="ehapp">').appendTo(env.apps_e);
+    o.div = $('<div class="ehapp drag">').appendTo(env.apps_e);
  
     o.has_align = o.add_to_collection = true;
     o.type(o); // add type-specific properties
+    if (o.content_element && o.init_state.css_state)
+        o.set_css(o.init_state.css_state);
     if (o.has_align)
         Hive.App.has_align(o);
     if (o.add_to_collection)
@@ -645,16 +653,16 @@ Hive.App.Code = function(o){
 
     o.focus.add(function(){
         o.editor.focus()
-        o.content_element.removeClass('drag')
+        o.div.removeClass('drag')
     })
     o.unfocus.add(function(){
          o.content_element.addClass('drag')
+         o.div.getInputField().blur()
     })
 
-    // o.content_element = $('<textarea>').addClass('content code drag').appendTo(o.div);
-    o.editor = CodeMirror(o.div[0])
-    o.editor.setValue(o.init_state.content || '')
-    o.content_element = $(o.editor.getWrapperElement()).addClass('content')
+    keymap = {
+        'Ctrl-/': function(cm){ cm.execCommand('toggleComment') }
+    }
 
     if(!o.init_state.code_type)
         o.init_state.code_type = 'js'
@@ -662,6 +670,13 @@ Hive.App.Code = function(o){
         o.code_element = $('<script>')
     if(o.init_state.code_type == 'css')
         o.code_element = $('<style>')
+
+    // o.content_element = $('<textarea>').addClass('content code drag').appendTo(o.div);
+    var mode = o.init_state.code_type
+    if(mode == 'js') mode = 'javascript'
+    o.editor = CodeMirror(o.div[0], { extraKeys: keymap ,mode: mode })
+    o.editor.setValue(o.init_state.content || '')
+    o.content_element = $(o.editor.getWrapperElement()).addClass('content')
 
     o.load()
 
@@ -699,9 +714,11 @@ Hive.App.Image = function(o) {
 
     o.url_set = function(src) {
         if(o.img) o.img.remove();
-        o.content_element = o.img = $("<img class='content drag'>");
-        o.img.attr('src', src);
-        o.div.append(o.img);
+        o.img = $("<img class='content'>").attr('src', src);
+        // o.content_element = o.img;
+        o.content_element = o.content_element || $("<div>").appendTo(o.div);
+        o.content_element.append(o.img).addClass('crop_box');
+        // o.div.append(o.img);
         o.img.load(function(){setTimeout(o.img_load, 1)});
         // We recreated the content_element, so reapply its handlers.
         Hive.App.has_image_drop(o);
@@ -726,7 +743,6 @@ Hive.App.Image = function(o) {
             }
             o.init_state.dimensions = [ iw, ih ];
         }
-        o.load();
         o.img.css('width', o.dims()[0] + 'px');
         // fit and crop as needed
         if (o.init_state.fit) {
@@ -742,9 +758,8 @@ Hive.App.Image = function(o) {
             }
             o.init_state.fit = undefined;
         }
-        if (env.gifwall || o.init_state.scale_x != undefined) {
-            o.allow_crop(true);
-        }
+        o.allow_crop(true);
+        o.load();
     };
     // TODO-cleanup: move to has_crop
     o.allow_crop = function(force) {
@@ -754,10 +769,10 @@ Hive.App.Image = function(o) {
         o.init_state.scale_x = o.init_state.scale_x || 1;
         o.init_state.offset = o.init_state.offset || [0, 0];
         // o.is_cropped = true;
-        var happ = o.content_element.parent();
-        o.content_element = $('<div class="crop_box">');
-        o.img.appendTo(o.content_element);
-        o.content_element.appendTo(happ);
+        // var happ = o.content_element.parent();
+        // o.content_element = $('<div class="crop_box">');
+        // o.img.appendTo(o.content_element);
+        // o.content_element.appendTo(happ);
         o.div_aspect = o.dims()[0] / o.dims()[1];
         o.layout();
         return true;
@@ -924,27 +939,17 @@ Hive.registerApp(Hive.App.Image, 'hive.image');
 
 Hive.App.Rectangle = function(o) {
     Hive.App.has_resize(o);
-    var common = $.extend({}, o);
+    var Parent = $.extend({}, o);
+    o.init_state.css_state = $.extend(o.init_state.content, o.init_state.css_state);
 
-    o.css_state = o.css_state || {};
-    o.content = function(content) { return $.extend({}, o.css_state); };
     o.set_css = function(props) {
         props['background-color'] = props.color || props['background-color'];
         props['box-sizing'] = 'border-box';
-        o.content_element.css(props);
-        $.extend(o.css_state, props);
-        if(o.controls) o.controls.layout();
+        Parent.set_css(props);
     }
-    o.css_setter = function(css_prop) { return function(v) {
-        var ps = {}; ps[css_prop] = v; o.set_css(ps);
-    } }
 
     o.color = function(){ return o.css_state.color };
     o.color_set = o.css_setter('color');
-
-    // o.make_controls.push(function(o){
-    //     o.addControls($('#controls_rectangle'));
-    // });
 
     Hive.App.has_rotate(o);
     Hive.App.has_color(o);
@@ -953,7 +958,6 @@ Hive.App.Rectangle = function(o) {
 
     o.div.addClass('rectangle')
     o.content_element = $("<div class='content drag'>").appendTo(o.div);
-    o.set_css(o.init_state.content);
     setTimeout(function(){ o.load() }, 1);
 
     Hive.App.has_image_drop(o);
@@ -1216,7 +1220,7 @@ Hive.App.Polygon = function(o){
     o.dims_relative_set(o.init_state.dimensions || [100, 100])
     o.div.addClass('svg')
     o.content_element = $("<svg xmlns='http://www.w3.org/2000/svg'"
-        + " class='content' viewbox='0 0 100 100'"
+        + " class='drag content' viewbox='0 0 100 100'"
         + " preserveAspectRatio='none'>"
         + "<filter id='" + o.id + "_blur' filterUnits='userSpaceOnUse'>"
             + "<feGaussianBlur/></filter>"
@@ -1793,6 +1797,7 @@ Hive.App.has_image_drop = function(o) {
             o.highlight({on: false});
         }
         ev.preventDefault();
+        return false;
     });
     o.div.on("dblclick",function(ev) { 
         env.click_app = o;
@@ -1812,13 +1817,16 @@ Hive.App.has_image_drop = function(o) {
         if (files.length == 0)
             return false;
         var load = function(app) {
-            // app.fit_to({dims: o.dims(), pos: o.pos(), zoom: false});
+            if (typeof(app.set_css) == "function")
+                app.set_css(o.css_state)
         };
-        // TODO-dnd: Insert ajax to turn into proper file (from blob URL)
+        // TODO-dnd: handle multiple files (auto group / image bomb algorithm)
         var file = files[0];
         // TODO-dnd: have fit depend on where the object was dropped relative
         // to image center
-        var init_state = $.extend(o.init_state, {
+        var app_state = $.extend({}, o.state());
+        delete app_state.id;
+        var init_state = $.extend({}, o.init_state, app_state, {
             position: o.pos_relative(), 
             dimensions: o.dims_relative(),
             fit: 2 });
@@ -1835,6 +1843,8 @@ Hive.App.has_image_drop = function(o) {
 };
 Hive.App.has_border_radius = function(o) {
     var history_point;
+    o.init_state.css_state = $.extend({ 'border-radius' : 0 }, 
+        o.init_state.css_state);
     if (!o.is_selection) {
         o.sel_controls.push(Hive.App.has_border_radius);
         o.border_radius = function(){ return parseInt(o.css_state['border-radius']) };
