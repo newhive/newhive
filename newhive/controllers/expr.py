@@ -207,6 +207,9 @@ class Expr(ModelController):
         content = app.get('content', '')
         more_css = ''
         type = app.get('type')
+        if type != 'hive.rectangle':
+            c = app.get('css_state', {})
+            more_css = ';'.join([p + ':' + str(c[p]) for p in c])
         if type == 'hive.image':
             media = self.db.File.fetch(app.get('file_id'))
             if media: content = media.get_resample(

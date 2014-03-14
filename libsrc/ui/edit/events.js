@@ -76,7 +76,8 @@ define([
         if(event_name.indexOf('drag') == 0)
             $(element).drag(event_name, event_bubbler(event_name, data),
                 $.extend({bubble_mousedown: true}, drag_opts))
-		$(element).on(event_name, event_bubbler(event_name, data));
+		else
+            $(element).on(event_name, event_bubbler(event_name, data));
 		return o;
 	};
 
