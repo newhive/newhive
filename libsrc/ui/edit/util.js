@@ -492,7 +492,13 @@ env.layout_apps = o.layout_apps = function(){
     var bottom = Math.max(top + min_height, $(window).height());
     var margin = (bottom - top - $(".prompts .js_vcenter").height()) / 2;
     $(".prompts").css("top", top).height(bottom - top);
-    $(".prompts .js_vcenter").css("margin-top", margin)
+    $(".prompts .js_vcenter").css("margin-top", margin);
+
+    // Set #happs to take the full scroll dimensions of the window.
+    // Need to set to 0 first to allow for shrinking dimensions.
+    var body = $("body")[0];
+    $("#happs").height(0).height(body.scrollHeight)
+        .width(0).width(body.scrollWidth);
 };
 
 o.snap_helper = function(my_tuple, opts) {
