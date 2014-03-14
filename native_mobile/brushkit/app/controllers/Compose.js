@@ -45,8 +45,9 @@ $.save.addEventListener('click', function(){
 	save.getView('save_window').open();
 });
 
-
-
+$.compose_window.addEventListener('focus',function(e){
+	addActivityIndicator(e.source);
+});
 
 
 

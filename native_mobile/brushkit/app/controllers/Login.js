@@ -96,5 +96,9 @@ $.textfieldUsername.addEventListener('click',function(e){
 	e.cancelBubble = true;
 });
 
+$.login_window.addEventListener('focus',function(e){
+	addActivityIndicator(e.source);
+});
+
 
 
