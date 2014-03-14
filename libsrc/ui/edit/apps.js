@@ -933,6 +933,7 @@ Hive.registerApp(Hive.App.Image, 'hive.image');
 Hive.App.Rectangle = function(o) {
     Hive.App.has_resize(o);
     var Parent = $.extend({}, o);
+    o.init_state.css_state = $.extend(o.init_state.content, o.init_state.css_state);
 
     o.set_css = function(props) {
         props['background-color'] = props.color || props['background-color'];
