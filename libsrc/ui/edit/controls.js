@@ -176,7 +176,6 @@ o.Controls = function(app, multiselect, delegate) {
             dims[1] = ap[1] - pos[1] + ad[1];
             minned_dims = dims.slice();
         }
-        //pos = u._sub(pos)(u._apply(Math.max, 0)(u._sub(minned_dims)(dims)));
         pos = u._add(pos)(u._mul(delta_dir)(u._sub(minned_dims)(dims)));
 
         return { pos: pos, dims: minned_dims };
@@ -185,6 +184,9 @@ o.Controls = function(app, multiselect, delegate) {
     o.dims = function(){ return pos_dims().dims };
 
     o.layout = function() {
+        // Fix parent layout if needed
+        if (o.app.focused())
+            env.Selection.update_relative_coords();
         //if (delegate && o.app.controls)
         //    o.app.controls.layout();
         var pos = o.pos(), dims = o.dims(),
