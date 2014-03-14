@@ -893,6 +893,14 @@ Hive.App.Image = function(o) {
                 o.init_state.offset = u._mul(1 / o.init_state.scale_x / o.dims()[0])(offset);
             o.layout();
         };
+
+        // TODO-bugbug: make work
+        // this is executed before the resize button is added
+        // o.single_controls.push(function(sel){
+        //     sel.make_controls.push(function(){
+        //         evs.long_hold(o.controls.div.find('.resize'), o.app);
+        //     })
+        // })
     })();
 
     var _layout = o.layout;
@@ -1978,9 +1986,6 @@ Hive.App.has_resize = function(o) {
                 o.drag_target.busy = false;
                 o.app.resize_end();
             });
-        // TODO-cleanup: move to has_crop
-        // if (o.is_cropped) 
-        evs.long_hold(o.c.resize, o.app);
 
         return o;
     }
