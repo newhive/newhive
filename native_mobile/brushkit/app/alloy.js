@@ -24,10 +24,32 @@ var photosCollection = Alloy.Collections.instance('Photos');
 Titanium.App.Properties.setString('base_url_ssl', 'https://dev.newhive.com/');
 Titanium.App.Properties.setString('base_url', 'http://dev.newhive.com/');
 
+var imageUploadQueue = new Array();
 
+//global activityIndicator
+var ai_style;
+if (Ti.Platform.name === 'iPhone OS'){
+	ai_style = Ti.UI.iPhone.ActivityIndicatorStyle.PLAIN;
+}
+else {
+	ai_style = Ti.UI.ActivityIndicatorStyle.PLAIN;
+}
+var activityIndicator = Ti.UI.createActivityIndicator({
+	id:'activity_indicator',
+	color: '#aef0e8',
+	font: {fontSize:"20dp"},
+	message: 'Uploading',
+	style:ai_style,
+	top:"15%",
+	height:Ti.UI.SIZE,
+	width:Ti.UI.SIZE,
+	backgroundColor:"#606060",
+	opacity:0.7,
+	zIndex:100
+});
+Titanium.App.Properties.setBool('activity_indicator_is_visible', false);
 
 function showHiveCamera() {
-
 	var camera_button = Titanium.UI.createButton({
 		right:0,
 		bottom:0,
@@ -77,20 +99,22 @@ function showHiveCamera() {
 	
 		success:function(event)
 		{
-			small_image_obj = reduceImageSize(event.media);
-
-			photo = Alloy.createModel('photos');
-			photo.set('photo_blob', small_image_obj.image);
-			photo.set('width', small_image_obj.width);
-			photo.set('height', small_image_obj.height);
-			photo.save();
-			photosCollection.add(photo);
-
 			var compose = Alloy.createController('Compose'); 
-			compose.getView('compose_window').open();
+			var compose_win = compose.getView('compose_window');
+			compose_win.open();
+
 			Titanium.Media.hideCamera();
 
-			uploadImage(photo);
+			small_image_obj = reduceImageSize(event.media);
+
+			photo_model = Alloy.createModel('photos');
+			photo_model.set('photo_blob', small_image_obj.image);
+			photo_model.set('width', small_image_obj.width);
+			photo_model.set('height', small_image_obj.height);
+			photo_model.save();
+			photosCollection.add(photo_model);
+
+			addImageToUploadQueue(photo_model);
 		},
 		cancel:function()
 		{
@@ -144,7 +168,7 @@ function showHiveGallery(){
 
 				var compose = Alloy.createController('Compose'); 
 				compose.getView('compose_window').open();
-				Titanium.Media.hideCamera();
+				Titanium.Media.hidePhotoGallery();
 
 				uploadImage(photo);
 			}   else {
@@ -173,7 +197,7 @@ function checkLogin() {
 	xhr.send(params);
 
 	xhr.onerror = function(e) {
-		Ti.API.info('Check Login Error: '+ e.error);
+		alert('Error: '+ e.error);
 	};
 
 	xhr.onload = function(){
@@ -244,11 +268,49 @@ function reduceImageSize(lg_img) {
 	return small_photo_obj;
 }
 
+function addImageToUploadQueue(photo_model) {
+	is_busy = Titanium.App.Properties.getBool('activity_indicator_is_visible');
+	if(imageUploadQueue.length == 0 && !is_busy) {
+		activityIndicator.message = "Loading 1/1";
+		uploadImage(photo_model) ;
+	} else {
+		imageUploadQueue.push(photo_model);
+		ql = imageUploadQueue.length;
+		//add value for currently loading image, if any
+		if(is_busy)ql++;
+		activityIndicator.message = "Loading 1/"+ ql;
+	}
+}
+
+function checkUploadQueue(){
+	if(imageUploadQueue.length > 0) {
+		activityIndicator.message = "Loading 1/"+ imageUploadQueue.length;
+		photo_model = imageUploadQueue.shift();
+		uploadImage(photo_model) ;
+	} 
+}
+
 function uploadImage(photo_model) {
 	//Prepare xhr request
 	var BASE_URL = Titanium.App.Properties.getString('base_url_ssl');
 	var url = BASE_URL + 'api/file/create';
 	var xhr = Ti.Network.createHTTPClient();
+
+	if(Titanium.App.Properties.getBool('is_test') == true){
+		xhr.validatesSecureCertificate = false;
+	}
+
+	xhr.open('POST', url);
+	small_photo = photo_model.get('photo_blob');
+	var params = {client : 'mobile',  file: small_photo};
+	xhr.send(params);
+
+	activityIndicator.show();
+	Titanium.App.Properties.setBool('activity_indicator_is_visible', true);
+
+	xhr.onerror = function(e) {
+		alert('Error: '+ e.error);
+	};
 
 	xhr.onload = function(){
 		//if NOT json redirect to login
@@ -259,24 +321,37 @@ function uploadImage(photo_model) {
 
 			return;
 		}
-		
-		Ti.API.info("the uploadImage response: "+ this.responseText);
+
+		if(imageUploadQueue.length == 0){
+			activityIndicator.hide();
+			Titanium.App.Properties.setBool('activity_indicator_is_visible', false);
+		}
+
 		res = JSON.parse(this.responseText)[0];
-		alert("the res id: "+ res.id);
+
 		photo_model.set('new_hive_id', res.id);
 		Ti.API.info("the res id: "+ res.id);
 		photo_model.save();
+
+		//start next uploads, if any
+		checkUploadQueue();
 	};
-	
-
-	if(Titanium.App.Properties.getBool('is_test') == true){
-		xhr.validatesSecureCertificate = false;
-	}
-
-	xhr.open('POST', url);
-	small_photo = photo_model.get('photo_blob');
-	var params = {client : 'mobile',  file: small_photo};
-	xhr.send(params);
 }
+
+function addActivityIndicator(win){
+	do_add_ai = true;
+	//don't add if ActivityIndicator already a child of this window
+	wc = win.getChildren();
+	for(var i=0;i<wc.length;i++){
+		c = wc[i];
+		if(c.id == 'activity_indicator'){
+			do_add_ai = false;
+			return;
+		}
+	}
+	if(do_add_ai){
+		win.add(activityIndicator);
+	}
+};
 
 
