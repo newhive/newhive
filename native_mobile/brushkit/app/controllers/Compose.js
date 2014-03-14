@@ -1,14 +1,10 @@
 //var photosCollection = Alloy.Collections.Photos;
 
-
-$.compose_window.addEventListener('focus', function() {
+Ti.App.addEventListener('buildComposeWindow', function(){
 	$.scroll_view.removeAllChildren();
-	
-	//var photo_data = photosCollection.at(0);
 	photosCollection.each(function(p, index){
 		if(p != undefined){
 			var img = p.get('photo_blob');
-			//var orientation = ($.galleryView.size.width > $.galleryView.size.height) ? 'landscape' : 'portrait';
 			var img_view = Ti.UI.createImageView({
 				image:img,
 				width:"99%"
@@ -23,13 +19,9 @@ $.compose_window.addEventListener('focus', function() {
 			
 			$.scroll_view.add(img_view);
 		} else {
-			//$.galleryView.setImage(null);
 		}
 	});
-	
 });
-
-
 
 
 $.select.addEventListener('click',function() {
@@ -45,8 +37,9 @@ $.save.addEventListener('click', function(){
 	save.getView('save_window').open();
 });
 
-
-
+$.compose_window.addEventListener('focus',function(e){
+	addActivityIndicator(e.source);
+});
 
 
 
