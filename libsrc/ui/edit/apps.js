@@ -511,7 +511,7 @@ Hive.App = function(init_state, opts) {
 
     // initialize
 
-    o.div = $('<div class="ehapp">').appendTo(env.apps_e);
+    o.div = $('<div class="ehapp drag">').appendTo(env.apps_e);
  
     o.has_align = o.add_to_collection = true;
     o.type(o); // add type-specific properties
@@ -653,16 +653,16 @@ Hive.App.Code = function(o){
 
     o.focus.add(function(){
         o.editor.focus()
-        o.content_element.removeClass('drag')
+        o.div.removeClass('drag')
     })
     o.unfocus.add(function(){
          o.content_element.addClass('drag')
+         o.div.getInputField().blur()
     })
 
-    // o.content_element = $('<textarea>').addClass('content code drag').appendTo(o.div);
-    o.editor = CodeMirror(o.div[0])
-    o.editor.setValue(o.init_state.content || '')
-    o.content_element = $(o.editor.getWrapperElement()).addClass('content')
+    keymap = {
+        'Ctrl-/': function(cm){ cm.execCommand('toggleComment') }
+    }
 
     if(!o.init_state.code_type)
         o.init_state.code_type = 'js'
@@ -670,6 +670,13 @@ Hive.App.Code = function(o){
         o.code_element = $('<script>')
     if(o.init_state.code_type == 'css')
         o.code_element = $('<style>')
+
+    // o.content_element = $('<textarea>').addClass('content code drag').appendTo(o.div);
+    var mode = o.init_state.code_type
+    if(mode == 'js') mode = 'javascript'
+    o.editor = CodeMirror(o.div[0], { extraKeys: keymap ,mode: mode })
+    o.editor.setValue(o.init_state.content || '')
+    o.content_element = $(o.editor.getWrapperElement()).addClass('content')
 
     o.load()
 
@@ -707,7 +714,7 @@ Hive.App.Image = function(o) {
 
     o.url_set = function(src) {
         if(o.img) o.img.remove();
-        o.img = $("<img class='content drag'>").attr('src', src);
+        o.img = $("<img class='content'>").attr('src', src);
         // o.content_element = o.img;
         o.content_element = o.content_element || $("<div>").appendTo(o.div);
         o.content_element.append(o.img).addClass('crop_box');
@@ -1213,7 +1220,7 @@ Hive.App.Polygon = function(o){
     o.dims_relative_set(o.init_state.dimensions || [100, 100])
     o.div.addClass('svg')
     o.content_element = $("<svg xmlns='http://www.w3.org/2000/svg'"
-        + " class='content' viewbox='0 0 100 100'"
+        + " class='drag content' viewbox='0 0 100 100'"
         + " preserveAspectRatio='none'>"
         + "<filter id='" + o.id + "_blur' filterUnits='userSpaceOnUse'>"
             + "<feGaussianBlur/></filter>"

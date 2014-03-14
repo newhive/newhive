@@ -445,9 +445,19 @@ Hive.embed_code = function(element) {
     var el = $(c).eq(0)
     if(el.is('script')){
         app = { type: 'hive.code', content: el.html(), code_type: 'js' }
+        var url = el.attr('src')
+        if(url){
+            app.url = url
+            delete app.content
+        }
     }
     else if(el.is('style')){
         app = { type: 'hive.code', content: el.html(), code_type: 'css' }
+        var url = el.attr('href')
+        if(url){
+            app.url = url
+            delete app.content
+        }
     }
 
     else {
