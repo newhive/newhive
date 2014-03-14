@@ -24,73 +24,55 @@ var photosCollection = Alloy.Collections.instance('Photos');
 Titanium.App.Properties.setString('base_url_ssl', 'https://dev.newhive.com/');
 Titanium.App.Properties.setString('base_url', 'http://dev.newhive.com/');
 
+var NUM_ACTIVE_XHR = 0;
+var imageUploadQueue = new Array();
 
+//global activityIndicator
+var ai_style;
+if (Ti.Platform.name === 'iPhone OS'){
+	ai_style = Ti.UI.iPhone.ActivityIndicatorStyle.DARK;
+}
+else {
+	ai_style = Ti.UI.ActivityIndicatorStyle.DARK;
+}
+var activityIndicator = Ti.UI.createActivityIndicator({
+	id:'activity_indicator',
+	color: '#606060',
+	font: {fontSize:"20dp"},
+	message: '',
+	style:ai_style,
+	top:"15%",
+	height:"34dp",
+	width:"150dp",
+	backgroundColor:"#ffffff",
+	opacity:0.7,
+	zIndex:100
+});
+Titanium.App.Properties.setBool('activity_indicator_is_visible', false);
 
 function showHiveCamera() {
-
-	var camera_button = Titanium.UI.createButton({
-		right:0,
-		bottom:0,
-		width:'70%',
-		height:'23%',
-		backgroundImage: "/images/bg_orange_slice.png",
-		backgroundSelectedImage:'/images/bg_grey_slice_inactive.png',
-		backgroundRepeat: true,
-		color:"#444",
-		selectedColor:"#fff",
-		font: {fontWeight:'bold',fontSize:'22dp'}
-	});
-	var cancel_button = Titanium.UI.createButton({
-		left:0,
-		bottom:0,
-		width:'30%',
-		height:'23%',
-		backgroundImage: "/images/bg_slice_grey_flat.png",
-		backgroundSelectedImage:'/images/bg_slice_grey_flat_inactive.png',
-		backgroundRepeat: true,
-		color:"#444",
-		selectedColor:"#fff",
-		font: {fontWeight:'bold',fontSize:'22dp'}
-	});
-	
-	
-	camera_button.addEventListener('click',function(e)
-	{
-	   Titanium.API.log('info', 'Click-click!');
-	   Titanium.Media.takePicture();
-	});
-	
-	cancel_button.addEventListener('click',function(e)
-	{
-	   Titanium.API.log('info', 'Cancel!');
-	   Titanium.Media.hideCamera();
-	});
-	
-	
-	var camera_button_view = Titanium.UI.createView();
-	camera_button_view.add(camera_button);
-	camera_button_view.add(cancel_button);
-	
-	var camera_2d_matrix = Titanium.UI.create2DMatrix({scale:1});
-	
 	Titanium.Media.showCamera({
 	
 		success:function(event)
 		{
-			small_image_obj = reduceImageSize(event.media);
-
-			photo = Alloy.createModel('photos');
-			photo.set('photo_blob', small_image_obj.image);
-			photo.set('width', small_image_obj.width);
-			photo.set('height', small_image_obj.height);
-			photo.save();
-			photosCollection.add(photo);
-
 			var compose = Alloy.createController('Compose'); 
-			compose.getView('compose_window').open();
+			var compose_win = compose.getView('compose_window');
+
+			compose_win.open();
+			Ti.App.fireEvent('buildComposeWindow');
+
 			Titanium.Media.hideCamera();
 
-			uploadImage(photo);
+			small_image_obj = reduceImageSize(event.media);
+
+			photo_model = Alloy.createModel('photos');
+			photo_model.set('photo_blob', small_image_obj.image);
+			photo_model.set('width', small_image_obj.width);
+			photo_model.set('height', small_image_obj.height);
+			photo_model.save();
+			photosCollection.add(photo_model);
+
+			uploadImage(photo_model);
 		},
 		cancel:function()
 		{
@@ -100,30 +82,14 @@ function showHiveCamera() {
 		},
 		error:function(error)
 		{
-			// create alert
-			var a = Titanium.UI.createAlertDialog({title:'Camera'});
-	
-			// set message
-			if (error.code == Titanium.Media.NO_CAMERA)
-			{
-				a.setMessage('Please run this test on device');
-			}
-			else
-			{
-				a.setMessage('Unexpected error: ' + error.code);
-			}
-	
-			// show alert
-			a.show();
+			alert('camera error.');
 		},
 		saveToPhotoGallery:false,
 		allowEditing:false,
 		animated:true,
 		showControls:true,
-		/*overlay:camera_button_view,*/
-		autohide:true,
-		transform:camera_2d_matrix,
-		mediaTypes:[Ti.Media.MEDIA_TYPE_VIDEO,Ti.Media.MEDIA_TYPE_PHOTO]
+		autohide:false,
+		mediaTypes:[Ti.Media.MEDIA_TYPE_PHOTO]
 	});
 }
 
@@ -144,7 +110,7 @@ function showHiveGallery(){
 
 				var compose = Alloy.createController('Compose'); 
 				compose.getView('compose_window').open();
-				Titanium.Media.hideCamera();
+				Titanium.Media.hidePhotoGallery();
 
 				uploadImage(photo);
 			}   else {
@@ -173,7 +139,7 @@ function checkLogin() {
 	xhr.send(params);
 
 	xhr.onerror = function(e) {
-		Ti.API.info('Check Login Error: '+ e.error);
+		alert('Error: '+ e.error);
 	};
 
 	xhr.onload = function(){
@@ -250,6 +216,25 @@ function uploadImage(photo_model) {
 	var url = BASE_URL + 'api/file/create';
 	var xhr = Ti.Network.createHTTPClient();
 
+	if(Titanium.App.Properties.getBool('is_test') == true){
+		xhr.validatesSecureCertificate = false;
+	}
+
+	xhr.open('POST', url);
+	small_photo = photo_model.get('photo_blob');
+	var params = {client : 'mobile',  file: small_photo};
+	xhr.send(params);
+
+	NUM_ACTIVE_XHR++;
+
+	activityIndicator.message = 'uploading ' + NUM_ACTIVE_XHR;
+	activityIndicator.show();
+	Titanium.App.Properties.setBool('activity_indicator_is_visible', true);
+
+	xhr.onerror = function(e) {
+		alert('Error: '+ e.error);
+	};
+
 	xhr.onload = function(){
 		//if NOT json redirect to login
 		try {
@@ -259,24 +244,37 @@ function uploadImage(photo_model) {
 
 			return;
 		}
-		
-		Ti.API.info("the uploadImage response: "+ this.responseText);
+
+		NUM_ACTIVE_XHR--;
+
+		activityIndicator.message = 'uploading ' + NUM_ACTIVE_XHR ;
+
+		if(NUM_ACTIVE_XHR == 0){
+			activityIndicator.hide();
+			Titanium.App.Properties.setBool('activity_indicator_is_visible', false);
+		}
+
 		res = JSON.parse(this.responseText)[0];
-		alert("the res id: "+ res.id);
+
 		photo_model.set('new_hive_id', res.id);
-		Ti.API.info("the res id: "+ res.id);
 		photo_model.save();
 	};
-	
-
-	if(Titanium.App.Properties.getBool('is_test') == true){
-		xhr.validatesSecureCertificate = false;
-	}
-
-	xhr.open('POST', url);
-	small_photo = photo_model.get('photo_blob');
-	var params = {client : 'mobile',  file: small_photo};
-	xhr.send(params);
 }
+
+function addActivityIndicator(win){
+	do_add_ai = true;
+	//don't add if ActivityIndicator already a child of this window
+	wc = win.getChildren();
+	for(var i=0;i<wc.length;i++){
+		c = wc[i];
+		if(c.id == 'activity_indicator'){
+			do_add_ai = false;
+			return;
+		}
+	}
+	if(do_add_ai){
+		win.add(activityIndicator);
+	}
+};
 
 
