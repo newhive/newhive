@@ -185,8 +185,8 @@ o.Controls = function(app, multiselect, delegate) {
 
     o.layout = function() {
         // Fix parent layout if needed
-        if (o.app.focused())
-            env.Selection.update_relative_coords();
+        // if (o.app.focused())
+        //     env.Selection.update_relative_coords();
         //if (delegate && o.app.controls)
         //    o.app.controls.layout();
         var pos = o.pos(), dims = o.dims(),
