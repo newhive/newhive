@@ -43,6 +43,22 @@ function publishExrpession(){
 	var BASE_URL = Titanium.App.Properties.getString('base_url_ssl');
 	var url = BASE_URL + 'api/expr/save';
 	var xhr = Ti.Network.createHTTPClient();
+	
+	if(Titanium.App.Properties.getBool('is_test') == true){
+		xhr.validatesSecureCertificate = false;
+	}
+
+	xhr.open('POST', url);
+	
+	xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
+	xhr.setRequestHeader("Accepts","application/json");
+	
+	var params = {client : 'mobile', json: 'true', expr: JSON.stringify(exp)};
+	xhr.send(params);
+
+	xhr.onerror = function(e) {
+		alert('Error: '+ e.error);
+	};
 
 	xhr.onload = function(){
 		try {
@@ -66,18 +82,7 @@ function publishExrpession(){
 		var viewingURL = BASE_URL_COMMON + Ti.App.current_user_name + '/' + res.name;
 		Ti.Platform.openURL(viewingURL);
 	};
-	
-	if(Titanium.App.Properties.getBool('is_test') == true){
-		xhr.validatesSecureCertificate = false;
-	}
 
-	xhr.open('POST', url);
-	
-	xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
-	xhr.setRequestHeader("Accepts","application/json");
-	
-	var params = {client : 'mobile', json: 'true', expr: JSON.stringify(exp)};
-	xhr.send(params);
 }
 
 $.image_back.addEventListener('click', function(){
@@ -86,6 +91,12 @@ $.image_back.addEventListener('click', function(){
 });
 
 $.btn_save.addEventListener('click', function() {
+	//don't save if still loading images
+	if(Titanium.App.Properties.getBool('activity_indicator_is_visible')) {
+		alert("Wait for images to finish loading before saving.");
+		return;
+	}
+
 	var title = $.tf_title.value;
 	var url = $.tf_url.value;
 	var tags = $.tf_tags.value;
@@ -115,8 +126,9 @@ $.save_window.addEventListener('click', function()  {
 	$.tf_tags.blur();
 });
 
-$.save_window.addEventListener('focus', function(){
+$.save_window.addEventListener('focus', function(e){
 	$.tf_title.focus();
+	addActivityIndicator(e.source);
 });
 
 $.tf_title.addEventListener('click',function(e){
