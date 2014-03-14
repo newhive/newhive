@@ -99,20 +99,20 @@ define([
                 fired = false;
             };
 
-            // element
-            //     .on('mousedown', function(ev){
-            //         function long_hold(){
-            //             fired = true;
-            //             bubble_hold(ev);
-            //         }
-            //         timer = setTimeout(long_hold, 500);
-            //     })
-            //     .on('mouseup', function(ev){
-            //         cancel(ev, fired);
-            //     })
-            //     .on('mousemove', function(ev){
-            //         cancel(ev, false);
-            //     });
+            element
+                .on('mousedown', function(ev){
+                    function long_hold(){
+                        fired = true;
+                        bubble_hold(ev);
+                    }
+                    timer = setTimeout(long_hold, 500);
+                })
+                .on('mouseup', function(ev){
+                    cancel(ev, fired);
+                })
+                .on('mousemove', function(ev){
+                    cancel(ev, false);
+                });
 
             return o;
         };
