@@ -71,9 +71,11 @@ o.Text = function(o) {
     o.focus.add(function(){
         o.refresh_size();
         o.edit_mode(true);
+        o.div.removeClass('drag')
     });
     o.unfocus.add(function(){
         o.edit_mode(false);
+        o.div.addClass('drag')
     });
 
     o.link = function(v) {

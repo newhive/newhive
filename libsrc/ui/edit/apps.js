@@ -505,7 +505,7 @@ Hive.App = function(init_state, opts) {
 
     // initialize
 
-    o.div = $('<div class="ehapp">').appendTo(env.apps_e);
+    o.div = $('<div class="ehapp drag">').appendTo(env.apps_e);
  
     o.has_align = o.add_to_collection = true;
     o.type(o); // add type-specific properties
@@ -645,11 +645,11 @@ Hive.App.Code = function(o){
 
     o.focus.add(function(){
         o.editor.focus()
-        o.content_element.removeClass('drag')
+        o.div.removeClass('drag')
     })
     o.unfocus.add(function(){
          o.content_element.addClass('drag')
-         o.editor.getInputField().blur()
+         o.div.getInputField().blur()
     })
 
     keymap = {
@@ -706,7 +706,7 @@ Hive.App.Image = function(o) {
 
     o.url_set = function(src) {
         if(o.img) o.img.remove();
-        o.content_element = o.img = $("<img class='content drag'>");
+        o.content_element = o.img = $("<img class='content'>");
         o.img.attr('src', src);
         o.div.append(o.img);
         o.img.load(function(){setTimeout(o.img_load, 1)});
@@ -1223,7 +1223,7 @@ Hive.App.Polygon = function(o){
     o.dims_relative_set(o.init_state.dimensions || [100, 100])
     o.div.addClass('svg')
     o.content_element = $("<svg xmlns='http://www.w3.org/2000/svg'"
-        + " class='content' viewbox='0 0 100 100'"
+        + " class='drag content' viewbox='0 0 100 100'"
         + " preserveAspectRatio='none'>"
         + "<filter id='" + o.id + "_blur' filterUnits='userSpaceOnUse'>"
             + "<feGaussianBlur/></filter>"
