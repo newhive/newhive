@@ -98,7 +98,6 @@ function showHiveGallery(){
 		{
 			//checking if it is photo
 			if(event.mediaType == Ti.Media.MEDIA_TYPE_PHOTO) {
-
 				var compose = Alloy.createController('Compose'); 
 				var compose_win = compose.getView('compose_window');
 
