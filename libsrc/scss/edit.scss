@@ -21,6 +21,7 @@ body.edit {
     .control.copy {display:none}
     .control .set_bg {display:none}
     .control .opacity {display:none}
+    .control .rounding {display:none}
     .control .button.align {display:none}
     .prompts.gifwall {
         display:block;
@@ -56,6 +57,8 @@ body.edit {
             height: 100%;
             border: $color_selected 10px dashed;
             @include box-sizing( border-box );
+            background-color: inherit;
+            opacity: inherit;
             // position: absolute;
             // top: 0px;
         }
@@ -76,7 +79,8 @@ body.edit {
 }
 #happs {
     position: absolute;
-    left: 0; top: 0; right:0; bottom: 0;
+    left: 0; top: 0; 
+    // right:0; bottom: 0;
     z-index: 3;
 
     // currently selection always gets events, but they can be intercepted
@@ -127,7 +131,7 @@ body.edit {
     }
 }
 .prompts {
-    z-index: 3;
+    z-index: 4;
     position : absolute;
     width : 100%;
     pointer-events:none;

@@ -27,7 +27,12 @@ var o = {}
 ;
 
 o.Selection = function(o) {
-    o.elements = function(){ return elements.slice(); };
+    // returns: {param} n: nth selected element
+    //      {no params}  : the list of selected elements
+    o.elements = function(){ 
+        if (arguments.length > 0)
+            return elements[arguments[0]];
+        return elements.slice(); };
     o.count = function(){ return elements.length; };
     o.each = function(fn){ $.each(elements, fn) };
     o.get_targets = function(){
@@ -273,10 +278,13 @@ o.Selection = function(o) {
             app.pos_relative_set(new_pos);
         }
     };
-    o.move_start = function(){
+    set_full_apps = function() {
         full_apps = (drag_target && drag_target != o) ? [drag_target] : elements;
         full_apps = full_apps.filter(function(a) { 
             return a.full_coord != undefined; });
+    }
+    o.move_start = function(){
+        set_full_apps();
         // if (context.flags.full_bleed && full_apps.length)
         if (full_apps.length) {
             full = full_apps[0];
@@ -383,6 +391,7 @@ o.Selection = function(o) {
     hive_app.App.has_resize(o);
     var ref_dims, _ref_dims, _resize = o.resize;
     o.before_resize = function() {
+        set_full_apps();
         o.each(function(i, a) { 
             if (a.before_resize) a.before_resize(); });
 
@@ -392,7 +401,7 @@ o.Selection = function(o) {
             _ref_dims = elements[0].dims();
             elements[0].dims_ref_set();
         }
-        env.History.change_start();
+        env.History.change_start(full_apps.length);
     }
     o.after_resize = function() {
         o.each(function(i, a) { 
@@ -401,7 +410,9 @@ o.Selection = function(o) {
         o.update_relative_coords();
         env.History.change_end('resize');
 
+        full_apps = [];
         drag_target = ref_dims = undefined;
+        return true;
     }
     var _dims_relative_set = o.dims_relative_set;
     // Multiselect doesn't handle non-aspect-preserving resize. Delegate it.
@@ -498,12 +509,7 @@ o.Selection = function(o) {
             Controls(o, false);
             o.controls.layout();
         }
-        // if(!o.dragging && elements.length == 1 && !multi) {
-        //     Controls(elements[0], false);
-        //     if (env.gifwall && context.flags.show_mini_selection_border)
-        //         o.controls.div.find(".select_border").hidehide();
-        // }
-        if (env.gifwall && context.flags.show_mini_selection_border)
+        if (env.gifwall && context.flags.show_mini_selection_border && o.controls)
             o.controls.div.find(".select_border").hidehide();
         if(apps.length == 0) {
             evs.handler_del({handler_type: 0}); 
