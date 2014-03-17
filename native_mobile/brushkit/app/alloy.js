@@ -59,7 +59,6 @@ function showHiveCamera() {
 			var compose_win = compose.getView('compose_window');
 
 			compose_win.open();
-			Ti.App.fireEvent('buildComposeWindow');
 
 			Titanium.Media.hideCamera();
 
@@ -99,20 +98,24 @@ function showHiveGallery(){
 		{
 			//checking if it is photo
 			if(event.mediaType == Ti.Media.MEDIA_TYPE_PHOTO) {
-				small_image_obj = reduceImageSize(event.media);
-
-				photo = Alloy.createModel('photos');
-				photo.set('photo_blob', small_image_obj.image);
-				photo.set('width', small_image_obj.width);
-				photo.set('height', small_image_obj.height);
-				photo.save();
-				photosCollection.add(photo);
 
 				var compose = Alloy.createController('Compose'); 
-				compose.getView('compose_window').open();
+				var compose_win = compose.getView('compose_window');
+
+				compose_win.open();
+
 				Titanium.Media.hidePhotoGallery();
 
-				uploadImage(photo);
+				small_image_obj = reduceImageSize(event.media);
+
+				photo_model = Alloy.createModel('photos');
+				photo_model.set('photo_blob', small_image_obj.image);
+				photo_model.set('width', small_image_obj.width);
+				photo_model.set('height', small_image_obj.height);
+				photo_model.save();
+				photosCollection.add(photo_model);
+
+				uploadImage(photo_model);
 			}   else {
 				alert('Sorry, only image uploads allowed at this time.');
 			}
