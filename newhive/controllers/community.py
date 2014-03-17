@@ -407,10 +407,10 @@ class Community(Controller):
         if not page_data:
             print request
             return self.serve_404(tdata, request, response, json=json)
-        page_data.setdefault('title', 'NewHive')
-
         if(type(page_data) is Response):
             return page_data
+            
+        page_data.setdefault('title', 'NewHive')
 
         if type(page_data.get('cards')) is list:
             owner = self.db.User.named(kwargs.get('owner_name',''))
