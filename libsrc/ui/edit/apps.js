@@ -170,6 +170,13 @@ Hive.App = function(init_state, opts) {
         var ps = {}; ps[css_prop] = v; o.set_css(ps);
     } }
 
+    // This app, or the selected app if this is the selection
+    o.sel_app = function() {
+        if (o.is_selection && o.count() == 1)
+            return o.elements(0);
+        return o;
+    }
+
     // Chain "more_method" onto an existing "method" (or noop if method 
     // does not exist)
     // opts.order = ("before", "after", "user")
@@ -1542,6 +1549,7 @@ Hive.App.Audio = function(o) {
             var new_content = o.skin();
             o.content_element.replaceWith(new_content);
             o.content_element = new_content;
+            o.color_set(o.color());
             // ideally jPlayer API would be used so the interface
             // isn't reset, but this doesn't work, tested 2013-10
             //o.content_element.jPlayer('setMedia', s.url);
@@ -1727,7 +1735,10 @@ Hive.App.has_full_bleed = function(o, coord){
         if (!env.gifwall || !o.has_full_bleed())
             return;
         o.dims_ref_set();
-        env.History.change_start(true);
+        // TODO-delete.  Remove junk code. 
+        // Verify that resize only comes from selection now
+        // env.History.begin();
+        // env.History.change_start(true);
         push_apps = env.Apps.all().filter(function(a){
             return a.id != o.id;
         });
@@ -1752,6 +1763,8 @@ Hive.App.has_full_bleed = function(o, coord){
                 a.pos_relative_set(pos);
             }
         };
+        if (env.gifwall)
+            env.layout_apps();
 
         return dims
     };
@@ -1759,7 +1772,8 @@ Hive.App.has_full_bleed = function(o, coord){
     o.after_resize = function(){
         if (!env.gifwall || !o.has_full_bleed())
             return;
-        env.History.change_end();
+        // env.History.change_end();
+        // env.History.group("resize");
         env.layout_apps();
         return true;
     };
@@ -1959,8 +1973,9 @@ Hive.App.has_resize = function(o) {
     function controls(o) {
         var common = $.extend({}, o);
         o.resize_control = true;
+        var app = o.app.sel_app();
 
-        if (o.app.has_full_bleed())
+        if (app.has_full_bleed())
             o.c.resize = o.addControl($('#controls_misc .resize_v'));
         else
             o.c.resize = o.addControl($('#controls_misc .resize'));
@@ -1969,8 +1984,8 @@ Hive.App.has_resize = function(o) {
             common.layout()
             var p = o.padding;
             var dims = o.dims();
-            if (o.app.has_full_bleed())
-                o.c.resize.css({ top: dims[1] -18 + o.padding,
+            if (app.has_full_bleed())
+                o.c.resize.css({ top: dims[1] - 18 + o.padding,
                     left: Math.min(dims[0] / 2 - 18, dims[0] - 54) });
             else
                 o.c.resize.css({ left: dims[0] -18 + p, top: dims[1] - 18 + p });

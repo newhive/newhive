@@ -1,36 +1,20 @@
-//var photosCollection = Alloy.Collections.Photos;
+var photosCollection = Alloy.Collections.instance('Photos');
+
+function dofilter(_collection) {
+
+}
+
+function doTransform(model) {
+
+}
 
 
-$.compose_window.addEventListener('focus', function() {
-	$.scroll_view.removeAllChildren();
-	
-	//var photo_data = photosCollection.at(0);
-	photosCollection.each(function(p, index){
-		if(p != undefined){
-			var img = p.get('photo_blob');
-			//var orientation = ($.galleryView.size.width > $.galleryView.size.height) ? 'landscape' : 'portrait';
-			var img_view = Ti.UI.createImageView({
-				image:img,
-				width:"99%"
-			});
-			
-			//add listener to last elem to scroll to bottom of scroll_view
-			if((index+1) == photosCollection.length){
-				img_view.addEventListener('postlayout', function(){
-					$.scroll_view.scrollToBottom();
-				});
-			}
-			
-			$.scroll_view.add(img_view);
-		} else {
-			//$.galleryView.setImage(null);
-		}
-	});
-	
+$.gif_wall_table.addEventListener('postlayout', function(_e) {
+	if($.gif_wall_table.data[0].rows != 'undefined'){
+		Ti.API.info('$.gif_wall_table.data[0].rows.length: '+ $.gif_wall_table.data[0].rows.length);
+		$.gif_wall_table.scrollToIndex(($.gif_wall_table.data[0].rows.length -1));
+	}
 });
-
-
-
 
 $.select.addEventListener('click',function() {
 	showHiveGallery();
