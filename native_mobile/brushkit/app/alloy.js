@@ -103,7 +103,7 @@ function showHiveGallery(){
 
 				compose_win.open();
 
-				Titanium.Media.hidePhotoGallery();
+				Titanium.Media.hideCamera();
 
 				small_image_obj = reduceImageSize(event.media);
 
