@@ -10,8 +10,10 @@ function doTransform(model) {
 
 
 $.gif_wall_table.addEventListener('postlayout', function(_e) {
-	Ti.API.info('$.gif_wall_table.data[0].rows.length: '+ $.gif_wall_table.data[0].rows.length);
-	$.gif_wall_table.scrollToIndex(($.gif_wall_table.data[0].rows.length -1));
+	if($.gif_wall_table.data[0].rows != 'undefined'){
+		Ti.API.info('$.gif_wall_table.data[0].rows.length: '+ $.gif_wall_table.data[0].rows.length);
+		$.gif_wall_table.scrollToIndex(($.gif_wall_table.data[0].rows.length -1));
+	}
 });
 
 $.select.addEventListener('click',function() {
