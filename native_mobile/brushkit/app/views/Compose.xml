@@ -1,8 +1,9 @@
 <Alloy>
+	<Collection src="Photos" />
 	<Window id="compose_window">
-		<ScrollView id="scroll_view" layout="vertical">
-			
-		</ScrollView>
+		<TableView id='gif_wall_table' dataCollection="Photos">
+			<Require src="GIFWallRow"/>
+		</TableView>
 		
 		<View id="buttons_view">
 			<Button id="select">Select</Button>
