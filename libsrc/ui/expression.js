@@ -70,6 +70,7 @@ define([
                  .click(function(){ o.send_top('focus'); });
             $(window).on("scroll", layout.on_scroll);
             if (util.mobile()) {
+                $.event.special.swipe.horizontalDistanceThreshold = 200;
                 $(document).on("swipe", function(ev) {
                     if (ev.swipestart.coords[0] > ev.swipestop.coords[0])
                         o.page_next()
