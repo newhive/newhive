@@ -1395,6 +1395,11 @@ class Expr(HasSocial):
         else: filename = snapshot.get_thumb(dimension[0], dimension[1])
         return filename
 
+    def stripped_snapshot_name(self, size):
+        filename = self.snapshot_name(size)
+        if filename.startswith('//'): filename = filename[2:]
+        return filename
+
     def take_full_shot(self):
         snapshotter = Snapshots()
 

@@ -2,7 +2,7 @@
 	layout:"composite"
 }
 
-"#scroll_view": {
+"#gif_wall_table": {
 	top:"8%",
 	height:"67%",
 	zIndex:1
