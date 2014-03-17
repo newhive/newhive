@@ -579,7 +579,7 @@ Hive.App.Html = function(o) {
     }
 
     // function controls(o) {
-    //     o.addControls($('#controls_html'));
+    //     o.addButtons($('#controls_html'));
     //     // TODO: create interface for editing HTML
     //     // d.find('.render').click(o.app.toggle_render);
     //     return o;
@@ -603,7 +603,7 @@ Hive.registerApp(Hive.App.Html, 'hive.html');
 //     o.div.append(o.content_element);
 
 //     var controls = function(o){
-//         o.addControls($('#controls_raw_html'));
+//         o.addButtons($('#controls_raw_html'));
 //         o.div.find('.edit').click(function(){
 //             var dia = $($('#dia_edit_code')[0].outerHTML);
 //             u.show_dialog(dia, {
@@ -646,7 +646,7 @@ Hive.App.Code = function(o){
     }
 
     function controls(o) {
-        o.addControls($('#controls_script'))
+        o.addButtons($('#controls_script'))
         o.div.find('.exec').click(o.app.run)
         // o.hover_menu(o.div.find('.button.opts'), o.div.find('.drawer.opts'))
         // var showinview = o.div.find('.show_in_view')
@@ -931,7 +931,7 @@ Hive.App.Image = function(o) {
     };
 
     function controls(o) {
-        o.addControls($('#controls_image'));
+        o.addButtons($('#controls_image'));
         o.append_link_picker(o.div.find('.buttons'));
         o.div.find('.button.set_bg').click(function() {
             Hive.bg_change(o.app.state()) });
@@ -1199,7 +1199,7 @@ Hive.App.Polygon = function(o){
     }
 
     o.make_controls.push(function(o){
-        o.addControls($('#controls_path'));
+        o.addButtons($('#controls_path'));
         o.stroke_update(o.stroke_width())
     });
     Hive.App.has_stroke_width(o)
@@ -1439,37 +1439,41 @@ Hive.App.Sketch = function(o) {
     };
 
     function controls(o) {
-        var common = $.extend({}, o);
+        // var common = $.extend({}, o);
+        var app = o.app.sel_app();
        
-        o.addControls($('#controls_sketch'));
-        u.append_color_picker(o.div.find('.drawer.fill'), o.app.fill_color, '#000000');
+        o.addButtons($('#controls_sketch'));
+        u.append_color_picker(o.div.find('.drawer.fill'), app.fill_color, '#000000');
 
         o.hover_menu(o.div.find('.button.fill'), o.div.find('.drawer.fill'),
             { auto_close : false });
         //TODO: What does this click on the brush handle do?
         var brush_btn = o.div.find('.button.brush')
             .click( function(){
-                 o.app.set_brush( o.app.brush_name );
+                 app.set_brush( app.brush_name );
             });
         var brush_menu = o.hover_menu(brush_btn, o.div.find('.drawer.brush'));
-        o.div.find('.button.eraser').click( function(){ o.app.win.set_brush( 'eraser' ) });
+        o.div.find('.button.eraser').click( function(){ app.win.set_brush( 'eraser' ) });
         o.div.find('.drawer.brush .option').each(function(i, e) { $(e).click(function() {
-            o.app.set_brush($(e).attr('val'));
+            app.set_brush($(e).attr('val'));
 
             o.div.find('.drawer.brush .option').removeClass("selected");
             $(e).addClass("selected");
             brush_menu.close();
         }); })
-        o.div.find('.drawer.brush .option[val=' + o.app.brush_name + ']').click();
+        o.div.find('.drawer.brush .option[val=' + app.brush_name + ']').click();
 
         return o;
     };
-    o.make_controls.push(controls);
+    o.single_controls.push(function(o) {
+        o.make_controls.push(controls);
+        var app = o.sel_app();
+        Hive.App.has_slider_menu(o, '.size', function(v) { app.win.BRUSH_SIZE = v; },
+            function() { return app.win.BRUSH_SIZE; });
+    })
     Hive.App.has_rotate(o);
     Hive.App.has_opacity(o);
     Hive.App.has_shield(o);
-    Hive.App.has_slider_menu(o, '.size', function(v) { o.win.BRUSH_SIZE = v; },
-        function() { return o.win.BRUSH_SIZE; });
 
     o.content_element = $('<iframe>').attr('src', '/lib/harmony_sketch.html')
         .css({'width':'100%','height':'100%','position':'absolute'});
@@ -1873,7 +1877,6 @@ Hive.App.has_border_radius = function(o) {
         o.border_radius_set = function(v){ o.set_css({'border-radius':v+'px'}); };
     }
     o.make_controls.push(function(o){
-        // o.addControls($('#controls_rounding'));
         o.addButton($('#controls_rounding .rounding'));
     });
     Hive.App.has_slider_menu(o, '.rounding', o.border_radius_set, o.border_radius,
