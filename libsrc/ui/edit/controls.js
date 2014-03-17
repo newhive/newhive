@@ -129,6 +129,11 @@ o.Controls = function(app, multiselect, delegate) {
         return $($.map(ctrls.clone(false), o.appendButton)); };
     o.addControls = function(ctrls) { 
         return $($.map(ctrls.clone(false).children(), o.appendControl)); };
+    o.addButtons = function(ctrls) {
+        $ctrls = ctrls.find(".control.buttons");
+        if ($ctrls.length == 0)
+            $ctrls = ctrls;
+        return $($.map($ctrls.clone(false).children(), o.appendButton)); };
     o.hover_menu = function(handle, drawer, opts) {
         return u.hover_menu(handle, drawer, $.extend({
             auto_height: false, offset_y : o.padding - 7}, opts))
