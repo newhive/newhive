@@ -248,7 +248,7 @@ define([
     };
     var id_from_card_count = function(n, fetch){
         var page_data = o.page_data;
-        fetch = util.default(fetch, true);
+        fetch = util.defalt(fetch, true);
         // No data for card n.
         if (!page_data.cards || !page_data.cards[n]) {
             if (fetch)

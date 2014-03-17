@@ -170,6 +170,7 @@ class HiveAssets(Assets):
             cmd.build()
         # actually get webassets to build bundles (webassets is very lazy)
         for b in self.final_bundles:
+            print 'starting', b
             self.bundles[b] = self.assets_env[b].urls()
         #self.write_js(self.bundles, 'libsrc/server/compiled.bundles.json')
         print("Assets build complete in %s seconds", time.time() - t0)
@@ -253,8 +254,6 @@ class HiveAssets(Assets):
             # can't figure out how to make cram work from another dir
             old_dir = os.getcwd()
             os.chdir(join(config.src_home, 'libsrc'))
-            # cram is failing horribly for some reason.
-            # Maybe there's a circular dependency?
             os.system('./cram.sh')
             os.chdir(old_dir)
 
