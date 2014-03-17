@@ -38,9 +38,10 @@ define([
         routing.register_state(route_args);
         if (util.mobile()) {
             $("body").addClass('mobile');
+            // var init_scale = 575 / ($(window).width() || 720)
             $('<meta name="viewport" content="width=device-width, ' +
-                'height=device-height, initial-scale=0.5, ' +
-                'user-scalable=1"/>').appendTo($("head"));
+                'height=device-height' + //, initial-scale=' + init_scale +
+                ', user-scalable=1"/>').appendTo($("head"));
             context.flags.mobile = util.mobile();
         }
         page.init(o);
