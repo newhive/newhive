@@ -166,13 +166,6 @@ define([
                 page_data.remix = false
                 show_edit = true
             }
-
-            $('#dia_delete_ok').each(function(i, e){
-                $(e).data('dialog').opts.handler = function(e, data){
-                    o.controller.open('expressions_public',
-                        {'owner_name': context.user.name });
-                }
-            });
         }
         if(show_edit || page_data.remix)
             $('#content_btns .edit_ui').replaceWith(
@@ -248,7 +241,7 @@ define([
     };
     var id_from_card_count = function(n, fetch){
         var page_data = o.page_data;
-        fetch = util.default(fetch, true);
+        fetch = util.defalt(fetch, true);
         // No data for card n.
         if (!page_data.cards || !page_data.cards[n]) {
             if (fetch)
@@ -587,6 +580,13 @@ define([
             o.page_btn_animate($(this), "in");
         }).bind_once('mouseleave', function(e) {
             o.page_btn_animate($(this), "out");
+        });
+
+        $('#dia_delete_ok').each(function(i, e){
+            $(e).data('dialog').opts.handler = function(e, data){
+                o.controller.open('expressions_public',
+                    {'owner_name': context.user.name });
+            }
         });
     };
 
