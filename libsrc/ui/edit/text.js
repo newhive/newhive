@@ -22,6 +22,7 @@ var Text = o = {};
 o.Text = function(o) {
     hive_app.App.has_resize(o);
     hive_app.App.has_resize_h(o);
+    hive_app.App.has_opacity(o);
     hive_app.App.has_shield(o, {auto: false});
     // for now, having internal and external alignment is too weird.
     o.has_align = false;  
@@ -154,9 +155,10 @@ o.Text = function(o) {
     };
 
     function controls(o) {
-        var common = $.extend({}, o), d = o.div;
+        var d = o.div;
         // These controls can only ever apply to a single app.
-        var app = o.app.elements()[0];
+        if (!o.single()) return
+        var app = o.app.sel_app();
 
         o.addControls($('#controls_text'));
 
@@ -221,10 +223,7 @@ o.Text = function(o) {
 
         return o;
     }
-    o.single_controls.push(function(o) {
-        o.make_controls.push(controls);
-    })
-    // o.make_controls.push(controls);
+    o.make_controls.push(controls);
 
     o.div.addClass('text');
     if(!o.init_state.dimensions) o.dims_set([ 300, 20 ]);
