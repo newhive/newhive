@@ -41,14 +41,16 @@ var activityIndicator = Ti.UI.createActivityIndicator({
 	font: {fontSize:"20dp"},
 	message: '',
 	style:ai_style,
-	top:"15%",
-	height:"34dp",
-	width:"150dp",
+	top:"0dp",
+	right:"0dp",
+	height:"40dp",
+	width:"40dp",
 	backgroundColor:"#ffffff",
-	opacity:0.7,
+	opacity:0.95,
 	zIndex:100
 });
 Titanium.App.Properties.setBool('activity_indicator_is_visible', false);
+
 
 function showHiveCamera() {
 	Titanium.Media.showCamera({
@@ -229,7 +231,6 @@ function uploadImage(photo_model) {
 
 	NUM_ACTIVE_XHR++;
 
-	activityIndicator.message = 'uploading ' + NUM_ACTIVE_XHR;
 	activityIndicator.show();
 	Titanium.App.Properties.setBool('activity_indicator_is_visible', true);
 
@@ -248,8 +249,6 @@ function uploadImage(photo_model) {
 		}
 
 		NUM_ACTIVE_XHR--;
-
-		activityIndicator.message = 'uploading ' + NUM_ACTIVE_XHR ;
 
 		if(NUM_ACTIVE_XHR == 0){
 			activityIndicator.hide();
