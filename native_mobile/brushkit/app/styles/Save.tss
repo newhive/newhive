@@ -1,17 +1,19 @@
 "#save_window": {
-	layout:"composite"
+	layout:"composite",
+	top:"40dp",
 }
 
 "#top_nav": {
 	layout:"composite",
-	top:"40dp",
+	top:"0dp",
 	left:"0dp",
-	height: "24dp"
+	height: "24dp",
+	zIndex: 1
 }
 
 "#form_elems_view": {
 	layout:"vertical",
-	top:"80dp",
+	top:"40dp",
 	left: "20dp"
 }
 
