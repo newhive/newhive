@@ -497,14 +497,15 @@ o.Selection = function(o) {
         o.make_controls = o.base_controls.slice();
         var sel_controls = u.union.apply(null, 
             elements.map(function(app) {
-                return app.sel_controls || []; })
+                return app.make_controls || []; })
         )
-        if (elements.length == 1)
-            sel_controls = u.union(apps[0].single_controls, sel_controls);
-        sel_controls.map(function(f) {
-            if (typeof(f) == "function")
-                f(o);
-        })
+        // if (elements.length == 1)
+        //     sel_controls = u.union(apps[0].single_controls, sel_controls);
+        // sel_controls.map(function(f) {
+        //     if (typeof(f) == "function")
+        //         f(o);
+        // })
+        o.make_controls = u.union(sel_controls, o.make_controls);
         if(!o.dragging && multi) {
             Controls(o, false);
             o.controls.layout();
@@ -702,7 +703,7 @@ o.Selection = function(o) {
     var delegates = ["color", "color_set", "opacity", "opacity_set"
         ,"border_radius", "border_radius_set", "link"
         ,"stroke_width", "stroke_width_set", "stroke_update", "reframe"
-        ,"blur", "blur_set", "stroke", "stroke_set"];
+        ,"blur", "blur_set", "stroke", "stroke_set", "link", "link_set"];
     delegates.map(function(fn_name) {
         o[fn_name] = delegate_fn(fn_name);
     });

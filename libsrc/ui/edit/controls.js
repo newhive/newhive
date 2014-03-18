@@ -37,8 +37,7 @@ o.Controls = function(app, multiselect, delegate) {
         else app.controls.remove(); // otherwise destroy them and reconstruct requested type
     }
     var o = app.controls = {};
-    // TODO-cleanup: remove delegate, have selection handle control creation
-    //o.app = delegate || app;
+    var sel_app = app.sel_app()
     o.app = app;
     o.multiselect = multiselect;
 
@@ -66,7 +65,8 @@ o.Controls = function(app, multiselect, delegate) {
             // TODO: improve URL guessing
             if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && 
                 v.match(/\w+\.\w{2,}/)) v = 'http://' + v;
-            o.app.link(v);
+            o.app.link_set(v);
+            env.History.saver(sel_app.link, sel_app.link_set, 'link image').exec(v);
         };
 
         // Don't have to worry about duplicating handlers because all elements
@@ -138,6 +138,7 @@ o.Controls = function(app, multiselect, delegate) {
         return u.hover_menu(handle, drawer, $.extend({
             auto_height: false, offset_y : o.padding - 7}, opts))
     };
+    o.single = function() { return env.Selection.count() == 1 }
 
     o.padding = 4;
     o.border_width = 5;
