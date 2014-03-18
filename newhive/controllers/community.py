@@ -311,7 +311,8 @@ class Community(Controller):
             resp['expr']['title'] = '[password required]'
             resp['error'] = 'password'
         else:
-            meta['img_url'] = "http:" + expr.snapshot_name('big')
+            snap_url = expr.snapshot_name('big')
+            meta['img_url'] = "http:" + snap_url if snap_url else False
             expr_owner = expr.get_owner()
             if expr_owner and expr_owner['analytics'].get('views_by'):
                 expr_owner.increment({'analytics.views_by': 1})
