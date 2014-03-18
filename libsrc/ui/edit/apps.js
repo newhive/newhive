@@ -938,11 +938,12 @@ Hive.App.Image = function(o) {
     };
 
     function controls(o) {
+        var app = o.single()
+        if(!app) return
         o.addButtons($('#controls_image'));
         o.append_link_picker(o.div.find('.buttons'));
         o.div.find('.button.set_bg').click(function() {
-            Hive.bg_change(o.app.state()) });
-        return o;
+            Hive.bg_change(app.state()) });
     };
     o.make_controls.push(controls);
 
@@ -1206,11 +1207,13 @@ Hive.App.Polygon = function(o){
     }
 
     o.make_controls.push(function(o){
+        var app = o.single()
+        if(!app) return
         o.addButtons($('#controls_path'));
-        o.stroke_update(o.stroke_width())
+        app.stroke_update(app.stroke_width())
     });
     Hive.App.has_stroke_width(o)
-    Hive.App.has_stroke_color(o)
+    Hive.App.has_color(o, "stroke");
     Hive.App.has_blur(o)
     Hive.App.has_rotate(o)
     o.rotate_start = function(){
@@ -2238,7 +2241,7 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
 
         return o
     }
-    o.make_controls.push(controls)
+    o.make_controls.push(memoize('slider' + handle_q, controls))
 }
 
 Hive.App.has_align = function(o) {
@@ -2297,19 +2300,15 @@ Hive.App.has_align = function(o) {
 };
     
 Hive.App.has_opacity = function(o) {
-    // if (o.is_selection) {
-        var history_point;
-        var app = env.Selection;
-        Hive.App.has_slider_menu(o, '.button.opacity',
-            function(v) { app.opacity_set(v/100) },
-            function() { return Math.round(app.opacity() * 100) },
-            function(){ history_point = env.History.saver(
-                app.opacity, app.opacity_set, 'change opacity') },
-            function(){ history_point.save() }
-        );
-    //     return;
-    // }
-    // o.sel_controls.push( Hive.App.has_opacity );
+    var history_point;
+    var app = env.Selection;
+    Hive.App.has_slider_menu(o, '.button.opacity',
+        function(v) { app.opacity_set(v/100) },
+        function() { return Math.round(app.opacity() * 100) },
+        function(){ history_point = env.History.saver(
+            app.opacity, app.opacity_set, 'change opacity') },
+        function(){ history_point.save() }
+    );
     var opacity = o.init_state.opacity === undefined ? 1 : o.init_state.opacity;
     o.opacity = function(){ return opacity; };
     o.opacity_set = function(s){
@@ -2329,44 +2328,29 @@ Hive.App.has_opacity = function(o) {
 };
 // var make_has_slider()
 Hive.App.has_stroke_width = function(o) {
-    if (!o.is_selection) {
-        o.sel_controls.push(Hive.App.has_stroke_width)
-        return
-    }
-    var history_point
+    var history_point, sel = env.Selection
     Hive.App.has_slider_menu(o, '.stroke-width'
         ,function(v){
-            o.stroke_update(v)
-            o.stroke_width_set(v)
+            sel.stroke_update(v)
+            sel.stroke_width_set(v)
         }
-        ,o.stroke_width
+        ,sel.stroke_width
         ,function(){ history_point = env.History.saver(
-            o.stroke_width, o.stroke_width_set, 'stroke') }
+            sel.stroke_width, sel.stroke_width_set, 'stroke') }
         ,function(){
             history_point.save()
-            o.reframe()
+            sel.reframe()
         }
     )
 }
-Hive.App.has_stroke_color = function(o) {
-    if (!o.is_selection) {
-        o.sel_controls.push(Hive.App.has_stroke_color)
-        return
-    }
-    Hive.App.has_color(o, "stroke");
-}
 Hive.App.has_blur = function(o) {
-    if (!o.is_selection) {
-        o.sel_controls.push(Hive.App.has_blur)
-        return
-    }
-    var history_point
-    Hive.App.has_slider_menu(o, '.blur' ,o.blur_set ,o.blur
+    var history_point, sel = env.Selection
+    Hive.App.has_slider_menu(o, '.blur' ,sel.blur_set ,sel.blur
         ,function(){ history_point = env.History.saver(
-            o.blur, o.blur_set, 'stroke') }
+            sel.blur, sel.blur_set, 'stroke') }
         ,function(){
             history_point.save()
-            o.reframe()
+            sel.reframe()
         }
     )
 }
