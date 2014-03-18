@@ -287,7 +287,7 @@ CutyCapt::saveSnapshot() {
   // check for other events... This is primarily a problem
   // under my Ubuntu virtual machine.
 
-  mPage->setViewportSize( mainFrame->contentsSize() );
+  // mPage->setViewportSize( mainFrame->contentsSize() );
 
   switch (mFormat) {
     case SvgFormat: {
