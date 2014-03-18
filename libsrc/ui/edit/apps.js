@@ -1868,17 +1868,17 @@ Hive.App.has_image_drop = function(o) {
     return o;
 };
 Hive.App.has_border_radius = function(o) {
-    var history_point;
-    o.init_state.css_state = $.extend({ 'border-radius' : 0 }, 
-        o.init_state.css_state);
     if (!o.is_selection) {
         o.sel_controls.push(Hive.App.has_border_radius);
+        o.init_state.css_state = $.extend({ 'border-radius' : 0 }, 
+            o.init_state.css_state);
         o.border_radius = function(){ return parseInt(o.css_state['border-radius']) };
         o.border_radius_set = function(v){ o.set_css({'border-radius':v+'px'}); };
     }
     o.make_controls.push(function(o){
         o.addButton($('#controls_rounding .rounding'));
     });
+    var history_point;
     Hive.App.has_slider_menu(o, '.rounding', o.border_radius_set, o.border_radius,
         function(){ history_point = env.History.saver(
             o.border_radius, o.border_radius_set, 'border radius'); },

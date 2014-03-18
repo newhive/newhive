@@ -500,7 +500,7 @@ o.Selection = function(o) {
                 return app.sel_controls || []; })
         )
         if (elements.length == 1)
-            sel_controls = u.union(sel_controls, apps[0].single_controls);
+            sel_controls = u.union(apps[0].single_controls, sel_controls);
         sel_controls.map(function(f) {
             if (typeof(f) == "function")
                 f(o);

@@ -326,13 +326,13 @@ Hive.init = function(exp, site_context){
 
     env.apps_e = $('#happs'); // container element for all interactive apps
     env.History.init();
-    hive_app.Apps.init(Hive.Exp.apps);
     // Hive.init_common();
     if(context.query.new_user)
         $("#dia_editor_help").data("dialog").open();
     // TODO-cleanup: remove Selection from registered apps, and factor out
     // shared functionality into has_coords
     env.Selection = hive_app.new_app({ type : 'hive.selection' });
+    hive_app.Apps.init(Hive.Exp.apps);
 
     $('.edit.overlay').showshow()
     Hive.init_global_handlers()
