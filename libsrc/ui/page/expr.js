@@ -75,21 +75,24 @@ define([
 
         var wide = ($(window).width() >= 1180) ? true : false;
         var columns = ($(window).width() >= 980) ? 2 : 1;
-        if (o.overlay_columns != columns) {
+        if (o.overlay_columns != columns || o.wide_overlay != wide) {
             o.overlay_columns = columns;
-            $("#popup_content .left_pane").width((columns == 1) ? 508 : 430);
-            $("#popup_content > *").css('display', (columns == 1) ? 'block' : 'inline-block');
-            $("#popup_content .right_pane").css('text-align', (columns == 1) ? 'left' : 'right').
-                css("max-width", (columns == 1) ? '522px' : '470px');
-            if (columns == 1)
-                $("#popup_content .empty").showshow();
-            else
-                $("#popup_content .empty").hidehide();
-        }
-        if (o.wide_overlay != wide) {
             o.wide_overlay = wide;
+            $("#popup_content > *").css('display', (columns == 1) ? 'block' : 'inline-block');
+            $("#popup_content .right_pane")
+                .css('text-align', (columns == 1) ? 'left' : 'right')
+                .css("max-width", (columns == 1) ? '522px' : '470px');
+            if (columns == 1) {
+                $("#popup_content .empty").showshow();
+                $("#popup_content .left_pane")
+                    .css("max-width", '522px').width("auto");
+            } else {
+                $("#popup_content .empty").hidehide();
+                $("#popup_content .left_pane")
+                    .css("max-width", '522px').width((wide) ? 600 : 430);
+            }
+
             $("#popup_content").css("max-width", (wide) ? 980+600-430 : 980);
-            $("#popup_content .left_pane").width((wide) ? 600 : 430);
         }
     };
     var resize_icon = function(el) {
@@ -121,6 +124,9 @@ define([
         $('#popup_content .counts_icon').each(function(i, el) {
             resize_icon($(this));
         });
+        // Move the plus buttons inside the tag list
+        $("#social_overlay .tags_box .moveme").children()
+            .prependTo($("#social_overlay .tag_list"));
         // Reset scroll to top
         $("body").scrollTop(0);
         
