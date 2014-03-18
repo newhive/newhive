@@ -15,7 +15,16 @@ define([
     menu,
     edit_container_template
 ){
-    var o = {}, save_dialog, expr;
+    var o = {}, save_dialog, expr, default_expr = {
+        auth: 'public'
+        ,container: {
+            facebook_btn: true
+            ,twitter_btn: true
+            ,love_btn: true
+            ,republish_btn: true
+            ,comment_btn: true
+        }
+    }
 
     o.init = function(controller){
         // o.controller = controller;
@@ -92,8 +101,9 @@ define([
         if(expr.auth) $('#menu_privacy [val=' + expr.auth +']').click()
         $('#use_custom_domain').prop('checked', expr.url ? 1 : 0).
             trigger('change')
-        for(var btn in (expr.container || {}))
-            $('[name=' + btn + ']').prop('checked', expr.container[btn])
+        var container = expr.container || $.extend({}, default_expr.container)
+        for(var btn in container)
+            $('[name=' + btn + ']').prop('checked', container[btn])
     }
 
     o.render = function(page_data){
@@ -101,7 +111,7 @@ define([
         $('#site').empty().append(edit_container_template(page_data)).showshow();
         $('#editor').focus()
 
-        expr = context.page_data.expr || { auth: 'public' }
+        expr = context.page_data.expr || $.extend({}, default_expr)
         if(context.query.tags){
             var tags = (expr.tags || "") + " " + unescape(context.query.tags)
                 ,list = o.tag_list(tags)
@@ -240,6 +250,13 @@ define([
             var url = $('#custom_url').val()
                 .replace(/^.{0,6}\/\//, '').toLowerCase()
             $('#custom_url').val(url)
+        })
+
+        $('.buttons_toggle').click(function(){
+            var check = $.makeArray($('.button_options input')).filter(
+                function(el){ return !$(el).prop('checked') }).length > 0
+            $('.button_options input').each(function(i, el){
+                $(el).prop('checked', check) })
         })
     }
 
