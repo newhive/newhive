@@ -2300,7 +2300,7 @@ Hive.App.has_opacity = function(o) {
     // if (o.is_selection) {
         var history_point;
         var app = env.Selection;
-        Hive.App.has_slider_menu(app, '.button.opacity',
+        Hive.App.has_slider_menu(o, '.button.opacity',
             function(v) { app.opacity_set(v/100) },
             function() { return Math.round(app.opacity() * 100) },
             function(){ history_point = env.History.saver(
