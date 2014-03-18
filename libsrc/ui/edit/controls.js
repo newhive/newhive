@@ -138,7 +138,8 @@ o.Controls = function(app, multiselect, delegate) {
         return u.hover_menu(handle, drawer, $.extend({
             auto_height: false, offset_y : o.padding - 7}, opts))
     };
-    o.single = function() { return env.Selection.count() == 1 }
+    o.single = function() {
+        return (env.Selection.count() == 1) ? o.app.sel_app() : false }
 
     o.padding = 4;
     o.border_width = 5;
