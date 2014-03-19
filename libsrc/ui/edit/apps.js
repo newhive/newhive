@@ -775,22 +775,6 @@ Hive.App.Image = function(o) {
         o.allow_crop(true);
         o.load();
     };
-    // TODO-cleanup: move to has_crop
-    o.allow_crop = function(force) {
-        if (!force && !context.flags.rect_drag_drop)
-            return false;
-
-        o.init_state.scale_x = o.init_state.scale_x || 1;
-        o.init_state.offset = o.init_state.offset || [0, 0];
-        // o.is_cropped = true;
-        // var happ = o.content_element.parent();
-        // o.content_element = $('<div class="crop_box">');
-        // o.img.appendTo(o.content_element);
-        // o.content_element.appendTo(happ);
-        o.div_aspect = o.dims()[0] / o.dims()[1];
-        o.layout();
-        return true;
-    };
 
     // TODO-cleanup: move to has_crop
     (function(){
@@ -908,13 +892,28 @@ Hive.App.Image = function(o) {
             o.layout();
         };
 
-        // TODO-bugbug: make work
-        // this is executed before the resize button is added
-        // o.single_controls.push(function(sel){
-        //     sel.make_controls.push(function(){
-        //         evs.long_hold(o.controls.div.find('.resize'), o.app);
-        //     })
-        // })
+        // TODO-cleanup: move to has_crop
+        o.allow_crop = function(force) {
+            if (!force && !context.flags.rect_drag_drop)
+                return false;
+
+            o.init_state.scale_x = o.init_state.scale_x || 1;
+            o.init_state.offset = o.init_state.offset || [0, 0];
+            // o.is_cropped = true;
+            // var happ = o.content_element.parent();
+            // o.content_element = $('<div class="crop_box">');
+            // o.img.appendTo(o.content_element);
+            // o.content_element.appendTo(happ);
+            o.div_aspect = o.dims()[0] / o.dims()[1];
+            o.layout();
+            return true;
+        };
+
+        o.make_controls.push(function(sel){
+            var app = sel.single()
+            if(!app) return
+            evs.long_hold(sel.div.find('.resize'), app);
+        })
     })();
 
     var _layout = o.layout;

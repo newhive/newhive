@@ -127,12 +127,13 @@ o.Text = function(o) {
             _dims_relative_set(dims);
             return;
         }
-        var new_scale;
-        if (dims_ref)
-            new_scale = scale_ref * o.dims()[0] / dims_ref[0];
-        else
-            new_scale = o.scale() * o.dims_relative()[0] / old_dims[0];
+
+        if (!dims_ref) return
+        var new_scale = scale_ref * o.dims()[0] / dims_ref[0];
         o.scale_set(new_scale);
+
+        // should not scale for resize_h
+        // new_scale = o.scale() * o.dims_relative()[0] / old_dims[0];
     }
     
     var _load = o.load;
@@ -214,11 +215,6 @@ o.Text = function(o) {
             }).click(function(){
                 app.rte.exec_command($(el).attr('cmd'), $(el).attr('val'));
             });
-        });
-
-        o.select_box.click(function(e){
-            e.stopPropagation();
-            app.edit_mode(false);
         });
 
         return o;
