@@ -11,7 +11,7 @@
   <div class=''>newhive.com/{user.name}/</div>
   <div class='note'>
     Change the URL to "Save As"
-    <div class='floatright'>
+    <div class='floatright {<unless flags.custom_domain}hide{>}'>
       <input type='checkbox' id='use_custom_domain'>
       <label for='use_custom_domain'>Custom domain</label>
     </div>
@@ -38,23 +38,23 @@
     <input type="checkbox">Allow others to remix this expression</label></div>
 
   <div class='button_options {<unless flags.button_options}hide{>}'>
-    Show buttons for: &nbsp; &nbsp;
+    Show buttons for: &nbsp; 
     <label>
       <input type='checkbox' name='facebook_btn'>
       <img src='{asset "skin/nav/facebook.png"}'>
-    </label> &nbsp; &nbsp;
+    </label>
     <label>
       <input type='checkbox' name='twitter_btn'>
       <img src='{asset "skin/nav/twitter.png"}'>
-    </label> &nbsp; &nbsp;
+    </label>
     <label>
       <input type='checkbox' name='love_btn'>
       <img src='{asset "skin/nav/love.png"}'>
-    </label> &nbsp; &nbsp;
+    </label>
     <label>
       <input type='checkbox' name='republish_btn'>
       <img src='{asset "skin/nav/republish.png"}'>
-    </label> &nbsp; &nbsp;
+    </label>
     <label>
       <input type='checkbox' name='comment_btn'>
       <img src='{asset "skin/nav/comment.png"}'>
