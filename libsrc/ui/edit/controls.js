@@ -237,9 +237,10 @@ o.Controls = function(app, multiselect, delegate) {
         .on(o.select_borders, 'drag', o.app)
         .on(o.select_borders, 'dragend', o.app);
     o.div.append(o.select_box.append(o.select_borders));
-    o.select_box.click(function( e ){
-        e.stopPropagation();
-        o.app.unfocus();
+    o.select_box.click(function(){
+        var app = o.single()
+        if(app)
+            app.unfocus();
     });
 
     if(o.multiselect && o.app.angle)
