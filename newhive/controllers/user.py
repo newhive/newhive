@@ -562,6 +562,17 @@ class User(ModelController):
             return self.serve_json(response, { 'error':
                 'username exists or invalid username' })
 
+        email_lists = map(lambda email_list: {
+            'name': email_list.name
+        }, mail.MetaMailer.unsubscribable('user'))
+        subscribed = []
+        for email_list in email_lists:
+            subscribed.append(email_list['name'])
+            email_list['subscribed'] = True
+        update = {}
+        update['email_subscriptions'] = subscribed
+        user.update(**update)
+
         # TODO: offer suggested users to follow.
         # new user follows NewHive
         self.db.Star.create(user, self.db.User.site_user)
