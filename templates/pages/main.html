@@ -2,8 +2,10 @@
 
 {% if 'home' %}
   {% block meta %}
-    {% set description = ("" if page_data.expr else "We believe that your life is a blank canvas + you decide what goes on it. NewHive is your radically simple, DIY self publishing tool.") %}
+    {% set description = ("Express yourself" if page_data.expr else "We believe that your life is a blank canvas + you decide what goes on it. NewHive is your radically simple, DIY self publishing tool.") %}
+    {# TODO-cleanup: what is this?
     <meta name="description" content="{{meta_description}}">
+    #}
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="@newhive">
     <meta property="og:image" content=
@@ -15,15 +17,6 @@
     <meta name="twitter:title" content='{{page_data.title|e}}'>
     <meta property="og:description" content='{{description}}'>
     <meta property="twitter:description" content='{{description}}'>
-    
-    {#
-    <meta name="twitter:card" content="photo">
-    <meta name="twitter:site" content="@examplephotosite">
-    <meta name="twitter:creator" content="@sippey">
-    <meta name="twitter:image" content="http://example.com/photo/a/image.jpg">
-    <meta name="twitter:image:width" content="610">
-    <meta name="twitter:image:height" content="610">  
-    #}
   {% endblock meta %}
 {% endif %}
 
