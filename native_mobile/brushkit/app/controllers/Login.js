@@ -92,8 +92,26 @@ $.login_window.addEventListener('focus', function(){
 $.textfieldPwd.addEventListener('click',function(e){
 	e.cancelBubble = true;
 });
+$.textfieldPwd.addEventListener('focus',function(e){
+	e.source.borderColor = "#aef0e8";
+	e.source.borderWidth = "4dp";
+});
+$.textfieldPwd.addEventListener('blur',function(e){
+	e.source.borderColor = "#000000";
+	e.source.borderWidth = "1dp";
+});
+
+	
 $.textfieldUsername.addEventListener('click',function(e){
 	e.cancelBubble = true;
+});
+$.textfieldUsername.addEventListener('focus',function(e){
+	e.source.borderColor = "#aef0e8";
+	e.source.borderWidth = "4dp";
+});
+$.textfieldUsername.addEventListener('blur',function(e){
+	e.source.borderColor = "#000000";
+	e.source.borderWidth = "1dp";
 });
 
 $.login_window.addEventListener('focus',function(e){

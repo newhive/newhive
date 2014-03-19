@@ -4,12 +4,13 @@
 function publishExrpession(){
 	var apps = new Array();
 	var i_y = 0;
+	Ti.API.info('photo collection length: ' + photosCollection.length);
 	photosCollection.each(function(p, index) {
 		var w= p.get('width');
 		var h = p.get('height');
 
 		pb = p.get('photo_blob');
-		Ti.API.info("TEST THE HEIGHT, the blob.height: "+ pb.height + ", and stored height: " + h);
+		Ti.API.info("this image newhive id: "+ p.get('new_hive_id'));
 
 		apps.push({
 			"file_id": p.get('new_hive_id'),
@@ -72,6 +73,13 @@ function publishExrpession(){
 		res = JSON.parse(this.responseText);
 		Ti.API.info("the res: "+ this.responseText);
 
+		if(res.error){
+			if(res.error == "overwrite"){
+				alert("You already have an expression with that title. Choose another title.");
+				return;
+			}
+		}
+
 		//remove all the photo models from the collection to start the next expression fresh
 		photosCollection.reset();
 
@@ -129,17 +137,42 @@ $.save_window.addEventListener('click', function()  {
 $.save_window.addEventListener('focus', function(e){
 	$.tf_title.focus();
 	addActivityIndicator(e.source);
+	photosCollection.fetch();
 });
 
 $.tf_title.addEventListener('click',function(e){
 	e.cancelBubble = true;
 });
+$.tf_title.addEventListener('focus',function(e){
+	e.source.borderColor = "#aef0e8";
+	e.source.borderWidth = "4dp";
+});
+$.tf_title.addEventListener('blur',function(e){
+	e.source.borderColor = "#000000";
+	e.source.borderWidth = "1dp";
+});
 
 $.tf_url.addEventListener('click',function(e){
 	e.cancelBubble = true;
 });
+$.tf_url.addEventListener('focus',function(e){
+	e.source.borderColor = "#aef0e8";
+	e.source.borderWidth = "4dp";
+});
+$.tf_url.addEventListener('blur',function(e){
+	e.source.borderColor = "#000000";
+	e.source.borderWidth = "1dp";
+});
 
 $.tf_tags.addEventListener('click',function(e){
 	e.cancelBubble = true;
+});
+$.tf_tags.addEventListener('focus',function(e){
+	e.source.borderColor = "#aef0e8";
+	e.source.borderWidth = "4dp";
+});
+$.tf_tags.addEventListener('blur',function(e){
+	e.source.borderColor = "#000000";
+	e.source.borderWidth = "1dp";
 });
 
