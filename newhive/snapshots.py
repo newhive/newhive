@@ -31,7 +31,7 @@ class Snapshots(object):
         # url = 'http://' + host + ExpressionSnapshotURI(expr_id)
         if isinstance(pw, basestring) and len(pw) > 0:
             host = utils.url_host(on_main_domain=False,secure=True)
-            url = 'https://' + host + '/' + expr_id + '?snapshot&' + urllib.urlencode({'pw': pw})
+            url = 'http://' + host + '/' + expr_id + '?snapshot&' + urllib.urlencode({'pw': pw})
         else:
             url = 'http://' + host + '/' + expr_id + '?snapshot'
         # print url
