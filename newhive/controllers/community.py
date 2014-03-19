@@ -312,7 +312,10 @@ class Community(Controller):
             resp['error'] = 'password'
         else:
             snap_url = expr.snapshot_name('big')
-            meta['img_url'] = "http:" + snap_url if snap_url else False
+            if snap_url and not snap_url.startswith("http"):
+                meta['img_url'] = "http:" + snap_url  
+            else: 
+                meta['img_url'] = snap_url  
             expr_owner = expr.get_owner()
             if expr_owner and expr_owner['analytics'].get('views_by'):
                 expr_owner.increment({'analytics.views_by': 1})
