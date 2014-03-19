@@ -19,10 +19,6 @@ $.gif_wall_table.addEventListener('postlayout', function(e) {
 	}
 });
 
-$.gif_wall_table.addEventListener('swipe',function(e){
-	Ti.API.info('slide!');
-});
-
 $.select.addEventListener('click',function() {
 	showHiveGallery();
 });
@@ -31,15 +27,33 @@ $.take.addEventListener('click', function(){
 	showHiveCamera();
 });
 
-$.save.addEventListener('click', function(){
-	var save = Alloy.createController('Save');
-	save.getView('save_window').open();
-});
+$.save.addEventListener('click', enabledSaveAction);
 
 $.compose_window.addEventListener('focus',function(e){
 	addActivityIndicator(e.source);
 	photosCollection.fetch();
 });
 
+Ti.App.addEventListener('disableSave',function(){
+	$.save.backgroundColor = "#c3c3c3";
+	$.save.color = "#ffffff";
+	$.save.removeEventListener('click',enabledSaveAction);
+	$.save.addEventListener('click',disabledSaveAction);
+});
+Ti.App.addEventListener('enableSave',function(){
+	$.save.backgroundColor = "#aef0e8";
+	$.save.color = "#000000";
+	$.save.removeEventListener('click',disabledSaveAction);
+	$.save.addEventListener('click',enabledSaveAction);
+});
+
+function disabledSaveAction() {
+	alert("Wait for images to finish loading before saving.");
+}
+
+function enabledSaveAction() {
+	var save = Alloy.createController('Save');
+	save.getView('save_window').open();
+}
 
 

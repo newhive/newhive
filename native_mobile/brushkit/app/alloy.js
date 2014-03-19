@@ -231,8 +231,7 @@ function uploadImage(photo_model) {
 
 	NUM_ACTIVE_XHR++;
 
-	activityIndicator.show();
-	Titanium.App.Properties.setBool('activity_indicator_is_visible', true);
+	setActivityIndicatorShow();
 
 	xhr.onerror = function(e) {
 		alert('Error: '+ e.error);
@@ -251,8 +250,7 @@ function uploadImage(photo_model) {
 		NUM_ACTIVE_XHR--;
 
 		if(NUM_ACTIVE_XHR == 0){
-			activityIndicator.hide();
-			Titanium.App.Properties.setBool('activity_indicator_is_visible', false);
+			setActivityIndicatorHide();
 		}
 
 		res = JSON.parse(this.responseText)[0];
@@ -277,5 +275,16 @@ function addActivityIndicator(win){
 		win.add(activityIndicator);
 	}
 };
+
+function setActivityIndicatorShow(){
+	activityIndicator.show();
+	Titanium.App.Properties.setBool('activity_indicator_is_visible', true);
+	Ti.App.fireEvent('disableSave');
+}
+function setActivityIndicatorHide(){
+	activityIndicator.hide();
+	Titanium.App.Properties.setBool('activity_indicator_is_visible', false);
+	Ti.App.fireEvent('enableSave');
+}
 
 
