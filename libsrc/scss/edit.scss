@@ -82,7 +82,9 @@ body.edit {
     left: 0; top: 0; 
     // right:0; bottom: 0;
     z-index: 3;
+}
 
+#happs, #grid_guide {
     // currently selection always gets events, but they can be intercepted
     &.default .drag { cursor: move; }
     &.draw { cursor: crosshair; }

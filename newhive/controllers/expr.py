@@ -302,8 +302,10 @@ class Expr(ModelController):
         data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
         data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
         app_id = app.get('id', app['z'])
-        return "<div class='happ %s' id='app%s' style='%s'%s>%s</div>" %\
-            (type.replace('.', '_'), app_id, css_for_app(app) + more_css, data, html)
+        return "<div class='happ %s %s' id='app%s' style='%s'%s>%s</div>" % (
+            type.replace('.', '_'), app.get('css_class'), app_id,
+            css_for_app(app) + more_css, data, html
+        )
 
 # TODO-bug fix resizing after loading by sending pre-scaled expr
 # Requires client layout_apps() to use scaled expr dimensions
