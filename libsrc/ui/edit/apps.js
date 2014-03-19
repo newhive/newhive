@@ -511,6 +511,13 @@ Hive.App = function(init_state, opts) {
         return o2;
     };
 
+    o.css_class = function(){
+        return o.init_state.css_class }
+    o.css_class_set = function(s){
+        o.div.removeClass(o.css_class()).addClass(s)
+        o.init_state.css_class = s
+    }
+
     o.load = Funcs(function() {
         if( ! o.init_state.position ) o.init_state.position = [ 100, 100 ];
         if( ! o.init_state.dimensions ) o.init_state.dimensions = [ 300, 200 ];
@@ -652,16 +659,15 @@ Hive.App.Code = function(o){
     }
 
     function controls(o) {
-        o.addButtons($('#controls_script'))
-        o.div.find('.exec').click(o.app.run)
+        var sel = env.Selection
+        find_or_create_button(o, '.run').click(sel.run)
         // o.hover_menu(o.div.find('.button.opts'), o.div.find('.drawer.opts'))
         // var showinview = o.div.find('.show_in_view')
         // showinview.prop('checked', o.app.init_state.show_in_view).on(
         //     'change', function(){
         //         o.app.init_state.show_in_view = showinview.prop('checked') })
-        return o
     }
-    o.make_controls.push(controls)
+    o.make_controls.push(memoize('has_run', controls))
     Hive.App.has_shield(o)
 
     o.focus.add(function(){
@@ -669,8 +675,8 @@ Hive.App.Code = function(o){
         o.div.removeClass('drag')
     })
     o.unfocus.add(function(){
-         o.content_element.addClass('drag')
-         o.div.getInputField().blur()
+         o.div.addClass('drag')
+         o.editor.getInputField().blur()
     })
 
     keymap = {
@@ -1299,11 +1305,11 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         // TODO: UI for indicating polygon drawing is active
         // probably highlight shape menu at bottom middle
         evs.handler_set(o);
-        env.apps_e.addClass('draw').removeClass('default');
+        Hive.cursor_set('default')
     };
     o.unfocus = function(){
-        env.apps_e.removeClass('draw').addClass('default');
         evs.handler_del(o);
+        Hive.cursor_set('draw')
     };
 
     var pos = function(ev){
