@@ -794,7 +794,8 @@ Hive.App.Image = function(o) {
                 return;
             if(!o.init_state.scale_x) 
                 if (!o.allow_crop()) return false;
-            o.hide_controls()
+            // TODO: should we only hide controls if selected?
+            $("#controls").showhide(false);
             ev.stopPropagation();
             drag_hold = true;
 
@@ -806,7 +807,7 @@ Hive.App.Image = function(o) {
         };
         o.long_hold_cancel = function(ev){
             if(!drag_hold) return;
-            o.show_controls()
+            $("#controls").showhide(true);
             if (ev)
                 ev.stopPropagation();
             drag_hold = false;
@@ -818,6 +819,7 @@ Hive.App.Image = function(o) {
             if (!drag_hold) return;
             ev.stopPropagation();
             ref_offset = o.offset();
+            // This code "fixes" one of the coordinates so it won't be modifyable
             // o.fixed_coord = (ref_offset[0] == 0) ? 0 : ((ref_offset[1] == 0) ? 1 : -1);
             history_point = env.History.saver(o.offset, o.offset_set, 'move crop');
         };
