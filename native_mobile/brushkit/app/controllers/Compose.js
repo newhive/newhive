@@ -10,8 +10,12 @@ function doTransform(model) {
 
 
 $.gif_wall_table.addEventListener('postlayout', function(e) {
+	Ti.API.info('Layout COMPLETE');
+
 	try {
+		Ti.API.info('rows length! : '+ $.gif_wall_table.data[0].rows.length );
 		if($.gif_wall_table.data[0].rows.length > 1){
+			Ti.API.info('gif wallable don e did is better than one');
 			$.gif_wall_table.scrollToIndex(($.gif_wall_table.data[0].rows.length -1));
 		}
 	} catch(error) {
@@ -46,11 +50,12 @@ Ti.App.addEventListener('enableSave',function(){
 });
 
 Ti.App.addEventListener('disableShowCamera',function(){
-	Ti.API.info('DISABLE THE GODDAMN CAMERA');
 	$.take.backgroundColor = "#c3c3c3";
 	$.take.color = "#ffffff";
 	$.take.removeEventListener('click',enabledShowCameraAction);
 	$.take.addEventListener('click',disabledShowCameraAction);
+
+	Ti.App.fireEvent('disableSave');
 });
 Ti.App.addEventListener('enableShowCamera',function(){
 	$.take.backgroundColor = "#aef0e8";

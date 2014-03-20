@@ -56,6 +56,7 @@ function showHiveCamera() {
 	Titanium.Media.showCamera({
 		success:function(event)
 		{
+			compose_win.open();	
 			Titanium.Media.hideCamera();
 
 			small_image_obj = reduceImageSize(event.media);
@@ -90,9 +91,7 @@ function showHiveCamera() {
 	var compose = Alloy.createController('Compose'); 
 	var compose_win = compose.getView('compose_window');
 	//avoid camera error by disabling showCamera on compose page until image finishes resizing
-	Ti.App.fireEvent('disableShowCamera');
-
-	compose_win.open();		
+	Ti.App.fireEvent('disableShowCamera');	
 }
 
 function showHiveGallery(){
@@ -117,6 +116,8 @@ function showHiveGallery(){
 				photo_model.save();
 				photosCollection.add(photo_model);
 
+				Ti.App.fireEvent('enableShowCamera');
+
 				uploadImage(photo_model);
 			}   else {
 				alert('Sorry, only image uploads allowed at this time.');
@@ -127,6 +128,13 @@ function showHiveGallery(){
 			//the photo gallery
 		}
 	});
+
+	var compose = Alloy.createController('Compose'); 
+	var compose_win = compose.getView('compose_window');
+	//avoid camera error by disabling showCamera on compose page until image finishes resizing
+	Ti.App.fireEvent('disableShowCamera');
+
+	compose_win.open();	
 }
 
 function checkLogin() {
