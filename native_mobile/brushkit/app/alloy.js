@@ -54,14 +54,8 @@ Titanium.App.Properties.setBool('activity_indicator_is_visible', false);
 
 function showHiveCamera() {
 	Titanium.Media.showCamera({
-	
 		success:function(event)
 		{
-			var compose = Alloy.createController('Compose'); 
-			var compose_win = compose.getView('compose_window');
-
-			compose_win.open();
-
 			Titanium.Media.hideCamera();
 
 			small_image_obj = reduceImageSize(event.media);
@@ -73,12 +67,12 @@ function showHiveCamera() {
 			photo_model.save();
 			photosCollection.add(photo_model);
 
+			Ti.App.fireEvent('enableShowCamera');
+
 			uploadImage(photo_model);
 		},
 		cancel:function()
 		{
-			var compose = Alloy.createController('Compose'); 
-			compose.getView('compose_window').open();
 			Titanium.Media.hideCamera();
 		},
 		error:function(error)
@@ -92,6 +86,13 @@ function showHiveCamera() {
 		autohide:false,
 		mediaTypes:[Ti.Media.MEDIA_TYPE_PHOTO]
 	});
+
+	var compose = Alloy.createController('Compose'); 
+	var compose_win = compose.getView('compose_window');
+	//avoid camera error by disabling showCamera on compose page until image finishes resizing
+	Ti.App.fireEvent('disableShowCamera');
+
+	compose_win.open();		
 }
 
 function showHiveGallery(){
@@ -286,5 +287,14 @@ function setActivityIndicatorHide(){
 	Titanium.App.Properties.setBool('activity_indicator_is_visible', false);
 	Ti.App.fireEvent('enableSave');
 }
+
+Ti.App.addEventListener('clearPhotosDB', function(){
+	photosCollection.fetch();
+	photosCollection.reset();
+	var db=Ti.Database.open('newhive');
+	var deleteRecords=db.execute('DELETE FROM photos');
+	Ti.API.info('Affected Rows    '+db.getRowsAffected());
+	db.close();
+});
 
 
