@@ -10,12 +10,8 @@ function doTransform(model) {
 
 
 $.gif_wall_table.addEventListener('postlayout', function(e) {
-	Ti.API.info('Layout COMPLETE');
-
 	try {
-		Ti.API.info('rows length! : '+ $.gif_wall_table.data[0].rows.length );
 		if($.gif_wall_table.data[0].rows.length > 1){
-			Ti.API.info('gif wallable don e did is better than one');
 			$.gif_wall_table.scrollToIndex(($.gif_wall_table.data[0].rows.length -1));
 		}
 	} catch(error) {
@@ -23,9 +19,7 @@ $.gif_wall_table.addEventListener('postlayout', function(e) {
 	}
 });
 
-$.select.addEventListener('click',function() {
-	showHiveGallery();
-});
+$.select.addEventListener('click',enabledShowGalleryAction);
 
 $.take.addEventListener('click', enabledShowCameraAction);
 
@@ -55,6 +49,11 @@ Ti.App.addEventListener('disableShowCamera',function(){
 	$.take.removeEventListener('click',enabledShowCameraAction);
 	$.take.addEventListener('click',disabledShowCameraAction);
 
+	$.select.backgroundColor = "#c3c3c3";
+	$.select.color = "#ffffff";
+	$.select.removeEventListener('click',enabledShowGalleryAction);
+	$.select.addEventListener('click',disabledShowGalleryAction);
+
 	Ti.App.fireEvent('disableSave');
 });
 Ti.App.addEventListener('enableShowCamera',function(){
@@ -62,6 +61,11 @@ Ti.App.addEventListener('enableShowCamera',function(){
 	$.take.color = "#000000";
 	$.take.removeEventListener('click',disabledShowCameraAction);
 	$.take.addEventListener('click',enabledShowCameraAction);
+
+	$.select.backgroundColor = "#aef0e8";
+	$.select.color = "#000000";
+	$.select.removeEventListener('click',disabledShowGalleryAction);
+	$.select.addEventListener('click',enabledShowGalleryAction);
 });
 
 function disabledShowCameraAction() {
@@ -70,6 +74,13 @@ function disabledShowCameraAction() {
 
 function enabledShowCameraAction() {
 	showHiveCamera();
+}
+function disabledShowGalleryAction() {
+	return
+}
+
+function enabledShowGalleryAction() {
+	showHiveGallery();
 }
 
 function disabledSaveAction() {
