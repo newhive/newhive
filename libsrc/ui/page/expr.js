@@ -8,6 +8,7 @@ define([
 
     'sj!templates/activity.html',
     'sj!templates/social_overlay.html',
+    'sj!templates/form_overlay.html',
     'sj!templates/edit_btn.html',
     'sj!templates/expr_actions.html',
     'sj!templates/comment.html'
@@ -21,6 +22,7 @@ define([
 
     activity_template,
     social_overlay_template,
+    form_overlay_template,
     edit_btn_template,
     expr_actions_template,
     comment_template
@@ -159,6 +161,14 @@ define([
         if(page_data.expr.tags
             && page_data.expr.tags.indexOf("remix") >= 0
         ) page_data.remix = true;
+        if(page_data.expr.tags
+            && page_data.expr.tags.indexOf("gifwall") >= 0
+        ) {
+            page_data.form_tag = "gifwall";
+            $("#logo").hidehide();
+            $('#overlays').append(form_overlay_template(page_data));
+            $('.overlay.form').showshow();
+        }
 
         if (!context.user.logged_in) {
             $("#signup_create").showshow();
@@ -185,6 +195,8 @@ define([
         $('#site').showshow();
         $('.page_btn').hidehide();
         $('#content_btns .expr_actions').hide()
+        $("#logo").showshow();
+        $('.overlay.form').remove();
     };
 
     // Check to see if tags overflows its bounds.
