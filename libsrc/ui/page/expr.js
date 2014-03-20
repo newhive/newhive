@@ -114,6 +114,7 @@ define([
         // TODO: should the HTML render on page load? Or delayed?
         o.expr = page_data.expr;
         o.page_data = page_data;
+        $('body').addClass('expr')
 
         $('title').text(o.expr.title);
         $('#site').hidehide();
@@ -190,6 +191,7 @@ define([
 
     o.exit = function(){
         o.last_found = -1;
+        $('body').removeClass('expr')
         hide_exprs();
         o.hide_panel();
         $('#site').showshow();

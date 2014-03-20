@@ -1,16 +1,19 @@
-define(['browser/jquery'], function($) {
+define(['browser/jquery', 'ui/util'], function($, util) {
     var o = {};
 
     o.on_scroll = function(ev) {
 
     }
     o.place_apps = function() {
+        if(util.mobile()) return
+
         var win_width = $(window).width();
         $('.happfill').each(function(i, div) {
             var e = $(div);
             //e.width(e.parent().width()).height(e.parent().height());
             o.img_fill(e.find('img'))
         });
+
         $('.happ').each(function(i, app_div) {
             var e = $(this);
             var s = e.parent().width() / 1000;
