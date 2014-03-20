@@ -213,13 +213,7 @@ define([
             show_tags(context.route.include_tags);
         }
         if (o.show_more_tags) toggle_more_tags();
-        $("#signup_create").showshow();
-        $("#content_btns").showshow();
-        if (context.user.logged_in) {
-            $("#signup_create .create").removeClass("hide");
-        } else {
-            $("#signup_create .signup").removeClass("hide");
-        }
+        $(".overlay.panel").showshow();
 
         o.more_cards = (context.page_data.cards &&
             (context.page_data.cards.length == 20));
@@ -230,10 +224,7 @@ define([
     }
     o.exit = function(){
         $(".network_nav").showshow();
-        $("#signup_create").hidehide();
-        $("#content_btns").hidehide();
-        $("#signup_create .signup").addClass("hide");
-        $("#signup_create .create").addClass("hide");
+        $(".overlay.panel").hidehide();
     };
 
     var card_animate = function(card, dir){
