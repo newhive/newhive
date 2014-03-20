@@ -387,8 +387,8 @@ Hive.embed_code = function(element) {
             "<iframe width='100%' height='100%' class='youtube-player'" +
             "  src='" + url + "' frameborder='0' " +
             "allowfullscreen></iframe>"
-        };
-        app.init_state.media = "youtube"
+            ,media: 'youtube'
+        }
             //   '<object type="application/x-shockwave-flash" style="width:100%; height:100%" '
             // + 'data="' + url + '"><param name="movie" value="' + url + '">'
             // + '<param name="allowFullScreen" value="true">'
@@ -397,11 +397,12 @@ Hive.embed_code = function(element) {
         app = { type : 'hive.html', content :
             '<iframe src="//player.vimeo.com/video/'
             + m[2] + '?title=0&amp;byline=0&amp;portrait=0"'
-            + 'style="width:100%;height:100%;border:0"></iframe>' };
-        app.init_state.media = "vimeo"
+            + 'style="width:100%;height:100%;border:0"></iframe>'
+            ,media: 'vimeo'
+        }
     } else if(m = c.match(/^https?:\/\/(.*)mp3$/i)) {
-        app = { type : 'hive.audio', content : {url : c, player : minimal} }
-        app.init_state.media = "hive.audio"
+        app = { type : 'hive.audio', content : {url : c, player : minimal}
+            ,media: 'hive.audio' }
     } else if(m = c.match(/https?:\/\/.*soundcloud.com/i)) {
         var stuffs = $('<div>');
         stuffs.html(c);
@@ -411,8 +412,8 @@ Hive.embed_code = function(element) {
         embed.attr('width', '100%');
         embed.find('[width]').attr('width', '100%');
         embed.find('embed').attr('wmode', 'opaque');
-        app = { type : 'hive.html', content : embed[0].outerHTML };
-        app.init_state.media = "soundcloud"
+        app = { type : 'hive.html', content : embed[0].outerHTML
+            ,media: 'soundcloud' };
     }
 
     else if(c.match(/^https?:\/\//i)) {
@@ -443,11 +444,7 @@ Hive.embed_code = function(element) {
         return;
     }
 
-<<<<<<< Updated upstream
     if(!app){
-=======
-    if (!app) {
->>>>>>> Stashed changes
         var el = $(c).eq(0)
         if(el.is('script')){
             app = { type: 'hive.code', content: el.html(), code_type: 'js' }
@@ -465,8 +462,8 @@ Hive.embed_code = function(element) {
                 delete app.content
             }
         }
+    }
 
-<<<<<<< Updated upstream
     if(!app){
         var dom = $('<div>');
         dom[0].innerHTML = c;
@@ -474,16 +471,6 @@ Hive.embed_code = function(element) {
         dom.find('embed').attr('wmode', 'opaque');
         dom.find('iframe').attr('width', '100%').attr('height', '100%');
         app = { type : 'hive.html', content: dom[0].innerHTML };
-=======
-        else {
-            var dom = $('<div>');
-            dom[0].innerHTML = c;
-            dom.find('object').append($('<param name="wmode" value="opaque"/>'));
-            dom.find('embed').attr('wmode', 'opaque');
-            dom.find('iframe').attr('width', '100%').attr('height', '100%');
-            app = { type : 'hive.html', content: dom[0].innerHTML };
-        }
->>>>>>> Stashed changes
     }
 
     hive_app.new_app(app);
