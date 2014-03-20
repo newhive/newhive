@@ -5,7 +5,6 @@ define([
     ,'browser/js'
 
     ,'ui/menu'
-    ,'ui/codemirror'
     ,'ui/dialog'
     ,'ui/util'
     ,'server/context'
@@ -30,7 +29,6 @@ define([
     ,js
 
     ,Menu
-    ,CodeMirror
     ,dialog
     ,ui_util
     ,context
@@ -114,9 +112,9 @@ Hive.init_menus = function() {
 
     u.hover_menu('.insert_shape', '#menu_shape');
     $('#menu_shape .rect').click(function(e) {
-        hive_app.new_app({ type : 'hive.rectangle', content :
+        hive_app.new_app({ type : 'hive.rectangle', css_state :
             { color : colors[24], 'border-color' : 'black', 'border-width' : 0,
-                'border-style' : 'solid', 'border-radius' : 0 } });
+                'border-style' : 'solid' } });
     });
     $('#menu_shape .sketch').click(function(e) {
         hive_app.new_app({ type: 'hive.sketch', dimensions: [700, 700 / 1.6]
@@ -132,7 +130,7 @@ Hive.init_menus = function() {
         points: js.range(10).map(function(i){
             var d = ((i == 0 ? 0 : Math.PI*2*i/10) + Math.PI/10)
                 ,o = [47.705200572253005, 45.72550799853835] // dims/2
-                ,r = i%2*30+20
+                ,r = (i % 2) ? 50 : 19.0983005625
                 ,p = [Math.cos(d), Math.sin(d)]
             return u._add(o)( u._mul(p)(r) )
         })
@@ -232,7 +230,7 @@ Hive.init_global_handlers = function(){
     evs.on('body', 'mousedown');
     evs.on('body', 'mouseup');
     // evs.on('body', 'click');
-    var drag_base = env.apps_e;
+    var drag_base = $('#grid_guide, .prompts')
     evs.on(drag_base, 'dragenter');
     evs.on(drag_base, 'dragleave');
     evs.on(drag_base, 'drop');
@@ -243,21 +241,13 @@ Hive.init_global_handlers = function(){
 
     // The plus button needs to be clickable, but pass other events through
     $(".prompts .plus_btn").add($(".prompts .hint"))
-        .on("dragenter",function(ev) { 
-            drag_base.trigger(ev);
-            return false;
-        })
-        .on("dragleave",function(ev) { 
-            drag_base.trigger(ev);
-            return false;
-        })
-        .on('dragenter dragover', function(ev){
-            ev.preventDefault();
-        })
-        .on("drop",function(ev) {
+        .on("drop dragenter dragleave",function(ev) { 
             ev.preventDefault();
             drag_base.trigger(ev);
             return false;
+        })
+        .on('dragover', function(ev){
+            ev.preventDefault();
         })
         .on("mouseenter", function(ev){
             drag_base.trigger("dragenter");
@@ -269,6 +259,7 @@ Hive.init_global_handlers = function(){
     evs.handler_set(env.Selection);
     evs.handler_set(Hive);
     env.apps_e.addClass('default');
+    Hive.cursor_set('default')
 
     var busy_e = $('.save .loading');
     $(document).ajaxStart(function(){
@@ -336,13 +327,13 @@ Hive.init = function(exp, site_context){
 
     env.apps_e = $('#happs'); // container element for all interactive apps
     env.History.init();
-    hive_app.Apps.init(Hive.Exp.apps);
     // Hive.init_common();
     if(context.query.new_user)
         $("#dia_editor_help").data("dialog").open();
     // TODO-cleanup: remove Selection from registered apps, and factor out
     // shared functionality into has_coords
     env.Selection = hive_app.new_app({ type : 'hive.selection' });
+    hive_app.Apps.init(Hive.Exp.apps);
 
     $('.edit.overlay').showshow()
     Hive.init_global_handlers()
@@ -375,6 +366,9 @@ Hive.exit = function(){
 
 // Matches youtube and vimeo URLs, any URL pointing to an image, and
 // creates the appropriate App state to be passed to hive_app.new_app.
+//
+// TODO-feature-html-embed: iterate over each element, and do something
+// reasonable
 Hive.embed_code = function(element) {
     var c = $(element).val().trim(), app
     var v = "", more_args = "", start = 0;
@@ -393,23 +387,23 @@ Hive.embed_code = function(element) {
             "<iframe width='100%' height='100%' class='youtube-player'" +
             "  src='" + url + "' frameborder='0' " +
             "allowfullscreen></iframe>"
-        };
+            ,media: 'youtube'
+        }
             //   '<object type="application/x-shockwave-flash" style="width:100%; height:100%" '
             // + 'data="' + url + '"><param name="movie" value="' + url + '">'
             // + '<param name="allowFullScreen" value="true">'
             // + '<param name="wmode" value="opaque"/></object>' };
-    }
-
-    else if(m = c.match(/^https?:\/\/(www.)?vimeo.com\/(.*)$/i))
+    } else if(m = c.match(/^https?:\/\/(www.)?vimeo.com\/(.*)$/i)) {
         app = { type : 'hive.html', content :
             '<iframe src="//player.vimeo.com/video/'
             + m[2] + '?title=0&amp;byline=0&amp;portrait=0"'
-            + 'style="width:100%;height:100%;border:0"></iframe>' };
-
-    else if(m = c.match(/^https?:\/\/(.*)mp3$/i))
-        app = { type : 'hive.audio', content : {url : c, player : minimal} }
-
-    else if(m = c.match(/https?:\/\/.*soundcloud.com/i)) {
+            + 'style="width:100%;height:100%;border:0"></iframe>'
+            ,media: 'vimeo'
+        }
+    } else if(m = c.match(/^https?:\/\/(.*)mp3$/i)) {
+        app = { type : 'hive.audio', content : {url : c, player : minimal}
+            ,media: 'hive.audio' }
+    } else if(m = c.match(/https?:\/\/.*soundcloud.com/i)) {
         var stuffs = $('<div>');
         stuffs.html(c);
         var embed = stuffs.children().first();
@@ -418,7 +412,8 @@ Hive.embed_code = function(element) {
         embed.attr('width', '100%');
         embed.find('[width]').attr('width', '100%');
         embed.find('embed').attr('wmode', 'opaque');
-        app = { type : 'hive.html', content : embed[0].outerHTML };
+        app = { type : 'hive.html', content : embed[0].outerHTML
+            ,media: 'soundcloud' };
     }
 
     else if(c.match(/^https?:\/\//i)) {
@@ -449,7 +444,27 @@ Hive.embed_code = function(element) {
         return;
     }
 
-    else {
+    if(!app){
+        var el = $(c).eq(0)
+        if(el.is('script')){
+            app = { type: 'hive.code', content: el.html(), code_type: 'js' }
+            var url = el.attr('src')
+            if(url){
+                app.url = url
+                delete app.content
+            }
+        }
+        else if(el.is('style')){
+            app = { type: 'hive.code', content: el.html(), code_type: 'css' }
+            var url = el.attr('href')
+            if(url){
+                app.url = url
+                delete app.content
+            }
+        }
+    }
+
+    if(!app){
         var dom = $('<div>');
         dom[0].innerHTML = c;
         dom.find('object').append($('<param name="wmode" value="opaque"/>'));
@@ -493,6 +508,12 @@ Hive.state = function() {
     return Hive.Exp;
 }
 
+var cursor_name
+Hive.cursor_set = function(name){
+    env.apps_e.add('#grid_guide').removeClass(cursor_name).addClass(name)
+    cursor_name = name
+}
+
 // BEGIN-Events  //////////////////////////////////////////////////////
 
 Hive.global_highlight = function(showhide) {
@@ -512,6 +533,7 @@ Hive.dragenter = function(ev){
     Hive.global_highlight(true);
     dragging_count++;
     ev.preventDefault();
+    return false;
 };
 Hive.dragstart = function(){ 
     // hovers_active(false);
@@ -530,6 +552,7 @@ Hive.drop = Hive.dragleave = function(){
 
     if (0 == dragging_count)
         Hive.global_highlight(false);
+    return false;
 };
 // TODO-feature-editor-prompts: could be used in handlers for non-pointer
 // events, like in a type to add text box handler

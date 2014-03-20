@@ -1,0 +1,6 @@
+<Alloy>
+	<Window id="index_window">
+		<Label>New Hive.</Label>
+		<ImageView image="/images/logo.png"></ImageView>
+	</Window>
+</Alloy>

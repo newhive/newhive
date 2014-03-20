@@ -96,13 +96,13 @@ o.History.init = function(){
     // needed to change the state
     o.saver = function(getter, setter, name){
         var o2 = { name: name };
-        o2.old_state = getter();
+        o2.old_state = getter("history");
 
         o2.save = function(){
-            o2.new_state = getter();
+            o2.new_state = getter(o2.old_state, "history");
             o.save(
-                function(){ setter(o2.old_state) },
-                function(){ setter(o2.new_state) },
+                function(){ setter(o2.old_state, "history") },
+                function(){ setter(o2.new_state, "history") },
                 o2.name
             );
         };
@@ -116,9 +116,9 @@ o.History.init = function(){
     };
 
     //// BEGIN-Utility functions
-    var old_states, save_targets;
+    var old_states = [], save_targets = [];
     var get_states = function(){
-        return save_targets.map(function(a){ return a.state_relative(); }) 
+        return save_targets.slice(-1)[0].map(function(a){ return a.state_relative(); }) 
     };
     // apps == true: save all state
     // apps == false: save selection state
@@ -130,12 +130,15 @@ o.History.init = function(){
             else
                 apps = env.Apps.all();
         }
-        save_targets = apps.slice();
-        old_states = get_states();
+        var targets = apps.slice();
+        if (targets[0] && targets[0].is_selection)
+            targets = env.Selection.get_targets();
+        save_targets.push(targets);
+        old_states.push(get_states());
     };
     o.change_end = function(name){
-        var targets = save_targets.slice(), new_states = get_states(),
-            start_states = old_states.slice();
+        var new_states = get_states(), targets = save_targets.pop().slice(), 
+            start_states = old_states.pop().slice();
         o.save(
             function(){ $.each(targets, function(i, a){
                 a.state_relative_set(start_states[i]) }) },
@@ -143,7 +146,6 @@ o.History.init = function(){
                 a.state_relative_set(new_states[i]) }) },
             name
         );
-        save_targets = old_states = undefined;
     };
     ///////////////
 

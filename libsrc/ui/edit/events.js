@@ -68,13 +68,16 @@ define([
         });
     };
 
-	o.on = function(element, event_name, data){
+	o.on = function(element, event_name, data, drag_opts){
+        // Nasty Hack:
         // this assumes mousedown is handled elsewhere, and canceled
-        // which allows for separate mousedown and dragstart handlers 
-        if(event_name == 'dragstart')
-            $(element).drag('start', event_bubbler(event_name, data),
-                {bubble_mousedown: true})
-		$(element).on(event_name, event_bubbler(event_name, data));
+        // which allows for separate mousedown and dragstart handlers
+        // also passes awkward opts parameter to drag handlers
+        if(event_name.indexOf('drag') == 0)
+            $(element).drag(event_name, event_bubbler(event_name, data),
+                $.extend({bubble_mousedown: true}, drag_opts))
+		else
+            $(element).on(event_name, event_bubbler(event_name, data));
 		return o;
 	};
 
@@ -96,20 +99,20 @@ define([
                 fired = false;
             };
 
-            // element
-            //     .on('mousedown', function(ev){
-            //         function long_hold(){
-            //             fired = true;
-            //             bubble_hold(ev);
-            //         }
-            //         timer = setTimeout(long_hold, 500);
-            //     })
-            //     .on('mouseup', function(ev){
-            //         cancel(ev, fired);
-            //     })
-            //     .on('mousemove', function(ev){
-            //         cancel(ev, false);
-            //     });
+            element
+                .on('mousedown', function(ev){
+                    function long_hold(){
+                        fired = true;
+                        bubble_hold(ev);
+                    }
+                    timer = setTimeout(long_hold, 500);
+                })
+                .on('mouseup', function(ev){
+                    cancel(ev, fired);
+                })
+                .on('mousemove', function(ev){
+                    cancel(ev, false);
+                });
 
             return o;
         };

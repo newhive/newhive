@@ -169,7 +169,109 @@ o.array_sum = function( a, b ){
     return rv;
 }
 
-// used for app id
+var checkIfAllArgumentsAreArrays = function (functionArguments) {
+    for (var i = 0; i < functionArguments.length; i++) {
+        if (!(functionArguments[i] instanceof Array)) {
+            throw new Error('Every argument must be an array!');
+        }
+    }
+}
+
+o.distinct = function (array) {
+    if (arguments.length != 1) throw new Error('There must be exactly 1 array argument!');
+    checkIfAllArgumentsAreArrays(arguments);
+
+    var result = [];
+
+    for (var i = 0; i < array.length; i++) {
+        var item = array[i];
+
+        if ($.inArray(item, result) === -1) {
+            result.push(item);
+        }
+    }
+
+    return result;
+ }
+
+ o.union = function (/* minimum 2 arrays */) {
+    if (arguments.length == 0 ) return []
+    else if (arguments.length == 1) return arguments[0];
+    checkIfAllArgumentsAreArrays(arguments);
+
+    var result = o.distinct(arguments[0]);
+
+    for (var i = 1; i < arguments.length; i++) {
+        var arrayArgument = arguments[i];
+
+        for (var j = 0; j < arrayArgument.length; j++) {
+            var item = arrayArgument[j];
+
+            if ($.inArray(item, result) === -1) {
+                result.push(item);
+            }
+        }
+    }
+
+    return result;
+ }
+
+ o.intersect = function (/* minimum 2 arrays */) {
+     if (arguments.length < 2) throw new Error('There must be minimum 2 array arguments!');
+     checkIfAllArgumentsAreArrays(arguments);
+
+     var result = [];
+     var distinctArray = o.distinct(arguments[0]);
+     if (distinctArray.length === 0) return [];
+
+     for (var i = 0; i < distinctArray.length; i++) {
+         var item = distinctArray[i];
+
+         var shouldAddToResult = true;
+
+         for (var j = 1; j < arguments.length; j++) {
+             var array2 = arguments[j];
+             if (array2.length == 0) return [];
+
+             if ($.inArray(item, array2) === -1) {
+                 shouldAddToResult = false;
+                 break;
+             }
+         }
+
+         if (shouldAddToResult) {
+             result.push(item);
+         }
+     }
+
+     return result;
+ }
+
+ o.except = function (/* minimum 2 arrays */) {
+     if (arguments.length < 2) throw new Error('There must be minimum 2 array arguments!');
+     checkIfAllArgumentsAreArrays(arguments);
+
+     var result = [];
+     var distinctArray = o.distinct(arguments[0]);
+     var otherArraysConcatenated = [];
+
+     for (var i = 1; i < arguments.length; i++) {
+         var otherArray = arguments[i];
+         otherArraysConcatenated = otherArraysConcatenated.concat(otherArray);
+     }
+
+     for (var i = 0; i < distinctArray.length; i++) {
+         var item = distinctArray[i];
+
+         if ($.inArray(item, otherArraysConcatenated) === -1) {
+             result.push(item);
+         }
+     }
+
+     return result;
+ }
+
+ // used for app id
 o.random_str = function(){ return Math.random().toString(16).slice(2); };
 
 o.polygon = function(sides){
@@ -363,6 +465,8 @@ o.new_file = function(files, opts, app_opts, filter) {
             // app.read_only = true;
         }
         app.url = file.url;
+        app.file_name = file.name
+
         if (filter && !filter(app))
             return;
 
@@ -390,7 +494,14 @@ env.layout_apps = o.layout_apps = function(){
     var bottom = Math.max(top + min_height, $(window).height());
     var margin = (bottom - top - $(".prompts .js_vcenter").height()) / 2;
     $(".prompts").css("top", top).height(bottom - top);
-    $(".prompts .js_vcenter").css("margin-top", margin)
+    $(".prompts .js_vcenter").css("margin-top", margin);
+
+    // Set #happs to take the full scroll dimensions of the window.
+    // Need to set to 0 first to allow for shrinking dimensions.
+    // drag_base is no longer #happs
+    // var body = $("body")[0];
+    // $("#happs").height(0).height(body.scrollHeight)
+    //     .width(0).width(body.scrollWidth);
 };
 
 o.snap_helper = function(my_tuple, opts) {
@@ -608,6 +719,7 @@ o.append_color_picker = function(container, callback, init_color, opts){
     var normalize = function(c){
         return color_probe_0.css('color', '').css('color', c).css('color') }
     var to_rgb = function(c){
+        if (c.length == 3) return c;
         var c = normalize(c)
         if(!c) return
         // this handles color names like "blue"
@@ -654,7 +766,9 @@ o.append_color_picker = function(container, callback, init_color, opts){
         var amt = e.originalEvent.wheelDelta / 40
         if(!amt) return
         hsv[0] = js.bound(hsv[0] + amt/100, 0, 1)
-        calc_color()
+        var c = calc_color()
+        o.set_color(c);
+
         e.preventDefault()
     })
 
@@ -677,6 +791,7 @@ o.append_color_picker = function(container, callback, init_color, opts){
         var hex = to_hex(color);
         manual_input.val(hex);
         callback(hex, color);
+        return color;
     }
 
     function hsvToRgb(h, s, v){

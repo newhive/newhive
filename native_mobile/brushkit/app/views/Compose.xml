@@ -1,0 +1,14 @@
+<Alloy>
+	<Collection src="Photos" />
+	<Window id="compose_window">
+		<TableView id='gif_wall_table' dataCollection="Photos">
+			<Require src="GIFWallRow"/>
+		</TableView>
+		
+		<View id="buttons_view">
+			<Button id="select">Select</Button>
+			<Button id="take">Take</Button>
+			<Button id="save">Save</Button>
+		</View>
+	</Window>
+</Alloy>
