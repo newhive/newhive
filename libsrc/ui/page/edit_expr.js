@@ -1,21 +1,36 @@
 define([
-    'browser/jquery',
-    'browser/js',
-    'server/context',
-    'ui/page/expr',
-    'ui/dialog',
-    'ui/menu',
-    'sj!templates/edit_container.html'
+    'browser/jquery'
+    ,'browser/js'
+    ,'server/context'
+    ,'ui/page/expr'
+    ,'ui/dialog'
+    ,'ui/menu'
+
+    ,'sj!templates/edit_container.html'
 ], function(
-    $,
-    js,
-    context,
-    expr_page,
-    dialog,
-    menu,
-    edit_container_template
+    $
+    ,js
+    ,context
+    ,expr_page
+    ,dialog
+    ,menu
+
+    ,edit_container_template
 ){
-    var o = {}, save_dialog, expr;
+    var o = {}, save_dialog, expr, ui_page, default_expr = {
+        auth: 'public'
+        ,container: {
+            facebook_btn: true
+            ,twitter_btn: true
+            ,love_btn: true
+            ,republish_btn: true
+            ,comment_btn: true
+        }
+    }
+
+    o.set_page = function(page){
+        ui_page = page;
+    }
 
     o.init = function(controller){
         // o.controller = controller;
@@ -25,11 +40,9 @@ define([
 
     o.enter = function(){
         $("body").addClass("edit");
-        window.addEventListener('message', o.sandbox_receive, false);
-    };
+   };
     
     o.exit = function(){
-        // TODO: don't let user navigate away from page w/o saving
         // TODO: implement autosave
         $('link.edit').remove();
         $('#site').empty();
@@ -92,8 +105,9 @@ define([
         if(expr.auth) $('#menu_privacy [val=' + expr.auth +']').click()
         $('#use_custom_domain').prop('checked', expr.url ? 1 : 0).
             trigger('change')
-        for(var btn in (expr.container || {}))
-            $('[name=' + btn + ']').prop('checked', expr.container[btn])
+        var container = expr.container || $.extend({}, default_expr.container)
+        for(var btn in container)
+            $('[name=' + btn + ']').prop('checked', container[btn])
     }
 
     o.render = function(page_data){
@@ -101,7 +115,7 @@ define([
         $('#site').empty().append(edit_container_template(page_data)).showshow();
         $('#editor').focus()
 
-        expr = context.page_data.expr || { auth: 'public' }
+        expr = context.page_data.expr || $.extend({}, default_expr)
         if(context.query.tags){
             var tags = (expr.tags || "") + " " + unescape(context.query.tags)
                 ,list = o.tag_list(tags)
@@ -115,9 +129,16 @@ define([
             , function(){ return o.exit_safe } )
         o.exit_safe = true
         // o.save_safe = true
+        if(expr.tags
+            && expr.tags.toLowerCase().indexOf("gifwall") >= 0
+        ) {
+            ui_page.make_form_page("#gifwall");
+        }
+        
     };
 
     o.attach_handlers = function(){
+        window.addEventListener('message', o.sandbox_receive, false);
         save_dialog = dialog.create('#dia_save', {close: function(){
             o.sandbox_send({focus:1}) }})
         $('#editor').on('mouseover', function(){
@@ -240,6 +261,13 @@ define([
             var url = $('#custom_url').val()
                 .replace(/^.{0,6}\/\//, '').toLowerCase()
             $('#custom_url').val(url)
+        })
+
+        $('.buttons_toggle').click(function(){
+            var check = $.makeArray($('.button_options input')).filter(
+                function(el){ return !$(el).prop('checked') }).length > 0
+            $('.button_options input').each(function(i, el){
+                $(el).prop('checked', check) })
         })
     }
 

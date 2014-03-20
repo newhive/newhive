@@ -230,7 +230,7 @@ Hive.init_global_handlers = function(){
     evs.on('body', 'mousedown');
     evs.on('body', 'mouseup');
     // evs.on('body', 'click');
-    var drag_base = env.apps_e;
+    var drag_base = $('#grid_guide, .prompts')
     evs.on(drag_base, 'dragenter');
     evs.on(drag_base, 'dragleave');
     evs.on(drag_base, 'drop');
@@ -259,6 +259,7 @@ Hive.init_global_handlers = function(){
     evs.handler_set(env.Selection);
     evs.handler_set(Hive);
     env.apps_e.addClass('default');
+    Hive.cursor_set('default')
 
     var busy_e = $('.save .loading');
     $(document).ajaxStart(function(){
@@ -326,13 +327,13 @@ Hive.init = function(exp, site_context){
 
     env.apps_e = $('#happs'); // container element for all interactive apps
     env.History.init();
-    hive_app.Apps.init(Hive.Exp.apps);
     // Hive.init_common();
     if(context.query.new_user)
         $("#dia_editor_help").data("dialog").open();
     // TODO-cleanup: remove Selection from registered apps, and factor out
     // shared functionality into has_coords
     env.Selection = hive_app.new_app({ type : 'hive.selection' });
+    hive_app.Apps.init(Hive.Exp.apps);
 
     $('.edit.overlay').showshow()
     Hive.init_global_handlers()
@@ -386,23 +387,23 @@ Hive.embed_code = function(element) {
             "<iframe width='100%' height='100%' class='youtube-player'" +
             "  src='" + url + "' frameborder='0' " +
             "allowfullscreen></iframe>"
-        };
+            ,media: 'youtube'
+        }
             //   '<object type="application/x-shockwave-flash" style="width:100%; height:100%" '
             // + 'data="' + url + '"><param name="movie" value="' + url + '">'
             // + '<param name="allowFullScreen" value="true">'
             // + '<param name="wmode" value="opaque"/></object>' };
-    }
-
-    else if(m = c.match(/^https?:\/\/(www.)?vimeo.com\/(.*)$/i))
+    } else if(m = c.match(/^https?:\/\/(www.)?vimeo.com\/(.*)$/i)) {
         app = { type : 'hive.html', content :
             '<iframe src="//player.vimeo.com/video/'
             + m[2] + '?title=0&amp;byline=0&amp;portrait=0"'
-            + 'style="width:100%;height:100%;border:0"></iframe>' };
-
-    else if(m = c.match(/^https?:\/\/(.*)mp3$/i))
-        app = { type : 'hive.audio', content : {url : c, player : minimal} }
-
-    else if(m = c.match(/https?:\/\/.*soundcloud.com/i)) {
+            + 'style="width:100%;height:100%;border:0"></iframe>'
+            ,media: 'vimeo'
+        }
+    } else if(m = c.match(/^https?:\/\/(.*)mp3$/i)) {
+        app = { type : 'hive.audio', content : {url : c, player : minimal}
+            ,media: 'hive.audio' }
+    } else if(m = c.match(/https?:\/\/.*soundcloud.com/i)) {
         var stuffs = $('<div>');
         stuffs.html(c);
         var embed = stuffs.children().first();
@@ -411,7 +412,8 @@ Hive.embed_code = function(element) {
         embed.attr('width', '100%');
         embed.find('[width]').attr('width', '100%');
         embed.find('embed').attr('wmode', 'opaque');
-        app = { type : 'hive.html', content : embed[0].outerHTML };
+        app = { type : 'hive.html', content : embed[0].outerHTML
+            ,media: 'soundcloud' };
     }
 
     else if(c.match(/^https?:\/\//i)) {
@@ -442,25 +444,27 @@ Hive.embed_code = function(element) {
         return;
     }
 
-    var el = $(c).eq(0)
-    if(el.is('script')){
-        app = { type: 'hive.code', content: el.html(), code_type: 'js' }
-        var url = el.attr('src')
-        if(url){
-            app.url = url
-            delete app.content
+    if(!app){
+        var el = $(c).eq(0)
+        if(el.is('script')){
+            app = { type: 'hive.code', content: el.html(), code_type: 'js' }
+            var url = el.attr('src')
+            if(url){
+                app.url = url
+                delete app.content
+            }
         }
-    }
-    else if(el.is('style')){
-        app = { type: 'hive.code', content: el.html(), code_type: 'css' }
-        var url = el.attr('href')
-        if(url){
-            app.url = url
-            delete app.content
+        else if(el.is('style')){
+            app = { type: 'hive.code', content: el.html(), code_type: 'css' }
+            var url = el.attr('href')
+            if(url){
+                app.url = url
+                delete app.content
+            }
         }
     }
 
-    else {
+    if(!app){
         var dom = $('<div>');
         dom[0].innerHTML = c;
         dom.find('object').append($('<param name="wmode" value="opaque"/>'));
@@ -502,6 +506,12 @@ Hive.state = function() {
     Hive.Exp.dimensions = [1000, Math.ceil(h)];
 
     return Hive.Exp;
+}
+
+var cursor_name
+Hive.cursor_set = function(name){
+    env.apps_e.add('#grid_guide').removeClass(cursor_name).addClass(name)
+    cursor_name = name
 }
 
 // BEGIN-Events  //////////////////////////////////////////////////////

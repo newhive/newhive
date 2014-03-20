@@ -22,6 +22,7 @@ var Text = o = {};
 o.Text = function(o) {
     hive_app.App.has_resize(o);
     hive_app.App.has_resize_h(o);
+    hive_app.App.has_opacity(o);
     hive_app.App.has_shield(o, {auto: false});
     // for now, having internal and external alignment is too weird.
     o.has_align = false;  
@@ -126,12 +127,13 @@ o.Text = function(o) {
             _dims_relative_set(dims);
             return;
         }
-        var new_scale;
-        if (dims_ref)
-            new_scale = scale_ref * o.dims()[0] / dims_ref[0];
-        else
-            new_scale = o.scale() * o.dims_relative()[0] / old_dims[0];
+
+        if (!dims_ref) return
+        var new_scale = scale_ref * o.dims()[0] / dims_ref[0];
         o.scale_set(new_scale);
+
+        // should not scale for resize_h
+        // new_scale = o.scale() * o.dims_relative()[0] / old_dims[0];
     }
     
     var _load = o.load;
@@ -154,9 +156,10 @@ o.Text = function(o) {
     };
 
     function controls(o) {
-        var common = $.extend({}, o), d = o.div;
+        var d = o.div;
         // These controls can only ever apply to a single app.
-        var app = o.app.elements()[0];
+        if (!o.single()) return
+        var app = o.app.sel_app();
 
         o.addControls($('#controls_text'));
 
@@ -214,17 +217,9 @@ o.Text = function(o) {
             });
         });
 
-        o.select_box.click(function(e){
-            e.stopPropagation();
-            app.edit_mode(false);
-        });
-
         return o;
     }
-    o.single_controls.push(function(o) {
-        o.make_controls.push(controls);
-    })
-    // o.make_controls.push(controls);
+    o.make_controls.push(controls);
 
     o.div.addClass('text');
     if(!o.init_state.dimensions) o.dims_set([ 300, 20 ]);

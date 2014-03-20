@@ -240,10 +240,6 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
     .name { display: none; }
 }
 
-#dia_password_recovery {
-    padding: 0px 35px 22px 35px;
-}
-
 // Thumbnail Dialog
 #dia_thumbnail .thumb {
     @include border-radius(7px);
@@ -263,14 +259,10 @@ form.login {
     input[type=text], input[type=password] {
         width: 100%;
         margin: 4px 0px;
-        &[name=secret] { margin-bottom: 10px; }
     }
     .password_recovery {
-        color: black;
-        margin-right: 15px;
-        float: left;
-        line-height: 40px;
-        height: 40px;
+        color: grey;
+        font-size: 13px
     }
     input[type=submit] { float: right; }
 }
@@ -474,7 +466,7 @@ form.login {
             float: left;
         }
         .tag_list {
-            width: 440px;
+            width: 100%;
         }
     }
 }

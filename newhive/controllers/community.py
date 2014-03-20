@@ -311,7 +311,11 @@ class Community(Controller):
             resp['expr']['title'] = '[password required]'
             resp['error'] = 'password'
         else:
-            meta['img_url'] = expr.snapshot_name('big')
+            snap_url = expr.snapshot_name('big')
+            if snap_url and not snap_url.startswith("http"):
+                meta['img_url'] = "http:" + snap_url  
+            else: 
+                meta['img_url'] = snap_url  
             expr_owner = expr.get_owner()
             if expr_owner and expr_owner['analytics'].get('views_by'):
                 expr_owner.increment({'analytics.views_by': 1})
@@ -407,10 +411,10 @@ class Community(Controller):
         if not page_data:
             print request
             return self.serve_404(tdata, request, response, json=json)
-        page_data.setdefault('title', 'NewHive')
-
         if(type(page_data) is Response):
             return page_data
+            
+        page_data.setdefault('title', 'NewHive')
 
         if type(page_data.get('cards')) is list:
             owner = self.db.User.named(kwargs.get('owner_name',''))

@@ -1558,7 +1558,7 @@ class Expr(HasSocial):
         ids = []
         if old: ids += self.get('file_id', [])
         if thumb: ids += ( [ d['thumb_file_id'] ] if d.get('thumb_file_id') else [] )
-        if background: self._match_id(d.get('background', {}).get('url'))
+        if background: self._match_id((d.get('background') or {}).get('url'))
         if apps:
             for a in d.get('apps', []):
                 ids.extend( self._match_id( a.get('content') ) )

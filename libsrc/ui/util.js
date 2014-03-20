@@ -30,7 +30,7 @@ define([
         else
             return 0;
     }
-    o.default = function (x, def) {
+    o.defalt = function (x, def) {
         if (x === 0 || x === false || x)
             return x;
         return def;

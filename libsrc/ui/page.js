@@ -11,6 +11,8 @@ define([
     'server/context',
     'browser/layout',
     'ui/page/pages',
+
+    'sj!templates/form_overlay.html',
     'sj!templates/password_reset.html',
     'sj!templates/collections.html',
     'sj!templates/overlay.html',
@@ -46,6 +48,8 @@ define([
     context,
     browser_layout,
     pages,
+
+    form_overlay_template,
     password_template,
     collections_template,
     overlay_template,
@@ -227,6 +231,15 @@ define([
             if (context.page && context.page.exit) 
                 context.page.exit();
         }
+        // TODO-cleanup: unify handling of #Forms
+        {
+            // Clean up old #Form junk
+            $("#logo").showshow();
+            $('.overlay.form').remove();
+            var $create = $("#overlays .create")
+            if ($create.data("href"))
+                $create.attr("href", $create.data("href"))
+        }
         o.preprocess_context();
         if (new_page && new_page.preprocess_page_data) 
             pages[method].preprocess_page_data(page_data);
@@ -246,22 +259,6 @@ define([
         else
             render_site(page_data);
 
-        // fix up rounded borders on content_btns overlay
-        var btns = $('#content_btns').find('.btn');
-        btns.removeClass('left right');
-        for(var i = 0, e; (e = btns.eq(i++)).length;){
-            if(!e.hasClass('hide')) {
-                $(e).addClass('left');
-                break;
-            }
-        }
-        for(var i = btns.length - 1, e; (e = btns.eq(i--)).length;){
-            if(!e.hasClass('hide')) {
-                $(e).addClass('right');
-                break;
-            }
-        }
-
         // TODO: move to ./page/community
         if (page_data.page == "tag_search") {
             o.render_tag_page();
@@ -269,6 +266,22 @@ define([
 
         if (new_page && new_page.enter) new_page.enter();
         o.resize();
+
+        // fix up rounded borders on content_btns overlay
+        var btns = $('#content_btns').find('.btn');
+        btns.removeClass('left right');
+        for(var i = 0, e; (e = btns.eq(i++)).length;){
+            if(e.is(':visible')) {
+                $(e).addClass('left');
+                break;
+            }
+        }
+        for(var i = btns.length - 1, e; (e = btns.eq(i--)).length;){
+            if(e.is(':visible')) {
+                $(e).addClass('right');
+                break;
+            }
+        }
 
         o.attach_handlers();
     };
@@ -431,6 +444,19 @@ define([
         $("#site>.tag_list_container").replaceWith(
             tags_main_template(context.page_data));
     }
+    o.make_special_create = function(tag_name) {
+        var $create = $("#overlays .create")
+        if (!$create.data("href"))
+            $create.data("href", $create.attr("href"))
+        $create.attr("href", $create.data("href") + "?tags=" + tag_name)
+    }
+    o.make_form_page = function(tag_name) {
+        var page_data = context.page_data;
+        page_data.form_tag = tag_name;
+        $("#logo").hidehide();
+        $('#overlays').append(form_overlay_template(page_data));
+        o.make_special_create(page_data.form_tag);
+    }
     o.render_tag_page = function(){
         $('#tag_bar').remove();
         $('#feed').prepend(tags_page_template(context.page_data));
@@ -441,6 +467,8 @@ define([
         // var top_context = { "tagnum": 0, "item": tag_name };
         // $('#header span').text(header_prefix).append(tag_card_template(top_context));
         $('#follow_tag_form').on('success', o.tag_response);
+        if (["gifwall"].indexOf(tag_name.toLowerCase()) >= 0)
+            o.make_special_create(tag_name);
     }
 
     o.tag_response = function (e, json){

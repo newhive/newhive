@@ -2,7 +2,6 @@
 
 #create_account {
 	margin: 30px auto;
-	width: 700px;
 
 	#logo {
 		margin: auto;
@@ -10,8 +9,7 @@
 		display: block;
 	}
 	.heading {
-		margin: 28px 0px;
-		margin-bottom: 38px;
+		margin-top: 28px;
 	}
 	.subheading {
 		margin-bottom: 7px;
@@ -19,11 +17,12 @@
 	span#username_label {
 		color: red;
 	}
-	#left_pane {
+
+	.pane {
 		display: inline-block;
+		text-align: left;
 		width: 300px;
-		margin-right: 60px;
-		margin-left: 45px;
+		margin: 35px 50px 0 50px;
 
 		input[type="text"],input[type=password] {
 			width: 100%;
@@ -31,8 +30,7 @@
 		}
 	}
 
-	#right_pane {
-		display: inline-block;
+	.pane.terms {
 		vertical-align: top;
 		&> * { vertical-align: bottom; }
 		ol {
