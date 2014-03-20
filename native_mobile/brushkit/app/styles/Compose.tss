@@ -1,10 +1,12 @@
 "#compose_window": {
-	layout:"composite"
+	layout:"composite",
+	top:"40dp"
 }
 
 "#gif_wall_table": {
-	top:"8%",
-	height:"67%",
+	top:"0dp",
+	height:"75%",
+	separatorColor:"transparent",
 	zIndex:1
 }
 
