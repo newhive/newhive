@@ -230,7 +230,7 @@ Hive.init_global_handlers = function(){
     evs.on('body', 'mousedown');
     evs.on('body', 'mouseup');
     // evs.on('body', 'click');
-    var drag_base = $('#grid_guide')
+    var drag_base = $('#grid_guide, .prompts')
     evs.on(drag_base, 'dragenter');
     evs.on(drag_base, 'dragleave');
     evs.on(drag_base, 'drop');
