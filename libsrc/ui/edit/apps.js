@@ -1840,7 +1840,7 @@ Hive.App.has_image_drop = function(o) {
     });
     o.div.on("dblclick",function(ev) { 
         env.click_app = o;
-        $("#media_input").click() 
+        $("#media_input").click()
     });
 
     var on_files = function(files, file_list){

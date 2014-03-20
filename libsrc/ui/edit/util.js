@@ -465,6 +465,8 @@ o.new_file = function(files, opts, app_opts, filter) {
             // app.read_only = true;
         }
         app.url = file.url;
+        app.file_name = file.name
+
         if (filter && !filter(app))
             return;
 
