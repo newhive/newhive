@@ -2,7 +2,7 @@
 	<Window id="login_window" title="Login" class="login" layout="composite">
 		<View id="textfields_view" class="content_tile">
 			<TextField id="textfieldUsername" class='textfield-username' hintText='username'/>
-			<TextField id="textfieldPwd" class='textfield-pwd' hintText='password'/>
+			<TextField id="textfieldPwd" class='textfield-pwd' hintText='password'  />
 			<Label id="error_message">Unrecongized username or password.</Label>
 			<Button id="retrieve_password">Retrieve password</Button>
 		</View>
