@@ -443,25 +443,27 @@ Hive.embed_code = function(element) {
         return;
     }
 
-    var el = $(c).eq(0)
-    if(el.is('script')){
-        app = { type: 'hive.code', content: el.html(), code_type: 'js' }
-        var url = el.attr('src')
-        if(url){
-            app.url = url
-            delete app.content
+    if(!app){
+        var el = $(c).eq(0)
+        if(el.is('script')){
+            app = { type: 'hive.code', content: el.html(), code_type: 'js' }
+            var url = el.attr('src')
+            if(url){
+                app.url = url
+                delete app.content
+            }
         }
-    }
-    else if(el.is('style')){
-        app = { type: 'hive.code', content: el.html(), code_type: 'css' }
-        var url = el.attr('href')
-        if(url){
-            app.url = url
-            delete app.content
+        else if(el.is('style')){
+            app = { type: 'hive.code', content: el.html(), code_type: 'css' }
+            var url = el.attr('href')
+            if(url){
+                app.url = url
+                delete app.content
+            }
         }
     }
 
-    else {
+    if(!app){
         var dom = $('<div>');
         dom[0].innerHTML = c;
         dom.find('object').append($('<param name="wmode" value="opaque"/>'));
