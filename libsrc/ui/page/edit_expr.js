@@ -1,21 +1,23 @@
 define([
-    'browser/jquery',
-    'browser/js',
-    'server/context',
-    'ui/page/expr',
-    'ui/dialog',
-    'ui/menu',
-    'sj!templates/edit_container.html'
+    'browser/jquery'
+    ,'browser/js'
+    ,'server/context'
+    ,'ui/page/expr'
+    ,'ui/dialog'
+    ,'ui/menu'
+
+    ,'sj!templates/edit_container.html'
 ], function(
-    $,
-    js,
-    context,
-    expr_page,
-    dialog,
-    menu,
-    edit_container_template
+    $
+    ,js
+    ,context
+    ,expr_page
+    ,dialog
+    ,menu
+
+    ,edit_container_template
 ){
-    var o = {}, save_dialog, expr, default_expr = {
+    var o = {}, save_dialog, expr, ui_page, default_expr = {
         auth: 'public'
         ,container: {
             facebook_btn: true
@@ -26,6 +28,10 @@ define([
         }
     }
 
+    o.set_page = function(page){
+        ui_page = page;
+    }
+
     o.init = function(controller){
         // o.controller = controller;
         // o.render_overlays();
@@ -34,11 +40,9 @@ define([
 
     o.enter = function(){
         $("body").addClass("edit");
-        window.addEventListener('message', o.sandbox_receive, false);
-    };
+   };
     
     o.exit = function(){
-        // TODO: don't let user navigate away from page w/o saving
         // TODO: implement autosave
         $('link.edit').remove();
         $('#site').empty();
@@ -125,9 +129,16 @@ define([
             , function(){ return o.exit_safe } )
         o.exit_safe = true
         // o.save_safe = true
+        if(expr.tags
+            && expr.tags.toLowerCase().indexOf("gifwall") >= 0
+        ) {
+            ui_page.make_form_page("#gifwall");
+        }
+        
     };
 
     o.attach_handlers = function(){
+        window.addEventListener('message', o.sandbox_receive, false);
         save_dialog = dialog.create('#dia_save', {close: function(){
             o.sandbox_send({focus:1}) }})
         $('#editor').on('mouseover', function(){
