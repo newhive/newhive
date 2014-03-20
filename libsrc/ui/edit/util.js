@@ -498,9 +498,10 @@ env.layout_apps = o.layout_apps = function(){
 
     // Set #happs to take the full scroll dimensions of the window.
     // Need to set to 0 first to allow for shrinking dimensions.
-    var body = $("body")[0];
-    $("#happs").height(0).height(body.scrollHeight)
-        .width(0).width(body.scrollWidth);
+    // drag_base is no longer #happs
+    // var body = $("body")[0];
+    // $("#happs").height(0).height(body.scrollHeight)
+    //     .width(0).width(body.scrollWidth);
 };
 
 o.snap_helper = function(my_tuple, opts) {
