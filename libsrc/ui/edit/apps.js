@@ -592,14 +592,18 @@ Hive.App.Html = function(o) {
         o.shield();
     }
 
-    // function controls(o) {
-    //     o.addButtons($('#controls_html'));
-    //     // TODO: create interface for editing HTML
-    //     // d.find('.render').click(o.app.toggle_render);
-    //     return o;
-    // }
-    // o.make_controls.push(controls);
     Hive.App.has_opacity(o)
+    // TODO: migrate this and use init_state.media
+    m = content.match(/(youtube)|(vimeo)/);
+    if (m) {
+        o.make_controls.push(memoize("full_screen_control", function(o) {
+            var app = o.single()
+            if(!app) return
+            o.addButton($('#controls_image .set_bg'));
+            o.div.find('.button.set_bg').click(function() {
+                Hive.bg_change(app.state()) });
+        }))
+    }
 
     setTimeout(function(){ o.load(); }, 100);
 
@@ -2445,9 +2449,15 @@ Hive.bg_set = function(bg, load) {
     Hive.bg_color_set(bg.color);
 
     var img = Hive.bg_div.find('img'),
-        imgs = img.add('#bg_preview_img'),
+        raw = $(bg.content),
+        imgs = img.add('#bg_preview_img').add(raw),
         url = bg.content || bg.url;
     if(url) bg.url = url;
+    if(raw.length) {
+        imgs.hidehide();
+        raw.appendTo(Hive.bg_div).showshow();
+        return;
+    }
 
     if(bg.url) imgs.showshow();
     else { imgs.hidehide(); return }
