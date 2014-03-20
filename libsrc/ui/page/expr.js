@@ -54,24 +54,23 @@ define([
         // context.is_secure not set until after module instantiation
         o.content_url_base = (context.is_secure ?
                 context.config.secure_content_url : context.config.content_url);
-        $("#page_prev").click(o.page_prev);
-        $("#page_next").click(o.page_next);
+        $(".page_btn.page_prev").click(o.page_prev);
+        $(".page_btn.page_next").click(o.page_next);
         $("#social_plus").click(o.social_toggle);
         window.addEventListener('message', o.handle_message, false);
     };
 
     o.hide_panel = function(){
-        $("#signup_create").hidehide();
-        $("#content_btns").hidehide();
-        $("#signup_create .signup").addClass("hide");
-        $("#signup_create .create").addClass("hide");
+        $(".overlay.panel").hidehide();
         $(".panel .social_btn").addClass("hide");
         $(".panel .edit_ui").hidehide();
     }
 
     o.resize = function(){
-        browser_layout.center($('#page_prev'), undefined, {'h': false});
-        browser_layout.center($('#page_next'), undefined, {'h': false});
+        if (!util.mobile()) {
+            browser_layout.center($('.page_btn.page_prev'), undefined, {'h': false});
+            browser_layout.center($('.page_btn.page_next'), undefined, {'h': false});
+        }
 
         var wide = ($(window).width() >= 1180) ? true : false;
         var columns = ($(window).width() >= 980) ? 2 : 1;
@@ -118,7 +117,7 @@ define([
         $('#site').hidehide();
         $("#popup_content").remove();
         $("#dia_comments").remove();
-        $('#content_btns .expr_actions').replaceWith(
+        $('.overlay.panel .expr_actions').replaceWith(
             expr_actions_template(page_data))
         $('#social_overlay').append(
             social_overlay_template(page_data));
@@ -153,7 +152,7 @@ define([
         animate_expr();
 
         o.hide_panel();
-        $("#content_btns").showshow();
+        $(".overlay.panel").showshow();
         $(".social_btn").removeClass("hide");
 
         var show_edit = false
@@ -166,20 +165,12 @@ define([
             ui_page.make_form_page("gifwall");
         }
 
-        if (!context.user.logged_in) {
-            $("#signup_create").showshow();
-            $("#signup_create .signup").removeClass("hide");
-        } else {
-            $("#signup_create").showshow();
-            $("#signup_create .create").removeClass("hide");
-
-            if(context.user.id == o.expr.owner.id){
-                page_data.remix = false
-                show_edit = true
-            }
+        if (context.user.logged_in && context.user.id == o.expr.owner.id) {
+            page_data.remix = false
+            show_edit = true
         }
         if(show_edit || page_data.remix)
-            $('#content_btns .edit_ui').replaceWith(
+            $('.overlay.panel .edit_ui').replaceWith(
                 edit_btn_template(page_data) )
     }
 
@@ -190,7 +181,7 @@ define([
         o.hide_panel();
         $('#site').showshow();
         $('.page_btn').hidehide();
-        $('#content_btns .expr_actions').hidehide()
+        $('.overlay.panel .expr_actions').hidehide()
     };
 
     // Check to see if tags overflows its bounds.
@@ -455,7 +446,7 @@ define([
 
         // postMessage only works after the page loads.
         // So page buttons are always visible during expr loading,
-        // and once expr loads, they behave normally #page_btn_load_hack
+        // and once expr loads, they behave normally .page_btn.page_btn_load_hack
         if(!contentFrame.data('loaded')){
             // bugbug: sometimes this is never followed by a contentFrame.load
             // console.log('showing');
@@ -859,17 +850,17 @@ define([
         }
 
         if(msg == 'show_prev') {
-            $('#page_prev').showshow();
-            $('#page_next').hidehide();
+            $('.page_btn.page_prev').showshow();
+            $('.page_btn.page_next').hidehide();
         } else if(msg == 'show_next') {
-            $('#page_next').showshow();
-            $('#page_prev').hidehide();
+            $('.page_btn.page_next').showshow();
+            $('.page_btn.page_prev').hidehide();
         } else if(msg == 'hide') {
             $('.page_btn').hidehide();
         }
 
         // should reflect whether left or right page_btn should be visible if
-        // page is not loading. See #page_btn_load_hack
+        // page is not loading. See .page_btn.page_btn_load_hack
         page_btn_state = msg;
     };
 
