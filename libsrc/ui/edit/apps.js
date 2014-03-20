@@ -532,6 +532,7 @@ Hive.App = function(init_state, opts) {
     // initialize
 
     o.div = $('<div class="ehapp drag">').appendTo(env.apps_e);
+    o.css_class_set(o.css_class())
  
     o.has_align = o.add_to_collection = true;
     o.type(o); // add type-specific properties
@@ -1865,12 +1866,9 @@ Hive.App.has_image_drop = function(o) {
         var file = files[0];
         // TODO-dnd: have fit depend on where the object was dropped relative
         // to image center
-        var app_state = $.extend({}, o.state());
+        var app_state = o.state()
         delete app_state.id;
-        var init_state = $.extend({}, o.init_state, app_state, {
-            position: o.pos_relative(), 
-            dimensions: o.dims_relative(),
-            fit: 2 });
+        var init_state = $.extend(app_state, {fit: 2 })
         env.History.begin();
         app = u.new_file(files, init_state,
             { load:load, position: true })[0];
