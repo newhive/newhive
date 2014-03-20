@@ -249,11 +249,10 @@ define([
                 };
             }
             else {
-                o.controller.get('expressions_public', {
-                    owner_name: page_data.expr.owner.name }, set_cards)
-                context.page_data.cards_route = {
-                    route_args: { route_name: 'expressions_public' }
-                };
+                var route_args = { route_name: 'expressions_public'
+                    ,owner_name: page_data.expr.owner.name }
+                o.controller.get(route_args.route_name, route_args, set_cards)
+                context.page_data.cards_route = { route_args: route_args }
             }
         }
     };
