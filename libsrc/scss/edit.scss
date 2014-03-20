@@ -9,6 +9,8 @@ body.edit {
 &.default {
     #edit_nav .change_zoom {display:none}
     .ehapp .highlight {
+        position: absolute;
+        top: 0px; left: 0px; right: 0px; bottom:0px;
         background-color: $color_selected;
         opacity: .6;
     }
