@@ -1,0 +1,15 @@
+"Window":{
+	layout:"vertical"
+}
+"Label": {
+	top:"20dp",
+	font:{
+		fontSize: "20dp"
+	},
+	color: "#fa562d"
+}
+"ImageView": {
+	top:"40dp"
+}
+
+
