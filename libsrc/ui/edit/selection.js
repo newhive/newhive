@@ -393,7 +393,7 @@ o.Selection = function(o) {
     o.before_resize = function() {
         set_full_apps();
         o.each(function(i, a) { 
-            if (a.before_resize) a.before_resize(); });
+            if (a.resize_start) a.resize_start(); });
 
         drag_target = o;
         ref_dims = o.dims_relative();
@@ -405,7 +405,7 @@ o.Selection = function(o) {
     }
     o.after_resize = function() {
         o.each(function(i, a) { 
-            if (a.after_resize) a.after_resize(); });
+            if (a.resize_end) a.resize_end(); });
 
         o.update_relative_coords();
         env.History.change_end('resize');
@@ -415,9 +415,11 @@ o.Selection = function(o) {
         return true;
     }
     var _dims_relative_set = o.dims_relative_set;
-    // Multiselect doesn't handle non-aspect-preserving resize. Delegate it.
+    // Multiselect doesn't handle non-aspect-preserving resize.
+    // Delegate it for single selection
     var delegate_dims_set = function() {
-        return (ref_dims && elements.length == 1 && !elements[0].get_aspect()) }
+        return (ref_dims && elements.length == 1) // && !elements[0].get_aspect())
+    }
     o.dims_relative_set = function(new_dims) {
         if (delegate_dims_set())
             return;
@@ -497,14 +499,9 @@ o.Selection = function(o) {
         o.make_controls = o.base_controls.slice();
         var sel_controls = u.union.apply(null, 
             elements.map(function(app) {
-                return app.sel_controls || []; })
+                return app.make_controls || []; })
         )
-        if (elements.length == 1)
-            sel_controls = u.union(sel_controls, apps[0].single_controls);
-        sel_controls.map(function(f) {
-            if (typeof(f) == "function")
-                f(o);
-        })
+        o.make_controls = u.union(o.make_controls, sel_controls);
         if(!o.dragging && multi) {
             Controls(o, false);
             o.controls.layout();
@@ -700,9 +697,10 @@ o.Selection = function(o) {
         }
     }
     var delegates = ["color", "color_set", "opacity", "opacity_set"
-        ,"border_radius", "border_radius_set", "link"
+        ,"border_radius", "border_radius_set", "link", "link_set"
         ,"stroke_width", "stroke_width_set", "stroke_update", "reframe"
-        ,"blur", "blur_set", "stroke", "stroke_set"];
+        ,"blur", "blur_set", "stroke", "stroke_set", 'run'
+        ,'css_class', 'css_class_set'];
     delegates.map(function(fn_name) {
         o[fn_name] = delegate_fn(fn_name);
     });

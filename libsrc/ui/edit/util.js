@@ -465,6 +465,8 @@ o.new_file = function(files, opts, app_opts, filter) {
             // app.read_only = true;
         }
         app.url = file.url;
+        app.file_name = file.name
+
         if (filter && !filter(app))
             return;
 
@@ -496,9 +498,10 @@ env.layout_apps = o.layout_apps = function(){
 
     // Set #happs to take the full scroll dimensions of the window.
     // Need to set to 0 first to allow for shrinking dimensions.
-    var body = $("body")[0];
-    $("#happs").height(0).height(body.scrollHeight)
-        .width(0).width(body.scrollWidth);
+    // drag_base is no longer #happs
+    // var body = $("body")[0];
+    // $("#happs").height(0).height(body.scrollHeight)
+    //     .width(0).width(body.scrollWidth);
 };
 
 o.snap_helper = function(my_tuple, opts) {
@@ -716,6 +719,7 @@ o.append_color_picker = function(container, callback, init_color, opts){
     var normalize = function(c){
         return color_probe_0.css('color', '').css('color', c).css('color') }
     var to_rgb = function(c){
+        if (c.length == 3) return c;
         var c = normalize(c)
         if(!c) return
         // this handles color names like "blue"
@@ -762,7 +766,9 @@ o.append_color_picker = function(container, callback, init_color, opts){
         var amt = e.originalEvent.wheelDelta / 40
         if(!amt) return
         hsv[0] = js.bound(hsv[0] + amt/100, 0, 1)
-        calc_color()
+        var c = calc_color()
+        o.set_color(c);
+
         e.preventDefault()
     })
 
@@ -785,6 +791,7 @@ o.append_color_picker = function(container, callback, init_color, opts){
         var hex = to_hex(color);
         manual_input.val(hex);
         callback(hex, color);
+        return color;
     }
 
     function hsvToRgb(h, s, v){

@@ -75,21 +75,24 @@ define([
 
         var wide = ($(window).width() >= 1180) ? true : false;
         var columns = ($(window).width() >= 980) ? 2 : 1;
-        if (o.overlay_columns != columns) {
+        if (o.overlay_columns != columns || o.wide_overlay != wide) {
             o.overlay_columns = columns;
-            $("#popup_content .left_pane").width((columns == 1) ? 508 : 430);
-            $("#popup_content > *").css('display', (columns == 1) ? 'block' : 'inline-block');
-            $("#popup_content .right_pane").css('text-align', (columns == 1) ? 'left' : 'right').
-                css("max-width", (columns == 1) ? '522px' : '470px');
-            if (columns == 1)
-                $("#popup_content .empty").showshow();
-            else
-                $("#popup_content .empty").hidehide();
-        }
-        if (o.wide_overlay != wide) {
             o.wide_overlay = wide;
+            $("#popup_content > *").css('display', (columns == 1) ? 'block' : 'inline-block');
+            $("#popup_content .right_pane")
+                .css('text-align', (columns == 1) ? 'left' : 'right')
+                .css("max-width", (columns == 1) ? '522px' : '470px');
+            if (columns == 1) {
+                $("#popup_content .empty").showshow();
+                $("#popup_content .left_pane")
+                    .css("max-width", '522px').width("auto");
+            } else {
+                $("#popup_content .empty").hidehide();
+                $("#popup_content .left_pane")
+                    .css("max-width", '522px').width((wide) ? 600 : 430);
+            }
+
             $("#popup_content").css("max-width", (wide) ? 980+600-430 : 980);
-            $("#popup_content .left_pane").width((wide) ? 600 : 430);
         }
     };
     var resize_icon = function(el) {
@@ -121,6 +124,9 @@ define([
         $('#popup_content .counts_icon').each(function(i, el) {
             resize_icon($(this));
         });
+        // Move the plus buttons inside the tag list
+        $("#social_overlay .tags_box .moveme").children()
+            .prependTo($("#social_overlay .tag_list"));
         // Reset scroll to top
         $("body").scrollTop(0);
         
@@ -153,11 +159,15 @@ define([
         if(page_data.expr.tags
             && page_data.expr.tags.indexOf("remix") >= 0
         ) page_data.remix = true;
+        if(page_data.expr.tags
+            && page_data.expr.tags.indexOf("gifwall") >= 0
+        ) {
+            ui_page.make_form_page("gifwall");
+        }
 
         if (!context.user.logged_in) {
             $("#signup_create").showshow();
             $("#signup_create .signup").removeClass("hide");
-            // $('#social_plus').hidehide();
         } else {
             $("#signup_create").showshow();
             $("#signup_create .create").removeClass("hide");
@@ -166,13 +176,6 @@ define([
                 page_data.remix = false
                 show_edit = true
             }
-
-            $('#dia_delete_ok').each(function(i, e){
-                $(e).data('dialog').opts.handler = function(e, data){
-                    o.controller.open('expressions_public',
-                        {'owner_name': context.user.name });
-                }
-            });
         }
         if(show_edit || page_data.remix)
             $('#content_btns .edit_ui').replaceWith(
@@ -185,7 +188,7 @@ define([
         o.hide_panel();
         $('#site').showshow();
         $('.page_btn').hidehide();
-        $('#content_btns .expr_actions').hide()
+        $('#content_btns .expr_actions').hidehide()
     };
 
     // Check to see if tags overflows its bounds.
@@ -238,17 +241,16 @@ define([
                 };
             }
             else {
-                o.controller.get('expressions_public', {
-                    owner_name: page_data.expr.owner.name }, set_cards)
-                context.page_data.cards_route = {
-                    route_args: { route_name: 'expressions_public' }
-                };
+                var route_args = { route_name: 'expressions_public'
+                    ,owner_name: page_data.expr.owner.name }
+                o.controller.get(route_args.route_name, route_args, set_cards)
+                context.page_data.cards_route = { route_args: route_args }
             }
         }
     };
     var id_from_card_count = function(n, fetch){
         var page_data = o.page_data;
-        fetch = util.default(fetch, true);
+        fetch = util.defalt(fetch, true);
         // No data for card n.
         if (!page_data.cards || !page_data.cards[n]) {
             if (fetch)
@@ -587,6 +589,13 @@ define([
             o.page_btn_animate($(this), "in");
         }).bind_once('mouseleave', function(e) {
             o.page_btn_animate($(this), "out");
+        });
+
+        $('#dia_delete_ok').each(function(i, e){
+            $(e).data('dialog').opts.handler = function(e, data){
+                o.controller.open('expressions_public',
+                    {'owner_name': context.user.name });
+            }
         });
     };
 

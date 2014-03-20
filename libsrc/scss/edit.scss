@@ -9,6 +9,8 @@ body.edit {
 &.default {
     #edit_nav .change_zoom {display:none}
     .ehapp .highlight {
+        position: absolute;
+        top: 0px; left: 0px; right: 0px; bottom:0px;
         background-color: $color_selected;
         opacity: .6;
     }
@@ -82,7 +84,9 @@ body.edit {
     left: 0; top: 0; 
     // right:0; bottom: 0;
     z-index: 3;
+}
 
+#happs, #grid_guide {
     // currently selection always gets events, but they can be intercepted
     &.default .drag { cursor: move; }
     &.draw { cursor: crosshair; }

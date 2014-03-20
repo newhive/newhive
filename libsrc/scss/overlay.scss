@@ -115,6 +115,13 @@
             background-color: black;
         }
     }
+    &.form {
+        display: block;
+        left: 20px;
+        bottom: 20px;
+        padding: 10px;
+        &:hover { background-color: black; color: white; }
+    }
 }
 
 #social_overlay {
@@ -129,21 +136,22 @@
     // height: 180px;
     &:hover { background-color: white; }
 
-    .plus_menu, .icon.add_queue {
-        position: absolute;
+    .icon.plus_menu, .icon.add_queue {
+        // position: absolute;
         // background-color: black;
-        top: 18px;
-        right: 27px;
-        margin: 0px;
+        // top: 18px;
+        // right: 27px;
+        margin: -6px 0px 0px 0px;
+        float: right;
     }
-    .icon.add_queue { right: 77px; }
+    // .icon.add_queue { right: 77px; }
     #popup_content {
         //position:absolute;
         //top: 44px;
         max-width: 980px;
         overflow-x: auto;
         margin: auto;
-        padding: 20px 0px 0px 10px;
+        padding: 20px 20px 0px 20px;
         // position: relative;
         //height: 306px;
         //overflow: auto;
@@ -175,16 +183,12 @@
         width: 430px;
         padding-right: 5px;
 
-        .title_spacer { 
-            height: 78px;
-            display: table;
-        }
+        .title_box { height: 78px; }
         .title {
-            // TODO: change to box?
-            @include calc-width("100% - 10px");
-            height: 100%;
             vertical-align: middle;
-            display: table-cell;
+            // display: table-cell;
+            max-height: 64px;
+            overflow: hidden;
         }
         .user_action_bar { 
             float: right; 
@@ -209,20 +213,15 @@
 
     .right_pane {
         display: inline-block;
-        // width: 470px;
         width: 100%;
         max-width: 522px;
 
         text-align: right;
         margin-right: 70px;
 
-        .vcenter_spacer {
-            height: 80px;
-        }
+        .tags_box { height: 78px; }
         .tag_list {
-            // text-align: center;
-            max-height: 80px;
-            overflow: hidden;
+            max-height: 78px;
         }
         .stats_bar {
             margin-top: 10px;
@@ -257,6 +256,7 @@
 
 }
 
+// TODO-cleanup: move this to another file
 $action: love comment republish;
 .activity {
     .feed_item {
