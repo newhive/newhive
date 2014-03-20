@@ -79,9 +79,9 @@ function publishExrpession(){
 				return;
 			}
 		}
-
+		
 		//remove all the photo models from the collection to start the next expression fresh
-		photosCollection.reset();
+		Ti.App.fireEvent('clearPhotosDB');
 
 		var creator = Alloy.createController('Create'); 
 		creator.getView('create_window').open();
@@ -99,12 +99,6 @@ $.image_back.addEventListener('click', function(){
 });
 
 $.btn_save.addEventListener('click', function() {
-	//don't save if still loading images
-	if(Titanium.App.Properties.getBool('activity_indicator_is_visible')) {
-		alert("Wait for images to finish loading before saving.");
-		return;
-	}
-
 	var title = $.tf_title.value;
 	var url = $.tf_url.value;
 	var tags = $.tf_tags.value;
