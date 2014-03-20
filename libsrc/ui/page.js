@@ -267,8 +267,8 @@ define([
         if (new_page && new_page.enter) new_page.enter();
         o.resize();
 
-        // fix up rounded borders on content_btns overlay
-        var btns = $('#content_btns').find('.btn');
+        // fix up rounded borders on panel overlay
+        var btns = $('.overlay.panel').find('.btn');
         btns.removeClass('left right');
         for(var i = 0, e; (e = btns.eq(i++)).length;){
             if(e.is(':visible')) {
