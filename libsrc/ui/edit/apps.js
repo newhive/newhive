@@ -796,6 +796,7 @@ Hive.App.Image = function(o) {
                 if (!o.allow_crop()) return false;
             // TODO: should we only hide controls if selected?
             $("#controls").showhide(false);
+            // env.Selection.hide_controls();
             ev.stopPropagation();
             drag_hold = true;
 
@@ -808,6 +809,7 @@ Hive.App.Image = function(o) {
         o.long_hold_cancel = function(ev){
             if(!drag_hold) return;
             $("#controls").showhide(true);
+            // env.Selection.show_controls();
             if (ev)
                 ev.stopPropagation();
             drag_hold = false;
@@ -1021,7 +1023,7 @@ Hive.App.has_ctrl_points = function(o){
                 .on('dragstart', function(ev){
                     dragging = true
                     app.transform_start(i)
-                    app.hide_controls()
+                    env.Selection.hide_controls()
                     ev.stopPropagation()
                 })
                 .on('drag', function(ev, dd){
@@ -1030,7 +1032,7 @@ Hive.App.has_ctrl_points = function(o){
                 })
                 .on('dragend', function(ev){
                     dragging = false
-                    app.show_controls()
+                    env.Selection.show_controls()
                     ev.stopPropagation()
                 })
         })
@@ -1902,7 +1904,7 @@ Hive.App.has_resize = function(o) {
     o.dims_ref_set = function(){ dims_ref = o.dims(); };
     o.resize_start = function(){
         if (o.before_resize) o.before_resize();
-        o.hide_controls()
+        env.Selection.hide_controls()
         dims_ref = o.dims();
         u.reset_sensitivity();
         history_point = o.history_helper_relative('resize');
@@ -1951,7 +1953,7 @@ Hive.App.has_resize = function(o) {
         if (!skip_history) history_point.save();
         if (env.Selection.selected(o)) 
             env.Selection.update_relative_coords();
-        o.show_controls()
+        env.Selection.show_controls()
     };
     o.resize_to = function(delta){
         return [ Math.max(1, dims_ref[0] + delta[0]), 
@@ -2090,7 +2092,7 @@ Hive.App.has_rotate = function(o) {
 
     function controls(o) {
         var common = $.extend({}, o), ref_angle = null, offsetAngle = null,
-            ref_centroid;
+            ref_centroid, app = o.app.sel_app();
 
         o.getAngle = function(e) {
             var x = e.pageX - ref_centroid[0];
@@ -2120,7 +2122,7 @@ Hive.App.has_rotate = function(o) {
                 ref_centroid = app.centroid()
                 ref_angle = app.angle();
                 offsetAngle = o.getAngle(e);
-                app.hide_controls()
+                env.Selection.hide_controls()
                 if (app.rotate_start)
                     app.rotate_start(ref_angle);
                 if(!app.is_selection)
@@ -2136,7 +2138,7 @@ Hive.App.has_rotate = function(o) {
             .drag('end', function(){
                 if(app.rotate_end) app.rotate_end();
                 env.Selection.update_relative_coords();
-                app.show_controls()
+                env.Selection.show_controls()
                 if(!app.is_selection)
                     history_point.save()
             })
@@ -2168,8 +2170,8 @@ Hive.App.has_rotate = function(o) {
             if(s.angle)
                 o.angle_set(s.angle)
         }
-    } else 
-        o.make_controls.push(controls);
+    }
+    o.make_controls.push(memoize("rotate_controls", controls));
 }
 
 Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {

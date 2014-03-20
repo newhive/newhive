@@ -348,7 +348,7 @@ o.Selection = function(o) {
             (elements.length)
     }
 
-    hive_app.App.has_rotate(o);
+    // hive_app.App.has_rotate(o);
     var ref_angle = 0, ref_center, rotation_refs
     o.angle = function(){ 
         if (elements.length == 1 && typeof(elements[0].angle) == "function")
