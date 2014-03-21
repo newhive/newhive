@@ -21,8 +21,8 @@ var photosCollection = Alloy.Collections.instance('Photos');
 //dev-1 login: viciousesque/changeme	
 // /var/log/apache2/error.log
 
-Titanium.App.Properties.setString('base_url_ssl', 'https://dev.newhive.com/');
-Titanium.App.Properties.setString('base_url', 'http://dev.newhive.com/');
+Titanium.App.Properties.setString('base_url_ssl', 'https://staging.newhive.com/');
+Titanium.App.Properties.setString('base_url', 'http://staging.newhive.com/');
 
 var NUM_ACTIVE_XHR = 0;
 var imageUploadQueue = new Array();
@@ -297,4 +297,39 @@ Ti.App.addEventListener('clearPhotosDB', function(){
 	db.close();
 });
 
+var _text_fields
+var init_textfields = function(fields, final_callback){
+	_text_fields = fields
 
+	// set up tab order
+	fields.slice(0,-1).map(function(field, i){
+		field.addEventListener('return', function(){
+		    fields[i+1].focus() })
+	})
+	fields[fields.length-1].addEventListener('return', final_callback)
+
+	// default interactive styling
+	fields.map(function(field){
+		field.addEventListener('focus', function(e){
+			e.source.borderColor = "#aef0e8"
+			e.source.borderWidth = "4dp"
+		})
+		field.addEventListener('blur', function(e){
+			e.source.borderColor = "#000000"
+			e.source.borderWidth = "1dp"
+		})
+	})
+}
+var textfield_blur = function(){
+	_text_fields.map(function(f){
+		f.blur() }) }
+
+var init_page = function(page){
+	page.addEventListener('focus', function(ev){
+		addActivityIndicator(ev.source) })
+
+	page.addEventListener('click', function(ev){
+		if(ev.source.constructor == Ti.UI.TextField) return
+		textfield_blur()
+	})
+}

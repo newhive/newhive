@@ -2,7 +2,7 @@ var args = arguments[0] || {};
 ///
 Ti.API.info('LOADING LOGIN PAGE');
 
-function doLogin(e) {
+function do_login(e) {
 	var BASE_URL = Titanium.App.Properties.getString('base_url_ssl');
 	var url = BASE_URL + 'api/user/login?json=true';
 	var xhr = Ti.Network.createHTTPClient();
@@ -63,11 +63,13 @@ function doLogin(e) {
 	
 }
 
+// init_page($.login_window)
+// init_textfields([$.textfieldusername, $.textfieldpwd], do_login)
+
 $.textfieldUsername.addEventListener('focus', function(){
 	$.error_message.opacity = "0";
 	$.retrieve_password.opacity = "0";
 });
-
 
 $.retrieve_password.addEventListener('click', function(){
 	var retrieve = Alloy.createController('RetrievePassword'); 
@@ -79,44 +81,3 @@ $.retrieve_password.addEventListener('click', function(){
 	$.textfieldUsername.value = "";
 	$.textfieldPwd.value = "";
 });
-
-$.login_window.addEventListener('click', function()  {
-	$.textfieldUsername.blur();
-	$.textfieldPwd.blur();
-});
-
-$.login_window.addEventListener('focus', function(){
-	$.textfieldUsername.focus();
-});
-
-$.textfieldPwd.addEventListener('click',function(e){
-	e.cancelBubble = true;
-});
-$.textfieldPwd.addEventListener('focus',function(e){
-	e.source.borderColor = "#aef0e8";
-	e.source.borderWidth = "4dp";
-});
-$.textfieldPwd.addEventListener('blur',function(e){
-	e.source.borderColor = "#000000";
-	e.source.borderWidth = "1dp";
-});
-
-	
-$.textfieldUsername.addEventListener('click',function(e){
-	e.cancelBubble = true;
-});
-$.textfieldUsername.addEventListener('focus',function(e){
-	e.source.borderColor = "#aef0e8";
-	e.source.borderWidth = "4dp";
-});
-$.textfieldUsername.addEventListener('blur',function(e){
-	e.source.borderColor = "#000000";
-	e.source.borderWidth = "1dp";
-});
-
-$.login_window.addEventListener('focus',function(e){
-	addActivityIndicator(e.source);
-});
-
-
-
