@@ -74,11 +74,14 @@ function showHiveCamera() {
 		},
 		cancel:function()
 		{
-			Titanium.Media.hideCamera();
+			Ti.App.fireEvent('enableShowCamera');
+			Ti.App.fireEvent('enableSave');
 		},
 		error:function(error)
 		{
 			alert('camera error.');
+			Ti.App.fireEvent('enableShowCamera');
+			Ti.App.fireEvent('enableSave');
 		},
 		saveToPhotoGallery:false,
 		allowEditing:false,
@@ -100,12 +103,7 @@ function showHiveGallery(){
 		{
 			//checking if it is photo
 			if(event.mediaType == Ti.Media.MEDIA_TYPE_PHOTO) {
-				var compose = Alloy.createController('Compose'); 
-				var compose_win = compose.getView('compose_window');
-
 				compose_win.open();
-
-				Titanium.Media.hideCamera();
 
 				small_image_obj = reduceImageSize(event.media);
 
@@ -124,17 +122,15 @@ function showHiveGallery(){
 			}
 		},
 		cancel:function() {
-			//user cancelled the action fron within
-			//the photo gallery
-		}
+			Ti.App.fireEvent('enableShowCamera');
+			Ti.App.fireEvent('enableSave');
+		}	
 	});
 
 	var compose = Alloy.createController('Compose'); 
 	var compose_win = compose.getView('compose_window');
 	//avoid camera error by disabling showCamera on compose page until image finishes resizing
 	Ti.App.fireEvent('disableShowCamera');
-
-	compose_win.open();	
 }
 
 function checkLogin() {
@@ -239,7 +235,6 @@ function uploadImage(photo_model) {
 	xhr.send(params);
 
 	NUM_ACTIVE_XHR++;
-
 	setActivityIndicatorShow();
 
 	xhr.onerror = function(e) {
@@ -301,7 +296,6 @@ Ti.App.addEventListener('clearPhotosDB', function(){
 	photosCollection.reset();
 	var db=Ti.Database.open('newhive');
 	var deleteRecords=db.execute('DELETE FROM photos');
-	Ti.API.info('Affected Rows    '+db.getRowsAffected());
 	db.close();
 });
 
