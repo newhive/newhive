@@ -6,8 +6,8 @@ function do_login(e) {
 	var BASE_URL = Titanium.App.Properties.getString('base_url_ssl');
 	var url = BASE_URL + 'api/user/login?json=true';
 	var xhr = Ti.Network.createHTTPClient();
-	var username = $.textfieldUsername.value;
-	var pwd = $.textfieldPwd.value;
+	var username = $.tf_username.value;
+	var pwd = $.tf_password.value;
 	
 	Ti.API.info('username value: ' + username);
 	
@@ -45,8 +45,8 @@ function do_login(e) {
 		if(res.logged_in){
 			Ti.API.info('login success! '+ res.name);
 			
-			$.textfieldUsername.blur();
-			$.textfieldPwd.blur();
+			$.tf_username.blur();
+			$.tf_password.blur();
 			
 			Ti.App.current_user_name = res.name;
 			Ti.App.current_user_id = res.id;
@@ -63,10 +63,10 @@ function do_login(e) {
 	
 }
 
-// init_page($.login_window)
-// init_textfields([$.textfieldusername, $.textfieldpwd], do_login)
+init_page($.login_window)
+init_textfields([$.tf_username, $.tf_password], do_login)
 
-$.textfieldUsername.addEventListener('focus', function(){
+$.tf_username.addEventListener('focus', function(){
 	$.error_message.opacity = "0";
 	$.retrieve_password.opacity = "0";
 });
@@ -78,6 +78,6 @@ $.retrieve_password.addEventListener('click', function(){
 	$.error_message.opacity = "0";
 	$.retrieve_password.opacity = "0";
 	
-	$.textfieldUsername.value = "";
-	$.textfieldPwd.value = "";
+	$.tf_username.value = "";
+	$.tf_password.value = "";
 });
