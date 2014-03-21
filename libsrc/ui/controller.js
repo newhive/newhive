@@ -39,7 +39,7 @@ define([
         if (util.mobile()) {
             $("body").addClass('mobile');
             // var init_scale = 575 / ($(window).width() || 720)
-            $('<meta name="viewport" content="width=715">')
+            $('<meta name="viewport" content="width=500">')
                 .appendTo('head')
                  //, initial-scale=' + init_scale +
                 // + ', user-scalable=1"/>').appendTo($("head"));
