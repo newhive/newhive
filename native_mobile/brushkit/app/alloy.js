@@ -69,6 +69,7 @@ function showHiveCamera() {
 			photosCollection.add(photo_model);
 
 			Ti.App.fireEvent('enableShowCamera');
+			Titanium.App.Properties.setBool('is_camera_open', false);
 
 			uploadImage(photo_model);
 		},
@@ -76,6 +77,13 @@ function showHiveCamera() {
 		{
 			Ti.App.fireEvent('enableShowCamera');
 			Ti.App.fireEvent('enableSave');
+
+			Titanium.App.Properties.setBool('is_camera_open', false);
+
+			//caputre any setActivityIndicatorHide events that were defered because the camera was open
+			if(NUM_ACTIVE_XHR==0){
+				setActivityIndicatorHide();
+			}
 		},
 		error:function(error)
 		{
@@ -94,7 +102,8 @@ function showHiveCamera() {
 	var compose = Alloy.createController('Compose'); 
 	var compose_win = compose.getView('compose_window');
 	//avoid camera error by disabling showCamera on compose page until image finishes resizing
-	Ti.App.fireEvent('disableShowCamera');	
+	Ti.App.fireEvent('disableShowCamera');
+	Titanium.App.Properties.setBool('is_camera_open', true);	
 }
 
 function showHiveGallery(){
@@ -124,6 +133,13 @@ function showHiveGallery(){
 		cancel:function() {
 			Ti.App.fireEvent('enableShowCamera');
 			Ti.App.fireEvent('enableSave');
+
+			Titanium.App.Properties.setBool('is_camera_open', false);
+
+			//caputre any setActivityIndicatorHide events that were defered because the camera was open
+			if(NUM_ACTIVE_XHR==0){
+				setActivityIndicatorHide();
+			}
 		}	
 	});
 
@@ -253,7 +269,8 @@ function uploadImage(photo_model) {
 
 		NUM_ACTIVE_XHR--;
 
-		if(NUM_ACTIVE_XHR == 0){
+		//if camera is open defer setActivityIndicatorHide
+		if(NUM_ACTIVE_XHR == 0 && Titanium.App.Properties.getBool('is_camera_open')==false){
 			setActivityIndicatorHide();
 		}
 
