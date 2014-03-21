@@ -11,24 +11,13 @@
 "TextField": {
 	top:"18dp",
 	width:'70%',
-	height:'32dp',
-	backgroundColor: "#ffffff",
-	borderWidth:1,
-	borderColor:"#000000",
-	paddingLeft: 10,
-	color:"#000000",
-	font: {
-		fontSize: "18dp",
-		fontWeight: "bold"
-	},
 	autocapitalization: Ti.UI.TEXT_AUTOCAPITALIZATION_NONE,
 	autocorrect: false
 }
 
-"#textfieldPwd": {
+"#tf_password": {
 	passwordMask:"true"
 }
-
 
 "#button_view": {
 	width: Titanium.UI.FILL,

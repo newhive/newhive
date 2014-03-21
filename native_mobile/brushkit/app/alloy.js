@@ -330,13 +330,9 @@ var init_textfields = function(fields, final_callback){
 	// default interactive styling
 	fields.map(function(field){
 		field.addEventListener('focus', function(e){
-			e.source.borderColor = "#aef0e8"
-			e.source.borderWidth = "4dp"
-		})
+			e.source.borderColor = '#ACEFE2' })
 		field.addEventListener('blur', function(e){
-			e.source.borderColor = "#000000"
-			e.source.borderWidth = "1dp"
-		})
+			e.source.borderColor = 'black' })
 	})
 }
 var textfield_blur = function(){
