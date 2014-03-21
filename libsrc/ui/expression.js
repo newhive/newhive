@@ -63,8 +63,11 @@ define([
         $(document).mousemove(check_hover);
         $(document).click(expr_click);
         // $(document).mouseleave(function(e) { window.setTimeout(clear_hover, 600, e); });
-        $(window).resize(layout.place_apps)
-             .click(function(){ o.send_top('focus'); });
+        if (!util.mobile()) {
+            // Don't run on mobile
+            $(window).resize(layout.place_apps)
+                 .click(function(){ o.send_top('focus'); });
+        }
         $(window).on("scroll", layout.on_scroll);
         if (0 && util.mobile()) {
             $.event.special.swipe.horizontalDistanceThreshold = 200;
