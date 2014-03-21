@@ -125,15 +125,15 @@
 }
 .mobile .overlay {
     &.form, &.logo {
-        bottom: 0px; left: 0px;
+        bottom: 10px; left: 10px;
     }
     &.panel {
-        bottom: 0px; right: 0px;
+        bottom: 10px; right: 10px;
     }
     &.page_btn {
-        bottom: 50px;
-        &.page_next { right: 0px; }
-        &.page_prev { left: 0px; }
+        bottom: 60px;
+        &.page_next { right: 10px; }
+        &.page_prev { left: 10px; }
     }
 }
 #social_overlay {

@@ -5,7 +5,7 @@ define(['browser/jquery', 'ui/util'], function($, util) {
 
     }
     o.place_apps = function() {
-        if(util.mobile()) return
+        // if(util.mobile()) return
 
         var win_width = $(window).width();
         $('.happfill').each(function(i, div) {

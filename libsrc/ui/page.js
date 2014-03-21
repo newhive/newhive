@@ -459,7 +459,7 @@ define([
     }
     o.render_tag_page = function(){
         $('#tag_bar').remove();
-        $('#feed').prepend(tags_page_template(context.page_data));
+        $('.feed').prepend(tags_page_template(context.page_data));
         var tag_name = context.page_data.tags_search[0];
         $('title').text("#" + tag_name.toUpperCase());
         var header_prefix = ""; // "Search: "
@@ -601,7 +601,7 @@ define([
         if(context.page_data.layout == 'grid' || context.page_data.layout == 'mini') {
             var columns = Math.max(1, Math.min(3, 
                 Math.floor($(window).width() / grid_width)));
-            $('#feed').css('width', columns * (grid_width + border_width));
+            $('.feed').css('width', columns * (grid_width + border_width));
             if (o.columns != columns || !done_layout) {
                 o.columns = columns;
                 if (o.column_layout)
@@ -627,7 +627,7 @@ define([
             var col_width = 0;
             if (i < o.columns)
                 col_width = grid_width;
-            $("#feed .column_"+i).css("width", col_width);
+            $(".feed .column_"+i).css("width", col_width);
         }
 
         // Then add the cards into the shortest column
@@ -639,7 +639,7 @@ define([
             el_card = $("#card_" + card_id);
             var min = Math.min.apply(null, row_heights);
             var min_i = row_heights.indexOf(min);
-            var el_col = $("#feed .column_" + min_i);
+            var el_col = $(".feed .column_" + min_i);
             el_col.append(el_card);
             row_heights[min_i] += el_card.height();
         };
@@ -649,7 +649,7 @@ define([
     o.add_grid_borders = function(columns){
         var columns = o.columns;
         if(context.page_data.layout != 'grid') return;
-        var expr_cards = $('#feed .card');
+        var expr_cards = $('.feed .card');
         // Count of cards which fit to even multiple of columns
         var card_count = expr_cards.length - columns;// - (expr_cards.length % columns);
         expr_cards.each(function(i) {
