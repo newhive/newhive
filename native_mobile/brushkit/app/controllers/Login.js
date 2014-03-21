@@ -2,12 +2,12 @@ var args = arguments[0] || {};
 ///
 Ti.API.info('LOADING LOGIN PAGE');
 
-function doLogin(e) {
+function do_login(e) {
 	var BASE_URL = Titanium.App.Properties.getString('base_url_ssl');
 	var url = BASE_URL + 'api/user/login?json=true';
 	var xhr = Ti.Network.createHTTPClient();
-	var username = $.textfieldUsername.value;
-	var pwd = $.textfieldPwd.value;
+	var username = $.tf_username.value;
+	var pwd = $.tf_password.value;
 	
 	Ti.API.info('username value: ' + username);
 	
@@ -45,8 +45,8 @@ function doLogin(e) {
 		if(res.logged_in){
 			Ti.API.info('login success! '+ res.name);
 			
-			$.textfieldUsername.blur();
-			$.textfieldPwd.blur();
+			$.tf_username.blur();
+			$.tf_password.blur();
 			
 			Ti.App.current_user_name = res.name;
 			Ti.App.current_user_id = res.id;
@@ -63,11 +63,13 @@ function doLogin(e) {
 	
 }
 
-$.textfieldUsername.addEventListener('focus', function(){
+init_page($.login_window)
+init_textfields([$.tf_username, $.tf_password], do_login)
+
+$.tf_username.addEventListener('focus', function(){
 	$.error_message.opacity = "0";
 	$.retrieve_password.opacity = "0";
 });
-
 
 $.retrieve_password.addEventListener('click', function(){
 	var retrieve = Alloy.createController('RetrievePassword'); 
@@ -76,47 +78,6 @@ $.retrieve_password.addEventListener('click', function(){
 	$.error_message.opacity = "0";
 	$.retrieve_password.opacity = "0";
 	
-	$.textfieldUsername.value = "";
-	$.textfieldPwd.value = "";
+	$.tf_username.value = "";
+	$.tf_password.value = "";
 });
-
-$.login_window.addEventListener('click', function()  {
-	$.textfieldUsername.blur();
-	$.textfieldPwd.blur();
-});
-
-$.login_window.addEventListener('focus', function(){
-	$.textfieldUsername.focus();
-});
-
-$.textfieldPwd.addEventListener('click',function(e){
-	e.cancelBubble = true;
-});
-$.textfieldPwd.addEventListener('focus',function(e){
-	e.source.borderColor = "#aef0e8";
-	e.source.borderWidth = "4dp";
-});
-$.textfieldPwd.addEventListener('blur',function(e){
-	e.source.borderColor = "#000000";
-	e.source.borderWidth = "1dp";
-});
-
-	
-$.textfieldUsername.addEventListener('click',function(e){
-	e.cancelBubble = true;
-});
-$.textfieldUsername.addEventListener('focus',function(e){
-	e.source.borderColor = "#aef0e8";
-	e.source.borderWidth = "4dp";
-});
-$.textfieldUsername.addEventListener('blur',function(e){
-	e.source.borderColor = "#000000";
-	e.source.borderWidth = "1dp";
-});
-
-$.login_window.addEventListener('focus',function(e){
-	addActivityIndicator(e.source);
-});
-
-
-
