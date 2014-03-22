@@ -1,7 +1,6 @@
 <Alloy>
-	<Collection src="Photos" />
 	<Window id="compose_window">
-		<TableView id='gif_wall_table' dataCollection="Photos">
+		<TableView id='gif_wall_table' dataCollection="Photos" >
 			<Require src="GIFWallRow"/>
 		</TableView>
 		

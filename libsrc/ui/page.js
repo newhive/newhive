@@ -11,6 +11,8 @@ define([
     'server/context',
     'browser/layout',
     'ui/page/pages',
+
+    'sj!templates/form_overlay.html',
     'sj!templates/password_reset.html',
     'sj!templates/collections.html',
     'sj!templates/overlay.html',
@@ -46,6 +48,8 @@ define([
     context,
     browser_layout,
     pages,
+
+    form_overlay_template,
     password_template,
     collections_template,
     overlay_template,
@@ -216,17 +220,21 @@ define([
         o.columns = 0;
         new_page = pages[method];
         expr_page = (method == 'expr');
+
         page_data.layout = method;
+        
         dialog.close_all();
         if(context.error == "login" && o.login_dialog){
             o.login_dialog.open();
             $('#login_form .error_msg').showshow().fadeIn("slow");
             delete context.error
         }
-        if (context.page != new_page) {
-            if (context.page && context.page.exit) 
-                context.page.exit();
+        if(context.page != new_page){
+            if(context.page && context.page.exit)
+                context.page.exit()
         }
+        o.form_page_exit()
+
         o.preprocess_context();
         if (new_page && new_page.preprocess_page_data) 
             pages[method].preprocess_page_data(page_data);
@@ -246,29 +254,30 @@ define([
         else
             render_site(page_data);
 
-        // fix up rounded borders on content_btns overlay
-        var btns = $('#content_btns').find('.btn');
-        btns.removeClass('left right');
-        for(var i = 0, e; (e = btns.eq(i++)).length;){
-            if(!e.hasClass('hide')) {
-                $(e).addClass('left');
-                break;
-            }
-        }
-        for(var i = btns.length - 1, e; (e = btns.eq(i--)).length;){
-            if(!e.hasClass('hide')) {
-                $(e).addClass('right');
-                break;
-            }
-        }
-
         // TODO: move to ./page/community
         if (page_data.page == "tag_search") {
             o.render_tag_page();
         }
 
+        o.form_page_enter()
         if (new_page && new_page.enter) new_page.enter();
         o.resize();
+
+        // fix up rounded borders on panel overlay
+        var btns = $('.overlay.panel').find('.btn');
+        btns.removeClass('left right');
+        for(var i = 0, e; (e = btns.eq(i++)).length;){
+            if(e.is(':visible')) {
+                $(e).addClass('left');
+                break;
+            }
+        }
+        for(var i = btns.length - 1, e; (e = btns.eq(i--)).length;){
+            if(e.is(':visible')) {
+                $(e).addClass('right');
+                break;
+            }
+        }
 
         o.attach_handlers();
     };
@@ -431,9 +440,36 @@ define([
         $("#site>.tag_list_container").replaceWith(
             tags_main_template(context.page_data));
     }
+
+    o.form_page_enter = function(){
+        var page_data = context.page_data;
+        if(page_data.expr && page_data.expr.tags
+            && page_data.expr.tags.indexOf("gifwall") >= 0
+        ) page_data.form_tag = 'gifwall'
+        if(!page_data.form_tag) return
+
+        $("#logo").hidehide();
+        $('#overlays').append(form_overlay_template(page_data));
+
+        var $create = $("#overlays .create")
+        if (!$create.data("href"))
+            $create.data("href", $create.attr("href"))
+        $create.attr("href", $create.data("href") + "?tags=" + page_data.form_tag)
+    }
+    o.form_page_exit = function(){
+        delete context.page_data.form_tag
+        // Clean up old #Form junk
+        $("#logo").showshow();
+        $('.overlay.form').remove();
+
+        var $create = $("#overlays .create")
+        if ($create.data("href"))
+            $create.attr("href", $create.data("href"))
+    }
+
     o.render_tag_page = function(){
         $('#tag_bar').remove();
-        $('#feed').prepend(tags_page_template(context.page_data));
+        $('.feed').prepend(tags_page_template(context.page_data));
         var tag_name = context.page_data.tags_search[0];
         $('title').text("#" + tag_name.toUpperCase());
         var header_prefix = ""; // "Search: "
@@ -573,7 +609,7 @@ define([
         if(context.page_data.layout == 'grid' || context.page_data.layout == 'mini') {
             var columns = Math.max(1, Math.min(3, 
                 Math.floor($(window).width() / grid_width)));
-            $('#feed').css('width', columns * (grid_width + border_width));
+            $('.feed').css('width', columns * (grid_width + border_width));
             if (o.columns != columns || !done_layout) {
                 o.columns = columns;
                 if (o.column_layout)
@@ -599,7 +635,7 @@ define([
             var col_width = 0;
             if (i < o.columns)
                 col_width = grid_width;
-            $("#feed .column_"+i).css("width", col_width);
+            $(".feed .column_"+i).css("width", col_width);
         }
 
         // Then add the cards into the shortest column
@@ -611,7 +647,7 @@ define([
             el_card = $("#card_" + card_id);
             var min = Math.min.apply(null, row_heights);
             var min_i = row_heights.indexOf(min);
-            var el_col = $("#feed .column_" + min_i);
+            var el_col = $(".feed .column_" + min_i);
             el_col.append(el_card);
             row_heights[min_i] += el_card.height();
         };
@@ -621,7 +657,7 @@ define([
     o.add_grid_borders = function(columns){
         var columns = o.columns;
         if(context.page_data.layout != 'grid') return;
-        var expr_cards = $('#feed .card');
+        var expr_cards = $('.feed .card');
         // Count of cards which fit to even multiple of columns
         var card_count = expr_cards.length - columns;// - (expr_cards.length % columns);
         expr_cards.each(function(i) {

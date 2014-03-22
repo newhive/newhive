@@ -5,3 +5,16 @@
 		fontSize: "20dp"
 	}
 }
+
+"TextField": {
+    height: 50
+    ,color: 'black'
+    ,backgroundColor: 'white'
+    ,borderWidth: 3
+    ,borderColor: 'black'
+    ,paddingLeft: 10
+    ,font: {
+        fontSize: 20
+        ,fontWeight: 'bold'
+    }
+}

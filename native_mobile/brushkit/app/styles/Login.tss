@@ -11,28 +11,24 @@
 "TextField": {
 	top:"18dp",
 	width:'70%',
-	height:'32dp',
-	backgroundColor: "#eee",
-	borderWidth:1,
-	borderColor:"#464646",
-	color:"#fa562d",
-	textAlign:"center",
-	font: {
-		fontSize: "18dp",
-		fontWeight: "bold"
-	}
+	autocapitalization: Ti.UI.TEXT_AUTOCAPITALIZATION_NONE,
+	autocorrect: false
+}
+
+"#tf_password": {
+	passwordMask:"true"
 }
 
 "#button_view": {
 	width: Titanium.UI.FILL,
-	height: "80dp",
+	height: "12.5%",
 	bottom:'0dp',
 	backgroundColor: "transparent",
 	zIndex:"10"
 }
 "#submit": {
 	width: Titanium.UI.FILL,
-	height:"80dp",	
+	height:Titanium.UI.FILL,	
 	bottom:"0dp",
 	color:"#000000",
 	borderColor:"#3e3e3e",
