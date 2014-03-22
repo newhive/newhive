@@ -220,26 +220,21 @@ define([
         o.columns = 0;
         new_page = pages[method];
         expr_page = (method == 'expr');
+
         page_data.layout = method;
+        
         dialog.close_all();
         if(context.error == "login" && o.login_dialog){
             o.login_dialog.open();
             $('#login_form .error_msg').showshow().fadeIn("slow");
             delete context.error
         }
-        if (context.page != new_page) {
-            if (context.page && context.page.exit) 
-                context.page.exit();
+        if(context.page != new_page){
+            if(context.page && context.page.exit)
+                context.page.exit()
         }
-        // TODO-cleanup: unify handling of #Forms
-        {
-            // Clean up old #Form junk
-            $("#logo").showshow();
-            $('.overlay.form').remove();
-            var $create = $("#overlays .create")
-            if ($create.data("href"))
-                $create.attr("href", $create.data("href"))
-        }
+        o.form_page_exit()
+
         o.preprocess_context();
         if (new_page && new_page.preprocess_page_data) 
             pages[method].preprocess_page_data(page_data);
@@ -264,6 +259,7 @@ define([
             o.render_tag_page();
         }
 
+        o.form_page_enter()
         if (new_page && new_page.enter) new_page.enter();
         o.resize();
 
@@ -444,19 +440,33 @@ define([
         $("#site>.tag_list_container").replaceWith(
             tags_main_template(context.page_data));
     }
-    o.make_special_create = function(tag_name) {
+
+    o.form_page_enter = function(){
+        var page_data = context.page_data;
+        if(page_data.expr && page_data.expr.tags
+            && page_data.expr.tags.indexOf("gifwall") >= 0
+        ) page_data.form_tag = 'gifwall'
+        if(!page_data.form_tag) return
+
+        $("#logo").hidehide();
+        $('#overlays').append(form_overlay_template(page_data));
+
         var $create = $("#overlays .create")
         if (!$create.data("href"))
             $create.data("href", $create.attr("href"))
-        $create.attr("href", $create.data("href") + "?tags=" + tag_name)
+        $create.attr("href", $create.data("href") + "?tags=" + page_data.form_tag)
     }
-    o.make_form_page = function(tag_name) {
-        var page_data = context.page_data;
-        page_data.form_tag = tag_name;
-        $("#logo").hidehide();
-        $('#overlays').append(form_overlay_template(page_data));
-        o.make_special_create(page_data.form_tag);
+    o.form_page_exit = function(){
+        delete context.page_data.form_tag
+        // Clean up old #Form junk
+        $("#logo").showshow();
+        $('.overlay.form').remove();
+
+        var $create = $("#overlays .create")
+        if ($create.data("href"))
+            $create.attr("href", $create.data("href"))
     }
+
     o.render_tag_page = function(){
         $('#tag_bar').remove();
         $('.feed').prepend(tags_page_template(context.page_data));
@@ -467,8 +477,6 @@ define([
         // var top_context = { "tagnum": 0, "item": tag_name };
         // $('#header span').text(header_prefix).append(tag_card_template(top_context));
         $('#follow_tag_form').on('success', o.tag_response);
-        if (["gifwall"].indexOf(tag_name.toLowerCase()) >= 0)
-            o.make_special_create(tag_name);
     }
 
     o.tag_response = function (e, json){

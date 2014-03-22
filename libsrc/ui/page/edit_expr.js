@@ -129,12 +129,6 @@ define([
             , function(){ return o.exit_safe } )
         o.exit_safe = true
         // o.save_safe = true
-        if(expr.tags
-            && expr.tags.toLowerCase().indexOf("gifwall") >= 0
-        ) {
-            ui_page.make_form_page("#gifwall");
-        }
-        
     };
 
     o.attach_handlers = function(){

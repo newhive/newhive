@@ -111,8 +111,9 @@ define([
         // TODO: should the HTML render on page load? Or delayed?
         o.expr = page_data.expr;
         o.page_data = page_data;
-        $('body').addClass('expr')
+        ui_page.form_page_exit()
 
+        $('body').addClass('expr')
         $('title').text(o.expr.title);
         $('#site').hidehide();
         $("#popup_content").remove();
@@ -159,11 +160,6 @@ define([
         if(page_data.expr.tags
             && page_data.expr.tags.indexOf("remix") >= 0
         ) page_data.remix = true;
-        if(page_data.expr.tags
-            && page_data.expr.tags.indexOf("gifwall") >= 0
-        ) {
-            ui_page.make_form_page("gifwall");
-        }
 
         if (context.user.logged_in && context.user.id == o.expr.owner.id) {
             page_data.remix = false
@@ -172,6 +168,7 @@ define([
         if(show_edit || page_data.remix)
             $('.overlay.panel .edit_ui').replaceWith(
                 edit_btn_template(page_data) )
+        ui_page.form_page_enter()
     }
 
     o.exit = function(){
@@ -318,7 +315,7 @@ define([
             debug("loaded frame: " + found);
 
             if (contentFrame.hasClass('expr_visible')) 
-                contentFrame.get(0).contentWindow.postMessage({action: 'show'}, '*');
+                o.expr_show(contentFrame)
             for (var i = 0, el; el = loading_frame_list[i]; i++) {
                 if (el.prop("id") == contentFrame.prop("id")) {
                     loaded_frame_list.concat(loading_frame_list.splice(i, 1));
@@ -341,6 +338,10 @@ define([
         return contentFrame;
     };
 
+    o.expr_show = function(frame_el){
+        frame_el.get(0).contentWindow.postMessage({action: 'show'}, '*')
+    }
+
     o.play_timer = false;
     // Animate the new visible expression, bring it to top of z-index.
     function animate_expr (){
@@ -353,13 +354,10 @@ define([
         $('.social_btn').showshow();
 
         var contentFrame = o.get_expr(expr_id);
-        if (contentFrame.length == 0) {
+        if (contentFrame.length == 0)
             contentFrame = o.cache_frames([expr_id], true);
-        }
-        else {
-            contentFrame.get(0).contentWindow.
-                postMessage({action: 'show'}, '*');
-        }
+        else
+            o.expr_show(contentFrame)
         contentFrame.addClass('expr_visible').removeClass('expr_hidden').showshow();
         contentFrame.showshow();
         $('#exprs .expr').not('.expr_visible').css({'z-index': 0 });
