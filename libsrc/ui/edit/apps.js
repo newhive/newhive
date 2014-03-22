@@ -2448,11 +2448,13 @@ Hive.bg_set = function(bg, load) {
     env.Exp.background = bg;
     Hive.bg_color_set(bg.color);
 
-    var img = Hive.bg_div.find('img'),
-        raw = $(bg.content),
-        imgs = img.add('#bg_preview_img').add(raw),
-        url = bg.content || bg.url;
-    if(url) bg.url = url;
+    var img = Hive.bg_div.find('img')
+        ,imgs = img.add('#bg_preview_img').add(raw)
+        ,raw = false;
+    try {
+        raw = $(bg.content)
+    } catch(e){}
+
     if(raw.length) {
         imgs.hidehide();
         raw.appendTo(Hive.bg_div).showshow();
