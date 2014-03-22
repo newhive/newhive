@@ -8,7 +8,6 @@ define([
 
     'sj!templates/activity.html',
     'sj!templates/social_overlay.html',
-    'sj!templates/form_overlay.html',
     'sj!templates/edit_btn.html',
     'sj!templates/expr_actions.html',
     'sj!templates/comment.html'
@@ -22,7 +21,6 @@ define([
 
     activity_template,
     social_overlay_template,
-    form_overlay_template,
     edit_btn_template,
     expr_actions_template,
     comment_template
@@ -56,24 +54,23 @@ define([
         // context.is_secure not set until after module instantiation
         o.content_url_base = (context.is_secure ?
                 context.config.secure_content_url : context.config.content_url);
-        $("#page_prev").click(o.page_prev);
-        $("#page_next").click(o.page_next);
+        $(".page_btn.page_prev").click(o.page_prev);
+        $(".page_btn.page_next").click(o.page_next);
         $("#social_plus").click(o.social_toggle);
         window.addEventListener('message', o.handle_message, false);
     };
 
     o.hide_panel = function(){
-        $("#signup_create").hidehide();
-        $("#content_btns").hidehide();
-        $("#signup_create .signup").addClass("hide");
-        $("#signup_create .create").addClass("hide");
+        $(".overlay.panel").hidehide();
         $(".panel .social_btn").addClass("hide");
         $(".panel .edit_ui").hidehide();
     }
 
     o.resize = function(){
-        browser_layout.center($('#page_prev'), undefined, {'h': false});
-        browser_layout.center($('#page_next'), undefined, {'h': false});
+        if (!util.mobile()) {
+            browser_layout.center($('.page_btn.page_prev'), undefined, {'h': false});
+            browser_layout.center($('.page_btn.page_next'), undefined, {'h': false});
+        }
 
         var wide = ($(window).width() >= 1180) ? true : false;
         var columns = ($(window).width() >= 980) ? 2 : 1;
@@ -114,12 +111,14 @@ define([
         // TODO: should the HTML render on page load? Or delayed?
         o.expr = page_data.expr;
         o.page_data = page_data;
+        ui_page.form_page_exit()
 
+        $('body').addClass('expr')
         $('title').text(o.expr.title);
         $('#site').hidehide();
         $("#popup_content").remove();
         $("#dia_comments").remove();
-        $('#content_btns .expr_actions').replaceWith(
+        $('.overlay.panel .expr_actions').replaceWith(
             expr_actions_template(page_data))
         $('#social_overlay').append(
             social_overlay_template(page_data));
@@ -154,49 +153,32 @@ define([
         animate_expr();
 
         o.hide_panel();
-        $("#content_btns").showshow();
+        $(".overlay.panel").showshow();
         $(".social_btn").removeClass("hide");
 
         var show_edit = false
         if(page_data.expr.tags
             && page_data.expr.tags.indexOf("remix") >= 0
         ) page_data.remix = true;
-        if(page_data.expr.tags
-            && page_data.expr.tags.indexOf("gifwall") >= 0
-        ) {
-            page_data.form_tag = "gifwall";
-            $("#logo").hidehide();
-            $('#overlays').append(form_overlay_template(page_data));
-            $('.overlay.form').showshow();
-        }
 
-        if (!context.user.logged_in) {
-            $("#signup_create").showshow();
-            $("#signup_create .signup").removeClass("hide");
-            // $('#social_plus').hidehide();
-        } else {
-            $("#signup_create").showshow();
-            $("#signup_create .create").removeClass("hide");
-
-            if(context.user.id == o.expr.owner.id){
-                page_data.remix = false
-                show_edit = true
-            }
+        if (context.user.logged_in && context.user.id == o.expr.owner.id) {
+            page_data.remix = false
+            show_edit = true
         }
         if(show_edit || page_data.remix)
-            $('#content_btns .edit_ui').replaceWith(
+            $('.overlay.panel .edit_ui').replaceWith(
                 edit_btn_template(page_data) )
+        ui_page.form_page_enter()
     }
 
     o.exit = function(){
         o.last_found = -1;
+        $('body').removeClass('expr')
         hide_exprs();
         o.hide_panel();
         $('#site').showshow();
         $('.page_btn').hidehide();
-        $('#content_btns .expr_actions').hide()
-        $("#logo").showshow();
-        $('.overlay.form').remove();
+        $('.overlay.panel .expr_actions').hidehide()
     };
 
     // Check to see if tags overflows its bounds.
@@ -333,7 +315,7 @@ define([
             debug("loaded frame: " + found);
 
             if (contentFrame.hasClass('expr_visible')) 
-                contentFrame.get(0).contentWindow.postMessage({action: 'show'}, '*');
+                o.expr_show(contentFrame)
             for (var i = 0, el; el = loading_frame_list[i]; i++) {
                 if (el.prop("id") == contentFrame.prop("id")) {
                     loaded_frame_list.concat(loading_frame_list.splice(i, 1));
@@ -356,6 +338,10 @@ define([
         return contentFrame;
     };
 
+    o.expr_show = function(frame_el){
+        frame_el.get(0).contentWindow.postMessage({action: 'show'}, '*')
+    }
+
     o.play_timer = false;
     // Animate the new visible expression, bring it to top of z-index.
     function animate_expr (){
@@ -368,13 +354,10 @@ define([
         $('.social_btn').showshow();
 
         var contentFrame = o.get_expr(expr_id);
-        if (contentFrame.length == 0) {
+        if (contentFrame.length == 0)
             contentFrame = o.cache_frames([expr_id], true);
-        }
-        else {
-            contentFrame.get(0).contentWindow.
-                postMessage({action: 'show'}, '*');
-        }
+        else
+            o.expr_show(contentFrame)
         contentFrame.addClass('expr_visible').removeClass('expr_hidden').showshow();
         contentFrame.showshow();
         $('#exprs .expr').not('.expr_visible').css({'z-index': 0 });
@@ -461,7 +444,7 @@ define([
 
         // postMessage only works after the page loads.
         // So page buttons are always visible during expr loading,
-        // and once expr loads, they behave normally #page_btn_load_hack
+        // and once expr loads, they behave normally .page_btn.page_btn_load_hack
         if(!contentFrame.data('loaded')){
             // bugbug: sometimes this is never followed by a contentFrame.load
             // console.log('showing');
@@ -865,17 +848,17 @@ define([
         }
 
         if(msg == 'show_prev') {
-            $('#page_prev').showshow();
-            $('#page_next').hidehide();
+            $('.page_btn.page_prev').showshow();
+            $('.page_btn.page_next').hidehide();
         } else if(msg == 'show_next') {
-            $('#page_next').showshow();
-            $('#page_prev').hidehide();
+            $('.page_btn.page_next').showshow();
+            $('.page_btn.page_prev').hidehide();
         } else if(msg == 'hide') {
             $('.page_btn').hidehide();
         }
 
         // should reflect whether left or right page_btn should be visible if
-        // page is not loading. See #page_btn_load_hack
+        // page is not loading. See .page_btn.page_btn_load_hack
         page_btn_state = msg;
     };
 

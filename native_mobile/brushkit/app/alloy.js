@@ -21,8 +21,8 @@ var photosCollection = Alloy.Collections.instance('Photos');
 //dev-1 login: viciousesque/changeme	
 // /var/log/apache2/error.log
 
-Titanium.App.Properties.setString('base_url_ssl', 'https://dev.newhive.com/');
-Titanium.App.Properties.setString('base_url', 'http://dev.newhive.com/');
+Titanium.App.Properties.setString('base_url_ssl', 'https://staging.newhive.com/');
+Titanium.App.Properties.setString('base_url', 'http://staging.newhive.com/');
 
 var NUM_ACTIVE_XHR = 0;
 var imageUploadQueue = new Array();
@@ -41,25 +41,22 @@ var activityIndicator = Ti.UI.createActivityIndicator({
 	font: {fontSize:"20dp"},
 	message: '',
 	style:ai_style,
-	top:"15%",
-	height:"34dp",
-	width:"150dp",
+	top:"0dp",
+	right:"0dp",
+	height:"40dp",
+	width:"40dp",
 	backgroundColor:"#ffffff",
-	opacity:0.7,
+	opacity:0.95,
 	zIndex:100
 });
 Titanium.App.Properties.setBool('activity_indicator_is_visible', false);
 
+
 function showHiveCamera() {
 	Titanium.Media.showCamera({
-	
 		success:function(event)
 		{
-			var compose = Alloy.createController('Compose'); 
-			var compose_win = compose.getView('compose_window');
-
-			compose_win.open();
-
+			compose_win.open();	
 			Titanium.Media.hideCamera();
 
 			small_image_obj = reduceImageSize(event.media);
@@ -71,17 +68,28 @@ function showHiveCamera() {
 			photo_model.save();
 			photosCollection.add(photo_model);
 
+			Ti.App.fireEvent('enableShowCamera');
+			Titanium.App.Properties.setBool('is_camera_open', false);
+
 			uploadImage(photo_model);
 		},
 		cancel:function()
 		{
-			var compose = Alloy.createController('Compose'); 
-			compose.getView('compose_window').open();
-			Titanium.Media.hideCamera();
+			Ti.App.fireEvent('enableShowCamera');
+			Ti.App.fireEvent('enableSave');
+
+			Titanium.App.Properties.setBool('is_camera_open', false);
+
+			//caputre any setActivityIndicatorHide events that were defered because the camera was open
+			if(NUM_ACTIVE_XHR==0){
+				setActivityIndicatorHide();
+			}
 		},
 		error:function(error)
 		{
 			alert('camera error.');
+			Ti.App.fireEvent('enableShowCamera');
+			Ti.App.fireEvent('enableSave');
 		},
 		saveToPhotoGallery:false,
 		allowEditing:false,
@@ -90,6 +98,12 @@ function showHiveCamera() {
 		autohide:false,
 		mediaTypes:[Ti.Media.MEDIA_TYPE_PHOTO]
 	});
+
+	var compose = Alloy.createController('Compose'); 
+	var compose_win = compose.getView('compose_window');
+	//avoid camera error by disabling showCamera on compose page until image finishes resizing
+	Ti.App.fireEvent('disableShowCamera');
+	Titanium.App.Properties.setBool('is_camera_open', true);	
 }
 
 function showHiveGallery(){
@@ -98,12 +112,7 @@ function showHiveGallery(){
 		{
 			//checking if it is photo
 			if(event.mediaType == Ti.Media.MEDIA_TYPE_PHOTO) {
-				var compose = Alloy.createController('Compose'); 
-				var compose_win = compose.getView('compose_window');
-
 				compose_win.open();
-
-				Titanium.Media.hideCamera();
 
 				small_image_obj = reduceImageSize(event.media);
 
@@ -114,16 +123,30 @@ function showHiveGallery(){
 				photo_model.save();
 				photosCollection.add(photo_model);
 
+				Ti.App.fireEvent('enableShowCamera');
+
 				uploadImage(photo_model);
 			}   else {
 				alert('Sorry, only image uploads allowed at this time.');
 			}
 		},
 		cancel:function() {
-			//user cancelled the action fron within
-			//the photo gallery
-		}
+			Ti.App.fireEvent('enableShowCamera');
+			Ti.App.fireEvent('enableSave');
+
+			Titanium.App.Properties.setBool('is_camera_open', false);
+
+			//caputre any setActivityIndicatorHide events that were defered because the camera was open
+			if(NUM_ACTIVE_XHR==0){
+				setActivityIndicatorHide();
+			}
+		}	
 	});
+
+	var compose = Alloy.createController('Compose'); 
+	var compose_win = compose.getView('compose_window');
+	//avoid camera error by disabling showCamera on compose page until image finishes resizing
+	Ti.App.fireEvent('disableShowCamera');
 }
 
 function checkLogin() {
@@ -228,10 +251,7 @@ function uploadImage(photo_model) {
 	xhr.send(params);
 
 	NUM_ACTIVE_XHR++;
-
-	activityIndicator.message = 'uploading ' + NUM_ACTIVE_XHR;
-	activityIndicator.show();
-	Titanium.App.Properties.setBool('activity_indicator_is_visible', true);
+	setActivityIndicatorShow();
 
 	xhr.onerror = function(e) {
 		alert('Error: '+ e.error);
@@ -249,11 +269,9 @@ function uploadImage(photo_model) {
 
 		NUM_ACTIVE_XHR--;
 
-		activityIndicator.message = 'uploading ' + NUM_ACTIVE_XHR ;
-
-		if(NUM_ACTIVE_XHR == 0){
-			activityIndicator.hide();
-			Titanium.App.Properties.setBool('activity_indicator_is_visible', false);
+		//if camera is open defer setActivityIndicatorHide
+		if(NUM_ACTIVE_XHR == 0 && Titanium.App.Properties.getBool('is_camera_open')==false){
+			setActivityIndicatorHide();
 		}
 
 		res = JSON.parse(this.responseText)[0];
@@ -279,4 +297,54 @@ function addActivityIndicator(win){
 	}
 };
 
+function setActivityIndicatorShow(){
+	activityIndicator.show();
+	Titanium.App.Properties.setBool('activity_indicator_is_visible', true);
+	Ti.App.fireEvent('disableSave');
+}
+function setActivityIndicatorHide(){
+	activityIndicator.hide();
+	Titanium.App.Properties.setBool('activity_indicator_is_visible', false);
+	Ti.App.fireEvent('enableSave');
+}
 
+Ti.App.addEventListener('clearPhotosDB', function(){
+	photosCollection.fetch();
+	photosCollection.reset();
+	var db=Ti.Database.open('newhive');
+	var deleteRecords=db.execute('DELETE FROM photos');
+	db.close();
+});
+
+var _text_fields
+var init_textfields = function(fields, final_callback){
+	_text_fields = fields
+
+	// set up tab order
+	fields.slice(0,-1).map(function(field, i){
+		field.addEventListener('return', function(){
+		    fields[i+1].focus() })
+	})
+	fields[fields.length-1].addEventListener('return', final_callback)
+
+	// default interactive styling
+	fields.map(function(field){
+		field.addEventListener('focus', function(e){
+			e.source.borderColor = '#ACEFE2' })
+		field.addEventListener('blur', function(e){
+			e.source.borderColor = 'black' })
+	})
+}
+var textfield_blur = function(){
+	_text_fields.map(function(f){
+		f.blur() }) }
+
+var init_page = function(page){
+	page.addEventListener('focus', function(ev){
+		addActivityIndicator(ev.source) })
+
+	page.addEventListener('click', function(ev){
+		if(ev.source.constructor == Ti.UI.TextField) return
+		textfield_blur()
+	})
+}
