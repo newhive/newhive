@@ -353,8 +353,10 @@
 
 // TODO: BUGBUG: should really be something like body.main
 body.mobile {
-    .feed.profile, .feed.profile .card .snapshot { width: 485px; }
+    .feed.profile, .feed.profile .card .snapshot { width: 500px; }
+    #site #home_video { width: 500px; height: 281px; }
 }
+#home_video { width: 640px; height: 360px; }
 body {
     ///
     // background-color:blue;
