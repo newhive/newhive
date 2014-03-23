@@ -344,7 +344,11 @@ var init_page = function(page){
 		addActivityIndicator(ev.source) })
 
 	page.addEventListener('click', function(ev){
-		if(ev.source.constructor == Ti.UI.TextField) return
+		ev_elem = ev.source.getApiName();
+		is_textfield = (ev_elem.indexOf('TextField') != -1) ? true : false;
+
+		if(is_textfield) return
+
 		textfield_blur()
 	})
 }
