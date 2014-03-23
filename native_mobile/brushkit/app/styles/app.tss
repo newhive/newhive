@@ -7,7 +7,8 @@
 }
 
 "TextField": {
-    height: 50
+    width:'80%'
+    ,height: '40dp'
     ,color: 'black'
     ,backgroundColor: 'white'
     ,borderWidth: 3
@@ -17,4 +18,7 @@
         fontSize: 20
         ,fontWeight: 'bold'
     }
+    ,
+    autocapitalization: Ti.UI.TEXT_AUTOCAPITALIZATION_NONE
+    ,autocorrect: false
 }

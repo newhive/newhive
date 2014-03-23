@@ -10,9 +10,7 @@
 }
 "TextField": {
 	top:"18dp",
-	width:'70%',
-	autocapitalization: Ti.UI.TEXT_AUTOCAPITALIZATION_NONE,
-	autocorrect: false
+	width:'70%'
 }
 
 "#tf_password": {
