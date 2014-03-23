@@ -55,23 +55,6 @@
 }
 
 
-"TextField" : {
-	width:'80%',
-	height:'32dp',
-	backgroundColor: "#ffffff",
-	borderWidth:1,
-	borderColor:"#000000",
-	paddingLeft: 10,
-	color:"#000000",
-	font: {
-		fontSize: "18dp",
-		fontWeight: "bold"
-	},
-	autocapitalization: Ti.UI.TEXT_AUTOCAPITALIZATION_NONE,
-	autocorrect: false
-}
-
-
 
 "#tf_title": {
 	top:"0dp"
