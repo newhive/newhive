@@ -275,7 +275,7 @@ Hive.init_global_handlers = function(){
 
     $('#btn_save').click(function(){
         var expr = Hive.state();
-        Hive.send({save: expr})
+        Hive.send({save_dialog: 1})
     })
 };
 
@@ -285,6 +285,8 @@ Hive.receive = function(ev){
         Hive.init(msg.expr, msg.context)
     if(msg.focus)
         window.focus()
+    if(msg.save_request)
+        Hive.send({save: Hive.state()})
 }
 Hive.send = function(m){
     window.parent.postMessage(m, '*') }
