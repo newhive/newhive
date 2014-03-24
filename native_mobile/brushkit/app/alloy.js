@@ -17,10 +17,6 @@ Titanium.App.Properties.setBool('is_test', true);
 
 var photosCollection = Alloy.Collections.instance('Photos');
 
-//192.168.1.147:5000
-//dev-1 login: viciousesque/changeme	
-// /var/log/apache2/error.log
-
 Titanium.App.Properties.setString('base_url_ssl', 'https://staging.newhive.com/');
 Titanium.App.Properties.setString('base_url', 'http://staging.newhive.com/');
 
@@ -344,7 +340,11 @@ var init_page = function(page){
 		addActivityIndicator(ev.source) })
 
 	page.addEventListener('click', function(ev){
-		if(ev.source.constructor == Ti.UI.TextField) return
+		ev_elem = ev.source.getApiName();
+		is_textfield = (ev_elem.indexOf('TextField') != -1) ? true : false;
+
+		if(is_textfield) return
+
 		textfield_blur()
 	})
 }
