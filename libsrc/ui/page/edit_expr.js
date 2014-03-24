@@ -129,6 +129,8 @@ define([
             , function(){ return o.exit_safe } )
         o.exit_safe = true
         // o.save_safe = true
+        // So page has access to the expr content, especially tags
+        context.page_data.expr = expr;
     };
 
     o.attach_handlers = function(){
