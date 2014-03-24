@@ -442,9 +442,10 @@ define([
     }
 
     o.form_page_enter = function(){
+        // TODO: make this work for #Forms beyond "gifwall."
         var page_data = context.page_data;
-        if(page_data.expr && page_data.expr.tags
-            && page_data.expr.tags.indexOf("gifwall") >= 0
+        if(page_data.expr && page_data.expr.tags_index
+            && page_data.expr.tags_index.indexOf("gifwall") >= 0
         ) page_data.form_tag = 'gifwall'
         if(!page_data.form_tag) return
 
