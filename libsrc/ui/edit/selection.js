@@ -27,7 +27,12 @@ var o = {}
 ;
 
 o.Selection = function(o) {
-    o.elements = function(){ return elements.slice(); };
+    // returns: {param} n: nth selected element
+    //      {no params}  : the list of selected elements
+    o.elements = function(){ 
+        if (arguments.length > 0)
+            return elements[arguments[0]];
+        return elements.slice(); };
     o.count = function(){ return elements.length; };
     o.each = function(fn){ $.each(elements, fn) };
     o.get_targets = function(){
@@ -35,6 +40,7 @@ o.Selection = function(o) {
             elements.slice() : [drag_target]; 
     };
     o.add_to_collection = false;
+    o.has_align = false;
     o.is_selection = true;
     o.make_controls = [];
     o.handler_type = 2;
@@ -110,9 +116,7 @@ o.Selection = function(o) {
                 drag_target = o;
             else
                 drag_target = ev.data;
-            // TODO-cleanup-controls remove true branch
-            if(elements.length == 1) elements[0].hide_controls()
-            else o.hide_controls()
+            o.hide_controls()
             o.move_start();
             return;
         } else if(env.gifwall) {
@@ -160,9 +164,7 @@ o.Selection = function(o) {
     o.dragend = function (ev, dd) {
         if(!o.dragging) return;
         o.dragging = false;
-        // TODO-cleanup-controls remove true branch
-        if(elements.length == 1) elements[0].show_controls()
-        else o.show_controls()
+        o.show_controls()
 
         var app = ev.data;
         if(app){
@@ -276,10 +278,13 @@ o.Selection = function(o) {
             app.pos_relative_set(new_pos);
         }
     };
-    o.move_start = function(){
+    set_full_apps = function() {
         full_apps = (drag_target && drag_target != o) ? [drag_target] : elements;
         full_apps = full_apps.filter(function(a) { 
             return a.full_coord != undefined; });
+    }
+    o.move_start = function(){
+        set_full_apps();
         // if (context.flags.full_bleed && full_apps.length)
         if (full_apps.length) {
             full = full_apps[0];
@@ -299,7 +304,7 @@ o.Selection = function(o) {
         var off = [0, 0];
         if (o != drag_target)
             off = u._sub(drag_target.min_pos())(drag_target.pos_relative());
-        pos = u._add(pos)(off);
+        // pos = u._add(pos)(off);
         // TODO-feature-snap: check key shortcut to turn off snapping
         if(!env.no_snap){
             var excludes = {};
@@ -343,9 +348,13 @@ o.Selection = function(o) {
             (elements.length)
     }
 
-    hive_app.App.has_rotate(o);
+    // hive_app.App.has_rotate(o);
     var ref_angle = 0, ref_center, rotation_refs
-    o.angle = function(){ return 0; };
+    o.angle = function(){ 
+        if (elements.length == 1 && typeof(elements[0].angle) == "function")
+            return elements[0].angle();
+        return 0; 
+    };
     o.rotate_start = function(angle) {
         ref_angle = angle;
         ref_center = o.centroid_relative()
@@ -380,44 +389,71 @@ o.Selection = function(o) {
         env.History.change_end('rotate')
     }
     hive_app.App.has_resize(o);
-    var ref_dims, _resize = o.resize;
+    var ref_dims, _ref_dims, _resize = o.resize;
     o.before_resize = function() {
+        set_full_apps();
         o.each(function(i, a) { 
-            if (a.before_resize) a.before_resize(); });
+            if (a.resize_start) a.resize_start(); });
 
         drag_target = o;
         ref_dims = o.dims_relative();
-        env.History.change_start();
+        if (delegate_dims_set()) {
+            _ref_dims = elements[0].dims();
+            elements[0].dims_ref_set();
+        }
+        env.History.change_start(full_apps.length);
     }
     o.after_resize = function() {
         o.each(function(i, a) { 
-            if (a.after_resize) a.after_resize(); });
+            if (a.resize_end) a.resize_end(); });
 
         o.update_relative_coords();
         env.History.change_end('resize');
 
+        full_apps = [];
         drag_target = ref_dims = undefined;
+        return true;
     }
-    o.resize = function(delta){
-        _resize(delta);
-        if(!ref_dims) return;
-
-        var new_dims = o.dims_relative(),
-            scale_by = Math.max( new_dims[0] / ref_dims[0],
-                new_dims[1] / ref_dims[1] );
+    var _dims_relative_set = o.dims_relative_set;
+    // Multiselect doesn't handle non-aspect-preserving resize.
+    // Delegate it for single selection
+    var delegate_dims_set = function() {
+        return (ref_dims && elements.length == 1) // && !elements[0].get_aspect())
+    }
+    o.dims_relative_set = function(new_dims) {
+        if (delegate_dims_set())
+            return;
+        var new_ref = ref_dims;
+        if (!new_ref) {
+            new_ref = o.dims_relative();
+        }
+        var scale_by = Math.max( new_dims[0] / new_ref[0],
+            new_dims[1] / new_ref[1] );
 
         o.each(function(i, a){
             a.pos_relative_set( 
                 u._add(u._mul(scale_by)(_positions[i]))(o.pos_relative()) );
-            a.dims_relative_set( u._mul(scale_by)(u._mul(ref_dims)(_scales[i])) );
+            a.dims_relative_set( u._mul(scale_by)(u._mul(new_ref)(_scales[i])) );
         });
 
         var bounds = o.bounds();
-        o.dims_relative_set([bounds.right - bounds.left, bounds.bottom - bounds.top]);
+        _dims_relative_set([bounds.right - bounds.left, bounds.bottom - bounds.top]);
+        if (!ref_dims)
+            o.update_relative_coords();
+    }
+    o.resize = function(delta){
+        var dims = _resize(delta);
+        if(!ref_dims) return;
+        if (delegate_dims_set()) {
+            return elements[0].resize(delta);
+        }
 
-        o.layout();
     };
     o.get_aspect = function() {
+        if (elements.length == 1 && !elements[0].get_aspect()) {
+            return elements[0].get_aspect();
+        }
+
         var dims = o.dims();
         return dims[0] / dims[1];
     };
@@ -425,19 +461,16 @@ o.Selection = function(o) {
     // END-event-handlers
 
     o.app_select = function(app, multi) {
-        if(multi){
+        if(multi) {
             app.unfocus();
-        }
-        else{
+        } else {
             app.focus();
             // TODO-feature for sketch and geometry apps: evs.handler_set(o.type)
             // depends on defining app specific but instance unspecific creation
             // handlers on app type constructors
         }
-        // Controls(app, multi || context.flags.show_mini_selection_border);
-        if (multi || env.show_mini_selection_border)
-            Controls(app, true);
-        // Controls(app, multi);
+        // Add mini-border
+        Controls(app, true);
     };
     o.app_unselect = function(app) {
         app.unfocus();
@@ -446,14 +479,10 @@ o.Selection = function(o) {
 
     o.update = function(apps){
         apps = $.grep(apps || elements, function(e){ return ! e.deleted; });
-        var multi = o.dragging || (apps.length > 1);
-
-        // TODO-feature, TODO-cleanup-controls: do not make
-        // distinction between selecting single and multiple apps.
-        // Show controls which apply to all objects in the selection
+        var multi = true;
 
         // Previously unfocused elements that should be focused
-        $.each(apps, function(i, el){ o.app_select(el, multi); });
+        $.each(apps, function(i, el){ o.app_select(el, apps.length > 1); });
         // Previously focused elements that should be unfocused
         o.each(function(i, el){
             if($.inArray(el, apps) == -1) {
@@ -465,20 +494,23 @@ o.Selection = function(o) {
 
         o.update_relative_coords();
 
+        // Show controls which apply to all objects in the selection
         if (o.controls) o.controls.remove();
+        o.make_controls = o.base_controls.slice();
+        var sel_controls = u.union.apply(null, 
+            elements.map(function(app) {
+                return app.make_controls || []; })
+        )
+        o.make_controls = u.union(o.make_controls, sel_controls);
         if(!o.dragging && multi) {
             Controls(o, false);
             o.controls.layout();
         }
-        // if(apps.length <= 1 && o.controls)
-        //     o.controls.remove();
-        if(!o.dragging && apps.length == 1) {
-            Controls(apps[0], false);
-            if (env.gifwall && context.flags.show_mini_selection_border)
-                o.controls.div.find(".select_border").hidehide();
-        }
+        if (env.gifwall && context.flags.show_mini_selection_border && o.controls)
+            o.controls.div.find(".select_border").hidehide();
         if(apps.length == 0) {
             evs.handler_del({handler_type: 0}); 
+            if (o.controls) o.controls.remove();
         }
     };
 
@@ -490,7 +522,7 @@ o.Selection = function(o) {
         o.update(elements.concat([element]));
     };
     o.select = function(app_or_apps){
-        return o.update($.isArray(app_or_apps) ? app_or_apps : [app_or_apps]);
+        return o.update((!app_or_apps || $.isArray(app_or_apps)) ? app_or_apps : [app_or_apps]);
     };
     o.selected = function(app){
         return $.inArray(app, elements) != -1;
@@ -506,18 +538,13 @@ o.Selection = function(o) {
     o.update_relative_coords = function(){
         var bounds = o.bounds(), _pos = [bounds.left, bounds.top]
             ,_dims = [bounds.right - bounds.left, bounds.bottom - bounds.top];
-        o.no_layout = true;
-        if (!u.array_equals(_pos, o.pos_relative()))
-            _pos_relative_set(_pos);
-        if (!u.array_equals(_dims, o.dims_relative()))
-            o.dims_relative_set(_dims);
-        o.no_layout = false;
         _positions = elements.map(function(a){
             return u._sub(a.pos_relative())(_pos);
         });
         _scales = elements.map(function(a){
             return u._div(a.dims_relative())(_dims);
         });
+        o.bounds_relative_set(_pos, _dims);
     };
 
     var _pos_relative_set = o.pos_relative_set;
@@ -529,10 +556,17 @@ o.Selection = function(o) {
         var bounds = o.bounds();
         _pos_relative_set([bounds.left, bounds.top]);
 
-        o.layout();
+        // o.layout();
     };
     o.bounds = function() { 
         return u.app_bounds(elements);
+    };
+    // Overridden so as to take place in un-rotated space
+    o.min_pos = function() {
+        return o.pos_relative();
+    };
+    o.max_pos = function() {
+        return u._add(o.pos_relative())(o.dims_relative());
     };
 
     // END-coords
@@ -623,7 +657,57 @@ o.Selection = function(o) {
         if(o.controls)
             o.controls.layout();
     });
-    hive_app.App.has_nudge(o);
+    
+    // Set up delegate functions for controls
+    o.load = function() {
+        o.base_controls = o.make_controls.slice();
+    }
+    setTimeout(o.load, 1);
+    var delegate_fn = function(fn_name) {
+        return function() {
+            var args = $.makeArray(arguments), res = "undefined"
+                ,from_history = (args.slice(-1)[0] == "history")
+                ,apps = elements.slice();
+            if (from_history) {
+                args.pop();
+                if (args.length) {
+                    args = args[0].slice();
+                    apps = args.shift();
+                }
+            }
+            all_res = apps.map(function(app, i) {
+                if (typeof(app[fn_name]) == "function") {
+                    var applied = args;
+                    if (from_history)
+                        applied = [args[i]];
+                    if (typeof(app[fn_name]) == "function") {
+                        var _res = app[fn_name].apply(null, applied);
+                        if (res == "undefined") res = _res;
+                        if (res != _res) res = undefined;
+                    }
+                    return _res;
+                }
+                return undefined;
+            });
+            if (from_history) {
+                all_res.unshift(apps);
+                return all_res;
+            }
+            return res;
+        }
+    }
+    var delegates = ["color", "color_set", "opacity", "opacity_set"
+        ,"border_radius", "border_radius_set", "link", "link_set"
+        ,"stroke_width", "stroke_width_set", "stroke_update", "reframe"
+        ,"blur", "blur_set", "stroke", "stroke_set", 'run'
+        ,'css_class', 'css_class_set'];
+    delegates.map(function(fn_name) {
+        o[fn_name] = delegate_fn(fn_name);
+    });
+
+    // prevent selection keyhandler from eating events when nothing is selected
+    hive_app.App.has_nudge(o, function(){ return elements.length > 0 })
+
     return o;
 };
 hive_app.registerApp(o.Selection, 'hive.selection');

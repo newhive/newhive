@@ -37,11 +37,13 @@ class Runner(object):
             else:
                 self.add_work()
                 time.sleep(1)
-                if not self.continuous:
+                if not self.continuous and len(self.queue) == 0:
                     break
 
 class ImageScalerRunner(Runner):
     def add_work(self):
+        # TODO: Need to write maintenance script to clean up files which
+        # failed resamples, namely: resample_time older than 6 hours AND has no resamples
         work = list(db.File.search({'resample_time':0}).limit(10))
         _now = now()
         for k in work:

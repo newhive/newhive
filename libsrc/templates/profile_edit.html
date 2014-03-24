@@ -1,7 +1,8 @@
 {<with owner}
   <form id='user_update_form' {form_attrs "user_update" "owner_name" user.name} method='POST'>
 
-    <div id='user_header' class='header with_background'> {# {<if profile_bg} with_background{>}'> #}
+    <div class='user_header header with_background'> 
+      {# {<if profile_bg} with_background{>}'> #}
       <label for='profile_bg_input' class='background'>
         <img id='profile_bg'
           src='{<if profile_bg}{profile_bg}{>}{<else}place_holder.png{>}'>

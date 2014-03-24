@@ -7,11 +7,12 @@
 }
 
 // Search bar
+.mobile .search_bar input[type=text] { width: 380px; }
 .search_bar {
     margin: 25px auto;
     // margin-bottom: 50px;
     display: block;
-    width: 538px;
+    max-width: 538px;
     // padding-left: 44px;
     // height: $nav_size - 18;
     input[type=text] { 
@@ -121,7 +122,18 @@
 }
 
 // User Profile header
-#user_header {
+.mobile .user_header {
+    width: 450px;
+    .profile {
+        .thumb {
+            width: 60px;
+            float: left;
+            margin: 0px 10px 0px 0px;
+        }
+        .info { width: 450px; }
+    }
+}
+.user_header {
     width: 800px;
     margin: 50px auto; // 10px auto;
     &.with_background {
@@ -132,7 +144,6 @@
         z-index: 1;
         background-color: white;
 
-        img.thumb { width: 222px; height: 222px; }
         .thumb {
             img { width: 222px; }
             // width: 222px; height: 222px;
@@ -242,7 +253,7 @@
     cursor: pointer;
 }
 
-// moved out of #feed because it applies to social overlay
+// moved out of .feed because it applies to social overlay
 .owner {
     font-family: Gibson;
     .username {
@@ -341,6 +352,11 @@
 
 
 // TODO: BUGBUG: should really be something like body.main
+body.mobile {
+    .feed.profile, .feed.profile .card .snapshot { width: 500px; }
+    #site #home_video { width: 500px; height: 281px; }
+}
+#home_video { width: 640px; height: 360px; }
 body {
     ///
     // background-color:blue;
@@ -382,7 +398,7 @@ body {
     .tag_list {
         &.main {
             text-align: center;
-            width: 600px;
+            max-width: 600px;
             max-height: 114px;
             overflow: hidden;
             &.expanded {
@@ -463,10 +479,10 @@ body {
         }
     }
 
-    #feed.public .card.unlisted {
+    .feed.public .card.unlisted {
         opacity: .4;
     }
-    #feed {
+    .feed {
         .icon.private {
             background-image: asset_url('skin/nav/private.png');
             width: 44px;
@@ -513,7 +529,7 @@ body {
         }
     }
     
-    #feed.profile {
+    .feed.profile {
         width: 715px;
 
         .card {
@@ -529,7 +545,7 @@ body {
 
             .snapshot {
                 width: 715px;
-                height: 430px;
+                // height: 430px;
             }
             .title_spacer {
                 padding: 0px 10px;
@@ -559,7 +575,7 @@ body {
         }
     }
 
-    #feed.grid {
+    .feed.grid {
         /* max-width: 1256px; */
         // margin: auto;
         width: 1230px;
@@ -611,7 +627,7 @@ body {
             // }
             .snapshot {
                 width: 390px;
-                height: 235px;
+                // height: 235px;
             }
         }
     }

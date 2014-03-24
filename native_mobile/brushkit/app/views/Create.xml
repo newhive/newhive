@@ -1,0 +1,10 @@
+<Alloy>
+	<Window id="create_window">
+		<ImageView id="logo" image="/images/logo_with_name.png"></ImageView>
+		
+		<Label id="label_create" >Create your \nExpression</Label>
+		
+		<Button id="select">Select</Button>
+		<Button id="take">Take</Button>
+	</Window>
+</Alloy>
