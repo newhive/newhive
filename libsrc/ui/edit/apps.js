@@ -789,14 +789,13 @@ Hive.App.Image = function(o) {
 
     // TODO-cleanup: move to has_crop
     (function(){
-        var drag_hold, fake_img, ref_offset, ref_dims, ref_scale_x;
+        var drag_hold, fake_img, ref_offset, ref_dims, ref_scale_x, crop_bg;
 
         // UI for setting .offset of apps on drag after long_hold
         o.long_hold = function(ev){
             if(o != ev.data) return;
-            if(o.has_full_bleed() && 
-                ($(ev.target).hasClass("resize") || $(ev.target).hasClass("resize_v")))
-                return;
+            if( o.has_full_bleed() && ($(ev.target).hasClass("resize")
+                || $(ev.target).hasClass("resize_v")) ) return;
             if(!o.init_state.scale_x) 
                 if (!o.allow_crop()) return false;
             // TODO: should we only hide controls if selected?
@@ -806,9 +805,12 @@ Hive.App.Image = function(o) {
             drag_hold = true;
 
             // show new img w/ opacity
-            fake_img = o.img.clone().appendTo(o.div).css('opacity', .5)
-                .css('z-index', 0);
-            o.img = o.img.add(fake_img);
+            crop_bg = $('<div>').css('background-color', 'black')
+                .appendTo(o.div)
+            fake_img = o.img.clone().appendTo(o.div).css({ 'opacity': .5
+                , 'z-index': 0 })
+            o.img = o.img.add(fake_img).add(crop_bg);
+            o.layout()
             return false;
         };
         o.long_hold_cancel = function(ev){
@@ -818,8 +820,9 @@ Hive.App.Image = function(o) {
             if (ev)
                 ev.stopPropagation();
             drag_hold = false;
-            o.img = o.img.not(fake_img);
+            o.img = o.img.not(fake_img).not(crop_bg);
             fake_img.remove();
+            crop_bg.remove()
         };
 
         o.dragstart = function(ev){
@@ -939,8 +942,9 @@ Hive.App.Image = function(o) {
     }
     o.layout = function() {
         _layout();
-        var dims = o.dims(), scale_x = o.init_state.scale_x || 1;
-        o.img.css('width', scale_x * dims[0] + 'px').css('height', 'auto');
+        var dims = o.dims(), scale_x = o.init_state.scale_x || 1,
+            scale_y = scale_x / o.aspect;
+        o.img.css({ 'width': scale_x * dims[0], 'height': scale_y * dims[0] })
         var offset = o.offset();
         if (offset) {
             o.img.css({"margin-left": offset[0], "margin-top": offset[1]});
