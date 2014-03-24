@@ -1,4 +1,4 @@
-<div class='overlay panel nav {<if query.clean}hide{>}' id='content_btns'>
+<div class='overlay panel nav {<if query.clean}hide{>}'>
   {# create or signup/login #}
   {<unless user.logged_in}
     <span class='signup'>
@@ -20,9 +20,9 @@
   {# + button to open overlay #}
   <div class='social_btn item btn hide hoverable'></div>
 </div>
-{<if (not flags.mobile)}
-  <div class='social overlay page_btn' id='page_prev'></div>
-  <div class='social overlay page_btn' id='page_next'></div>
+{<if (or 1 (not flags.mobile))}
+  <div class='social overlay page_btn page_prev'></div>
+  <div class='social overlay page_btn page_next'></div>
 {>}
 {# hive logo button #}
 <div id='logo' class='overlay nav logo icon left right {<if query.clean}hide{>}'></div>
@@ -65,6 +65,21 @@
     </a>#}
     <div class="title">Log in:</div>
     {|templates/login_form.html}
+  </div>
+  
+  <div id="dia_recover" class="standard dialog" data-handle='.password_recovery'>
+    <div class="error title expr">Reset your password:</div>
+    <div class="subheading error_msg"></div>
+    {<vcenter "success_show heading pointer"}
+      <div class="centered">A password reset link was sent to your email.</div>
+    {>}
+    <div class="success_hide">
+      <form { form_attrs "password_recover" } id='form_password_recover' method='POST'>
+        <div class="form_text">Enter your email address.</div>
+        <input autofocus placeholder="Email" type="text" name="email">
+        <button type="submit" class="submit teal_btn upper">Enter</button>
+      </form>
+    </div>
   </div>
 {>}
 

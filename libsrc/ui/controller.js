@@ -26,7 +26,7 @@ define([
     o.init = function(route_args){
         window.c = context; // useful for debugging
         setup_google_analytics();
-        if (context.flags.mobile_web)
+        if (!util.mobile() && context.flags.mobile_web)
             util.mobile = function() { return "true" };
         // init_history();
 
@@ -38,10 +38,12 @@ define([
         routing.register_state(route_args);
         if (util.mobile()) {
             $("body").addClass('mobile');
-            $('<meta name="viewport" content="width=device-width, ' +
-                'height=device-height, initial-scale=0.5, ' +
-                'user-scalable=1"/>').appendTo($("head"));
-            context.flags.mobile = true;
+            // var init_scale = 575 / ($(window).width() || 720)
+            $('<meta name="viewport" content="width=500">')
+                .appendTo('head')
+                 //, initial-scale=' + init_scale +
+                // + ', user-scalable=1"/>').appendTo($("head"));
+            context.flags.mobile = util.mobile();
         }
         page.init(o);
         js.each(pages, function(m){

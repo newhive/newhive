@@ -2,29 +2,32 @@
   <div id="popup_content">
     <div class="left_pane">
       {# expression title #}
-      <div class="title_spacer">
+      {<vcenter "title_box"}
         <div class="title expr text">{expr.title|untitled|e}
-        </div></div>
+        </div>
+      {>}
       {# user profile #}
       {<with owner "brief" true}
         {|templates/profile_card.html}
       {>}
     </div>
     <div class="right_pane">
-      {# plus menu (Add to collection) #}
-      <div class="icon plus_menu needs_login pointer"></div>
-      {<if flags.admin}
-        <form {form_attrs "add_featured_queue"} method="POST">
-          <input type="hidden" name="expr_id" value="{id}">
-          <button type="submit" class="icon add_queue pointer"></button>
-        </form>
-      {>}
-      {# tags #}
-      <div class="vcenter_spacer"><div class="spacer">
+     {# tags #}
+      {<vcenter "tags_box"}
+        <div class="hide moveme">
+          {# plus menu (Add to collection) #}
+          <div class="icon plus_menu needs_login pointer"></div>
+          {<if flags.admin}
+            <form {form_attrs "add_featured_queue"} method="POST">
+              <input type="hidden" name="expr_id" value="{id}">
+              <button type="submit" class="icon add_queue pointer"></button>
+            </form>
+          {>}
+        </div>
         {<with null "no_delete" true}
           {|templates/tag_list.html}
         {>}
-      </div></div>
+      {>}
       {# Action icons #}
       <div class="stats_bar">
         {# views, metadata #}

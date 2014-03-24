@@ -199,14 +199,17 @@ class Expr(ModelController):
         html_for_app = partial(self.html_for_app, scale=expr_scale,
             snapshot_mode=snapshot_mode)
         app_html = map(html_for_app, exp.get('apps', []))
-        if exp.has_key('dimensions') and 'gifwall' not in exp.get('tags_index',[]):
-            app_html.append("<div id='expr_spacer' class='happ' style='top: {}px;'></div>".format(exp['dimensions'][1]))
+        # if exp.has_key('dimensions') and 'gifwall' not in exp.get('tags_index',[]):
+        #     app_html.append("<div id='expr_spacer' class='happ' style='top: {}px;'></div>".format(exp['dimensions'][1]))
         return ''.join(app_html)
 
     def html_for_app(self, app, scale=1, snapshot_mode=False):
         content = app.get('content', '')
         more_css = ''
         type = app.get('type')
+        if type != 'hive.rectangle':
+            c = app.get('css_state', {})
+            more_css = ';'.join([p + ':' + str(c[p]) for p in c])
         if type == 'hive.image':
             media = self.db.File.fetch(app.get('file_id'))
             if media: content = media.get_resample(
@@ -281,16 +284,28 @@ class Expr(ModelController):
                 + "' style='filter:url(#%s_blur)'/></svg>" % app.get('id','')
             )
             style = app.get('style', {})
-            more_css = 'fill:%s;stroke:%s' % (
-                style.get('fill',''), style.get('stroke',''))
+            more_css = ';'.join([ k+':'+str(v) for k,v in style.items()])
+        elif type == 'hive.code':
+            tag = 'script'
+            ctype = app.get('code_type', 'js')
+            if ctype == 'js':
+                if app.get('url'):
+                    html = "<script src='%s'></script>" % app.get('url')
+                else:
+                    html = "<script>%s</script>" % app.get('content')
+            if ctype == 'css':
+                # TODO-feature-css-url: if app['url'], put <link> tag in head
+                html =  '<style>%s</style>' % app.get('content')
         else:
             html = content
 
         data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
         data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
         app_id = app.get('id', app['z'])
-        return "<div class='happ %s' id='app%s' style='%s'%s>%s</div>" %\
-            (type.replace('.', '_'), app_id, css_for_app(app) + more_css, data, html)
+        return "<div class='happ %s %s' id='app%s' style='%s'%s>%s</div>" % (
+            type.replace('.', '_'), app.get('css_class'), app_id,
+            css_for_app(app) + more_css, data, html
+        )
 
 # TODO-bug fix resizing after loading by sending pre-scaled expr
 # Requires client layout_apps() to use scaled expr dimensions
