@@ -2449,7 +2449,7 @@ Hive.bg_set = function(bg, load) {
     Hive.bg_color_set(bg.color);
 
     var img = Hive.bg_div.find('img')
-        ,imgs = img.add('#bg_preview_img').add(raw)
+        ,imgs = img.add('#bg_preview_img')
         ,raw = false;
     try {
         raw = $(bg.content)
