@@ -441,14 +441,16 @@ define([
     }
 
     o.form_page_enter = function(){
+        // must be idempotent; called twice for expr pagethroughs
         // TODO: make this work for #Forms beyond "gifwall."
-        var page_data = context.page_data;
-        if(page_data.expr && page_data.expr.tags_index
-            && page_data.expr.tags_index.indexOf("gifwall") >= 0
-        ) page_data.form_tag = 'gifwall'
-        if(!page_data.form_tag) return
+        var page_data = context.page_data, expr = page_data.expr
+            ,tags = expr && (expr.tags_index || expr.tags)
+        if(tags && tags.indexOf("gifwall") >= 0)
+            page_data.form_tag = 'gifwall'
+        else return
 
         $("#logo").hidehide();
+        $('.overlay.form').remove()
         $('#overlays').append(form_overlay_template(page_data));
 
         var $create = $("#overlays .create")
