@@ -900,6 +900,7 @@ class User(HasSocial):
             if expr and expr.get('auth') == 'public':
                 expr['score'] = popularity_time_score(expr)
                 exprs_by_id[expr.id] = expr
+        # TODO-perf: move this into MongoDB (mapreduce)
         result = sorted(exprs_by_id.values(),
             key=lambda x: x['score'], reverse=True)
         return result[at:at+limit]
@@ -1379,6 +1380,12 @@ class Expr(HasSocial):
     #TODO-cleanup: remove after snapshot migration
     def snapshot_name_base(self, size, time):
         return '_'.join([self.id, time, self.entropy(), size]) + '.jpg' #(".jpg" if (size == "full") else ".png")
+
+    def snapshot_name_http(self, size):
+        res = self.snapshot_name(size)
+        if not res.startswith("http"):
+            res = "http:" + res
+        return res
 
     # size is 'big', 'small', or 'tiny'.
     def snapshot_name(self, size):

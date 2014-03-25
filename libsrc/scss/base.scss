@@ -91,9 +91,10 @@ button {
 .disabled  {
     &.teal_btn, &.text_btn, &.black_btn {
         color: $color_light_grey;
-        // background-color: black !important;
+        background-color: grey;
         &:hover {
             color: $color_light_grey;
+            background-color: grey;
         }
     }
     &.grey_btn {
@@ -108,9 +109,6 @@ button {
     }
     &.grey_btn:hover {
         background-color: $color_light_grey;
-    }
-    &.black_btn:hover {
-        background-color: black;
     }
 }
 .grey_btn {

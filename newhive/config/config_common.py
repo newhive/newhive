@@ -67,12 +67,13 @@ site_flags = {
     ,'modify_special_tags': ['admins','nd4']
     ,'show_mini_selection_border': ['admins','nd4']
     ,'copy_table': ['admins','nd4']
+    ,'button_options': ['admins']
+    ,'shapes': ['admins']
+    ,'custom_domain': []
     # Admin
     ,'admin': ['admins']
     # Old / unused
     ,'logged': ['logged_out']
-    ,'shapes': ['admins']
-    ,'button_options': ['admins']
 }
 
 site_user = 'newhive'
