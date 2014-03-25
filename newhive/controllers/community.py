@@ -212,15 +212,18 @@ class Community(Controller):
         }
 
     def loves(self, tdata, request, owner_name=None, db_args={}, **args):
-        # TODO: properly handle private expressions by passing viewer to cards
-
         owner = self.db.User.named(owner_name)
         if not owner: return None
         # Get the feeds starred by owner_name...
         spec = {'initiator_name': owner_name, 'entity_class':'Expr' }
         # ...and grab its expressions.
+        # TODO: deal with privacy by doing a mapreduce
+        # _db_args = {} if owner_name != tdata.user.get('name') else db_args
         cards = self.db.Expr.fetch(map(lambda en:en['entity'], 
             self.db.Star.page(spec, **db_args)))
+        # if owner_name != tdata.user.get('name'):
+        #     spec['auth'] = 'public'
+
         profile = owner.client_view(viewer=tdata.user)
         return {
             'cards': cards, 'owner': profile, 'card_type':'expr',
