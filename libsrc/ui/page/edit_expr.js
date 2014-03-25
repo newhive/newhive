@@ -112,7 +112,7 @@ define([
         if(expr.auth) $('#menu_privacy [val=' + expr.auth +']').click()
         $('#use_custom_domain').prop('checked', expr.url ? 1 : 0).
             trigger('change')
-        var container = expr.container || $.extend({}, default_expr.container)
+        var container = expr.container || {} // $.extend({}, default_expr.container)
         for(var btn in container)
             $('[name=' + btn + ']').prop('checked', container[btn])
     }
