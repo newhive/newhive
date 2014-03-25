@@ -65,7 +65,6 @@ define([
 ){
     var o = {}, expr_page = false, grid_width, controller,
         border_width = 1,
-        column_layout = false,
         render_new_cards_func,
         anim_direction; // 0 = up, +/-1 = right/left
     const anim_duration = 700;
@@ -442,14 +441,16 @@ define([
     }
 
     o.form_page_enter = function(){
+        // must be idempotent; called twice for expr pagethroughs
         // TODO: make this work for #Forms beyond "gifwall."
-        var page_data = context.page_data;
-        if(page_data.expr && page_data.expr.tags_index
-            && page_data.expr.tags_index.indexOf("gifwall") >= 0
-        ) page_data.form_tag = 'gifwall'
-        if(!page_data.form_tag) return
+        var page_data = context.page_data, expr = page_data.expr
+            ,tags = expr && (expr.tags_index || expr.tags)
+        if(tags && tags.indexOf("gifwall") >= 0)
+            page_data.form_tag = 'gifwall'
+        else return
 
         $("#logo").hidehide();
+        $('.overlay.form').remove()
         $('#overlays').append(form_overlay_template(page_data));
 
         var $create = $("#overlays .create")
@@ -626,6 +627,7 @@ define([
     // Move the expr.card's into the feed layout, shuffling them
     // into the shortest column.  
     o.layout_columns = function(ordered_ids){
+        o.column_layout = true;
         if (undefined == ordered_ids) {
             ordered_ids = $.map(context.page_data.cards, function(el) {
                 return el.id;
@@ -662,24 +664,26 @@ define([
         // Count of cards which fit to even multiple of columns
         var card_count = expr_cards.length - columns;// - (expr_cards.length % columns);
         expr_cards.each(function(i) {
+            var $el = $(this);
+            $el.removeAttr('style');
             if (o.column_layout) {
-                if (! $(this).parent().hasClass("column_0"))
-                    $(this).css("border-left", "1px solid black");
+                if (! $el.parent().hasClass("column_0"))
+                    $el.css("border-left", "1px solid black");
                 else
-                    $(this).css("border-left", "none");
-                if (! $(this).is(":first-child"))
-                    $(this).css("border-top", "1px solid black");
+                    $el.css("border-left", "none");
+                if (! $el.is(":first-child"))
+                    $el.css("border-top", "1px solid black");
                 else
-                    $(this).css("border-top", "none");
+                    $el.css("border-top", "none");
             } else {
                 if (i < card_count)
-                    $(this).css("border-bottom", "1px solid black");
+                    $el.css("border-bottom", "1px solid black");
                 else
-                    $(this).css("border-bottom", "none");
+                    $el.css("border-bottom", "none");
                 if ((i + 1) % columns != 0 && i + 1 < expr_cards.length)
-                    $(this).css("border-right", "1px solid black");
+                    $el.css("border-right", "1px solid black");
                 else
-                    $(this).css("border-right", "none");
+                    $el.css("border-right", "none");
             }
         });
     };
