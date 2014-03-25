@@ -1,0 +1,60 @@
+"#compose_window": {
+	layout:"composite",
+	top:"40dp"
+}
+
+"#gif_wall_table": {
+	top:"0dp",
+	height:"75%",
+	separatorColor:"transparent",
+	zIndex:1
+}
+
+"#buttons_view": {
+	layout:"composite",
+	bottom:"0dp",
+	height:"25%",
+	zIndex:10
+}
+
+"#select": {
+	width: "50%",
+	height:"50%",
+	left:"0dp",
+	top:"0dp",
+	color:"#000000",
+	borderColor:"#3e3e3e",
+	borderWidth: "1dp",
+	backgroundColor: "#aef0e8",
+	font: {
+		fontSize: "20dp",
+		fontWeight: "bold"
+	}
+}
+"#take": {
+	width: "50%",
+	height:"50%",
+	right:"0dp",	
+	top:"0dp",
+	color:"#000000",
+	borderColor:"#3e3e3e",
+	borderWidth: "1dp",
+	backgroundColor: "#aef0e8",
+	font: {
+		fontSize: "20dp",
+		fontWeight: "bold"
+	}
+}
+"#save": {
+	width: "100%",
+	height:"50%",	
+	bottom:"0dp",
+	color:"#000000",
+	borderColor:"#3e3e3e",
+	borderWidth: "1dp",
+	backgroundColor: "#aef0e8",
+	font: {
+		fontSize: "20dp",
+		fontWeight: "bold"
+	}
+}

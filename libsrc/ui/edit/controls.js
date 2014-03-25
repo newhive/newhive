@@ -37,8 +37,7 @@ o.Controls = function(app, multiselect, delegate) {
         else app.controls.remove(); // otherwise destroy them and reconstruct requested type
     }
     var o = app.controls = {};
-    // TODO-cleanup: remove delegate, have selection handle control creation
-    //o.app = delegate || app;
+    var sel_app = app.sel_app()
     o.app = app;
     o.multiselect = multiselect;
 
@@ -66,7 +65,8 @@ o.Controls = function(app, multiselect, delegate) {
             // TODO: improve URL guessing
             if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && 
                 v.match(/\w+\.\w{2,}/)) v = 'http://' + v;
-            o.app.link(v);
+            o.app.link_set(v);
+            env.History.saver(sel_app.link, sel_app.link_set, 'link image').exec(v);
         };
 
         // Don't have to worry about duplicating handlers because all elements
@@ -129,10 +129,17 @@ o.Controls = function(app, multiselect, delegate) {
         return $($.map(ctrls.clone(false), o.appendButton)); };
     o.addControls = function(ctrls) { 
         return $($.map(ctrls.clone(false).children(), o.appendControl)); };
+    o.addButtons = function(ctrls) {
+        $ctrls = ctrls.find(".control.buttons");
+        if ($ctrls.length == 0)
+            $ctrls = ctrls;
+        return $($.map($ctrls.clone(false).children(), o.appendButton)); };
     o.hover_menu = function(handle, drawer, opts) {
         return u.hover_menu(handle, drawer, $.extend({
-            auto_height: false, offset_y : o.padding - 4}, opts))
+            auto_height: false, offset_y : o.padding - 7}, opts))
     };
+    o.single = function() {
+        return (env.Selection.count() == 1) ? o.app.sel_app() : false }
 
     o.padding = 4;
     o.border_width = 5;
@@ -176,7 +183,6 @@ o.Controls = function(app, multiselect, delegate) {
             dims[1] = ap[1] - pos[1] + ad[1];
             minned_dims = dims.slice();
         }
-        //pos = u._sub(pos)(u._apply(Math.max, 0)(u._sub(minned_dims)(dims)));
         pos = u._add(pos)(u._mul(delta_dir)(u._sub(minned_dims)(dims)));
 
         return { pos: pos, dims: minned_dims };
@@ -185,6 +191,9 @@ o.Controls = function(app, multiselect, delegate) {
     o.dims = function(){ return pos_dims().dims };
 
     o.layout = function() {
+        // Fix parent layout if needed
+        // if (o.app.focused())
+        //     env.Selection.update_relative_coords();
         //if (delegate && o.app.controls)
         //    o.app.controls.layout();
         var pos = o.pos(), dims = o.dims(),
@@ -228,9 +237,10 @@ o.Controls = function(app, multiselect, delegate) {
         .on(o.select_borders, 'drag', o.app)
         .on(o.select_borders, 'dragend', o.app);
     o.div.append(o.select_box.append(o.select_borders));
-    o.select_box.click(function( e ){
-        e.stopPropagation();
-        o.app.unfocus();
+    o.select_box.click(function(){
+        var app = o.single()
+        if(app)
+            app.unfocus();
     });
 
     if(o.multiselect && o.app.angle)

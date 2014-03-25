@@ -1,21 +1,36 @@
 define([
-    'browser/jquery',
-    'browser/js',
-    'server/context',
-    'ui/page/expr',
-    'ui/dialog',
-    'ui/menu',
-    'sj!templates/edit_container.html'
+    'browser/jquery'
+    ,'browser/js'
+    ,'server/context'
+    ,'ui/page/expr'
+    ,'ui/dialog'
+    ,'ui/menu'
+
+    ,'sj!templates/edit_container.html'
 ], function(
-    $,
-    js,
-    context,
-    expr_page,
-    dialog,
-    menu,
-    edit_container_template
+    $
+    ,js
+    ,context
+    ,expr_page
+    ,dialog
+    ,menu
+
+    ,edit_container_template
 ){
-    var o = {}, save_dialog, expr;
+    var o = {}, save_dialog, expr, ui_page, default_expr = {
+        auth: 'public'
+        ,container: {
+            facebook_btn: true
+            ,twitter_btn: true
+            ,love_btn: true
+            ,republish_btn: true
+            ,comment_btn: true
+        }
+    }
+
+    o.set_page = function(page){
+        ui_page = page;
+    }
 
     o.init = function(controller){
         // o.controller = controller;
@@ -25,16 +40,17 @@ define([
 
     o.enter = function(){
         $("body").addClass("edit");
-        window.addEventListener('message', o.sandbox_receive, false);
-    };
+   };
     
     o.exit = function(){
-        // TODO: don't let user navigate away from page w/o saving
         // TODO: implement autosave
         $('link.edit').remove();
         $('#site').empty();
         $("body").removeClass("edit");
     };
+
+    o.save_enabled_set = function(v){
+        $('#save_submit').addremoveClass('disabled', !v).prop('disabled', !v) }
 
     o.success = function(ev, ret){
         // Hive.upload_finish();
@@ -43,24 +59,28 @@ define([
         if(ret.error == 'overwrite') {
             $('#expr_name').html(expr.name);
             $('#dia_overwrite').data('dialog').open();
-            $('#save_submit').removeClass('disabled');
+            o.save_enabled_set(true)
         }
-        else if(ret.id)
-            o.view_expr(ret);
+        else if(ret.id){
+            o.controller.set_exit_warning(false)
+            o.view_expr(ret)
+        }
     }
     o.error = function(ev, ret){
         // Hive.upload_finish();
         if (ret.status == 403){
             relogin(function(){ $('#btn_save').click(); });
         }
-        $('#save_submit').removeClass('disabled');
+        o.save_enabled_set(false)
     }
-    o.submit = function(){
+    o.info_submit = function(){
+        if(!o.check_url()) return false
         o.update_expr()
-        // TODO-polish-edit-save: consider allowing save dialog to open before
-        // files are saved, and showing warning here if unfinished
-        // if(!o.save_safe && )
-        o.controller.set_exit_warning(false)
+        o.sandbox_send({save_request: 1})
+        // fake form never submits
+        return false
+    }
+    o.save_submit = function(){
         $('#expr_save .expr').val(JSON.stringify(expr))
     }
 
@@ -92,8 +112,9 @@ define([
         if(expr.auth) $('#menu_privacy [val=' + expr.auth +']').click()
         $('#use_custom_domain').prop('checked', expr.url ? 1 : 0).
             trigger('change')
-        for(var btn in (expr.container || {}))
-            $('[name=' + btn + ']').prop('checked', expr.container[btn])
+        var container = expr.container || {} // $.extend({}, default_expr.container)
+        for(var btn in container)
+            $('[name=' + btn + ']').prop('checked', container[btn])
     }
 
     o.render = function(page_data){
@@ -101,7 +122,16 @@ define([
         $('#site').empty().append(edit_container_template(page_data)).showshow();
         $('#editor').focus()
 
-        expr = context.page_data.expr || { auth: 'public' }
+        expr = context.page_data.expr = ( context.page_data.expr
+            || $.extend({}, default_expr) )
+        // Handle remix
+        if (expr.owner_name != context.user.name) {
+            expr.owner_name = context.user.name;
+            expr.owner = context.user.id;
+            expr.remix_parent_id = expr.id;
+            expr.id = expr._id = '';
+        }
+
         if(context.query.tags){
             var tags = (expr.tags || "") + " " + unescape(context.query.tags)
                 ,list = o.tag_list(tags)
@@ -115,40 +145,42 @@ define([
             , function(){ return o.exit_safe } )
         o.exit_safe = true
         // o.save_safe = true
+        // So page has access to the expr content, especially tags
+        context.page_data.expr = expr;
     };
 
     o.attach_handlers = function(){
+        window.addEventListener('message', o.sandbox_receive, false);
         save_dialog = dialog.create('#dia_save', {close: function(){
             o.sandbox_send({focus:1}) }})
         $('#editor').on('mouseover', function(){
             o.sandbox_send({focus:1}) })
-        $('#expr_save').off('success error before_submit')
+
+        $('#expr_info').off('submit').on('submit', o.info_submit)
+        $('#expr_save').off('before_submit success error')
+            .on('before_submit', o.save_submit)
             .on('success', o.success).on('error', o.error)
-            .on('before_submit', o.submit)
-        $('#save_submit').off('click').on('click', o.check_url)
+
         o.init_save_dialog()
         o.update_form()
     };
 
     o.sandbox_receive = function(ev){
         var msg = ev.data
-        if(msg.save){
-            expr = msg.save
-
-            // Handle remix
-            if (expr.owner_name != context.user.name) {
-                expr.owner_name = context.user.name;
-                expr.owner = context.user.id;
-                expr.remix_parent_id = expr.id;
-                expr.id = expr._id = '';
-            }
-
+        if(msg.save_dialog)
             save_dialog.open()
+        if(msg.save){
+            expr.background = msg.save.background
+            expr.apps = msg.save.apps
+            $('#expr_save').submit()
         }
         if(msg.ready) o.edit_expr()
         if(typeof msg.exit_safe != 'undefined')
             o.exit_safe = msg.exit_safe
-        // if(msg.save_safe) o.save_safe = msg.exit_safe
+        if(typeof msg.save_safe != 'undefined'){
+            o.save_safe = msg.save_safe
+            o.save_enabled_set(o.save_safe)
+        }
     }
     o.sandbox_send = function(m){
         $('#editor')[0].contentWindow.postMessage(m, '*') }
@@ -192,12 +224,6 @@ define([
             expr.overwrite = true;
             $('#expr_save').submit()
         });
-        // $("#dia_save").on('keydown', function(e) {
-        //     if ((e.keyCode || e.which || e.charCode || 0) == 13) {
-        //         $("#save_submit").click();
-        //         e.preventDefault();
-        //     }
-        // });
         
         // Automatically update url unless it's an already saved
         // expression or the user has modified the url manually
@@ -240,6 +266,13 @@ define([
             var url = $('#custom_url').val()
                 .replace(/^.{0,6}\/\//, '').toLowerCase()
             $('#custom_url').val(url)
+        })
+
+        $('.buttons_toggle').click(function(){
+            var check = $.makeArray($('.button_options input')).filter(
+                function(el){ return !$(el).prop('checked') }).length > 0
+            $('.button_options input').each(function(i, el){
+                $(el).prop('checked', check) })
         })
     }
 

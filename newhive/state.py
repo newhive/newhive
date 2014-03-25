@@ -900,6 +900,7 @@ class User(HasSocial):
             if expr and expr.get('auth') == 'public':
                 expr['score'] = popularity_time_score(expr)
                 exprs_by_id[expr.id] = expr
+        # TODO-perf: move this into MongoDB (mapreduce)
         result = sorted(exprs_by_id.values(),
             key=lambda x: x['score'], reverse=True)
         return result[at:at+limit]
@@ -1380,6 +1381,12 @@ class Expr(HasSocial):
     def snapshot_name_base(self, size, time):
         return '_'.join([self.id, time, self.entropy(), size]) + '.jpg' #(".jpg" if (size == "full") else ".png")
 
+    def snapshot_name_http(self, size):
+        res = self.snapshot_name(size)
+        if not res.startswith("http"):
+            res = "http:" + res
+        return res
+
     # size is 'big', 'small', or 'tiny'.
     def snapshot_name(self, size):
         if not self.get('snapshot_time') or not self.get('snapshot_id'):
@@ -1393,6 +1400,11 @@ class Expr(HasSocial):
         if size == "big" or not dimension:
             filename = snapshot['url']
         else: filename = snapshot.get_thumb(dimension[0], dimension[1])
+        return filename
+
+    def stripped_snapshot_name(self, size):
+        filename = self.snapshot_name(size)
+        if filename.startswith('//'): filename = filename[2:]
         return filename
 
     def take_full_shot(self):
@@ -1553,7 +1565,7 @@ class Expr(HasSocial):
         ids = []
         if old: ids += self.get('file_id', [])
         if thumb: ids += ( [ d['thumb_file_id'] ] if d.get('thumb_file_id') else [] )
-        if background: self._match_id(d.get('background', {}).get('url'))
+        if background: self._match_id((d.get('background') or {}).get('url'))
         if apps:
             for a in d.get('apps', []):
                 ids.extend( self._match_id( a.get('content') ) )
