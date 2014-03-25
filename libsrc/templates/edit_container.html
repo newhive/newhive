@@ -3,6 +3,8 @@
 
 {# dialog triggered by postMessage from edit sandbox #}
 <div id='dia_save' class='standard dialog'>
+  <form id='expr_info' method='POST'>
+    
   <div class="heading expr title">Save</div>
   <div class='upper label medbold'>Title</div>
   <textarea rows="1" autofocus id='title'></textarea>
@@ -11,7 +13,7 @@
   <div class=''>newhive.com/{user.name}/</div>
   <div class='note'>
     Change the URL to "Save As"
-    <div class='floatright'>
+    <div class='floatright {<unless flags.custom_domain}hide{>}'>
       <input type='checkbox' id='use_custom_domain'>
       <label for='use_custom_domain'>Custom domain</label>
     </div>
@@ -38,23 +40,23 @@
     <input type="checkbox">Allow others to remix this expression</label></div>
 
   <div class='button_options {<unless flags.button_options}hide{>}'>
-    Show buttons for: &nbsp; &nbsp;
+    <span class='arrow buttons_toggle'>Show buttons for: &nbsp; &nbsp;</span>
     <label>
       <input type='checkbox' name='facebook_btn'>
       <img src='{asset "skin/nav/facebook.png"}'>
-    </label> &nbsp; &nbsp;
+    </label>
     <label>
       <input type='checkbox' name='twitter_btn'>
       <img src='{asset "skin/nav/twitter.png"}'>
-    </label> &nbsp; &nbsp;
+    </label>
     <label>
       <input type='checkbox' name='love_btn'>
       <img src='{asset "skin/nav/love.png"}'>
-    </label> &nbsp; &nbsp;
+    </label>
     <label>
       <input type='checkbox' name='republish_btn'>
       <img src='{asset "skin/nav/republish.png"}'>
-    </label> &nbsp; &nbsp;
+    </label>
     <label>
       <input type='checkbox' name='comment_btn'>
       <img src='{asset "skin/nav/comment.png"}'>
@@ -64,19 +66,18 @@
   <span id='privacy' class='teal_btn upper'>Unlisted
   </span><div class="inline drop_arrow"></div>
 
-  <form {form_attrs "expr_save"} id='expr_save' method='POST'>
-    <input type='hidden' name='expr' class='expr'>
-    <button id='save_submit' class='save black_btn upper' type='submit'>
-      <span class='label'>Save</span>{#<img
-        src='{asset "skin/edit/loading.gif"}' class='hide loading'>#}</div>
-    </button>
-  </form>
+  <button id='save_submit' class='save black_btn upper' type='submit'>
+    <span class='label'>Save</span>{#<img
+      src='{asset "skin/edit/loading.gif"}' class='hide loading'>#}</div>
+  </button>
 
   <div id='password_ui' style='display: none'>
     <br>
     <b>Optional password</b><br>
     <input type='password' id='password' value=''>
   </div>
+
+  </form>
 </div>
 <div id='menu_privacy' class='menu drawer medbold' style='width : 125px;'>
   <div val='password' class='menu_item'>Unlisted</div>
@@ -89,3 +90,7 @@
  <input id='save_overwrite' type='button' class='btn black rounded' value='Yes'>&nbsp; &nbsp; &nbsp; 
  <input id='cancel_overwrite' type='button' class='btn black rounded' value='No'>
 </div>
+
+<form {form_attrs "expr_save"} id='expr_save' method='POST'>
+  <input type='hidden' name='expr' class='expr'>
+</form>

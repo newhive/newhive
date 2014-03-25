@@ -1,19 +1,24 @@
-define(['browser/jquery'], function($) {
+define(['browser/jquery', 'ui/util'], function($, util) {
     var o = {};
 
     o.on_scroll = function(ev) {
 
     }
     o.place_apps = function() {
+        // if(util.mobile()) return
+
         var win_width = $(window).width();
+        if(util.mobile()) win_width = 500;
+        // TODO: bg code should respect win_width
         $('.happfill').each(function(i, div) {
             var e = $(div);
             //e.width(e.parent().width()).height(e.parent().height());
             o.img_fill(e.find('img'))
         });
+
         $('.happ').each(function(i, app_div) {
             var e = $(this);
-            var s = e.parent().width() / 1000;
+            var s = win_width / 1000;
             if(!e.data('css')) {
                 var c = {}, props = ['left', 'top', 'width', 'height'],
                     border = $(app_div).css('border-radius');

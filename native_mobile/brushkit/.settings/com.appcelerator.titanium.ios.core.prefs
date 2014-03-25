@@ -1,0 +1,13 @@
+eclipse.preferences.version=1
+iosLaunchConfigurationAttributes/ATTR_MINIFY=true
+iosLaunchConfigurationAttributes/ATTR_PROJECT_NAME=brushkit
+iosLaunchConfigurationAttributes/appid=com.newhive.brushkit
+iosLaunchConfigurationAttributes/certificate=john perkins (S462KZ53EC)
+iosLaunchConfigurationAttributes/distribute_path=/Users/viciousesque/Documents/VICBIZ/SMALLBORE/CLIENTS/NEW_HIVE
+iosLaunchConfigurationAttributes/keychain=/Users/viciousesque/Library/Keychains/login.keychain
+iosLaunchConfigurationAttributes/output_format=ipa
+iosLaunchConfigurationAttributes/sdk_version=7.0.3
+iosLaunchConfigurationAttributes/uuid=957DBA42-EAB7-4469-B9B9-568F42C562A4
+provisioning_profiles/development/ABD67025-DD8F-4C26-B9B0-25E1605F8DF0/appid=*
+provisioning_profiles/development/ABD67025-DD8F-4C26-B9B0-25E1605F8DF0/name=iOS Team Provisioning Profile\: *
+provisioning_profiles/development/ABD67025-DD8F-4C26-B9B0-25E1605F8DF0/uuid=ABD67025-DD8F-4C26-B9B0-25E1605F8DF0

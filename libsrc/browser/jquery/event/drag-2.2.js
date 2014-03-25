@@ -116,7 +116,7 @@ drag = $special.drag = {
 		if ( $( event.target ).is( dd.not ) ) 
 			return;
 		// check for handle selector
-		if ( dd.handle && !$( event.target ).closest( dd.handle, event.currentTarget ).length ) 
+		if ( dd.handle && !$( event.currentTarget ).closest( dd.handle ).length ) 
 			return;
 
 		drag.touched = event.type == 'touchstart' ? this : null;

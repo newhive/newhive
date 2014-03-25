@@ -54,42 +54,44 @@ define([
         // context.is_secure not set until after module instantiation
         o.content_url_base = (context.is_secure ?
                 context.config.secure_content_url : context.config.content_url);
-        $("#page_prev").click(o.page_prev);
-        $("#page_next").click(o.page_next);
+        $(".page_btn.page_prev").click(o.page_prev);
+        $(".page_btn.page_next").click(o.page_next);
         $("#social_plus").click(o.social_toggle);
         window.addEventListener('message', o.handle_message, false);
     };
 
     o.hide_panel = function(){
-        $("#signup_create").hidehide();
-        $("#content_btns").hidehide();
-        $("#signup_create .signup").addClass("hide");
-        $("#signup_create .create").addClass("hide");
+        $(".overlay.panel").hidehide();
         $(".panel .social_btn").addClass("hide");
         $(".panel .edit_ui").hidehide();
     }
 
     o.resize = function(){
-        browser_layout.center($('#page_prev'), undefined, {'h': false});
-        browser_layout.center($('#page_next'), undefined, {'h': false});
+        if (!util.mobile()) {
+            browser_layout.center($('.page_btn.page_prev'), undefined, {'h': false});
+            browser_layout.center($('.page_btn.page_next'), undefined, {'h': false});
+        }
 
         var wide = ($(window).width() >= 1180) ? true : false;
         var columns = ($(window).width() >= 980) ? 2 : 1;
-        if (o.overlay_columns != columns) {
+        if (o.overlay_columns != columns || o.wide_overlay != wide) {
             o.overlay_columns = columns;
-            $("#popup_content .left_pane").width((columns == 1) ? 508 : 430);
-            $("#popup_content > *").css('display', (columns == 1) ? 'block' : 'inline-block');
-            $("#popup_content .right_pane").css('text-align', (columns == 1) ? 'left' : 'right').
-                css("max-width", (columns == 1) ? '522px' : '470px');
-            if (columns == 1)
-                $("#popup_content .empty").showshow();
-            else
-                $("#popup_content .empty").hidehide();
-        }
-        if (o.wide_overlay != wide) {
             o.wide_overlay = wide;
+            $("#popup_content > *").css('display', (columns == 1) ? 'block' : 'inline-block');
+            $("#popup_content .right_pane")
+                .css('text-align', (columns == 1) ? 'left' : 'right')
+                .css("max-width", (columns == 1) ? '522px' : '470px');
+            if (columns == 1) {
+                $("#popup_content .empty").showshow();
+                $("#popup_content .left_pane")
+                    .css("max-width", '522px').width("auto");
+            } else {
+                $("#popup_content .empty").hidehide();
+                $("#popup_content .left_pane")
+                    .css("max-width", '522px').width((wide) ? 600 : 430);
+            }
+
             $("#popup_content").css("max-width", (wide) ? 980+600-430 : 980);
-            $("#popup_content .left_pane").width((wide) ? 600 : 430);
         }
     };
     var resize_icon = function(el) {
@@ -108,18 +110,24 @@ define([
     o.render = function(page_data){
         // TODO: should the HTML render on page load? Or delayed?
         o.expr = page_data.expr;
+        o.page_data = page_data;
+        ui_page.form_page_exit()
 
+        $('body').addClass('expr')
         $('title').text(o.expr.title);
         $('#site').hidehide();
         $("#popup_content").remove();
         $("#dia_comments").remove();
-        $('#content_btns .expr_actions').replaceWith(
+        $('.overlay.panel .expr_actions').replaceWith(
             expr_actions_template(page_data))
         $('#social_overlay').append(
-            social_overlay_template(context.page_data));
+            social_overlay_template(page_data));
         $('#popup_content .counts_icon').each(function(i, el) {
             resize_icon($(this));
         });
+        // Move the plus buttons inside the tag list
+        $("#social_overlay .tags_box .moveme").children()
+            .prependTo($("#social_overlay .tag_list"));
         // Reset scroll to top
         $("body").scrollTop(0);
         
@@ -133,29 +141,7 @@ define([
         o.action_set_state($(".republish_btn"), o.action_get_state("republish"));
         o.action_set_state($(".comment_btn"), o.action_get_state("comment"));
 
-        if (page_data.cards == undefined) {
-            // In case of direct link with no context,
-            // fetch cards from q param, or the default context, @owner
-
-            var set_cards = function(data){
-                page_data.cards = data.cards };
-
-            if(context.query.q){
-                var query = {q: context.query.q, id: o.expr.id };
-                o.controller.get('search', {}, set_cards, query);
-                context.page_data.cards_route = {
-                    query: query,
-                    route_args: { route_name: 'search' }
-                };
-            }
-            else {
-                o.controller.get('expressions_public', {
-                    owner_name: page_data.expr.owner.name }, set_cards)
-                context.page_data.cards_route = {
-                    route_args: { route_name: 'expressions_public' }
-                };
-            }
-        }
+        fetch_cards();
 
         var found = find_card(o.expr.id);
         if (found >= 0) {
@@ -167,7 +153,7 @@ define([
         animate_expr();
 
         o.hide_panel();
-        $("#content_btns").showshow();
+        $(".overlay.panel").showshow();
         $(".social_btn").removeClass("hide");
 
         var show_edit = false
@@ -175,38 +161,24 @@ define([
             && page_data.expr.tags.indexOf("remix") >= 0
         ) page_data.remix = true;
 
-        if (!context.user.logged_in) {
-            $("#signup_create").showshow();
-            $("#signup_create .signup").removeClass("hide");
-            // $('#social_plus').hidehide();
-        } else {
-            $("#signup_create").showshow();
-            $("#signup_create .create").removeClass("hide");
-
-            if(context.user.id == o.expr.owner.id){
-                page_data.remix = false
-                show_edit = true
-            }
-
-            $('#dia_delete_ok').each(function(i, e){
-                $(e).data('dialog').opts.handler = function(e, data){
-                    o.controller.open('expressions_public',
-                        {'owner_name': context.user.name });
-                }
-            });
+        if (context.user.logged_in && context.user.id == o.expr.owner.id) {
+            page_data.remix = false
+            show_edit = true
         }
         if(show_edit || page_data.remix)
-            $('#content_btns .edit_ui').replaceWith(
+            $('.overlay.panel .edit_ui').replaceWith(
                 edit_btn_template(page_data) )
+        ui_page.form_page_enter()
     }
 
     o.exit = function(){
         o.last_found = -1;
+        $('body').removeClass('expr')
         hide_exprs();
         o.hide_panel();
         $('#site').showshow();
         $('.page_btn').hidehide();
-        $('#content_btns .expr_actions').hide()
+        $('.overlay.panel .expr_actions').hidehide()
     };
 
     // Check to see if tags overflows its bounds.
@@ -241,6 +213,42 @@ define([
         }
     };
 
+    var fetch_cards = function () {
+        var page_data = o.page_data;
+        if (page_data.cards == undefined) {
+            // In case of direct link with no context,
+            // fetch cards from q param, or the default context, @owner
+
+            var set_cards = function(data){
+                page_data.cards = data.cards };
+
+            if(context.query.q){
+                var query = {q: context.query.q, id: o.expr.id };
+                o.controller.get('search', {}, set_cards, query);
+                context.page_data.cards_route = {
+                    query: query,
+                    route_args: { route_name: 'search' }
+                };
+            }
+            else {
+                var route_args = { route_name: 'expressions_public'
+                    ,owner_name: page_data.expr.owner.name }
+                o.controller.get(route_args.route_name, route_args, set_cards)
+                context.page_data.cards_route = { route_args: route_args }
+            }
+        }
+    };
+    var id_from_card_count = function(n, fetch){
+        var page_data = o.page_data;
+        fetch = util.defalt(fetch, true);
+        // No data for card n.
+        if (!page_data.cards || !page_data.cards[n]) {
+            if (fetch)
+                fetch_cards();
+            return "";
+        }
+        return page_data.cards[n].id;
+    };
     var find_card = function(expr_id){
         var found = -1;
         var page_data = context.page_data;
@@ -307,7 +315,7 @@ define([
             debug("loaded frame: " + found);
 
             if (contentFrame.hasClass('expr_visible')) 
-                contentFrame.get(0).contentWindow.postMessage({action: 'show'}, '*');
+                o.expr_show(contentFrame)
             for (var i = 0, el; el = loading_frame_list[i]; i++) {
                 if (el.prop("id") == contentFrame.prop("id")) {
                     loaded_frame_list.concat(loading_frame_list.splice(i, 1));
@@ -330,6 +338,10 @@ define([
         return contentFrame;
     };
 
+    o.expr_show = function(frame_el){
+        frame_el.get(0).contentWindow.postMessage({action: 'show'}, '*')
+    }
+
     o.play_timer = false;
     // Animate the new visible expression, bring it to top of z-index.
     function animate_expr (){
@@ -342,13 +354,10 @@ define([
         $('.social_btn').showshow();
 
         var contentFrame = o.get_expr(expr_id);
-        if (contentFrame.length == 0) {
+        if (contentFrame.length == 0)
             contentFrame = o.cache_frames([expr_id], true);
-        }
-        else {
-            contentFrame.get(0).contentWindow.
-                postMessage({action: 'show'}, '*');
-        }
+        else
+            o.expr_show(contentFrame)
         contentFrame.addClass('expr_visible').removeClass('expr_hidden').showshow();
         contentFrame.showshow();
         $('#exprs .expr').not('.expr_visible').css({'z-index': 0 });
@@ -356,12 +365,48 @@ define([
         var anim_direction = 0;
         if (o.last_found >= 0 && found >= 0) {
             var dir = found - o.last_found;
-            if (Math.abs(dir) > 5)
+            if (Math.abs(dir) > 1)
                 dir *= -1;
             anim_direction = (dir > 0) ? 1 : -1;
         }
         o.last_found = found;
-        if (anim_direction == 0 || expr_curr.length != 1 || o.animation_timeout != undefined) {
+        o.animating = false;
+        if (0 && util.mobile() && found > 0) {
+            frames = [ found - 1, found, found + 1 ];
+            frames = frames.map(function(v) {
+                return o.get_expr(id_from_card_count(v));
+            })
+            $('#exprs .expr').addClass('.expr_hidden');
+            var x = 0, win_width = $(window).width(), scroll_goal=-1;
+            for (var i = 0; i < 3; ++i) {
+                if (frames[i].length) {
+                    frames[i].css("left", x).showshow().removeClass('.expr_hidden');
+                    if (i == 1)
+                        scroll_goal = x;
+                    x += win_width;
+                }
+            }
+            if (scroll_goal > 0) {
+                $("#exprs").css("overflow-x","auto").scrollLeft(scroll_goal);
+                // $('#exprs .expr .expr_hidden').hidehide();
+                $('#exprs .expr.expr_hidden').remove();
+                $("#exprs").unbind("scroll").on("scroll", function (ev) {
+                    if (o.animating) {
+                        ev.currentTarget.scrollLeft = scroll_goal;
+                        return;
+                    }
+                    var x = ev.currentTarget.scrollLeft;
+                    if (scroll_goal - x > win_width / 3) {
+                        o.navigate_page(-1);
+                    } else if (x - scroll_goal > win_width / 3) {
+                        o.navigate_page(1);
+                    }
+                });
+            }
+        } else if (anim_direction == 0
+            || expr_curr.length != 1
+            || o.animation_timeout != undefined
+        ) {
             contentFrame.css({
                 'left': 0,
                 'top': -contentFrame.height() + 'px',
@@ -399,7 +444,7 @@ define([
 
         // postMessage only works after the page loads.
         // So page buttons are always visible during expr loading,
-        // and once expr loads, they behave normally #page_btn_load_hack
+        // and once expr loads, they behave normally .page_btn.page_btn_load_hack
         if(!contentFrame.data('loaded')){
             // bugbug: sometimes this is never followed by a contentFrame.load
             // console.log('showing');
@@ -535,6 +580,13 @@ define([
             o.page_btn_animate($(this), "in");
         }).bind_once('mouseleave', function(e) {
             o.page_btn_animate($(this), "out");
+        });
+
+        $('#dia_delete_ok').each(function(i, e){
+            $(e).data('dialog').opts.handler = function(e, data){
+                o.controller.open('expressions_public',
+                    {'owner_name': context.user.name });
+            }
         });
     };
 
@@ -721,15 +773,20 @@ define([
     o.page_prev = function() { o.navigate_page(-1); };
     o.page_next = function() { o.navigate_page(1); };
     o.navigate_page = function(offset){
+        o.animating = true;
         var page_data = context.page_data;
         if (page_data.cards != undefined) {
             var len = page_data.cards.length
             var found = find_card(page_data.expr_id);
             // TODO: do we need error handling?
             if (found >= 0) {
-                // TODO: need to asynch fetch more expressions and concat to cards.
+                var orig_found = found;
                 found = (found + len + offset) % len;
-                if (offset > 0 && found + 5 > len) {
+                debug("navigate (" + offset + ") to " + found);
+                if ((offset < 0 && found > orig_found) 
+                    || (offset > 0 && found + 5 > len))
+                {
+                    // Async fetch more expressions and concat to cards.
                     on_scroll_add_page();
                 }
                 // Cache upcoming expressions
@@ -791,17 +848,17 @@ define([
         }
 
         if(msg == 'show_prev') {
-            $('#page_prev').showshow();
-            $('#page_next').hidehide();
+            $('.page_btn.page_prev').showshow();
+            $('.page_btn.page_next').hidehide();
         } else if(msg == 'show_next') {
-            $('#page_next').showshow();
-            $('#page_prev').hidehide();
+            $('.page_btn.page_next').showshow();
+            $('.page_btn.page_prev').hidehide();
         } else if(msg == 'hide') {
             $('.page_btn').hidehide();
         }
 
         // should reflect whether left or right page_btn should be visible if
-        // page is not loading. See #page_btn_load_hack
+        // page is not loading. See .page_btn.page_btn_load_hack
         page_btn_state = msg;
     };
 

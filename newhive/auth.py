@@ -58,7 +58,6 @@ def new_session(db, user, request, response):
     session_data = dict(
          user = user.id
         ,active = True
-        ,remember = request.form.get('remember', False)
         ,expires = expires
         )
     session_data.update(dfilter(request.form, ['remember', 'client']))

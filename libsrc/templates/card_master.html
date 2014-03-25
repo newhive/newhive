@@ -45,7 +45,7 @@
     <input type="hidden" name="deletes" value=0>
   </form>
 {>}
-<div id='feed' class='{layout}{<unless route.private} public{>}'>
+<div class='feed {layout}{<unless route.private} public{>}'>
   {|templates/cards.html}
   {# Insert 3-column layout here.  
     When unused, it's 0 height.
