@@ -96,6 +96,7 @@ continuous = True
 
 def get_exprs(query_and={}):
     and_exp = [
+        {'$where': "!this.password"},
         {'snapshot_fails': {'$not': {'$gt': 5}}},
         {"$or": [
             {"snapshot_time": { "$exists": False }},
