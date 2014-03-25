@@ -2,13 +2,14 @@
   {<if expr.container.facebook_btn}
     <a href='https://www.facebook.com/sharer/sharer.php?u={|location|param}'
       target='_new' title='share on facebook'
-      class='facebook hoverable btn item'><div class='icon'></div>
+      class='facebook share hoverable btn item'><div class='icon'></div>
   {>}
   {<if expr.container.twitter_btn}
     <a href='https://twitter.com/share?url={
-      |location|param}&related=NewHive&text={
-      param (concat expr.title " @NewHive")}' target='_new'
-      title='share on twitter' class='twitter item btn hoverable'
+        |location|param}&related=NewHive&text={
+        param (concat "\"" expr.title "\"" " by " expr.owner.fullname)}'
+      target='_new' title='share on twitter'
+      class='twitter share item btn hoverable'
     ><div class='icon'></div></a>
   {>}
   {<if user.logged_in}
