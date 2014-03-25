@@ -2455,6 +2455,7 @@ Hive.bg_set = function(bg, load) {
         raw = $(bg.content)
     } catch(e){}
 
+    $('#bg .content').remove()
     if(raw.length) {
         imgs.hidehide();
         raw.appendTo(Hive.bg_div).showshow();
