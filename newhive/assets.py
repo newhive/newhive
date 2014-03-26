@@ -20,7 +20,7 @@ class Assets(object):
         self.base_path = normpath(join(config.src_home, asset_path))
         self.strip = len(self.base_path) + 1
 
-        # TODO-cleanup: use S3Interface instead of s3_con
+        # TODO-cleanup: use S3Interface everywhere instead of s3_con
         self.s3_con = S3Connection(config.aws_id, config.aws_secret)
         self.asset_bucket = self.s3_con.get_bucket(config.s3_buckets.get('asset'))
         cloudfront = config.cloudfront_domains['asset']
@@ -170,6 +170,7 @@ class HiveAssets(Assets):
             cmd.build()
         # actually get webassets to build bundles (webassets is very lazy)
         for b in self.final_bundles:
+            print 'starting', b
             self.bundles[b] = self.assets_env[b].urls()
         #self.write_js(self.bundles, 'libsrc/server/compiled.bundles.json')
         print("Assets build complete in %s seconds", time.time() - t0)
@@ -214,7 +215,7 @@ class HiveAssets(Assets):
             "scss/dialogs.scss", "scss/community.scss",
             "scss/settings.scss", "scss/signup_flow.scss", "scss/menu.scss",
             "scss/jplayer.scss", "scss/forms.scss", "scss/overlay.scss",
-            "scss/skin.scss", "scss/edit.scss",
+            "scss/skin.scss", 'scss/edit.scss', 'scss/codemirror.css',
             filters=scss_filter,
             output='compiled.app.css',
             debug=False
@@ -230,6 +231,7 @@ class HiveAssets(Assets):
         # edit_scss = webassets.Bundle(
         #     'scss/edit.scss',
         #     'scss/codemirror.css',
+        #     'scss/overlay',
         #     filters=scss_filter,
         #     output='compiled.edit.css',
         #     debug=False
@@ -252,8 +254,6 @@ class HiveAssets(Assets):
             # can't figure out how to make cram work from another dir
             old_dir = os.getcwd()
             os.chdir(join(config.src_home, 'libsrc'))
-            # cram is failing horribly for some reason.
-            # Maybe there's a circular dependency?
             os.system('./cram.sh')
             os.chdir(old_dir)
 
@@ -268,6 +268,12 @@ class HiveAssets(Assets):
                 output = '../lib/expr.js'
             )
             self.final_bundles.append('expr.js')
+
+            self.assets_env.register('edit.js', 'compiled.edit.js'
+                ,filters = 'yui_js'
+                ,output = '../lib/edit.js'
+            )
+            self.final_bundles.append('edit.js')
 
         # CSS for expressions, and also site pages
         minimal_scss = webassets.Bundle(

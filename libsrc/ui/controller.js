@@ -1,17 +1,21 @@
 define([
-    'browser/jquery',
-    'browser/js',
-    'ui/page',
-    'ui/page/pages',
-    'server/context',
-    'json!ui/routes.json',
-    //'history/history',
-    'ui/routing'
+    'browser/jquery'
+    ,'browser/js'
+    ,'ui/page'
+    ,'ui/page/pages'
+    ,'ui/util'
+    ,'server/context'
+    ,'json!ui/routes.json'
+    // ,'history/history'
+    ,'ui/routing'
+
+    // ,'browser/jquery.mobile.custom'
 ], function(
      $
-    ,util
+    ,js
     ,page
     ,pages
+    ,util
     ,context
     ,routes
     //,history
@@ -22,6 +26,8 @@ define([
     o.init = function(route_args){
         window.c = context; // useful for debugging
         setup_google_analytics();
+        if (!util.mobile() && context.flags.mobile_web)
+            util.mobile = function() { return "true" };
         // init_history();
 
         context.server_url = context.config.server_url; // used in many templates
@@ -30,8 +36,17 @@ define([
 
         context.parse_query();
         routing.register_state(route_args);
+        if (util.mobile()) {
+            $("body").addClass('mobile');
+            // var init_scale = 575 / ($(window).width() || 720)
+            $('<meta name="viewport" content="width=500">')
+                .appendTo('head')
+                 //, initial-scale=' + init_scale +
+                // + ', user-scalable=1"/>').appendTo($("head"));
+            context.flags.mobile = util.mobile();
+        }
         page.init(o);
-        util.each(pages, function(m){
+        js.each(pages, function(m){
             if(m.init) m.init(o);
         });
         o.dispatch(route_args.route_name, context.page_data);
@@ -96,7 +111,7 @@ define([
         var route = context.page_data.cards_route;
         var api_call = {
             method: 'get',
-            url: routing.page_state(route.route_args.route_name,
+            url: context.page_state(route.route_args.route_name,
                 route.route_args, route.query).api,
             dataType: 'json',
             success: add_cards,
@@ -108,10 +123,11 @@ define([
 
     o.set_exit_warning = function(warning, exit_condition){
         o.exit_warning = warning;
-        o.exit_condition = exit_condition;
+        o.exit_condition = exit_condition || function(){ return true }
         if(warning){
             window.onbeforeunload = function(){
-                return o.exit_warning;
+                if(!o.exit_condition())
+                    return o.exit_warning;
             };
         } else {
             window.onbeforeunload = null;
@@ -121,10 +137,9 @@ define([
     // TODO-cleanup: refactor these into distinct functionalities of
     // fetching data from server and opening a new page
     o.open_route = function(page_state, callback, push_state) {
-        if(o.exit_warning &&
-            (!o.exit_condition || !o.exit_condition()) &&
-            !confirm(o.exit_warning)
-        ) return;
+        if(o.exit_warning && !o.exit_condition() && !confirm(o.exit_warning))
+            return;
+        o.set_exit_warning(false)
 
         context.query;
 
@@ -165,10 +180,10 @@ define([
         o.fake_open(card_query['route_name'], card_query);
     };
     o.open = function(route_name, route_args, query){
-        o.open_route(routing.page_state(route_name, route_args, query));
+        o.open_route(context.page_state(route_name, route_args, query));
     };
     o.get = function(route_name, route_args, callback, query){
-        o.open_route(routing.page_state(
+        o.open_route(context.page_state(
             route_name, route_args, query), callback);
     };
     o.fake_open = function(route_name, route_args, query){
@@ -176,7 +191,7 @@ define([
         // Fallback to plane old open.
         if (! (window.history && window.history.pushState))
             return o.open(route_name, route_args);
-        var page_state = routing.page_state(route_name, route_args, query);
+        var page_state = context.page_state(route_name, route_args, query);
         history.pushState(page_state, null, page_state.page);
         context.parse_query(route_args);
     };

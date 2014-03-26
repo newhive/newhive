@@ -30,7 +30,7 @@ define([
     var ui_page, win = $(window), card_type, card_layout;
     o.more_cards = true;
     var on_scroll_add_page = function(){
-        if((win.scrollTop() > ($('#feed').height() - win.height()))
+        if((win.scrollTop() > ($('.feed').height() - win.height()))
             && o.more_cards
         ){
             o.controller.next_cards(ui_page.render_new_cards);
@@ -42,7 +42,7 @@ define([
         data.layout = card_layout;
         if(data.cards.length < 20)
             o.more_cards = false;
-        cards_template(data).insertBefore('#feed .footer');
+        cards_template(data).insertBefore('.feed .footer');
         ui_page.attach_handlers();
         ui_page.layout_columns();
         ui_page.add_grid_borders();
@@ -73,17 +73,11 @@ define([
         card_type = context.page_data.card_type;
         card_layout = context.page_data.layout;
 
-        $('#feed .expr.card').on('mouseenter', function(event){
+        $('.feed .expr.card').on('mouseenter', function(event){
             card_animate($(this), "in");
         }).on('mouseleave', function(event){
             card_animate($(this), "out");
         });
-        if (!context.user.logged_in) {
-            var d = dialog.create($("#dia_login_or_join"));
-            $(".overlay .signup_btn").unbind('click').click(d.open);
-            d = dialog.create($("#login_menu"));
-            $(".overlay .login_btn").unbind('click').click(d.open);
-        }
         // $(".tags.nav_button").unbind('click').click(show_hide_tags);
         $(".tag_list_container .expander").unbind('click').on('click', function(ev) {
             toggle_more_tags();
@@ -95,7 +89,7 @@ define([
             var columns = $(".ncolumn .column").filter(
                 function(i,e) { return $(e).width(); }).length;
             if (columns == 0) {
-                ordered_cards = $("#feed .card");
+                ordered_cards = $(".feed .card");
             } else {
                 var col_array = [];
                 var card_count = 0;
@@ -132,8 +126,8 @@ define([
         });
 
         if( allow_reorder() ){
-            $("#feed").sortable({
-                items: $("#feed .card"),
+            $(".feed").sortable({
+                items: $(".feed .card"),
                 start: function (e, ui) {
                     if (! save_immediately)
                         $(".save_bar").showshow();
@@ -176,8 +170,8 @@ define([
                             function(i,el){ return $(el).text(); });
                     $("form.tag_order input[name=tag_order]").
                         val(tags.toArray().join(","));
-                    $("form.tag_order").submit().unbind("response").
-                        on("response", function(e, json) {
+                    $("form.tag_order").submit().unbind('success').
+                        on('success', function(e, json) {
                             context.page_data.ordered_count = json.tagged_ordered;
                             context.page_data.tag_list = json.tagged;
                             o.preprocess_page_data(context.page_data);
@@ -219,13 +213,7 @@ define([
             show_tags(context.route.include_tags);
         }
         if (o.show_more_tags) toggle_more_tags();
-        $("#signup_create").showshow();
-        $("#content_btns").showshow();
-        if (context.user.logged_in) {
-            $("#signup_create .create").removeClass("hide");
-        } else {
-            $("#signup_create .signup").removeClass("hide");
-        }
+        $(".overlay.panel").showshow();
 
         o.more_cards = (context.page_data.cards &&
             (context.page_data.cards.length == 20));
@@ -236,10 +224,7 @@ define([
     }
     o.exit = function(){
         $(".network_nav").showshow();
-        $("#signup_create").hidehide();
-        $("#content_btns").hidehide();
-        $("#signup_create .signup").addClass("hide");
-        $("#signup_create .create").addClass("hide");
+        $(".overlay.panel").hidehide();
     };
 
     var card_animate = function(card, dir){

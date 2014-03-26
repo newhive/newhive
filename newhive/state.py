@@ -73,6 +73,7 @@ class Database:
     def query_echo(self, q, expr_only=None, viewer=None, id=None, **args):
         args['viewer'] = viewer
         search = self.parse_query(q)
+        results = []
         if search.get('auth'):
             args['auth'] = ('public' if
                 search['auth'] == 'public' else 'password')
@@ -97,6 +98,8 @@ class Database:
                         self.User.root_user['tagged']['Featured'], **args)
                 elif feed == 'recent':
                     results = self.Expr.page({}, **args)
+                elif feed == 'trending':
+                    results = viewer.feed_trending(**args)
             elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
                 owner = None
                 if user and len(tags) == 1:
@@ -535,7 +538,7 @@ class User(HasSocial):
         self.owner = self
 
     def expr_create(self, d):
-        doc = dict(owner = self.id, name = '', domain = self['sites'][0])
+        doc = dict(owner = self.id, name = '')
         doc.update(d)
         return self.db.Expr.create(doc)
 
@@ -876,7 +879,7 @@ class User(HasSocial):
         return flat
 
     # TODO-polish merge with db.query to enable searching within feed
-    def feed_trending(self, at=0, limit=20):
+    def feed_trending(self, at=0, limit=20, viewer=None):
         at = int(at)
         limit = int(limit)
         items = self.network_feed_items(limit=500)
@@ -897,6 +900,7 @@ class User(HasSocial):
             if expr and expr.get('auth') == 'public':
                 expr['score'] = popularity_time_score(expr)
                 exprs_by_id[expr.id] = expr
+        # TODO-perf: move this into MongoDB (mapreduce)
         result = sorted(exprs_by_id.values(),
             key=lambda x: x['score'], reverse=True)
         return result[at:at+limit]
@@ -1221,6 +1225,7 @@ class Expr(HasSocial):
     cname = 'expr'
     indexes = [
          (['owner_name', 'name'], {'unique':True})
+        ,'url'
         ,['owner', 'updated']
         ,'tags_index'
         ,'text_index'
@@ -1376,6 +1381,12 @@ class Expr(HasSocial):
     def snapshot_name_base(self, size, time):
         return '_'.join([self.id, time, self.entropy(), size]) + '.jpg' #(".jpg" if (size == "full") else ".png")
 
+    def snapshot_name_http(self, size):
+        res = self.snapshot_name(size)
+        if not res.startswith("http"):
+            res = "http:" + res
+        return res
+
     # size is 'big', 'small', or 'tiny'.
     def snapshot_name(self, size):
         if not self.get('snapshot_time') or not self.get('snapshot_id'):
@@ -1389,6 +1400,11 @@ class Expr(HasSocial):
         if size == "big" or not dimension:
             filename = snapshot['url']
         else: filename = snapshot.get_thumb(dimension[0], dimension[1])
+        return filename
+
+    def stripped_snapshot_name(self, size):
+        filename = self.snapshot_name(size)
+        if filename.startswith('//'): filename = filename[2:]
         return filename
 
     def take_full_shot(self):
@@ -1417,6 +1433,8 @@ class Expr(HasSocial):
         snapshot_time = now()
         dimension_list = [(715, 430, "big"), (390, 235, "small"), (70, 42, 'tiny')]
         upload_list = []
+        pw = self.get('password', '')
+        self.inc('snapshot_fails')
 
         for w, h, size in dimension_list:
             name = self.snapshot_name_base(size, str(int(snapshot_time)))
@@ -1424,7 +1442,7 @@ class Expr(HasSocial):
             local = '/tmp/' + name
             if w == dimension_list[0][0]:
                 r = snapshotter.take_snapshot(self.id, dimensions=(w,h),
-                    out_filename=local)
+                    out_filename=local, pw=pw)
                 if not r:
                     return False
             else:
@@ -1464,6 +1482,7 @@ class Expr(HasSocial):
 
         self.update(snapshot_time=snapshot_time, entropy=self['entropy'],
             snapshot_id=file_record.id, updated=False)
+        self.reset('snapshot_fails')
         return True
 
     # @property
@@ -1548,7 +1567,7 @@ class Expr(HasSocial):
         ids = []
         if old: ids += self.get('file_id', [])
         if thumb: ids += ( [ d['thumb_file_id'] ] if d.get('thumb_file_id') else [] )
-        if background: self._match_id(d.get('background', {}).get('url'))
+        if background: self._match_id((d.get('background') or {}).get('url'))
         if apps:
             for a in d.get('apps', []):
                 ids.extend( self._match_id( a.get('content') ) )
@@ -1564,7 +1583,6 @@ class Expr(HasSocial):
     def create(self):
         assert map(self.has_key, ['owner', 'domain', 'name'])
         self['owner_name'] = self.db.User.fetch(self['owner'])['name']
-        self['domain'] = self['domain'].lower()
         self['random'] = random.random()
         self['views'] = 0
         self.setdefault('title', 'Untitled')
@@ -1713,7 +1731,7 @@ class Expr(HasSocial):
         counts['Views'] = self.views
         counts['Comment'] = self.comment_count
         expr = dfilter(self, ['name', 'title', 'feed', 'created',
-            'updated', 'password'])
+            'updated', 'password', 'container'])
         dict.update(expr, {
             'tags': self.get('tags_index'),
             'id': self.id,
@@ -1821,7 +1839,10 @@ class File(Entity):
         return self._file
 
     def download(self):
-        try: response = urllib.urlopen(self['url'])
+        url = self['url']
+        if url.startswith("//"):
+            url = "http:" + url
+        try: response = urllib.urlopen(url)
         except:
             print 'urlopen fail for ' + self.id + ': ' + json.dumps(self.get('url'))
             return False

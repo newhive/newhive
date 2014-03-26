@@ -1,0 +1,31 @@
+<span class='expr_actions{<if (not expr)} hide{>}'>{##}
+  {<if expr.container.facebook_btn}
+    <a href='https://www.facebook.com/sharer/sharer.php?u={|location|param}'
+      target='_new' title='share on facebook'
+      class='facebook share hoverable btn item'><div class='icon'></div>
+  {>}
+  {<if expr.container.twitter_btn}
+    <a href='https://twitter.com/share?url={
+        |location|param}&related=NewHive&text={
+        param (concat "\"" expr.title "\"" " by " expr.owner.fullname)}'
+      target='_new' title='share on twitter'
+      class='twitter share item btn hoverable'
+    ><div class='icon'></div></a>
+  {>}
+  {<if user.logged_in}
+    {<if expr.container.love_btn}
+      <div title='love' class='love_btn love btn needs_login item hoverable'
+        ><div class='love icon'></div></div>
+    {>}
+    {<if expr.container.republish_btn}
+      <div title='republish'
+        class='republish_btn republish btn needs_login item hoverable'
+        ><div class='republish icon'></div></div>
+    {>}
+    {<if expr.container.comment_btn}
+      <div title='comment'
+        class='comment_btn comment btn needs_login item hoverable'
+        ><div class='comment icon'></div></div>
+    {>}
+  {>}
+</span>{##}

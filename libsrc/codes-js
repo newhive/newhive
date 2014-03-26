@@ -3,9 +3,7 @@
 ./browser/layout.js
 ./browser/js.js
 ./server/context.js
-./analytics.js
 ./admin.js
-./dragndrop.js
 ./ui/routing.js
 ./ui/page.js
 ./ui/dialog.js
@@ -28,5 +26,4 @@
 ./build/site.js
 ./build/external_jquery.js
 ./build/expr.js
-./analytics_dashboard.js
 ./edit/frame.js

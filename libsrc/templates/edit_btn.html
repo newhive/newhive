@@ -2,7 +2,7 @@
   can change but the overlay isn't rerendered. #}
 <span class='edit_ui'>{# #}
   <div id="edit_handle" 
-    class='{<if remix}remix_icon{>}{<else}edit_icon{>} icon btn hide'></div>
+    class='{<if remix}remix_icon{>}{<else}edit_icon{>} item btn needs_login'></div>
 
   {# menu: wrench (edit/remix) #}
   <div id='edit_menu' class='menu drawer' 
@@ -23,7 +23,7 @@
       <div class="small heading">Are you sure you want to delete this Expression?</div>
       <input type="hidden" value="{expr.id}" name="expr_id">
       <button type="cancel" class="teal_btn upper">Cancel</button>
-      <button type="submit" class="grey_btn upper">Delete</button>
+      <button type="submit" class="submit grey_btn upper">Delete</button>
     </form>
   </div>{# #}
 </span>

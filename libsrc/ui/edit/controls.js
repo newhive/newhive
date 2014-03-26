@@ -37,8 +37,8 @@ o.Controls = function(app, multiselect, delegate) {
         else app.controls.remove(); // otherwise destroy them and reconstruct requested type
     }
     var o = app.controls = {};
-    // TODO-cleanup: remove delegate, have selection handle control creation
-    o.app = delegate || app;
+    var sel_app = app.sel_app()
+    o.app = app;
     o.multiselect = multiselect;
 
     o.remove = function() {
@@ -65,7 +65,8 @@ o.Controls = function(app, multiselect, delegate) {
             // TODO: improve URL guessing
             if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && 
                 v.match(/\w+\.\w{2,}/)) v = 'http://' + v;
-            o.app.link(v);
+            o.app.link_set(v);
+            env.History.saver(sel_app.link, sel_app.link_set, 'link image').exec(v);
         };
 
         // Don't have to worry about duplicating handlers because all elements
@@ -128,10 +129,17 @@ o.Controls = function(app, multiselect, delegate) {
         return $($.map(ctrls.clone(false), o.appendButton)); };
     o.addControls = function(ctrls) { 
         return $($.map(ctrls.clone(false).children(), o.appendControl)); };
+    o.addButtons = function(ctrls) {
+        $ctrls = ctrls.find(".control.buttons");
+        if ($ctrls.length == 0)
+            $ctrls = ctrls;
+        return $($.map($ctrls.clone(false).children(), o.appendButton)); };
     o.hover_menu = function(handle, drawer, opts) {
         return u.hover_menu(handle, drawer, $.extend({
-            auto_height: false, offset_y : o.padding - 4}, opts))
+            auto_height: false, offset_y : o.padding - 7}, opts))
     };
+    o.single = function() {
+        return (env.Selection.count() == 1) ? o.app.sel_app() : false }
 
     o.padding = 4;
     o.border_width = 5;
@@ -147,12 +155,20 @@ o.Controls = function(app, multiselect, delegate) {
     pad_ul = $.map(pad_ul, function(x) { return Math.max(x, o.border_width) });
     pad_br = $.map(pad_br, function(x) { return Math.max(x, o.border_width) });
     var pos_dims = function(){
-        // TODO-bugbug: can still be pushed off screen with really small apps 
-        var ap = o.app.pos(),
+        // TODO-bugbug-border-push:
+        //    * Can still be pushed off screen with really small apps 
+        //    * Add scroll height when pushed from bottom to prevent
+        //      overlap of controls with app content
+        // TODO-polish-border-push:
+        //    * Make pushed border segments dashed
+        //    * Create pushed controls container so controls meant to
+        //      overlay app content can be separated
+        // Maybe ditch border pushing entirely. Not convinced it's worth it
+        var ap = app.pos(),
             win = $(window), wdims = [win.width(), win.height()],
             pos = [ Math.max(pad_ul[0] + window.scrollX,
                 ap[0]), Math.max(pad_ul[1] + window.scrollY, ap[1]) ],
-            ad = o.app.dims(),
+            ad = app.dims(),
             dims = [ ap[0] - pos[0] + ad[0], ap[1] - pos[1] + ad[1] ];
         if(dims[0] + pos[0] > wdims[0] + window.scrollX - pad_br[0])
             dims[0] = wdims[0] + window.scrollX - pad_br[0] - pos[0];
@@ -161,7 +177,7 @@ o.Controls = function(app, multiselect, delegate) {
 
         var minned_dims = [ Math.max(min_d[0], dims[0]),
             Math.max(min_d[1], dims[1]) ];
-        delta_dir = [ ap[0] < 0 ? 0 : -1, ap[1] < 0 ? 0 : -1 ];
+        var delta_dir = [ ap[0] < 0 ? 0 : -1, ap[1] < 0 ? 0 : -1 ];
         if(env.gifwall && !o.multiselect) {
             pos[1] = Math.max(pad_ul[1], ap[1]);
             dims[1] = ap[1] - pos[1] + ad[1];
@@ -175,6 +191,11 @@ o.Controls = function(app, multiselect, delegate) {
     o.dims = function(){ return pos_dims().dims };
 
     o.layout = function() {
+        // Fix parent layout if needed
+        // if (o.app.focused())
+        //     env.Selection.update_relative_coords();
+        //if (delegate && o.app.controls)
+        //    o.app.controls.layout();
         var pos = o.pos(), dims = o.dims(),
             cx = dims[0] / 2, cy = dims[1] / 2, p = o.padding,
             bw = o.border_width, outer_l = -cx -bw - p,
@@ -216,10 +237,14 @@ o.Controls = function(app, multiselect, delegate) {
         .on(o.select_borders, 'drag', o.app)
         .on(o.select_borders, 'dragend', o.app);
     o.div.append(o.select_box.append(o.select_borders));
-    o.select_box.click(function( e ){
-        e.stopPropagation();
-        o.app.unfocus();
+    o.select_box.click(function(){
+        var app = o.single()
+        if(app)
+            app.unfocus();
     });
+
+    if(o.multiselect && o.app.angle)
+        o.select_box.rotate(o.app.angle());
 
     if (!multiselect) {
         o.addControls($('#controls_common'));
@@ -229,11 +254,14 @@ o.Controls = function(app, multiselect, delegate) {
         o.c.remove  = d.find('.remove' );
         o.c.resize  = d.find('.resize' );
         o.c.stack   = d.find('.stack'  );
-        o.c.remove.click(function() { o.app.remove(); });
+        o.c.remove.click(function(){
+            o.app.remove();
+            env.layout_apps() // in case scrollbar visibility changed
+        });
         o.c.copy    = d.find('.copy'   );
         o.c.copy.click(function(){
-            var copy = o.app.copy({ load: function(){
-                env.Selection.select(copy);
+            var copy = o.app.copy({ load: function(a){
+                env.Selection.select(a);
             } });
         });
         if (env.copy_table) {
