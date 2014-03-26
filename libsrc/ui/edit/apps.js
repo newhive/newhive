@@ -413,7 +413,7 @@ Hive.App = function(init_state, opts) {
         var win = $(window),
             pos = [ ( win.width() - o.width() ) / 2 + win.scrollLeft(),
                 ( win.height() - o.height() ) / 2 + win.scrollTop() ];
-        if(typeof(offset) != "undefined"){ pos = u.array_sum(pos, offset) };
+        if(typeof(offset) != "undefined"){ pos = u._add(pos)(offset) };
         o.pos_set(pos);
     };
 
@@ -522,7 +522,7 @@ Hive.App = function(init_state, opts) {
         if( ! o.init_state.position ) o.init_state.position = [ 100, 100 ];
         if( ! o.init_state.dimensions ) o.init_state.dimensions = [ 300, 200 ];
         if( opts.offset )
-            o.init_state.position = u.array_sum(o.init_state.position, opts.offset);
+            o.init_state.position = u._add(o.init_state.position)(opts.offset);
         o.state_relative_set(o.init_state);
         if (o.init_state.full_bleed_coord != undefined)
             Hive.App.has_full_bleed(o, o.init_state.full_coord);

@@ -129,7 +129,7 @@ define([
 
         jplayer.init_jplayer();
 
-        layout.place_apps();
+        // layout.place_apps();
     };
 
     o.link_target = function(a){
