@@ -17,8 +17,8 @@ Titanium.App.Properties.setBool('is_test', true);
 
 var photosCollection = Alloy.Collections.instance('Photos');
 
-Titanium.App.Properties.setString('base_url_ssl', 'https://staging.newhive.com/');
-Titanium.App.Properties.setString('base_url', 'http://staging.newhive.com/');
+Titanium.App.Properties.setString('base_url_ssl', 'https://www.newhive.com/');
+Titanium.App.Properties.setString('base_url', 'http://www.newhive.com/');
 
 var NUM_ACTIVE_XHR = 0;
 var imageUploadQueue = new Array();
@@ -62,10 +62,15 @@ function showHiveCamera() {
 			photo_model.set('width', small_image_obj.width);
 			photo_model.set('height', small_image_obj.height);
 			photo_model.save();
+			Ti.API.info('photoscolleciton length before adding new model: '+ photosCollection.length);
 			photosCollection.add(photo_model);
+			Ti.API.info('photoscolleciton length AFTER adding new model: '+ photosCollection.length);
 
 			Ti.App.fireEvent('enableShowCamera');
 			Titanium.App.Properties.setBool('is_camera_open', false);
+
+			Ti.API.info('model width: '+ photo_model.get('width'));
+			Ti.API.info('model height: '+ photo_model.get('height'));
 
 			uploadImage(photo_model);
 		},
@@ -217,10 +222,15 @@ function reduceImageSize(lg_img) {
 		{
 			width:reduce_w,
 			height:reduce_h,
-			format:ImageFactory.JPEG,
-			quality:0.8
+			format:ImageFactory.JPEG
 		});
+
+	small_photo = ImageFactory.compress(small_photo, 0.333);
+
 	Ti.API.info('AFTER reducing: ' + small_photo.length);
+
+	Ti.API.info('AFTER width: ' + reduce_w);
+	Ti.API.info('AFTER height: ' + reduce_h);
 
 	small_photo_obj = {
 		image: small_photo,
@@ -272,8 +282,24 @@ function uploadImage(photo_model) {
 
 		res = JSON.parse(this.responseText)[0];
 
+		Ti.API.info("as setting new_hive_Id, image stored width: "+ photo_model.get('width'));
+
 		photo_model.set('new_hive_id', res.id);
 		photo_model.save();
+		//photosCollection.add(photo_model);
+
+
+
+		Ti.API.info("photosCollection length: "+ photosCollection.length);
+
+		photosCollection.each(function(p, index) {
+			Ti.API.info("this image newhive id: "+ p.get('new_hive_id'));
+			
+			Ti.API.info("this image stored blob: "+ p.get('photo_blob'));
+			Ti.API.info("this image stored width: "+ p.get('width'));
+			Ti.API.info("this image stored height: "+ p.get('height'));
+
+		});
 	};
 }
 

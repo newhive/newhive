@@ -11,6 +11,9 @@ function publishExrpession(){
 
 		pb = p.get('photo_blob');
 		Ti.API.info("this image newhive id: "+ p.get('new_hive_id'));
+		
+		Ti.API.info("this image stored width: "+ p.get('width'));
+		Ti.API.info("this image stored height: "+ p.get('height'));
 
 		apps.push({
 			"file_id": p.get('new_hive_id'),
