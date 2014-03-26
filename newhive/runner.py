@@ -2,7 +2,7 @@ from newhive import state, config
 db = state.Database(config)
 
 import time, threading
-from newhive.utils import now, time_u
+from newhive.utils import now, time_u, threaded_timeout
 
 class Runner(object):
     """Continuously process work"""
@@ -22,6 +22,7 @@ class Runner(object):
         pass
 
     def run(self):
+        old_threads = threading.active_count()
         while True:
             if len(self.queue):
                 item = self.queue.pop()
@@ -29,9 +30,9 @@ class Runner(object):
                 self.process(item)
                 if (self.total % self.print_frequency == 0):
                     print self.total
-                while threading.active_count() > self.thread_limit:
+                while threading.active_count() > self.thread_limit - old_threads:
                     print "waiting for %s threads:" % (
-                        threading.active_count() - self.thread_limit)
+                        threading.active_count() - self.thread_limit - old_threads)
                     time.sleep(1)
 
             else:
@@ -41,6 +42,11 @@ class Runner(object):
                     break
 
 class ImageScalerRunner(Runner):
+    def __init__(self, **args):
+        super(ImageScalerRunner, self).__init__()
+        # because we are using an extra thread per work thread to set timeout.
+        self.thread_limit *= 2
+
     def add_work(self):
         # TODO: Need to write maintenance script to clean up files which
         # failed resamples, namely: resample_time older than 6 hours AND has no resamples
@@ -51,6 +57,7 @@ class ImageScalerRunner(Runner):
         self.queue.extend(work)
 
     def process(self, file_record):
-        t = threading.Thread(target=file_record.set_resamples)
+        t = threading.Thread(target=
+            threaded_timeout(file_record.set_resamples, timeout_duration=99))
         t.daemon = True
         t.start()
