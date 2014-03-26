@@ -30,6 +30,9 @@ def fixup_expr_assets(expr, dryrun=True, force=False):
     apps = expr.get('apps',[])
     for app in apps:
         fixup_assets_s3(app, ['url', 'content'])
+    snap = expr.get('snapshot_id')
+    if snap: snap = db.File.fetch(snap)
+    if snap: fixup_file_assets(snap, dryrun=dryrun, force=force)
     background = expr.get('background')
     if background:
         fixup_assets_s3(background, ['url'])
