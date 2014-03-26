@@ -477,6 +477,10 @@ o.Selection = function(o) {
         if(app.controls) app.controls.remove();
     };
 
+    o.scroll_to_view = function() {
+        u.scroll_to_view(o.max_pos());
+        u.scroll_to_view(o.min_pos());
+    }
     o.update = function(apps){
         apps = $.grep(apps || elements, function(e){ return ! e.deleted; });
         var multi = true;
