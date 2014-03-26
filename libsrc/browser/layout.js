@@ -1,19 +1,24 @@
-define(['browser/jquery'], function($) {
+define(['browser/jquery', 'ui/util'], function($, util) {
     var o = {};
 
     o.on_scroll = function(ev) {
 
     }
     o.place_apps = function() {
+        // if(util.mobile()) return
+
         var win_width = $(window).width();
+        if(util.mobile()) win_width = 500;
+        // TODO: bg code should respect win_width
         $('.happfill').each(function(i, div) {
             var e = $(div);
             //e.width(e.parent().width()).height(e.parent().height());
             o.img_fill(e.find('img'))
         });
+
         $('.happ').each(function(i, app_div) {
             var e = $(this);
-            var s = e.parent().width() / 1000;
+            var s = win_width / 1000;
             if(!e.data('css')) {
                 var c = {}, props = ['left', 'top', 'width', 'height'],
                     border = $(app_div).css('border-radius');
@@ -61,9 +66,10 @@ define(['browser/jquery'], function($) {
     // TODO: generalize into layout function that can size to parent,
     // as well as center to any side or corner
     o.center = function(e, inside, opts){
+        e = $(e)
         if(!e.width() || !e.height()) return; // As image is loading, sometimes height can be falsely reported as 0
 
-        var w = (typeof(inside) == 'undefined' ? $(window) : inside),
+        var w = (inside ? $(inside) : $(window))
             opts = $.extend({
                 absolute: false,
                 minimum: true,
@@ -110,7 +116,7 @@ define(['browser/jquery'], function($) {
     };
 
     // TODO: unminify this (wtf?)
-    var new_window = function(b,c,d){
+    o.new_window = function(b,c,d){
         var a=function(){if(!window.open(b,'t','scrollbars=yes,toolbar=0,resizable=1,status=0,width='+c+',height='+d)){document.location.href=b}};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}
     };
 

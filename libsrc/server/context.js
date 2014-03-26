@@ -36,6 +36,11 @@ define([
             return entityMap[s];
         });
     };
+
+    o.location = function(context){ return window.location.toString() }
+
+    o.param = function(context, v){
+        return window.encodeURIComponent(v) }
     
     o.defer = function(context, block){
         return '<div class="defer" data-content="' + escapeHtml(block(context)) + '"></div>';
@@ -72,11 +77,21 @@ define([
         return "[Untitled]";
     }
 
+    o.page_state = function(route_name, args, query_args){
+        var s = routing.page_state(route_name, args, query_args)
+            server = o.config.server_url.slice(0,-1)
+        // attempt to make routing work on custom domain,
+        // foiled by history API not allowing to change domain
+        // s.page = server + s.page
+        // s.api = server + s.api
+        return s
+    }
+
     var attrs = function(route_name, args, query_args, is_form, suppress){
         if(!suppress) suppress = [];
         var attributes = suppress.indexOf('attributes') >= 0 ? [] : 
                 [ ['data-route-name', route_name] ],
-            page_state = routing.page_state(route_name, args, query_args);
+            page_state = o.page_state(route_name, args, query_args)
 
         if (is_form) {
             attributes.push(['enctype', 'multipart/form-data']);
@@ -94,7 +109,8 @@ define([
     };
 
     var get_route_args = function(arguments){
-        var args = { username: o.user.name };
+        var args = {}
+        if(o.user) args.username = o.user.name
         // All arguments after route_name are name value pairs
         for(var i = 2; i < arguments.length; i += 2)
             args[arguments[i]] = arguments[i + 1];
@@ -104,7 +120,8 @@ define([
 
     // TODO-cleanup: merge with query_attrs
     o.search_attrs = function(scope){
-        var args = { username: o.user.name };
+        var args = {}
+        if(o.user) args.username = o.user.name
         var query_args = ""
         // All arguments after route_name are prefix value pairs
         for(var i = 1; i < arguments.length; i += 2)
@@ -166,13 +183,13 @@ define([
         // var all_elements = elements.add(document.body);
 
         // Common site-wide handlers
-        find_all(dom, '*[data-class-toggle]').each(function(i, ev) {
+        find_all(dom, '*[data-class-toggle]').each(function(i, el) {
             var click_func = function(klass) {
-                return function(el) {
-                    $(ev).toggleClass(klass);
+                return function() {
+                    $(el).toggleClass(klass);
                 };
             }
-            var class_toggles = $(ev).attr('data-class-toggle');
+            var class_toggles = $(el).attr('data-class-toggle');
             if (class_toggles) {
                 class_toggles = JSON.parse(class_toggles);
             }
@@ -184,42 +201,42 @@ define([
             }
         });
         // TODO-cleanup: this is a subcase of class-toggle.
-        find_all(elements, '*[data-link-show]').each(function(i, ev) {
-            var handle = find_all(elements, $(ev).attr('data-link-show'));
+        find_all(elements, '*[data-link-show]').each(function(i, el) {
+            var handle = find_all(elements, $(el).attr('data-link-show'));
             if(!handle) throw 'missing handle';
-            handle.on('click', function(el) { 
-                $(ev).toggleshow();
+            handle.on('click', function(ev) { 
+                $(el).toggleshow();
             });
         });
 
         find_all(elements, 'form[data-route-name]').each(
-            function(i, ev){ form_handler(ev, elements) });
+            function(i, el){ form_handler(el, elements) });
 
-        find_all(elements, '.menu.drawer[data-handle]').each(function(i, ev){
-            var handle = find_all(elements, $(ev).attr('data-handle'));
+        find_all(elements, '.menu.drawer[data-handle]').each(function(i, el){
+            var handle = find_all(elements, $(el).attr('data-handle'));
             if(!handle) throw 'missing handle';
-            var parent = find_all(elements, $(ev).attr('data-parent'));
+            var parent = find_all(elements, $(el).attr('data-parent'));
             var opts = {};
             if (parent.length && parent.data('menu')) {
                 opts['group'] = parent.data('menu');
                 opts['layout_x'] = 'submenu';
                 // opts['layout'] =  'center_y';
             }
-            menu(handle, ev, opts);
+            menu(handle, el, opts);
         });
 
-        find_all(elements, '.dialog[data-handle]').each(function(i, ev){
-            var handle = find_all(elements, $(ev).attr('data-handle'));
+        find_all(elements, '.dialog[data-handle]').each(function(i, el){
+            var handle = find_all(elements, $(el).attr('data-handle'));
             if(!handle) throw 'missing handle';
-            var d = dialog.create(ev);
+            var d = dialog.create(el);
             handle.click(d.open);
         });
 
-        find_all(elements, '.hoverable').each(function(i, ev){
-            ui_util.hoverable($(ev)) });
+        find_all(elements, '.hoverable').each(function(i, el){
+            ui_util.hoverable($(el)) });
 
         js.each(o._after_render_handlers, function(handler, selector){
-            find_all(elements, selector).each(function(i,ev){ handler($(ev)) });
+            find_all(elements, selector).each(function(i,el){ handler($(el)) });
         });
 
         return elements;
@@ -230,25 +247,32 @@ define([
 
     var submit_form = function(form){
         var opts = {};
-        form.trigger('before_submit');
         opts.url = form.attr('action');
-        opts.data = new FormData($(form)[0]);
         opts.success = function(data){
             // if(!file_api) input.trigger('with_files',
                 // [ data.map(function(f){ return f.url }) ]);
-            form.trigger('response', [data]);
-            form.find("*[type=submit]").
-                removeClass('disabled').prop('disabled','');
+            form.trigger('success', [data]);
         };
         opts.error = function(data){
-            // TODO: open new window with debugger
-            console.error("Server error post request: " + form.attr('action')
-                + '\n(remove form handlers to see error) $("form").unbind("submit")');
+            if(config.debug_mode){
+                // TODO: open new window with debugger
+                console.error("Server error post request: "
+                    + form.attr('action') + '\n(remove form handlers to '
+                    + 'see error) $("form").unbind("submit")'
+                )
+            }
             form.trigger('error', [data]);
         };
+        opts.complete = function(){
+            form.find("*[type=submit]").
+                removeClass('disabled').prop('disabled','')
+        }
+        form.trigger('before_submit');
+        opts.data = new FormData($(form)[0]);
         upload.submit(false, opts);
         form.trigger('after_submit');
-        form.find("*[type=submit]").addClass('disabled').prop('disabled','true');
+        form.find("*[type=submit]")
+            .addClass('disabled').prop('disabled','true');
     };
 
     function form_handler(form, all){
@@ -279,7 +303,7 @@ define([
                     function(files, file_list){
                         form.trigger('with_files', [files, file_list]); },
                     function(file_records){
-                        form.trigger('response', [file_records]); }
+                        form.trigger('success', [file_records]); }
                 );
         });
 

@@ -1,5 +1,3 @@
-{% extends "pages/main.html" %}
-
 {% block head %} 
  <style>
 .toolbtn { margin-left : 20px }
@@ -12,7 +10,8 @@
 {% block body %}
  <div
  class='happ' style='left:322.246859px; top:110.125647px;
- width:354.005168px; height:333.333333px; ; z-index : 1;'><img
+ width:354.005168px; height:333.333333px; ; z-index : 1;margin:auto'>
+ <img style='width:100%;'
  src='{{ 'skin/1/floating_island.png'|asset_url }}'></div>
  {% if user_is_owner %}
   <div
@@ -26,7 +25,7 @@
   League Gothic;">THIS PAGE ONLY EXISTS IN THE FUTURE</span></a></div>
  {% else %}
   <div class='happ' style='left:356px; top:61.493411px;
-  width:270.863836px; height:30.014641px; font-size : 1.44120864659em;
+  width:auto; height:30.014641px; font-size : 1.44120864659em;
   z-index : 0; text-align : center' data-scale='1.44120864659'><span style="font-family:
   League Gothic;">NOTHING IS HERE</span></div>
  {% endif %}

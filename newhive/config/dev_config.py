@@ -4,7 +4,7 @@ database        = 'test'
 plain_port      = 1212
 ssl_port        = 1213
 debug_mode      = True
-debug_unsecure  = True
+debug_unsecure  = False
 
 # Uncomment to run as live server
 # sudo service apache2 restart
@@ -12,8 +12,8 @@ debug_unsecure  = True
 # ssl_port        = 443
 # debug_mode      = False
 
-server_name     = 'site'
-content_domain  = 'content'
+server_name     = 'office.newhive.com'
+content_domain  = 'office.tnh.me'
 dev_prefix      = None
 
 aws_id          = 'AKIAJSU3W7EYEO4ZZCNA'

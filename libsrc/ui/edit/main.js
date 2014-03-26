@@ -5,18 +5,19 @@ define([
     ,'browser/js'
 
     ,'ui/menu'
-    ,'ui/codemirror'
     ,'ui/dialog'
     ,'ui/util'
     ,'server/context'
     ,'ui/colors'
     ,'browser/upload'
+    ,'browser/layout'
 
     ,'./apps'
     ,'./util'
     ,'./events'
     ,'./env'
     ,'./selection'
+    ,'sj!templates/edit_sandbox.html'
 
     ,'./text'
 
@@ -28,18 +29,19 @@ define([
     ,js
 
     ,Menu
-    ,CodeMirror
     ,dialog
     ,ui_util
     ,context
     ,colors
     ,upload
+    ,layout
 
     ,hive_app
     ,u
     ,evs
     ,env
     ,selection
+    ,edit_template
 ){
 
 var Hive = {}
@@ -51,6 +53,7 @@ var Hive = {}
 Hive.asset = asset;
 
 // Expose to outside for debugging
+window.h = Hive
 Hive.u = u;
 Hive.env = env;
 Hive.app = hive_app;
@@ -108,14 +111,54 @@ Hive.init_menus = function() {
     $('#embed_done').click(function() { Hive.embed_code('#embed_code'); embed_menu.close(); });
 
     u.hover_menu('.insert_shape', '#menu_shape');
-    $('#shape_rectangle').click(function(e) {
-        hive_app.new_app({ type : 'hive.rectangle', content :
+    $('#menu_shape .rect').click(function(e) {
+        hive_app.new_app({ type : 'hive.rectangle', css_state :
             { color : colors[24], 'border-color' : 'black', 'border-width' : 0,
-                'border-style' : 'solid', 'border-radius' : 0 } });
+                'border-style' : 'solid' } });
     });
-    $('#shape_sketch').click(function(e) {
-        hive_app.new_app({ type: 'hive.sketch', dimensions: [700, 700 / 1.6], content: { brush: 'simple', brush_size: 10 } });
+    $('#menu_shape .sketch').click(function(e) {
+        hive_app.new_app({ type: 'hive.sketch', dimensions: [700, 700 / 1.6]
+            ,content: { brush: 'simple', brush_size: 10 } });
     });
+    // polygon shapes
+    var poly = hive_app.App.Polygon
+    Hive.template_triangle = { // triangle
+        "type":"hive.polygon",
+        "points":[[50,0],[100, 100*Math.sqrt(3)/2],[0, 100*Math.sqrt(3)/2]]
+    }
+    Hive.template_pentagram = $.extend({}, Hive.template_triangle, {
+        points: js.range(10).map(function(i){
+            var d = ((i == 0 ? 0 : Math.PI*2*i/10) + Math.PI/10)
+                ,o = [47.705200572253005, 45.72550799853835] // dims/2
+                ,r = (i % 2) ? 50 : 19.0983005625
+                ,p = [Math.cos(d), Math.sin(d)]
+            return u._add(o)( u._mul(p)(r) )
+        })
+    })
+    Hive.template_hexagon = $.extend({}, Hive.template_triangle, {
+        points: js.range(6).map(function(i){
+            var d = (i == 0 ? 0 : Math.PI*2*i/6)
+                ,o = [50.5, 43.80127018922194] // dims/2
+                ,p = [Math.cos(d), Math.sin(d)]
+            return u._add(o)( u._mul(p)(50) )
+        })
+    })
+    $('#menu_shape .triangle').click(function(){
+        poly.mode(Hive.template_triangle)
+        poly.focus()
+    })
+    $('#menu_shape .pentagram').click(function(){
+        poly.mode(Hive.template_pentagram)
+        poly.focus()
+    })
+    $('#menu_shape .hexagon').click(function(){
+        poly.mode(Hive.template_hexagon)
+        poly.focus()
+    })
+    $('#menu_shape .free_form').click(function(){
+        poly.mode(false)
+        poly.focus()
+    })
 
     u.hover_menu('.insert_file', '#menu_file');
 
@@ -137,11 +180,11 @@ Hive.init_menus = function() {
         }
         center = u._mul([ev.clientX, ev.clientY])(env.scale());
         u.new_file(files, { center: center });
-    }).on('response', function(ev, files){ u.on_media_upload(files) });
+    }).on('success', function(ev, files){ u.on_media_upload(files) });
 
     $('#link_upload').on('with_files', function(ev, files){
         // TODO-polish: maybe create link text box first
-    }).on('response', function(ev, files){
+    }).on('success', function(ev, files){
         Hive.Exp.background.url = files[0].url;
         // TODO-polish: maybe deal with multiple files
         var file = files[0];
@@ -152,6 +195,7 @@ Hive.init_menus = function() {
         hive_app.new_app(app);
     });
 };
+
 Hive.init_dialogs = function() {
     // TODO-refactor: separate background dialog, save dialog, and top level
     // menus into respective constructors
@@ -161,120 +205,14 @@ Hive.init_dialogs = function() {
     // if ( !ua.match(/(Firefox|Chrome|Safari)/i) || ua.match(/OS 5(_\d)+ like Mac OS X/i)) {
     //     u.show_dialog('#editor_browsers');
     // }
-
     hive_app.init_background_dialog();
-    Hive.init_save_dialog();
 };
-Hive.init_save_dialog = function(){
-    var busy_e = $('.save .loading');
-    $(document).ajaxStart(function(){
-        // TODO-draft: set a flag to block saving while uploads are in progress
-        busy_e.showshow();
-        $('#save_submit').addClass('disabled');
-        //$('#save_submit .label').hidehide(); // can't get to look nice
-    }).ajaxStop(function(){
-        busy_e.hidehide();
-        $('#save_submit').removeClass('disabled');
-        //$('#save_submit .label').showshow();
-    }).ajaxError(function(ev, jqXHR, ajaxOptions){
-        // TODO-polish upload_error: show some warning, and somehow indicate
-        // which app(s) failed to save
-    });
 
-    var checkUrl = function(){
-        var u = $('#url').val();
-        if(u.match(/[^\w.\/-]/)) {
-            alert("Please just use letters, numbers, dash, period and slash in URLs. It makes it easier to share on other websites.");
-            $('#url').focus();
-            return false;
-        } else {
-            return true;
-        }
-    };
+Hive.layout = function(){
+    u.layout_apps();
+    layout.center('.app_btns', 'body', {v: false});        
+}
 
-    // var save_menu = Hive.u.hover_menu('#btn_save', '#dia_save',
-    //     { auto_close : false, click_persist : '#dia_save' });
-    $('#save_submit').click(function(){
-        if( ! $(this).hasClass('disabled') ){
-            if(checkUrl()){
-                Hive.edit_page.controller.set_exit_warning(false);
-                Hive.save();
-            }
-        }
-    });
-    // canonicalize tags field.
-    function tags_input_changed(el) {
-        const reserved_tags = ["remixed", "gifwall"];
-        var tags = el.val().trim();
-        var tag_list = Hive.tag_list(tags);
-        tags = Hive.canonical_tags(tag_list, reserved_tags);
-        $("#tags_input").val(tags);
-        Hive.set_tag_index(Hive.tag_list(tags));
-        var search_tags = " " + tags.toLowerCase() + " ";
-        $(".remix_label input").prop("checked", search_tags.indexOf(" #remix ") >= 0);
-    }
-    $("#tags_input").change(function(e){
-        var el = $(e.target);
-        tags_input_changed(el);
-    });
-    $(".remix_label input").change(function(e) {
-        if ($(e.target).prop("checked")) {
-            $("#tags_input").val("#remix " + $("#tags_input").val());
-        } else {
-            $("#tags_input").val($("#tags_input").val().replace(/[#,]?remix/gi,""));
-            tags_input_changed($("#tags_input"));
-        }
-    });
-    tags_input_changed($("#tags_input"));
-    var save_dialog = $('#dia_save').data('dialog');
-    save_dialog.opts.open = Hive.edit_pause;
-    save_dialog.opts.close = Hive.edit_start;
-
-    var overwrite_dialog = dialog.create('#dia_overwrite');
-    $('#cancel_overwrite').click(overwrite_dialog.close);
-    $('#save_overwrite').click(function() {
-        Hive.Exp.overwrite = true;
-        Hive.save();
-    });
-    $("#dia_save").on('keydown', function(e) {
-        if ((e.keyCode || e.which || e.charCode || 0) == 13) {
-            $("#save_submit").click();
-            e.preventDefault();
-        }
-    });
-    
-    // Automatically update url unless it's an already saved
-    // expression or the user has modified the url manually
-    $('#dia_save #title')
-        .text(context.page_data.expr.title)
-        .on('keydown keyup', function(){
-            if (!(Hive.Exp.home || Hive.Exp.created || $('#url').hasClass('modified') )) {
-                $('#url').val($('#title').val().replace(/[^0-9a-zA-Z]/g, "-")
-                    .replace(/--+/g, "-").replace(/-$/, "").toLowerCase());
-            }
-        }).keydown()
-        .blur(function(){
-            $('#title').val($('#title').val().trim());
-        }).blur();
-
-    $('#dia_save #url')
-        .focus(function(){
-            $(this).addClass('modified');
-        })
-        .change(checkUrl);
-
-    u.hover_menu($('#privacy' ), $('#menu_privacy')); //todo-delete, { group: save_menu } );
-    $('#menu_privacy').click(function(e) {
-        $('#menu_privacy div').removeClass('selected');
-        var t = $(e.target);
-        t.addClass('selected');
-        $('#privacy').text(t.text());
-        var v = t.attr('val');
-        if(v == 'password') $('#password_ui').showshow();
-        else $('#password_ui').hidehide();
-    });
-    if(Hive.Exp.auth) $('#menu_privacy [val=' + Hive.Exp.auth +']').click();
-};
 Hive.init_global_handlers = function(){
     // Global event handlers
     $(window).on('resize', function(ev) {
@@ -282,14 +220,17 @@ Hive.init_global_handlers = function(){
         env.scale_set();
         var new_scale = env.scale();
         if(old_scale == new_scale) return;
-
-        u.layout_apps();
+        Hive.layout()
     });
+    Hive.layout()
+
     $(window).on('scroll', Hive.scroll);
     evs.on(document, 'keydown');
     evs.on('body', 'mousemove');
     evs.on('body', 'mousedown');
-    var drag_base = $('#grid_guide');
+    evs.on('body', 'mouseup');
+    // evs.on('body', 'click');
+    var drag_base = $('#grid_guide, .prompts')
     evs.on(drag_base, 'dragenter');
     evs.on(drag_base, 'dragleave');
     evs.on(drag_base, 'drop');
@@ -300,110 +241,108 @@ Hive.init_global_handlers = function(){
 
     // The plus button needs to be clickable, but pass other events through
     $(".prompts .plus_btn").add($(".prompts .hint"))
-    .on("dragenter",function(ev) { 
-        $("#grid_guide").trigger(ev);
-        return false; })
-    .on("dragleave",function(ev) { 
-        $("#grid_guide").trigger(ev);
-        return false; })
-    .on('dragenter dragover', function(ev){
-        ev.preventDefault(); })
-    .on("drop",function(ev) {
-        ev.preventDefault();
-        $("#grid_guide").trigger(ev);
-        return false; })
-    .on("mouseenter", function(ev) {
-        $("#grid_guide").trigger("dragenter"); })
-    .on("mouseleave", function(ev) {
-        $("#grid_guide").trigger("dragleave"); });
+        .on("drop dragenter dragleave",function(ev) { 
+            ev.preventDefault();
+            drag_base.trigger(ev);
+            return false;
+        })
+        .on('dragover', function(ev){
+            ev.preventDefault();
+        })
+        .on("mouseenter", function(ev){
+            drag_base.trigger("dragenter");
+        })
+        .on("mouseleave", function(ev) {
+            drag_base.trigger("dragleave");
+        });
+
+    evs.handler_set(env.Selection);
+    evs.handler_set(Hive);
+    env.apps_e.addClass('default');
+    Hive.cursor_set('default')
+
+    var busy_e = $('.save .loading');
+    $(document).ajaxStart(function(){
+        busy_e.showshow();
+        Hive.send({save_safe: false})
+    }).ajaxStop(function(){
+        busy_e.hidehide();
+        Hive.send({save_safe: true})
+    }).ajaxError(function(ev, jqXHR, ajaxOptions){
+        // TODO-polish-upload-error: show some warning, and somehow indicate
+        // which app(s) failed to save
+    });
+
+    $('#btn_save').click(function(){
+        var expr = Hive.state();
+        Hive.send({save_dialog: 1})
+    })
 };
-Hive.init = function(exp, page){
+
+Hive.receive = function(ev){
+    var msg = ev.data
+    if(msg.init)
+        Hive.init(msg.expr, msg.context)
+    if(msg.focus)
+        window.focus()
+    if(msg.save_request)
+        Hive.send({save: Hive.state()})
+}
+Hive.send = function(m){
+    window.parent.postMessage(m, '*') }
+
+Hive.pre_init = function(){
+    window.addEventListener('message', Hive.receive, false)
+    Hive.send({ready: true})
+}
+
+Hive.init = function(exp, site_context){
     // this reference must be maintained, do not assign to Exp
     env.Exp = Hive.Exp = exp;
-    Hive.edit_page = page;
+    // Hive.edit_page = page;
     if(!exp.auth) exp.auth = 'public';
     env.scale_set();
+
+    $.extend(context, site_context)
+    env.copy_table = context.flags.copy_table || false;
+    env.gifwall = $.inArray('gifwall', exp.tags_index) > -1
+    env.squish_full_bleed = env.gifwall;
+    env.show_mini_selection_border = 
+        env.gifwall || context.flags.show_mini_selection_border;
+
+    var exit_safe = true
+    env.exit_safe_set = function(v){
+        if(v == exit_safe) return
+        Hive.send({exit_safe: v})
+        exit_safe = v
+    }
+
+    if (env.gifwall)
+        $("body").addClass("gifwall");
+    else
+        $("body").addClass("default");
+    $('body').append(edit_template())
 
     Hive.init_dialogs();
     Hive.init_menus();
     // Hive.init_autosave();
 
+    env.apps_e = $('#happs'); // container element for all interactive apps
     env.History.init();
-    hive_app.Apps.init(Hive.Exp.apps);
-    Hive.init_common();
+    // Hive.init_common();
+    if(context.query.new_user)
+        $("#dia_editor_help").data("dialog").open();
+    // TODO-cleanup: remove Selection from registered apps, and factor out
+    // shared functionality into has_coords
     env.Selection = hive_app.new_app({ type : 'hive.selection' });
+    hive_app.Apps.init(Hive.Exp.apps);
 
+    $('.edit.overlay').showshow()
     Hive.init_global_handlers()
-    Hive.edit_start();
-    env.layout_apps();
     setTimeout(function() { env.layout_apps(); }, 100);
 };
 
-Hive.tag_list = function(tags) {
-    tags = tags.split(" ");
-    tags = $.map(tags, function(x) {
-        return x.toLowerCase().replace(/[^a-z0-9]/gi,'');
-    });
-    u.array_delete(tags, "");
-    return tags;
-}
-Hive.canonical_tags = function(tags_list, special) {
-    // context.flags.modify_special_tags = true;
-    tags_list = $.map(tags_list, function(x, i) {
-        if (special && special.indexOf(x) >= 0) {
-            x = u.capitalize(x);
-            if (!context.flags.modify_special_tags)
-                x = "";
-        }
-        return "#" + x;
-    });
-    if (!context.flags.modify_special_tags && special && Hive.Exp.tags_index)
-        $.map(Hive.Exp.tags_index, function(x, i) {
-            if (special.indexOf(x) >= 0) {
-                x = "#" + u.capitalize(x);
-                tags_list.push(x);
-            }
-        });
-    tags_list = u.array_unique(tags_list);
-    u.array_delete(tags_list, "#");
-    return tags_list.join(" ");
-}
-Hive.set_tag_index = function(tags) {
-    Hive.Exp.tags_index = tags;
-}
-// Called on load() and save()
-Hive.init_common = function(){
-    var query = location.search.slice(1);
-    if (query.length) {
-        if (query == "new_user") {
-            $("#dia_editor_help").data("dialog").open();
-        } else {
-            // otherwise query is assumed to be tag list
-            $tags = $("#tags_input");
-            var e = {target:$tags};
-            var tags = (Hive.Exp.tags || "") + " " + unescape(query);
-            Hive.set_tag_index(Hive.tag_list(tags));
-            $tags.val(tags).trigger("change",e);
-        }
-    }
-    $('title').text("Editor - " + (Hive.Exp.title || "[Untitled]"));
-    var tags = " " + $("#tags_input").val().trim() + " ";
-    env.copy_table = context.flags.copy_table || false;
-    env.gifwall = (tags.indexOf(" #Gifwall ") >= 0);
-
-    env.squish_full_bleed = env.gifwall;
-    env.show_mini_selection_border = 
-        env.gifwall || context.flags.show_mini_selection_border;
-
-    Hive.enter();
-};
-// var $style = $();
 Hive.enter = function(){
-    // $style.remove();
-    if (env.gifwall)
-        $("body").addClass("gifwall");
-    else
-        $("body").addClass("default");
 };
 
 Hive.exit = function(){
@@ -411,20 +350,27 @@ Hive.exit = function(){
     $("body").removeClass("gifwall");
     $("body").removeClass("default");
     $(document).off('keydown');
-    $('body').off('mousemove mousedown');
+    $('body').off('mousemove mousedown mouseup click');
 };
 
-Hive.edit_start = function(){
-    evs.handler_set(env.Selection);
-    evs.handler_set(Hive);
-};
-Hive.edit_pause = function(){
-    evs.handler_del(env.Selection);
-    evs.handler_del(Hive);
-};
+(function(){
+    var focus_classes;
+
+    Hive.focus = function(){
+        focus_classes = env.apps_e.attr('class');
+        evs.focus();
+    };
+    Hive.unfocus = function(){
+        env.apps_e.attr('class', focus_classes);
+        evs.unfocus();
+    };
+})();
 
 // Matches youtube and vimeo URLs, any URL pointing to an image, and
 // creates the appropriate App state to be passed to hive_app.new_app.
+//
+// TODO-feature-html-embed: iterate over each element, and do something
+// reasonable
 Hive.embed_code = function(element) {
     var c = $(element).val().trim(), app
     var v = "", more_args = "", start = 0;
@@ -436,30 +382,30 @@ Hive.embed_code = function(element) {
         || (m = c.match(/https?:\/\/youtu.be\/(.*)$/i)))
         v = m[1];
     if (v != "") {
-        var args = { 'rel': 0, 'showsearch': 0, 'showinfo': 0 };
+        var args = { 'rel': 0, 'showsearch': 0, 'showinfo': 0, 'autohide': 1 };
         if (start) args['start'] = start;
         var url = '//www.youtube.com/embed/' + v + '?' + $.param(args) + more_args;
         app = { type : 'hive.html', content : 
             "<iframe width='100%' height='100%' class='youtube-player'" +
             "  src='" + url + "' frameborder='0' " +
             "allowfullscreen></iframe>"
-        };
+            ,media: 'youtube'
+        }
             //   '<object type="application/x-shockwave-flash" style="width:100%; height:100%" '
             // + 'data="' + url + '"><param name="movie" value="' + url + '">'
             // + '<param name="allowFullScreen" value="true">'
             // + '<param name="wmode" value="opaque"/></object>' };
-    }
-
-    else if(m = c.match(/^https?:\/\/(www.)?vimeo.com\/(.*)$/i))
+    } else if(m = c.match(/^https?:\/\/(www.)?vimeo.com\/(.*)$/i)) {
         app = { type : 'hive.html', content :
             '<iframe src="//player.vimeo.com/video/'
             + m[2] + '?title=0&amp;byline=0&amp;portrait=0"'
-            + 'style="width:100%;height:100%;border:0"></iframe>' };
-
-    else if(m = c.match(/^https?:\/\/(.*)mp3$/i))
-        app = { type : 'hive.audio', content : {url : c, player : minimal} }
-
-    else if(m = c.match(/https?:\/\/.*soundcloud.com/i)) {
+            + 'style="width:100%;height:100%;border:0"></iframe>'
+            ,media: 'vimeo'
+        }
+    } else if(m = c.match(/^https?:\/\/(.*)mp3$/i)) {
+        app = { type : 'hive.audio', content : {url : c, player : minimal}
+            ,media: 'hive.audio' }
+    } else if(m = c.match(/https?:\/\/.*soundcloud.com/i)) {
         var stuffs = $('<div>');
         stuffs.html(c);
         var embed = stuffs.children().first();
@@ -468,7 +414,8 @@ Hive.embed_code = function(element) {
         embed.attr('width', '100%');
         embed.find('[width]').attr('width', '100%');
         embed.find('embed').attr('wmode', 'opaque');
-        app = { type : 'hive.html', content : embed[0].outerHTML };
+        app = { type : 'hive.html', content : embed[0].outerHTML
+            ,media: 'soundcloud' };
     }
 
     else if(c.match(/^https?:\/\//i)) {
@@ -499,7 +446,27 @@ Hive.embed_code = function(element) {
         return;
     }
 
-    else {
+    if(!app){
+        var el = $(c).eq(0)
+        if(el.is('script')){
+            app = { type: 'hive.code', content: el.html(), code_type: 'js' }
+            var url = el.attr('src')
+            if(url){
+                app.url = url
+                delete app.content
+            }
+        }
+        else if(el.is('style')){
+            app = { type: 'hive.code', content: el.html(), code_type: 'css' }
+            var url = el.attr('href')
+            if(url){
+                app.url = url
+                delete app.content
+            }
+        }
+    }
+
+    if(!app){
         var dom = $('<div>');
         dom[0].innerHTML = c;
         dom.find('object').append($('<param name="wmode" value="opaque"/>'));
@@ -511,45 +478,6 @@ Hive.embed_code = function(element) {
     hive_app.new_app(app);
     $(element).val('');
 }; 
-
-Hive.save = function() {
-    var expr = Hive.state();
-    if(expr.name.match(/^(profile|tag)$/)) {
-        alert('The name "' + expr.name + '" is reserved.');
-        return false;
-    }
-
-    // Handle remix
-    if (expr.owner_name != context.user.name) {
-        expr.owner_name = context.user.name;
-        expr.owner = context.user.id;
-        expr.remix_parent_id = expr.id;
-        expr.id = expr._id = '';
-    }
-
-    var on_response = function(ev, ret){
-        // Hive.upload_finish();
-        if(typeof(ret) != 'object')
-            alert("Sorry, something is broken :(. Please send us feedback");
-        if(ret.error == 'overwrite') {
-            $('#expr_name').html(expr.name);
-            $('#dia_overwrite').data('dialog').open();
-            $('#save_submit').removeClass('disabled');
-        }
-        else if(ret.id) Hive.edit_page.view_expr(ret);
-    }, on_error = function(ev, ret){
-        // Hive.upload_finish();
-        if (ret.status == 403){
-            relogin(function(){ $('#btn_save').click(); });
-        }
-        $('#save_submit').removeClass('disabled');
-    };
-
-    $('#expr_save .expr').val(JSON.stringify(expr));
-    $('#expr_save').on('response', on_response)
-        .on('error', on_error).submit();
-    Hive.init_common();
-};
 
 // TODO-feature-autosave: implement 
 Hive.init_autosave = function (){
@@ -568,13 +496,8 @@ Hive.init_autosave = function (){
 // Get and set the JSON object Hive.Exp which represents the edited expression
 Hive.state = function() {
     //Hive.Exp.domain = $('#domain').val();
-    Hive.Exp.name = $('#url').val();
+    hive_app.Apps.restack(); // collapse layers of deleted apps
     Hive.Exp.apps = hive_app.Apps.state();
-    Hive.Exp.title = $('#title').val();
-    Hive.Exp.tags = $('#tags_input').val();
-    Hive.Exp.auth = $('#menu_privacy .selected').attr('val');
-    if(Hive.Exp.auth == 'password') 
-        Hive.Exp.password = $('#password').val();
 
     // get height
     var h = 0;
@@ -587,9 +510,15 @@ Hive.state = function() {
     return Hive.Exp;
 }
 
+var cursor_name
+Hive.cursor_set = function(name){
+    env.apps_e.add('#grid_guide').removeClass(cursor_name).addClass(name)
+    cursor_name = name
+}
+
 // BEGIN-Events  //////////////////////////////////////////////////////
 
-global_highlight = function(showhide) {
+Hive.global_highlight = function(showhide) {
     if (env.gifwall) {
         $(".prompts .highlight").showhide(showhide);
         var fn = showhide ? "mouseover" : 'mouseout';
@@ -603,13 +532,14 @@ Hive.handler_type = 3;
 var dragging_count = 0;
 Hive.dragenter = function(ev){ 
     // hovers_active(false);
-    global_highlight(true);
+    Hive.global_highlight(true);
     dragging_count++;
     ev.preventDefault();
+    return false;
 };
 Hive.dragstart = function(){ 
     // hovers_active(false);
-    // global_highlight(true);
+    // Hive.global_highlight(true);
 };
 Hive.dragend = function(){
     // TODO-usability: fix disabling hover states in ui/util.hoverable
@@ -623,24 +553,29 @@ Hive.drop = Hive.dragleave = function(){
         --dragging_count;
 
     if (0 == dragging_count)
-        global_highlight(false);
+        Hive.global_highlight(false);
+    return false;
 };
-Hive.mouse_pos = [0, 0];
-Hive.mousemove = function(ev){
-    Hive.mouse_pos = [ev.clientX, ev.clientY];
-};
+// TODO-feature-editor-prompts: could be used in handlers for non-pointer
+// events, like in a type to add text box handler
+// Hive.mouse_pos = [0, 0];
+// Hive.mousemove = function(ev){
+//     Hive.mouse_pos = [ev.clientX, ev.clientY];
+// };
 Hive.keydown = function(ev){
     // TODO-feature-editor-prompts #706: if key pressed is a word character,
     // create hive.text app with content of the character pressed
 
-    if(ev.ctrlKey && ev.keyCode == 90){
+    if(u.is_ctrl(ev) && ev.keyCode == 90){ // ctrl+z
         env.History.undo();
         return false;
     }
-    else if(ev.ctrlKey && ev.keyCode == 89){
+    else if(u.is_ctrl(ev) && ev.keyCode == 89){ // ctrl+y
         env.History.redo();
         return false;
     }
+    else if(ev.keyCode == 27) // esc
+        evs.focused().unfocus()
 };
 
 Hive.scroll = function(ev){

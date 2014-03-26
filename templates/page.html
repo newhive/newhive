@@ -2,7 +2,7 @@
 
 {% block head %}
   {{ super() }}
-  <title>{{ ('NewHive' if not page_data.title else page_data.title)|e }}</title>
+  <title>{{ page_data.title|e }}</title>
   {% for item in asset_bundle('app.css') %}
     <link rel='stylesheet' type='text/css' href='{{ item }}'>
   {% endfor %}

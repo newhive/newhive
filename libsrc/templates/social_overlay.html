@@ -2,38 +2,41 @@
   <div id="popup_content">
     <div class="left_pane">
       {# expression title #}
-      <div class="title_spacer">
+      {<vcenter "title_box"}
         <div class="title expr text">{expr.title|untitled|e}
-        </div></div>
+        </div>
+      {>}
       {# user profile #}
       {<with owner "brief" true}
         {|templates/profile_card.html}
       {>}
     </div>
     <div class="right_pane">
-      {# plus menu (Add to collection) #}
-      <div class="icon plus_menu needs_login pointer"></div>
-      {<if flags.admin}
-        <form {form_attrs "add_featured_queue"} method="POST">
-          <input type="hidden" name="expr_id" value="{id}">
-          <button type="submit" class="icon add_queue pointer"></button>
-        </form>
-      {>}
-      {# tags #}
-      <div class="vcenter_spacer"><div class="spacer">
+     {# tags #}
+      {<vcenter "tags_box"}
+        <div class="hide moveme">
+          {# plus menu (Add to collection) #}
+          <div class="icon plus_menu needs_login pointer"></div>
+          {<if flags.admin}
+            <form {form_attrs "add_featured_queue"} method="POST">
+              <input type="hidden" name="expr_id" value="{id}">
+              <button type="submit" class="icon add_queue pointer"></button>
+            </form>
+          {>}
+        </div>
         {<with null "no_delete" true}
           {|templates/tag_list.html}
         {>}
-      </div></div>
+      {>}
       {# Action icons #}
       <div class="stats_bar">
         {# views, metadata #}
-        {<with null "attr_id" "views_icon" "icon_class" "views" 
-          "count" counts.Views "tooltip" "Views"}
-          {|templates/icon_count.html}
-        {>}
+        {<with null "btn_class" "views views_btn" "count" counts.Views
+          "tooltip" "Views"}{|templates/icon_count.html}{>}
         {# Views menu drawer #}
-        <div id="views_menu" class="menu drawer" data-handle='#views_icon' data-menu-opts='"layout_x":"center","no_item_hover":true'>
+        <div id="views_menu" class="menu drawer" data-handle='.views_btn'
+          data-menu-opts='"layout_x":"center","no_item_hover":true'
+        >
           <div class='menu_item'>
             <div class="text upper item">Created</div>
             <div class="color_grey_medium">{recency_time created}</div>
@@ -44,23 +47,24 @@
           </div>
         </div>
         {# Love icon + drawer #}
-        {<with null "attr_id" "love_icon" "icon_class" "love needs_login" 
-          "count" counts.Star "tooltip" "Love"}
-          {|templates/icon_count.html}
-        {>}
+        {<with null "btn_class" "love_btn love needs_login" "count" counts.Star
+          "tooltip" "Love"}{|templates/icon_count.html}{>}
         {# Loves menu drawer #}
-        <div id="loves_menu" class="menu drawer icon_set" data-handle='#love_icon' >
+        <div id="love_menu" class="menu drawer icon_set" data-handle='.love_btn'>
           {<with null "activity" expr.loves "icon_only" true}
             {|templates/activity.html}
           {>}
         </div>
         {# Broadcast icon + drawer #}
-        {<with null "attr_id" "broadcast_icon" "icon_class" "republish needs_login" 
-          "count" counts.Broadcast "tooltip" "Republish"}
+        {<with null "btn_class" "republish_btn republish needs_login"
+          "count" counts.Broadcast "tooltip" "Republish"
+        }
           {|templates/icon_count.html}
         {>}
         {# Broadcast menu drawer #}
-        <div id="broadcast_menu" class="menu drawer icon_set" data-handle='#broadcast_icon' >
+        <div id="republish_menu" class="menu drawer icon_set"
+          data-handle='.republish_btn'
+        >
           {<with null "activity" expr.broadcast "icon_only" true}
             {|templates/activity.html}
           {>}
@@ -72,14 +76,11 @@
               {|templates/icon_count.html}
         #}
         {# Comment #}
-        {<with null "attr_id" "comment_icon" "icon_class" "comment" 
-          "count" counts.Comment "tooltip" "Comment"}
-          {|templates/icon_count.html}
-        {>}
+        {<with null "btn_class" "comment_btn comment" "count" counts.Comment
+          "tooltip" "Comment"}{|templates/icon_count.html}{>}
         {# Share #}
-        {<with null "attr_id" "social_share_icon" "icon_class" "share narrow"}
-          {|templates/icon_count.html}
-        {>}
+        {<with null "btn_class" "share social_share_btn" "icon_class" "narrow"}
+          {|templates/icon_count.html}{>}
         {# home button (moved to top nav)
             <a { anchor_attrs "home" }>
               {<with null "icon_class" "logo narrow"}{|templates/icon_count.html}{>}
@@ -106,13 +107,15 @@
           <input type="hidden" name="state" value="true">
         </form>
         {# Comments menu drawer #}
-        <div id="comments_menu" class="menu drawer icon_set" data-handle='#comment_icon' >
+        <div id="comments_menu" class="menu drawer icon_set"
+          data-handle='.comment_btn'
+        >
           {<with null "activity" comments "icon_only" true "dedupe" true}
             {|templates/activity.html}
           {>}
         </div>
         {# Share menu drawer #}
-        <div id="share_menu" class="menu drawer" data-handle='#social_share_icon'>
+        <div id="share_menu" class="menu drawer" data-handle='.social_share_btn'>
           <div class='menu_item black_active'>
             <a {href_attrs "expr_snapshot" "expr_id" id} id='save_jpg_btn'>Save as JPG
               {# TODO: this saves as png, need to process into jpg #}
@@ -130,7 +133,7 @@
   </div>
 
   {# belongs in its own file? #}
-  <div id="dia_comments" class="dialog" data-handle='#comment_icon'>
+  <div id="dia_comments" class="dialog" data-handle='.comment_btn'>
     {# activity feed #}
     <div class="title text">Discussion</div>
     {# removing redundant comment icon
@@ -161,7 +164,7 @@
     } method='post' class='site'>
       <input type='password' placeholder='Enter password' autofocus
         name='password' class='password'>
-      <div class='btns'><input type='submit' value='ENTER' class='teal_btn'></div>
+      <div class='btns'><input type='submit' value='ENTER' class='submit teal_btn'></div>
     </form>
     <form action='{config.secure_content_url}{id}' method='POST' class='content'
       class='expr_password_form'><input type='hidden' name='password'

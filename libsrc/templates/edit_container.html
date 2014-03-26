@@ -1,0 +1,96 @@
+<iframe src='{ concat config.content_url "home/edit/" page_data.expr.id }'
+  id='editor'></iframe>
+
+{# dialog triggered by postMessage from edit sandbox #}
+<div id='dia_save' class='standard dialog'>
+  <form id='expr_info' method='POST'>
+    
+  <div class="heading expr title">Save</div>
+  <div class='upper label medbold'>Title</div>
+  <textarea rows="1" autofocus id='title'></textarea>
+
+  <div class='upper label medbold'>URL</div>
+  <div class=''>newhive.com/{user.name}/</div>
+  <div class='note'>
+    Change the URL to "Save As"
+    <div class='floatright {<unless flags.custom_domain}hide{>}'>
+      <input type='checkbox' id='use_custom_domain'>
+      <label for='use_custom_domain'>Custom domain</label>
+    </div>
+  </div>
+  <input id='url' type='text' value=''>
+
+  <div class='hide' id='custom_url_box'>
+    <div class='upper label medbold'>
+      Custom URL
+      <a href='#' id='domain_help' class='floatright'>(help)</a></div>
+    <input id='custom_url' type='text' value=''>
+  </div>
+
+  <div class="dialog iframe" id="dia_domain_help" data-handle="#domain_help">
+    {<defer}<iframe src="{config.content_url}{config.site_user}/domain-help"
+      ></iframe>{>}
+  </div>
+
+  <div class='upper label medbold'>#Tags</div>
+  <input id='tags_input' type='text' value=''>
+  <div class='spacer'></div>
+
+  <div class="remix_label"><label>
+    <input type="checkbox">Allow others to remix this expression</label></div>
+
+  <div class='button_options {<unless flags.button_options}hide{>}'>
+    <span class='arrow buttons_toggle'>Show buttons for: &nbsp; &nbsp;</span>
+    <label>
+      <input type='checkbox' name='facebook_btn'>
+      <img src='{asset "skin/nav/facebook.png"}'>
+    </label>
+    <label>
+      <input type='checkbox' name='twitter_btn'>
+      <img src='{asset "skin/nav/twitter.png"}'>
+    </label>
+    <label>
+      <input type='checkbox' name='love_btn'>
+      <img src='{asset "skin/nav/love.png"}'>
+    </label>
+    <label>
+      <input type='checkbox' name='republish_btn'>
+      <img src='{asset "skin/nav/republish.png"}'>
+    </label>
+    <label>
+      <input type='checkbox' name='comment_btn'>
+      <img src='{asset "skin/nav/comment.png"}'>
+    </label>
+  </div>
+
+  <span id='privacy' class='teal_btn upper'>Unlisted
+  </span><div class="inline drop_arrow"></div>
+
+  <button id='save_submit' class='save black_btn upper' type='submit'>
+    <span class='label'>Save</span>{#<img
+      src='{asset "skin/edit/loading.gif"}' class='hide loading'>#}</div>
+  </button>
+
+  <div id='password_ui' style='display: none'>
+    <br>
+    <b>Optional password</b><br>
+    <input type='password' id='password' value=''>
+  </div>
+
+  </form>
+</div>
+<div id='menu_privacy' class='menu drawer medbold' style='width : 125px;'>
+  <div val='password' class='menu_item'>Unlisted</div>
+  <div val='public' class='menu_item'>Public</div>
+</div>
+
+<div id='dia_overwrite' class='dialog border selected center' style='width : 25em; padding : 20px'>
+ <h2>Overwrite?</h2>
+ You already have an expression at "/<span id='expr_name'></span>". Are you sure you want to replace it?<br><br>
+ <input id='save_overwrite' type='button' class='btn black rounded' value='Yes'>&nbsp; &nbsp; &nbsp; 
+ <input id='cancel_overwrite' type='button' class='btn black rounded' value='No'>
+</div>
+
+<form {form_attrs "expr_save"} id='expr_save' method='POST'>
+  <input type='hidden' name='expr' class='expr'>
+</form>

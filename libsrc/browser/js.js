@@ -14,6 +14,12 @@ o.copy = function(from, to, deep){
     return to;
 };
 
+o.setdefault = function(dest, source){
+    for(var k in source)
+        if(typeof dest[k] == 'undefined')
+            dest[k] = source[k]
+}
+
 // This improves upon jQuery.extend, in that it actually copies native objects (second if)
 // function copy(from, to) {
 //     if (from == null || typeof from != "object") return from;
@@ -62,6 +68,22 @@ o.zip = function(list1, list2) {
     for(var i = 0; i < list1.length; i++) ret.push([list1[i], list2[i]]);
     return ret;
 };
+
+o.array_unique = function(a){
+    return a.reduce(function(p, c){
+        if (p.indexOf(c) < 0) p.push(c);
+        return p;
+    }, []);
+}
+o.array_delete = function(arr, e) {
+    for(var n = 0; n < arr.length; n++) {
+        if(arr[n] == e) {
+            arr.splice(n, 1);
+            return true;
+        }
+    }
+    return false;
+}
 
 o.op = {
     '+' : function(a, b) { return a + b },
@@ -121,6 +143,8 @@ o.parse_query = function(url){
     });
     return args;
 }
+
+o.capitalize = function(str) { return str[0].toUpperCase() + str.slice(1); };
 
 return o;
 });

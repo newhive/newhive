@@ -1,7 +1,8 @@
 define([
-    'browser/jquery',
-    'browser/layout'
-], function($, layout, dialog_template){
+    'browser/jquery'
+    ,'browser/layout'
+    ,'ui/util'
+], function($, layout, util){
     var factory = { dialogs: [] };
 
     factory.create = function(element, options){
@@ -55,17 +56,29 @@ define([
         //     opts.shield.click(manual_close);
         //     if(opts.opts.click_close) dialog.click(manual_close);
         // }
+        o.layout = function(){
+            var this_dia = o.opts.dialog, _width = this_dia.data("_width")
+            if (_width > $(window).width())
+                _width = $(window).width()
+            this_dia.css("width", _width)
+            if (util.mobile()) {
+                var s = $(window).width() / _width
+                s = Math.min(s, $(window).height() / util.val(this_dia.css("height")))
+                this_dia.css("transform", "scale("+s+")")
+            }
+            opts.layout()
+        }
 
         o.open = function(){
             if(opts.opened) return;
             // TODO: Allow multiple dialogs?
             // Close any previous dialog. 
-            factory.close_all();
+            // factory.close_all();
 
             opts.opened = true;
             var this_dia = opts.dialog;
             
-            opts.shield = $("<div id='dialog_shield'>");
+            opts.shield = $("<div class='dialog_shield'>");
             if(opts.fade) opts.shield.addClass('fade');
             opts.shield.appendTo(document.body).click(o.close);
 
@@ -73,7 +86,8 @@ define([
             this_dia.detach();
             // Add to body to create a new z index stack
             this_dia.appendTo(document.body);
-            this_dia.find("form").unbind('response').on('response', opts.handler);
+            this_dia.find("form").unbind('success', opts.handler)
+                .on('success', opts.handler)
             this_dia.find(".error_msg").hidehide();
             this_dia.find(".success_show").hidehide();
             this_dia.find(".success_hide").showshow();
@@ -81,17 +95,19 @@ define([
                 o.close();
                 e.preventDefault(); 
             });
-            $(window).resize(opts.layout);
+            $(window).resize(o.layout);
             // Layout before *and* after.  Before so the window doesn't scroll viewport.
             // After so that it has guaranteed dimension for layout.
-            opts.layout();
+            o.layout();
             this_dia.removeClass('hide').showshow();
             // For old browsers which don't support autofocus.
             this_dia.find("*[autofocus]").focus();
             $.each(this_dia.find(".defer"), function (i, el) {
                 $(el).replaceWith($($(el).attr("data-content")));
             });
-            opts.layout();
+            if (!this_dia.data("_width"))
+                this_dia.data("_width", util.val(this_dia.css("width")));
+            o.layout();
 
             opts.open();
         };
@@ -102,7 +118,7 @@ define([
             opts.dialog.detach().appendTo(o.attach_point);
             if (opts.shield)
                 opts.shield.remove();
-            $(window).off('resize', opts.layout);
+            $(window).off('resize', o.layout);
             opts.dialog.hidehide();
             opts.close();
         }

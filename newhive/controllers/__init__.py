@@ -1,7 +1,7 @@
 from controller import * # for tab completion
 import controller, community, expr, file, user, cron, admin
 
-class Controllers(object):
+class Controllers(dict):
     """ Convenience class for instantiating all da controllers at once. """
     controllers = [
         controller.Controller,
@@ -14,8 +14,8 @@ class Controllers(object):
     ]
 
     def __init__(self, server_env):
-        for k in self.__class__.controllers:
-            setattr(self, k.__name__.lower(), k(**server_env))
+        for k in self.controllers:
+            self[k.__name__.lower()] = k(**server_env)
 
     @classmethod
     def register(this_class, that_class):

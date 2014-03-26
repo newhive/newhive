@@ -36,10 +36,10 @@ define([], function () {
 		x.open('GET', url, true);
 		x.onreadystatechange = function (e) {
 			if (x.readyState === 4) {
-				if (x.status < 400) {
+				if (x.status < 400 && x.responseText != "") {
 					callback(x.responseText);
 				}
-				else {
+				else if (errback && x.responseText != ""){
 					errback(new Error('fetchText() failed. status: ' + x.statusText));
 				}
 			}

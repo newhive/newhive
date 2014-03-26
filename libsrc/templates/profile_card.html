@@ -10,13 +10,18 @@
       class='ellipsis'>by &nbsp;<span class='username'>{owner.name}</span></a>
   </div>
 {>}{<else}
-  <div id='user_header' class='header{<if profile_bg} with_background{>}'>
+  <div class='user_header header{<if profile_bg} with_background{>}'>
     {<if profile_bg}<div class='background'><img src='{profile_bg}'></div>{>}
     <div class='profile'>
-      <a {anchor_attrs "expressions_public" "owner_name" name}><img src='{thumb_big}' class='thumb'></a>
+      {<if (not flags.mobile)}
+        <a {anchor_attrs "expressions_public" "owner_name" name}><img src='{thumb_big}' class='thumb'></a>
+      {>}
       <div class='info'>
         <div class='title_bar'>
           {|templates/user_actions.html}
+          {<if flags.mobile}
+            <a {anchor_attrs "expressions_public" "owner_name" name}><img src='{thumb_big}' class='thumb'></a>
+          {>}
           <a {anchor_attrs "expressions_public" "owner_name" name}>
             <div class='title ellipsis fullname'>{fullname|e}</div></a>
         </div>
@@ -33,17 +38,19 @@
             {<if expressions}{thousands expressions}{>}</a
           ><div class='spacer inline'></div>
           {# tags #}
-          <a class='nav_button inline tags'
-              {<if (or (eq route_name "expressions_tag_private")
-                       (eq route_name "expressions_public_grid_tags"))}
-                { anchor_attrs "expressions_tag" "owner_name" user.name 
-                "tag_name" tag_selected}>
-              {>}{<else}
-                { anchor_attrs "expressions_public_tags" "owner_name" owner.name }>
-              {>}
-            <div class="tags icon{<if (or (eq route_name "expressions_public_tags")
-              (eq route_name "expressions_tag"))} on{>}"></div></a
-          ><div class='spacer inline'></div>
+          {<if (not flags.mobile)}
+            <a class='nav_button inline tags'
+                {<if (or (eq route_name "expressions_tag_private")
+                         (eq route_name "expressions_public_grid_tags"))}
+                  { anchor_attrs "expressions_tag" "owner_name" owner.name 
+                  "tag_name" tag_selected}>
+                {>}{<else}
+                  { anchor_attrs "expressions_public_tags" "owner_name" owner.name }>
+                {>}
+              <div class="tags icon{<if (or (eq route_name "expressions_public_tags")
+                (eq route_name "expressions_tag"))} on{>}"></div></a
+            ><div class='spacer inline'></div>
+          {>}
           {# following #}
           <a class='nav_button txt_button inline upper{<if route_name "following"} on{>}' 
             { anchor_attrs "following" "owner_name" owner.name }>
