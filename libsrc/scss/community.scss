@@ -352,12 +352,13 @@
 }
 
 
-// TODO: BUGBUG: should really be something like body.main
 body.mobile {
     .feed.profile, .feed.profile .card .snapshot { width: 500px; }
     #site #home_video { width: 500px; height: 281px; }
+    .tag_list.main .drop_box { display:none; }
 }
 #home_video { width: 640px; height: 360px; }
+// TODO: should also have body.default
 body {
     ///
     // background-color:blue;
@@ -400,6 +401,7 @@ body {
         &.main {
             text-align: center;
             max-width: 600px;
+            min-width: 500px;
             max-height: 114px;
             overflow: hidden;
             &.expanded {
