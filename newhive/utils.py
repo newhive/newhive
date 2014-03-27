@@ -10,6 +10,7 @@ import numpy
 import operator
 import json
 import urllib,urllib2
+import threading
 #import pyes
 
 import newhive
@@ -76,8 +77,8 @@ def threaded_timeout(func, args=(), kwargs={}, timeout_duration=10, default=None
     """This function will spawn a thread and run the given function
     using the args, kwargs and return the given default value if the
     timeout_duration is exceeded.
-    """ 
-    # import threading
+    """
+    # import threading 
     class InterruptableThread(threading.Thread):
         def __init__(self):
             threading.Thread.__init__(self)
