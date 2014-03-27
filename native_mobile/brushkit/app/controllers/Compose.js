@@ -8,6 +8,62 @@ function doTransform(model) {
 
 }
 
+function showDeleteMediaModal(row){
+	mw = Ti.UI.createView({
+		id:'delete_media_modal',
+		width:"70%",
+		height:"30%",
+		top:"40dp",
+		left:"15%",
+		layout:"composite",
+		backgroundColor:"#ffffff",
+		borderRadius:"10dp",
+		zIndex:100
+	});
+	lbl = Ti.UI.createLabel({
+		top:"4dp",
+		left:"4dp",
+		width:"100%",
+		height:"70%",
+		color:"#000000",
+		vertical:Ti.UI.TEXT_VERTICAL_ALIGNMENT_TOP,
+		textAlign:Ti.UI.TEXT_ALIGNMENT_CENTER,
+		text:"Delete this media file?"
+	});
+	bd = Ti.UI.createButton({
+		width:"50%",
+		height:"20%",
+		bottom:"0dp",
+		right:"0dp",
+		title:"Delete",
+		color:"#000000"
+	});
+	bc = Ti.UI.createButton({
+		width:"50%",
+		height:"20%",
+		bottom:"0dp",
+		left:"0dp",
+		title:"Cancel",
+		color:"#000000"
+	});
+
+	bc.addEventListener('click',function(){
+		bc.setColor("#D9DADC");
+		$.compose_window.remove(mw);
+	});
+	bd.addEventListener('click',function(){
+		bd.setColor("#D9DADC");
+		m = photosCollection.get(row.model);
+		m.destroy();
+		$.compose_window.remove(mw);
+	});
+
+	mw.add(lbl);
+	mw.add(bd);
+	mw.add(bc);
+	$.compose_window.add(mw);
+}
+
 
 $.gif_wall_table.addEventListener('postlayout', function(e) {
 	try {
@@ -28,6 +84,10 @@ $.save.addEventListener('click', enabledSaveAction);
 $.compose_window.addEventListener('focus',function(e){
 	photosCollection.fetch();
 	addActivityIndicator(e.source);
+});
+
+$.gif_wall_table.addEventListener('longpress',function(e){
+	showDeleteMediaModal(e.rowData);
 });
 
 Ti.App.addEventListener('disableSave',function(){
