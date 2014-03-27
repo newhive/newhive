@@ -56,39 +56,51 @@ define([
         return $.map(input_file_list, function(x, i) {
             return input_file_list.item(i);});
     }
+    var filters = [ 
+        function(url) { return url; }
+        ,function(url) {
+            // Test for a google image redirect
+            var redirected = unescape(url);
+            return redirected.replace(/^.*imgurl=([^&]*)(&.*)?/, '$1');
+        }
+    ];
     o.drop_target = function(el, on_files, on_response){
         var on_drop = function(ev){
             var dt = ev.originalEvent.dataTransfer,
                 files = [],
-                url = dt.getData("URL");
+                orig_url = dt.getData("URL");
             var file_list = o.file_list_to_list(dt.files);
-            if (file_list.length == 0 && url.length) {
-                // TODO-bugbug: make async request for URL, call on_files on
-                // success with actual content-type
-                var file_name = url.split("/").slice(-1)[0];
-                var i = file_name.lastIndexOf(".");
-                if (i > 0) {
-                    var name = file_name.slice(0, i);
-                    var ext = file_name.slice(i + 1);
-                    // TODO-cleanup: have this live somewhere global
-                    // TODO-dnd: handle audio
-                    var image_mimes = {
-                        "jpg": "image/jpeg",
-                        "jpeg": "image/jpeg",
-                        "gif": "image/gif",
-                        "png": "image/png"
-                    };
-                    var mime = image_mimes[ext];
-                    if (mime) {
-                        files.push({
-                            url: url,
-                            name: name,
-                            mime: mime
-                        });
+            if (file_list.length == 0 && orig_url.length) {
+                for (var n = 0; n < filters.length; ++n) {
+                    // TODO-bugbug: make async request for URL, call on_files on
+                    // success with actual content-type
+                    var url = filters[n](orig_url)
+                    var file_name = url.split("/").slice(-1)[0];
+                    var i = file_name.lastIndexOf(".");
+                    if (i > 0) {
+                        var name = file_name.slice(0, i);
+                        var ext = file_name.slice(i + 1);
+                        // TODO-cleanup: have this live somewhere global
+                        // TODO-dnd: handle audio
+                        var image_mimes = {
+                            "jpg": "image/jpeg",
+                            "jpeg": "image/jpeg",
+                            "gif": "image/gif",
+                            "png": "image/png"
+                        };
+                        var mime = image_mimes[ext];
+                        if (mime) {
+                            files.push({
+                                url: url,
+                                name: name,
+                                mime: mime
+                            });
+                            on_files(files, file_list);
+                            break;
+                        }
                     }
-                    on_files(files, file_list);
                 }
-            } else{
+            } else {
                 on_files(o.unwrap_file_list(file_list), file_list);
             }
 
