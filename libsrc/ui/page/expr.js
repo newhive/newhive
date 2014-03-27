@@ -555,6 +555,11 @@ define([
         });
 
         $('.expr_actions .comment_btn').click(dia_comments.open)
+        $('.expr_actions .share.btn').click(function(ev){
+            var el = $(ev.target).closest('a')
+            browser_layout.new_window(el.attr('href'), 550, 550)
+            return false
+        })
 
         $(".feed_item").each(function(i, el) {
             edit_button = $(el).find('button[name=edit]');
