@@ -116,10 +116,16 @@ o.Selection = function(o) {
                 drag_target = o;
             else
                 drag_target = ev.data;
+            if (u.is_ctrl(ev)) {
+                // ctrl + drag = duplicate
+                drag_target.copy({offset:[0, 0]})
+            }
             o.hide_controls()
             o.move_start();
             return;
-        } else if(env.gifwall) {
+        } 
+        // Otherwise, we are changing selection via dragging on the background.
+        if(env.gifwall) {
             o.dragging = false;
             return;
         }
