@@ -1519,6 +1519,9 @@ class Expr(HasSocial):
         self.build_search(d)
         if d.get('auth') == 'public':
             d['password'] = None
+        # Reset fails if this is a real update
+        if d.get('updated', False): 
+            d['snapshot_fails'] = 0
         super(Expr, self).update(**d)
 
         self.update_owner(old_tags)
