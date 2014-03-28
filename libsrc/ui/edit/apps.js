@@ -729,7 +729,7 @@ Hive.App.Image = function(o) {
     o.link = function(v) {
         return o.init_state.href;
     };
-    o.color = function(){ return o.css_state['background-color'] };
+    o.color = function(){ return o.css_state['background-color'] || '#FFFFFF' };
     o.color_set = o.css_setter('background-color');
     Hive.App.has_color(o)
 
