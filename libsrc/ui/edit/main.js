@@ -71,6 +71,34 @@ Hive.toggle_grid = function() {
 };
 
 Hive.init_menus = function() {
+    var set_tiling_param = function(param) { 
+        return function(v) { env.tiling[param] = v; u.retile(); } }
+    var get_tiling_param = function(param) { 
+        return function() { return env.tiling[param] } }
+    hive_app.App.has_slider_menu(null, ""
+        ,set_tiling_param("aspect"), get_tiling_param("aspect"), null, null
+        ,{ min: .30, max: 3.0, handle:$(".icon.change_aspect"), container:$("body")
+        , menu_opts: { 
+            group: $(".misc.handle").data("menu")
+            ,auto_height: false 
+        }
+    }) ()
+    hive_app.App.has_slider_menu(null, ""
+        ,set_tiling_param("padding"), get_tiling_param("padding"), null, null
+        ,{ min:-10.0, max: 30.0, handle:$(".icon.change_padding"), container:$("body")
+        , menu_opts: { 
+            group: $(".misc.handle").data("menu")
+            ,auto_height: false 
+        }
+    }) ()
+    hive_app.App.has_slider_menu(null, ""
+        ,set_tiling_param("columns"), get_tiling_param("columns"), null, null
+        ,{ min:1, max: 10.0, handle:$(".icon.change_columns"), container:$("body")
+        , menu_opts: { 
+            group: $(".misc.handle").data("menu")
+            ,auto_height: false 
+        }
+    }) ()
     $('#text_default').click(function(e) {
         hive_app.new_app({ type : 'hive.text', content : '' });
     });
@@ -78,8 +106,8 @@ Hive.init_menus = function() {
         hive_app.new_app({ type: 'hive.text', content: '<span style="font-weight:bold">&nbsp;</span>',
             scale : 3 });
     });
+    var zooms = [ 1, .5, .25 ];
     $('.change_zoom').click(function(e) {
-        var zooms = [ 1, .5, .25 ];
         var zoom = env.zoom();
         // NOTE: indexOf will return -1 for unlisted zoom, so it will just
         // zoom to zooms[0] in that case.

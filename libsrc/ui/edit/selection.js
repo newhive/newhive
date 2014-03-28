@@ -32,7 +32,9 @@ o.Selection = function(o) {
     o.elements = function(){ 
         if (arguments.length > 0)
             return elements[arguments[0]];
-        return elements.slice(); };
+        return elements.slice(); 
+    };
+    o.sorted = function(){ return elements().sort(u.topo_cmp); }
     o.count = function(){ return elements.length; };
     o.each = function(fn){ $.each(elements, fn) };
     o.get_targets = function(){

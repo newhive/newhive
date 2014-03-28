@@ -281,6 +281,28 @@ o.polygon = function(sides){
 }
 
 //// BEGIN-editor-refactor belongs in editor specific utils
+// Sort two apps, first by top, then by left
+o.topo_cmp = function(app1, app2) {
+    var a = app2.min_pos(), b = app1.min_pos();
+    if (a[1] != b[1])
+        return b[1] - a[1];
+    return b[0] - a[0];
+}
+o.retile = function() {
+    var opts = $.extend({}, env.tiling)
+    var apps = env.Selection.sorted()
+    env.History.change_start(apps)
+    opts.width = env.Selection.max_pos()[0] - env.Selection.min_pos()[0]
+    opts.start_pos = env.Selection.min_pos().slice()
+    var regions = o.tile_magic(apps.length, opts)
+    for (var i = 0; i < apps.length; ++i) {
+        var app = apps[i]
+        app.pos_relative_set(regions[i][0])
+        app.dims_relative_set(regions[i][1])
+        if (app.recenter) app.recenter()
+    }
+    env.History.change_end("retile", {collapse: true})
+}
 // return an ordered list of count [pos, dims] pairs to tile
 o.tile_magic = function(count, opts) {
     opts = $.extend({
@@ -978,7 +1000,7 @@ o.remove_all_apps = function() {
 };
 
 //// END-debugging
-
+env.util = o
 return o;
 
 });

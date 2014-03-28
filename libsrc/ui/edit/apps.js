@@ -729,8 +729,23 @@ Hive.App.Image = function(o) {
     o.link = function(v) {
         return o.init_state.href;
     };
-    
-    var _state_update = o.state_update;
+    o.color = function(){ return o.css_state['background-color'] };
+    o.color_set = o.css_setter('background-color');
+    Hive.App.has_color(o)
+
+    var _state_update = o.state_update, _state_relative = o.state_relative
+        ,_state_relative_set = o.state_relative_set
+    o.state_relative = function() {
+        s = _state_relative()
+        s.scale_x = o.init_state.scale_x
+        s.offset = o.init_state.offset.slice()
+        return s
+    }
+    o.state_relative_set = function(s) {
+        if (s.scale_x) o.init_state.scale_x = s.scale_x
+        if (s.offset) o.init_state.offset = s.offset.slice()
+        _state_relative_set(s)
+    }
     o.state_update = function(s){
         // TODO-cleanup: migrate to use only url for consistency with other apps
         s.content = s.url = (s.url || s.content);
@@ -789,8 +804,14 @@ Hive.App.Image = function(o) {
 
     // TODO-cleanup: move to has_crop
     (function(){
-        var drag_hold, fake_img, ref_offset, ref_dims, ref_scale_x, crop_bg;
+        var drag_hold, fake_img, ref_offset, ref_dims, ref_scale_x, crop_bg
 
+        o.recenter = function() {
+            var dims = o.dims_relative(), nat_height = dims[0] / o.aspect;
+            o.init_state.offset[1] = 
+                (dims[1] - nat_height) / 2 / dims[0] / o.init_state.scale_x;
+            o.layout()
+        }
         // UI for setting .offset of apps on drag after long_hold
         o.long_hold = function(ev){
             if(o != ev.data) return;
@@ -2181,12 +2202,19 @@ Hive.App.has_rotate = function(o) {
 }
 
 Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
-    var initial, val, initialized = false
-    opts = $.extend({single: false}, opts)
-
+    opts = $.extend({
+        single: false // true to make this menu only available to singly-selected apps
+        , min:0       // minimum setting on range
+        , max:100     // maximum setting on range
+        , handle:$()  // provide the handle selector instead of looking for it
+        , container:null // add controls to container instead of menu
+    }, opts)
+    var handle = opts.handle, min = opts.min, max = opts.max
+        , container = opts.container, menu_opts = opts.menu_opts
+        , initial, val, initialized = false
+        , hover_menu = (o && o.hover_menu) || u.hover_menu
     function controls(o) {
         if (opts.single && !o.single()) return
-        var common = $.extend({}, o)
         if(!start) start = noop
         if(!end) end = noop
 
@@ -2196,17 +2224,20 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
                 .css('vertical-align', 'middle')
             ,num_input = $("<input type='text' size='3'>")
                 .appendTo(drawer)
-        handle = find_or_create_button(o, handle_q);
-        o.div.find('.buttons').append(drawer)
+        if (container) {
+            drawer.appendTo(container)
+        } else if (handle_q) {
+            handle = find_or_create_button(o, handle_q);
+            o.div.find('.buttons').append(drawer)
+        }
 
         handle.add(drawer).bind('mousewheel', function(e){
             // Need to initialize here because mousewheel can fire before 
             // menu is opened
             val = val || init();
-            var amt = (e.originalEvent.wheelDelta / 20) || 0
-            val = js.bound((val || 0) + amt, 0, 100)
+            var amt = (e.originalEvent.wheelDelta / 2000) || 0
+            clamp_set((val || min) + amt*(max - min))
             update_val()
-            set(val)
             e.preventDefault()
         })
 
@@ -2219,31 +2250,39 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
         var update_val = function(){
             if (typeof(val) == "number") {
                 num_input.val(val)
-                range.val(val)
+                range.val((val - min)/(max - min)*100)
             } else {
                 num_input.val()
                 range.val(0)
             }
         }
+        var clamp_set = function(n) {
+            val = js.bound(n, min, max);
+            set(val)
+            return val
+        }
 
-        var m = o.hover_menu(handle, drawer, {
-            open: function(){
-                num_input.focus().select()
-                initialize()
-                update_val()
-                start()
-            },
-            close: function(){
-                if(val != initial) end()
-            }
-        })
+        if (handle && handle.length) {
+            var m = hover_menu(handle, drawer, $.extend (
+                menu_opts, {
+                open: function(){
+                    num_input.focus().select()
+                    initialize()
+                    update_val()
+                    start()
+                },
+                close: function(){
+                    if(val != initial) end()
+                }
+            }))
+        }
 
         range.bind('change', function(){
             var v = parseFloat(range.val());
-            val = v
+            val = v/100*(max - min) + min
             update_val()
             num_input.val(val)
-            set(val)
+            clamp_set(val)
         })
 
         num_input.on('input keyup change', function(ev){
@@ -2251,12 +2290,13 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
             var v = parseFloat(num_input.val());
             if(isNaN(v)) return;
             val = v;
-            set(val);
+            clamp_set(val);
         })
 
         return o
     }
-    o.make_controls.push(memoize('slider' + handle_q, controls))
+    if (o) o.make_controls.push(memoize('slider' + handle_q, controls))
+    return controls
 }
 
 Hive.App.has_align = function(o) {
