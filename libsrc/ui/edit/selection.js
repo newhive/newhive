@@ -34,7 +34,7 @@ o.Selection = function(o) {
             return elements[arguments[0]];
         return elements.slice(); 
     };
-    o.sorted = function(){ return elements().sort(u.topo_cmp); }
+    o.sorted = function(){ return elements.slice().sort(u.topo_cmp); }
     o.count = function(){ return elements.length; };
     o.each = function(fn){ $.each(elements, fn) };
     o.get_targets = function(){
