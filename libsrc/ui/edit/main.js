@@ -85,7 +85,7 @@ Hive.init_menus = function() {
     }) ()
     hive_app.App.has_slider_menu(null, ""
         ,set_tiling_param("padding"), get_tiling_param("padding"), null, null
-        ,{ min:-10.0, max: 30.0, handle:$(".icon.change_padding"), container:$("body")
+        ,{ min:-30.0, max: 30.0, handle:$(".icon.change_padding"), container:$("body")
         , menu_opts: { 
             group: $(".misc.handle").data("menu")
             ,auto_height: false 

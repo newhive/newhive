@@ -175,6 +175,9 @@ Hive.App = function(init_state, opts) {
     o.css_setter = function(css_prop) { return function(v) {
         var ps = {}; ps[css_prop] = v; o.set_css(ps);
     } }
+    o.css_setter_px = function(css_prop) { return function(v) {
+        var ps = {}; ps[css_prop] = v + 'px'; o.set_css(ps);
+    } }
 
     // This app, or the selected app if this is the selection
     o.sel_app = function() {
@@ -732,6 +735,9 @@ Hive.App.Image = function(o) {
     o.color = function(){ return o.css_state['background-color'] || '#FFFFFF' };
     o.color_set = o.css_setter('background-color');
     Hive.App.has_color(o)
+    o.border_width = function(){ return parseInt(o.css_state['border-width'] || 0) };
+    o.border_width_set = o.css_setter_px('border-width');
+    Hive.App.has_border_width(o);
 
     var _state_update = o.state_update, _state_relative = o.state_relative
         ,_state_relative_set = o.state_relative_set
@@ -2381,7 +2387,22 @@ Hive.App.has_opacity = function(o) {
             o.opacity_set(opacity);
     });
 };
-// var make_has_slider()
+Hive.App.has_border_width = function(o) {
+    var history_point, sel = env.Selection
+    Hive.App.has_slider_menu(o, '.stroke-width'
+        ,function(v){
+            sel.border_width_set(v)
+        }
+        ,sel.border_width
+        ,function(){ history_point = env.History.saver(
+            sel.border_width, sel.border_width_set, 'stroke') }
+        ,function(){
+            history_point.save()
+            sel.reframe()
+        }
+        ,{max:20}
+    )
+}
 Hive.App.has_stroke_width = function(o) {
     var history_point, sel = env.Selection
     Hive.App.has_slider_menu(o, '.stroke-width'
