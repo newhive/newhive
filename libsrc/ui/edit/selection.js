@@ -493,14 +493,14 @@ o.Selection = function(o) {
         apps = $.grep(apps || elements, function(e){ return ! e.deleted; });
         var multi = true;
 
-        // Previously unfocused elements that should be focused
-        $.each(apps, function(i, el){ o.app_select(el, apps.length > 1); });
         // Previously focused elements that should be unfocused
         o.each(function(i, el){
             if($.inArray(el, apps) == -1) {
                 o.app_unselect(el);
             }
         });
+        // Previously unfocused elements that should be focused
+        $.each(apps, function(i, el){ o.app_select(el, apps.length > 1); });
 
         elements = $.merge([], apps);
 
@@ -712,7 +712,7 @@ o.Selection = function(o) {
         ,"border_radius", "border_radius_set", "link", "link_set"
         ,"stroke_width", "stroke_width_set", "stroke_update", "reframe"
         ,"blur", "blur_set", "stroke", "stroke_set", 'run'
-        ,'css_class', 'css_class_set'];
+        ,'css_class', 'css_class_set', "border_width", "border_width_set"];
     delegates.map(function(fn_name) {
         o[fn_name] = delegate_fn(fn_name);
     });
