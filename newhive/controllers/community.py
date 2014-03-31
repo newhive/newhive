@@ -337,6 +337,16 @@ class Community(Controller):
             "remix" not in expr.get('tags_index', [])):
             return None
         expr['id'] = expr.id
+
+        # editor currently depends on URL attribute
+        apps = expr.get('apps', [])
+        for a in apps:
+            print 'app ', a
+            file_id = a.get('file_id') 
+            if file_id and not a.get('url'):
+                print (self.db.File.fetch(file_id) or {}).get('url')
+                a['url'] = (self.db.File.fetch(file_id) or {}).get('url')
+
         return { 'expr': expr }
 
     def search(self, tdata, request, id=None, owner_name=None, expr_name=None,
