@@ -18,7 +18,7 @@ s3_buckets = {
 
 cloudfront_domains = {
     'media': 'd1v8u1ev1s9e4n.cloudfront.net',
-    'asset': None
+    'asset': 'd26s0ow2ajnmml.cloudfront.net'
 }
  
 facebook_app_id = '153421698080835'

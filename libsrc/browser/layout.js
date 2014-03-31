@@ -116,7 +116,7 @@ define(['browser/jquery', 'ui/util'], function($, util) {
     };
 
     // TODO: unminify this (wtf?)
-    var new_window = function(b,c,d){
+    o.new_window = function(b,c,d){
         var a=function(){if(!window.open(b,'t','scrollbars=yes,toolbar=0,resizable=1,status=0,width='+c+',height='+d)){document.location.href=b}};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}
     };
 

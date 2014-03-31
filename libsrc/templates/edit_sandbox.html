@@ -7,7 +7,7 @@
     src='{asset "skin/1/zoom.png"}'></div
   ><div class='change_zoom icon hoverable'></div
   ><div class='fluff pad'></div
-  ><div class='fluff center pad'><img id='btn_grid' title="show grid" src='{asset "skin/edit/grid-off.png"}'></div
+  ><div class='fluff center pad handle misc'><img title="misc" src='{asset "skin/edit/grid-off.png"}'></div
   ><div class='fluff smpad'></div
   ><div class='fluff center hoverable text text_btn black_active' title="editor help" id='btn_help'>?</div
   ><div id='btn_save' class='save upper text text_btn hoverable center pad black_active'
@@ -16,6 +16,25 @@
   ></div
 ></div>
 
+<div class='menu drawer medbold hide' data-handle=".handle.misc">
+  <div class='menu_item'>
+    <img id='btn_grid' title="show grid" src='{asset "skin/edit/grid-off.png"}'>
+  </div>
+  <div class='menu_item change_zoom icon hoverable'>
+    <img title='zoom' class='hoverable' src='{asset "skin/1/zoom.png"}'>
+  </div>
+  {<if flags.tile_multiple_images}
+    <div class='menu_item change_aspect icon'>
+      <img title="tile aspect" src='{asset "skin/edit/tiling-aspect.png"}'>
+    </div>
+    <div class='menu_item change_padding icon'>
+      <img title="tile padding" src='{asset "skin/edit/tiling-padding.png"}'>
+    </div>
+    <div class='menu_item change_columns icon'>
+      <img title="tile columns" src='{asset "skin/edit/tiling-columns.png"}'>
+    </div>
+  {>}
+</div>
 <div class="dialog iframe" id="dia_editor_help" data-handle="#btn_help">
   {<defer}
     <iframe src="{config.content_url}{config.site_user}/default-instructional"></iframe>

@@ -79,12 +79,10 @@ o.Text = function(o) {
         o.div.addClass('drag')
     });
 
-    o.link = function(v) {
-        if(typeof(v) == 'undefined') return o.rte.get_link();
-        //if(!v) o.rte.edit('unlink');
-        //else o.rte.make_link(v);
-        o.rte.make_link(v);
-    };
+    o.link = function(){
+        return o.rte.get_link(); }
+    o.link_set = function(v){
+        o.rte.make_link(v) }
 
     o.calcWidth = function() {
         return o.content_element.width();
