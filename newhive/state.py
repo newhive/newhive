@@ -1434,6 +1434,7 @@ class Expr(HasSocial):
         dimension_list = [(715, 430, "big"), (390, 235, "small"), (70, 42, 'tiny')]
         upload_list = []
         pw = self.get('password', '')
+        self.inc('snapshot_fails')
 
         for w, h, size in dimension_list:
             name = self.snapshot_name_base(size, str(int(snapshot_time)))
@@ -1481,6 +1482,7 @@ class Expr(HasSocial):
 
         self.update(snapshot_time=snapshot_time, entropy=self['entropy'],
             snapshot_id=file_record.id, updated=False)
+        self.reset('snapshot_fails')
         return True
 
     # @property
@@ -1517,6 +1519,9 @@ class Expr(HasSocial):
         self.build_search(d)
         if d.get('auth') == 'public':
             d['password'] = None
+        # Reset fails if this is a real update
+        if d.get('updated', False): 
+            d['snapshot_fails'] = 0
         super(Expr, self).update(**d)
 
         self.update_owner(old_tags)

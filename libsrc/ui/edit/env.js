@@ -22,6 +22,13 @@ o.zoom_set = function(_zoom) {
 }
 o.zoom = function(){ return zoom; };
 
+// TODO: move these to user record
+o.tiling = { 
+    aspect: .5*(Math.sqrt(5) + 1)
+    ,columns: 3.5
+    ,padding: 10
+}
+
 o.History = [];
 o.History.init = function(){
     var o = env.History, group_start, group_level = 0;
@@ -53,9 +60,9 @@ o.History.init = function(){
     };
 
     // pushes an action into the history stack
-    o.save = function(undo, redo, action_name){
+    o.save = function(undo, redo, action_name, misc){
         if( o[o.current + 1] ) o.splice(o.current + 1); // clear redo stack when saving
-        o.push({ undo: undo, redo: redo, name: action_name });
+        o.push({ undo: undo, redo: redo, name: action_name, misc: misc });
         o.current += 1;
         o.update_btn_titles();
         env.exit_safe_set(false)
@@ -136,16 +143,25 @@ o.History.init = function(){
         save_targets.push(targets);
         old_states.push(get_states());
     };
-    o.change_end = function(name){
-        var new_states = get_states(), targets = save_targets.pop().slice(), 
-            start_states = old_states.pop().slice();
-        o.save(
-            function(){ $.each(targets, function(i, a){
-                a.state_relative_set(start_states[i]) }) },
-            function(){ $.each(targets, function(i, a){
-                a.state_relative_set(new_states[i]) }) },
-            name
-        );
+    o.change_end = function(name, opts){
+        opts = $.extend({
+            collapse: false   // collapse undos with the same name and app list
+        }, opts)
+        var new_states = get_states(), targets = save_targets.pop().slice()
+            ,start_states = old_states.pop().slice()
+            ,last_save = o.slice(o.current - 1)[0]
+            ,undo = function(){ $.each(targets, function(i, a){
+                a.state_relative_set(start_states[i]) }) }
+            ,redo = function(){ $.each(targets, function(i, a){
+                a.state_relative_set(new_states[i]) }) }
+
+        if (opts.collapse && last_save && last_save.name == name 
+            && env.util.array_equals(last_save.misc, targets))
+        {
+            undo = last_save.undo
+            o.splice(o.current--)
+        }
+        o.save(undo, redo, name, targets);
     };
     ///////////////
 

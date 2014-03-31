@@ -7,7 +7,7 @@ body.edit {
 .ehapp.text { font-family: Helvetica, Arial, sans-serif; }
 .prompts.gifwall {display:none}
 &.default {
-    #edit_nav .change_zoom {display:none}
+    #edit_nav > .change_zoom {display:none}
     .ehapp .highlight {
         position: absolute;
         top: 0px; left: 0px; right: 0px; bottom:0px;
@@ -112,6 +112,7 @@ body.edit {
         vertical-align: top;
     }
 }
+.menu_item.change_zoom img { height: 30px; margin-left: -10px; }
 
 #bg {
     z-index: 1;
@@ -202,7 +203,7 @@ body.edit {
 .drawer { background-color : white; }
 
 .controls_src { display : none; }
-
+.control { position: absolute; }
 .controls {
     position:absolute;
     width:0; height:0;

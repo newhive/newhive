@@ -32,7 +32,9 @@ o.Selection = function(o) {
     o.elements = function(){ 
         if (arguments.length > 0)
             return elements[arguments[0]];
-        return elements.slice(); };
+        return elements.slice(); 
+    };
+    o.sorted = function(){ return elements.slice().sort(u.topo_cmp); }
     o.count = function(){ return elements.length; };
     o.each = function(fn){ $.each(elements, fn) };
     o.get_targets = function(){
@@ -116,10 +118,16 @@ o.Selection = function(o) {
                 drag_target = o;
             else
                 drag_target = ev.data;
+            if (u.is_ctrl(ev)) {
+                // ctrl + drag = duplicate
+                drag_target.copy({offset:[0, 0]})
+            }
             o.hide_controls()
             o.move_start();
             return;
-        } else if(env.gifwall) {
+        } 
+        // Otherwise, we are changing selection via dragging on the background.
+        if(env.gifwall) {
             o.dragging = false;
             return;
         }
@@ -485,14 +493,14 @@ o.Selection = function(o) {
         apps = $.grep(apps || elements, function(e){ return ! e.deleted; });
         var multi = true;
 
-        // Previously unfocused elements that should be focused
-        $.each(apps, function(i, el){ o.app_select(el, apps.length > 1); });
         // Previously focused elements that should be unfocused
         o.each(function(i, el){
             if($.inArray(el, apps) == -1) {
                 o.app_unselect(el);
             }
         });
+        // Previously unfocused elements that should be focused
+        $.each(apps, function(i, el){ o.app_select(el, apps.length > 1); });
 
         elements = $.merge([], apps);
 
@@ -704,7 +712,7 @@ o.Selection = function(o) {
         ,"border_radius", "border_radius_set", "link", "link_set"
         ,"stroke_width", "stroke_width_set", "stroke_update", "reframe"
         ,"blur", "blur_set", "stroke", "stroke_set", 'run'
-        ,'css_class', 'css_class_set'];
+        ,'css_class', 'css_class_set', "border_width", "border_width_set"];
     delegates.map(function(fn_name) {
         o[fn_name] = delegate_fn(fn_name);
     });

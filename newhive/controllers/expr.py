@@ -200,6 +200,8 @@ class Expr(ModelController):
         more_css = ''
         type = app.get('type')
         if type != 'hive.rectangle':
+            # rectangles have css as their content; all other apps have extra
+            # css in 'css_state'
             c = app.get('css_state', {})
             more_css = ';'.join([p + ':' + str(c[p]) for p in c])
         if type == 'hive.image':

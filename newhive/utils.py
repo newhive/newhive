@@ -10,6 +10,7 @@ import numpy
 import operator
 import json
 import urllib,urllib2
+import threading
 #import pyes
 
 import newhive
@@ -71,6 +72,27 @@ class Apply(object):
             if (i % print_frequency == 0):
                 print "(%d of %d) items processed... " % (i, total)
         print "success (%d of %d)" % (len(Apply.success) - initial_success, total)
+
+def threaded_timeout(func, args=(), kwargs={}, timeout_duration=10, default=None):
+    """This function will spawn a thread and run the given function
+    using the args, kwargs and return the given default value if the
+    timeout_duration is exceeded.
+    """
+    # import threading 
+    class InterruptableThread(threading.Thread):
+        def __init__(self):
+            threading.Thread.__init__(self)
+            self.result = default
+        def run(self):
+            self.result = func(*args, **kwargs)
+    it = InterruptableThread()
+    it.daemon = True
+    it.start()
+    it.join(timeout_duration)
+    if it.isAlive():
+        return it.result
+    else:
+        return default
 
 def lset(l, i, e, *default):
     default = default[0] if default else [None]
