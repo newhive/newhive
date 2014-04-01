@@ -21,7 +21,7 @@ define(['browser/jquery', 'ui/util'], function($, util) {
             var s = win_width / 1000;
             if(!e.data('css')) {
                 var c = {}, props = ['left', 'top', 'width', 'height'],
-                    border = $(app_div).css('border-radius');
+                    border = $(app_div).css('border-radius')
 
                 if(border && border.indexOf('px') > 0)
                     $.merge(props, [
@@ -38,9 +38,9 @@ define(['browser/jquery', 'ui/util'], function($, util) {
                 if((angle = e.attr('data-angle')) && e.rotate)
                     e.rotate(parseFloat(angle));
                 e.css('opacity', this.style.opacity);
-                if (e.hasClass('hive_image') && e.find('.crop_box').length) {
+                if (e.hasClass('hive_image')) {
                     var img = e.find('img');
-                    var ic = {}, props = ['margin-top', 'margin-left'];
+                    var ic = {}, props = ['margin-top', 'margin-left', 'width'];
                     props.map(function(p) { ic[p] = parseFloat(img.css(p)) });
                     img.data('css', ic);
                 }
@@ -52,11 +52,15 @@ define(['browser/jquery', 'ui/util'], function($, util) {
             }
             e.css(c);
             
-            if (e.hasClass('hive_image') && e.find('.crop_box').length) {
-                var img = e.find('img');
-                var ic = $.extend({}, img.data('css'));
+            if (e.hasClass('hive_image')) {
+                var img = e.find('img'), ic = $.extend({}, img.data('css'))
+                    ,border_width = parseFloat(app_div.style['border-width'])
+
                 for(var p in ic) {
-                    ic[p] = Math.round(ic[p] * s);
+                    var new_val = ic[p] * s
+                    if (util.starts_with(p, "margin"))
+                        new_val -= border_width;
+                    ic[p] = Math.round(new_val);
                 }
                 img.css(ic);
             }
