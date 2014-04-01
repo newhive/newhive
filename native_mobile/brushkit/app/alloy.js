@@ -13,7 +13,7 @@
 //instantiate the image factory module
 var ImageFactory = require('ti.imagefactory');
 
-Titanium.App.Properties.setBool('is_test', true);
+Titanium.App.Properties.setBool('is_test', false);
 
 var photosCollection = Alloy.Collections.instance('Photos');
 
@@ -225,7 +225,7 @@ function reduceImageSize(lg_img) {
 			format:ImageFactory.JPEG
 		});
 
-	small_photo = ImageFactory.compress(small_photo, 0.333);
+	small_photo = ImageFactory.compress(small_photo, 0.555);
 
 	Ti.API.info('AFTER reducing: ' + small_photo.length);
 

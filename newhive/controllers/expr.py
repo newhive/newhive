@@ -131,15 +131,7 @@ class Expr(ModelController):
         return self.serve_json(response, res)
 
     # the whole editor except the save dialog and upload code goes in sandbox
-    def editor_sandbox(self, tdata, request, response, expr_id=None, **args):
-        if expr_id:
-            expr_obj = self.db.Expr.fetch(expr_id)
-            if not expr_obj: return self.serve_404(tdata, request, response)
-            expr = expr_obj
-        else:
-            expr = request.form.get('expr', {})
-
-        tdata.context['expr'] = expr
+    def editor_sandbox(self, tdata, request, response, **args):
         return self.serve_page(tdata, response, 'pages/edit_sandbox.html')
 
     def snapshot(self, tdata, request, response, expr_id, **args):
