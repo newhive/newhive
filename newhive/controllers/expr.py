@@ -215,7 +215,7 @@ class Expr(ModelController):
             scale_x = app.get('scale_x')
             if scale_x:
                 scale_x *= dimensions[0]
-                css = 'width:%fpx' % scale_x)
+                css = 'width:%fpx' % (scale_x)
                 if app.get('offset'):
                     offset = [x * scale_x for x in app.get('offset')]
                     css = '%s;margin-left:%spx;margin-top:%spx' % (
