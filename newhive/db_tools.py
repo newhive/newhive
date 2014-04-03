@@ -43,7 +43,6 @@ def new_exprs(within_secs):
     return db.Expr.search({'created': {'$gt': now() - within_secs}})
 
 def new_exprs_weekly(periods=20, period=7*86400):
-    period = 7*86400
     expr_counts = [new_exprs(secs).count() for secs in xrange(0, period*periods, period)]
     return [expr_counts[i + 1] - expr_counts[i] for i in xrange(periods - 1)]
 
