@@ -2,8 +2,8 @@
 	<Window id="save_window">
 		
 		<View id="top_nav">
-			<ImageView id="image_back" image="/images/arrow_back.png"></ImageView>
-			<Label id="label_save">Save</Label>	
+			<Button id="image_back" backgroundImage="/images/arrow_back.png"></Button>
+			<Label id="label_save">Publish</Label>	
 		</View>
 		
 		<View id="form_elems_view">
@@ -26,7 +26,7 @@
 
 		
 		<View id="buttons_view">
-			<Button id="btn_save">Save</Button>
+			<Button id="btn_save">Publish</Button>
 		</View>
 	</Window>
 </Alloy>

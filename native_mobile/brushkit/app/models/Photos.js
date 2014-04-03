@@ -8,6 +8,7 @@ exports.definition = {
             "height": "numeric",
             "lat" : "numeric",
             "long" : "numeric",
+            "is_uploaded": "integer",
             "id" : "INTEGER PRIMARY KEY AUTOINCREMENT"
         },
         "defaults" : {

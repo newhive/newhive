@@ -60,6 +60,10 @@ function do_login(e) {
 			$.retrieve_password.opacity = 1;
 		};
 	};
+
+	xhr.onerror = function(e) {
+		alert('Error: '+ e.error);
+	};
 	
 }
 
