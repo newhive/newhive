@@ -154,6 +154,7 @@ define([
 
         o.hide_panel();
         $(".overlay.panel").showshow();
+        $(".overlay.panel .signup").hidehide()
         $(".social_btn").removeClass("hide");
 
         var show_edit = false
@@ -179,6 +180,7 @@ define([
         $('#site').showshow();
         $('.page_btn').hidehide();
         $('.overlay.panel .expr_actions').hidehide()
+        $(".overlay.panel .signup").showshow()
     };
 
     // Check to see if tags overflows its bounds.
