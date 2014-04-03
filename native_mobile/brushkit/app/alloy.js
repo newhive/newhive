@@ -192,6 +192,9 @@ function checkLogin() {
 		}else{
 			var login = Alloy.createController('Login');
 			login.getView('login_window').open();
+			login.tf_username.softKeyboardOnFocus =
+				Titanium.UI.Android.SOFT_KEYBOARD_SHOW_ON_FOCUS;
+			login.tf_username.focus();
 		};
 	};
 }
@@ -207,8 +210,9 @@ function reduceImageSize(lg_img) {
 
 	Ti.API.info('New Reduce Width: ' + reduce_w);
 	Ti.API.info('New Reduce Height: ' + reduce_h);
-	Ti.API.info('BEFORE reducing: ' + lg_img.length);
-
+	try {
+		Ti.API.info('BEFORE reducing: ' + lg_img.length);
+	} catch(error) {}
 
 	small_photo = ImageFactory.imageAsResized(lg_img,
 		{

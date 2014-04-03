@@ -4,7 +4,7 @@
 			<TextField id="tf_username" class='textfield-username' hintText='username'/>
 			<TextField id="tf_password" class='textfield-pwd'
 				hintText='password' passwordMask='true'/>
-			<Label id="error_message">Unrecongized username or password.</Label>
+			<Label id="error_message">Unrecognized username or password.</Label>
 			<Button id="retrieve_password">Retrieve password</Button>
 		</View>
 		

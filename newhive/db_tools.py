@@ -15,7 +15,16 @@ nd = db.User.named('newduke')
 ac = db.User.named('abram')
 e1 = db.Expr.with_url('newhive/default-instructional')
 
-def show_sizeof(x, level=0,show_deep=0):
+# returns cursor with expressions at most %days% old which have > 1 fail count
+def recent_fails(days=1):
+    return db.Expr.search({ 'snapshot_fails':{'$gt':1}
+        ,'updated':{'$gt': now() - days*86400} })
+
+# resets the fail count of given list or cursor of expressions
+def reset_fails(exprs):
+    map(lambda x:x.update(updated=False,snapshot_fails=0),list(exprs))
+
+def show_sizeof(x, level=0, show_deep=0):
     if (level <= show_deep):
         print "\t" * level, x.__class__, sys.getsizeof(x), x
 
@@ -33,6 +42,10 @@ def recent_exprs(within_secs):
 def new_exprs(within_secs):
     return db.Expr.search({'created': {'$gt': now() - within_secs}})
 
+def new_exprs_weekly(periods=20, period=7*86400):
+    expr_counts = [new_exprs(secs).count() for secs in xrange(0, period*periods, period)]
+    return [expr_counts[i + 1] - expr_counts[i] for i in xrange(periods - 1)]
+
 def name(entity):
     if type(entity) == list:
         return names(entity)
@@ -43,6 +56,9 @@ def name(entity):
         if e:
             return name(e)
         e = db.User.fetch(entity)
+        if e:
+            return name(e)
+        e = db.Expr.with_url(entity)
         if e:
             return name(e)
         return False

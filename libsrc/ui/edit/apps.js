@@ -736,7 +736,10 @@ Hive.App.Image = function(o) {
     o.color_set = o.css_setter('background-color');
     Hive.App.has_color(o)
     o.border_width = function(){ return parseInt(o.css_state['border-width'] || 0) };
-    o.border_width_set = o.css_setter_px('border-width');
+    o.border_width_set = function(v) {
+        o.css_setter_px('border-width')(v);
+        o.layout();
+    }
     Hive.App.has_border_width(o);
 
     var _state_update = o.state_update, _state_relative = o.state_relative
@@ -876,6 +879,13 @@ Hive.App.Image = function(o) {
             tuple[0] = [dims[0]*(1 - o.init_state.scale_x), 0, 0];
             tuple[1] = [dims[1] - dims[0] / o.aspect * o.init_state.scale_x, 0, 0];
             for (var j = 0; j < 2; ++j) {
+                if (tuple[j][0] > tuple[j][2]) { // ensure the tuple is sorted
+                    var tmp = tuple[j][0];
+                    tuple[j][0] = tuple[j][2];
+                    tuple[j][2] = tmp;
+                }
+                tuple[j][1] = undefined
+                // If we want to have center snapping:
                 tuple[j][1] = .5 * (tuple[j][0] + tuple[j][2]);
                 delta[j] = u.interval_constrain(delta[j], tuple[j]);
             }
@@ -975,6 +985,10 @@ Hive.App.Image = function(o) {
         var offset = o.offset();
         if (offset) {
             o.img.css({"margin-left": offset[0], "margin-top": offset[1]});
+            var border_width = o.border_width()
+            o.div.find(".crop_box img").css(
+                {"margin-left": offset[0] - border_width
+                ,"margin-top": offset[1] - border_width})
         }
     };
 
@@ -2218,11 +2232,11 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
     var handle = opts.handle, min = opts.min, max = opts.max
         , container = opts.container, menu_opts = opts.menu_opts
         , initial, val, initialized = false
-        , hover_menu = (o && o.hover_menu) || u.hover_menu
     function controls(o) {
         if (opts.single && !o.single()) return
         if(!start) start = noop
         if(!end) end = noop
+        var hover_menu = (o && o.hover_menu) || u.hover_menu
 
         var drawer = $('<div>').addClass('control border drawer slider hide')
             ,range = $("<input type='range' min='0' max='100'>")
