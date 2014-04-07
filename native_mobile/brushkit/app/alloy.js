@@ -103,6 +103,7 @@ function showHiveCamera() {
 
 	var compose = Alloy.createController('Compose'); 
 	var compose_win = compose.getView('compose_window');
+	Ti.App.fireEvent('showSave');
 	//avoid camera error by disabling showCamera on compose page until image finishes resizing
 	Ti.App.fireEvent('disableShowCamera');
 	Titanium.App.Properties.setBool('is_camera_open', true);	
@@ -151,6 +152,7 @@ function showHiveGallery(){
 
 	var compose = Alloy.createController('Compose'); 
 	var compose_win = compose.getView('compose_window');
+	Ti.App.fireEvent('showSave');
 	//avoid camera error by disabling showCamera on compose page until image finishes resizing
 	Ti.App.fireEvent('disableShowCamera');
 }

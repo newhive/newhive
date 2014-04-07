@@ -53,5 +53,6 @@
 	font: {
 		fontSize: "20dp",
 		fontWeight: "bold"
-	}
+	},
+	visible: false
 }

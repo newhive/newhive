@@ -100,6 +100,10 @@ $.gif_wall_table.addEventListener('longpress',function(e){
 	showDeleteMediaModal(e.rowData);
 });
 
+Ti.App.addEventListener('showSave', function(){
+	$.save.visible = true
+})
+
 Ti.App.addEventListener('disableSave',function(){
 	$.save.backgroundColor = "#c3c3c3";
 	$.save.color = "#ffffff";
