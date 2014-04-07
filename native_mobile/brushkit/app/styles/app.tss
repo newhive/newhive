@@ -22,3 +22,10 @@
     autocapitalization: Ti.UI.TEXT_AUTOCAPITALIZATION_NONE
     ,autocorrect: false
 }
+
+"Button": {
+    viewShadowColor: 'black'
+    ,viewShadowOffset: '(0,3)'
+    ,viewShadowRadius: '4'
+    ,backgroundImage: '/images/btn_back.png'
+}

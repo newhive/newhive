@@ -24,7 +24,6 @@
 	top:"0dp",
 	color:"#000000",
 	borderColor:"#3e3e3e",
-	borderWidth: "1dp",
 	backgroundColor: "#aef0e8",
 	font: {
 		fontSize: "20dp",
@@ -38,7 +37,6 @@
 	top:"0dp",
 	color:"#000000",
 	borderColor:"#3e3e3e",
-	borderWidth: "1dp",
 	backgroundColor: "#aef0e8",
 	font: {
 		fontSize: "20dp",
@@ -51,7 +49,6 @@
 	bottom:"0dp",
 	color:"#000000",
 	borderColor:"#3e3e3e",
-	borderWidth: "1dp",
 	backgroundColor: "#aef0e8",
 	font: {
 		fontSize: "20dp",
