@@ -15,6 +15,10 @@ var ImageFactory = require('ti.imagefactory');
 
 Titanium.App.Properties.setBool('is_test', true);
 
+Titanium.App.Properties.setBool('is_test', true);
+Titanium.App.Properties.setString('username', 'nd4');
+Titanium.App.Properties.setString('pwd', 'nd4');
+
 var photosCollection = Alloy.Collections.instance('Photos');
 
 
@@ -105,16 +109,19 @@ function showHiveCamera() {
 }
 
 function showHiveGallery(){
-	Titanium.Media.openPhotoGallery({
+	var opts = {
+		mediaTypes:[Titanium.Media.MEDIA_TYPE_PHOTO],
 		success:function(event)
 		{
-			//checking if it is photo
+			var small_image_obj;
+			// checking if it is photo
 			if(event.mediaType == Ti.Media.MEDIA_TYPE_PHOTO) {
-				compose_win.open();
-
 				small_image_obj = reduceImageSize(event.media);
+			}
 
-				photo_model = Alloy.createModel('photos');
+			if (small_image_obj && small_image_obj.width) {
+				compose_win.open();
+				var photo_model = Alloy.createModel('photos');
 				photo_model.set('photo_blob', small_image_obj.image);
 				photo_model.set('width', small_image_obj.width);
 				photo_model.set('height', small_image_obj.height);
@@ -139,7 +146,8 @@ function showHiveGallery(){
 				setActivityIndicatorHide();
 			}
 		}	
-	});
+	};
+	Titanium.Media.openPhotoGallery(opts);
 
 	var compose = Alloy.createController('Compose'); 
 	var compose_win = compose.getView('compose_window');
@@ -221,7 +229,12 @@ function reduceImageSize(lg_img) {
 			format:ImageFactory.JPEG
 		});
 
-	small_photo = ImageFactory.compress(small_photo, 0.555);
+	try {
+		small_photo = ImageFactory.compress(small_photo, 0.555);
+	} catch(error) {
+		Ti.API.info('Input not compressible: ');
+		return false;
+	}
 
 	Ti.API.info('AFTER reducing: ' + small_photo.length);
 	Ti.API.info('AFTER width: ' + reduce_w);

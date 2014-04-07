@@ -12,9 +12,8 @@ function do_login(e) {
 	Ti.API.info('username value: ' + username);
 	
 	if(Titanium.App.Properties.getBool('is_test') && username == ''){
-		username = 'viciousesque';
-		pwd = 'trueman';
-		//alt pwd: 		
+		username = Titanium.App.Properties.getString('username')
+		pwd = Titanium.App.Properties.getString('pwd');
 	}
 	
 	if(Titanium.App.Properties.getBool('is_test') == true){
