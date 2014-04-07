@@ -63,12 +63,17 @@ define([
         $(document).mousemove(check_hover);
         $(document).click(expr_click);
         // $(document).mouseleave(function(e) { window.setTimeout(clear_hover, 600, e); });
+
         if (!util.mobile()) {
-            // Don't run on mobile
-            $(window).resize(layout.place_apps)
-                 .click(function(){ o.send_top('focus'); });
+            var zoom = layout.get_zoom()
+            $(window).resize(function(){
+                var new_zoom = layout.get_zoom()
+                if(new_zoom == zoom) layout.place_apps()
+                zoom = new_zoom
+            })
         }
-        $(window).on("scroll", layout.on_scroll);
+        $(window).on("scroll", layout.on_scroll)
+            .click(function(){ o.send_top('focus'); });
         if (0 && util.mobile()) {
             $.event.special.swipe.horizontalDistanceThreshold = 200;
             $(document).on("swipe", function(ev) {

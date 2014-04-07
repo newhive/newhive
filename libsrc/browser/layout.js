@@ -4,6 +4,11 @@ define(['browser/jquery', 'ui/util'], function($, util) {
     o.on_scroll = function(ev) {
 
     }
+
+    o.get_zoom = function(){
+        return window.devicePixelRatio
+    }
+
     o.place_apps = function() {
         // if(util.mobile()) return
 
