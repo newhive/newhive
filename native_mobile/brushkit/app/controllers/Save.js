@@ -27,7 +27,7 @@ function publishExrpession(){
 	});
 
 	//set is public/private
-	var auth = $.public_switch.value ? "public" : "private";
+	var auth = $.public_switch.value ? "public" : "password";
 
 	//set is remixable
 	var remixable = $.remix_switch.value ? " #remix" : "";
