@@ -703,7 +703,7 @@ Hive.App.Code = function(o){
     if(mode == 'js') mode = 'javascript'
     o.editor = CodeMirror(o.div[0], { extraKeys: keymap ,mode: mode })
     o.editor.setValue(o.init_state.content || '')
-    o.content_element = $(o.editor.getWrapperElement()).addClass('content')
+    o.content_element = $(o.editor.getWrapperElement()).addClass('content code')
 
     o.load()
 

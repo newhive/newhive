@@ -38,7 +38,6 @@ define(['browser/jquery', 'ui/util'], function($, util) {
                 props.map(function(p) { c[p] = parseFloat(app_div.style[p]) });
                 var scale = parseFloat(e.attr('data-scale'));
                 if(scale) c['font-size'] = scale;
-                e.data('css', c);
                 var angle;
                 if((angle = e.attr('data-angle')) && e.rotate)
                     e.rotate(parseFloat(angle));
@@ -49,13 +48,25 @@ define(['browser/jquery', 'ui/util'], function($, util) {
                     props.map(function(p) { ic[p] = parseFloat(img.css(p)) });
                     img.data('css', ic);
                 }
+                e.data('css', c);
             }
-            var c = $.extend({}, e.data('css'));
+            var c = $.extend({}, e.data('css')), c2 = $.extend({}, c);
+            if(e.hasClass('text_column')){
+                var r = c['left'] / (1000 - c['width'])
+                c2['width'] = Math.min(win_width - 2*30,
+                    c['width'] * Math.max(1, s))
+                c2['left'] = Math.max(30, r * (win_width - c2['width']))
+                c2['font-size'] = ( c['font-size'] *
+                    Math.max(1, c2['width'] / c['width']) ) + 'em'
+                delete c['width']
+                delete c['left']
+                delete c['font-size']
+            }
             for(var p in c) {
-                if(p == 'font-size') c[p] = (c[p] * s) + 'em';
-                else c[p] = Math.round(c[p] * s);
+                if(p == 'font-size') c2[p] = (c[p] * s) + 'em';
+                else c2[p] = Math.round(c[p] * s);
             }
-            e.css(c);
+            e.css(c2);
             
             if (e.hasClass('hive_image')) {
                 var img = e.find('img'), ic = $.extend({}, img.data('css'))
