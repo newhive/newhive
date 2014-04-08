@@ -3,11 +3,7 @@
 		<TableView id='gif_wall_table' dataCollection="Photos" dataTransform="doTransform">
 			<Require src="GIFWallRow"/>
 		</TableView>
-		
-		<View id="buttons_view">
-			<Button id="select">Select</Button>
-			<Button id="take">Take</Button>
-			<Button id="save">Publish</Button>
-		</View>
+		<WebView id="web_view" url="../../generic.html">
+		</WebView>
 	</Window>
 </Alloy>
