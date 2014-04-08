@@ -71,17 +71,34 @@ function showDeleteMediaModal(row){
 	$.compose_window.add(mw);
 }
 
+var cameraEnabled = true;
+var saveEnabled = true;
+
+function buttonStyling() {
+	$.web_view.evalJS('$("button.publish").prop("disabled", '+!saveEnabled+')');
+	$.web_view.evalJS('$("button.select").add("button.take").prop("disabled", '+!cameraEnabled+')');
+}
+
+// Hook up the web_view events
+$.web_view.addEventListener('load', function(e) {
+	Ti.API.info("Loaded web_view.");
+	// if($.gif_wall_table.data[0] || $.gif_wall_table.data[0].rows.length == 0)
+	// 	$.web_view.evalJS('$("button.publish").hide()');
+});
 
 $.gif_wall_table.addEventListener('postlayout', function(e) {
 
 });
 
-
-$.select.addEventListener('click',enabledShowGalleryAction);
-
-$.take.addEventListener('click', enabledShowCameraAction);
-
-$.save.addEventListener('click', enabledSaveAction);
+Ti.App.addEventListener('app:btnAction', function(e) {
+	if (e.btn == 'publish') {
+		enabledSaveAction();
+	} else if (e.btn == 'take') {
+		enabledShowCameraAction();
+	} else if (e.btn == 'select') {
+		enabledShowGalleryAction();
+	}
+});
 
 $.compose_window.addEventListener('focus',function(e){
 	photosCollection.fetch();
@@ -97,49 +114,32 @@ $.compose_window.addEventListener('focus',function(e){
 });
 
 $.gif_wall_table.addEventListener('longpress',function(e){
-	showDeleteMediaModal(e.rowData);
+	if($.gif_wall_table.data[0] && $.gif_wall_table.data[0].rows.length > 0)
+		showDeleteMediaModal(e.rowData);
 });
 
 Ti.App.addEventListener('showSave', function(){
-	$.save.visible = true
+	$.web_view.evalJS('$("button.publish").show()');
 })
 
 Ti.App.addEventListener('disableSave',function(){
-	$.save.backgroundColor = "#c3c3c3";
-	$.save.color = "#ffffff";
-	$.save.removeEventListener('click',enabledSaveAction);
-	$.save.addEventListener('click',disabledSaveAction);
+	saveEnabled = false;
+	buttonStyling();
 });
 Ti.App.addEventListener('enableSave',function(){
-	$.save.backgroundColor = "#aef0e8";
-	$.save.color = "#000000";
-	$.save.removeEventListener('click',disabledSaveAction);
-	$.save.addEventListener('click',enabledSaveAction);
+	saveEnabled = true;
+	buttonStyling();
 });
 
 Ti.App.addEventListener('disableShowCamera',function(){
-	$.take.backgroundColor = "#c3c3c3";
-	$.take.color = "#ffffff";
-	$.take.removeEventListener('click',enabledShowCameraAction);
-	$.take.addEventListener('click',disabledShowCameraAction);
-
-	$.select.backgroundColor = "#c3c3c3";
-	$.select.color = "#ffffff";
-	$.select.removeEventListener('click',enabledShowGalleryAction);
-	$.select.addEventListener('click',disabledShowGalleryAction);
+	cameraEnabled = false;
+	buttonStyling();
 
 	Ti.App.fireEvent('disableSave');
 });
 Ti.App.addEventListener('enableShowCamera',function(){
-	$.take.backgroundColor = "#aef0e8";
-	$.take.color = "#000000";
-	$.take.removeEventListener('click',disabledShowCameraAction);
-	$.take.addEventListener('click',enabledShowCameraAction);
-
-	$.select.backgroundColor = "#aef0e8";
-	$.select.color = "#000000";
-	$.select.removeEventListener('click',disabledShowGalleryAction);
-	$.select.addEventListener('click',enabledShowGalleryAction);
+	cameraEnabled = true;
+	buttonStyling();
 });
 
 //fired after image successfully uploads in alloy.js

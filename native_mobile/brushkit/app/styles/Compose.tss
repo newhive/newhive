@@ -13,6 +13,13 @@
 "#buttons_view": {
 	layout:"composite",
 	bottom:"0dp",
+	height:"0%",
+	zIndex:10
+}
+
+"#web_view": {
+	layout:"composite",
+	bottom:"0%",
 	height:"25%",
 	zIndex:10
 }
