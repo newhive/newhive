@@ -100,6 +100,9 @@ Ti.App.addEventListener('app:btnAction', function(e) {
 	}
 });
 
+$.compose_window.setOrientationModes([Titanium.UI.PORTRAIT]);
+Titanium.UI.orientation = Titanium.UI.PORTRAIT;
+
 $.compose_window.addEventListener('focus',function(e){
 	photosCollection.fetch();
 	addActivityIndicator(e.source);
