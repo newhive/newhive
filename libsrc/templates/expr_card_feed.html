@@ -6,14 +6,15 @@
 {<with null "plus_menu" user.logged_in}
   {|templates/tag_list.html}
 {>}
-<a { query_attrs "view_expr" search_query
+<a { query_attrs "view_expr" 
+    (concat search_query (cond entropy (concat "&e=" entropy) ""))
     "id" id  "expr_name" name "owner_name" owner.name }
   ><img class="snapshot" src=
-  {<if snapshot_small}
-    "{snapshot_small}"
-  {>}{<else}
-    {asset "skin/site/expr_placeholder_small.jpg"}  
-  {>}>
+    {<if snapshot_small}
+      "{snapshot_small}"
+    {>}{<else}
+      {asset "skin/site/expr_placeholder_small.jpg"}  
+    {>}>
   {<vcenter}<div class='title expr'>{title|untitled|e}</div>{>}
 </a>
 <div class='info'>

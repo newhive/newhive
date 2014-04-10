@@ -226,6 +226,8 @@ define([
 
             if(context.query.q){
                 var query = {q: context.query.q, id: o.expr.id };
+                if (context.query.e) 
+                    query.e = context.query.e;
                 o.controller.get('search', {}, set_cards, query);
                 context.page_data.cards_route = {
                     query: query,
