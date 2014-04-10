@@ -8,7 +8,7 @@
 {<unless suppress_link}
   <a {<if route.include_tags}
     {# { search_attrs "@" page_data.owner.name " " "" "#" tag_name } #}
-    {<if route.private}
+    {<if (and route.private (eq user.name page_data.owner.name))}
       {anchor_attrs "expressions_tag_private" 
         "entropy" (get tag_entropy tag_name) "owner_name" owner.name "tag_name" tag_name}
     {>}{<else}

@@ -65,7 +65,7 @@
           <a class='nav_button inline'
             { anchor_attrs "loves" "owner_name" owner.name }>
             <div class="love icon{<if route_name "loves"} on{>}"></div></a
-          {<if user.logged_in}{<if user.name owner.name}
+          {<if (and user.logged_in (eq user.name owner.name))}
             ><div class='spacer inline'></div>
             {# private (logged in only) #}
             <a class='nav_button inline private'
@@ -79,7 +79,7 @@
               <div class='private icon
                 {<if (or (eq route_name "expressions_private")
                     (eq route_name "expressions_tag_private"))} on{>}'></div></a
-          {>}{>}
+          {>}
         ></div>
       </div>
     </div>
