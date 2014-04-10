@@ -197,8 +197,8 @@ function checkLogin() {
 			Ti.App.current_user_name = res.name;
 			Ti.App.current_user_id = res.id;
 
-			var creator = Alloy.createController('Create'); 
-			creator.getView('create_window').open();
+			var creator = Alloy.createController('Compose'); 
+			creator.getView('compose_window').open();
 		}else{
 			var login = Alloy.createController('Login');
 			login.getView('login_window').open();

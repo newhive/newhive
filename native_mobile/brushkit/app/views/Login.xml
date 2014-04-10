@@ -8,10 +8,9 @@
 			<Button id="retrieve_password">Retrieve password</Button>
 		</View>
 		
-		<View id="button_view" class="content_tile">
-			<Button id='submit' title="Login" onClick="do_login" />
-		</View>
-		
+		<WebView id="web_view" url="../../login_view.html">
+		</WebView>
+
 		<View id="blank_view" class="content_tile">
 			<ImageView id="watermark" image="/images/logo.png"></ImageView>
 		</View>

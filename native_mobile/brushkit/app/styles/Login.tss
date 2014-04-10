@@ -17,7 +17,7 @@
 	passwordMask:"true"
 }
 
-"#button_view": {
+"#web_view": {
 	width: Titanium.UI.FILL,
 	height: "12.5%",
 	bottom:'0dp',

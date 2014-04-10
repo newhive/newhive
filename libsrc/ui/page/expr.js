@@ -170,6 +170,10 @@ define([
             $('.overlay.panel .edit_ui').replaceWith(
                 edit_btn_template(page_data) )
         ui_page.form_page_enter()
+
+        o.overlay_columns = 0;
+        o.wide_overlay = 0;
+        o.resize();
     }
 
     o.exit = function(){
