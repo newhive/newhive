@@ -1248,7 +1248,7 @@ class Expr(HasSocial):
             # Hack for Zach. TODO-cleanup: verify with Zach that this link
             # isn't needed anymore and remove
             if (spec2.has_key('tags_index') 
-                and ['deck2013'] in spec2.get('tags_index').values()):
+                and ['deck2014'] in spec2.get('tags_index').values()):
                     override_unlisted = True
             # Set up auth filtering
             if auth:
@@ -1262,7 +1262,7 @@ class Expr(HasSocial):
                     spec2.setdefault('$and', [])
                     spec2['$and'].append({'$or': [{'auth': 'public'},
                         {'owner': viewer.id}]})
-            elif not override_unlisted:
+            else:
                 spec2.update({'auth': 'public'})
             opts.setdefault('fields', self.ignore_not_meta)
             return self.search(spec, filter, **opts)

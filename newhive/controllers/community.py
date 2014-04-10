@@ -107,6 +107,7 @@ class Community(Controller):
             "card_type": "expr",
             "tag_selected": tag_name,
             'owner': profile,
+            'entropy': entropy,
             'title': 'Expressions by ' + owner['name'],
         }
         if owner.id == tdata.user.id:
@@ -354,8 +355,13 @@ class Community(Controller):
     ):
         if not request.args.has_key('q'): return None
         id = request.args.get('id', None)
+        entropy = request.args.get('e', None)
+        owner = self.db.User.named(owner_name)
+        if entropy and owner and owner.get('tag_entropy',{}).get(tags[0], None) == entropy:
+            args['override_unlisted'] = True
+
         result, search = self.db.query_echo(request.args['q'], id=id, **db_args)
-        print('executed search', search)
+        # print('executed search', search)
         tags = search.get('tags', [])
         text = search.get('text', [])
         # Treat single-word text search as a tag search (show tag page)
