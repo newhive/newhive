@@ -1,7 +1,7 @@
 
 //var photosCollection = Alloy.Collections.Photos;
 
-function publishExrpession(){
+function publishExpression(){
 	var apps = new Array();
 	var i_y = 0;
 	Ti.API.info('photo collection length: ' + photosCollection.length);
@@ -116,7 +116,7 @@ var click_save = function(){
 		alert(url);
 	}
 
-	publishExrpession();
+	publishExpression();
 }
 
 $.btn_save.addEventListener('click', click_save)

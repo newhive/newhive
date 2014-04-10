@@ -2,6 +2,10 @@ var args = arguments[0] || {};
 ///
 Ti.API.info('LOADING LOGIN PAGE');
 
+Ti.App.addEventListener('app:do_login', function(e) {
+	do_login();
+});
+
 function do_login(e) {
 	var BASE_URL = Titanium.App.Properties.getString('base_url_ssl');
 	var url = BASE_URL + 'api/user/login?json=true';
