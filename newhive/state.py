@@ -1248,7 +1248,7 @@ class Expr(HasSocial):
             # Hack for Zach. TODO-cleanup: verify with Zach that this link
             # isn't needed anymore and remove
             if (spec2.has_key('tags_index') 
-                and ['deck2013'] in spec2.get('tags_index').values()):
+                and ['deck2014'] in spec2.get('tags_index').values()):
                     override_unlisted = True
             # Set up auth filtering
             if auth:
