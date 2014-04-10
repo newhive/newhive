@@ -122,18 +122,22 @@ class User(ModelController):
         resp = {}
         logged_user = tdata.user
         email = request.form.get('email')
-        user = self.db.User.find({'email': email})
+        users = list(self.db.User.search({'email': email}))
 
         if logged_user and logged_user.id:
             resp = { 'error': 'Already logged in.' }
-        elif not user:
+        elif not users:
             resp = { 'error': 'Sorry, that email address is not in our records.' }
         else:
-            key = junkstr(16)
-            recovery_link = abs_url(secure=True) + "home/community/password_reset?key=" + key + '&user=' + user.id
-            mail.TemporaryPassword(jinja_env=self.jinja_env, db=self.db).send(user, recovery_link)
-            user.update(password_recovery = key)
-
+            for user in users:
+                key = junkstr(16)
+                user.recovery_link = (abs_url(secure=True)
+                    + "home/community/password_reset?key="
+                    + key + '&user=' + user.id
+                )
+                user.update(password_recovery = key)
+            mail.TemporaryPassword(jinja_env=self.jinja_env, db=self.db
+                ).send(users)
         return self.serve_json(response, resp)
 
     # Show password reset dialog, filled with user name 
