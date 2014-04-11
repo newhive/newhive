@@ -179,6 +179,16 @@ Hive.App = function(init_state, opts) {
         var ps = {}; ps[css_prop] = v + 'px'; o.set_css(ps);
     } }
 
+    var _client_data = function() {
+        o.init_state.client_data = o.init_state.client_data || {};
+        return o.init_state.client_data;
+    }
+    o.client_data = function(key) { return _client_data().key; }
+    o.client_data_set = function(key, value) {
+        _client_data()[key] = value;
+        o.div.data(key, value);
+    }
+
     // This app, or the selected app if this is the selection
     o.sel_app = function() {
         if (o.is_selection && o.count() == 1)
@@ -535,6 +545,8 @@ Hive.App = function(init_state, opts) {
     // initialize
 
     o.div = $('<div class="happ drag">').appendTo(env.apps_e);
+    if (o.init_state.client_data) 
+        o.div.data(o.init_state.client_data)
     o.css_class_set(o.css_class())
  
     o.has_align = o.add_to_collection = true;
@@ -680,10 +692,10 @@ Hive.App.Code = function(o){
 
     o.focus.add(function(){
         o.editor.focus()
-        o.div.removeClass('drag')
+        o.div.removeClass('drag').css('opacity', .8)
     })
     o.unfocus.add(function(){
-         o.div.addClass('drag')
+         o.div.addClass('drag').css('opacity', .2)
          o.editor.getInputField().blur()
     })
 
@@ -704,6 +716,7 @@ Hive.App.Code = function(o){
     o.editor = CodeMirror(o.div[0], { extraKeys: keymap ,mode: mode })
     o.editor.setValue(o.init_state.content || '')
     o.content_element = $(o.editor.getWrapperElement()).addClass('content code')
+    o.div.css('background-color','white').css('opacity',.2);
 
     o.load()
 
@@ -1359,11 +1372,11 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         // TODO: UI for indicating polygon drawing is active
         // probably highlight shape menu at bottom middle
         evs.handler_set(o);
-        Hive.cursor_set('default')
+        u.cursor_set('draw')
     };
     o.unfocus = function(){
         evs.handler_del(o);
-        Hive.cursor_set('draw')
+        u.cursor_set('default')
     };
 
     var pos = function(ev){
