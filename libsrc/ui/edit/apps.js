@@ -534,7 +534,7 @@ Hive.App = function(init_state, opts) {
 
     // initialize
 
-    o.div = $('<div class="ehapp drag">').appendTo(env.apps_e);
+    o.div = $('<div class="happ drag">').appendTo(env.apps_e);
     o.css_class_set(o.css_class())
  
     o.has_align = o.add_to_collection = true;

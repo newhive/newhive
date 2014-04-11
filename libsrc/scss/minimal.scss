@@ -5,7 +5,7 @@ html, body, input, textarea { font-family : Helvetica, Arial, sans-serif; }
 html, body { margin : 0; padding : 0; color : black; white-space-collapse : discard; font-size : 17px; }
 img { padding : 0; margin : 0; border : 0; }
 a { color : inherit; text-decoration : none; }
-.happ, .ehapp { position : absolute; }
+.happ { position : absolute; }
 .happ img { width : 100%; }
 .happ.hive_image, .crop_box { 
     overflow: hidden; @include box-sizing(border-box); border: 0px solid; }
