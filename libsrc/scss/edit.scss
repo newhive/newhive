@@ -4,11 +4,11 @@ body.edit {
 // for backwards-compatability with old editor.
 // TODO: Make Gibson default and migrate all old expressions to override
 // default
-.ehapp.text { font-family: Helvetica, Arial, sans-serif; }
+.happ.text { font-family: Helvetica, Arial, sans-serif; }
 .prompts.gifwall {display:none}
 &.default {
     #edit_nav > .change_zoom {display:none}
-    .ehapp .highlight {
+    .happ .highlight {
         position: absolute;
         top: 0px; left: 0px; right: 0px; bottom:0px;
         background-color: $color_selected;
@@ -144,17 +144,17 @@ body.edit {
     font-size: 32px;
     font-weight: 700;
 }
-.ehapp, .ehapp > * {
+.happ, .happ > * {
     position : absolute;
 }
-// .ehapp { @include box-sizing( border-box ); }
-.ehapp .highlight {
+// .happ { @include box-sizing( border-box ); }
+.happ .highlight {
     width: 100%;
     height: 100%;
     pointer-events:none;
     z-index: 1336;
 }
-.ehapp .shield {
+.happ .shield {
     left : 0px; top : 0px;
     z-index: 2;
     width : 100%; height : 100%;
@@ -177,7 +177,7 @@ body.edit {
 }
 .app_select { position : absolute; }
 
-.ehapp {
+.happ {
     .content {
         z-index : 2;
         width: 100%; height: 100%;

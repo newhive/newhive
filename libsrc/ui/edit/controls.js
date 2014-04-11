@@ -227,7 +227,7 @@ o.Controls = function(app, multiselect, delegate) {
 
     // add borders
     o.select_box = $("<div style='position: absolute'>");
-    var border = $('<div>').addClass('select_border drag ehapp');
+    var border = $('<div>').addClass('select_border drag happ');
     o.select_borders = border.add(border.clone().addClass('right'))
         .add(border.clone().addClass('bottom'))
         .add(border.clone().addClass('left'));
