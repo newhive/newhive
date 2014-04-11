@@ -318,9 +318,14 @@ define([
 
         // Remember all the frames that are loading.
         loading_frame_list = loading_frame_list.concat(contentFrame.eq(0));
+        contentFrame.data('client_data', page_data.client_data)
         contentFrame.load(function () {
             contentFrame.data('loaded', true);
             debug("loaded frame: " + found);
+
+            // Set the client_data for each app in the loaded expression.
+            contentFrame.get(0).contentWindow.postMessage({action: "client_data"
+                , client_data: contentFrame.data('client_data')}, '*');
 
             if (contentFrame.hasClass('expr_visible')) 
                 o.expr_show(contentFrame)
