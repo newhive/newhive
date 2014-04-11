@@ -177,7 +177,8 @@ class Expr(ModelController):
         )
         if snapshot_mode:
             tdata.context['css'] = "body { overflow-x: hidden; }"
-
+        tdata.context['client_data'] = {x['id']: x.get('client_data') 
+                for x in expr_obj['apps'] if x.get('client_data')}
         return self.serve_page(tdata, response, 'pages/expr.html')
         
     def expr_to_html(self, exp, snapshot_mode=False, viewport=(1000, 750)):

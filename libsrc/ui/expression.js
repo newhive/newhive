@@ -39,7 +39,8 @@ define([
     //     o.send_top('layout=' + $(window).width() + ',' + $(window).height());
     // };
 
-    o.init = function(){
+    o.init = function(client_data){
+        o.client_data = $.extend({}, client_data);
         context.parse_query();
         var no_embed = ("no-embed" in context.query);
         if (no_embed) 
@@ -57,8 +58,11 @@ define([
                 } else {
                     o.show();
                 }
+            } 
+            else if ( m.data.action == "hide" ) o.hide();
+            else if ( m.data.action == "client_data" ) {
+                o.client_data = $.extend({}, m.data.client_data);
             }
-            if ( m.data.action == "hide" ) o.hide();
         }, false);
         $(document).mousemove(check_hover);
         $(document).click(expr_click);
@@ -178,6 +182,9 @@ define([
         });
         
         layout.place_apps();
+        for (var app in o.client_data) {
+            $("#app" + app).data(o.client_data[app]);
+        }
 
         o.update_targets();
     };

@@ -287,7 +287,7 @@ Hive.init_global_handlers = function(){
     evs.handler_set(env.Selection);
     evs.handler_set(Hive);
     env.apps_e.addClass('default');
-    Hive.cursor_set('default')
+    u.cursor_set('default')
 
     var busy_e = $('.save .loading');
     $(document).ajaxStart(function(){
@@ -536,12 +536,6 @@ Hive.state = function() {
     Hive.Exp.dimensions = [1000, Math.ceil(h)];
 
     return Hive.Exp;
-}
-
-var cursor_name
-Hive.cursor_set = function(name){
-    env.apps_e.add('#grid_guide').removeClass(cursor_name).addClass(name)
-    cursor_name = name
 }
 
 // BEGIN-Events  //////////////////////////////////////////////////////

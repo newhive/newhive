@@ -946,6 +946,11 @@ o.append_color_picker = function(container, callback, init_color, opts){
     return o;
 };
 
+var cursor_name
+o.cursor_set = function(name){
+    env.apps_e.add('#grid_guide').removeClass(cursor_name).addClass(name)
+    cursor_name = name
+}
 //// END-editor-refactor
 
 
