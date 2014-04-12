@@ -4,6 +4,7 @@ define([
     ,'server/context'
     ,'browser/upload'
     ,'browser/layout'
+    ,'browser/js'
     ,'ui/util'
     ,'ui/colors'
     ,'ui/codemirror/main'
@@ -20,6 +21,7 @@ define([
     ,context
     ,upload
     ,layout
+    ,js_util
     ,ui_util
     ,colors
     ,codemirror
@@ -131,7 +133,7 @@ env.Apps = Hive.Apps = (function(){
         for(var i = 0; i < o.length; i++) if( o[i].id == id ) return o[i];
     };
     o.all = function(){ return $.grep(o, function(e){ return ! e.deleted; }); };
-
+    o.filtered = function(filter) { return $.grep(o, filter); };
     o.init = function(initial_state, load){
         stack.splice(0);
         o.splice(0);
@@ -183,7 +185,7 @@ Hive.App = function(init_state, opts) {
         o.init_state.client_data = o.init_state.client_data || {};
         return o.init_state.client_data;
     }
-    o.client_data = function(key) { return _client_data().key; }
+    o.client_data = function(key) { return _client_data()[key]; }
     o.client_data_set = function(key, value) {
         _client_data()[key] = value;
         o.div.data(key, value);
@@ -548,8 +550,8 @@ Hive.App = function(init_state, opts) {
     if (o.init_state.client_data) 
         o.div.data(o.init_state.client_data)
     o.css_class_set(o.css_class())
- 
-    o.has_align = o.add_to_collection = true;
+
+    o.has_align = o.add_to_collection = o.client_visible = true;
     o.type(o); // add type-specific properties
     if (o.content_element && o.init_state.css_state)
         o.set_css(o.init_state.css_state);
@@ -557,6 +559,7 @@ Hive.App = function(init_state, opts) {
         Hive.App.has_align(o);
     if (o.add_to_collection)
         o.apps.add(o); // add to apps collection
+    o.make_controls = o.make_controls.concat(active_controls)
     // TODO-cleanup-events: attach app object to these events on app div without
     // creating duplicate event handlers, allowing for easier overriding
     evs.on(o.div, 'dragstart', o, {bubble_mousedown: true, handle: '.drag'})
@@ -668,27 +671,126 @@ Hive.registerApp(Hive.App.Html, 'hive.html');
 // };
 // Hive.registerApp(Hive.App.RawHtml, 'hive.raw_html');
 
+editor = {};
+active_controls = [];
+editor.add_slider = function(name, opts) {
+    opts = $.extend(opts, {handle_name: name})
+    var apps = env.Apps.filtered(function(a) { return a.client_visible; })
+    for (var i = 0; i < apps.length; ++i) {
+        var slider =
+            Hive.App.has_slider_menu(apps[i], "", function(v) {
+                return env.Selection.client_data_set(name, v)
+            }, function() {
+                return env.Selection.client_data(name)
+            }, null, null, opts)
+        if (i == 0) {
+            editor.current_code.created_controls.push(slider);
+            active_controls.push(slider);
+        }
+    }
+}
+
 Hive.App.Code = function(o){
     o.has_align = false
+    o.client_visible = false
     Hive.App.has_resize(o)
+    o.created_controls = []
 
     o.content = function(){ return o.editor.getValue() }
 
-    o.run = function(){
-        o.code_element.html(o.content()).remove().appendTo('body')
+    var iter = 0;
+    o.module_name = function() { return "module_" + o.id + "_" + iter; }
+    var module_code = function() {
+        // return o.content();
+        return "define('" + o.module_name() + "', " +
+            "['browser/jquery'], function($) { var self = {}; " + 
+            o.content() + 
+            "; return self; })";
+    }
+    var insert_code = function(action){
+        return function() {
+            editor.action = action;
+            o.code_element.remove();
+            ++iter;
+            o.code_element.html(module_code()).appendTo('body')
+        }
+    }
+    o.run = function() {
+        o.stop();
+        insert_code("run")();
+        try {
+            curl([o.module_name()], function(module) {
+                module.run && module.run();
+            }, function() {})
+        } catch (err) {}
+    }
+    o.stop = function() {
+        // insert_code("stop");
+        if (!iter) return;
+        try {
+            curl([o.module_name()], function(module) {
+                module.stop && module.stop();
+            }, function() {})
+        } catch (err) {}
+    }
+    o.edit = function() {
+        if (o.created_controls.length == 0) {
+            editor.current_code = o
+            var edit = function() {
+                try {
+                    curl([o.module_name()], function(module) {
+                        module.edit && module.edit();
+                    }, function() {})
+                } catch (err) {}
+                fixup_controls(null, true);
+            }
+            if (!iter) {
+                insert_code("edit")();
+                setTimeout(edit, 1000);
+            }
+            else 
+                edit();
+        } else {
+            var apps = env.Apps.filtered(function(a) { return a.client_visible; })
+            while (o.created_controls.length) {
+                var control = o.created_controls.pop();
+                js_util.array_delete(active_controls, control);
+                for (var i = 0; i < apps.length; ++i) {
+                    var app = apps[i];
+                    js_util.array_delete(app.make_controls, control);
+                }
+            }
+            fixup_controls();
+        }
     }
 
     function controls(o) {
         var sel = env.Selection
         find_or_create_button(o, '.run').click(sel.run)
+        find_or_create_button(o, '.stop').click(sel.stop)
+        find_or_create_button(o, '.edit').click(sel.edit)
         // o.hover_menu(o.div.find('.button.opts'), o.div.find('.drawer.opts'))
         // var showinview = o.div.find('.show_in_view')
         // showinview.prop('checked', o.app.init_state.show_in_view).on(
         //     'change', function(){
         //         o.app.init_state.show_in_view = showinview.prop('checked') })
     }
-    o.make_controls.push(memoize('has_run', controls))
+    o.make_controls.push(memoize('code_buttons', controls))
     Hive.App.has_shield(o)
+
+    var fixup_controls = function(controls, force_on) {
+        controls = controls || env.Selection.controls;
+        if (force_on || o.created_controls.length > 0) {
+            controls.div.find(".button.edit")
+                .css({"background-color":"black", "color": "white"
+                    ,"background-size":0})
+        } else {
+            controls.div.find(".button.edit")
+                .css({"background-color":"transparent", "color": "black"
+                    ,"background-size":""})
+        }        
+    }
+    o.make_controls.push(fixup_controls)
 
     o.focus.add(function(){
         o.editor.focus()
@@ -1550,8 +1652,8 @@ Hive.App.Sketch = function(o) {
     o.make_controls.push(controls);
     var app = o.sel_app();
     Hive.App.has_slider_menu(o, '.size'
-        ,function(v) { app.win.BRUSH_SIZE = v; }
-        ,function() { return app.win.BRUSH_SIZE; }
+        ,function(v) { env.Selection.sel_app().win.BRUSH_SIZE = v; }
+        ,function() { return env.Selection.sel_app().win.BRUSH_SIZE; }
         ,undefined,undefined,{single: true});
     Hive.App.has_rotate(o);
     Hive.App.has_opacity(o);
@@ -2234,6 +2336,10 @@ Hive.App.has_rotate = function(o) {
     o.make_controls.push(memoize("rotate_controls", controls));
 }
 
+// set: f(v): tell the app to set its state to the slider value
+// init: f(): get the app's state
+// start: called on menu open (for history)
+// end: called on menu close (for history)
 Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
     opts = $.extend({
         single: false // true to make this menu only available to singly-selected apps
@@ -2241,10 +2347,11 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
         , max:100     // maximum setting on range
         , handle:$()  // provide the handle selector instead of looking for it
         , container:null // add controls to container instead of menu
+        , handle_name:"" // provide a generic button's name instead of an icon
     }, opts)
     var handle = opts.handle, min = opts.min, max = opts.max
         , container = opts.container, menu_opts = opts.menu_opts
-        , initial, val, initialized = false
+        , initial, val, initialized = false, handle_name = opts.handle_name
     function controls(o) {
         if (opts.single && !o.single()) return
         if(!start) start = noop
@@ -2259,11 +2366,13 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
                 .appendTo(drawer)
         if (container) {
             drawer.appendTo(container)
-        } else if (handle_q) {
-            handle = find_or_create_button(o, handle_q);
+        } else {
+            handle = find_or_create_button(o, handle_q, handle_name);
             o.div.find('.buttons').append(drawer)
         }
-
+        if (handle_name && !handle_q) {
+            handle.html(handle_name[0]);
+        }
         handle.add(drawer).bind('mousewheel', function(e){
             // Need to initialize here because mousewheel can fire before 
             // menu is opened
@@ -2328,8 +2437,12 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
 
         return o
     }
-    if (o) o.make_controls.push(memoize('slider' + handle_q, controls))
-    return controls
+    var res = controls
+    if (o) {
+        res = memoize('slider' + handle_q + handle_name, controls)
+        o.make_controls.push(res)
+    }
+    return res
 }
 
 Hive.App.has_align = function(o) {
@@ -2457,11 +2570,12 @@ Hive.App.has_blur = function(o) {
         }
     )
 }
-var find_or_create_button = function(app, btn_name) {
+var find_or_create_button = function(app, btn_name, btn_title) {
     var btn = app.div.find('.button' + btn_name);
-    if (!btn.length) {
-        app.addButton($('#controls_misc .button' + btn_name));
-        btn = app.div.find('.button'+ btn_name);
+    if (!btn_name || !btn.length) {
+        btn_name = btn_name || ".run"
+        btn = app.addButton($('#controls_misc .button' + btn_name));
+        if (btn_title) btn.attr("title", btn_title);
     }
     return btn;
 }
