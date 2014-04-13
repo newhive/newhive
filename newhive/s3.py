@@ -11,7 +11,7 @@ def fixup_s3_url(url):
         url = re.sub(r'^https?://.*?/', '//' + cloudfront + '/', url)
     else:
         url = re.sub(r'^https?:', '', url)
-    return url
+    return url.sub(r'\?.*', '')
 
 class S3Interface(object):
     def __init__(self, config=None):
