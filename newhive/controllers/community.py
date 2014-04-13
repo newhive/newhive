@@ -344,10 +344,10 @@ class Community(Controller):
         # editor currently depends on URL attribute
         apps = expr.get('apps', [])
         for a in apps:
-            print 'app ', a
+            # print 'app ', a
             file_id = a.get('file_id') 
             if file_id and not a.get('url'):
-                print (self.db.File.fetch(file_id) or {}).get('url')
+                # print (self.db.File.fetch(file_id) or {}).get('url')
                 a['url'] = (self.db.File.fetch(file_id) or {}).get('url')
 
         return { 'expr': expr }
