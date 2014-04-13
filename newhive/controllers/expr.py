@@ -207,10 +207,9 @@ class Expr(ModelController):
             c = app.get('css_state', {})
             more_css = ';'.join([p + ':' + str(c[p]) for p in c])
         if type == 'hive.image':
+            url = app.get('url') or content
             media = self.db.File.fetch(app.get('file_id'))
-            if media: content = media.get_resample(
-                dimensions[0] * scale
-            )
+            if media: url = media.get_resample(dimensions[0] * scale)
 
             html = "<img src='%s'>" % content
             scale_x = app.get('scale_x')
@@ -221,7 +220,7 @@ class Expr(ModelController):
                     offset = [x * scale_x for x in app.get('offset')]
                     css = '%s;margin-left:%spx;margin-top:%spx' % (
                         css, offset[0], offset[1] )
-                html = "<img src='%s' style='%s'>" % (content, css)
+                html = "<img src='%s' style='%s'>" % (url, css)
             link = app.get('href')
             if link: html = "<a href='%s'>%s</a>" % (link, html)
         elif type == 'hive.sketch':
