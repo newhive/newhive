@@ -282,7 +282,9 @@ class Expr(ModelController):
                 if app.get('url'):
                     html = "<script src='%s'></script>" % app.get('url')
                 else:
-                    html = "<script>%s</script>" % app.get('content')
+                    html = (("<script>curl(['browser/jquery'],function($){" +
+                        "var self={};%s;self.run && self.run()})</script>")
+                        % app.get('content'))
             if ctype == 'css':
                 # TODO-feature-css-url: if app['url'], put <link> tag in head
                 html =  '<style>%s</style>' % app.get('content')
