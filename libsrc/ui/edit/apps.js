@@ -102,10 +102,10 @@ env.Apps = Hive.Apps = (function(){
 
     var stack = []
     u.has_shuffle(stack);
-    o.restack = function(){
+    o.restack = function(include_deletes){
         var c_layer = 0
         for(var i = 0; i < stack.length; i++){
-            if(!stack[i] || stack[i].deleted)
+            if(!include_deletes && (!stack[i] || stack[i].deleted))
                 continue
             stack[i].layer_set(c_layer)
             c_layer++
@@ -113,7 +113,7 @@ env.Apps = Hive.Apps = (function(){
     }
     o.stack = function(from, to){
         stack.move_element(from, to);
-        o.restack();
+        o.restack(true);
     };
     o._stack = stack;
     
@@ -121,11 +121,15 @@ env.Apps = Hive.Apps = (function(){
         var i = o.length;
         o.push(app);
 
-        if(typeof(app.layer()) != 'number') stack.push(app);
+        if(typeof(app.layer()) != 'number') {
+            app.layer_set(stack.length);
+            stack.push(app);
         // if there's already an app at this layer, splice in the new app one layer above
-        else if( stack[app.layer()] ) stack.splice(app.layer() + 1, 0, app);
-        else stack[app.layer()] = app;
-        o.restack();
+        } else if( stack[app.layer()] ) {
+            stack.splice(app.layer() + 1, 0, app);
+            o.restack(true)
+        } else // This case is on expression load
+            stack[app.layer()] = app;
         return i;
     };
     
