@@ -17,6 +17,20 @@ import newhive
 from newhive import config
 from newhive.config import abs_url, url_host
 
+class MemoDict(dict):
+    def __init__(self, src):
+        self.src = src
+
+    def __getitem__(self, key):
+        if dict.has_key(self, key):
+            return dict.__getitem__(self, key)
+        val = self.src.get(key, lambda: None)()
+        dict.__setitem__(self, key, val)
+        return val
+
+    def get_src(self):
+        return self.src
+
 # TODO-cleanup: move this into query helpers
 def filter_query(query, filter):
     query.setdefault('$and', [])

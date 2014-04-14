@@ -5,9 +5,13 @@
 from pymongo.errors import DuplicateKeyError
 
 from newhive import state
+from newhive.utils import MemoDict
 import newhive.config.tmp_live_config as live_config
-live_db = state.Database(live_config)
-
+import newhive.config.stub_dev_config as dev_config
+dbs = MemoDict({
+    "live_db": lambda: state.Database(live_config)
+    ,"dev_db": lambda: state.Database(dev_config) 
+})
 def cp_expr(expr, dest_db):
     new_expr = dest_db.Expr.new(expr)
     try:
