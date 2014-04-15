@@ -7,7 +7,7 @@ from pymongo.errors import DuplicateKeyError
 from newhive import state
 from newhive.utils import MemoDict
 import newhive.config.tmp_live_config as live_config
-import newhive.config.stub_dev_config as dev_config
+import newhive.config.dev_config as dev_config
 dbs = MemoDict({
     "live": lambda: state.Database(live_config)
     ,"dev": lambda: state.Database(dev_config) 
