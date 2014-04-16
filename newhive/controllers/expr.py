@@ -282,9 +282,9 @@ class Expr(ModelController):
                 if app.get('url'):
                     html = "<script src='%s'></script>" % app.get('url')
                 else:
-                    html = (("<script>curl(['browser/jquery'],function($){" +
-                        "var self={};%s;self.run && self.run()})</script>")
-                        % app.get('content'))
+                    html = ( "<script>curl(['ui/expression'],function(expr){"
+                        + "expr.load_code(%s)" % json.dumps(app.get('content'))
+                        + "})</script>" )
             if ctype == 'css':
                 # TODO-feature-css-url: if app['url'], put <link> tag in head
                 html =  '<style>%s</style>' % app.get('content')
@@ -296,7 +296,7 @@ class Expr(ModelController):
         data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
         app_id = app.get('id', app['z'])
         return "<div class='happ %s %s' id='app%s' style='%s'%s>%s</div>" % (
-            type.replace('.', '_'), app.get('css_class'), app_id,
+            type.replace('.', '_'), app.get('css_class', ''), app_id,
             css_for_app(app) + more_css, data, html
         )
 

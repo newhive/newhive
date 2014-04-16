@@ -711,31 +711,40 @@ Hive.App.Code = function(o){
             o.content() + 
             "; return self; })";
     }
-    var insert_code = function(action){
-        return function() {
-            editor.action = action;
-            o.code_element.remove();
-            ++iter;
-            o.code_element.html(module_code()).appendTo('body')
-        }
+    var insert_code = function(callback){
+        o.code_element.remove();
+        ++iter;
+        o.code_element.on('load')
+        o.code_element.html(module_code()).appendTo('body')
     }
+    // var try_code_call = function(func_name){
+    var animate_go
     o.run = function() {
         o.stop();
-        insert_code("run")();
-        try {
+        insert_code()
+
             curl([o.module_name()], function(module) {
                 module.run && module.run();
-            }, function() {})
-        } catch (err) {}
+                if(!module.animate) return
+                var animate_frame = function(){
+                    module.animate()
+                    // TODO-compat: if requestAnimationFrame not supported,
+                    // fallback to setTimeout
+                    if(animate_go) requestAnimationFrame(animate_frame)
+                }
+                animate_go = 1
+                animate_frame()
+            })
     }
     o.stop = function() {
-        // insert_code("stop");
+        // insert_code();
         if (!iter) return;
         try {
             curl([o.module_name()], function(module) {
                 module.stop && module.stop();
             }, function() {})
         } catch (err) {}
+        animate_go = 0
     }
     o.edit = function() {
         if (o.created_controls.length == 0) {
@@ -749,7 +758,7 @@ Hive.App.Code = function(o){
                 fixup_controls(null, true);
             }
             if (!iter) {
-                insert_code("edit")();
+                insert_code()
                 setTimeout(edit, 1000);
             }
             else 
@@ -804,6 +813,12 @@ Hive.App.Code = function(o){
          o.div.addClass('drag').css('opacity', .2)
          o.editor.getInputField().blur()
     })
+
+    var _remove = o.remove
+    o.remove = function(){
+        o.stop()
+        _remove()
+    }
 
     keymap = {
         'Ctrl-/': function(cm){ cm.execCommand('toggleComment') }
@@ -1158,7 +1173,7 @@ Hive.App.Rectangle = function(o) {
     Hive.App.has_opacity(o);
 
     o.div.addClass('rectangle')
-    o.content_element = $("<div class='content drag'>").appendTo(o.div);
+    o.content_element = o.div //$("<div class='content drag'>").appendTo(o.div);
     setTimeout(function(){ o.load() }, 1);
 
     Hive.App.has_image_drop(o);
