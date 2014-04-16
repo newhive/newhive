@@ -1486,7 +1486,9 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
     };
 
     var pos = function(ev){
-        return u._mul(1 / env.scale())([ev.clientX, ev.clientY]) }
+        var win = window
+        return u._mul(1 / env.scale())([ev.clientX + window.scrollX, 
+            ev.clientY + window.scrollY]) }
 
     var from_template = function(){
         var s = (template.state && template.state()) || template

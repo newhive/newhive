@@ -77,6 +77,8 @@ o.Selection = function(o) {
         })
         if(o.controls && $.contains(o.controls.div.get(0), ev.target))
             hit = true
+        if ($(ev.target).closest(".control").length)
+            hit = true
         if(!hit)
             o.unfocus()
     }
@@ -198,7 +200,10 @@ o.Selection = function(o) {
         o.old_selection = o.new_selection;
         o.new_selection = u.overlapped_apps(select);
         if (o.old_selection.length != o.new_selection.length){
-            o.update($.unique($.merge(o.new_selection, o.initial_elements)));
+            if (u.is_ctrl(event))
+                o.update($(u.except(o.initial_elements, o.new_selection)));
+            else
+                o.update($.unique($.merge(o.new_selection, o.initial_elements)));
         }
     };
 
