@@ -88,7 +88,7 @@ define([
             })
         }
     };
-    
+
     o.margin = function () {
         return $(window).width() / 4;
     }
@@ -157,6 +157,26 @@ define([
         }
     };
 
+    // called from script element generated from
+    // python newhive.controller.expr.html_for_app for each code app
+    var code_srcs = [], code_modules = [], animate_go = 1
+    o.load_code = function(code_src){
+        code_srcs.push(code_src) }
+
+    o.run_code = function(code_module){
+        code_modules.push(code_module)
+    
+        code_module.run && code_module.run()
+        if(!code_module.animate) return
+        var animate_frame = function(){
+            code_module.animate()
+            // TODO-compat: if requestAnimationFrame not supported,
+            // fallback to setTimeout
+            if(animate_go) requestAnimationFrame(animate_frame)
+        }
+        animate_frame()
+    }
+
     o.show = function(){
         o.paging_sent = false;
         // if(!Hive.expr) return;
@@ -187,7 +207,14 @@ define([
         }
 
         o.update_targets();
-    };
+
+        code_srcs.map(function(src){
+            var script = $('<script>').html(
+                "curl(['browser/jquery','ui/expression'],function($, expr){"
+                + "var self={};" + src + "expr.run_code(self) })"
+            ).addClass('code_module').appendTo('body')
+        })
+    }
     o.hide = function(){
         $('.hive_html').each(function(i, div) {
             var $div = $(div);
@@ -198,6 +225,10 @@ define([
         $('.hive_audio .jp-jplayer').each(function(i, div) {
             $(div).jPlayer("pause");
         });
+
+        animate_go = 0
+        code_modules.map(function(module){ module.stop && module.stop() })
+        $('script.code_module').remove()
     };
 
 
