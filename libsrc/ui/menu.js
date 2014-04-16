@@ -123,7 +123,7 @@ var menu = function(handle, drawer, options) {
         if(o.opened) return;
 
         o.opened = true;
-        if (!shield.parent().length) {
+        if (!opts.hover && !shield.parent().length) {
             shield.appendTo($("body"));
             shield.on("click", function(ev) { menu.close_all(); } );
         }
