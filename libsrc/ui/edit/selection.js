@@ -616,7 +616,8 @@ o.Selection = function(o) {
         var load_count = elements.length, copies, _load = opts.load;
         opts = $.extend({ 
             offset: [ 0, o.dims()[1] + 20 ],
-            'z_offset': elements.length },
+            // 'z_offset': elements.length 
+            },
             opts)
         opts.load = function(){
             load_count--;
@@ -628,9 +629,7 @@ o.Selection = function(o) {
             }
         };
         env.History.begin();
-        copies = $.map( elements, function(e){
-            return e.copy(opts)
-        });
+        var copies = hive_app.Apps.copy(elements, opts)
         env.History.group('copy group');
         return copies;
     }

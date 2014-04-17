@@ -132,7 +132,15 @@ env.Apps = Hive.Apps = (function(){
             stack[app.layer()] = app;
         return i;
     };
-    
+    o.copy = function(elements, opts) {
+        elements =  elements.sort(function(a,b) {
+            return a.layer() - b.layer()
+        });
+        opts.z_index = "top"; // NaN goes to top
+        return $.map(elements, function(e){
+            return e.copy(opts)
+        });
+    } 
     o.fetch = function(id){
         for(var i = 0; i < o.length; i++) if( o[i].id == id ) return o[i];
     };
@@ -340,13 +348,13 @@ Hive.App = function(init_state, opts) {
 
     o.layout = function(pos, dims){
         var pos = pos || o.pos(), dims = dims || o.dims();
-        if(full){
-            // o.div.css({left: 0, top: 0, width: '100%', height: '100%' })
-        }else{
+        // if(full){
+        //     // o.div.css({left: 0, top: 0, width: '100%', height: '100%' })
+        // }else{
             o.div.css({ 'left' : pos[0], 'top' : pos[1] });
             // rounding fixes SVG layout bug in Chrome
             o.div.width(Math.round(dims[0])).height(Math.round(dims[1]));
-        }
+        // }
         if(o.controls)
             o.controls.layout();
         // TODO-cleanup: have selection handle control creation
