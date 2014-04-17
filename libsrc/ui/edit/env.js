@@ -1,7 +1,7 @@
 define([], function(){
 
 var env = o = {};
-env.padding = 10;
+// env.padding = 10;
 env.show_move_sensitivity = false;
 env.no_snap = false;
 env.show_mini_selection_border = false
@@ -9,7 +9,7 @@ env.copy_table = false;
 
 // 1 editor unit := scale client pixels
 // The editor is 1000 units wide inside a 1000*scale pixel window
-var scale = 1, zoom = 1;
+var scale = 1, zoom = 1, padding = 10
 o.scale_set = function(){
     scale = zoom * $(window).width() / 1000;
 };
@@ -21,6 +21,8 @@ o.zoom_set = function(_zoom) {
     env.layout_apps();
 }
 o.zoom = function(){ return zoom; };
+o.padding = function() { return padding; };
+o.padding_set = function(_padding) { padding = _padding; };
 
 // TODO: move these to user record
 o.tiling = { 

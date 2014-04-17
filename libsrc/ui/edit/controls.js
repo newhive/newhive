@@ -311,7 +311,7 @@ o.Controls = function(app, multiselect, delegate) {
                 copy_list = [o.app];
                 if (o.app.elements)
                     copy_list = o.app.elements();
-                var padding = [env.padding, env.padding];
+                var padding = [env.padding(), env.padding()];
                 var grid_dims = u._add(padding)(u._mul(1/env.scale())(o.app.dims()));
                 env.History.begin();
                 for (var x = 0; x < grid[0]; ++x) {

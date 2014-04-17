@@ -71,7 +71,16 @@ Hive.toggle_grid = function() {
 };
 
 Hive.init_menus = function() {
-   $('#text_default').click(function(e) {
+    hive_app.App.has_slider_menu(null, ""
+        ,env.padding_set, env.padding, null, null
+        ,{ min: 0, max: 30, quant: 1
+        , handle:$(".icon.change_padding"), container:$("body")
+        , menu_opts: { 
+            group: $(".misc.handle").data("menu")
+            ,auto_height: false 
+        }
+    }) ()
+    $('#text_default').click(function(e) {
         hive_app.new_app({ type : 'hive.text', content : '' });
     });
     $('#text_header').click(function(e) {

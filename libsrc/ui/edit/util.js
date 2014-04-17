@@ -27,7 +27,12 @@ var o = {}
 
 // Returns true for a pseudo-control key (control on real computers, meta on macs)
 o.is_ctrl = function(ev){
-    return (ev.ctrlKey || ev.metaKey);
+    ev = ev || env.ev;
+    return ev && (ev.ctrlKey || ev.metaKey);
+}
+o.should_snap = function(ev) {
+    ev = ev || env.ev;
+    return !ev || !(ev.altKey);
 }
 
 // convert from pos/dims into a dict with left/right/width/height
@@ -322,7 +327,7 @@ o.tile_magic = function(count, opts) {
         columns:3 // max columns in any row
         ,width:1000 // width to fill
         ,aspect:1.61 // preferred aspect ratio of elements
-        ,padding:10 // padding between elements
+        ,padding:env.padding() // padding between elements
         ,start_pos: [0, 0] // where to position the 0th element
     }, opts)
     var max_columns = opts.columns, row_width = opts.width, aspect = opts.aspect
@@ -613,7 +618,7 @@ o.snap_helper = function(my_tuple, opts) {
         snap_radius: 10,        // Snap at most this far away
         sensitivity: 0,         // Exponent for falloff in the dimension of snap 
                                 // (makes it not snap far away)
-        padding: 10,            // Editor units to add to object snapping against each other
+        padding: env.padding(), // Editor units to add to object snapping against each other
         guide_0: true,          // show horizontal guide
         guide_1: true,          // show vertical guide
     }, opts );

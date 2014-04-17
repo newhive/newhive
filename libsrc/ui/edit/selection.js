@@ -309,7 +309,7 @@ o.Selection = function(o) {
         ref_pos = moved_obj.pos_relative();
         env.History.change_start(full_apps.length);
     };
-    o.move_relative = function(delta, axis_lock){
+    o.move_relative = function(delta, axis_lock, snapping){
         if(!ref_pos) return;
         if(axis_lock)
             delta[ Math.abs(delta[0]) > Math.abs(delta[1]) ? 1 : 0 ] = 0;
@@ -319,7 +319,7 @@ o.Selection = function(o) {
             off = u._sub(drag_target.min_pos())(drag_target.pos_relative());
         // pos = u._add(pos)(off);
         // TODO-feature-snap: check key shortcut to turn off snapping
-        if(!env.no_snap){
+        if(!env.no_snap && snapping){
             var excludes = {};
             if(drag_target.id) excludes[drag_target.id] = true;
             pos = u.snap_helper(drag_target.bounds_tuple_relative(pos), {
@@ -339,7 +339,7 @@ o.Selection = function(o) {
     o.move_handler = function(ev, delta){
         delta = u._div(delta)(env.scale());
 
-        o.move_relative(delta, ev.shiftKey);
+        o.move_relative(delta, ev.shiftKey, u.should_snap(ev));
     };
     o.move_end = function(){
         env.History.change_end('move');
