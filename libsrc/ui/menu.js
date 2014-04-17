@@ -147,6 +147,7 @@ var menu = function(handle, drawer, options) {
         if(opts.layout) o.layout();
 
         opts.open();
+        
         return o;
     };
 

@@ -67,18 +67,22 @@ o.Selection = function(o) {
         ev.stopPropagation()
         app_clicking = ev.data
 
-        if(!o.count() || o.is_multi(ev) || ev.data)
+        var hit = false
+        if(o.controls && $.contains(o.controls.div.get(0), ev.target))
+            hit = true
+        else if ($(ev.target).closest(".control").length)
+            hit = true
+
+        if (!hit)
+            $(":focus").blur()
+
+        if(hit || !o.count() || o.is_multi(ev) || ev.data)
             return
 
-        var hit = false
         o.each(function(i, el){
             if( el.controls && $.contains(el.controls.div.get(0), ev.target) )
                 hit = true
         })
-        if(o.controls && $.contains(o.controls.div.get(0), ev.target))
-            hit = true
-        if ($(ev.target).closest(".control").length)
-            hit = true
         if(!hit)
             o.unfocus()
     }
