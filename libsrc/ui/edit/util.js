@@ -62,26 +62,39 @@ o._sign = function(x) {
 }
 
 o._apply = function(func, scale) {
-    if (typeof(scale) == "number") {
-        return function(l) {
-            return $.map(l, function(x) { return func(scale, x); });
-        }
-    } else {
+    var scalar_functor = function(l) {
+        if (typeof(l) == "number") return func(scale, l);
+        return $.map(l, function(x) { return func(scale, x); });
+    }
+    var vector_functor = function(l) {
         // TODO: error handling?
-        return function(l) {
-            if (typeof(l) == "number") {
-                return $.map(scale, function(x, i) { return func(x, l); });
-            } else {
-                return $.map(l, function(x, i) { return func(scale[i], x); });
-            }
+        if (typeof(l) == "number") {
+            return $.map(scale, function(x, i) { return func(x, l); });
+        } else {
+            return $.map(l, function(x, i) { return func(scale[i], x); });
         }
     }
+    var variadic_functor = function(s) {
+        return (typeof(s) == "number") ? scalar_functor : vector_functor;
+    }
+    if (arguments.length < 3)
+        return variadic_functor(scale);
+    // var accum = (scale.slice) ? scale.slice() : scale;
+    for (var i = 2; i < arguments.length; ++i) {
+        // scale = accum;
+        scale = variadic_functor(scale)(arguments[i]);
+    }
+    return scale;
 };
 
-o._mul = function(scale){ return o._apply(js.op['*'], scale) }
-o._add = function(scale){ return o._apply(js.op['+'], scale) }
-o._div = function(scale){ return o._apply(js.op['/'], scale) }
-o._sub = function(scale){ return o._apply(js.op['-'], scale) }
+o._mul = function(){ return o._apply.apply(null, 
+    [js.op['*']].concat(Array.prototype.slice.call(arguments, 0))) }
+o._add = function(){ return o._apply.apply(null, 
+    [js.op['+']].concat(Array.prototype.slice.call(arguments, 0))) }
+o._div = function(){ return o._apply.apply(null, 
+    [js.op['/']].concat(Array.prototype.slice.call(arguments, 0))) }
+o._sub = function(){ return o._apply.apply(null, 
+    [js.op['-']].concat(Array.prototype.slice.call(arguments, 0))) }
 o._inv = function(l){ return l.map(function(x){ return 1/x; }) }
 
 // Linear interpolation
