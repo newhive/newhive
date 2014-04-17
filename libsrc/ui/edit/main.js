@@ -382,8 +382,12 @@ Hive.exit = function(){
 // TODO-feature-html-embed: iterate over each element, and do something
 // reasonable
 Hive.embed_code = function(element) {
-    var c = $(element).val().trim(), app
-    var v = "", more_args = "", start = 0;
+    var c = $(element).val().trim(), app = {}
+        ,frame = $('<iframe>').css({width:'100%',height:'100%',border:0})
+            .attr('allowFullScreen', true)
+        ,args, url, v = "", more_args = "", start = 0
+    ;
+
     if(m = c.match(/^https?:\/\/www.youtube.com\/.*?v=([^&]+)(.*)(#t=(\d+))?$/i)) {
         v = m[1];
         more_args = m[2] || "";
@@ -392,40 +396,35 @@ Hive.embed_code = function(element) {
         || (m = c.match(/https?:\/\/youtu.be\/(.*)$/i)))
         v = m[1];
     if (v != "") {
-        var args = { 'rel': 0, 'showsearch': 0, 'showinfo': 0, 'autohide': 1 };
+        args = { 'rel': 0, 'showsearch': 0, 'showinfo': 0, 'autohide': 1 };
         if (start) args['start'] = start;
-        var url = '//www.youtube.com/embed/' + v + '?' + $.param(args) + more_args;
-        app = { type : 'hive.html', content : 
-            "<iframe width='100%' height='100%' class='youtube-player'" +
-            "  src='" + url + "' frameborder='0' " +
-            "allowfullscreen></iframe>"
-            ,media: 'youtube'
-        }
-            //   '<object type="application/x-shockwave-flash" style="width:100%; height:100%" '
-            // + 'data="' + url + '"><param name="movie" value="' + url + '">'
-            // + '<param name="allowFullScreen" value="true">'
-            // + '<param name="wmode" value="opaque"/></object>' };
-    } else if(m = c.match(/^https?:\/\/(www.)?vimeo.com\/(.*)$/i)) {
-        app = { type : 'hive.html', content :
-            '<iframe src="//player.vimeo.com/video/'
-            + m[2] + '?title=0&amp;byline=0&amp;portrait=0"'
-            + 'style="width:100%;height:100%;border:0"></iframe>'
-            ,media: 'vimeo'
-        }
-    } else if(m = c.match(/^https?:\/\/(.*)mp3$/i)) {
-        app = { type : 'hive.audio', content : {url : c, player : minimal}
+        url = '//www.youtube.com/embed/' + v + '?' + $.param(args) + more_args;
+        frame.addClass('youtube-player').attr('src', url)
+        app = { type: 'hive.html', content: frame[0].outerHTML, media: 'youtube' }
+    }
+
+    else if(m = c.match(/^https?:\/\/(www.)?vimeo.com\/(.*)$/i)) {
+        frame.attr('src', '//player.vimeo.com/video/'
+            + m[2] + '?title=0&amp;byline=0&amp;portrait=0')
+        app = { type: 'hive.html', content: frame[0].outerHTML, media: 'vimeo' }
+    }
+
+    else if(m = c.match(/^https?:\/\/(.*)mp3$/i)) {
+        app = { type : 'hive.audio', content : {url : c, player: minimal}
             ,media: 'hive.audio' }
-    } else if(m = c.match(/https?:\/\/.*soundcloud.com/i)) {
+    }
+
+    else if(m = c.match(/https?:\/\/.*soundcloud.com/i)) {
+        app = { media: 'soundcloud' }
         var stuffs = $('<div>');
         stuffs.html(c);
-        var embed = stuffs.children().first();
-        if(embed.is('object')) embed.append($('<param name="wmode" value="opaque"/>'));
-        if(embed.is('embed')) embed.attr('wmode', 'opaque');
-        embed.attr('width', '100%');
-        embed.find('[width]').attr('width', '100%');
-        embed.find('embed').attr('wmode', 'opaque');
-        app = { type : 'hive.html', content : embed[0].outerHTML
-            ,media: 'soundcloud' };
+
+        if(!stuffs.children().length){
+            var args = { auto_play: false, hide_related: true, visual: true, url: c }
+            frame.attr('src', 'https://w.soundcloud.com/player/' +'?'+ $.param(args))
+            app.type = 'hive.html'
+            app.content = frame[0].outerHTML
+        }
     }
 
     else if(c.match(/^https?:\/\//i)) {
@@ -456,7 +455,7 @@ Hive.embed_code = function(element) {
         return;
     }
 
-    if(!app){
+    if(!app.type){
         var el = $(c).eq(0)
         if(el.is('script')){
             app = { type: 'hive.code', content: el.html(), code_type: 'js' }
@@ -476,13 +475,14 @@ Hive.embed_code = function(element) {
         }
     }
 
-    if(!app){
+    if(!app.type){
         var dom = $('<div>');
         dom[0].innerHTML = c;
         dom.find('object').append($('<param name="wmode" value="opaque"/>'));
         dom.find('embed').attr('wmode', 'opaque');
         dom.find('iframe').attr('width', '100%').attr('height', '100%');
-        app = { type : 'hive.html', content: dom[0].innerHTML };
+        app.type = 'hive.html'
+        app.content = dom[0].innerHTML
     }
 
     hive_app.new_app(app);
