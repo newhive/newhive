@@ -227,7 +227,7 @@ body.edit {
     }
 
     .stack { white-space : nowrap; }
-    .buttons {
+    .buttons,.top_buttons {
         pointer-events: none;
         * { pointer-events: auto; }
         .button {

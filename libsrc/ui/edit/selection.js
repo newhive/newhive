@@ -519,6 +519,9 @@ o.Selection = function(o) {
                 return app.make_controls || []; })
         )
         o.make_controls = u.union(o.make_controls, sel_controls);
+        if(apps.length > 1) {
+            o.multi_controls();
+        }
         if(!o.dragging && multi) {
             Controls(o, false);
             o.controls.layout();
@@ -530,7 +533,28 @@ o.Selection = function(o) {
             if (o.controls) o.controls.remove();
         }
     };
+    o.multi_controls = function() { 
+        o.make_controls.push(function (o) {
+            o.addTopButton($("#controls_multi .button"));
+        })
 
+        var set_tiling_param = function(param) { 
+            return function(v) { env.tiling[param] = v; u.retile(); } }
+        var get_tiling_param = function(param) { 
+            return function() { return env.tiling[param] } }
+        hive_app.App.has_slider_menu(o, ".change_aspect"
+            ,set_tiling_param("aspect"), get_tiling_param("aspect"), null, null
+            ,{ min: .30, max: 3.0
+        })
+        hive_app.App.has_slider_menu(o, ".change_padding"
+            ,set_tiling_param("padding"), get_tiling_param("padding"), null, null
+            ,{ min: -30, max: 30
+        })
+        hive_app.App.has_slider_menu(o, ".change_columns"
+            ,set_tiling_param("columns"), get_tiling_param("columns"), null, null
+            ,{ min: 1, max: 10.0
+        })
+    }
     o.unfocus = function(app){
         if(app) o.update($.grep(elements, function(el){ return el !== app }));
         else o.update([]);

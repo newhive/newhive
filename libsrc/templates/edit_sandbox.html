@@ -23,17 +23,9 @@
   <div class='menu_item change_zoom icon hoverable'>
     <img title='zoom' class='hoverable' src='{asset "skin/1/zoom.png"}'>
   </div>
-  {<if flags.tile_multiple_images}
-    <div class='menu_item change_aspect icon'>
-      <img title="tile aspect" src='{asset "skin/edit/tiling-aspect.png"}'>
-    </div>
-    <div class='menu_item change_padding icon'>
-      <img title="tile padding" src='{asset "skin/edit/tiling-padding.png"}'>
-    </div>
-    <div class='menu_item change_columns icon'>
-      <img title="tile columns" src='{asset "skin/edit/tiling-columns.png"}'>
-    </div>
-  {>}
+  <div class='menu_item change_padding icon hoverable'>
+    <img title='padding' class='hoverable' src='{asset "skin/edit/padding.png"}'>
+  </div>
 </div>
 <div class="dialog iframe" id="dia_editor_help" data-handle="#btn_help">
   {<defer}
@@ -226,6 +218,18 @@
   <img class='button rounding tip_N'
     src='{asset "skin/edit/rounded_corners.png"}' title='corner rounding'
 ></div>
+
+<div id='controls_multi' class='controls_src'>
+  {<if flags.tile_multiple_images}
+    <img class='button change_aspect' title="tile aspect" 
+      src='{asset "skin/edit/tiling-aspect.png"}'>
+    <img class='button change_padding' title="tile padding" 
+      src='{asset "skin/edit/tiling-padding.png"}'>
+    <img class='button change_columns' title="tile columns"
+      src='{asset "skin/edit/tiling-columns.png"}'>
+    </div>
+  {>}
+</div>
 
 <div id='controls_misc' class='controls_src'>
   <img class='control drag resize hoverable tip_SE' 

@@ -2374,8 +2374,10 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
             drawer.appendTo(container)
         } else {
             handle = find_or_create_button(o, handle_q, handle_name);
-            o.div.find('.buttons').append(drawer)
+            handle.parent().append(drawer)
         }
+        // For named handles with no icon, give them the text of the first 
+        // character of their name
         if (handle_name && !handle_q) {
             handle.html(handle_name[0]);
         }
@@ -2397,7 +2399,7 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
 
         var update_val = function(){
             if (typeof(val) == "number") {
-                num_input.val(val)
+                num_input.val((Math.round(val*1000)/1000).toString())
                 range.val((val - min)/(max - min)*100)
             } else {
                 num_input.val()
@@ -2425,7 +2427,7 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
             }))
         }
 
-        range.bind('change', function(){
+        range.on('input change', function(){
             var v = parseFloat(range.val());
             val = v/100*(max - min) + min
             update_val()
