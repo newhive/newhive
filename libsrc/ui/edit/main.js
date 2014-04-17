@@ -345,6 +345,7 @@ Hive.init = function(exp, site_context){
     // shared functionality into has_coords
     env.Selection = hive_app.new_app({ type : 'hive.selection' });
     hive_app.Apps.init(Hive.Exp.apps);
+    hive_app.Apps.restack();
 
     $('.edit.overlay').showshow()
     Hive.init_global_handlers()
