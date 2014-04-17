@@ -2146,7 +2146,7 @@ Hive.App.has_resize = function(o) {
         var _pos = o.pos_relative();
         // TODO: allow snapping to aspect ratio (keyboard?)
         // TODO: set snap parameters be set by user
-        if(!env.no_snap && !o.has_full_bleed()){
+        if(u.should_snap() && !env.no_snap && !o.has_full_bleed()){
             var tuple = [];
             tuple[0] = [undefined, undefined, pos[0]];
             tuple[1] = [undefined, undefined, pos[1]];
@@ -2196,7 +2196,8 @@ Hive.App.has_resize = function(o) {
                 o.drag_target.busy = true;
                 o.app.resize_start();
             })
-            .drag(function(e, dd){ o.app.resize([ dd.deltaX, dd.deltaY ]); })
+            .drag(function(e, dd){ 
+                env.ev = e; o.app.resize([ dd.deltaX, dd.deltaY ]); })
             .drag('end', function(e, dd){
                 o.drag_target.busy = false;
                 o.app.resize_end();
@@ -2366,6 +2367,7 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
         single: false // true to make this menu only available to singly-selected apps
         , min:0       // minimum setting on range
         , max:100     // maximum setting on range
+        , quant:0     // quantization of slider (1 ==> integers .1 ==> integer/10, etc)
         , handle:$()  // provide the handle selector instead of looking for it
         , container:null // add controls to container instead of menu
         , handle_name:"" // provide a generic button's name instead of an icon
@@ -2373,6 +2375,7 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
     var handle = opts.handle, min = opts.min, max = opts.max
         , container = opts.container, menu_opts = opts.menu_opts
         , initial, val, initialized = false, handle_name = opts.handle_name
+        , quant = opts.quant
     function controls(o) {
         if (opts.single && !o.single()) return
         if(!start) start = noop
@@ -2389,8 +2392,10 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
             drawer.appendTo(container)
         } else {
             handle = find_or_create_button(o, handle_q, handle_name);
-            o.div.find('.buttons').append(drawer)
+            handle.parent().append(drawer)
         }
+        // For named handles with no icon, give them the text of the first 
+        // character of their name
         if (handle_name && !handle_q) {
             handle.html(handle_name[0]);
         }
@@ -2412,7 +2417,7 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
 
         var update_val = function(){
             if (typeof(val) == "number") {
-                num_input.val(val)
+                num_input.val((Math.round(val*1000)/1000).toString())
                 range.val((val - min)/(max - min)*100)
             } else {
                 num_input.val()
@@ -2420,6 +2425,8 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
             }
         }
         var clamp_set = function(n) {
+            if (quant)
+                n = Math.round(n * quant) * quant;
             val = js.bound(n, min, max);
             set(val)
             return val
@@ -2440,12 +2447,12 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
             }))
         }
 
-        range.bind('change', function(){
+        range.on('input change', function(){
             var v = parseFloat(range.val());
             val = v/100*(max - min) + min
+            clamp_set(val)
             update_val()
             num_input.val(val)
-            clamp_set(val)
         })
 
         num_input.on('input keyup change', function(ev){

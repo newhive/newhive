@@ -27,7 +27,12 @@ var o = {}
 
 // Returns true for a pseudo-control key (control on real computers, meta on macs)
 o.is_ctrl = function(ev){
-    return (ev.ctrlKey || ev.metaKey);
+    ev = ev || env.ev;
+    return ev && (ev.ctrlKey || ev.metaKey);
+}
+o.should_snap = function(ev) {
+    ev = ev || env.ev;
+    return !ev || !(ev.altKey);
 }
 
 // convert from pos/dims into a dict with left/right/width/height
@@ -62,26 +67,39 @@ o._sign = function(x) {
 }
 
 o._apply = function(func, scale) {
-    if (typeof(scale) == "number") {
-        return function(l) {
-            return $.map(l, function(x) { return func(scale, x); });
-        }
-    } else {
+    var scalar_functor = function(l) {
+        if (typeof(l) == "number") return func(scale, l);
+        return $.map(l, function(x) { return func(scale, x); });
+    }
+    var vector_functor = function(l) {
         // TODO: error handling?
-        return function(l) {
-            if (typeof(l) == "number") {
-                return $.map(scale, function(x, i) { return func(x, l); });
-            } else {
-                return $.map(l, function(x, i) { return func(scale[i], x); });
-            }
+        if (typeof(l) == "number") {
+            return $.map(scale, function(x, i) { return func(x, l); });
+        } else {
+            return $.map(l, function(x, i) { return func(scale[i], x); });
         }
     }
+    var variadic_functor = function(s) {
+        return (typeof(s) == "number") ? scalar_functor : vector_functor;
+    }
+    if (arguments.length < 3)
+        return variadic_functor(scale);
+    // var accum = (scale.slice) ? scale.slice() : scale;
+    for (var i = 2; i < arguments.length; ++i) {
+        // scale = accum;
+        scale = variadic_functor(scale)(arguments[i]);
+    }
+    return scale;
 };
 
-o._mul = function(scale){ return o._apply(js.op['*'], scale) }
-o._add = function(scale){ return o._apply(js.op['+'], scale) }
-o._div = function(scale){ return o._apply(js.op['/'], scale) }
-o._sub = function(scale){ return o._apply(js.op['-'], scale) }
+o._mul = function(){ return o._apply.apply(null, 
+    [js.op['*']].concat(Array.prototype.slice.call(arguments, 0))) }
+o._add = function(){ return o._apply.apply(null, 
+    [js.op['+']].concat(Array.prototype.slice.call(arguments, 0))) }
+o._div = function(){ return o._apply.apply(null, 
+    [js.op['/']].concat(Array.prototype.slice.call(arguments, 0))) }
+o._sub = function(){ return o._apply.apply(null, 
+    [js.op['-']].concat(Array.prototype.slice.call(arguments, 0))) }
 o._inv = function(l){ return l.map(function(x){ return 1/x; }) }
 
 // Linear interpolation
@@ -309,7 +327,7 @@ o.tile_magic = function(count, opts) {
         columns:3 // max columns in any row
         ,width:1000 // width to fill
         ,aspect:1.61 // preferred aspect ratio of elements
-        ,padding:10 // padding between elements
+        ,padding:env.padding() // padding between elements
         ,start_pos: [0, 0] // where to position the 0th element
     }, opts)
     var max_columns = opts.columns, row_width = opts.width, aspect = opts.aspect
@@ -600,7 +618,7 @@ o.snap_helper = function(my_tuple, opts) {
         snap_radius: 10,        // Snap at most this far away
         sensitivity: 0,         // Exponent for falloff in the dimension of snap 
                                 // (makes it not snap far away)
-        padding: 10,            // Editor units to add to object snapping against each other
+        padding: env.padding(), // Editor units to add to object snapping against each other
         guide_0: true,          // show horizontal guide
         guide_1: true,          // show vertical guide
     }, opts );

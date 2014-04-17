@@ -309,7 +309,7 @@ o.Selection = function(o) {
         ref_pos = moved_obj.pos_relative();
         env.History.change_start(full_apps.length);
     };
-    o.move_relative = function(delta, axis_lock){
+    o.move_relative = function(delta, axis_lock, snapping){
         if(!ref_pos) return;
         if(axis_lock)
             delta[ Math.abs(delta[0]) > Math.abs(delta[1]) ? 1 : 0 ] = 0;
@@ -319,7 +319,7 @@ o.Selection = function(o) {
             off = u._sub(drag_target.min_pos())(drag_target.pos_relative());
         // pos = u._add(pos)(off);
         // TODO-feature-snap: check key shortcut to turn off snapping
-        if(!env.no_snap){
+        if(!env.no_snap && snapping){
             var excludes = {};
             if(drag_target.id) excludes[drag_target.id] = true;
             pos = u.snap_helper(drag_target.bounds_tuple_relative(pos), {
@@ -339,7 +339,7 @@ o.Selection = function(o) {
     o.move_handler = function(ev, delta){
         delta = u._div(delta)(env.scale());
 
-        o.move_relative(delta, ev.shiftKey);
+        o.move_relative(delta, ev.shiftKey, u.should_snap(ev));
     };
     o.move_end = function(){
         env.History.change_end('move');
@@ -519,6 +519,9 @@ o.Selection = function(o) {
                 return app.make_controls || []; })
         )
         o.make_controls = u.union(o.make_controls, sel_controls);
+        if(apps.length > 1) {
+            o.multi_controls();
+        }
         if(!o.dragging && multi) {
             Controls(o, false);
             o.controls.layout();
@@ -530,7 +533,28 @@ o.Selection = function(o) {
             if (o.controls) o.controls.remove();
         }
     };
+    o.multi_controls = function() { 
+        o.make_controls.push(function (o) {
+            o.addTopButton($("#controls_multi .button"));
+        })
 
+        var set_tiling_param = function(param) { 
+            return function(v) { env.tiling[param] = v; u.retile(); } }
+        var get_tiling_param = function(param) { 
+            return function() { return env.tiling[param] } }
+        hive_app.App.has_slider_menu(o, ".change_aspect"
+            ,set_tiling_param("aspect"), get_tiling_param("aspect"), null, null
+            ,{ min: .30, max: 3.0
+        })
+        hive_app.App.has_slider_menu(o, ".change_padding"
+            ,set_tiling_param("padding"), get_tiling_param("padding"), null, null
+            ,{ min: -30, max: 30
+        })
+        hive_app.App.has_slider_menu(o, ".change_columns"
+            ,set_tiling_param("columns"), get_tiling_param("columns"), null, null
+            ,{ min: 1, max: 10.0
+        })
+    }
     o.unfocus = function(app){
         if(app) o.update($.grep(elements, function(el){ return el !== app }));
         else o.update([]);

@@ -115,10 +115,11 @@ o.Controls = function(app, multiselect, delegate) {
         o.div.append(c);
         return c;
     };
-    o.appendButton = function(c) {
-        var buttons = o.div.find('.buttons');
+    o.appendButton = function(c, klass) {
+        klass = klass || "buttons"
+        var buttons = o.div.find('.' + klass);
         if (buttons.length == 0)
-            buttons = $('<div class="control buttons"></div>').appendTo(o.div);
+            buttons = $('<div class="control ' + klass + '"></div>').appendTo(o.div);
         buttons.append(c);
         return c;
     }
@@ -126,14 +127,19 @@ o.Controls = function(app, multiselect, delegate) {
     o.addControl = function(ctrls) { 
         return $($.map(ctrls.clone(false), o.appendControl)); };
     o.addButton = function(ctrls) { 
-        return $($.map(ctrls.clone(false), o.appendButton)); };
+        return $($.map(ctrls.clone(false), function(x) {
+            return o.appendButton(x) } )); };
+    o.addTopButton = function(ctrls) { 
+        return $($.map(ctrls.clone(false), function(x) {
+            return o.appendButton(x, "top_buttons") } )); };
     o.addControls = function(ctrls) { 
         return $($.map(ctrls.clone(false).children(), o.appendControl)); };
     o.addButtons = function(ctrls) {
         $ctrls = ctrls.find(".control.buttons");
         if ($ctrls.length == 0)
             $ctrls = ctrls;
-        return $($.map($ctrls.clone(false).children(), o.appendButton)); };
+        return $($.map($ctrls.clone(false).children(), function (x) {
+            o.appendButton(x) } )); };
     o.hover_menu = function(handle, drawer, opts) {
         return u.hover_menu(handle, drawer, $.extend({
             auto_height: false, offset_y : o.padding - 7}, opts))
@@ -220,6 +226,7 @@ o.Controls = function(app, multiselect, delegate) {
         o.c.stack  .css({ left: dims[0] - 78 + p, top: dims[1] + 8 + p });
         o.c.buttons.css({ left: -bw - p, top: dims[1] + p + 10,
             width: dims[0] - 60 });
+        o.c.top_buttons.css({ left: -bw - p, top: -38 - p, width: dims[0] - 60 });
     };
 
     o.div = $('<div>').addClass('controls');
@@ -304,7 +311,7 @@ o.Controls = function(app, multiselect, delegate) {
                 copy_list = [o.app];
                 if (o.app.elements)
                     copy_list = o.app.elements();
-                var padding = [env.padding, env.padding];
+                var padding = [env.padding(), env.padding()];
                 var grid_dims = u._add(padding)(u._mul(1/env.scale())(o.app.dims()));
                 env.History.begin();
                 for (var x = 0; x < grid[0]; ++x) {
@@ -332,6 +339,7 @@ o.Controls = function(app, multiselect, delegate) {
         $.map(o.app.make_controls, function(f){ f(o) });
 
         o.c.buttons = d.find('.buttons');
+        o.c.top_buttons   = d.find('.top_buttons'  );
         d.find('.hoverable').each(function(i, el){ ui_util.hoverable($(el)) });
     }
 
