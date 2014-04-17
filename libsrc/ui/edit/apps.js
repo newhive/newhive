@@ -876,7 +876,10 @@ Hive.App.Image = function(o) {
     };
     o.color = function(){ return o.css_state['background-color'] || '#FFFFFF' };
     o.color_set = o.css_setter('background-color');
-    Hive.App.has_color(o)
+    // Hive.App.has_color(o)
+    o.stroke = function(){ return o.css_state['border-color'] || '#000' };
+    o.stroke_set = o.css_setter('border-color');
+    Hive.App.has_color(o, "stroke");
     o.border_width = function(){ return parseInt(o.css_state['border-width'] || 0) };
     o.border_width_set = function(v) {
         o.css_setter_px('border-width')(v);
@@ -1140,6 +1143,11 @@ Hive.App.Image = function(o) {
 
     function controls(o) {
         var app = o.single()
+        var has_border = false
+        env.Selection.each(function(i, a) {
+            has_border |= (a.border_width && a.border_width() > 0)
+        })
+        o.div.find('.buttons .button.stroke').showhide(has_border);
         if(!app) return
         o.addButtons($('#controls_image'));
         o.append_link_picker(o.div.find('.buttons'));
