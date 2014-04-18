@@ -548,15 +548,15 @@ o.Selection = function(o) {
             return function() { return env.tiling[param] } }
         hive_app.App.has_slider_menu(o, ".change_aspect"
             ,set_tiling_param("aspect"), get_tiling_param("aspect"), null, null
-            ,{ min: .30, max: 3.0
+            ,{ min: .30, max: 3.0, quant: .1
         })
         hive_app.App.has_slider_menu(o, ".change_padding"
             ,set_tiling_param("padding"), get_tiling_param("padding"), null, null
-            ,{ min: -30, max: 30
+            ,{ min: -30, max: 30, quant: 1, clamp: false
         })
         hive_app.App.has_slider_menu(o, ".change_columns"
             ,set_tiling_param("columns"), get_tiling_param("columns"), null, null
-            ,{ min: 1, max: 10.0
+            ,{ min: 1, max: 10.0, quant: .1, clamp_max: false
         })
     }
     o.unfocus = function(app){
