@@ -25,6 +25,14 @@ define([
 var o = {}
     ,bound = js.bound;
 
+// For performance-critical ops, do not use jquery style
+o.inline_style = function(el, styles) {
+    var el_style = el.style
+    $.each(styles, function(style_name, style_val) {
+        el_style[style_name] = style_val + 'px'
+    })
+}
+
 // Returns true for a pseudo-control key (control on real computers, meta on macs)
 o.is_ctrl = function(ev){
     ev = ev || env.ev;

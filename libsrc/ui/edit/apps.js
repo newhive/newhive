@@ -364,13 +364,14 @@ Hive.App = function(init_state, opts) {
             return true;
         }
         var pos = pos || o.pos(), dims = dims || o.dims();
-        // if(full){
-        //     // o.div.css({left: 0, top: 0, width: '100%', height: '100%' })
-        // }else{
-            o.div.css({ 'left' : pos[0], 'top' : pos[1] });
-            // rounding fixes SVG layout bug in Chrome
-            o.div.width(Math.round(dims[0])).height(Math.round(dims[1]));
-        // }
+        // o.div.css({ 'left' : pos[0], 'top' : pos[1] });
+        var styles = o.div[0].style;
+        styles.left = pos[0] + 'px'
+        styles.top = pos[1] + 'px'
+        // rounding fixes SVG layout bug in Chrome
+        styles.width = Math.round(dims[0]) + 'px'
+        styles.height = Math.round(dims[1]) + 'px'
+        // o.div.width(Math.round(dims[0])).height(Math.round(dims[1]));
         if(o.controls)
             o.controls.layout();
         // TODO-cleanup: have selection handle control creation
@@ -409,8 +410,11 @@ Hive.App = function(init_state, opts) {
             ,mtx = [_min, _max], corners = [];
         for (var x = 0; x < 2; ++x) {
             for (var y = 0; y < 2; ++y) {
-                corners.push(u.rotate_about
-                    ([mtx[x][0], mtx[y][1]], _cen, u.deg2rad(r)));
+                var pt = [mtx[x][0], mtx[y][1]]
+                if (!r)
+                    corners.push(pt)
+                else
+                    corners.push(u.rotate_about(pt, _cen, u.deg2rad(r)));
             }
         }
         return corners;

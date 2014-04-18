@@ -208,16 +208,16 @@ o.Controls = function(app, multiselect, delegate) {
             bw = o.border_width, outer_l = -cx -bw - p,
             outer_width = dims[0] + bw*2 + p*2, outer_height = dims[1] + p * 2 + 1;
 
-        o.div.css({ left: pos[0], top: pos[1] });
+        u.inline_style(o.div[0], { left: pos[0], top: pos[1] })
 
-        o.select_box.css({ left: cx, top: cy });
-        o.select_borders.eq(0).css({ left: outer_l,
+        u.inline_style(o.select_box[0], { left: cx, top: cy });
+        u.inline_style(o.select_borders[0], { left: outer_l,
             top: -cy -bw -p, width: outer_width, height: bw }); // top
-        o.select_borders.eq(1).css({ left: cx + p,
+        u.inline_style(o.select_borders[1], { left: cx + p,
             top: -cy -p - bw + 1, height: outer_height + bw * 2 -2, width: bw }); // right
-        o.select_borders.eq(2).css({ left: outer_l,
+        u.inline_style(o.select_borders[2], { left: outer_l,
             top: cy + p, width: outer_width, height: bw }); // bottom
-        o.select_borders.eq(3).css({ left: outer_l,
+        u.inline_style(o.select_borders[3], { left: outer_l,
             top: -cy -p - bw + 1, height: outer_height + bw * 2 -2, width: bw }); // left
         if(o.multiselect) return;
 
