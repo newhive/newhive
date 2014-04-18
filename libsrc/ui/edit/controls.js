@@ -171,15 +171,16 @@ o.Controls = function(app, multiselect, delegate) {
         //      overlay app content can be separated
         // Maybe ditch border pushing entirely. Not convinced it's worth it
         var ap = app.pos(),
-            win = $(window), wdims = [win.width(), win.height()],
-            pos = [ Math.max(pad_ul[0] + window.scrollX,
-                ap[0]), Math.max(pad_ul[1] + window.scrollY, ap[1]) ],
+            // win = $(window), wdims = [win.width(), win.height()],
+            wdims = env.win_size,
+            pos = [ Math.max(pad_ul[0] + env.scrollX,
+                ap[0]), Math.max(pad_ul[1] + env.scrollY, ap[1]) ],
             ad = app.dims(),
             dims = [ ap[0] - pos[0] + ad[0], ap[1] - pos[1] + ad[1] ];
-        if(dims[0] + pos[0] > wdims[0] + window.scrollX - pad_br[0])
-            dims[0] = wdims[0] + window.scrollX - pad_br[0] - pos[0];
-        if(dims[1] + pos[1] > wdims[1] + window.scrollY - pad_br[1])
-            dims[1] = wdims[1] + window.scrollY - pad_br[1] - pos[1];
+        if(dims[0] + pos[0] > wdims[0] + env.scrollX - pad_br[0])
+            dims[0] = wdims[0] + env.scrollX - pad_br[0] - pos[0];
+        if(dims[1] + pos[1] > wdims[1] + env.scrollY - pad_br[1])
+            dims[1] = wdims[1] + env.scrollY - pad_br[1] - pos[1];
 
         var minned_dims = [ Math.max(min_d[0], dims[0]),
             Math.max(min_d[1], dims[1]) ];

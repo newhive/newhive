@@ -234,6 +234,7 @@ Hive.init_global_handlers = function(){
     Hive.layout()
 
     $(window).on('scroll', Hive.scroll);
+    Hive.scroll();
     evs.on(document, 'keydown');
     evs.on('body', 'mousemove');
     evs.on('body', 'mousedown');
@@ -583,6 +584,8 @@ Hive.keydown = function(ev){
 };
 
 Hive.scroll = function(ev){
+    env.scrollX = window.scrollX
+    env.scrollY = window.scrollY
     if(env.Selection.controls)
         env.Selection.controls.layout();
     env.Selection.elements().map(function(app){

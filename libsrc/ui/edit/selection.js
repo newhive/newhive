@@ -315,6 +315,7 @@ o.Selection = function(o) {
     };
     o.move_relative = function(delta, axis_lock, snapping){
         if(!ref_pos) return;
+        env.Apps.begin_layout();
         if(axis_lock)
             delta[ Math.abs(delta[0]) > Math.abs(delta[1]) ? 1 : 0 ] = 0;
         var pos = u._add(ref_pos)(delta);
@@ -338,6 +339,7 @@ o.Selection = function(o) {
         if (full_apps.length)
             o.pushing_move(pos);
         drag_target.pos_relative_set(pos);
+        env.Apps.end_layout();
         //o.layout();
     };
     o.move_handler = function(ev, delta){
