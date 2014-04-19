@@ -364,14 +364,9 @@ Hive.App = function(init_state, opts) {
             return true;
         }
         var pos = pos || o.pos(), dims = dims || o.dims();
-        // o.div.css({ 'left' : pos[0], 'top' : pos[1] });
-        var styles = o.div[0].style;
-        styles.left = pos[0] + 'px'
-        styles.top = pos[1] + 'px'
-        // rounding fixes SVG layout bug in Chrome
-        styles.width = Math.round(dims[0]) + 'px'
-        styles.height = Math.round(dims[1]) + 'px'
-        // o.div.width(Math.round(dims[0])).height(Math.round(dims[1]));
+        u.inline_style(o.div[0], { 'left' : pos[0], 'top' : pos[1] 
+            // rounding fixes SVG layout bug in Chrome
+            ,width: Math.round(dims[0]), height: Math.round(dims[1])});
         if(o.controls)
             o.controls.layout();
         // TODO-cleanup: have selection handle control creation
