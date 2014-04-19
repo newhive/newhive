@@ -31,6 +31,7 @@ import threading
 
 from datetime import datetime
 import time
+from newhive.utils import now
 
 
 # TODO-for-the-love-god: move this code into the runner framework, massive cleanup.
@@ -95,9 +96,11 @@ expr_limit = 10
 continuous = True
 
 def get_exprs(query_and={}):
+    time_last = now() - 10*60 # Don't re-snapshot within 10 minutes
     and_exp = [
-        {'$where': "!this.password"},
         {'snapshot_fails': {'$not': {'$gt': 5}}},
+        {'$where': "!this.password && (!this.snapshot_fail_time || "
+            + "this.snapshot_fail_time < " + str(time_last) + ")"},
         {"$or": [
             {"snapshot_time": { "$exists": False }},
             {"$where": "this.snapshot_time < this.updated"}

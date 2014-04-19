@@ -1435,6 +1435,7 @@ class Expr(HasSocial):
         upload_list = []
         pw = self.get('password', '')
         self.inc('snapshot_fails')
+        self.update(updated=False, snapshot_fail_time=now())
 
         for w, h, size in dimension_list:
             name = self.snapshot_name_base(size, str(int(snapshot_time)))
@@ -1483,6 +1484,7 @@ class Expr(HasSocial):
         self.update(snapshot_time=snapshot_time, entropy=self['entropy'],
             snapshot_id=file_record.id, updated=False)
         self.reset('snapshot_fails')
+        self.update(updated=False, snapshot_fail_time=0)
         return True
 
     # @property
