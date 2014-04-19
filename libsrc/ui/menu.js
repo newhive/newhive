@@ -272,7 +272,7 @@ var menu = function(handle, drawer, options) {
             menu.close_all(); 
         } );
     handle.unbind('click').click(function(){
-        if(o.opened && opts.default_item.length && opts.hover) {
+        if(opts.default_item.length && opts.hover) {
             menu.close_all();
             opts.default_item.click();
         } else if (o.opened && !opts.hover_close) {
