@@ -100,9 +100,9 @@ o.Selection = function(o) {
 
         if (context.flags.shift_does_raise && ev.shiftKey) {
             if(u.is_ctrl(ev))
-                app.stack_bottom()
+                app.stack_bottom(ev)
             else
-                app.stack_top()
+                app.stack_top(ev)
             return
         }
         if(o.is_multi(ev)){
@@ -651,16 +651,46 @@ o.Selection = function(o) {
     o.get_stack = function(){
         return elements.sort(function(a, b){ a.layer() - b.layer() });
     };
-    o.stack_top = function(){
+    o.stack_top = function(ev){
+        if (!ev.shiftKey) {
+            return o.stack_shift(1)
+        }
         env.History.begin();
         $.each(o.get_stack(), function(i, el){ el.stack_top() })
         env.History.group('stack group to top');
     };
-    o.stack_bottom = function(){
+    o.stack_bottom = function(ev){
+        if (!ev.shiftKey) {
+            return o.stack_shift(-1)
+        }
         env.History.begin();
         $.each(o.get_stack().reverse(), function(i, el){ el.stack_bottom() })
         env.History.group('stack group to bottom');
     };
+    o.stack_shift = function(offset) {
+        env.History.begin();
+        var overlaps = u.overlapped_apps(u.region_from_app(o))
+            , elements = o.get_stack(), pad = -1
+        if (offset < 0) {
+            elements.reverse()
+            pad = 0
+        }
+        overlaps = u.except(overlaps, elements)
+        var z_indexes = $.map(overlaps, function(a) { return a.layer(); })
+        z_indexes.sort()
+
+        $.map(elements, function(a) {
+            var layer = a.layer()
+            for (var i = 0; i < z_indexes.length; i++)
+                if (layer < z_indexes[i])
+                    break;
+            i = js.bound(i + offset + pad, 0, z_indexes.length - 1)
+            var new_layer = z_indexes[i];
+            if (u._sign(new_layer - layer) == u._sign(offset))
+                a.stack_to(new_layer)
+        })
+        env.History.group('stack group ' + ((offset > 0) ? 'up' : 'down'));
+    }
 
     var parent = o;
     o.make_controls.push(function(o){
@@ -690,8 +720,8 @@ o.Selection = function(o) {
                     else return true
                 },
             46: function(){ o.remove() }, // del
-            66: function(){ o.stack_bottom() }, // b
-            84: function(){ o.stack_top() }, // t
+            66: function(){ o.stack_bottom(ev) }, // b
+            84: function(){ o.stack_top(ev) }, // t
         }
         if(handlers[ev.keyCode]){
             if(handlers[ev.keyCode]()) return;
