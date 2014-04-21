@@ -38,7 +38,8 @@ define([
         if(!opts.dialog.length) throw "dialog element " + element + " not found";
         if(!opts.dialog.is('.dialog')){
             opts.cloned = true
-            opts.dialog = opts.dialog.clone()
+            if(opts.dialog.parent().length)
+                opts.dialog = opts.dialog.clone()
             opts.dialog.addClass('dialog').css('z-index',201).removeAttr('id')
                 .data('dialog', o)
         }
@@ -50,7 +51,7 @@ define([
         }
         var o = $.extend({
             opts: opts
-            , dialog: opts.dialog
+            ,dialog: opts.dialog
         }, o);
         opts.dialog.data('dialog', o);
         factory.dialogs.push(o);
