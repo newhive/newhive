@@ -297,7 +297,7 @@ class Expr(ModelController):
                 tag = 'style'
                 # TODO-code-editor: put style tag in head
                 html =  "<style id='%s'>%s</style>" % (
-                    app.get('content'), app.get('id') )
+                    app.get('id'), app.get('content') )
             return html
         else:
             html = content
