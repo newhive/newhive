@@ -177,8 +177,16 @@ class Expr(ModelController):
         )
         if snapshot_mode:
             tdata.context['css'] = "body { overflow-x: hidden; }"
-        tdata.context['client_data'] = {x['id']: x.get('client_data') 
-                for x in expr_obj['apps'] if x.get('client_data')}
+        client_data = {}
+        for app in expr_obj.get('apps',[]):
+            data = app.get('client_data', {})
+            data.update(media=app.get('media'))
+            if app['type'] == 'hive.code':
+                data.update(dfilter(app, ['content', 'url']))
+            if data:
+                data['type'] = app['type']
+                client_data[app['id']] = data
+        tdata.context.update(client_data=client_data)
         return self.serve_page(tdata, response, 'pages/expr.html')
         
     def expr_to_html(self, exp, snapshot_mode=False, viewport=(1000, 750)):
@@ -276,9 +284,9 @@ class Expr(ModelController):
             style = app.get('style', {})
             more_css = ';'.join([ k+':'+str(v) for k,v in style.items()])
         elif type == 'hive.code':
-            tag = 'script'
             ctype = app.get('code_type', 'js')
             if ctype == 'js':
+                tag = 'script'
                 if app.get('url'):
                     html = "<script src='%s'></script>" % app.get('url')
                 else:
@@ -286,16 +294,18 @@ class Expr(ModelController):
                         + "expr.load_code(%s)" % json.dumps(app.get('content'))
                         + "})</script>" )
             if ctype == 'css':
-                # TODO-feature-css-url: if app['url'], put <link> tag in head
-                html =  '<style>%s</style>' % app.get('content')
+                tag = 'style'
+                # TODO-code-editor: put style tag in head
+                html =  "<style id='%s'>%s</style>" % (
+                    app.get('id'), app.get('content') )
             return html
         else:
             html = content
 
         data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
         data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
-        app_id = app.get('id', app['z'])
-        return "<div class='happ %s %s' id='app%s' style='%s'%s>%s</div>" % (
+        app_id = app.get('id', 'app_' + str(app['z']))
+        return "<div class='happ %s %s' id='%s' style='%s'%s>%s</div>" % (
             type.replace('.', '_'), app.get('css_class', ''), app_id,
             css_for_app(app) + more_css, data, html
         )

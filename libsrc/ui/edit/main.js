@@ -397,7 +397,7 @@ Hive.embed_code = function(element) {
         || (m = c.match(/https?:\/\/youtu.be\/(.*)$/i)))
         v = m[1];
     if (v != "") {
-        args = { 'rel': 0, 'showsearch': 0, 'showinfo': 0, 'autohide': 1 };
+        args = { rel: 0, showsearch: 0, showinfo: 0, autohide: 1, enablejsapi: 1 }
         if (start) args['start'] = start;
         url = '//www.youtube.com/embed/' + v + '?' + $.param(args) + more_args;
         frame.addClass('youtube-player').attr('src', url)

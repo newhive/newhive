@@ -301,8 +301,6 @@ class Community(Controller):
         meta = {}
         resp = {
             'expr_id': expr.id
-            ,'client_data': {x['id']: x.get('client_data') 
-                for x in expr['apps'] if x.get('client_data')}
             ,'content_url': abs_url(domain=self.config.content_domain, 
                 secure=request.is_secure) + expr.id
             ,'expr': expr.client_view(viewer=tdata.user, activity=10)

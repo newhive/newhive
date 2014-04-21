@@ -36,6 +36,12 @@ define([
             fade: true
         }, options);
         if(!opts.dialog.length) throw "dialog element " + element + " not found";
+        if(!opts.dialog.is('.dialog')){
+            opts.cloned = true
+            opts.dialog = opts.dialog.clone()
+            opts.dialog.addClass('dialog').css('z-index',201).removeAttr('id')
+                .data('dialog', o)
+        }
 
         var preexisting = opts.dialog.data('dialog');
         if (preexisting) {
@@ -115,11 +121,15 @@ define([
         o.close = function() {
             if(!opts.opened) return;
             opts.opened = false;
-            opts.dialog.detach().appendTo(o.attach_point);
+            if(opts.cloned){
+                opts.dialog.remove()
+            }else{
+                opts.dialog.detach().appendTo(o.attach_point);
+                opts.dialog.hidehide();
+            }
             if (opts.shield)
                 opts.shield.remove();
             $(window).off('resize', o.layout);
-            opts.dialog.hidehide();
             opts.close();
         }
 
@@ -144,54 +154,3 @@ define([
 
     return factory;
 });
-
-// function loadDialog(url, opts) {
-//     $.extend({ absolute : true }, opts);
-//     var dia;
-//     if(loadDialog.loaded[url]) {
-//         dia = loadDialog.loaded[url];
-//         showDialog(dia,opts);
-//     }
-//     else {
-//         $.ajax({ url : url, dataType: 'text', success : function(h) { 
-//             var html = h;
-//             dia = loadDialog.loaded[url] = $(html);
-//             showDialog(dia,opts);
-//         }});
-//     }
-// }
-// loadDialog.loaded = {};
-
-// function loadDialogPost(name, opts) {
-//     var dia;
-//     opts = $.extend({reload: false, hidden: false}, opts);
-//     if(loadDialog.loaded[name]) {
-//         dia = loadDialog.loaded[name];
-//     } 
-//     if (dia && !opts.reload && !opts.hidden) {
-//         showDialog(dia,opts);
-//     } else {
-//         $.post(window.location, {action: 'dialog', dialog: name}, function(h){
-//             var html = h;
-//             if (dia && opts.reload ) {
-//                 dia.filter('div').replaceWith($(html).filter('div'));
-//             } else {
-//                 dia = loadDialog.loaded[name] = $(html);
-//                 if (!opts.hidden){
-//                     showDialog(dia,opts);
-//                 }
-//             }
-//         }, 'text');
-//     }
-// }
-
-// function secureDialog(type, opts) {
-//     var dia;
-//     var params = $.extend({'domain': window.location.hostname, 'path': window.location.pathname}, opts.params)
-//     if (loadDialog.loaded[type]) dia = loadDialog.loaded[type];
-//     else {
-//         dia = loadDialog.loaded[type] = '<iframe style="' + opts.style + '" src="' + server_url + type + '?' + $.param(params) + '" />';
-//     }
-//     return showDialog(dia, opts);
-// };
-// showDialog.
