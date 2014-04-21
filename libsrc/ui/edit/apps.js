@@ -100,6 +100,18 @@ env.Apps = Hive.Apps = (function(){
         return $.map(o.all(), function(app) { return app.state(); });
     };
 
+    var defer_layout = false
+    o.defer_layout = function() { return defer_layout }
+    o.begin_layout = function() { defer_layout = true }
+    o.end_layout = function() { 
+        defer_layout = false
+        $.map(o.all(), function(app) { 
+            if(app.needs_layout) {
+                app.layout()
+            }
+        })
+    }
+
     var stack = []
     u.has_shuffle(stack);
     o.restack = function(include_deletes){
@@ -132,7 +144,15 @@ env.Apps = Hive.Apps = (function(){
             stack[app.layer()] = app;
         return i;
     };
-    
+    o.copy = function(elements, opts) {
+        elements =  elements.sort(function(a,b) {
+            return a.layer() - b.layer()
+        });
+        opts.z_index = "top"; // NaN goes to top
+        return $.map(elements, function(e){
+            return e.copy(opts)
+        });
+    } 
     o.fetch = function(id){
         for(var i = 0; i < o.length; i++) if( o[i].id == id ) return o[i];
     };
@@ -339,14 +359,14 @@ Hive.App = function(init_state, opts) {
     }
 
     o.layout = function(pos, dims){
-        var pos = pos || o.pos(), dims = dims || o.dims();
-        if(full){
-            // o.div.css({left: 0, top: 0, width: '100%', height: '100%' })
-        }else{
-            o.div.css({ 'left' : pos[0], 'top' : pos[1] });
-            // rounding fixes SVG layout bug in Chrome
-            o.div.width(Math.round(dims[0])).height(Math.round(dims[1]));
+        if (Hive.Apps.defer_layout()) {
+            o.needs_layout = true;
+            return true;
         }
+        var pos = pos || o.pos(), dims = dims || o.dims();
+        u.inline_style(o.div[0], { 'left' : pos[0], 'top' : pos[1] 
+            // rounding fixes SVG layout bug in Chrome
+            ,width: Math.round(dims[0]), height: Math.round(dims[1])});
         if(o.controls)
             o.controls.layout();
         // TODO-cleanup: have selection handle control creation
@@ -385,8 +405,11 @@ Hive.App = function(init_state, opts) {
             ,mtx = [_min, _max], corners = [];
         for (var x = 0; x < 2; ++x) {
             for (var y = 0; y < 2; ++y) {
-                corners.push(u.rotate_about
-                    ([mtx[x][0], mtx[y][1]], _cen, u.deg2rad(r)));
+                var pt = [mtx[x][0], mtx[y][1]]
+                if (!r)
+                    corners.push(pt)
+                else
+                    corners.push(u.rotate_about(pt, _cen, u.deg2rad(r)));
             }
         }
         return corners;
@@ -467,8 +490,8 @@ Hive.App = function(init_state, opts) {
             (dims[1 - fit_coord] - scaled[1 - fit_coord]) / 2;
 
         if (opts.doit) {
-            o.pos_set(pos);
-            o.dims_set(scaled);
+            o.pos_relative_set(pos);
+            o.dims_relative_set(scaled);
         }
         return { pos: pos, dims: scaled };
     };
@@ -868,13 +891,14 @@ Hive.App.Image = function(o) {
     };
     o.color = function(){ return o.css_state['background-color'] || '#FFFFFF' };
     o.color_set = o.css_setter('background-color');
-    Hive.App.has_color(o)
+    // Hive.App.has_color(o)
+    o.stroke = function(){ return o.css_state['border-color'] || '#000' };
+    o.stroke_set = o.css_setter('border-color');
     o.border_width = function(){ return parseInt(o.css_state['border-width'] || 0) };
     o.border_width_set = function(v) {
         o.css_setter_px('border-width')(v);
         o.layout();
     }
-    Hive.App.has_border_width(o);
 
     var _state_update = o.state_update, _state_relative = o.state_relative
         ,_state_relative_set = o.state_relative_set
@@ -929,13 +953,13 @@ Hive.App.Image = function(o) {
         o.img.css('width', o.dims()[0] + 'px');
         // fit and crop as needed
         if (o.init_state.fit) {
-            var opts = { dims:o.dims(), pos:o.pos(), fit:o.init_state.fit, 
+            var opts = { dims:o.dims_relative(), pos:o.pos_relative(), fit:o.init_state.fit, 
                 doit: (o.init_state.fit != 2), // Cropping needed, wait on execution
                 scaled: [imageWidth, imageHeight] };
             var new_layout = o.fit_to(opts);
             if (opts.fit == 2) {
                 o.init_state.scale_x = new_layout.dims[0] / opts.dims[0];
-                o.init_state.offset = u._add(new_layout.pos)(u._mul(-1)(opts.pos));
+                o.init_state.offset = u._sub(new_layout.pos, opts.pos);
                 o.init_state.offset = u._mul( 1 / opts.dims[0] /
                     o.init_state.scale_x)(o.init_state.offset);
             }
@@ -1112,7 +1136,7 @@ Hive.App.Image = function(o) {
         return o.dims_relative()[0] / o.aspect + off;
     }
     o.layout = function() {
-        _layout();
+        if (_layout()) return true;
         var dims = o.dims(), scale_x = o.init_state.scale_x || 1,
             scale_y = scale_x / o.aspect;
         o.img.css({ 'width': scale_x * dims[0], 'height': scale_y * dims[0] })
@@ -1148,6 +1172,17 @@ Hive.App.Image = function(o) {
     o.state_update(o.init_state);
     o.url_set(o.init_state.url);
     Hive.App.has_image_drop(o);
+    Hive.App.has_border_width(o);
+    Hive.App.has_color(o, "stroke");
+    function fixup_controls(o) {
+        var has_border = false
+        env.Selection.each(function(i, a) {
+            has_border |= (a.border_width && a.border_width() > 0)
+        })
+        o.div.find('.buttons .button.stroke').showhide(has_border);
+    };
+    o.make_controls.push(fixup_controls);
+
     return o;
 }
 Hive.registerApp(Hive.App.Image, 'hive.image');
@@ -1191,7 +1226,7 @@ Hive.App.has_ctrl_points = function(o){
 
         var _layout = o.layout
         o.layout = function(){
-            _layout()
+            if (_layout()) return true;
 
             js.range(app.points_len()).map(function(i){
                 var p = u._mul(app.point(i))(env.scale())
@@ -1730,7 +1765,7 @@ Hive.App.Audio = function(o) {
     Hive.has_scale(o);
     var _layout = o.layout;
     o.layout = function() {
-        _layout();
+        if (_layout()) return true;
         o.div.css('font-size', (env.scale() * o.scale()) + 'em');
         var height = o.div.find('.jp-interface').height();
         o.div.find('.jp-button').width(height).height(height);
@@ -2368,6 +2403,9 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
         , min:0       // minimum setting on range
         , max:100     // maximum setting on range
         , quant:0     // quantization of slider (1 ==> integers .1 ==> integer/10, etc)
+        , clamp:true  // disallow values outside [min, max]
+        , clamp_min:true  // disallow values outside [min, max]
+        , clamp_max:true  // disallow values outside [min, max]
         , handle:$()  // provide the handle selector instead of looking for it
         , container:null // add controls to container instead of menu
         , handle_name:"" // provide a generic button's name instead of an icon
@@ -2375,7 +2413,8 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
     var handle = opts.handle, min = opts.min, max = opts.max
         , container = opts.container, menu_opts = opts.menu_opts
         , initial, val, initialized = false, handle_name = opts.handle_name
-        , quant = opts.quant
+        , quant = opts.quant, clamp_min = opts.clamp_min && opts.clamp
+        , clamp_max = opts.clamp && opts.clamp_max
     function controls(o) {
         if (opts.single && !o.single()) return
         if(!start) start = noop
@@ -2425,9 +2464,11 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
             }
         }
         var clamp_set = function(n) {
+            val = n
             if (quant)
-                n = Math.round(n * quant) * quant;
-            val = js.bound(n, min, max);
+                val = Math.round(val / quant) * quant;
+            if (clamp_min) val = Math.max(val, min)
+            if (clamp_max) val = Math.min(val, max)
             set(val)
             return val
         }
@@ -2568,7 +2609,7 @@ Hive.App.has_border_width = function(o) {
             history_point.save()
             sel.reframe()
         }
-        ,{max:20}
+        ,{max:20, quant:1}
     )
 }
 Hive.App.has_stroke_width = function(o) {

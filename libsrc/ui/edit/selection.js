@@ -67,18 +67,22 @@ o.Selection = function(o) {
         ev.stopPropagation()
         app_clicking = ev.data
 
-        if(!o.count() || o.is_multi(ev) || ev.data)
+        var hit = false
+        if(o.controls && $.contains(o.controls.div.get(0), ev.target))
+            hit = true
+        else if ($(ev.target).closest(".control").length)
+            hit = true
+
+        if (!hit)
+            $(":focus").blur()
+
+        if(hit || !o.count() || o.is_multi(ev) || ev.data)
             return
 
-        var hit = false
         o.each(function(i, el){
             if( el.controls && $.contains(el.controls.div.get(0), ev.target) )
                 hit = true
         })
-        if(o.controls && $.contains(o.controls.div.get(0), ev.target))
-            hit = true
-        if ($(ev.target).closest(".control").length)
-            hit = true
         if(!hit)
             o.unfocus()
     }
@@ -96,9 +100,9 @@ o.Selection = function(o) {
 
         if (context.flags.shift_does_raise && ev.shiftKey) {
             if(u.is_ctrl(ev))
-                app.stack_bottom()
+                app.stack_bottom(ev)
             else
-                app.stack_top()
+                app.stack_top(ev)
             return
         }
         if(o.is_multi(ev)){
@@ -311,6 +315,7 @@ o.Selection = function(o) {
     };
     o.move_relative = function(delta, axis_lock, snapping){
         if(!ref_pos) return;
+        env.Apps.begin_layout();
         if(axis_lock)
             delta[ Math.abs(delta[0]) > Math.abs(delta[1]) ? 1 : 0 ] = 0;
         var pos = u._add(ref_pos)(delta);
@@ -334,6 +339,7 @@ o.Selection = function(o) {
         if (full_apps.length)
             o.pushing_move(pos);
         drag_target.pos_relative_set(pos);
+        env.Apps.end_layout();
         //o.layout();
     };
     o.move_handler = function(ev, delta){
@@ -544,15 +550,15 @@ o.Selection = function(o) {
             return function() { return env.tiling[param] } }
         hive_app.App.has_slider_menu(o, ".change_aspect"
             ,set_tiling_param("aspect"), get_tiling_param("aspect"), null, null
-            ,{ min: .30, max: 3.0
+            ,{ min: .30, max: 3.0, quant: .1
         })
         hive_app.App.has_slider_menu(o, ".change_padding"
             ,set_tiling_param("padding"), get_tiling_param("padding"), null, null
-            ,{ min: -30, max: 30
+            ,{ min: -30, max: 30, quant: 1, clamp: false
         })
         hive_app.App.has_slider_menu(o, ".change_columns"
             ,set_tiling_param("columns"), get_tiling_param("columns"), null, null
-            ,{ min: 1, max: 10.0
+            ,{ min: 1, max: 10.0, quant: .1, clamp_max: false
         })
     }
     o.unfocus = function(app){
@@ -616,7 +622,8 @@ o.Selection = function(o) {
         var load_count = elements.length, copies, _load = opts.load;
         opts = $.extend({ 
             offset: [ 0, o.dims()[1] + 20 ],
-            'z_offset': elements.length },
+            // 'z_offset': elements.length 
+            },
             opts)
         opts.load = function(){
             load_count--;
@@ -628,9 +635,7 @@ o.Selection = function(o) {
             }
         };
         env.History.begin();
-        copies = $.map( elements, function(e){
-            return e.copy(opts)
-        });
+        var copies = hive_app.Apps.copy(elements, opts)
         env.History.group('copy group');
         return copies;
     }
@@ -646,16 +651,46 @@ o.Selection = function(o) {
     o.get_stack = function(){
         return elements.sort(function(a, b){ a.layer() - b.layer() });
     };
-    o.stack_top = function(){
+    o.stack_top = function(ev){
+        if (!ev.shiftKey) {
+            return o.stack_shift(1)
+        }
         env.History.begin();
         $.each(o.get_stack(), function(i, el){ el.stack_top() })
         env.History.group('stack group to top');
     };
-    o.stack_bottom = function(){
+    o.stack_bottom = function(ev){
+        if (!ev.shiftKey) {
+            return o.stack_shift(-1)
+        }
         env.History.begin();
         $.each(o.get_stack().reverse(), function(i, el){ el.stack_bottom() })
         env.History.group('stack group to bottom');
     };
+    o.stack_shift = function(offset) {
+        env.History.begin();
+        var overlaps = u.overlapped_apps(u.region_from_app(o))
+            , elements = o.get_stack(), pad = -1
+        if (offset < 0) {
+            elements.reverse()
+            pad = 0
+        }
+        overlaps = u.except(overlaps, elements)
+        var z_indexes = $.map(overlaps, function(a) { return a.layer(); })
+        z_indexes.sort()
+
+        $.map(elements, function(a) {
+            var layer = a.layer()
+            for (var i = 0; i < z_indexes.length; i++)
+                if (layer < z_indexes[i])
+                    break;
+            i = js.bound(i + offset + pad, 0, z_indexes.length - 1)
+            var new_layer = z_indexes[i];
+            if (u._sign(new_layer - layer) == u._sign(offset))
+                a.stack_to(new_layer)
+        })
+        env.History.group('stack group ' + ((offset > 0) ? 'up' : 'down'));
+    }
 
     var parent = o;
     o.make_controls.push(function(o){
@@ -685,8 +720,8 @@ o.Selection = function(o) {
                     else return true
                 },
             46: function(){ o.remove() }, // del
-            66: function(){ o.stack_bottom() }, // b
-            84: function(){ o.stack_top() }, // t
+            66: function(){ o.stack_bottom(ev) }, // b
+            84: function(){ o.stack_top(ev) }, // t
         }
         if(handlers[ev.keyCode]){
             if(handlers[ev.keyCode]()) return;

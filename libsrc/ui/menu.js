@@ -6,7 +6,7 @@ define([
 function noop(){}
 
 var mobile_opts = { hover: false, hover_close: false };
-var shield = $("<div id='menu_shield'>");
+
 var menu = function(handle, drawer, options) {
     var handle = $(handle), drawer = $(drawer), o = { handle : handle, drawer : drawer },
         menu_items = drawer.find('.menu_item'), close_timer = false,
@@ -81,10 +81,10 @@ var menu = function(handle, drawer, options) {
         clearTimeout(close_timer);
         close_timer = false;
         if(!opts.close_condition()) return;
+        $.map(o.menus, function(m){ m.close(force) });
         if(!o.opened) return;
 
         if(o.sticky) return;
-        $.map(o.menus, function(m){ m.close(force) });
 
         o.do_close();
 
@@ -92,8 +92,10 @@ var menu = function(handle, drawer, options) {
         opts.close();
         handle.data('busy', false);
         handle.removeClass('active');
-        if (!menu.menus.filter(function(m) { return m.opened; } ).length)
-            shield.remove();
+        // Unset the handler if all menus are closed
+        if (!o.menus.filter(function(m) { return m.opened; } ).length) {
+            menu.remove_menu_shield();
+        }
 
         return o;
     }
@@ -123,9 +125,8 @@ var menu = function(handle, drawer, options) {
         if(o.opened) return;
 
         o.opened = true;
-        if (!opts.hover && !shield.parent().length) {
-            shield.appendTo($("body"));
-            shield.on("click", function(ev) { menu.close_all(); } );
+        if(!shield_handler) {
+            menu.set_menu_shield();
         }
 
         if( opts.group.current && (opts.group.current != o) )
@@ -147,6 +148,7 @@ var menu = function(handle, drawer, options) {
         if(opts.layout) o.layout();
 
         opts.open();
+
         return o;
     };
 
@@ -270,7 +272,7 @@ var menu = function(handle, drawer, options) {
             menu.close_all(); 
         } );
     handle.unbind('click').click(function(){
-        if(o.opened && opts.default_item.length && opts.hover) {
+        if(opts.default_item.length && opts.hover) {
             menu.close_all();
             opts.default_item.click();
         } else if (o.opened && !opts.hover_close) {
@@ -282,9 +284,10 @@ var menu = function(handle, drawer, options) {
     if(opts.focus_persist){
         drawer.find('input[type=text],input[type=password],textarea').on('click keydown', function(){
             o.sticky = true;
-        }).on('blur', function(){
+        }).on('blur', function(ev){
             o.sticky = false;
-            o.delayed_close(true);
+            if ($(ev.target).closest(".drawer").length == 0)
+                o.delayed_close(true);
         }).on('focus', o.cancel_close);
         drawer.mousedown(function(){ setTimeout(o.cancel_close, 1) });
     }
@@ -300,8 +303,41 @@ var menu = function(handle, drawer, options) {
     return o;
 }
 
+var global_handler = function(name, handler) {
+    var bodyEle = $("body").get(0);
+    if(bodyEle.addEventListener) {
+        bodyEle.addEventListener(name, handler, true);
+    } else if(bodyEle.attachEvent) {
+        handler = function(){
+            var event = window.event;
+            handler(event)
+        };
+        document.attachEvent("on" + name, handler)
+    }
+    return handler
+}
+var global_handler_off = function(name, handler) {
+    var bodyEle = $("body").get(0);
+    if(bodyEle.removeEventListener) {
+       bodyEle.removeEventListener(name, handler, true);
+    } else if(bodyEle.detachEvent) {
+       document.detachEvent("on" + name, handler);
+    }
+}
+
+var shield_handler = null;
+menu.set_menu_shield = function() {
+    shield_handler = global_handler("click", function(ev) {
+        if ($(ev.target).closest(".drawer").length == 0)
+            menu.close_all()    
+    })
+}
+menu.remove_menu_shield = function() {
+    global_handler_off("click", shield_handler)
+    shield_handler = null;
+}
 menu.close_all = function() {
-    $.each(menu.menus, function(i,m) { m.close(true); } ) 
+    $.each(menu.menus, function(i,m) { m.close(true); } )
 }
 menu.menus = [];
 

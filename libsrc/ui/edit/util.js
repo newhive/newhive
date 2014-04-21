@@ -25,6 +25,14 @@ define([
 var o = {}
     ,bound = js.bound;
 
+// For performance-critical ops, do not use jquery style
+o.inline_style = function(el, styles) {
+    var el_style = el.style
+    $.each(styles, function(style_name, style_val) {
+        el_style[style_name] = style_val + 'px'
+    })
+}
+
 // Returns true for a pseudo-control key (control on real computers, meta on macs)
 o.is_ctrl = function(ev){
     ev = ev || env.ev;
@@ -306,44 +314,68 @@ o.topo_cmp = function(app1, app2) {
         return b[1] - a[1];
     return b[0] - a[0];
 }
-o.retile = function() {
-    var opts = $.extend({}, env.tiling)
+o.retile = function(opts) {
+    opts = $.extend({ 
+            start_pos:env.Selection.min_pos().slice()
+            ,width:env.Selection.max_pos()[0] - env.Selection.min_pos()[0]
+        }
+        ,env.tiling, opts)
     var apps = env.Selection.sorted()
     env.History.change_start(apps)
-    opts.width = env.Selection.max_pos()[0] - env.Selection.min_pos()[0]
-    opts.start_pos = env.Selection.min_pos().slice()
+    env.Apps.begin_layout()
+    if (opts.natural) {
+        opts.aspects = apps.map(function(a) { return a.aspect || a.get_aspect() })
+    } else {
+        opts.aspects = apps.map(function(a) { return a.get_aspect() })
+    }
     var regions = o.tile_magic(apps.length, opts)
     for (var i = 0; i < apps.length; ++i) {
         var app = apps[i]
-        app.pos_relative_set(regions[i][0])
-        app.dims_relative_set(regions[i][1])
+        if (opts.natural && app.aspect) {
+            app.fit_to({pos:regions[i][0], dims:regions[i][1]
+                , scaled:[app.aspect,1]})
+        } else {
+            app.pos_relative_set(regions[i][0])
+            app.dims_relative_set(regions[i][1])
+        }
         if (app.recenter) app.recenter()
     }
+    env.Apps.end_layout()
     env.History.change_end("retile", {collapse: true})
 }
 // return an ordered list of count [pos, dims] pairs to tile
 o.tile_magic = function(count, opts) {
     opts = $.extend({
-        columns:3 // max columns in any row
-        ,width:1000 // width to fill
-        ,aspect:1.61 // preferred aspect ratio of elements
-        ,padding:env.padding() // padding between elements
-        ,start_pos: [0, 0] // where to position the 0th element
+        columns:3               // max columns in any row
+        ,width:1000             // width to fill
+        ,aspect:1.61            // preferred aspect ratio of elements
+        ,padding:env.padding()  // padding between elements
+        ,start_pos: [0, 0]      // where to position the 0th element
+        ,aspects:[]             // list of aspects for each object
     }, opts)
     var max_columns = opts.columns, row_width = opts.width, aspect = opts.aspect
         ,padding = opts.padding, start_pos = opts.start_pos
         ,rows = Math.ceil(count / max_columns), pos = start_pos.slice()
         ,remainder = count, mod = count / rows, surplus = 0
-        ,res = []
+        ,res = [], n = 0
     for (var y = 0; y < rows; ++y) {
         surplus += mod
         var columns = Math.round(surplus)
             ,total_pad = (columns - 1)*padding
-            ,width = (row_width - total_pad) / columns
-            ,dims = [width, width/aspect]
+            ,total_width = (row_width - total_pad)
+            ,dims = [aspect, 1]
+            ,first_n = n, row_aspect = 0
         for (var x = 0; x < columns; ++x) {
+            var new_aspect = opts.aspects[n++] || aspect
+            row_aspect += new_aspect
+        }
+        dims[1] = total_width / row_aspect
+        n = first_n
+        for (var x = 0; x < columns; ++x) {
+            var new_aspect = opts.aspects[n++] || aspect
+            dims[0] = dims[1] * new_aspect
             res.push([pos.slice(), dims.slice()])
-            pos[0] += width + padding
+            pos[0] += dims[0] + padding
         }
         pos[0] = start_pos[0]
         pos[1] += dims[1] + padding
@@ -515,16 +547,16 @@ o.new_file = function(files, opts, app_opts, filter) {
     // list. Multiple images should be placed in a table, or slide-show
     env.History.begin();
     if (context.flags.tile_multiple_images && files.length > 1) {
-        var width = 1000, columns = 3.5, padding = 10
+        var gutter = 20, width = 1000-2*gutter, columns = 3.5, padding = env.padding()
         if (opts.dimensions) width = opts.dimensions[0]
         columns = Math.max(1, columns * width / 1000)
         var start_pos = opts.position || 
-            [0, Math.max(0, o.app_bounds(env.Apps.all()).bottom) + padding]
+            [gutter, Math.max(0, o.app_bounds(env.Apps.all()).bottom) + padding]
         var regions = o.tile_magic(files.length, {start_pos:start_pos, columns:columns
             ,aspect: 1.61, width:width, padding:padding 
         })
     }
-    var loaded_count = files.length;
+    var loaded_count = 0;
     var apps = $.map(files, function(file, i){
         var app = $.extend({ file_name: file.name, file_id: file.id,
             file_meta: file.meta }, opts);
@@ -564,9 +596,14 @@ o.new_file = function(files, opts, app_opts, filter) {
         if (filter && !filter(app))
             return;
 
+        loaded_count++;
         var loaded = function() {
-            // if (!--loaded_count)
-            //     env.Selection.update(apps)
+            if (!--loaded_count && context.flags.tile_multiple_images 
+                && files.length > 1) {
+                env.Selection.update(apps)
+                o.retile({natural:1})//, start_pos:start_pos})
+                env.Selection.scroll_to_view();
+            }
         }
         if (!context.flags.tile_multiple_images)
             return env.new_app(app, $.extend({ offset: [20*i, 20*i] }, app_opts) );

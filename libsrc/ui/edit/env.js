@@ -11,6 +11,7 @@ env.copy_table = false;
 // The editor is 1000 units wide inside a 1000*scale pixel window
 var scale = 1, zoom = 1, padding = 10
 o.scale_set = function(){
+    env.win_size = [$(window).width(), $(window).height()]
     scale = zoom * $(window).width() / 1000;
 };
 o.scale = function(){
@@ -53,7 +54,8 @@ o.History.init = function(){
         post_change = env.Selection.update;
         var action_group = o.splice(group_start, group_length);
         o.save(
-            function(){ $.map(action_group, function(e){ e.undo() }); post_change() },
+            function(){ $.map(action_group.slice().reverse(), 
+                function(e){ e.undo() }); post_change() },
             function(){ $.map(action_group, function(e){ e.redo() }); post_change() },
             name
         );
@@ -151,7 +153,7 @@ o.History.init = function(){
         }, opts)
         var new_states = get_states(), targets = save_targets.pop().slice()
             ,start_states = old_states.pop().slice()
-            ,last_save = o.slice(o.current - 1)[0]
+            ,last_save = o.slice(o.current)[0]
             ,undo = function(){ $.each(targets, function(i, a){
                 a.state_relative_set(start_states[i]) }) }
             ,redo = function(){ $.each(targets, function(i, a){
