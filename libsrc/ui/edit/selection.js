@@ -420,14 +420,16 @@ o.Selection = function(o) {
             _ref_dims = elements[0].dims();
             elements[0].dims_ref_set();
         }
+        // env.History.begin();
         env.History.change_start(full_apps.length);
     }
     o.after_resize = function() {
         o.each(function(i, a) { 
-            if (a.resize_end) a.resize_end(); });
+            if (a.resize_end) a.resize_end(true /* skip history */); });
 
         o.update_relative_coords();
         env.History.change_end('resize');
+        // env.History.group('resize');
 
         full_apps = [];
         drag_target = ref_dims = undefined;
