@@ -66,9 +66,10 @@ define([
         // }
         o.layout = function(){
             var this_dia = o.opts.dialog, _width = this_dia.data("_width")
-            if (_width > $(window).width())
+            if(_width > $(window).width()){
                 _width = $(window).width()
-            this_dia.css("width", _width)
+                // this_dia.css("width", _width)
+            }
             if (util.mobile()) {
                 var s = $(window).width() / _width
                 s = Math.min(s, $(window).height() / util.val(this_dia.css("height")))
