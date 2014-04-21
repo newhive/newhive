@@ -369,9 +369,10 @@ Hive.App = function(init_state, opts) {
             ,width: Math.round(dims[0]), height: Math.round(dims[1])});
         if(o.controls)
             o.controls.layout();
-        // TODO-cleanup: have selection handle control creation
-        if(env.Selection && u.array_equals(env.Selection.elements(), [o]))
-            env.Selection.layout();
+        // If this app == selection, update selection. 
+        if(env.Selection && u.array_equals(env.Selection.elements(), [o])) {
+            env.Selection.update_relative_coords();
+        }
     };
 
     o.pos_relative = function(){ return _pos.slice(); };
@@ -746,18 +747,18 @@ Hive.App.Code = function(o){
         o.stop();
         insert_code()
 
-            curl([o.module_name()], function(module) {
-                module.run && module.run();
-                if(!module.animate) return
-                var animate_frame = function(){
-                    module.animate()
-                    // TODO-compat: if requestAnimationFrame not supported,
-                    // fallback to setTimeout
-                    if(animate_go) requestAnimationFrame(animate_frame)
-                }
-                animate_go = 1
-                animate_frame()
-            })
+        curl([o.module_name()], function(module) {
+            module.run && module.run();
+            if(!module.animate) return
+            var animate_frame = function(){
+                module.animate()
+                // TODO-compat: if requestAnimationFrame not supported,
+                // fallback to setTimeout
+                if(animate_go) requestAnimationFrame(animate_frame)
+            }
+            animate_go = 1
+            animate_frame()
+        })
     }
     o.stop = function() {
         // insert_code();
@@ -897,6 +898,8 @@ Hive.App.Image = function(o) {
     o.border_width = function(){ return parseInt(o.css_state['border-width'] || 0) };
     o.border_width_set = function(v) {
         o.css_setter_px('border-width')(v);
+        if (env.Selection.controls)
+            fixup_controls(env.Selection.controls);
         o.layout();
     }
 
@@ -2493,7 +2496,7 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
             val = v/100*(max - min) + min
             clamp_set(val)
             update_val()
-            num_input.val(val)
+            // num_input.val(val)
         })
 
         num_input.on('input keyup change', function(ev){
@@ -2502,6 +2505,7 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
             if(isNaN(v)) return;
             val = v;
             clamp_set(val);
+            update_val()
         })
 
         return o

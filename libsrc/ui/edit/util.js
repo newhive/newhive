@@ -341,6 +341,7 @@ o.retile = function(opts) {
         if (app.recenter) app.recenter()
     }
     env.Apps.end_layout()
+    env.Selection.update_relative_coords();
     env.History.change_end("retile", {collapse: true})
 }
 // return an ordered list of count [pos, dims] pairs to tile
@@ -612,7 +613,8 @@ o.new_file = function(files, opts, app_opts, filter) {
     });
     env.History.group('create');
     env.Selection.update(apps);
-    env.Selection.scroll_to_view();
+    if (regions)
+        env.Selection.scroll_to_view();
     return apps;
 };
 
