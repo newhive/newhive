@@ -179,7 +179,11 @@ define([
         animate_frame()
     }
 
+    var visible = false
     o.show = function(){
+        if(visible) return
+        visible = true
+    
         o.paging_sent = false;
         // if(!Hive.expr) return;
 
@@ -206,6 +210,7 @@ define([
         })
     }
     o.hide = function(){
+        visible = false
         $('.hive_html').each(function(i, div) {
             var $div = $(div);
             if ($div.html() == '') return;
