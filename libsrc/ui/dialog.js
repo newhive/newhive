@@ -50,6 +50,7 @@ define([
         }
         var o = $.extend({
             opts: opts
+            dialog: opts.dialog
         }, o);
         opts.dialog.data('dialog', o);
         factory.dialogs.push(o);
@@ -116,6 +117,8 @@ define([
             o.layout();
 
             opts.open();
+
+            return o
         };
 
         o.close = function() {
