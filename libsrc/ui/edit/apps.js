@@ -907,8 +907,8 @@ Hive.App.Image = function(o) {
         ,_state_relative_set = o.state_relative_set
     o.state_relative = function() {
         s = _state_relative()
-        s.scale_x = o.init_state.scale_x
-        s.offset = o.init_state.offset.slice()
+        if (o.init_state.scale_x) s.scale_x = o.init_state.scale_x
+        if (o.init_state.offset) s.offset = o.init_state.offset.slice()
         return s
     }
     o.state_relative_set = function(s) {
