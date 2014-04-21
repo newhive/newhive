@@ -114,6 +114,8 @@ body.edit {
 }
 .menu_item.change_zoom img { height: 30px; margin-left: -10px; }
 
+// So that using the form doesn't cause the window to scroll
+#media_upload { position: fixed; }
 #bg {
     z-index: 1;
 }
