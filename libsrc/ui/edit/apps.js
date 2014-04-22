@@ -1088,9 +1088,9 @@ Hive.App.Image = function(o) {
             o.div_aspect = dims[0] / dims[1];
             o.dims_relative_set(dims);
         };
-        o.resize_end = function() {
+        o.resize_end = function(skip_history) {
             if(!drag_hold) 
-                return _resize_end();
+                return _resize_end(skip_history);
             history_point.save();
             o.long_hold_cancel();
         };
@@ -1396,8 +1396,8 @@ Hive.App.Polygon = function(o){
         })
         o.size_update(o.dims_relative())
     }
-    o.resize_end = function(){
-        _resize_end()
+    o.resize_end = function(skip_history){
+        _resize_end(skip_history)
         o.transform_start(0)
         o.reframe()
     }
@@ -2166,11 +2166,11 @@ Hive.App.has_resize = function(o) {
         return dims
     }
 
-    o.resize_end = function(){ 
+    o.resize_end = function(skip_history){ 
         u.set_debug_info("");
         $(".ruler").hidehide();
-        var skip_history = false;
-        if (o.after_resize) skip_history = o.after_resize();
+        // skip_history = false;
+        if (o.after_resize) skip_history |= o.after_resize();
         if (!skip_history) history_point.save();
         if (env.Selection.selected(o)) 
             env.Selection.update_relative_coords();
