@@ -73,9 +73,6 @@ o.Selection = function(o) {
         else if ($(ev.target).closest(".control").length)
             hit = true
 
-        if (!hit)
-            $(":focus").blur()
-
         if(hit || !o.count() || o.is_multi(ev) || ev.data)
             return
 
@@ -92,7 +89,7 @@ o.Selection = function(o) {
 
         var app_clicked = app_clicking
         app_clicking = false
-        if(o.dragging) return
+        if(dragging) return
 
         var app = ev.data;
         // must be mouseup on an app that was mousedowned
@@ -112,31 +109,32 @@ o.Selection = function(o) {
         else o.update([ app ])
     }
 
-    var dragging = false, drag_target;
+    var dragging = false, drag_target, selecting = false;
     o.drag_target = function(){ return drag_target; };
     o.dragstart = function(ev, dd){
-        if(o.dragging) return
-        o.dragging = true;
+        if(dragging) return
+        dragging = true;
         var app = ev.data;
-        if(app){
+        if(app && !u.is_ctrl(ev)) {
             // If target is in selection, drag whole selection
             if(elements.indexOf(ev.data) >= 0)
                 drag_target = o;
             else
                 drag_target = ev.data;
-            if (u.is_ctrl(ev)) {
-                // ctrl + drag = duplicate
+            if (ev.altKey) {
+                // alt + drag = duplicate
                 drag_target.copy({offset:[0, 0]})
             }
             o.hide_controls()
             o.move_start();
             return;
-        } 
+        }
         // Otherwise, we are changing selection via dragging on the background.
         if(env.gifwall) {
-            o.dragging = false;
+            dragging = false;
             return;
         }
+        selecting = true
         o.offset = env.apps_e.offset().left;
         u.reset_sensitivity();
 
@@ -156,13 +154,13 @@ o.Selection = function(o) {
         }
     };
     o.drag = function(ev, dd){
-        if (!o.dragging) return;
+        if (!dragging) return;
         ev.stopPropagation()
 
         var delta = [dd.deltaX, dd.deltaY];
         o.sensitivity = u.calculate_sensitivity(delta);
         var app = ev.data;
-        if(app){
+        if(app && !selecting){
             o.move_handler(ev, delta);
             return
         }
@@ -176,23 +174,25 @@ o.Selection = function(o) {
         o.update_focus(ev);
     };
     o.dragend = function (ev, dd) {
-        if(!o.dragging) return;
-        o.dragging = false;
+        if(!dragging) return;
+        dragging = false;
         o.show_controls()
 
         var app = ev.data;
-        if(app){
+        if(app && !selecting){
             o.move_end();
             return false;
         }
 
         if(!o.drag_dims) return;
         o.select_box.remove();
-        if(o.pos) o.update_focus();
+        if(o.pos) o.update_focus(ev);
         if(o.div) o.div.remove();
         o.update(elements);
+        selecting = false
         return false;
     }
+    var old_mod = false, old_selection = []
     o.update_focus = function(event){
         var s = env.scale();
         var select = { 
@@ -201,14 +201,16 @@ o.Selection = function(o) {
             top: (o.drag_pos[1] - o.offset) / s, 
             bottom: (o.drag_pos[1] + o.drag_dims[1]) / s, 
         };
-        o.old_selection = o.new_selection;
-        o.new_selection = u.overlapped_apps(select);
-        if (o.old_selection.length != o.new_selection.length){
-            if (u.is_ctrl(event))
-                o.update($(u.except(o.initial_elements, o.new_selection)));
+        var new_selection = u.overlapped_apps(select);
+        var new_mod = event.shiftKey;
+        if (old_selection.length != new_selection.length || new_mod != old_mod){
+            if (new_mod)
+                o.update($(u.except(o.initial_elements, new_selection)));
             else
-                o.update($.unique($.merge(o.new_selection, o.initial_elements)));
+                o.update($.unique($.merge(new_selection, o.initial_elements)));
         }
+        old_mod = new_mod;
+        old_selection = new_selection;
     };
 
     // We handle our own history
@@ -420,14 +422,16 @@ o.Selection = function(o) {
             _ref_dims = elements[0].dims();
             elements[0].dims_ref_set();
         }
+        // env.History.begin();
         env.History.change_start(full_apps.length);
     }
     o.after_resize = function() {
         o.each(function(i, a) { 
-            if (a.resize_end) a.resize_end(); });
+            if (a.resize_end) a.resize_end(true /* skip history */); });
 
         o.update_relative_coords();
         env.History.change_end('resize');
+        // env.History.group('resize');
 
         full_apps = [];
         drag_target = ref_dims = undefined;
@@ -528,7 +532,7 @@ o.Selection = function(o) {
         if(apps.length > 1) {
             o.multi_controls();
         }
-        if(!o.dragging && multi) {
+        if(!dragging && multi) {
             Controls(o, false);
             o.controls.layout();
         }
@@ -670,10 +674,10 @@ o.Selection = function(o) {
     o.stack_shift = function(offset) {
         env.History.begin();
         var overlaps = u.overlapped_apps(u.region_from_app(o))
-            , elements = o.get_stack(), pad = -1
+            , elements = o.get_stack(), up_offset = -1
         if (offset < 0) {
             elements.reverse()
-            pad = 0
+            up_offset = 0
         }
         overlaps = u.except(overlaps, elements)
         var z_indexes = $.map(overlaps, function(a) { return a.layer(); })
@@ -684,7 +688,7 @@ o.Selection = function(o) {
             for (var i = 0; i < z_indexes.length; i++)
                 if (layer < z_indexes[i])
                     break;
-            i = js.bound(i + offset + pad, 0, z_indexes.length - 1)
+            i = js.bound(i + offset + up_offset, 0, z_indexes.length - 1)
             var new_layer = z_indexes[i];
             if (u._sign(new_layer - layer) == u._sign(offset))
                 a.stack_to(new_layer)
