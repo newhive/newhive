@@ -184,7 +184,7 @@ class Expr(ModelController):
             if app['type'] == 'hive.code':
                 data.update(dfilter(app, ['content', 'url']))
             if app['type'] == 'hive.image':
-                data.update(url=app.get('url'))
+                data.update(dfilter(app, ['url']))
             if data:
                 data['type'] = app['type']
                 client_data[app['id']] = data
