@@ -1,15 +1,15 @@
 <div id='edit_nav' class='edit nav overlay'
-  ><div class='center pad'><img id='btn_undo' title='undo' class='hoverable'
+  ><div class='center pad'><img id='btn_undo' title='Undo' class='hoverable'
     src='{"skin/edit/undo.png"|asset}'></div
-  ><div class='center'><img id='btn_redo' title='redo' class='hoverable'
+  ><div class='center'><img id='btn_redo' title='Redo' class='hoverable'
     src='{asset "skin/edit/redo.png"}'></div
-  ><div class='change_zoom center'><img title='zoom' class='hoverable'
+  ><div class='change_zoom center'><img title='Zoom' class='hoverable'
     src='{asset "skin/1/zoom.png"}'></div
   ><div class='change_zoom icon hoverable'></div
   ><div class='fluff pad'></div
-  ><div class='fluff center pad handle misc'><img title="misc" src='{asset "skin/edit/grid-off.png"}'></div
+  ><div class='fluff center pad handle misc'><img title="Misc" src='{asset "skin/edit/grid-off.png"}'></div
   ><div class='fluff smpad'></div
-  ><div class='fluff center hoverable text text_btn black_active' title="editor help" id='btn_help'>?</div
+  ><div class='fluff center hoverable text text_btn black_active' title="Editor help" id='btn_help'>?</div
   ><div id='btn_save' class='save upper text text_btn hoverable center pad black_active'
     >Save <div class='inline arrow'></div>
     <img src='{asset "skin/edit/loading.gif"}' class='hide loading'
@@ -18,13 +18,13 @@
 
 <div class='menu drawer medbold hide' data-handle=".handle.misc">
   <div class='menu_item'>
-    <img id='btn_grid' title="show grid" src='{asset "skin/edit/grid-off.png"}'>
+    <img id='btn_grid' title="Show grid" src='{asset "skin/edit/grid-off.png"}'>
   </div>
   <div class='menu_item change_zoom icon hoverable'>
-    <img title='zoom' class='hoverable' src='{asset "skin/1/zoom.png"}'>
+    <img title='Zoom' class='hoverable' src='{asset "skin/1/zoom.png"}'>
   </div>
   <div class='menu_item change_padding icon hoverable'>
-    <img title='universal padding / snapping' class='hoverable' src='{asset "skin/edit/padding.png"}'>
+    <img title='Universal padding / snapping' class='hoverable' src='{asset "skin/edit/padding.png"}'>
   </div>
 </div>
 <div class="dialog iframe" id="dia_editor_help" data-handle="#btn_help">
@@ -101,23 +101,33 @@
 </div>
 
 <div id='controls_common' class='controls_src'>
- <img class='control remove tip_NE' src='{asset "skin/edit/delete_app.png"}' title='delete'>
- <div class='control stack'><img class='stack_up hoverable' src='{asset "skin/edit/stack_up.png"}' title='move to front'><img class='stack_down hoverable' src='{asset "skin/edit/stack_down.png"}' title='move to back'></div>
+ <img class='control remove tip_NE' src='{asset "skin/edit/delete_app.png"}' title='Delete'>
+ <div class='control stack'><img class='stack_up hoverable' src='{asset "skin/edit/stack_up.png"}' title='Move to front'><img class='stack_down hoverable' src='{asset "skin/edit/stack_down.png"}' title='Move to back'></div>
  <img class='control copy tip_N' src='{asset "skin/edit/copy.png"}'
-   title='duplicate element'>
+   title='Duplicate element'>
 </div>
 
 <div id='controls_text' class='controls_src'>
  <div class='control buttons'
-  ><img class='button link tip_W'     src='{asset "skin/edit/link.png"}' title='link'
-  ><!--<img class='button fontsize' src='{asset "skin/edit/text_size.png"}'
-  >--><img class='button fontname'           src='{asset "skin/edit/font.png"}'
-  ><img class='button color'              src='{asset "skin/edit/color.png"}'
-  ><img class='button bold'     src='{asset "skin/edit/bold.png"}'     cmd='+bold'
-  ><img class='button italic'   src='{asset "skin/edit/italic.png"}'   cmd='+italic'
-  ><img class='button align'              src='{asset "skin/edit/justify.png"}'  
-  ><img class='button unformat' src='{asset "skin/edit/unformat.png"}' cmd='+removeFormat' title='unformat'
-  ><!--<div class='control drawer border fontsize'
+  ><img class='button link tip_W'   title='Add link' 
+    src='{asset "skin/edit/link.png"}'
+  ><img class='button fontname'     title="Font" 
+    src='{asset "skin/edit/font.png"}'
+  ><img class='button color'        title="Text color" 
+    src='{asset "skin/edit/color.png"}'
+  ><img class='button bold'         title="Bold" 
+    src='{asset "skin/edit/bold.png"}'          cmd='+bold'
+  ><img class='button italic'       title="Italic" 
+    src='{asset "skin/edit/italic.png"}'        cmd='+italic'
+  ><img class='button align'        title="Alignment" 
+    src='{asset "skin/edit/justify.png"}'  
+  ><img class='button unformat'     title="Remove formatting" 
+    src='{asset "skin/edit/unformat.png"}'      cmd='+removeFormat'
+  >
+  {# 
+  <!--<img class='button fontsize' src='{asset "skin/edit/text_size.png"}'
+  >-->
+  <!--<div class='control drawer border fontsize'
     ><span class='option fs1' style='font-size : .75em' val = '.75'>a</span
     > <span class='option fs2' style='font-size :   1em' val =   '1'>a</span
     > <span class='option fs3' style='font-size : 1.5em' val = '1.5'>a</span
@@ -126,7 +136,9 @@
     > <span class='option fs5' style='font-size :   5em' val =   '5'>a</span
     > <span class='option fs5' style='font-size :   8em' val =   '8'>a</span
   ></div
-  >--><div class='control drawer border fontname'
+  >-->
+  #}
+  <div class='control drawer border fontname'
    ><div class='option' style='font-family:Helvetica'         cmd='+fontName' val='Helvetica'        >Helvetica       </div
    ><div class='option' style='font-family:Museo'         cmd='+fontName' val='Museo'        >Museo       </div
    ><div class='option' style='font-family:Lobster'         cmd='+fontName' val='Lobster'        >Lobster       </div
@@ -176,12 +188,16 @@
   ><div class='control drawer border color'></div
   ><div class='control drawer border align'
    ><div><nobr
-    ><img class='option small hoverable' cmd='+justifyLeft'    src='{asset "skin/edit/justify_left.png"}' 
-    ><img class='option small hoverable' cmd='+justifyRight'   src='{asset "skin/edit/justify_right.png"}'
+    ><img class='option small hoverable'                title='Flush left'
+      src='{asset "skin/edit/justify_left.png"}'        cmd='+justifyLeft'
+    ><img class='option small hoverable'                title='Flush right'
+      src='{asset "skin/edit/justify_right.png"}'       cmd='+justifyRight'
    ></nobr></div
    ><div
-    ><img class='option small hoverable' cmd='+justifyCenter'  src='{asset "skin/edit/justify_center.png"}'
-    ><img class='option small hoverable' cmd='+justifyFull'    src='{asset "skin/edit/justify_full.png"}'  
+    ><img class='option small hoverable'                title='Centered'
+      src='{asset "skin/edit/justify_center.png"}'      cmd='+justifyCenter'
+    ><img class='option small hoverable'                title='Flush left and right'
+      src='{asset "skin/edit/justify_full.png"}'        cmd='+justifyFull'
    ></div
   ></div
  ></div>
@@ -190,42 +206,23 @@
 <div id='controls_image' class='controls_src'>
  <div class='control buttons'
   {# Link belongs in controls_misc #}
-  ><img class='button link tip_W' src='{asset "skin/edit/link.png"}' title='link'
-  ><img class='button set_bg' src='{asset "skin/edit/fullscreen.png"}' title='make background'
- ></div
-></div>
-
-<div id='controls_script' class='controls_src'>
- <div class='control buttons'
-  >
-
-  {# removing for now, too much work to add code editor to view mode
-  ><a href='#' title='options'><div class='button bg opts' title='run'
-    >...</div></a
-
-  ><div class='control menu drawer opts' data-handle='.button.opts'>
-    <div id='text_default' class='menu_item default'>
-      <label><input type='checkbox' class='show_in_view'
-        >Show when viewing</label>
-    </div>
-  </div
-  #}
-  
+  ><img class='button link tip_W' src='{asset "skin/edit/link.png"}' title='Link'
+  ><img class='button set_bg' src='{asset "skin/edit/fullscreen.png"}' title='Make background'
  ></div
 ></div>
 
 <div id='controls_rounding' class='controls_src'>
   <img class='button rounding tip_N'
-    src='{asset "skin/edit/rounded_corners.png"}' title='corner rounding'
+    src='{asset "skin/edit/rounded_corners.png"}' title='Corner rounding'
 ></div>
 
 <div id='controls_multi' class='controls_src'>
   {<if flags.tile_multiple_images}
-    <img class='button change_aspect' title="tile aspect" 
+    <img class='button change_aspect' title="Tile aspect" 
       src='{asset "skin/edit/tiling-aspect.png"}'>
-    <img class='button change_padding' title="tile padding" 
+    <img class='button change_padding' title="Tile padding" 
       src='{asset "skin/edit/tiling-padding.png"}'>
-    <img class='button change_columns' title="tile columns"
+    <img class='button change_columns' title="Tile columns"
       src='{asset "skin/edit/tiling-columns.png"}'>
     </div>
   {>}
@@ -233,47 +230,50 @@
 
 <div id='controls_misc' class='controls_src'>
   <img class='control drag resize hoverable tip_SE' 
-    src='{asset "skin/edit/resize.png"}' title="resize">
+    src='{asset "skin/edit/resize.png"}' title="Resize">
   <img class='control drag resize_h hoverable tip_E' 
-    src='{asset "skin/edit/resize_h.png"}' title="resize">
+    src='{asset "skin/edit/resize_h.png"}' title="Resize">
   <img class='control drag resize_v hoverable tip_S' 
-    src='{asset "skin/edit/resize_v.png"}' title="resize">
+    src='{asset "skin/edit/resize_v.png"}' title="Resize">
   
-  <img class='button color' src='{asset "skin/edit/color.png"}' title="color">
+  <img class='button color' src='{asset "skin/edit/color.png"}' title="Color">
   <div class='control drawer color border'></div>
 
   <img class='button opacity tip_N' 
-    src='{asset "skin/edit/opacity.png"}' title='opacity'>
+    src='{asset "skin/edit/opacity.png"}' title='Opacity'>
   
-  <img class='button align' src='{asset "skin/edit/justify.png"}' title='alignment'>
+  <img class='button align' src='{asset "skin/edit/justify.png"}' title='Alignment'>
   <div class='control drawer border align'>
    <div><nobr>
-    <img class='option small hoverable' cmd='+alignLeft'    src='{asset "skin/edit/justify_left.png"}'>
-    <img class='option small hoverable' cmd='+alignRight'   src='{asset "skin/edit/justify_right.png"}'>
-   </nobr></div>
-   <div>
-    <img class='option small hoverable' cmd='+alignCenter'  src='{asset "skin/edit/justify_center.png"}'>
-    <img class='option small hoverable' cmd='+alignFull'    src='{asset "skin/edit/justify_full.png"}'>
+    <img class='option small hoverable'             title='Align left'
+      src='{asset "skin/edit/justify_left.png"}'      cmd='+alignLeft'>
+    <img class='option small hoverable'             title='Align right'
+      src='{asset "skin/edit/justify_right.png"}'     cmd='+alignRight'>
+   </nobr></div><div>
+    <img class='option small hoverable'             title='Center'
+      src='{asset "skin/edit/justify_center.png"}'    cmd='+alignCenter'>
+    <img class='option small hoverable'             title='Full width'
+      src='{asset "skin/edit/justify_full.png"}'      cmd='+alignFull'>
    </div>
   </div>
 
   {# polygon #}
-  <img class='button blank stroke-width tip_N' src='{asset "skin/edit/border_width.png"}' title='stroke width'
-  ><img class='button stroke tip_N' src='{asset "skin/edit/border_color.png"}' title='stroke color'
-  ><img class='button blur tip_N' src='{asset "skin/edit/border_color.png"}' title='gaussian blur'>
+  <img class='button blank stroke-width tip_N' src='{asset "skin/edit/border_width.png"}' title='Stroke width'
+  ><img class='button stroke tip_N' src='{asset "skin/edit/border_color.png"}' title='Stroke color'
+  ><img class='button blur tip_N' src='{asset "skin/edit/border_color.png"}' title='Gaussian blur'>
 
-  <div class='button bg run' title='run'>&rarr;</div>
-  <div class='button bg stop' title='stop'>&Chi;</div>
-  <div class='button bg edit' title='edit'>&Xi;</div>
+  <div class='button bg run' title='Run'>&rarr;</div>
+  <div class='button bg stop' title='Stop'>&Chi;</div>
+  <div class='button bg edit' title='Edit'>&Xi;</div>
 </div>
 
 <div id='controls_sketch' class='controls_src'>
  <div class='control buttons'
-  {#><img class='button link tip_W'     src='{asset "skin/edit/link.png"}' title='link'#}
-  ><img class='button fill tip_N' src='{asset "skin/edit/color.png"}' title='fill color'
-  ><img class='button brush rounding tip_N' src='{asset "skin/edit/brush_icon.png"}' title='brush'
-  ><img class='button eraser rounding' src='{asset "skin/edit/eraser_icon.png"}' title='eraser'
-  ><img class='button size rounding tip_N' src='{asset "skin/edit/brush_size.png"}' title='brush size'
+  {#><img class='button link tip_W'     src='{asset "skin/edit/link.png"}' title='Add link'#}
+  ><img class='button fill tip_N' src='{asset "skin/edit/color.png"}' title='Fill color'
+  ><img class='button brush rounding tip_N' src='{asset "skin/edit/brush_icon.png"}' title='Brush'
+  ><img class='button eraser rounding' src='{asset "skin/edit/eraser_icon.png"}' title='Eraser'
+  ><img class='button size rounding tip_N' src='{asset "skin/edit/brush_size.png"}' title='Brush size'
 
   ><div class='control drawer fill border'></div
   ><div class='control drawer border brush'

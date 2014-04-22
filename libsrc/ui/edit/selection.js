@@ -660,7 +660,7 @@ o.Selection = function(o) {
             return o.stack_shift(1)
         }
         env.History.begin();
-        $.each(o.get_stack(), function(i, el){ el.stack_top() })
+        $.each(o.get_stack().reverse(), function(i, el){ el.stack_top() })
         env.History.group('stack group to top');
     };
     o.stack_bottom = function(ev){
@@ -674,9 +674,8 @@ o.Selection = function(o) {
     o.stack_shift = function(offset) {
         env.History.begin();
         var overlaps = u.overlapped_apps(u.region_from_app(o))
-            , elements = o.get_stack(), up_offset = -1
+            , elements = o.get_stack().reverse(), up_offset = -1
         if (offset < 0) {
-            elements.reverse()
             up_offset = 0
         }
         overlaps = u.except(overlaps, elements)
@@ -705,8 +704,6 @@ o.Selection = function(o) {
     });
 
     o.layout = function(){
-        if (o.no_layout)
-            return;
         if (o.controls)
             o.controls.layout();
     }
