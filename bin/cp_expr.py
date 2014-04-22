@@ -31,7 +31,8 @@ def cp_expr(expr, dest_db):
         old_file = src_db.File.fetch(file_id)
         old_file['tmp_file'] = old_file.file
         old_file['resample_time'] = 0
-        del old_file['resamples']
+        if old_file.has_key('resamples'):
+            del old_file['resamples']
         try:
             new_file = dest_db.File.create(old_file)
             print('copying file ' + new_file['url'])
