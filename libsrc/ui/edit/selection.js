@@ -73,10 +73,6 @@ o.Selection = function(o) {
         else if ($(ev.target).closest(".control").length)
             hit = true
 
-        // TODO: remove when menu shield works.
-        if (!hit)
-            $(":focus").blur()
-
         if(hit || !o.count() || o.is_multi(ev) || ev.data)
             return
 

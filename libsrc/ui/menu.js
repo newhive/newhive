@@ -84,7 +84,7 @@ var menu = function(handle, drawer, options) {
         $.map(o.menus, function(m){ m.close(force) });
         if(!o.opened) return;
 
-        if(o.sticky) return;
+        if(!force && o.sticky) return;
 
         o.do_close();
 
