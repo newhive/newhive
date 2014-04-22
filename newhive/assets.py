@@ -87,7 +87,7 @@ class Assets(object):
         if props:
             url = ((self.local_base_url + name) if props[2] else
                 (self.base_url + name + '.' + props[1]))
-            if abs and url.startswith('/'): url = abs_url() + url[1:]
+            if abs and re.match(r'/[^/]', url): url = abs_url() + url[1:]
             if http and url.startswith('//'): url = 'http:' + url
             return url
         elif return_debug:
