@@ -71,6 +71,15 @@ Hive.toggle_grid = function() {
 };
 
 Hive.init_menus = function() {
+    hive_app.App.has_slider_menu(null, ""
+        ,env.padding_set, env.padding, null, null
+        ,{ min: 0, max: 30, quant: 1
+        , handle:$(".icon.change_padding"), container:$("body")
+        , menu_opts: { 
+            group: $(".misc.handle").data("menu")
+            ,auto_height: false 
+        }
+    }) ()
     $('#text_default').click(function(e) {
         hive_app.new_app({ type : 'hive.text', content : '' });
     });
@@ -78,8 +87,8 @@ Hive.init_menus = function() {
         hive_app.new_app({ type: 'hive.text', content: '<span style="font-weight:bold">&nbsp;</span>',
             scale : 3 });
     });
+    var zooms = [ 1, .5, .25 ];
     $('.change_zoom').click(function(e) {
-        var zooms = [ 1, .5, .25 ];
         var zoom = env.zoom();
         // NOTE: indexOf will return -1 for unlisted zoom, so it will just
         // zoom to zooms[0] in that case.
@@ -225,6 +234,7 @@ Hive.init_global_handlers = function(){
     Hive.layout()
 
     $(window).on('scroll', Hive.scroll);
+    Hive.scroll();
     evs.on(document, 'keydown');
     evs.on('body', 'mousemove');
     evs.on('body', 'mousedown');
@@ -259,7 +269,7 @@ Hive.init_global_handlers = function(){
     evs.handler_set(env.Selection);
     evs.handler_set(Hive);
     env.apps_e.addClass('default');
-    Hive.cursor_set('default')
+    u.cursor_set('default')
 
     var busy_e = $('.save .loading');
     $(document).ajaxStart(function(){
@@ -336,6 +346,7 @@ Hive.init = function(exp, site_context){
     // shared functionality into has_coords
     env.Selection = hive_app.new_app({ type : 'hive.selection' });
     hive_app.Apps.init(Hive.Exp.apps);
+    hive_app.Apps.restack();
 
     $('.edit.overlay').showshow()
     Hive.init_global_handlers()
@@ -372,8 +383,12 @@ Hive.exit = function(){
 // TODO-feature-html-embed: iterate over each element, and do something
 // reasonable
 Hive.embed_code = function(element) {
-    var c = $(element).val().trim(), app
-    var v = "", more_args = "", start = 0;
+    var c = $(element).val().trim(), app = {}
+        ,frame = $('<iframe>').css({width:'100%',height:'100%',border:0})
+            .attr('allowFullScreen', true)
+        ,args, url, v = "", more_args = "", start = 0
+    ;
+
     if(m = c.match(/^https?:\/\/www.youtube.com\/.*?v=([^&]+)(.*)(#t=(\d+))?$/i)) {
         v = m[1];
         more_args = m[2] || "";
@@ -382,40 +397,35 @@ Hive.embed_code = function(element) {
         || (m = c.match(/https?:\/\/youtu.be\/(.*)$/i)))
         v = m[1];
     if (v != "") {
-        var args = { 'rel': 0, 'showsearch': 0, 'showinfo': 0, 'autohide': 1 };
+        args = { rel: 0, showsearch: 0, showinfo: 0, autohide: 1, enablejsapi: 1 }
         if (start) args['start'] = start;
-        var url = '//www.youtube.com/embed/' + v + '?' + $.param(args) + more_args;
-        app = { type : 'hive.html', content : 
-            "<iframe width='100%' height='100%' class='youtube-player'" +
-            "  src='" + url + "' frameborder='0' " +
-            "allowfullscreen></iframe>"
-            ,media: 'youtube'
-        }
-            //   '<object type="application/x-shockwave-flash" style="width:100%; height:100%" '
-            // + 'data="' + url + '"><param name="movie" value="' + url + '">'
-            // + '<param name="allowFullScreen" value="true">'
-            // + '<param name="wmode" value="opaque"/></object>' };
-    } else if(m = c.match(/^https?:\/\/(www.)?vimeo.com\/(.*)$/i)) {
-        app = { type : 'hive.html', content :
-            '<iframe src="//player.vimeo.com/video/'
-            + m[2] + '?title=0&amp;byline=0&amp;portrait=0"'
-            + 'style="width:100%;height:100%;border:0"></iframe>'
-            ,media: 'vimeo'
-        }
-    } else if(m = c.match(/^https?:\/\/(.*)mp3$/i)) {
-        app = { type : 'hive.audio', content : {url : c, player : minimal}
+        url = '//www.youtube.com/embed/' + v + '?' + $.param(args) + more_args;
+        frame.addClass('youtube-player').attr('src', url)
+        app = { type: 'hive.html', content: frame[0].outerHTML, media: 'youtube' }
+    }
+
+    else if(m = c.match(/^https?:\/\/(www.)?vimeo.com\/(.*)$/i)) {
+        frame.attr('src', '//player.vimeo.com/video/'
+            + m[2] + '?title=0&amp;byline=0&amp;portrait=0')
+        app = { type: 'hive.html', content: frame[0].outerHTML, media: 'vimeo' }
+    }
+
+    else if(m = c.match(/^https?:\/\/(.*)mp3$/i)) {
+        app = { type : 'hive.audio', content : {url : c, player: minimal}
             ,media: 'hive.audio' }
-    } else if(m = c.match(/https?:\/\/.*soundcloud.com/i)) {
+    }
+
+    else if(m = c.match(/https?:\/\/.*soundcloud.com/i)) {
+        app = { media: 'soundcloud' }
         var stuffs = $('<div>');
         stuffs.html(c);
-        var embed = stuffs.children().first();
-        if(embed.is('object')) embed.append($('<param name="wmode" value="opaque"/>'));
-        if(embed.is('embed')) embed.attr('wmode', 'opaque');
-        embed.attr('width', '100%');
-        embed.find('[width]').attr('width', '100%');
-        embed.find('embed').attr('wmode', 'opaque');
-        app = { type : 'hive.html', content : embed[0].outerHTML
-            ,media: 'soundcloud' };
+
+        if(!stuffs.children().length){
+            var args = { auto_play: false, hide_related: true, visual: true, url: c }
+            frame.attr('src', 'https://w.soundcloud.com/player/' +'?'+ $.param(args))
+            app.type = 'hive.html'
+            app.content = frame[0].outerHTML
+        }
     }
 
     else if(c.match(/^https?:\/\//i)) {
@@ -446,7 +456,7 @@ Hive.embed_code = function(element) {
         return;
     }
 
-    if(!app){
+    if(!app.type){
         var el = $(c).eq(0)
         if(el.is('script')){
             app = { type: 'hive.code', content: el.html(), code_type: 'js' }
@@ -466,13 +476,14 @@ Hive.embed_code = function(element) {
         }
     }
 
-    if(!app){
+    if(!app.type){
         var dom = $('<div>');
         dom[0].innerHTML = c;
         dom.find('object').append($('<param name="wmode" value="opaque"/>'));
         dom.find('embed').attr('wmode', 'opaque');
         dom.find('iframe').attr('width', '100%').attr('height', '100%');
-        app = { type : 'hive.html', content: dom[0].innerHTML };
+        app.type = 'hive.html'
+        app.content = dom[0].innerHTML
     }
 
     hive_app.new_app(app);
@@ -508,12 +519,6 @@ Hive.state = function() {
     Hive.Exp.dimensions = [1000, Math.ceil(h)];
 
     return Hive.Exp;
-}
-
-var cursor_name
-Hive.cursor_set = function(name){
-    env.apps_e.add('#grid_guide').removeClass(cursor_name).addClass(name)
-    cursor_name = name
 }
 
 // BEGIN-Events  //////////////////////////////////////////////////////
@@ -579,6 +584,8 @@ Hive.keydown = function(ev){
 };
 
 Hive.scroll = function(ev){
+    env.scrollX = window.scrollX
+    env.scrollY = window.scrollY
     if(env.Selection.controls)
         env.Selection.controls.layout();
     env.Selection.elements().map(function(app){

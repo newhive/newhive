@@ -13,6 +13,13 @@
 "#buttons_view": {
 	layout:"composite",
 	bottom:"0dp",
+	height:"0%",
+	zIndex:10
+}
+
+"#web_view": {
+	layout:"composite",
+	bottom:"0%",
 	height:"25%",
 	zIndex:10
 }
@@ -24,7 +31,6 @@
 	top:"0dp",
 	color:"#000000",
 	borderColor:"#3e3e3e",
-	borderWidth: "1dp",
 	backgroundColor: "#aef0e8",
 	font: {
 		fontSize: "20dp",
@@ -38,7 +44,6 @@
 	top:"0dp",
 	color:"#000000",
 	borderColor:"#3e3e3e",
-	borderWidth: "1dp",
 	backgroundColor: "#aef0e8",
 	font: {
 		fontSize: "20dp",
@@ -51,10 +56,10 @@
 	bottom:"0dp",
 	color:"#000000",
 	borderColor:"#3e3e3e",
-	borderWidth: "1dp",
 	backgroundColor: "#aef0e8",
 	font: {
 		fontSize: "20dp",
 		fontWeight: "bold"
-	}
+	},
+	visible: false
 }

@@ -1,8 +1,12 @@
 {% set bg = expr.background or {} %}
-<div id='bg' class='happfill' {{ "style='background-color : " + bg.color + "'" if bg and bg.color }}>
-{% if bg.type == 'hive.html' %}
-  {{ bg.content }}
-{% elif bg.url %}
- <img src='{{ bg.url }}' style='opacity:{{ bg.opacity if bg and bg.opacity is defined else 1 }};{{ 'display:none' if not (bg and bg.url) }}'>
-{% endif %}
+<div id='bg' class='happfill {% if bg.type == "hive.html" %}hive_html{% endif %}'
+  {{ "style='background-color : " + bg.color + "'" if bg and bg.color }}
+>
+  {% if bg.type == 'hive.html' %}
+    {{ bg.content }}
+  {% elif bg.url %}
+    <img src='{{ bg.url }}'
+      style='opacity:{{ bg.opacity if bg and bg.opacity is defined else 1 }};{{
+      'display:none' if not (bg and bg.url) }}'>
+  {% endif %}
 </div>

@@ -5,13 +5,15 @@ html, body, input, textarea { font-family : Helvetica, Arial, sans-serif; }
 html, body { margin : 0; padding : 0; color : black; white-space-collapse : discard; font-size : 17px; }
 img { padding : 0; margin : 0; border : 0; }
 a { color : inherit; text-decoration : none; }
-.happ, .ehapp { position : absolute; }
+.happ { position : absolute; }
 .happ img { width : 100%; }
-.happ.hive_image, .crop_box { overflow: hidden; }
+.happ.hive_image, .crop_box { 
+    overflow: hidden; @include box-sizing(border-box); border: 0px solid; }
 .crop_box { width:100%; height:100%; z-index:2; }
 .happ.hive_text img { width: inherit; }
 .happfill { position : fixed; top : 0; left : 0; width : 100%; height : 100%; }
 .happfill img { position : absolute; left : 0; top : 0; }
+.text_column .softbr { display: none; }
 h1 { font-size : 40px; }
 // TODO: reexamine this, and everything else in this file.
 form { display : inline; }

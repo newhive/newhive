@@ -35,6 +35,9 @@ define([
             return x;
         return def;
     }
+    o.starts_with = function(haystack, needle) {
+        return haystack.substr(0, needle.length) == needle;
+    }
 
     o.mobile = function() {
         return (navigator.userAgent.match(/Android/i)

@@ -1,3 +1,6 @@
+from config_common import *
+from live_secret import *
+
 live_server     = True
 dev_prefix      = None
 

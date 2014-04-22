@@ -48,7 +48,7 @@ class Database:
 
         self.con = pymongo.MongoClient(host=config.database_host, port=config.database_port)
         self.mdb = self.con[config.database]
-        self.s3 = S3Interface()
+        self.s3 = S3Interface(config)
         self.assets = assets
 
         self.collections = map(lambda entity_type: entity_type.Collection(self, entity_type), entity_types)
@@ -1248,7 +1248,7 @@ class Expr(HasSocial):
             # Hack for Zach. TODO-cleanup: verify with Zach that this link
             # isn't needed anymore and remove
             if (spec2.has_key('tags_index') 
-                and ['deck2013'] in spec2.get('tags_index').values()):
+                and ['deck2014'] in spec2.get('tags_index').values()):
                     override_unlisted = True
             # Set up auth filtering
             if auth:
@@ -1262,7 +1262,7 @@ class Expr(HasSocial):
                     spec2.setdefault('$and', [])
                     spec2['$and'].append({'$or': [{'auth': 'public'},
                         {'owner': viewer.id}]})
-            elif not override_unlisted:
+            else:
                 spec2.update({'auth': 'public'})
             opts.setdefault('fields', self.ignore_not_meta)
             return self.search(spec, filter, **opts)
@@ -1291,7 +1291,7 @@ class Expr(HasSocial):
 
         def with_url(cls, url):
             """ Convenience utility function not used in production, retrieve Expr from path or full URL """
-            [user, name] = url.split('/')[-2:]
+            [user, name] = url.split('/', 1)
             name = name.split('?')[0]
             return cls.named(user, name)
 
@@ -1435,6 +1435,7 @@ class Expr(HasSocial):
         upload_list = []
         pw = self.get('password', '')
         self.inc('snapshot_fails')
+        self.update(updated=False, snapshot_fail_time=now())
 
         for w, h, size in dimension_list:
             name = self.snapshot_name_base(size, str(int(snapshot_time)))
@@ -1483,6 +1484,7 @@ class Expr(HasSocial):
         self.update(snapshot_time=snapshot_time, entropy=self['entropy'],
             snapshot_id=file_record.id, updated=False)
         self.reset('snapshot_fails')
+        self.update(updated=False, snapshot_fail_time=0)
         return True
 
     # @property
@@ -1519,6 +1521,9 @@ class Expr(HasSocial):
         self.build_search(d)
         if d.get('auth') == 'public':
             d['password'] = None
+        # Reset fails if this is a real update
+        if d.get('updated', False): 
+            d['snapshot_fails'] = 0
         super(Expr, self).update(**d)
 
         self.update_owner(old_tags)

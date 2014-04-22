@@ -131,15 +131,7 @@ class Expr(ModelController):
         return self.serve_json(response, res)
 
     # the whole editor except the save dialog and upload code goes in sandbox
-    def editor_sandbox(self, tdata, request, response, expr_id=None, **args):
-        if expr_id:
-            expr_obj = self.db.Expr.fetch(expr_id)
-            if not expr_obj: return self.serve_404(tdata, request, response)
-            expr = expr_obj
-        else:
-            expr = request.form.get('expr', {})
-
-        tdata.context['expr'] = expr
+    def editor_sandbox(self, tdata, request, response, **args):
         return self.serve_page(tdata, response, 'pages/edit_sandbox.html')
 
     def snapshot(self, tdata, request, response, expr_id, **args):
@@ -185,7 +177,18 @@ class Expr(ModelController):
         )
         if snapshot_mode:
             tdata.context['css'] = "body { overflow-x: hidden; }"
-
+        client_data = {}
+        for app in expr_obj.get('apps',[]):
+            data = app.get('client_data', {})
+            data.update(media=app.get('media'))
+            if app['type'] == 'hive.code':
+                data.update(dfilter(app, ['content', 'url']))
+            if app['type'] == 'hive.image':
+                data.update(dfilter(app, ['url']))
+            if data:
+                data['type'] = app['type']
+                client_data[app['id']] = data
+        tdata.context.update(client_data=client_data)
         return self.serve_page(tdata, response, 'pages/expr.html')
         
     def expr_to_html(self, exp, snapshot_mode=False, viewport=(1000, 750)):
@@ -206,26 +209,28 @@ class Expr(ModelController):
     def html_for_app(self, app, scale=1, snapshot_mode=False):
         content = app.get('content', '')
         more_css = ''
+        dimensions = app.get('dimensions', [100,100])
         type = app.get('type')
         if type != 'hive.rectangle':
+            # rectangles have css as their content; all other apps have extra
+            # css in 'css_state'
             c = app.get('css_state', {})
             more_css = ';'.join([p + ':' + str(c[p]) for p in c])
         if type == 'hive.image':
+            url = app.get('url') or content
             media = self.db.File.fetch(app.get('file_id'))
-            if media: content = media.get_resample(
-                app.get('dimensions', [100,100])[0] * scale
-            )
+            if media: url = media.get_resample(dimensions[0] * scale)
 
             html = "<img src='%s'>" % content
             scale_x = app.get('scale_x')
             if scale_x:
-                css = 'width:%f%%' % (100*scale_x)
+                scale_x *= dimensions[0]
+                css = 'width:%fpx' % (scale_x)
                 if app.get('offset'):
-                    scale_x *= app.get('dimensions', 1)[0]
                     offset = [x * scale_x for x in app.get('offset')]
                     css = '%s;margin-left:%spx;margin-top:%spx' % (
                         css, offset[0], offset[1] )
-                html = "<div class='crop_box'><img src='%s' style='%s'></div>" % (content, css)
+                html = "<img src='%s' style='%s'>" % (url, css)
             link = app.get('href')
             if link: html = "<a href='%s'>%s</a>" % (link, html)
         elif type == 'hive.sketch':
@@ -236,11 +241,10 @@ class Expr(ModelController):
             html = ''
         elif type == 'hive.html':
             html_original = '%s' % (app.get('content',''))
-            # print 'found hive.html'
             if snapshot_mode:
                 def get_embed_img_html(url):
                     ret_html = ''
-                    oembed = utils.get_embedly_oembed(url)
+                    oembed = utils.get_embedly_oembed(url) if url else ''
                     if oembed and oembed.get('thumbnail_url'):
                         ret_html += '<img src="%s"/>' % oembed['thumbnail_url']
                     return ret_html
@@ -256,14 +260,11 @@ class Expr(ModelController):
                         if param.get('name') == 'movie':
                             html += get_embed_img_html(param.get('value'))
                             more_css += ";overflow:hidden"
-                            # print 'found Youtube.'
                 if not html:
-                    # print 'found iframe'
                     for iframe in hivehtml.find_all('iframe'):
                         html = get_embed_img_html(iframe.get('src'))
                         if not html:
                             error = True
-                            # print 'error.'
                     if error:
                         html = html_original
             else:
@@ -272,8 +273,7 @@ class Expr(ModelController):
         elif type == 'hive.polygon':
             html = (
                   "<svg xmlns='http://www.w3.org/2000/svg'"
-                + " viewbox='0 0 %f %f" % (
-                    app['dimensions'][0], app['dimensions'][1] )
+                + " viewbox='0 0 %f %f" % tuple(dimensions)
                 + "'>"
                 + "<filter id='%s_blur'" % app.get('id','')
                 + " filterUnits='userSpaceOnUse'><feGaussianBlur stdDeviation='"
@@ -286,36 +286,42 @@ class Expr(ModelController):
             style = app.get('style', {})
             more_css = ';'.join([ k+':'+str(v) for k,v in style.items()])
         elif type == 'hive.code':
-            tag = 'script'
             ctype = app.get('code_type', 'js')
             if ctype == 'js':
+                tag = 'script'
                 if app.get('url'):
                     html = "<script src='%s'></script>" % app.get('url')
                 else:
-                    html = "<script>%s</script>" % app.get('content')
+                    html = ( "<script>curl(['ui/expression'],function(expr){"
+                        + "expr.load_code(%s)" % json.dumps(app.get('content'))
+                        + "})</script>" )
             if ctype == 'css':
-                # TODO-feature-css-url: if app['url'], put <link> tag in head
-                html =  '<style>%s</style>' % app.get('content')
+                tag = 'style'
+                # TODO-code-editor: put style tag in head
+                html =  "<style id='%s'>%s</style>" % (
+                    app.get('id'), app.get('content') )
+            return html
         else:
             html = content
 
         data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
         data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
-        app_id = app.get('id', app['z'])
-        return "<div class='happ %s %s' id='app%s' style='%s'%s>%s</div>" % (
-            type.replace('.', '_'), app.get('css_class'), app_id,
+        app_id = app.get('id', 'app_' + str(app['z']))
+        return "<div class='happ %s %s' id='%s' style='%s'%s>%s</div>" % (
+            type.replace('.', '_'), app.get('css_class', ''), app_id,
             css_for_app(app) + more_css, data, html
         )
 
 # TODO-bug fix resizing after loading by sending pre-scaled expr
 # Requires client layout_apps() to use scaled expr dimensions
 def css_for_app(app):
+    dimensions = app.get('dimensions', [100,100])
     css = {
             'left': app['position'][0]
             , 'top': app['position'][1]
             , 'z-index': app['z']
-            , 'width': app['dimensions'][0]
-            , 'height': app['dimensions'][1]
+            , 'width': dimensions[0]
+            , 'height': dimensions[1]
             , 'opacity': app.get('opacity', 1)
             , 'font-size': app.get('scale')
             }

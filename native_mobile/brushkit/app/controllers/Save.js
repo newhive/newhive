@@ -1,16 +1,19 @@
 
 //var photosCollection = Alloy.Collections.Photos;
 
-function publishExrpession(){
+function publishExpression(){
 	var apps = new Array();
 	var i_y = 0;
 	Ti.API.info('photo collection length: ' + photosCollection.length);
 	photosCollection.each(function(p, index) {
-		var w= p.get('width');
+		var w = p.get('width');
 		var h = p.get('height');
 
 		pb = p.get('photo_blob');
 		Ti.API.info("this image newhive id: "+ p.get('new_hive_id'));
+		
+		Ti.API.info("this image stored width: "+ p.get('w'));
+		Ti.API.info("this image stored height: "+ p.get('h'));
 
 		apps.push({
 			"file_id": p.get('new_hive_id'),
@@ -24,7 +27,7 @@ function publishExrpession(){
 	});
 
 	//set is public/private
-	var auth = $.public_switch.value ? "public" : "private";
+	var auth = $.public_switch.value ? "public" : "password";
 
 	//set is remixable
 	var remixable = $.remix_switch.value ? " #remix" : "";
@@ -113,21 +116,18 @@ var click_save = function(){
 		alert(url);
 	}
 
-	publishExrpession();
+	publishExpression();
 }
 
 $.btn_save.addEventListener('click', click_save)
 
 init_page($.save_window)
 init_textfields([$.tf_title, $.tf_url, $.tf_tags], click_save)
+$.tf_title.focus();
+photosCollection.fetch();
 
 $.tf_title.addEventListener('change',function() {
 	var title =  $.tf_title.value;
 	url = title.replace(/[^0-9a-zA-Z]/g, "-").replace(/--+/g, "-").replace(/-$/, "").toLowerCase();
 	$.tf_url.value = url;
-});
-
-$.save_window.addEventListener('focus', function(e){
-	$.tf_title.focus();
-	photosCollection.fetch();
 });

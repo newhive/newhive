@@ -154,6 +154,7 @@ define([
 
         o.hide_panel();
         $(".overlay.panel").showshow();
+        $(".overlay.panel .signup").hidehide()
         $(".social_btn").removeClass("hide");
 
         var show_edit = false
@@ -169,6 +170,10 @@ define([
             $('.overlay.panel .edit_ui').replaceWith(
                 edit_btn_template(page_data) )
         ui_page.form_page_enter()
+
+        o.overlay_columns = 0;
+        o.wide_overlay = 0;
+        o.resize();
     }
 
     o.exit = function(){
@@ -179,6 +184,7 @@ define([
         $('#site').showshow();
         $('.page_btn').hidehide();
         $('.overlay.panel .expr_actions').hidehide()
+        $(".overlay.panel .signup").showshow()
     };
 
     // Check to see if tags overflows its bounds.
@@ -224,6 +230,8 @@ define([
 
             if(context.query.q){
                 var query = {q: context.query.q, id: o.expr.id };
+                if (context.query.e) 
+                    query.e = context.query.e;
                 o.controller.get('search', {}, set_cards, query);
                 context.page_data.cards_route = {
                     query: query,
@@ -313,7 +321,6 @@ define([
         contentFrame.load(function () {
             contentFrame.data('loaded', true);
             debug("loaded frame: " + found);
-
             if (contentFrame.hasClass('expr_visible')) 
                 o.expr_show(contentFrame)
             for (var i = 0, el; el = loading_frame_list[i]; i++) {

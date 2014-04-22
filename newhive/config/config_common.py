@@ -70,6 +70,7 @@ site_flags = {
     ,'button_options': ['admins']
     ,'shapes': ['admins']
     ,'custom_domain': []
+    ,'tile_multiple_images': ['admins', 'nd4']
     # Admin
     ,'admin': ['admins']
     # Old / unused

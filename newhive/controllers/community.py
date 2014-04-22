@@ -78,7 +78,7 @@ class Community(Controller):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         if args.get('tag_name'): return self.expressions_tag(
-            tdata, request, owner_name=owner_name, **args)
+            tdata, request, owner_name=owner_name, db_args=db_args, **args)
         spec = {'owner_name': owner_name}
         cards = self.db.Expr.page(spec, auth='public', **db_args)
         return self.expressions_for(tdata, cards, owner)
@@ -107,6 +107,7 @@ class Community(Controller):
             "card_type": "expr",
             "tag_selected": tag_name,
             'owner': profile,
+            'entropy': entropy,
             'title': 'Expressions by ' + owner['name'],
         }
         if owner.id == tdata.user.id:
@@ -337,6 +338,16 @@ class Community(Controller):
             "remix" not in expr.get('tags_index', [])):
             return None
         expr['id'] = expr.id
+
+        # editor currently depends on URL attribute
+        apps = expr.get('apps', [])
+        for a in apps:
+            # print 'app ', a
+            file_id = a.get('file_id') 
+            if file_id and not a.get('url'):
+                # print (self.db.File.fetch(file_id) or {}).get('url')
+                a['url'] = (self.db.File.fetch(file_id) or {}).get('url')
+
         return { 'expr': expr }
 
     def search(self, tdata, request, id=None, owner_name=None, expr_name=None,
@@ -344,8 +355,13 @@ class Community(Controller):
     ):
         if not request.args.has_key('q'): return None
         id = request.args.get('id', None)
+        entropy = request.args.get('e', None)
+        owner = self.db.User.named(owner_name)
+        if entropy and owner and owner.get('tag_entropy',{}).get(tags[0], None) == entropy:
+            args['override_unlisted'] = True
+
         result, search = self.db.query_echo(request.args['q'], id=id, **db_args)
-        print('executed search', search)
+        # print('executed search', search)
         tags = search.get('tags', [])
         text = search.get('text', [])
         # Treat single-word text search as a tag search (show tag page)

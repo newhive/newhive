@@ -519,21 +519,24 @@ define(['browser/js', 'module'],
 		return obj.length;
 	};
 	context_base.and = function(context){
-		for(var i = 1; i < arguments.length; ++i){
+		// special case: (and) returns true. 
+		if (arguments.length == 1)
+			return true;
+		for(var i = 1; i < arguments.length - 1; ++i){
 			if (!arguments[i])
-				return false;
+				return arguments[i];
 		}
-		return true;
+		return arguments[i];
 	};
 	context_base.or = function(context){
 		// special case: (or) returns true. (or false) and (or true... false true) are false.
 		if (arguments.length == 1)
 			return true;
-		for(var i = 1; i < arguments.length; ++i){
+		for(var i = 1; i < arguments.length - 1; ++i){
 			if (arguments[i])
 				return arguments[i];
 		}
-		return false;
+		return arguments[i];
 	};
 	context_base.not = function(context, arg){
 		return ! arg;
@@ -543,6 +546,9 @@ define(['browser/js', 'module'],
 	};
 	context_base.neq = function(context, lhs, rhs){
 		return lhs != rhs;
+	};
+	context_base.cond = function(context, cond, truthy, falsy){
+		return cond ? truthy : falsy;
 	};
 	context_base.lower = function(context, s){ return s.toLowerCase(); };
 	// TODO-cleanup: add example cases to all these functions.

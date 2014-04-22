@@ -32,7 +32,9 @@ o.Selection = function(o) {
     o.elements = function(){ 
         if (arguments.length > 0)
             return elements[arguments[0]];
-        return elements.slice(); };
+        return elements.slice(); 
+    };
+    o.sorted = function(){ return elements.slice().sort(u.topo_cmp); }
     o.count = function(){ return elements.length; };
     o.each = function(fn){ $.each(elements, fn) };
     o.get_targets = function(){
@@ -65,16 +67,19 @@ o.Selection = function(o) {
         ev.stopPropagation()
         app_clicking = ev.data
 
-        if(!o.count() || o.is_multi(ev) || ev.data)
+        var hit = false
+        if(o.controls && $.contains(o.controls.div.get(0), ev.target))
+            hit = true
+        else if ($(ev.target).closest(".control").length)
+            hit = true
+
+        if(hit || !o.count() || o.is_multi(ev) || ev.data)
             return
 
-        var hit = false
         o.each(function(i, el){
             if( el.controls && $.contains(el.controls.div.get(0), ev.target) )
                 hit = true
         })
-        if(o.controls && $.contains(o.controls.div.get(0), ev.target))
-            hit = true
         if(!hit)
             o.unfocus()
     }
@@ -84,7 +89,7 @@ o.Selection = function(o) {
 
         var app_clicked = app_clicking
         app_clicking = false
-        if(o.dragging) return
+        if(dragging) return
 
         var app = ev.data;
         // must be mouseup on an app that was mousedowned
@@ -92,9 +97,9 @@ o.Selection = function(o) {
 
         if (context.flags.shift_does_raise && ev.shiftKey) {
             if(u.is_ctrl(ev))
-                app.stack_bottom()
+                app.stack_bottom(ev)
             else
-                app.stack_top()
+                app.stack_top(ev)
             return
         }
         if(o.is_multi(ev)){
@@ -104,25 +109,32 @@ o.Selection = function(o) {
         else o.update([ app ])
     }
 
-    var dragging = false, drag_target;
+    var dragging = false, drag_target, selecting = false;
     o.drag_target = function(){ return drag_target; };
     o.dragstart = function(ev, dd){
-        if(o.dragging) return
-        o.dragging = true;
+        if(dragging) return
+        dragging = true;
         var app = ev.data;
-        if(app){
+        if(app && !u.is_ctrl(ev)) {
             // If target is in selection, drag whole selection
             if(elements.indexOf(ev.data) >= 0)
                 drag_target = o;
             else
                 drag_target = ev.data;
+            if (ev.altKey) {
+                // alt + drag = duplicate
+                drag_target.copy({offset:[0, 0]})
+            }
             o.hide_controls()
             o.move_start();
             return;
-        } else if(env.gifwall) {
-            o.dragging = false;
+        }
+        // Otherwise, we are changing selection via dragging on the background.
+        if(env.gifwall) {
+            dragging = false;
             return;
         }
+        selecting = true
         o.offset = env.apps_e.offset().left;
         u.reset_sensitivity();
 
@@ -142,13 +154,13 @@ o.Selection = function(o) {
         }
     };
     o.drag = function(ev, dd){
-        if (!o.dragging) return;
+        if (!dragging) return;
         ev.stopPropagation()
 
         var delta = [dd.deltaX, dd.deltaY];
         o.sensitivity = u.calculate_sensitivity(delta);
         var app = ev.data;
-        if(app){
+        if(app && !selecting){
             o.move_handler(ev, delta);
             return
         }
@@ -162,23 +174,25 @@ o.Selection = function(o) {
         o.update_focus(ev);
     };
     o.dragend = function (ev, dd) {
-        if(!o.dragging) return;
-        o.dragging = false;
+        if(!dragging) return;
+        dragging = false;
         o.show_controls()
 
         var app = ev.data;
-        if(app){
+        if(app && !selecting){
             o.move_end();
             return false;
         }
 
         if(!o.drag_dims) return;
         o.select_box.remove();
-        if(o.pos) o.update_focus();
+        if(o.pos) o.update_focus(ev);
         if(o.div) o.div.remove();
         o.update(elements);
+        selecting = false
         return false;
     }
+    var old_mod = false, old_selection = []
     o.update_focus = function(event){
         var s = env.scale();
         var select = { 
@@ -187,11 +201,16 @@ o.Selection = function(o) {
             top: (o.drag_pos[1] - o.offset) / s, 
             bottom: (o.drag_pos[1] + o.drag_dims[1]) / s, 
         };
-        o.old_selection = o.new_selection;
-        o.new_selection = u.overlapped_apps(select);
-        if (o.old_selection.length != o.new_selection.length){
-            o.update($.unique($.merge(o.new_selection, o.initial_elements)));
+        var new_selection = u.overlapped_apps(select);
+        var new_mod = event.shiftKey;
+        if (old_selection.length != new_selection.length || new_mod != old_mod){
+            if (new_mod)
+                o.update($(u.except(o.initial_elements, new_selection)));
+            else
+                o.update($.unique($.merge(new_selection, o.initial_elements)));
         }
+        old_mod = new_mod;
+        old_selection = new_selection;
     };
 
     // We handle our own history
@@ -296,8 +315,9 @@ o.Selection = function(o) {
         ref_pos = moved_obj.pos_relative();
         env.History.change_start(full_apps.length);
     };
-    o.move_relative = function(delta, axis_lock){
+    o.move_relative = function(delta, axis_lock, snapping){
         if(!ref_pos) return;
+        env.Apps.begin_layout();
         if(axis_lock)
             delta[ Math.abs(delta[0]) > Math.abs(delta[1]) ? 1 : 0 ] = 0;
         var pos = u._add(ref_pos)(delta);
@@ -306,7 +326,7 @@ o.Selection = function(o) {
             off = u._sub(drag_target.min_pos())(drag_target.pos_relative());
         // pos = u._add(pos)(off);
         // TODO-feature-snap: check key shortcut to turn off snapping
-        if(!env.no_snap){
+        if(!env.no_snap && snapping){
             var excludes = {};
             if(drag_target.id) excludes[drag_target.id] = true;
             pos = u.snap_helper(drag_target.bounds_tuple_relative(pos), {
@@ -321,12 +341,13 @@ o.Selection = function(o) {
         if (full_apps.length)
             o.pushing_move(pos);
         drag_target.pos_relative_set(pos);
+        env.Apps.end_layout();
         //o.layout();
     };
     o.move_handler = function(ev, delta){
         delta = u._div(delta)(env.scale());
 
-        o.move_relative(delta, ev.shiftKey);
+        o.move_relative(delta, ev.shiftKey, u.should_snap(ev));
     };
     o.move_end = function(){
         env.History.change_end('move');
@@ -401,14 +422,16 @@ o.Selection = function(o) {
             _ref_dims = elements[0].dims();
             elements[0].dims_ref_set();
         }
+        // env.History.begin();
         env.History.change_start(full_apps.length);
     }
     o.after_resize = function() {
         o.each(function(i, a) { 
-            if (a.resize_end) a.resize_end(); });
+            if (a.resize_end) a.resize_end(true /* skip history */); });
 
         o.update_relative_coords();
         env.History.change_end('resize');
+        // env.History.group('resize');
 
         full_apps = [];
         drag_target = ref_dims = undefined;
@@ -477,18 +500,22 @@ o.Selection = function(o) {
         if(app.controls) app.controls.remove();
     };
 
+    o.scroll_to_view = function() {
+        u.scroll_to_view(o.max_pos());
+        u.scroll_to_view(o.min_pos());
+    }
     o.update = function(apps){
         apps = $.grep(apps || elements, function(e){ return ! e.deleted; });
         var multi = true;
 
-        // Previously unfocused elements that should be focused
-        $.each(apps, function(i, el){ o.app_select(el, apps.length > 1); });
         // Previously focused elements that should be unfocused
         o.each(function(i, el){
             if($.inArray(el, apps) == -1) {
                 o.app_unselect(el);
             }
         });
+        // Previously unfocused elements that should be focused
+        $.each(apps, function(i, el){ o.app_select(el, apps.length > 1); });
 
         elements = $.merge([], apps);
 
@@ -502,7 +529,10 @@ o.Selection = function(o) {
                 return app.make_controls || []; })
         )
         o.make_controls = u.union(o.make_controls, sel_controls);
-        if(!o.dragging && multi) {
+        if(apps.length > 1) {
+            o.multi_controls();
+        }
+        if(!dragging && multi) {
             Controls(o, false);
             o.controls.layout();
         }
@@ -513,7 +543,28 @@ o.Selection = function(o) {
             if (o.controls) o.controls.remove();
         }
     };
+    o.multi_controls = function() { 
+        o.make_controls.push(function (o) {
+            o.addTopButton($("#controls_multi .button"));
+        })
 
+        var set_tiling_param = function(param) { 
+            return function(v) { env.tiling[param] = v; u.retile(); } }
+        var get_tiling_param = function(param) { 
+            return function() { return env.tiling[param] } }
+        hive_app.App.has_slider_menu(o, ".change_aspect"
+            ,set_tiling_param("aspect"), get_tiling_param("aspect"), null, null
+            ,{ min: .30, max: 3.0, quant: .1
+        })
+        hive_app.App.has_slider_menu(o, ".change_padding"
+            ,set_tiling_param("padding"), get_tiling_param("padding"), null, null
+            ,{ min: -30, max: 30, quant: 1, clamp: false
+        })
+        hive_app.App.has_slider_menu(o, ".change_columns"
+            ,set_tiling_param("columns"), get_tiling_param("columns"), null, null
+            ,{ min: 1, max: 10.0, quant: .1, clamp_max: false
+        })
+    }
     o.unfocus = function(app){
         if(app) o.update($.grep(elements, function(el){ return el !== app }));
         else o.update([]);
@@ -575,7 +626,8 @@ o.Selection = function(o) {
         var load_count = elements.length, copies, _load = opts.load;
         opts = $.extend({ 
             offset: [ 0, o.dims()[1] + 20 ],
-            'z_offset': elements.length },
+            // 'z_offset': elements.length 
+            },
             opts)
         opts.load = function(){
             load_count--;
@@ -587,9 +639,7 @@ o.Selection = function(o) {
             }
         };
         env.History.begin();
-        copies = $.map( elements, function(e){
-            return e.copy(opts)
-        });
+        var copies = hive_app.Apps.copy(elements, opts)
         env.History.group('copy group');
         return copies;
     }
@@ -605,16 +655,46 @@ o.Selection = function(o) {
     o.get_stack = function(){
         return elements.sort(function(a, b){ a.layer() - b.layer() });
     };
-    o.stack_top = function(){
+    o.stack_top = function(ev){
+        if (!ev.shiftKey) {
+            return o.stack_shift(1)
+        }
         env.History.begin();
         $.each(o.get_stack(), function(i, el){ el.stack_top() })
         env.History.group('stack group to top');
     };
-    o.stack_bottom = function(){
+    o.stack_bottom = function(ev){
+        if (!ev.shiftKey) {
+            return o.stack_shift(-1)
+        }
         env.History.begin();
         $.each(o.get_stack().reverse(), function(i, el){ el.stack_bottom() })
         env.History.group('stack group to bottom');
     };
+    o.stack_shift = function(offset) {
+        env.History.begin();
+        var overlaps = u.overlapped_apps(u.region_from_app(o))
+            , elements = o.get_stack(), up_offset = -1
+        if (offset < 0) {
+            elements.reverse()
+            up_offset = 0
+        }
+        overlaps = u.except(overlaps, elements)
+        var z_indexes = $.map(overlaps, function(a) { return a.layer(); })
+        z_indexes.sort()
+
+        $.map(elements, function(a) {
+            var layer = a.layer()
+            for (var i = 0; i < z_indexes.length; i++)
+                if (layer < z_indexes[i])
+                    break;
+            i = js.bound(i + offset + up_offset, 0, z_indexes.length - 1)
+            var new_layer = z_indexes[i];
+            if (u._sign(new_layer - layer) == u._sign(offset))
+                a.stack_to(new_layer)
+        })
+        env.History.group('stack group ' + ((offset > 0) ? 'up' : 'down'));
+    }
 
     var parent = o;
     o.make_controls.push(function(o){
@@ -644,8 +724,8 @@ o.Selection = function(o) {
                     else return true
                 },
             46: function(){ o.remove() }, // del
-            66: function(){ o.stack_bottom() }, // b
-            84: function(){ o.stack_top() }, // t
+            66: function(){ o.stack_bottom(ev) }, // b
+            84: function(){ o.stack_top(ev) }, // t
         }
         if(handlers[ev.keyCode]){
             if(handlers[ev.keyCode]()) return;
@@ -699,8 +779,9 @@ o.Selection = function(o) {
     var delegates = ["color", "color_set", "opacity", "opacity_set"
         ,"border_radius", "border_radius_set", "link", "link_set"
         ,"stroke_width", "stroke_width_set", "stroke_update", "reframe"
-        ,"blur", "blur_set", "stroke", "stroke_set", 'run'
-        ,'css_class', 'css_class_set'];
+        ,"blur", "blur_set", "stroke", "stroke_set", 'run', 'edit', 'stop'
+        ,'css_class', 'css_class_set', "border_width", "border_width_set"
+        ,"client_data", "client_data_set"];
     delegates.map(function(fn_name) {
         o[fn_name] = delegate_fn(fn_name);
     });

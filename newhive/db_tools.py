@@ -43,9 +43,10 @@ def new_exprs(within_secs):
     return db.Expr.search({'created': {'$gt': now() - within_secs}})
 
 def new_exprs_weekly(weeks=20):
-    week = 7*86400
-    expr_counts = [new_exprs(secs).count() for secs in xrange(0, week*weeks, week)]
-    return [expr_counts[i + 1] - expr_counts[i] for i in xrange(weeks - 1)]
+    return new_exprs_periodic(periods=weeks, period=7*86400)
+def new_exprs_periodic(periods=20, period=7*86400):
+    expr_counts = [new_exprs(secs).count() for secs in xrange(0, period*periods, period)]
+    return [expr_counts[i + 1] - expr_counts[i] for i in xrange(periods - 1)]
 
 def name(entity):
     if type(entity) == list:

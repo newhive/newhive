@@ -15,12 +15,17 @@ var ImageFactory = require('ti.imagefactory');
 
 Titanium.App.Properties.setBool('is_test', true);
 
+Titanium.App.Properties.setBool('is_test', true);
+Titanium.App.Properties.setString('username', 'nd4');
+Titanium.App.Properties.setString('pwd', 'nd4');
+
 var photosCollection = Alloy.Collections.instance('Photos');
 
-Titanium.App.Properties.setString('base_url_ssl', 'https://staging.newhive.com/');
-Titanium.App.Properties.setString('base_url', 'http://staging.newhive.com/');
 
-var NUM_ACTIVE_XHR = 0;
+Titanium.App.Properties.setString('base_url_ssl', 'https://www.newhive.com/');
+Titanium.App.Properties.setString('base_url', 'http://www.newhive.com/');
+
+Titanium.App.Properties.setInt('num_active_xhr', 0);
 var imageUploadQueue = new Array();
 
 //global activityIndicator
@@ -61,6 +66,7 @@ function showHiveCamera() {
 			photo_model.set('photo_blob', small_image_obj.image);
 			photo_model.set('width', small_image_obj.width);
 			photo_model.set('height', small_image_obj.height);
+			photo_model.set('is_uploaded', 0);
 			photo_model.save();
 			photosCollection.add(photo_model);
 
@@ -77,7 +83,7 @@ function showHiveCamera() {
 			Titanium.App.Properties.setBool('is_camera_open', false);
 
 			//caputre any setActivityIndicatorHide events that were defered because the camera was open
-			if(NUM_ACTIVE_XHR==0){
+			if(Titanium.App.Properties.getInt('num_active_xhr') ==0){
 				setActivityIndicatorHide();
 			}
 		},
@@ -97,22 +103,26 @@ function showHiveCamera() {
 
 	var compose = Alloy.createController('Compose'); 
 	var compose_win = compose.getView('compose_window');
+	Ti.App.fireEvent('showSave');
 	//avoid camera error by disabling showCamera on compose page until image finishes resizing
 	Ti.App.fireEvent('disableShowCamera');
 	Titanium.App.Properties.setBool('is_camera_open', true);	
 }
 
 function showHiveGallery(){
-	Titanium.Media.openPhotoGallery({
+	var opts = {
+		mediaTypes:[Titanium.Media.MEDIA_TYPE_PHOTO],
 		success:function(event)
 		{
-			//checking if it is photo
+			var small_image_obj;
+			// checking if it is photo
 			if(event.mediaType == Ti.Media.MEDIA_TYPE_PHOTO) {
-				compose_win.open();
-
 				small_image_obj = reduceImageSize(event.media);
+			}
 
-				photo_model = Alloy.createModel('photos');
+			if (small_image_obj && small_image_obj.width) {
+				compose_win.open();
+				var photo_model = Alloy.createModel('photos');
 				photo_model.set('photo_blob', small_image_obj.image);
 				photo_model.set('width', small_image_obj.width);
 				photo_model.set('height', small_image_obj.height);
@@ -133,14 +143,16 @@ function showHiveGallery(){
 			Titanium.App.Properties.setBool('is_camera_open', false);
 
 			//caputre any setActivityIndicatorHide events that were defered because the camera was open
-			if(NUM_ACTIVE_XHR==0){
+			if(Titanium.App.Properties.getInt('num_active_xhr') ==0){
 				setActivityIndicatorHide();
 			}
 		}	
-	});
+	};
+	Titanium.Media.openPhotoGallery(opts);
 
 	var compose = Alloy.createController('Compose'); 
 	var compose_win = compose.getView('compose_window');
+	Ti.App.fireEvent('showSave');
 	//avoid camera error by disabling showCamera on compose page until image finishes resizing
 	Ti.App.fireEvent('disableShowCamera');
 }
@@ -161,6 +173,7 @@ function checkLogin() {
 
 	xhr.onerror = function(e) {
 		alert('Error: '+ e.error);
+		checkLogin();
 	};
 
 	xhr.onload = function(){
@@ -184,25 +197,22 @@ function checkLogin() {
 			Ti.App.current_user_name = res.name;
 			Ti.App.current_user_id = res.id;
 
-			var creator = Alloy.createController('Create'); 
-			creator.getView('create_window').open();
+			var creator = Alloy.createController('Compose'); 
+			creator.getView('compose_window').open();
 		}else{
 			var login = Alloy.createController('Login');
 			login.getView('login_window').open();
+			login.tf_username.softKeyboardOnFocus =
+				Titanium.UI.Android.SOFT_KEYBOARD_SHOW_ON_FOCUS;
+			login.tf_username.focus();
 		};
 	};
 }
 
-
 function reduceImageSize(lg_img) {
-	Ti.API.info('width: ' + lg_img.width);
-	Ti.API.info('height: ' + lg_img.height);
-
 	var max_length = 1000;
 
 	reduce_pct = max_length/lg_img.width;
-
-	Ti.API.info('this is the REDUCE_PCT: '+ reduce_pct);
 
 	reduce_w = Math.floor(lg_img.width*reduce_pct);
 	reduce_h = Math.floor(lg_img.height*reduce_pct);
@@ -210,17 +220,27 @@ function reduceImageSize(lg_img) {
 
 	Ti.API.info('New Reduce Width: ' + reduce_w);
 	Ti.API.info('New Reduce Height: ' + reduce_h);
-	Ti.API.info('BEFORE reducing: ' + lg_img.length);
-
+	try {
+		Ti.API.info('BEFORE reducing: ' + lg_img.length);
+	} catch(error) {}
 
 	small_photo = ImageFactory.imageAsResized(lg_img,
 		{
 			width:reduce_w,
 			height:reduce_h,
-			format:ImageFactory.JPEG,
-			quality:0.8
+			format:ImageFactory.JPEG
 		});
+
+	try {
+		small_photo = ImageFactory.compress(small_photo, 0.555);
+	} catch(error) {
+		Ti.API.info('Input not compressible: ');
+		return false;
+	}
+
 	Ti.API.info('AFTER reducing: ' + small_photo.length);
+	Ti.API.info('AFTER width: ' + reduce_w);
+	Ti.API.info('AFTER height: ' + reduce_h);
 
 	small_photo_obj = {
 		image: small_photo,
@@ -244,16 +264,28 @@ function uploadImage(photo_model) {
 	xhr.open('POST', url);
 	small_photo = photo_model.get('photo_blob');
 	var params = {client : 'mobile',  file: small_photo};
+
 	xhr.send(params);
 
-	NUM_ACTIVE_XHR++;
+	naxhr = Titanium.App.Properties.getInt('num_active_xhr');
+	naxhr++;
+	Titanium.App.Properties.setInt('num_active_xhr', naxhr);
+
 	setActivityIndicatorShow();
 
 	xhr.onerror = function(e) {
-		alert('Error: '+ e.error);
+		naxhr = Titanium.App.Properties.getInt('num_active_xhr');
+		naxhr--;
+		Titanium.App.Properties.setInt('num_active_xhr', naxhr);
+
+		if(naxhr == 0 && Titanium.App.Properties.getBool('is_camera_open')==false){
+			setActivityIndicatorHide();
+		}
+		Ti.App.fireEvent('photoFailedToUpload');
 	};
 
 	xhr.onload = function(){
+
 		//if NOT json redirect to login
 		try {
 		    JSON.parse(this.responseText);
@@ -263,19 +295,42 @@ function uploadImage(photo_model) {
 			return;
 		}
 
-		NUM_ACTIVE_XHR--;
+		naxhr = Titanium.App.Properties.getInt('num_active_xhr');
+		naxhr--;
+		Titanium.App.Properties.setInt('num_active_xhr', naxhr);
 
 		//if camera is open defer setActivityIndicatorHide
-		if(NUM_ACTIVE_XHR == 0 && Titanium.App.Properties.getBool('is_camera_open')==false){
+		if(naxhr == 0 && Titanium.App.Properties.getBool('is_camera_open')==false){
 			setActivityIndicatorHide();
 		}
 
 		res = JSON.parse(this.responseText)[0];
 
 		photo_model.set('new_hive_id', res.id);
+		photo_model.set('is_uploaded', 1);
 		photo_model.save();
+
+		//used to update image view in compose
+		Ti.App.fireEvent('photoUploaded');
+
+		//check for and if any retry faild uploads
+		Ti.App.fireEvent('retryFailedUploads');
 	};
 }
+
+Ti.App.addEventListener('retryFailedUploads',function() {
+	fu = photosCollection.where({is_uploaded: 0});
+	Ti.API.info('retryFailedUploads');
+	try{
+		if(fu.length > 0){
+			photo_model = fu.pop();
+			uploadImage(photo_model);
+		}
+	} catch(error){
+		return;
+	}
+});
+
 
 function addActivityIndicator(win){
 	do_add_ai = true;

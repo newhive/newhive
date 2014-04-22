@@ -2,6 +2,10 @@ var args = arguments[0] || {};
 ///
 Ti.API.info('LOADING LOGIN PAGE');
 
+Ti.App.addEventListener('app:do_login', function(e) {
+	do_login();
+});
+
 function do_login(e) {
 	var BASE_URL = Titanium.App.Properties.getString('base_url_ssl');
 	var url = BASE_URL + 'api/user/login?json=true';
@@ -12,9 +16,8 @@ function do_login(e) {
 	Ti.API.info('username value: ' + username);
 	
 	if(Titanium.App.Properties.getBool('is_test') && username == ''){
-		username = 'viciousesque';
-		pwd = 'trueman';
-		//alt pwd: 		
+		username = Titanium.App.Properties.getString('username')
+		pwd = Titanium.App.Properties.getString('pwd');
 	}
 	
 	if(Titanium.App.Properties.getBool('is_test') == true){
@@ -51,14 +54,18 @@ function do_login(e) {
 			Ti.App.current_user_name = res.name;
 			Ti.App.current_user_id = res.id;
 			
-			var creator = Alloy.createController('Create'); 
-			creator.getView('create_window').open();
+			var creator = Alloy.createController('Compose'); 
+			creator.getView('compose_window').open();
 			
 		}else{
 			Ti.API.info('you failed');
 			$.error_message.opacity = 1;
 			$.retrieve_password.opacity = 1;
 		};
+	};
+
+	xhr.onerror = function(e) {
+		alert('Error: '+ e.error);
 	};
 	
 }

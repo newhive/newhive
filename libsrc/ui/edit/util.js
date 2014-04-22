@@ -25,17 +25,34 @@ define([
 var o = {}
     ,bound = js.bound;
 
-o.is_ctrl = function(ev){
-    return (ev.ctrlKey || ev.metaKey);
+// For performance-critical ops, do not use jquery style
+o.inline_style = function(el, styles) {
+    var el_style = el.style
+    $.each(styles, function(style_name, style_val) {
+        el_style[style_name] = style_val + 'px'
+    })
 }
 
+// Returns true for a pseudo-control key (control on real computers, meta on macs)
+o.is_ctrl = function(ev){
+    ev = ev || env.ev;
+    return ev && (ev.ctrlKey || ev.metaKey);
+}
+o.should_snap = function(ev) {
+    ev = ev || env.ev;
+    return !ev || !(ev.altKey);
+}
+
+// convert from pos/dims into a dict with left/right/width/height
 o.css_coords = function(el, pos, dims){
     return el.css({ left: pos[0], top: pos[1]
         ,width: dims[0], height: dims[1] })
 }
 
+// convert between degrees and radians
 o.rad2deg = function(angle) { return angle * (180. / Math.PI) }
 o.deg2rad = function(angle) { return angle * (Math.PI / 180.) }
+
 // rotate the given 2-vector counterclockwise (y-up) through angle radians
 o.rotate = function(pt, angle) {
     var cos = Math.cos(angle);
@@ -45,6 +62,9 @@ o.rotate = function(pt, angle) {
     res[1] = pt[1]*cos + pt[0]*sin;
     return res;
 }
+
+// rotate the given point counterclockwise (y-up) through angle radians
+// about a particular point in 2-space
 o.rotate_about = function(pt, cent, angle) {
     return o._add(cent)(o.rotate(o._sub(pt)(cent), angle));
 }
@@ -55,26 +75,39 @@ o._sign = function(x) {
 }
 
 o._apply = function(func, scale) {
-    if (typeof(scale) == "number") {
-        return function(l) {
-            return $.map(l, function(x) { return func(scale, x); });
-        }
-    } else {
+    var scalar_functor = function(l) {
+        if (typeof(l) == "number") return func(scale, l);
+        return $.map(l, function(x) { return func(scale, x); });
+    }
+    var vector_functor = function(l) {
         // TODO: error handling?
-        return function(l) {
-            if (typeof(l) == "number") {
-                return $.map(scale, function(x, i) { return func(x, l); });
-            } else {
-                return $.map(l, function(x, i) { return func(scale[i], x); });
-            }
+        if (typeof(l) == "number") {
+            return $.map(scale, function(x, i) { return func(x, l); });
+        } else {
+            return $.map(l, function(x, i) { return func(scale[i], x); });
         }
     }
+    var variadic_functor = function(s) {
+        return (typeof(s) == "number") ? scalar_functor : vector_functor;
+    }
+    if (arguments.length < 3)
+        return variadic_functor(scale);
+    // var accum = (scale.slice) ? scale.slice() : scale;
+    for (var i = 2; i < arguments.length; ++i) {
+        // scale = accum;
+        scale = variadic_functor(scale)(arguments[i]);
+    }
+    return scale;
 };
 
-o._mul = function(scale){ return o._apply(js.op['*'], scale) }
-o._add = function(scale){ return o._apply(js.op['+'], scale) }
-o._div = function(scale){ return o._apply(js.op['/'], scale) }
-o._sub = function(scale){ return o._apply(js.op['-'], scale) }
+o._mul = function(){ return o._apply.apply(null, 
+    [js.op['*']].concat(Array.prototype.slice.call(arguments, 0))) }
+o._add = function(){ return o._apply.apply(null, 
+    [js.op['+']].concat(Array.prototype.slice.call(arguments, 0))) }
+o._div = function(){ return o._apply.apply(null, 
+    [js.op['/']].concat(Array.prototype.slice.call(arguments, 0))) }
+o._sub = function(){ return o._apply.apply(null, 
+    [js.op['-']].concat(Array.prototype.slice.call(arguments, 0))) }
 o._inv = function(l){ return l.map(function(x){ return 1/x; }) }
 
 // Linear interpolation
@@ -150,6 +183,7 @@ o.array_equals = function(a, b) {
   }
   return true;
 }
+// returns the array of the nth element of every member array
 o.nth = function(array, n) {
     return array.map(function(x) { return x[n] })
 }
@@ -159,15 +193,6 @@ o.max = function(array){
 o.min = function(array){
     return Math.min.apply(Math, array);
 };
-
-o.array_sum = function( a, b ){
-    if (a.length != b.length) { throw "Arrays must be equal length" };
-    rv = [];
-    for (i=0; i< a.length; i++){
-        rv[i] = a[i] + b[i]
-    }
-    return rv;
-}
 
 var checkIfAllArgumentsAreArrays = function (functionArguments) {
     for (var i = 0; i < functionArguments.length; i++) {
@@ -282,6 +307,83 @@ o.polygon = function(sides){
 }
 
 //// BEGIN-editor-refactor belongs in editor specific utils
+// Sort two apps, first by top, then by left
+o.topo_cmp = function(app1, app2) {
+    var a = app2.min_pos(), b = app1.min_pos();
+    if (a[1] != b[1])
+        return b[1] - a[1];
+    return b[0] - a[0];
+}
+o.retile = function(opts) {
+    opts = $.extend({ 
+            start_pos:env.Selection.min_pos().slice()
+            ,width:env.Selection.max_pos()[0] - env.Selection.min_pos()[0]
+        }
+        ,env.tiling, opts)
+    var apps = env.Selection.sorted()
+    env.History.change_start(apps)
+    env.Apps.begin_layout()
+    if (opts.natural) {
+        opts.aspects = apps.map(function(a) { return a.aspect || a.get_aspect() })
+    } else {
+        opts.aspects = apps.map(function(a) { return a.get_aspect() })
+    }
+    var regions = o.tile_magic(apps.length, opts)
+    for (var i = 0; i < apps.length; ++i) {
+        var app = apps[i]
+        if (opts.natural && app.aspect) {
+            app.fit_to({pos:regions[i][0], dims:regions[i][1]
+                , scaled:[app.aspect,1]})
+        } else {
+            app.pos_relative_set(regions[i][0])
+            app.dims_relative_set(regions[i][1])
+        }
+        if (app.recenter) app.recenter()
+    }
+    env.Apps.end_layout()
+    env.Selection.update_relative_coords();
+    env.History.change_end("retile", {collapse: true})
+}
+// return an ordered list of count [pos, dims] pairs to tile
+o.tile_magic = function(count, opts) {
+    opts = $.extend({
+        columns:3               // max columns in any row
+        ,width:1000             // width to fill
+        ,aspect:1.61            // preferred aspect ratio of elements
+        ,padding:env.padding()  // padding between elements
+        ,start_pos: [0, 0]      // where to position the 0th element
+        ,aspects:[]             // list of aspects for each object
+    }, opts)
+    var max_columns = opts.columns, row_width = opts.width, aspect = opts.aspect
+        ,padding = opts.padding, start_pos = opts.start_pos
+        ,rows = Math.ceil(count / max_columns), pos = start_pos.slice()
+        ,remainder = count, mod = count / rows, surplus = 0
+        ,res = [], n = 0
+    for (var y = 0; y < rows; ++y) {
+        surplus += mod
+        var columns = Math.round(surplus)
+            ,total_pad = (columns - 1)*padding
+            ,total_width = (row_width - total_pad)
+            ,dims = [aspect, 1]
+            ,first_n = n, row_aspect = 0
+        for (var x = 0; x < columns; ++x) {
+            var new_aspect = opts.aspects[n++] || aspect
+            row_aspect += new_aspect
+        }
+        dims[1] = total_width / row_aspect
+        n = first_n
+        for (var x = 0; x < columns; ++x) {
+            var new_aspect = opts.aspects[n++] || aspect
+            dims[0] = dims[1] * new_aspect
+            res.push([pos.slice(), dims.slice()])
+            pos[0] += dims[0] + padding
+        }
+        pos[0] = start_pos[0]
+        pos[1] += dims[1] + padding
+        surplus -= columns
+    }
+    return res
+}
 o.region_from_app = function(app) {
     var min_pos = app.min_pos(), max_pos = app.max_pos();
     return { left: min_pos[0], right: max_pos[0],
@@ -321,6 +423,15 @@ o.app_bounds = function(elements) {
         bottom: o.max(abs_maxs.map(function(c){ return c[1] }))
     };
 };
+
+// Ensure that the given point is viewable in the scroll range
+o.scroll_to_view = function(pt) {
+    var $body = $("body"), top = $body.scrollTop(), bottom = top + $body.height()
+    if (pt[1] < top)
+        $body.scrollTop(pt[1])
+    else if (pt[1] > bottom)
+        $body.scrollTop(pt[1] - (bottom - top))
+}
 
 // wrappers
 o.hover_menu = function(handle, drawer, opts){
@@ -435,10 +546,26 @@ o.new_file = function(files, opts, app_opts, filter) {
     // TODO-feature: depending on type and number of files, create grouping of
     // media objects. Multiple audio files should be assembled into a play
     // list. Multiple images should be placed in a table, or slide-show
-
-    return $.map(files, function(file, i){
+    env.History.begin();
+    if (context.flags.tile_multiple_images && files.length > 1) {
+        var gutter = 20, width = 1000-2*gutter, columns = 3.5, padding = env.padding()
+        if (opts.dimensions) width = opts.dimensions[0]
+        columns = Math.max(1, columns * width / 1000)
+        var start_pos = opts.position || 
+            [gutter, Math.max(0, o.app_bounds(env.Apps.all()).bottom) + padding]
+        var regions = o.tile_magic(files.length, {start_pos:start_pos, columns:columns
+            ,aspect: 1.61, width:width, padding:padding 
+        })
+    }
+    var loaded_count = 0;
+    var apps = $.map(files, function(file, i){
         var app = $.extend({ file_name: file.name, file_id: file.id,
             file_meta: file.meta }, opts);
+        if (regions) {
+            app.position = regions[i][0]
+            app.dimensions = regions[i][1]
+            app.fit = 2
+        }
 
         // TODO: html files should just be saved on s3 and inserted as an <iframe>
         // if(file.mime.match(/text\/html/)){
@@ -470,10 +597,25 @@ o.new_file = function(files, opts, app_opts, filter) {
         if (filter && !filter(app))
             return;
 
-        return env.new_app(app, $.extend({ offset: [20*i, 20*i] }, app_opts) );
+        loaded_count++;
+        var loaded = function() {
+            if (!--loaded_count && context.flags.tile_multiple_images 
+                && files.length > 1) {
+                env.Selection.update(apps)
+                o.retile({natural:1})//, start_pos:start_pos})
+                env.Selection.scroll_to_view();
+            }
+        }
+        if (!context.flags.tile_multiple_images)
+            return env.new_app(app, $.extend({ offset: [20*i, 20*i] }, app_opts) );
+        else
+            return env.new_app(app, $.extend({no_select:true, load:loaded}, app_opts) );
     });
-
-    return false;
+    env.History.group('create');
+    env.Selection.update(apps);
+    if (regions)
+        env.Selection.scroll_to_view();
+    return apps;
 };
 
 env.layout_apps = o.layout_apps = function(){
@@ -515,7 +657,7 @@ o.snap_helper = function(my_tuple, opts) {
         snap_radius: 10,        // Snap at most this far away
         sensitivity: 0,         // Exponent for falloff in the dimension of snap 
                                 // (makes it not snap far away)
-        padding: 10,            // Editor units to add to object snapping against each other
+        padding: env.padding(), // Editor units to add to object snapping against each other
         guide_0: true,          // show horizontal guide
         guide_1: true,          // show vertical guide
     }, opts );
@@ -861,6 +1003,11 @@ o.append_color_picker = function(container, callback, init_color, opts){
     return o;
 };
 
+var cursor_name
+o.cursor_set = function(name){
+    env.apps_e.add('#grid_guide').removeClass(cursor_name).addClass(name)
+    cursor_name = name
+}
 //// END-editor-refactor
 
 
@@ -910,12 +1057,12 @@ o.debug = function(a){
 
 o.remove_all_apps = function() {
     // store a copy of Apps so we can destructively update it
-    var aps = $.map(hive_app.Apps, id); 
+    var apps = $.map(hive_app.Apps, id); 
     $.map(apps, function(a) { a.remove() });
 };
 
 //// END-debugging
-
+env.util = o
 return o;
 
 });

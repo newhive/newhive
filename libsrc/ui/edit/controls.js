@@ -115,10 +115,11 @@ o.Controls = function(app, multiselect, delegate) {
         o.div.append(c);
         return c;
     };
-    o.appendButton = function(c) {
-        var buttons = o.div.find('.buttons');
+    o.appendButton = function(c, klass) {
+        klass = klass || "buttons"
+        var buttons = o.div.find('.' + klass);
         if (buttons.length == 0)
-            buttons = $('<div class="control buttons"></div>').appendTo(o.div);
+            buttons = $('<div class="control ' + klass + '"></div>').appendTo(o.div);
         buttons.append(c);
         return c;
     }
@@ -126,14 +127,19 @@ o.Controls = function(app, multiselect, delegate) {
     o.addControl = function(ctrls) { 
         return $($.map(ctrls.clone(false), o.appendControl)); };
     o.addButton = function(ctrls) { 
-        return $($.map(ctrls.clone(false), o.appendButton)); };
+        return $($.map(ctrls.clone(false), function(x) {
+            return o.appendButton(x) } )); };
+    o.addTopButton = function(ctrls) { 
+        return $($.map(ctrls.clone(false), function(x) {
+            return o.appendButton(x, "top_buttons") } )); };
     o.addControls = function(ctrls) { 
         return $($.map(ctrls.clone(false).children(), o.appendControl)); };
     o.addButtons = function(ctrls) {
         $ctrls = ctrls.find(".control.buttons");
         if ($ctrls.length == 0)
             $ctrls = ctrls;
-        return $($.map($ctrls.clone(false).children(), o.appendButton)); };
+        return $($.map($ctrls.clone(false).children(), function (x) {
+            o.appendButton(x) } )); };
     o.hover_menu = function(handle, drawer, opts) {
         return u.hover_menu(handle, drawer, $.extend({
             auto_height: false, offset_y : o.padding - 7}, opts))
@@ -165,15 +171,16 @@ o.Controls = function(app, multiselect, delegate) {
         //      overlay app content can be separated
         // Maybe ditch border pushing entirely. Not convinced it's worth it
         var ap = app.pos(),
-            win = $(window), wdims = [win.width(), win.height()],
-            pos = [ Math.max(pad_ul[0] + window.scrollX,
-                ap[0]), Math.max(pad_ul[1] + window.scrollY, ap[1]) ],
+            // win = $(window), wdims = [win.width(), win.height()],
+            wdims = env.win_size,
+            pos = [ Math.max(pad_ul[0] + env.scrollX,
+                ap[0]), Math.max(pad_ul[1] + env.scrollY, ap[1]) ],
             ad = app.dims(),
             dims = [ ap[0] - pos[0] + ad[0], ap[1] - pos[1] + ad[1] ];
-        if(dims[0] + pos[0] > wdims[0] + window.scrollX - pad_br[0])
-            dims[0] = wdims[0] + window.scrollX - pad_br[0] - pos[0];
-        if(dims[1] + pos[1] > wdims[1] + window.scrollY - pad_br[1])
-            dims[1] = wdims[1] + window.scrollY - pad_br[1] - pos[1];
+        if(dims[0] + pos[0] > wdims[0] + env.scrollX - pad_br[0])
+            dims[0] = wdims[0] + env.scrollX - pad_br[0] - pos[0];
+        if(dims[1] + pos[1] > wdims[1] + env.scrollY - pad_br[1])
+            dims[1] = wdims[1] + env.scrollY - pad_br[1] - pos[1];
 
         var minned_dims = [ Math.max(min_d[0], dims[0]),
             Math.max(min_d[1], dims[1]) ];
@@ -201,16 +208,16 @@ o.Controls = function(app, multiselect, delegate) {
             bw = o.border_width, outer_l = -cx -bw - p,
             outer_width = dims[0] + bw*2 + p*2, outer_height = dims[1] + p * 2 + 1;
 
-        o.div.css({ left: pos[0], top: pos[1] });
+        u.inline_style(o.div[0], { left: pos[0], top: pos[1] })
 
-        o.select_box.css({ left: cx, top: cy });
-        o.select_borders.eq(0).css({ left: outer_l,
+        u.inline_style(o.select_box[0], { left: cx, top: cy });
+        u.inline_style(o.select_borders[0], { left: outer_l,
             top: -cy -bw -p, width: outer_width, height: bw }); // top
-        o.select_borders.eq(1).css({ left: cx + p,
+        u.inline_style(o.select_borders[1], { left: cx + p,
             top: -cy -p - bw + 1, height: outer_height + bw * 2 -2, width: bw }); // right
-        o.select_borders.eq(2).css({ left: outer_l,
+        u.inline_style(o.select_borders[2], { left: outer_l,
             top: cy + p, width: outer_width, height: bw }); // bottom
-        o.select_borders.eq(3).css({ left: outer_l,
+        u.inline_style(o.select_borders[3], { left: outer_l,
             top: -cy -p - bw + 1, height: outer_height + bw * 2 -2, width: bw }); // left
         if(o.multiselect) return;
 
@@ -220,6 +227,7 @@ o.Controls = function(app, multiselect, delegate) {
         o.c.stack  .css({ left: dims[0] - 78 + p, top: dims[1] + 8 + p });
         o.c.buttons.css({ left: -bw - p, top: dims[1] + p + 10,
             width: dims[0] - 60 });
+        o.c.top_buttons.css({ left: -bw - p, top: -38 - p, width: dims[0] - 60 });
     };
 
     o.div = $('<div>').addClass('controls');
@@ -227,7 +235,7 @@ o.Controls = function(app, multiselect, delegate) {
 
     // add borders
     o.select_box = $("<div style='position: absolute'>");
-    var border = $('<div>').addClass('select_border drag ehapp');
+    var border = $('<div>').addClass('select_border drag happ');
     o.select_borders = border.add(border.clone().addClass('right'))
         .add(border.clone().addClass('bottom'))
         .add(border.clone().addClass('left'));
@@ -304,7 +312,7 @@ o.Controls = function(app, multiselect, delegate) {
                 copy_list = [o.app];
                 if (o.app.elements)
                     copy_list = o.app.elements();
-                var padding = [env.padding, env.padding];
+                var padding = [env.padding(), env.padding()];
                 var grid_dims = u._add(padding)(u._mul(1/env.scale())(o.app.dims()));
                 env.History.begin();
                 for (var x = 0; x < grid[0]; ++x) {
@@ -332,6 +340,7 @@ o.Controls = function(app, multiselect, delegate) {
         $.map(o.app.make_controls, function(f){ f(o) });
 
         o.c.buttons = d.find('.buttons');
+        o.c.top_buttons   = d.find('.top_buttons'  );
         d.find('.hoverable').each(function(i, el){ ui_util.hoverable($(el)) });
     }
 
