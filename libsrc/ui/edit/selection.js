@@ -73,6 +73,7 @@ o.Selection = function(o) {
         else if ($(ev.target).closest(".control").length)
             hit = true
 
+        // TODO: remove when menu shield works.
         if (!hit)
             $(":focus").blur()
 
@@ -677,10 +678,10 @@ o.Selection = function(o) {
     o.stack_shift = function(offset) {
         env.History.begin();
         var overlaps = u.overlapped_apps(u.region_from_app(o))
-            , elements = o.get_stack(), pad = -1
+            , elements = o.get_stack(), up_offset = -1
         if (offset < 0) {
             elements.reverse()
-            pad = 0
+            up_offset = 0
         }
         overlaps = u.except(overlaps, elements)
         var z_indexes = $.map(overlaps, function(a) { return a.layer(); })
@@ -691,7 +692,7 @@ o.Selection = function(o) {
             for (var i = 0; i < z_indexes.length; i++)
                 if (layer < z_indexes[i])
                     break;
-            i = js.bound(i + offset + pad, 0, z_indexes.length - 1)
+            i = js.bound(i + offset + up_offset, 0, z_indexes.length - 1)
             var new_layer = z_indexes[i];
             if (u._sign(new_layer - layer) == u._sign(offset))
                 a.stack_to(new_layer)
