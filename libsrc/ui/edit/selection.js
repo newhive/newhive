@@ -551,11 +551,15 @@ o.Selection = function(o) {
         o.make_controls.push(function (o) {
             o.addTopButton($("#controls_multi .button"));
         })
+        // Only show aspect control if there is an element with unfixed aspect
+        $("#controls_multi .button.change_aspect").showhide(
+            o.elements().filter(function(a) {return !a.get_aspect()}).length) 
 
         var set_tiling_param = function(param) { 
             return function(v) { env.tiling[param] = v; u.retile(); } }
         var get_tiling_param = function(param) { 
             return function() { return env.tiling[param] } }
+
         hive_app.App.has_slider_menu(o, ".change_aspect"
             ,set_tiling_param("aspect"), get_tiling_param("aspect"), null, null
             ,{ min: .30, max: 3.0, quant: .1
