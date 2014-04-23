@@ -685,6 +685,8 @@ o.snap_helper = function(my_tuple, opts) {
             break;
     }
     var tuple = [[],[]], new_pos = pos.slice();
+    if (snap_radius < 0.5)
+        return new_pos;
     // TODO-perf: save this array only after drag/drop
     // And keep it sorted
     var apps = env.Apps.all().filter(function(app) {
