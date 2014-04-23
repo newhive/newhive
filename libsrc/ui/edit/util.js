@@ -664,7 +664,7 @@ o.snap_helper = function(my_tuple, opts) {
     var s = env.scale(),
         exclude_ids = opts.exclude_ids,
         snap_strength = opts.snap_strength,
-        snap_radius = opts.snap_radius,
+        snap_radius = opts.snap_radius * env.padding()/10.,
         sensitivity = opts.sensitivity,
         padding = opts.padding,
         pos = [], show_guide = [];

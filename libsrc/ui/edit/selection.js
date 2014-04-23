@@ -113,6 +113,7 @@ o.Selection = function(o) {
     o.drag_target = function(){ return drag_target; };
     o.dragstart = function(ev, dd){
         if(dragging) return
+        u.reset_sensitivity();
         dragging = true;
         var app = ev.data;
         if(app && !u.is_ctrl(ev)) {
