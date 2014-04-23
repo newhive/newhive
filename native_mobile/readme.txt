@@ -48,5 +48,9 @@ adb devices
 cd native_mobile/brushkit
 node-inspector
 # in another terminal
+
+# debug build
 titanium build -p android -T device --debug-host localhost:5858 --skip-js-minify
+# regular build
+titanium build -p android -T device
 # open localhost:8080/debug?port=5858 in chrome, F8 to start app execution

@@ -2191,6 +2191,7 @@ Hive.App.has_resize = function(o) {
         if (!skip_history) history_point.save();
     };
     o.resize_to = function(delta){
+        dims_ref = dims_ref || o.dims();
         return [ Math.max(1, dims_ref[0] + delta[0]), 
             Math.max(1, dims_ref[1] + delta[1]) ];
     };
