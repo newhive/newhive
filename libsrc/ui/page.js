@@ -295,35 +295,28 @@ define([
                     });
                 }
             }
+            var form = $('.dialog.add_to_collection form')
+                ,tag_name = form.find('input[name=tag_name]')
+            form.off('after_submit').on('after_submit', o.dia_collections.close)
             o.dia_collections.open();
             var submit_add_to_collection = function(tag_name) {
-                $(".dialog.add_to_collection input[name=tag_name]").val(tag_name);
-                $(".dialog.add_to_collection form").submit();
-                o.dia_collections.close();
+                tag_name.val(tag_name)
+                form.submit()
             };
             var update_text = function (){
                 var text = $(".dialog.add_to_collection .tag_name")
-                    , val = $(text).val()
-                    , val_filtered = val.replace(/[^a-z0-9\_]+/i, '')
+                    ,val = $(text).val()
+                    ,val_filtered = val.replace(/[^a-z0-9\_]+/i, '').toLowerCase()
                 ;
                 if(val != val_filtered) $(text).val( val_filtered );
                 $(".dialog.add_to_collection .tag_new")
                     .text($(text).val()).showshow().addClass("tag_15");
                 if ('' == $(text).val())
                     $(".dialog.add_to_collection .tag_new").hidehide();
+                tag_name.val(val_filtered)
             }
-            $(".dialog.add_to_collection form").on('keypress', function (e) {
-                e = e || event;
-
-                if ((e.keyCode || e.which || e.charCode || 0) == 13) {
-                    submit_add_to_collection($(".dialog.add_to_collection .tag_name").val());
-                    return false;
-                }
-                return true;
-            });
-            $(".dialog.add_to_collection .tag_name").on('keyup', function (e) {
-                update_text();
-            });
+            $(".dialog.add_to_collection .tag_name")
+                .bind_once('keyup', update_text)
             $(".dialog.add_to_collection .tag_list .tag_label").
                 unbind('click').on('click', function (e) {
                 submit_add_to_collection($(this).text());
