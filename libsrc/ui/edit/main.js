@@ -76,7 +76,9 @@ Hive.init_menus = function() {
         ,{ min: 0, max: 30, quant: 1
         , handle:$(".icon.change_padding"), container:$("body")
         , menu_opts: { 
-            group: $(".misc.handle").data("menu")
+            layout_x: "submenu"
+            ,layout: "left"
+            ,group: $(".misc.handle").data("menu")
             ,auto_height: false 
         }
     }) ()
