@@ -78,6 +78,12 @@ define([
             opts.layout()
         }
 
+        var key_handler = function(e) {
+            if (e.keyCode == 27) { // escape
+                // If a dialog is up, kill it.
+                factory.close_all();
+            }
+        }
         o.open = function(){
             if(opts.opened) return;
             // TODO: Allow multiple dialogs?
@@ -117,7 +123,7 @@ define([
             if (!this_dia.data("_width"))
                 this_dia.data("_width", util.val(this_dia.css("width")));
             o.layout();
-
+            $("body").off('keydown', key_handler).on("keydown", key_handler);
             opts.open();
 
             return o
@@ -136,6 +142,8 @@ define([
                 opts.shield.remove();
             $(window).off('resize', o.layout);
             opts.close();
+            if (factory.dialogs.filter(function(d){ d.opened}).length == 0)
+                $("body").off('keydown', key_handler)
         }
 
         return o;

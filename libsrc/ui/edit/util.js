@@ -599,15 +599,15 @@ o.new_file = function(files, opts, app_opts, filter) {
 
         loaded_count++;
         var loaded = function() {
-            if (!--loaded_count && context.flags.tile_multiple_images 
-                && files.length > 1) {
+            if (!--loaded_count) {
                 env.Selection.update(apps)
-                o.retile({natural:1})//, start_pos:start_pos})
+                if (context.flags.tile_multiple_images && files.length > 1)
+                    o.retile({natural:1})//, start_pos:start_pos})
                 env.Selection.scroll_to_view();
             }
         }
         if (!context.flags.tile_multiple_images)
-            return env.new_app(app, $.extend({ offset: [20*i, 20*i] }, app_opts) );
+            return env.new_app(app, $.extend({ offset: [20*i, 20*i], load:loaded }, app_opts) );
         else
             return env.new_app(app, $.extend({no_select:true, load:loaded}, app_opts) );
     });

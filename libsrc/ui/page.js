@@ -373,16 +373,13 @@ define([
         // });
         
         // global keypress handler
-        $("body").unbind('keydown').keydown(function(e) {
+        var key_handler = function(e) {
             if (window.event)
                var key = window.event.keyCode;
             else if (e)
                var key = e.which;
             var keychar = String.fromCharCode(key);
-            if (e.keyCode == 27) { // escape
-                // If a dialog is up, kill it.
-                dialog.close_all();
-            } else if ((e.keyCode == 39 || e.keyCode == 37) &&
+            if ((e.keyCode == 39 || e.keyCode == 37) &&
                 !(e.metaKey || e.ctrlKey || e.altKey) &&
                 $(e.target).is("body")) {
                 // If paging, go to previous / next expression.
@@ -400,8 +397,9 @@ define([
             } else {
                 // alert('keyCode: ' + e.keyCode);
             }
-        });
-        $(window).scroll(function(e) {
+        }
+        $(document).off('keydown', key_handler).on("keydown", key_handler);
+        var scroll_handler = function(e) {
             if (c.route_name == "edit_expr")
                 return;
             return;
@@ -413,7 +411,8 @@ define([
                 if (c.route_name != "edit_expr")
                     $(".overlay.nav").stop().fadeIn("fast");
             }, 100);
-        });
+        }
+        $(window).off("scroll", scroll_handler).on("scroll", scroll_handler);
     };
     o.attach_handlers = function(){
         if(context.page && context.page.attach_handlers)
