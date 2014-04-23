@@ -188,8 +188,6 @@ Hive.App = function(init_state, opts) {
     o.type = Hive.appTypes[init_state.type];
     o.id = init_state.id || u.random_str();
     o.handler_type = 0;
-    o.sel_controls = [];
-    o.single_controls = [];
 
     o.css_state = {};
     o.content = function(content) { return $.extend({}, o.css_state); };
@@ -198,12 +196,15 @@ Hive.App = function(init_state, opts) {
         $.extend(o.css_state, props);
         if(o.controls) o.controls.layout();
     }
-    o.css_setter = function(css_prop) { return function(v) {
-        var ps = {}; ps[css_prop] = v; o.set_css(ps);
-    } }
-    o.css_setter_px = function(css_prop) { return function(v) {
-        var ps = {}; ps[css_prop] = v + 'px'; o.set_css(ps);
-    } }
+    o.css_getter = function(css_prop){ return function(){
+        return o.css_state[css_prop] } }
+    o.css_setter = function(css_prop, suffix) { 
+        suffix = suffix || ""
+        return function(v) {
+            var ps = {}; ps[css_prop] = v + suffix; o.set_css(ps);
+        }
+    }
+    o.css_setter_px = function(css_prop) { return o.css_setter(css_prop, 'px') }
 
     var _client_data = function() {
         o.init_state.client_data = o.init_state.client_data || {};
@@ -525,7 +526,7 @@ Hive.App = function(init_state, opts) {
     };
 
     o.state = function(){
-        var s = $.extend({}, o.init_state, o.state_relative(), {
+        var s = $.extend(true, {}, o.init_state, o.state_relative(), {
             z: o.layer(),
             full_bleed_coord: o.full_coord,
             id: o.id
@@ -691,7 +692,6 @@ Hive.registerApp(Hive.App.Html, 'hive.html');
 //         return o;
 //     };
 //     o.make_controls.push(controls);
-//     o.sel_controls = o.sel_controls.concat([ controls ]);
 
 //     setTimeout(function(){ o.load(); }, 100);
 
@@ -1264,6 +1264,7 @@ Hive.App.has_ctrl_points = function(o){
                 ev.stopPropagation()
         }
     })
+    o.make_controls[o.make_controls.length - 1].single = true;
 }
 
 Hive.App.Polygon = function(o){
@@ -1335,6 +1336,7 @@ Hive.App.Polygon = function(o){
         if(display_only){
             var s = env.scale()
             u.css_coords(o.div, u._mul(new_pos)(s), u._mul(new_dims)(s))
+            // if(o.controls) o.controls.layout();
         }
         else{
             o.pos_relative_set(new_pos)
@@ -1398,6 +1400,12 @@ Hive.App.Polygon = function(o){
     }
     o.resize_end = function(skip_history){
         _resize_end(skip_history)
+        scale = u._div(o.dims_relative())(ref_dims)
+        ref_points.map(function(p, i){
+            o.point_update(i, u._mul(p)(scale))
+        })
+        o.size_update(o.dims_relative())
+
         o.transform_start(0)
         o.reframe()
     }
@@ -2169,12 +2177,8 @@ Hive.App.has_resize = function(o) {
     o.resize_end = function(skip_history){ 
         u.set_debug_info("");
         $(".ruler").hidehide();
-        // skip_history = false;
         if (o.after_resize) skip_history |= o.after_resize();
         if (!skip_history) history_point.save();
-        if (env.Selection.selected(o)) 
-            env.Selection.update_relative_coords();
-        env.Selection.show_controls()
     };
     o.resize_to = function(delta){
         return [ Math.max(1, dims_ref[0] + delta[0]), 
@@ -2369,7 +2373,6 @@ Hive.App.has_rotate = function(o) {
         return o;
     }
     if (!o.is_selection) {
-        o.sel_controls.push(Hive.App.has_rotate);
         var angle = o.init_state.angle ? o.init_state.angle : 0;
         o.angle = function(){ return angle; };
         o.angle_set = function(a){

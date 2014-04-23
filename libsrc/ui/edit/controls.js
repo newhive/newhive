@@ -331,6 +331,7 @@ o.Controls = function(app, multiselect, delegate) {
                             copy_list.push(copy);
                     }
                 }
+                env.Selection.select(copy_list);
                 env.History.group('copy grid');
             });
         }

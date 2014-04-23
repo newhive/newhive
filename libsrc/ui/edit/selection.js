@@ -435,6 +435,7 @@ o.Selection = function(o) {
 
         full_apps = [];
         drag_target = ref_dims = undefined;
+        o.show_controls()
         return true;
     }
     var _dims_relative_set = o.dims_relative_set;
@@ -531,6 +532,9 @@ o.Selection = function(o) {
         o.make_controls = u.union(o.make_controls, sel_controls);
         if(apps.length > 1) {
             o.multi_controls();
+            o.make_controls = o.make_controls.filter(function(c) {
+                return !c.single;
+            })
         }
         if(!dragging && multi) {
             Controls(o, false);
