@@ -537,6 +537,11 @@ o.Selection = function(o) {
                 return !c.single;
             })
         }
+        o.make_controls = o.make_controls.merge_sort(function(a,b) {
+            a = a.display_order || 5
+            b = b.display_order || 5
+            return a - b
+        })
         if(!dragging && multi) {
             Controls(o, false);
             o.controls.layout();

@@ -124,7 +124,7 @@ Hive.init_menus = function() {
     u.hover_menu('.insert_shape', '#menu_shape');
     $('#menu_shape .rect').click(function(e) {
         hive_app.new_app({ type : 'hive.rectangle', css_state :
-            { color : colors[24], 'border-color' : 'black', 'border-width' : 0,
+            { 'background-color' : colors[24], 'border-color' : 'black', 'border-width' : 0,
                 'border-style' : 'solid' } });
     });
     $('#menu_shape .sketch').click(function(e) {

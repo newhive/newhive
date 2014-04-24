@@ -197,6 +197,7 @@ Hive.App = function(init_state, opts) {
     o.type = Hive.appTypes[init_state.type];
     o.id = init_state.id || u.random_str();
     o.handler_type = 0;
+    o.make_controls = [];
 
     o.css_state = {};
     o.content = function(content) { return $.extend({}, o.css_state); };
@@ -214,6 +215,29 @@ Hive.App = function(init_state, opts) {
         }
     }
     o.css_setter_px = function(css_prop) { return o.css_setter(css_prop, 'px') }
+
+    // Generic setters and getters
+    o.color = function(){ return o.css_state['background-color'] || '#FFFFFF' };
+    o.color_set = o.css_setter('background-color');
+    o.stroke = function(){ return o.css_state['border-color'] || '#000' };
+    o.stroke_set = o.css_setter('border-color');
+    o.border_width = function(){ return parseInt(o.css_state['border-width'] || 0) };
+    o.border_width_set = function(v) {
+        o.css_setter_px('border-width')(v);
+        if (env.Selection.controls)
+            fixup_controls(env.Selection.controls);
+        o.layout();
+    }
+    function fixup_controls(o) {
+        var has_border = false
+        env.Selection.each(function(i, a) {
+            has_border |= (a.border_width && a.border_width() > 0)
+        })
+        o.div.find('.buttons .button.stroke').showhide(has_border);
+    };
+    fixup_controls.display_order = 9;
+    o.make_controls.push(fixup_controls);
+
 
     var _client_data = function() {
         o.init_state.client_data = o.init_state.client_data || {};
@@ -286,8 +310,6 @@ Hive.App = function(init_state, opts) {
     o.stack_top = function(){
         o.stack_to(o.apps.length -1) };
     
-    o.make_controls = [];
-
     var focused = false;
     o.focused = function() { return focused };
     o.focus = Funcs(function() {
@@ -654,12 +676,11 @@ Hive.App.Html = function(o) {
     m = content.match(/(youtube)|(vimeo)/);
     if (m) {
         o.make_controls.push(memoize("full_screen_control", function(o) {
-            var app = o.single()
-            if(!app) return
             o.addButton($('#controls_image .set_bg'));
             o.div.find('.button.set_bg').click(function() {
-                Hive.bg_change(app.state()) });
+                Hive.bg_change(o.single().state()) });
         }))
+        o.make_controls[o.make_controls.length - 1].single = true;
     }
 
     setTimeout(function(){ o.load(); }, 100);
@@ -900,19 +921,7 @@ Hive.App.Image = function(o) {
     o.link = function(v) {
         return o.init_state.href;
     };
-    o.color = function(){ return o.css_state['background-color'] || '#FFFFFF' };
-    o.color_set = o.css_setter('background-color');
     // Hive.App.has_color(o)
-    o.stroke = function(){ return o.css_state['border-color'] || '#000' };
-    o.stroke_set = o.css_setter('border-color');
-    o.border_width = function(){ return parseInt(o.css_state['border-width'] || 0) };
-    o.border_width_set = function(v) {
-        o.css_setter_px('border-width')(v);
-        if (env.Selection.controls)
-            fixup_controls(env.Selection.controls);
-        o.layout();
-    }
-
     var _state_update = o.state_update, _state_relative = o.state_relative
         ,_state_relative_set = o.state_relative_set
     o.state_relative = function() {
@@ -1136,10 +1145,9 @@ Hive.App.Image = function(o) {
         };
 
         o.make_controls.push(function(sel){
-            var app = sel.single()
-            if(!app) return
-            evs.long_hold(sel.div.find('.resize'), app);
+            evs.long_hold(sel.div.find('.resize'), sel.single());
         })
+        o.make_controls[o.make_controls.length - 1].single = true;
     })();
 
     var _layout = o.layout;
@@ -1168,13 +1176,12 @@ Hive.App.Image = function(o) {
     };
 
     function controls(o) {
-        var app = o.single()
-        if(!app) return
         o.addButtons($('#controls_image'));
         o.append_link_picker(o.div.find('.buttons'));
         o.div.find('.button.set_bg').click(function() {
-            Hive.bg_change(app.state()) });
+            Hive.bg_change(o.single().state()) });
     };
+    controls.single = true;
     o.make_controls.push(controls);
 
     Hive.App.has_rotate(o);
@@ -1187,14 +1194,6 @@ Hive.App.Image = function(o) {
     Hive.App.has_image_drop(o);
     Hive.App.has_border_width(o);
     Hive.App.has_color(o, "stroke");
-    function fixup_controls(o) {
-        var has_border = false
-        env.Selection.each(function(i, a) {
-            has_border |= (a.border_width && a.border_width() > 0)
-        })
-        o.div.find('.buttons .button.stroke').showhide(has_border);
-    };
-    o.make_controls.push(fixup_controls);
 
     return o;
 }
@@ -1206,19 +1205,13 @@ Hive.App.Rectangle = function(o) {
     var Parent = $.extend({}, o);
     o.init_state.css_state = $.extend(o.init_state.content, o.init_state.css_state);
 
-    o.set_css = function(props) {
-        props['background-color'] = props.color || props['background-color'];
-        props['box-sizing'] = 'border-box';
-        Parent.set_css(props);
-    }
-
-    o.color = function(){ return o.css_state.color };
-    o.color_set = o.css_setter('color');
-
     Hive.App.has_rotate(o);
     Hive.App.has_color(o);
+    o.make_controls[o.make_controls.length - 1].display_order = 1
     Hive.App.has_border_radius(o);
     Hive.App.has_opacity(o);
+    Hive.App.has_border_width(o);
+    Hive.App.has_color(o, "stroke");
 
     o.div.addClass('rectangle')
     o.content_element = o.div //$("<div class='content drag'>").appendTo(o.div);
@@ -1456,11 +1449,11 @@ Hive.App.Polygon = function(o){
     }
 
     o.make_controls.push(function(o){
-        var app = o.single()
-        if(!app) return
         o.addButtons($('#controls_path'));
-        app.stroke_update(app.stroke_width())
+        app.stroke_update(o.single().stroke_width())
     });
+    o.make_controls[o.make_controls.length - 1].single = true;
+    
     Hive.App.has_stroke_width(o)
     Hive.App.has_color(o, "stroke");
     Hive.App.has_blur(o)
@@ -2431,9 +2424,8 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
         , container = opts.container, menu_opts = opts.menu_opts
         , initial, val, initialized = false, handle_name = opts.handle_name
         , quant = opts.quant, clamp_min = opts.clamp_min && opts.clamp
-        , clamp_max = opts.clamp && opts.clamp_max
+        , clamp_max = opts.clamp && opts.clamp_max, single = opts.single
     function controls(o) {
-        if (opts.single && !o.single()) return
         if(!start) start = noop
         if(!end) end = noop
         var hover_menu = (o && o.hover_menu) || u.hover_menu
@@ -2526,7 +2518,9 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
     }
     var res = controls
     if (o) {
-        res = memoize('slider' + handle_q + handle_name, controls)
+        if (single) controls.single = true
+        res = memoize('slider' + ((single) ? '_S' : '') + 
+            handle_q + handle_name, controls)
         o.make_controls.push(res)
     }
     return res
