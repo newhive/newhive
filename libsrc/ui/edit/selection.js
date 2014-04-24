@@ -694,7 +694,7 @@ o.Selection = function(o) {
         }
         overlaps = u.except(overlaps, elements)
         var z_indexes = $.map(overlaps, function(a) { return a.layer(); })
-        z_indexes.sort()
+        z_indexes.sort(js.op['-'])
 
         $.map(elements, function(a) {
             var layer = a.layer()

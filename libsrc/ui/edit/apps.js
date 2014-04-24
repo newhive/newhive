@@ -2399,12 +2399,12 @@ Hive.App.has_rotate = function(o) {
         var _sr = o.state_relative, _srs = o.state_relative_set
         o.state_relative = function(){
             var s = _sr();
-            if(angle) s.angle = angle;
+            if(angle === 0 || angle) s.angle = angle;
             return s;
         };
         o.state_relative_set = function(s){
             _srs(s)
-            if(s.angle)
+            if(s.angle === 0 || s.angle)
                 o.angle_set(s.angle)
         }
     }
