@@ -130,7 +130,7 @@ define([
             var old = $("#dynamic_group img").filter(function(e){
                 return $(this).attr("src") == h
             })
-            if (old.length == 0) {
+            if (old.length == 0 && h) {
                 var i = $("<img style='display:none'>").attr('src', h);
                 $("#dynamic_group").append(i);
             }
