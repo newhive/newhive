@@ -2372,7 +2372,15 @@ Hive.App.has_rotate = function(o) {
                 if(!app.is_selection)
                     history_point.save()
             })
-            .dblclick(function(){ app.angle_set(0); });
+            .dblclick(function(){ 
+                if(app.is_selection)
+                    return;
+                history_point = env.History.saver(
+                    app.angle, app.angle_set, 'rotate');
+                app.angle_set(0); 
+                env.Selection.update_relative_coords();
+                history_point.save()
+            });
 
         return o;
     }
