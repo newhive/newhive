@@ -111,14 +111,22 @@ env.Apps = Hive.Apps = (function(){
 
     var defer_layout = false
     o.defer_layout = function() { return defer_layout }
-    o.begin_layout = function() { defer_layout = true }
+    o.begin_layout = function() { 
+        defer_layout = true
+    }
     o.end_layout = function() { 
         defer_layout = false
+        var apps = o.all()
+        apps.push(env.Selection)
+        // performance experiment: would the css update faster if not on 
+        // the DOM? Turns out no.
+        // var controls = $("#controls").remove()
         $.map(o.all(), function(app) { 
             if(app.needs_layout) {
                 app.layout()
             }
         })
+        // controls.appendTo("#controls_group")
     }
 
     var stack = []

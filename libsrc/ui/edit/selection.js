@@ -601,6 +601,11 @@ o.Selection = function(o) {
     // position and dimension methods
 
     o.update_relative_coords = function(){
+        if (hive_app.Apps.defer_layout()) {
+            o.needs_layout = true;
+            return true;
+        }
+
         var bounds = o.bounds(), _pos = [bounds.left, bounds.top]
             ,_dims = [bounds.right - bounds.left, bounds.bottom - bounds.top];
         _positions = elements.map(function(a){
@@ -718,6 +723,14 @@ o.Selection = function(o) {
     });
 
     o.layout = function(){
+        if (hive_app.Apps.defer_layout()) {
+            o.needs_layout = true;
+            return true;
+        }
+        if (o.needs_layout) {
+            o.needs_layout = false;
+            o.update_relative_coords();
+        }
         if (o.controls)
             o.controls.layout();
     }

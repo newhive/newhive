@@ -13,10 +13,11 @@ define([
         return false;
     };
     o.asset_name_from_url = function(url){
-        if (url.slice(-9).slice(0,1) != ".")
-            return false;
+        // if (url.search(".png"))
+        //     return false;
+        url = url.replace("-hover", "")
         var asset_name = 
-            url.slice(0,-9).replace(/^(https?:)?(\/\/)?[^\/]+\//,"");
+            url.replace(/^(https?:)?(\/\/)?[^\/]+\/(lib\/)?/,"");
         if (_asset(asset_name))
             return asset_name;
         return false;
@@ -118,11 +119,21 @@ define([
         });
 
         function hover_url(url) {
-            var orig_asset = o.asset_name_from_url(url) || url;
+            var orig_asset = o.asset_name_from_url(url)
+            var missing_asset = !orig_asset
+            orig_asset = orig_asset || url;
             var h = orig_asset.replace(/(.png)|(-\w*)$/, '-hover.png');
-            h = _asset(h) || h;
-            var i = $("<img style='display:none'>").attr('src', h);
-            $(document.body).append(i);
+            if (missing_asset)
+                h = _asset(h) || h
+            else
+                h = _asset(h)
+            var old = $("#dynamic_group img").filter(function(e){
+                return $(this).attr("src") == h
+            })
+            if (old.length == 0) {
+                var i = $("<img style='display:none'>").attr('src', h);
+                $("#dynamic_group").append(i);
+            }
             return h;
         }
     };

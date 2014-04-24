@@ -74,7 +74,7 @@ Hive.init_menus = function() {
     hive_app.App.has_slider_menu(null, ""
         ,env.padding_set, env.padding, null, null
         ,{ min: 0, max: 30, quant: 1
-        , handle:$(".icon.change_padding"), container:$("body")
+        , handle:$(".icon.change_padding"), container:$("#dynamic_group")
         , menu_opts: { 
             layout_x: "submenu"
             ,layout: "left"
