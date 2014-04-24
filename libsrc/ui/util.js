@@ -93,11 +93,9 @@ define([
                     elem.hidehide();
             };
         }(jQuery));
-        // TODO-cleanup: make this take in named functions only and unbind
-        // them by name.
         (function($){
             $.fn.bind_once = function( event_name, func ) {
-                return $(this).unbind(event_name).on(event_name, func);
+                return $(this).off(event_name, func).on(event_name, func);
             };
         }(jQuery));
     };

@@ -211,6 +211,7 @@ class Expr(ModelController):
         more_css = ''
         dimensions = app.get('dimensions', [100,100])
         type = app.get('type')
+        klass = type.replace('.', '_')
         if type != 'hive.rectangle':
             # rectangles have css as their content; all other apps have extra
             # css in 'css_state'
@@ -224,6 +225,7 @@ class Expr(ModelController):
             html = "<img src='%s'>" % content
             scale_x = app.get('scale_x')
             if scale_x:
+                klass += " crop_box"
                 scale_x *= dimensions[0]
                 css = 'width:%fpx' % (scale_x)
                 if app.get('offset'):
@@ -308,7 +310,7 @@ class Expr(ModelController):
         data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
         app_id = app.get('id', 'app_' + str(app['z']))
         return "<div class='happ %s %s' id='%s' style='%s'%s>%s</div>" % (
-            type.replace('.', '_'), app.get('css_class', ''), app_id,
+            klass, app.get('css_class', ''), app_id,
             css_for_app(app) + more_css, data, html
         )
 
