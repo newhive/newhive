@@ -108,8 +108,8 @@ define([
             el.data('src_hover', hover_url(el.prop('src')));
             el.data('hover_showhide', function(showhide) 
                 { el.attr('src', el.data(showhide ? 'src_hover' : 'src')) });
-            el.mouseenter(el.data('hover_showhide')(true)).
-                mouseout(el.data('hover_showhide')(false));
+            el.mouseenter(function() {el.data('hover_showhide')(true)}).
+                mouseout(function() {el.data('hover_showhide')(false)});
         }
         el.mouseenter(function() {
             if(o.hoverable.disabled) return;
