@@ -311,6 +311,11 @@
         "controller": "expr",
         "method": "save"
     },
+    "expr_unused_name": {
+        "api_route": "/api/expr/unused_name",
+        "controller": "expr",
+        "method": "unused_name"
+    },
     "expr_delete": {
         "api_route": "/api/expr/delete",
         "controller": "expr",

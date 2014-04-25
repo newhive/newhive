@@ -130,6 +130,17 @@ define([
             expr.owner = context.user.id;
             expr.remix_parent_id = expr.id;
             expr.id = expr._id = '';
+            expr.created = undefined;
+        }
+        if(context.query.copy !== undefined){
+            expr.id = expr._id = '';
+            expr.created = undefined;
+            o.controller.get('expr_unused_name', {}, function(resp) {
+                expr.name = resp.name
+                o.update_form()
+            }, {
+                owner_id: expr.owner, name: expr.name
+            })
         }
 
         if(context.query.tags){
