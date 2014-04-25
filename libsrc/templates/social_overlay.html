@@ -16,7 +16,7 @@
       {<vcenter "tags_box"}
         <div class="hide moveme">
           {# plus menu (Add to collection) #}
-          <div class="icon plus_menu needs_login pointer"></div>
+          <div class="icon plus_menu needs_login pointer" title="Add to collection"></div>
           {<if flags.admin}
             <form {form_attrs "add_featured_queue"} method="POST">
               <input type="hidden" name="expr_id" value="{id}">
