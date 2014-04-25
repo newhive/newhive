@@ -1556,8 +1556,9 @@ class Expr(HasSocial):
     def build_search(self, d):
         tags = d.get('tags', self.get('tags'))
         tag_list = []
-        if tags: tag_list = d['tags_index'] = normalize_tags(tags)
-
+        if tags: tag_list = normalize_tags(tags)
+        d['tags_index'] = tag_list
+        
         d['title_index'] = normalize(d.get('title', self.get('title', '')))
 
         text_index = []
