@@ -296,11 +296,11 @@ define([
                 }
             }
             var form = $('.dialog.add_to_collection form')
-                ,tag_name = form.find('input[name=tag_name]')
+                ,el_tag_name = form.find('input[name=tag_name]')
             form.off('after_submit').on('after_submit', o.dia_collections.close)
             o.dia_collections.open();
             var submit_add_to_collection = function(tag_name) {
-                tag_name.val(tag_name)
+                el_tag_name.val(tag_name)
                 form.submit()
             };
             var update_text = function (){
@@ -313,7 +313,7 @@ define([
                     .text($(text).val()).showshow().addClass("tag_15");
                 if ('' == $(text).val())
                     $(".dialog.add_to_collection .tag_new").hidehide();
-                tag_name.val(val_filtered)
+                el_tag_name.val(val_filtered)
             }
             $(".dialog.add_to_collection .tag_name")
                 .bind_once('keyup', update_text)
