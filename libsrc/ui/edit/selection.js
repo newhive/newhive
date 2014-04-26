@@ -177,6 +177,7 @@ o.Selection = function(o) {
     o.dragend = function (ev, dd) {
         if(!dragging) return;
         dragging = false;
+        o.update(elements)
         o.show_controls()
 
         var app = ev.data;
@@ -486,6 +487,7 @@ o.Selection = function(o) {
     // END-event-handlers
 
     o.app_select = function(app, multi) {
+        app.div.addClass("selected");
         if(multi) {
             app.unfocus();
         } else {
@@ -498,6 +500,7 @@ o.Selection = function(o) {
         Controls(app, true);
     };
     o.app_unselect = function(app) {
+        app.div.removeClass("selected");
         app.unfocus();
         if(app.controls) app.controls.remove();
     };
@@ -517,7 +520,10 @@ o.Selection = function(o) {
             }
         });
         // Previously unfocused elements that should be focused
-        $.each(apps, function(i, el){ o.app_select(el, apps.length > 1); });
+        $.each(apps, function(i, el){ 
+            if($.inArray(el, elements) == -1)
+                o.app_select(el, apps.length > 1); 
+        });
 
         elements = $.merge([], apps);
 
@@ -532,10 +538,9 @@ o.Selection = function(o) {
         )
         o.make_controls = u.union(o.make_controls, sel_controls);
         if(apps.length > 1) {
-            o.multi_controls();
             o.make_controls = o.make_controls.filter(function(c) {
                 return !c.single;
-            })
+            }).concat(o.multi_controls)
         }
         o.make_controls = o.make_controls.merge_sort(function(a,b) {
             a = a.display_order || 5
@@ -553,13 +558,18 @@ o.Selection = function(o) {
             if (o.controls) o.controls.remove();
         }
     };
-    o.multi_controls = function() { 
+    o.multi_controls = (function() {
+        var control_len = o.make_controls.length;
         o.make_controls.push(function (o) {
             o.addTopButton($("#controls_multi .button"));
         })
-        // Only show aspect control if there is an element with unfixed aspect
-        $("#controls_multi .button.change_aspect").showhide(
-            o.elements().filter(function(a) {return !a.get_aspect()}).length) 
+        o.make_controls.push(function (o) {
+            // Only show aspect control if there is an element with unfixed aspect
+            $("#controls .button.change_aspect").showhide(
+                env.Selection.elements().filter(function(a) {
+                    return !a.get_aspect()}).length) 
+        })
+        o.make_controls[o.make_controls.length - 1].display_order = 9
 
         var set_tiling_param = function(param) { 
             return function(v) { env.tiling[param] = v; u.retile(); } }
@@ -578,7 +588,8 @@ o.Selection = function(o) {
             ,set_tiling_param("columns"), get_tiling_param("columns"), null, null
             ,{ min: 1, max: 10.0, quant: .1, clamp_max: false
         })
-    }
+        return o.make_controls.splice(control_len);
+    })()
     o.unfocus = function(app){
         if(app) o.update($.grep(elements, function(el){ return el !== app }));
         else o.update([]);

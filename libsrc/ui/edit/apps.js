@@ -738,6 +738,7 @@ Hive.registerApp(Hive.App.Html, 'hive.html');
 // };
 // Hive.registerApp(Hive.App.RawHtml, 'hive.raw_html');
 
+// TODO-refactor: We need to decide on an object model for developers
 editor = {};
 active_controls = [];
 editor.add_slider = function(name, opts) {
