@@ -1398,7 +1398,7 @@ class Expr(HasSocial):
             return False
         dimension = dimensions.get(size, False)
         if size == "big" or not dimension:
-            filename = snapshot['url']
+            filename = snapshot.url
         else: filename = snapshot.get_thumb(dimension[0], dimension[1])
         return filename
 
@@ -1572,12 +1572,19 @@ class Expr(HasSocial):
     def _collect_files(self, d, old=True, thumb=True, background=True, apps=True):
         ids = []
         if old: ids += self.get('file_id', [])
-        if thumb: ids += ( [ d['thumb_file_id'] ] if d.get('thumb_file_id') else [] )
-        if background: self._match_id((d.get('background') or {}).get('url'))
-        if apps:
-            for a in d.get('apps', []):
-                ids.extend( self._match_id( a.get('content') ) )
-        ids = list( set( ids ) )
+
+        apps = d.get('apps',[])
+        bg = d.get('background')
+        if bg: apps.append(bg)
+        for a in apps:
+            f_id = a.get('file_id')
+            if(f_id): ids.append(f_id)
+            ids.extend( self._match_id(a.get('content')) )
+
+        ids = filter(
+            lambda f_id: db.File.fetch(f_id, fields={'fields':'_id'})
+            ,list( set(ids) )
+        )
         ids.sort()
         d['file_id'] = ids
         return ids
@@ -1845,15 +1852,15 @@ class File(Entity):
         return self._file
 
     def download(self):
-        url = self['url']
+        url = self.url
         if url.startswith("//"):
             url = "http:" + url
         try: response = urllib.urlopen(url)
         except:
-            print 'urlopen fail for ' + self.id + ': ' + json.dumps(self.get('url'))
+            print 'urlopen fail for ' + self.id + ': ' + json.dumps(self.url)
             return False
         if response.getcode() != 200:
-            print 'http fail ' + str(response.getcode()) + ': ' + self['url']
+            print 'http fail ' + str(response.getcode()) + ': ' + self.url
             return False
         self._file = os.tmpfile()
         self._file.write(response.read())
@@ -1903,12 +1910,12 @@ class File(Entity):
         resamples = self.get('resamples', []) or []
         for size in resamples:
             if (w and size[0] > w) or (h and size[1] > h):
-                return self.get('url') + '_' + str(int(size[0]))
+                return self.url + '_' + str(int(size[0]))
                 # This was necessary when media assets were on 5 buckets
                 # but resamples were only on one.
                 # return ( self.db.s3.bucket_url('media') + self.id + '_' +
                 #     str(int(size[0])) )
-        return self.get('url')
+        return self.url
 
     def _resample_name(self, w):
         return self.id + '_' + str(int(w))
@@ -1939,7 +1946,7 @@ class File(Entity):
     def get_thumb(self, w, h):
         name = str(w) + 'x' + str(h)
         if not self.get('thumbs', {}).get(name): return False
-        url = self.get('url')
+        url = self.url
         if not url: return False
         return url + '_' + name
 
@@ -1964,6 +1971,11 @@ class File(Entity):
             self['fs_path'] = media_path(owner)
             with open(joinpath(self['fs_path'], id), 'w') as f: f.write(file.read())
             return abs_url() + 'file/' + owner['name'] + '/' + name
+
+    @property
+    def url(self):
+        return self.db.s3.url('media', self.id,
+            bucket_name=self.get('s3_bucket'))
 
     def create_existing(self):
         super(File, self).create()
@@ -2032,8 +2044,9 @@ class File(Entity):
                     print 'can not delete missing file: ' + self['fs_path']
 
     def client_view(self, viewer=None, activity=0):
-        r = dfilter(self, ['name', 'mime', 'owner', 'url', 'thumbs'])
-        dict.update(r, id=self.id, thumb_big=self.get_thumb(222,222),
+        r = dfilter(self, ['name', 'mime', 'owner', 'thumbs'])
+        dict.update(r, id=self.id, url=self.url,
+            thumb_big=self.get_thumb(222,222),
             thumb_small=self.get_thumb(70,70))
         return r
 
