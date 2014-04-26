@@ -1221,7 +1221,6 @@ Hive.App.Rectangle = function(o) {
     Hive.App.has_border_width(o);
     Hive.App.has_color(o, "stroke");
 
-    o.div.addClass('rectangle')
     o.content_element = o.div //$("<div class='content drag'>").appendTo(o.div);
     setTimeout(function(){ o.load() }, 1);
 
@@ -1458,7 +1457,8 @@ Hive.App.Polygon = function(o){
 
     o.make_controls.push(function(o){
         o.addButtons($('#controls_path'));
-        app.stroke_update(o.single().stroke_width())
+        var app = o.single()
+        app.stroke_update(app.stroke_width())
     });
     o.make_controls[o.make_controls.length - 1].single = true;
     

@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-import os, json, cgi, base64
+import os, json, cgi, base64, re
 from pymongo.errors import DuplicateKeyError
 from functools import partial
 
@@ -25,6 +25,37 @@ class Expr(ModelController):
         return self.serve_json(response, resp)
 
         
+    def unused_name(self, tdata, request, response, **args):
+        """ Returns an unused expression name matching the base name provided """
+
+        resp = {}
+        name = request.form.get("name") or request.args.get("name","")
+        owner_id = request.form.get("owner_id") or request.args.get("owner_id", "")
+        owner = self.db.User.fetch(owner_id)
+
+        if not name or not len(name) or not owner:
+            raise ValueError('Expr / user not found')
+
+        m = re.match("(.*)-([0-9]+)$", name)
+        if m:
+            base_name = m.group(1)
+            num = int(m.group(2))
+        else:
+            base_name = name
+            num = 0
+        expr_names = [e['name'] for e in list(self.db.Expr.search({
+            'owner': owner_id, 'name': re.compile("^" + base_name + ".*")
+        }))]
+        while True:
+            if num:
+                name = base_name + "-" + str(num)
+            else:
+                name = base_name
+            if name not in expr_names:
+                resp['name'] = name
+                return self.serve_json(response, resp)
+            num += 1
+
     def save(self, tdata, request, response, **args):
         """ Parses JSON object from POST variable 'exp' and stores it in database.
             If the name (url) does not match record in database, create a new record."""
