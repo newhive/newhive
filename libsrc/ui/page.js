@@ -209,7 +209,8 @@ define([
         if (render_new_cards_func)
             render_new_cards_func(data);
         o.attach_handlers();
-        o.layout_columns();
+        if (o.column_layout)
+            o.layout_columns();
         o.add_grid_borders();
     }
     o.render = function(method, data){

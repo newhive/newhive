@@ -43,9 +43,6 @@ define([
         if(data.cards.length < 20)
             o.more_cards = false;
         cards_template(data).insertBefore('.feed .footer');
-        ui_page.attach_handlers();
-        ui_page.layout_columns();
-        ui_page.add_grid_borders();
     };
 
     var allow_reorder = function() {
