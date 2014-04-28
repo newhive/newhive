@@ -353,7 +353,7 @@
 
 
 body.mobile {
-    .feed.profile, .feed.profile .card .snapshot { width: 500px; }
+    .feed.profile, .feed.profile .card .snapshot { width: 500px; height: 300px }
     #site #home_video { width: 500px; height: 281px; }
     .tag_list.main .drop_box { display:none; }
 }
@@ -549,7 +549,7 @@ body {
 
             .snapshot {
                 width: 715px;
-                // height: 430px;
+                height: 430px;
             }
             .title_spacer {
                 padding: 0px 10px;
@@ -631,7 +631,7 @@ body {
             // }
             .snapshot {
                 width: 390px;
-                // height: 235px;
+                height: 235px;
             }
         }
     }
