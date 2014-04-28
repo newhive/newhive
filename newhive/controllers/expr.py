@@ -256,7 +256,7 @@ class Expr(ModelController):
             media = self.db.File.fetch(app.get('file_id'))
             if media: url = media.get_resample(dimensions[0] * scale)
 
-            html = "<img src='%s'>" % content
+            html = "<img src='%s'>" % url
             scale_x = app.get('scale_x')
             if scale_x:
                 klass += " crop_box"
@@ -267,7 +267,7 @@ class Expr(ModelController):
                     css = '%s;margin-left:%spx;margin-top:%spx' % (
                         css, offset[0], offset[1] )
                 html = "<img src='%s' style='%s'>" % (url, css)
-            link = app.get('href', url)
+            link = app.get('href')
             if link: html = "<a href='%s'>%s</a>" % (link, html)
         elif type == 'hive.sketch':
             html = "<img src='%s'>" % content.get('src')
