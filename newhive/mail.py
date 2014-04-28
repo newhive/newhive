@@ -461,7 +461,7 @@ class Welcome(Mailer):
         user_home_url = re.sub(r'/[^/]*$', '', user_profile_url)
         context = {
             'recipient': user
-            , 'create_link' : abs_url(secure=True) + "edit"
+            , 'create_link' : abs_url(secure=True) + "/home/edit"
             , 'create_icon': self.asset('skin/1/create.png')
             , 'featured_exprs': self.db.Expr.featured(6)
             }
