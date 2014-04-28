@@ -1389,7 +1389,7 @@ class Expr(HasSocial):
 
     # size is 'big', 'small', or 'tiny'.
     def snapshot_name(self, size):
-        if not self.get('snapshot_time') or not self.get('snapshot_id'):
+        if not self.get('snapshot_id'):
             return False
 
         dimensions = {"big": (715, 430), "small": (390, 235), 'tiny': (70, 42)}
@@ -1475,11 +1475,8 @@ class Expr(HasSocial):
         call(["rm", upload_list[0][0]])
 
         # Delete old snapshot
-        if old_time:
-            if self.get('snapshot_id'):
-                self.db.File.fetch(self.get('snapshot_id')).purge()
-            if self.get('snapshot'):
-                self.db.File.fetch(self.get('snapshot')).purge()
+        if old_time and self.get('snapshot_id'):
+            self.db.File.fetch(self.get('snapshot_id')).purge()
 
         self.update(snapshot_time=snapshot_time, entropy=self['entropy'],
             snapshot_id=file_record.id, updated=False)
@@ -1573,7 +1570,7 @@ class Expr(HasSocial):
         ids = []
         if old: ids += self.get('file_id', [])
 
-        apps = d.get('apps',[])
+        apps = list(d.get('apps',[]))
         bg = d.get('background')
         if bg: apps.append(bg)
         for a in apps:
