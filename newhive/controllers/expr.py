@@ -235,7 +235,7 @@ class Expr(ModelController):
                     css = '%s;margin-left:%spx;margin-top:%spx' % (
                         css, offset[0], offset[1] )
                 html = "<img src='%s' style='%s'>" % (url, css)
-            link = app.get('href')
+            link = app.get('href', url)
             if link: html = "<a href='%s'>%s</a>" % (link, html)
         elif type == 'hive.sketch':
             html = "<img src='%s'>" % content.get('src')
