@@ -1389,7 +1389,7 @@ class Expr(HasSocial):
 
     # size is 'big', 'small', or 'tiny'.
     def snapshot_name(self, size):
-        if not self.get('snapshot_time') or not self.get('snapshot_id'):
+        if not self.get('snapshot_id'):
             return False
 
         dimensions = {"big": (715, 430), "small": (390, 235), 'tiny': (70, 42)}
@@ -1475,11 +1475,8 @@ class Expr(HasSocial):
         call(["rm", upload_list[0][0]])
 
         # Delete old snapshot
-        if old_time:
-            if self.get('snapshot_id'):
-                self.db.File.fetch(self.get('snapshot_id')).purge()
-            if self.get('snapshot'):
-                self.db.File.fetch(self.get('snapshot')).purge()
+        if old_time and self.get('snapshot_id'):
+            self.db.File.fetch(self.get('snapshot_id')).purge()
 
         self.update(snapshot_time=snapshot_time, entropy=self['entropy'],
             snapshot_id=file_record.id, updated=False)
@@ -1571,12 +1568,19 @@ class Expr(HasSocial):
     def _collect_files(self, d, old=True, thumb=True, background=True, apps=True):
         ids = []
         if old: ids += self.get('file_id', [])
-        if thumb: ids += ( [ d['thumb_file_id'] ] if d.get('thumb_file_id') else [] )
-        if background: self._match_id((d.get('background') or {}).get('url'))
-        if apps:
-            for a in d.get('apps', []):
-                ids.extend( self._match_id( a.get('content') ) )
-        ids = list( set( ids ) )
+
+        apps = list(d.get('apps',[]))
+        bg = d.get('background')
+        if bg: apps.append(bg)
+        for a in apps:
+            f_id = a.get('file_id')
+            if(f_id): ids.append(f_id)
+            ids.extend( self._match_id(a.get('content')) )
+
+        ids = filter(
+            lambda f_id: db.File.fetch(f_id, fields={'fields':'_id'})
+            ,list( set(ids) )
+        )
         ids.sort()
         d['file_id'] = ids
         return ids
