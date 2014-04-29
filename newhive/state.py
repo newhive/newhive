@@ -1579,7 +1579,7 @@ class Expr(HasSocial):
             ids.extend( self._match_id(a.get('content')) )
 
         ids = filter(
-            lambda f_id: db.File.fetch(f_id, fields={'fields':'_id'})
+            lambda f_id: self.db.File.fetch(f_id, fields={'fields':'_id'})
             ,list( set(ids) )
         )
         ids.sort()

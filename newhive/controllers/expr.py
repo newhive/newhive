@@ -210,6 +210,7 @@ class Expr(ModelController):
             tdata.context['css'] = "body { overflow-x: hidden; }"
         client_data = {}
         for app in expr_obj.get('apps',[]):
+            app_id = app.get('id', 'app_' + str(app['z']))
             data = app.get('client_data', {})
             data.update(media=app.get('media'))
             if app['type'] == 'hive.code':
@@ -218,7 +219,7 @@ class Expr(ModelController):
                 data.update(dfilter(app, ['url']))
             if data:
                 data['type'] = app['type']
-                client_data[app['id']] = data
+                client_data[app_id] = data
         tdata.context.update(client_data=client_data)
         return self.serve_page(tdata, response, 'pages/expr.html')
         
@@ -243,6 +244,8 @@ class Expr(ModelController):
         dimensions = app.get('dimensions', [100,100])
         type = app.get('type')
         klass = type.replace('.', '_')
+        app_id = app.get('id', 'app_' + str(app['z']))
+
         if type != 'hive.rectangle':
             # rectangles have css as their content; all other apps have extra
             # css in 'css_state'
@@ -253,7 +256,7 @@ class Expr(ModelController):
             media = self.db.File.fetch(app.get('file_id'))
             if media: url = media.get_resample(dimensions[0] * scale)
 
-            html = "<img src='%s'>" % content
+            html = "<img src='%s'>" % url
             scale_x = app.get('scale_x')
             if scale_x:
                 klass += " crop_box"
@@ -308,13 +311,13 @@ class Expr(ModelController):
                   "<svg xmlns='http://www.w3.org/2000/svg'"
                 + " viewbox='0 0 %f %f" % tuple(dimensions)
                 + "'>"
-                + "<filter id='%s_blur'" % app.get('id','')
+                + "<filter id='%s_blur'" % app_id 
                 + " filterUnits='userSpaceOnUse'><feGaussianBlur stdDeviation='"
                 + "%f'></filter>" % app.get('blur', 0)
                 + "<polygon points='"
                 + ' '.join( map( lambda p: "%f %f" % (p[0], p[1]),
                     app.get('points', []) ) )
-                + "' style='filter:url(#%s_blur)'/></svg>" % app.get('id','')
+                + "' style='filter:url(#%s_blur)'/></svg>" % app_id
             )
             style = app.get('style', {})
             more_css = ';'.join([ k+':'+str(v) for k,v in style.items()])
@@ -332,14 +335,13 @@ class Expr(ModelController):
                 tag = 'style'
                 # TODO-code-editor: put style tag in head
                 html =  "<style id='%s'>%s</style>" % (
-                    app.get('id'), app.get('content') )
+                    app_id, app.get('content') )
             return html
         else:
             html = content
 
         data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
         data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
-        app_id = app.get('id', 'app_' + str(app['z']))
         return "<div class='happ %s %s' id='%s' style='%s'%s>%s</div>" % (
             klass, app.get('css_class', ''), app_id,
             css_for_app(app) + more_css, data, html
