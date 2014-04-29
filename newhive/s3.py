@@ -48,7 +48,7 @@ class S3Interface(object):
         if mimetype: s3_headers['Content-Type'] = mimetype
         k.set_contents_from_file(file, headers=s3_headers)
         k.make_public()
-        return self.url(path)
+        return self.url(bucket, path)
 
     def bucket_url(self, bucket='media', bucket_name=None):
         return '//' + ( self.config.cloudfront_domains.get(bucket) or (
