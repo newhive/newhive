@@ -5,12 +5,6 @@
 from pymongo.errors import DuplicateKeyError
 
 from newhive import state
-from newhive.utils import MemoDict
-
-def load_db_config(name):
-    conf = __import__('newhive.config.' + name, fromlist=['newhive','config'])
-    return state.Database(conf)
-dbs = MemoDict(load_db_config)
 
 def cp_expr(expr, dest_db):
     new_expr = dest_db.Expr.new(expr)
