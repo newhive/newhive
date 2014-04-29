@@ -323,6 +323,7 @@
     },
     "expr_snapshot": {
         "controller": "TODO-cleanup: Jordan believes this is deprecated",
+        "controller": "Abram believes this is for returning the most recent snapshot of a given expr. Whether we use this or not at the moment, it's useful",
         "page_route": "/api/expr/snapshot/<expr_id>",
         "api_route": "/api/expr/snapshot/<expr_id>",
         "controller": "expr",
