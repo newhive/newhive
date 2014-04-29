@@ -353,17 +353,21 @@ class Community(Controller):
     def search(self, tdata, request, id=None, owner_name=None, expr_name=None,
         db_args={}, **args
     ):
-        if not request.args.has_key('q'): return None
+        q = request.args.get('q')
+        if not q: return None
         id = request.args.get('id', None)
         entropy = request.args.get('e', None)
         owner = self.db.User.named(owner_name)
-        if entropy and owner and owner.get('tag_entropy',{}).get(tags[0], None) == entropy:
-            args['override_unlisted'] = True
-
-        result, search = self.db.query_echo(request.args['q'], id=id, **db_args)
-        # print('executed search', search)
+        search = self.db.parse_query(q)
         tags = search.get('tags', [])
         text = search.get('text', [])
+        if entropy and search.get('user') and len(tags) == 1:
+            user = self.db.User.named(search.get('user'))
+            if user and user.get('tag_entropy',{}).get(tags[0], None) == entropy:
+                db_args['override_unlisted'] = True
+
+        result, search = self.db.query_echo(q, id=id, **db_args)
+        # print('executed search', search)
         # Treat single-word text search as a tag search (show tag page)
         if len(search) == 1 and len(text) == 1:
             tags = text
