@@ -1,17 +1,17 @@
 # README:
-# place appropriate db credentials in newhive/config/tmp_live_config
-# if they are live credentials, delete immediately afterwards
+# place appropriate db credentials in newhive/config/live_secret
+# and delete immediately afterwards
 
 from pymongo.errors import DuplicateKeyError
 
 from newhive import state
 from newhive.utils import MemoDict
-import newhive.config.live_config as live_config
-import newhive.config.dev_config as dev_config
-dbs = MemoDict({
-    "live": lambda: state.Database(live_config)
-    ,"dev": lambda: state.Database(dev_config) 
-})
+
+def load_db_config(name):
+    conf = __import__('newhive.config.' + name, fromlist=['newhive','config'])
+    return state.Database(conf)
+dbs = MemoDict(load_db_config)
+
 def cp_expr(expr, dest_db):
     new_expr = dest_db.Expr.new(expr)
     try:
