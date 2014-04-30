@@ -18,6 +18,8 @@ define([
         url = url.replace("-hover", "")
         var asset_name = 
             url.replace(/^(https?:)?(\/\/)?[^\/]+\/(lib\/)?/,"");
+        // Remove the cache-busting 8-char hex
+        asset_name = asset_name.replace(/\.[0-9a-z]{8}$/,"")
         if (_asset(asset_name))
             return asset_name;
         return false;
