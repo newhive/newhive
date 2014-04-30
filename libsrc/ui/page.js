@@ -437,7 +437,8 @@ define([
         // must be idempotent; called twice for expr pagethroughs
         // TODO: make this work for #Forms beyond "gifwall."
         var page_data = context.page_data, expr = page_data.expr
-            ,tags = expr && (expr.tags_index || expr.tags)
+            ,tags = (expr && (expr.tags_index || expr.tags))
+                || page_data.tags_search
         if(tags && tags.indexOf("gifwall") >= 0)
             page_data.form_tag = 'gifwall'
         else return
