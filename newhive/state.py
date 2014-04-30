@@ -1,5 +1,5 @@
 import newhive
-import re, pymongo, bson.objectid, random, urllib, os, time, json, math
+import re, pymongo, bson.objectid, random, urllib, urllib2, os, time, json, math
 import operator as op
 from tempfile import mkstemp
 from os.path import join as joinpath
@@ -1291,8 +1291,7 @@ class Expr(HasSocial):
 
         def with_url(cls, url):
             """ Convenience utility function not used in production, retrieve Expr from path or full URL """
-            [user, name] = url.split('/', 1)
-            name = name.split('?')[0]
+            [user, name] = urllib2.urlparse.urlparse(url).path[1:].split('/', 1)
             return cls.named(user, name)
 
         def page(self, spec, sort='updated', **args):
