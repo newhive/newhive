@@ -169,8 +169,8 @@ define([
         if(show_edit || page_data.remix) {
             $('.overlay.panel .edit_ui').replaceWith(
                 edit_btn_template(page_data) )
-            $('.overlay.panel .edit_menu .remix')
-                .showhide(o.tags && o.tags.indexOf('remix') >= 0)
+            $('.overlay.panel .remix')
+                .showhide(ui_page.tags && ui_page.tags.indexOf('remix') >= 0)
         }
         ui_page.form_page_enter()
 
