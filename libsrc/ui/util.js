@@ -106,8 +106,10 @@ define([
         if(el.prop('src')) {
             el.data('src', el.prop('src'));
             el.data('src_hover', hover_url(el.prop('src')));
-            el.data('hover_showhide', function(showhide) 
-                { el.attr('src', el.data(showhide ? 'src_hover' : 'src')) });
+            el.data('hover_showhide', function(showhide) { 
+                new_src = el.data(showhide ? 'src_hover' : 'src');
+                if (new_src) el.attr('src', new_src) 
+            });
             el.mouseenter(function() {el.data('hover_showhide')(true)}).
                 mouseout(function() {el.data('hover_showhide')(false)});
         }

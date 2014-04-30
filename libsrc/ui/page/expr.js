@@ -542,8 +542,16 @@ define([
     o.attach_handlers = function(){
         $("#social_close").unbind('click').click(o.social_toggle);
         $(".social_btn").unbind('click').click(o.social_toggle);
+        if (context.flags.fade_controls) {
+            $(".panel.overlay").css("opacity",.4)
+                .off("mouseenter").on("mouseenter", function(ev) {
+                    $(this).stop(true).animate({"opacity":1},{duration:200}) } )
+                .on("mouseleave", function(ev) { 
+                    $(this).animate({"opacity":.4},{duration:200}) } )
+        }
         if ($("#site").children().length && context.page_data.cards_route)
             $(".title_spacer .title").addClass("pointer").unbind('click').click(function() {
+                // clicking the title in social overlay returns to the collection
                 o.exit();
                 o.controller.direct_fake_open(context.page_data.cards_route.route_args);
                 $("body").scrollTop(o.controller.scroll_top);

@@ -196,7 +196,7 @@ body.edit {
         pointer-events: none;
         .content { * { pointer-events: visible } }
     }
-    &.hive_code { border: "1px solid black"; }
+    &.hive_code { border: 1px solid black; }
     .content.code {
         border: none;
         margin: 0;
