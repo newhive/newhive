@@ -166,9 +166,12 @@ define([
             page_data.remix = false
             show_edit = true
         }
-        if(show_edit || page_data.remix)
+        if(show_edit || page_data.remix) {
             $('.overlay.panel .edit_ui').replaceWith(
                 edit_btn_template(page_data) )
+            $('.overlay.panel .edit_menu .remix')
+                .showhide(o.tags && o.tags.indexOf('remix') >= 0)
+        }
         ui_page.form_page_enter()
 
         o.overlay_columns = 0;

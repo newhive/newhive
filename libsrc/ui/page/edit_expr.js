@@ -108,6 +108,7 @@ define([
         $('#url').val(expr.name)
         $('#title').val(expr.title)
         $('#tags_input').val(expr.tags)
+        tags_input_changed()
         $('#custom_url').val(expr.url)
         if(expr.auth) $('#menu_privacy [val=' + expr.auth +']').click()
         $('#use_custom_domain').prop('checked', expr.url ? 1 : 0).
@@ -125,16 +126,18 @@ define([
         expr = context.page_data.expr = ( context.page_data.expr
             || $.extend({}, default_expr) )
         // Handle remix
-        if (expr.owner_name != context.user.name) {
+        if (expr.owner_name != context.user.name || context.query.remix !== undefined) {
             expr.owner_name = context.user.name;
             expr.owner = context.user.id;
             expr.remix_parent_id = expr.id;
             expr.id = expr._id = '';
             expr.created = undefined;
         }
-        if(context.query.copy !== undefined){
+        if (context.query.copy !== undefined){
             expr.id = expr._id = '';
             expr.created = undefined;
+        }
+        if (expr.name) {
             o.controller.get('expr_unused_name', {}, function(resp) {
                 expr.name = resp.name
                 o.update_form()
@@ -221,9 +224,15 @@ define([
         $(".remix_label input").change(function(e) {
             if ($(e.target).prop("checked")) {
                 $("#tags_input").val("#remix " + $("#tags_input").val());
-            } else {
-                $("#tags_input").val($("#tags_input").val().replace(/[#,]?remix/gi,""));
                 tags_input_changed()
+            } else {
+                var i = expr.tags_index.indexOf("remix")
+                if (i >= 0) {
+                    expr.tags_index.splice(i, 1)
+                    var tags = o.canonical_tags(expr.tags_index)
+                    $("#tags_input").val(tags);
+                    tags_input_changed()
+                }
             }
         });
         // save_dialog.opts.open = Hive.unfocus;
