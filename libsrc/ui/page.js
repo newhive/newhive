@@ -214,7 +214,7 @@ define([
         o.add_grid_borders();
     }
     o.render = function(method, data){
-        var page_data = data.page_data;
+        var page_data = context.page_data, expr = page_data.expr
         if (page_data.title) $("head title").text(page_data.title);
         o.column_layout = false;
         o.columns = 0;
@@ -236,6 +236,8 @@ define([
         o.form_page_exit()
 
         o.preprocess_context();
+        o.tags = (expr && (expr.tags_index || expr.tags))
+            || page_data.tags_search
         if (new_page && new_page.preprocess_page_data) 
             pages[method].preprocess_page_data(page_data);
         if (new_page) {
@@ -436,16 +438,17 @@ define([
     o.form_page_enter = function(){
         // must be idempotent; called twice for expr pagethroughs
         // TODO: make this work for #Forms beyond "gifwall."
-        var page_data = context.page_data, expr = page_data.expr
-            ,tags = (expr && (expr.tags_index || expr.tags))
-                || page_data.tags_search
-        if(tags && tags.indexOf("gifwall") >= 0)
+        var page_data = context.page_data
+        if(o.tags && o.tags.indexOf("gifwall") >= 0)
             page_data.form_tag = 'gifwall'
         else return
 
-        $("#logo").hidehide();
-        $('.overlay.form').remove()
-        $('#overlays').append(form_overlay_template(page_data));
+        // only show the #GIFWALL on an expression page
+        if (page_data.expr) {
+            $("#logo").hidehide();
+            $('.overlay.form').remove()
+            $('#overlays').append(form_overlay_template(page_data));
+        }
 
         var $create = $("#overlays .create")
         if (!$create.data("href"))
