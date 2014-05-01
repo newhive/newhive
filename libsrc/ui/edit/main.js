@@ -74,9 +74,11 @@ Hive.init_menus = function() {
     hive_app.App.has_slider_menu(null, ""
         ,env.padding_set, env.padding, null, null
         ,{ min: 0, max: 30, quant: 1
-        , handle:$(".icon.change_padding"), container:$("body")
+        , handle:$(".icon.change_padding"), container:$("#dynamic_group")
         , menu_opts: { 
-            group: $(".misc.handle").data("menu")
+            layout_x: "submenu"
+            ,layout: "left"
+            ,group: $(".misc.handle").data("menu")
             ,auto_height: false 
         }
     }) ()
@@ -122,7 +124,7 @@ Hive.init_menus = function() {
     u.hover_menu('.insert_shape', '#menu_shape');
     $('#menu_shape .rect').click(function(e) {
         hive_app.new_app({ type : 'hive.rectangle', css_state :
-            { color : colors[24], 'border-color' : 'black', 'border-width' : 0,
+            { 'background-color' : colors[24], 'border-color' : 'black', 'border-width' : 0,
                 'border-style' : 'solid' } });
     });
     $('#menu_shape .sketch').click(function(e) {

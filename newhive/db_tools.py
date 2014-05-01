@@ -2,7 +2,7 @@ import re
 
 import newhive
 from newhive import state
-from newhive.utils import now, time_u, Apply, lget
+from newhive.utils import now, time_u, Apply, lget, memoized
 from newhive.server_session import db, server_env
 from newhive.mongo_helpers import mq
 
@@ -14,6 +14,11 @@ config = server_env['config']
 nd = db.User.named('newduke')
 ac = db.User.named('abram')
 e1 = db.Expr.with_url('newhive/default-instructional')
+
+@memoized
+def dbs(name):
+    conf = __import__('newhive.config.' + name, fromlist=['newhive','config'])
+    return state.Database(conf)
 
 # returns cursor with expressions at most %days% old which have > 1 fail count
 def recent_fails(days=1):

@@ -194,6 +194,70 @@ o.min = function(array){
     return Math.min.apply(Math, array);
 };
 
+// Add stable merge sort to Array and jQuery prototypes
+// Note: We wrap it in a closure so it doesn't pollute the global
+//       namespace, but we don't put it in $(document).ready, since it's
+//       not dependent on the DOM
+// http://stackoverflow.com/questions/1427608/fast-stable-sorting-algorithm-implementation-in-javascript
+(function() {
+
+  // expose to Array and jQuery
+  Array.prototype.merge_sort = jQuery.fn.merge_sort = merge_sort;
+  Object.defineProperty(Array.prototype, "merge_sort", {enumerable: false})
+  function merge_sort(compare) {
+
+    var length = this.length,
+        middle = Math.floor(length / 2);
+
+    if (!compare) {
+      compare = function(left, right) {
+        if (left < right)
+          return -1;
+        if (left == right)
+          return 0;
+        else
+          return 1;
+      };
+    }
+
+    if (length < 2)
+      return this;
+
+    return merge(
+      this.slice(0, middle).merge_sort(compare),
+      this.slice(middle, length).merge_sort(compare),
+      compare
+    );
+  }
+
+  function merge(left, right, compare) {
+
+    var result = [];
+
+    while (left.length > 0 || right.length > 0) {
+      if (left.length > 0 && right.length > 0) {
+        if (compare(left[0], right[0]) <= 0) {
+          result.push(left[0]);
+          left = left.slice(1);
+        }
+        else {
+          result.push(right[0]);
+          right = right.slice(1);
+        }
+      }
+      else if (left.length > 0) {
+        result.push(left[0]);
+        left = left.slice(1);
+      }
+      else if (right.length > 0) {
+        result.push(right[0]);
+        right = right.slice(1);
+      }
+    }
+    return result;
+  }
+})();
+
 var checkIfAllArgumentsAreArrays = function (functionArguments) {
     for (var i = 0; i < functionArguments.length; i++) {
         if (!(functionArguments[i] instanceof Array)) {
@@ -332,6 +396,8 @@ o.retile = function(opts) {
     for (var i = 0; i < apps.length; ++i) {
         var app = apps[i]
         if (opts.natural && app.aspect) {
+            if (app.init_state.scale_x)
+                app.init_state.scale_x = 1
             app.fit_to({pos:regions[i][0], dims:regions[i][1]
                 , scaled:[app.aspect,1]})
         } else {
@@ -599,15 +665,15 @@ o.new_file = function(files, opts, app_opts, filter) {
 
         loaded_count++;
         var loaded = function() {
-            if (!--loaded_count && context.flags.tile_multiple_images 
-                && files.length > 1) {
+            if (!--loaded_count) {
                 env.Selection.update(apps)
-                o.retile({natural:1})//, start_pos:start_pos})
+                if (context.flags.tile_multiple_images && files.length > 1)
+                    o.retile({natural:1})//, start_pos:start_pos})
                 env.Selection.scroll_to_view();
             }
         }
         if (!context.flags.tile_multiple_images)
-            return env.new_app(app, $.extend({ offset: [20*i, 20*i] }, app_opts) );
+            return env.new_app(app, $.extend({ offset: [20*i, 20*i], load:loaded }, app_opts) );
         else
             return env.new_app(app, $.extend({no_select:true, load:loaded}, app_opts) );
     });
@@ -664,7 +730,7 @@ o.snap_helper = function(my_tuple, opts) {
     var s = env.scale(),
         exclude_ids = opts.exclude_ids,
         snap_strength = opts.snap_strength,
-        snap_radius = opts.snap_radius,
+        snap_radius = opts.snap_radius * env.padding()/10.,
         sensitivity = opts.sensitivity,
         padding = opts.padding,
         pos = [], show_guide = [];
@@ -685,6 +751,8 @@ o.snap_helper = function(my_tuple, opts) {
             break;
     }
     var tuple = [[],[]], new_pos = pos.slice();
+    if (snap_radius < 0.5)
+        return new_pos;
     // TODO-perf: save this array only after drag/drop
     // And keep it sorted
     var apps = env.Apps.all().filter(function(app) {

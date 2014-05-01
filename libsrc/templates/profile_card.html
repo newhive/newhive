@@ -31,7 +31,7 @@
           {# expressions public, count #}
           <a class='nav_button inline exprs' 
             {# {<if route_name "expressions_public_grid"} on{>} #}
-            title="Grid view"
+            title="Expression grid"
             { anchor_attrs "expressions_public_grid" "owner_name" owner.name 
               "tag_name" ""}>
             <img class="exprs" src='{asset "skin/nav/expressions.png"}'/> 
@@ -39,7 +39,7 @@
           ><div class='spacer inline'></div>
           {# tags #}
           {<if (not flags.mobile)}
-            <a class='nav_button inline tags' title="Tags view"
+            <a class='nav_button inline tags' title="Tags"
                 {<if (or (eq route_name "expressions_tag_private")
                          (eq route_name "expressions_public_grid_tags"))}
                   { anchor_attrs "expressions_tag" "owner_name" owner.name 
@@ -68,7 +68,7 @@
           {<if (and user.logged_in (eq user.name owner.name))}
             ><div class='spacer inline'></div>
             {# private (logged in only) #}
-            <a class='nav_button inline private' title="Private view"
+            <a class='nav_button inline private' title="Private expressions"
               {<if (or (eq route_name "expressions_tag")
                        (eq route_name "expressions_public_grid_tags"))}
                 { anchor_attrs "expressions_tag_private" "owner_name" user.name 

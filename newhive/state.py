@@ -1,5 +1,5 @@
 import newhive
-import re, pymongo, bson.objectid, random, urllib, os, time, json, math
+import re, pymongo, bson.objectid, random, urllib, urllib2, os, time, json, math
 import operator as op
 from tempfile import mkstemp
 from os.path import join as joinpath
@@ -1291,8 +1291,7 @@ class Expr(HasSocial):
 
         def with_url(cls, url):
             """ Convenience utility function not used in production, retrieve Expr from path or full URL """
-            [user, name] = url.split('/', 1)
-            name = name.split('?')[0]
+            [user, name] = urllib2.urlparse.urlparse(url).path[1:].split('/', 1)
             return cls.named(user, name)
 
         def page(self, spec, sort='updated', **args):
@@ -1398,7 +1397,7 @@ class Expr(HasSocial):
             return False
         dimension = dimensions.get(size, False)
         if size == "big" or not dimension:
-            filename = snapshot['url']
+            filename = snapshot.url
         else: filename = snapshot.get_thumb(dimension[0], dimension[1])
         return filename
 
@@ -1553,8 +1552,9 @@ class Expr(HasSocial):
     def build_search(self, d):
         tags = d.get('tags', self.get('tags'))
         tag_list = []
-        if tags: tag_list = d['tags_index'] = normalize_tags(tags)
-
+        if tags: tag_list = normalize_tags(tags)
+        d['tags_index'] = tag_list
+        
         d['title_index'] = normalize(d.get('title', self.get('title', '')))
 
         text_index = []
@@ -1848,15 +1848,15 @@ class File(Entity):
         return self._file
 
     def download(self):
-        url = self['url']
+        url = self.url
         if url.startswith("//"):
             url = "http:" + url
         try: response = urllib.urlopen(url)
         except:
-            print 'urlopen fail for ' + self.id + ': ' + json.dumps(self.get('url'))
+            print 'urlopen fail for ' + self.id + ': ' + json.dumps(self.url)
             return False
         if response.getcode() != 200:
-            print 'http fail ' + str(response.getcode()) + ': ' + self['url']
+            print 'http fail ' + str(response.getcode()) + ': ' + self.url
             return False
         self._file = os.tmpfile()
         self._file.write(response.read())
@@ -1906,12 +1906,12 @@ class File(Entity):
         resamples = self.get('resamples', []) or []
         for size in resamples:
             if (w and size[0] > w) or (h and size[1] > h):
-                return self.get('url') + '_' + str(int(size[0]))
+                return self.url + '_' + str(int(size[0]))
                 # This was necessary when media assets were on 5 buckets
                 # but resamples were only on one.
                 # return ( self.db.s3.bucket_url('media') + self.id + '_' +
                 #     str(int(size[0])) )
-        return self.get('url')
+        return self.url
 
     def _resample_name(self, w):
         return self.id + '_' + str(int(w))
@@ -1942,7 +1942,7 @@ class File(Entity):
     def get_thumb(self, w, h):
         name = str(w) + 'x' + str(h)
         if not self.get('thumbs', {}).get(name): return False
-        url = self.get('url')
+        url = self.url
         if not url: return False
         return url + '_' + name
 
@@ -1967,6 +1967,11 @@ class File(Entity):
             self['fs_path'] = media_path(owner)
             with open(joinpath(self['fs_path'], id), 'w') as f: f.write(file.read())
             return abs_url() + 'file/' + owner['name'] + '/' + name
+
+    @property
+    def url(self):
+        return self.db.s3.url('media', self.id,
+            bucket_name=self.get('s3_bucket'))
 
     def create_existing(self):
         super(File, self).create()
@@ -2035,8 +2040,9 @@ class File(Entity):
                     print 'can not delete missing file: ' + self['fs_path']
 
     def client_view(self, viewer=None, activity=0):
-        r = dfilter(self, ['name', 'mime', 'owner', 'url', 'thumbs'])
-        dict.update(r, id=self.id, thumb_big=self.get_thumb(222,222),
+        r = dfilter(self, ['name', 'mime', 'owner', 'thumbs'])
+        dict.update(r, id=self.id, url=self.url,
+            thumb_big=self.get_thumb(222,222),
             thumb_small=self.get_thumb(70,70))
         return r
 

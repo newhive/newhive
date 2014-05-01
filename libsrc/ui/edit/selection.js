@@ -113,6 +113,7 @@ o.Selection = function(o) {
     o.drag_target = function(){ return drag_target; };
     o.dragstart = function(ev, dd){
         if(dragging) return
+        u.reset_sensitivity();
         dragging = true;
         var app = ev.data;
         if(app && !u.is_ctrl(ev)) {
@@ -435,6 +436,7 @@ o.Selection = function(o) {
 
         full_apps = [];
         drag_target = ref_dims = undefined;
+        o.show_controls()
         return true;
     }
     var _dims_relative_set = o.dims_relative_set;
@@ -484,6 +486,7 @@ o.Selection = function(o) {
     // END-event-handlers
 
     o.app_select = function(app, multi) {
+        app.div.addClass("selected");
         if(multi) {
             app.unfocus();
         } else {
@@ -496,6 +499,7 @@ o.Selection = function(o) {
         Controls(app, true);
     };
     o.app_unselect = function(app) {
+        app.div.removeClass("selected");
         app.unfocus();
         if(app.controls) app.controls.remove();
     };
@@ -515,7 +519,10 @@ o.Selection = function(o) {
             }
         });
         // Previously unfocused elements that should be focused
-        $.each(apps, function(i, el){ o.app_select(el, apps.length > 1); });
+        $.each(apps, function(i, el){ 
+            if($.inArray(el, elements) == -1)
+                o.app_select(el, apps.length > 1); 
+        });
 
         elements = $.merge([], apps);
 
@@ -530,8 +537,15 @@ o.Selection = function(o) {
         )
         o.make_controls = u.union(o.make_controls, sel_controls);
         if(apps.length > 1) {
-            o.multi_controls();
+            o.make_controls = o.make_controls.filter(function(c) {
+                return !c.single;
+            }).concat(o.multi_controls)
         }
+        o.make_controls = o.make_controls.merge_sort(function(a,b) {
+            a = a.display_order || 5
+            b = b.display_order || 5
+            return a - b
+        })
         if(!dragging && multi) {
             Controls(o, false);
             o.controls.layout();
@@ -543,15 +557,24 @@ o.Selection = function(o) {
             if (o.controls) o.controls.remove();
         }
     };
-    o.multi_controls = function() { 
+    o.multi_controls = (function() {
+        var control_len = o.make_controls.length;
         o.make_controls.push(function (o) {
             o.addTopButton($("#controls_multi .button"));
         })
+        o.make_controls.push(function (o) {
+            // Only show aspect control if there is an element with unfixed aspect
+            $("#controls .button.change_aspect").showhide(
+                env.Selection.elements().filter(function(a) {
+                    return !a.get_aspect()}).length) 
+        })
+        o.make_controls[o.make_controls.length - 1].display_order = 9
 
         var set_tiling_param = function(param) { 
             return function(v) { env.tiling[param] = v; u.retile(); } }
         var get_tiling_param = function(param) { 
             return function() { return env.tiling[param] } }
+
         hive_app.App.has_slider_menu(o, ".change_aspect"
             ,set_tiling_param("aspect"), get_tiling_param("aspect"), null, null
             ,{ min: .30, max: 3.0, quant: .1
@@ -564,7 +587,8 @@ o.Selection = function(o) {
             ,set_tiling_param("columns"), get_tiling_param("columns"), null, null
             ,{ min: 1, max: 10.0, quant: .1, clamp_max: false
         })
-    }
+        return o.make_controls.splice(control_len);
+    })()
     o.unfocus = function(app){
         if(app) o.update($.grep(elements, function(el){ return el !== app }));
         else o.update([]);
@@ -587,6 +611,11 @@ o.Selection = function(o) {
     // position and dimension methods
 
     o.update_relative_coords = function(){
+        if (hive_app.Apps.defer_layout()) {
+            o.needs_layout = true;
+            return true;
+        }
+
         var bounds = o.bounds(), _pos = [bounds.left, bounds.top]
             ,_dims = [bounds.right - bounds.left, bounds.bottom - bounds.top];
         _positions = elements.map(function(a){
@@ -680,7 +709,7 @@ o.Selection = function(o) {
         }
         overlaps = u.except(overlaps, elements)
         var z_indexes = $.map(overlaps, function(a) { return a.layer(); })
-        z_indexes.sort()
+        z_indexes.sort(js.op['-'])
 
         $.map(elements, function(a) {
             var layer = a.layer()
@@ -704,6 +733,14 @@ o.Selection = function(o) {
     });
 
     o.layout = function(){
+        if (hive_app.Apps.defer_layout()) {
+            o.needs_layout = true;
+            return true;
+        }
+        if (o.needs_layout) {
+            o.needs_layout = false;
+            o.update_relative_coords();
+        }
         if (o.controls)
             o.controls.layout();
     }

@@ -17,20 +17,6 @@ import newhive
 from newhive import config
 from newhive.config import abs_url, url_host
 
-class MemoDict(dict):
-    def __init__(self, src):
-        self.src = src
-
-    def __getitem__(self, key):
-        if dict.has_key(self, key):
-            return dict.__getitem__(self, key)
-        val = self.src.get(key, lambda: None)()
-        dict.__setitem__(self, key, val)
-        return val
-
-    def get_src(self):
-        return self.src
-
 # TODO-cleanup: move this into query helpers
 def filter_query(query, filter):
     query.setdefault('$and', [])
@@ -292,32 +278,48 @@ def b64decode(s, add_padding=True, url_safe=True):
     else:
         return base64.b64decode(s1)
 
+def memoized(obj):
+    """Decorator that caches return values of function, method, or class"""
+    cache = {}
 
-class memoized(object):
-   """Decorator that caches a function's return value each time it is called.
-   If called later with the same arguments, the cached value is returned, and
-   not re-evaluated.
-   """
-   def __init__(self, func):
-      self.func = func
-      self.cache = {}
-   def __call__(self, *args):
-      try:
-         return self.cache[args]
-      except KeyError:
-         value = self.func(*args)
-         self.cache[args] = value
-         return value
-      except TypeError:
-         # uncachable -- for instance, passing a list as an argument.
-         # Better to not cache than to blow up entirely.
-         return self.func(*args)
-   def __repr__(self):
-      """Return the function's docstring."""
-      return self.func.__doc__
-   def __get__(self, obj, objtype):
-      """Support instance methods."""
-      return functools.partial(self.__call__, obj)
+    def memoizer(*args, **kwargs):
+        """function, method, or class decorated with memoized
+        src property is the decorated function, class or method and
+        cache property is the dictionary of return values"""
+        key = str(args) + str(kwargs)
+        if key not in cache:
+            cache[key] = obj(*args, **kwargs)
+        return cache[key]
+
+    memoizer.src = obj
+    memoizer.cache = cache
+    return memoizer
+
+# class memoized(object):
+#    """Decorator that caches a function's return value each time it is called.
+#    If called later with the same arguments, the cached value is returned, and
+#    not re-evaluated.
+#    """
+#    def __init__(self, func):
+#       self.func = func
+#       self.cache = {}
+#    def __call__(self, *args):
+#       try:
+#          return self.cache[args]
+#       except KeyError:
+#          value = self.func(*args)
+#          self.cache[args] = value
+#          return value
+#       except TypeError:
+#          # uncachable -- for instance, passing a list as an argument.
+#          # Better to not cache than to blow up entirely.
+#          return self.func(*args)
+#    def __repr__(self):
+#       """Return the function's docstring."""
+#       return self.func.__doc__
+#    def __get__(self, obj, objtype):
+#       """Support instance methods."""
+#       return functools.partial(self.__call__, obj)
 
 
 def cached(fn):

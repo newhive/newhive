@@ -12,6 +12,10 @@
         class='default menu_item hoverable'>Remix</a>
     {>}{<else}
       <div class='pointer menu_item hoverable' id='delete_btn'>Delete</div>
+      <a {query_attrs "edit_expr" "copy" "id" expr.id}
+        class='menu_item hoverable'>Copy</a>
+      <a {query_attrs "edit_expr" "remix" "id" expr.id}
+        class='menu_item remix hoverable hide'>Remix</a>
       <a {anchor_attrs "edit_expr" "id" expr.id}
         class='default menu_item hoverable'>Edit</a>
     {>}
