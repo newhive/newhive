@@ -126,18 +126,21 @@ define([
         expr = context.page_data.expr = ( context.page_data.expr
             || $.extend({}, default_expr) )
         // Handle remix
+        var remixed = false
         if (expr.owner_name != context.user.name || context.query.remix !== undefined) {
             expr.owner_name = context.user.name;
             expr.owner = context.user.id;
             expr.remix_parent_id = expr.id;
             expr.id = expr._id = '';
             expr.created = undefined;
+            remixed = true
         }
         if (context.query.copy !== undefined){
             expr.id = expr._id = '';
             expr.created = undefined;
+            remixed = true
         }
-        if (expr.name) {
+        if (remixed) {
             o.controller.get('expr_unused_name', {}, function(resp) {
                 expr.name = resp.name
                 o.update_form()
