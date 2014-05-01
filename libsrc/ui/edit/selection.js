@@ -661,10 +661,11 @@ o.Selection = function(o) {
         opts.load = function(){
             load_count--;
             if( ! load_count ) {
+                o.select( copies );
                 if (_load)
                     _load();
-                else
-                    o.select( copies );
+                // else
+                //     o.select( copies );
             }
         };
         env.History.begin();

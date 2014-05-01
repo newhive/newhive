@@ -45,7 +45,7 @@ define([
         // TODO-cleanup-HACK: There should be a unified flow for merging
         // the new data
         ui_page.render_new_cards(data);
-        if(data.cards.length < 20)
+        if(data.cards.length == 0)
             more_cards = false;
     };
 

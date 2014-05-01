@@ -40,9 +40,10 @@ define([
         // ugly hack to merge old context attributes to new data
         data.card_type = card_type;
         data.layout = card_layout;
-        if(data.cards.length < 20)
+        if(data.cards.length == 0)
             o.more_cards = false;
-        cards_template(data).insertBefore('.feed .footer');
+        else
+            cards_template(data).insertBefore('.feed .footer');
     };
 
     var allow_reorder = function() {
@@ -119,6 +120,7 @@ define([
             var ordered_ids = reorder();
             $(this).find("input[name=new_order]").val(ordered_ids.join(","));
             $(this).find("input[name=deletes]").val(card_deletes);
+            card_deletes = 0
             $("form.save_bar").hidehide();
         });
 

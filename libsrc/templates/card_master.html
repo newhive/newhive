@@ -46,7 +46,6 @@
   </form>
 {>}
 <div class='feed {layout}{<unless route.private} public{>}'>
-  {|templates/cards.html}
   {# Insert 3-column layout here.  
     When unused, it's 0 height.
     When unused, the columns have 0 width #}
@@ -55,6 +54,7 @@
       <div class="column column_{col_num}"></div>
     {>}
   </div>
+  {|templates/cards.html}
   {<if cards}
     <div class="footer"></div>
   {>}

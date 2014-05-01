@@ -225,12 +225,12 @@ Hive.App = function(init_state, opts) {
     o.css_setter_px = function(css_prop) { return o.css_setter(css_prop, 'px') }
 
     // Generic setters and getters
-    o.color = function(){ return o.css_state['background-color'] || '#FFFFFF' };
-    o.color_set = o.css_setter('background-color');
-    o.stroke = function(){ return o.css_state['border-color'] || '#000' };
-    o.stroke_set = o.css_setter('border-color');
-    o.border_width = function(){ return parseInt(o.css_state['border-width'] || 0) };
-    o.border_width_set = function(v) {
+    o.gcolor = function(){ return o.css_state['background-color'] || 'transparent' };
+    o.gcolor_set = o.css_setter('background-color');
+    o.gstroke = function(){ return o.css_state['border-color'] || '#000' };
+    o.gstroke_set = o.css_setter('border-color');
+    o.gborder_width = function(){ return parseInt(o.css_state['border-width'] || 0) };
+    o.gborder_width_set = function(v) {
         o.css_setter_px('border-width')(v);
         if (env.Selection.controls)
             fixup_controls(env.Selection.controls);
@@ -244,8 +244,7 @@ Hive.App = function(init_state, opts) {
         o.div.find('.buttons .button.stroke').showhide(has_border);
     };
     fixup_controls.display_order = 9;
-    o.make_controls.push(fixup_controls);
-
+    o.make_controls.push(memoize("fixup_controls", fixup_controls));
 
     var _client_data = function() {
         o.init_state.client_data = o.init_state.client_data || {};
@@ -506,7 +505,7 @@ Hive.App = function(init_state, opts) {
     o.copy = function(opts){
         if(!opts) opts = {};
         if(!opts.offset) opts.offset = [ 0, o.dims()[1] + 20 ];
-        var app_state = $.extend({}, o.state());
+        var app_state = $.extend({}, true, o.state());
         delete app_state.id;
         if(opts.z_offset) app_state.z += opts.z_offset;
         var cp = Hive.App(app_state, opts);
@@ -757,6 +756,27 @@ editor.add_slider = function(name, opts) {
         }
     }
 }
+editor.add_button = function(name, on_run, opts) {
+    var apps = env.Apps.filtered(function(a) { return a.client_visible; })
+    var handle_name = name
+    var controls = function(o) {
+        var handle = find_or_create_button(o, null, handle_name);
+        handle.on("click", function(ev) {
+            env.History.begin();
+            on_run(ev);
+            env.History.group(name);
+        })
+    }
+    controls.display_order = 6
+    // controls = memoize("userbutton_"+name, controls)
+    for (var i = 0; i < apps.length; ++i) {
+        apps[i].make_controls.push(controls)
+        if (i == 0) {
+            editor.current_code.created_controls.push(controls);
+            active_controls.push(controls);
+        }
+    }
+}
 
 Hive.App.Code = function(o){
     o.has_align = false
@@ -867,6 +887,7 @@ Hive.App.Code = function(o){
                     ,"background-size":""})
         }        
     }
+    fixup_controls.display_order = 9
     o.make_controls.push(fixup_controls)
 
     o.focus.add(function(){
@@ -901,6 +922,7 @@ Hive.App.Code = function(o){
     o.editor = CodeMirror(o.div[0], { extraKeys: keymap ,mode: mode })
     o.editor.setValue(o.init_state.content || '')
     o.content_element = $(o.editor.getWrapperElement()).addClass('content code')
+    // TODO-cleanup: Move to CSS
     o.div.css('background-color','white').css('opacity',.2);
 
     o.load()
@@ -2628,6 +2650,10 @@ Hive.App.has_opacity = function(o) {
 };
 Hive.App.has_border_width = function(o) {
     var history_point, sel = env.Selection
+    var name = "border_width"
+    if (!o[name]) o[name] = o['g' + name]
+    if (!o[name + "_set"]) o[name + "_set"] = o['g' + name + "_set"]
+
     Hive.App.has_slider_menu(o, '.stroke-width'
         ,function(v){
             sel.border_width_set(v)
@@ -2672,15 +2698,21 @@ Hive.App.has_blur = function(o) {
 var find_or_create_button = function(app, btn_name, btn_title) {
     var btn = app.div.find('.button' + btn_name);
     if (!btn_name || !btn.length) {
-        btn_name = btn_name || ".run"
-        btn = app.addButton($('#controls_misc .button' + btn_name));
-        if (btn_title) btn.attr("title", btn_title);
+        btn = app.addButton($('#controls_misc .button' + (btn_name || ".run")));
+        if (btn_title) {
+            btn.attr("title", btn_title);
+            if (!btn_name)
+                btn.html(btn_title[0]);
+        }
+
     }
     return btn;
 }
 
 Hive.App.has_color = function(o, name){
     if(!name) name = 'color'
+    if (!o[name]) o[name] = o['g' + name]
+    if (!o[name + "_set"]) o[name + "_set"] = o['g' + name + "_set"]
     o.make_controls.push(memoize('has_color_' + name, function(o) {
         var common = $.extend({}, o);
         var color_drawer, sel = env.Selection
