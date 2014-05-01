@@ -177,7 +177,6 @@ o.Selection = function(o) {
     o.dragend = function (ev, dd) {
         if(!dragging) return;
         dragging = false;
-        o.update(elements)
         o.show_controls()
 
         var app = ev.data;
