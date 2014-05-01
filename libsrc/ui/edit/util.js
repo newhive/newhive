@@ -396,6 +396,8 @@ o.retile = function(opts) {
     for (var i = 0; i < apps.length; ++i) {
         var app = apps[i]
         if (opts.natural && app.aspect) {
+            if (app.init_state.scale_x)
+                app.init_state.scale_x = 1
             app.fit_to({pos:regions[i][0], dims:regions[i][1]
                 , scaled:[app.aspect,1]})
         } else {

@@ -1006,6 +1006,7 @@ Hive.App.Image = function(o) {
 
         o.recenter = function() {
             var dims = o.dims_relative(), nat_height = dims[0] / o.aspect;
+            o.init_state.offset[0] = 0
             o.init_state.offset[1] = 
                 (dims[1] - nat_height) / 2 / dims[0] / o.init_state.scale_x;
             o.layout()
