@@ -27,6 +27,17 @@ o.Text = function(o) {
     // for now, having internal and external alignment is too weird.
     o.has_align = false;  
 
+    // When this app is multiselected, have color act on all foreground text
+    o.color = function() { return o.div.find("font").css("color") }
+    o.color_set = function(v) { 
+        // o.div.find("font").css("color", v)
+        o.rte.makeEditable()
+        o.rte.focusAndPlaceCursorAtStart()
+        document.execCommand('selectAll');
+        o.rte.exec_command('+foreColor', v) 
+        o.rte.focusAndPlaceCursorAtStart()
+    }
+
     o.get_aspect = function() {
         var dims = o.dims();
         return dims[0] / dims[1];
