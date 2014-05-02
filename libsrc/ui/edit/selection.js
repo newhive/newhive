@@ -537,8 +537,12 @@ o.Selection = function(o) {
         )
         o.make_controls = u.union(o.make_controls, sel_controls);
         if(apps.length > 1) {
+            var common_type = apps[0].type.tname
+            apps.map(function(a) { 
+                if (common_type != a.type.tname) common_type = false
+            })
             o.make_controls = o.make_controls.filter(function(c) {
-                return !c.single;
+                return !c.single && (common_type || !c.single_type);
             }).concat(o.multi_controls)
         }
         o.make_controls = o.make_controls.merge_sort(function(a,b) {
@@ -652,7 +656,7 @@ o.Selection = function(o) {
     // END-coords
 
     o.copy = function(opts){
-        var load_count = elements.length, copies, _load = opts.load;
+        var load_count = elements.length + 1, copies, _load = opts.load;
         opts = $.extend({ 
             offset: [ 0, o.dims()[1] + 20 ],
             // 'z_offset': elements.length 
@@ -671,6 +675,9 @@ o.Selection = function(o) {
         env.History.begin();
         var copies = hive_app.Apps.copy(elements, opts)
         env.History.group('copy group');
+        // load_count is one more than elements to guarantee copies existence
+        // when loaded.
+        setTimeout(opts.load, 1)
         return copies;
     }
     o.remove = function(){

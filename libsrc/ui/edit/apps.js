@@ -40,8 +40,7 @@ var Hive = {}
 ;
 
 var memoize = function(key, value) {
-    if (memo[key]) return memo[key];
-    memo[key] = value
+    if (!memo[key]) memo[key] = value
     return memo[key];
 }
 Hive.appTypes = { };
@@ -785,6 +784,29 @@ Hive.App.Code = function(o){
     o.created_controls = []
 
     o.content = function(){ return o.editor.getValue() }
+    var _load = o.load
+    o.run_module_func = function(module_func, callback) {
+        var curl_func = function() {
+            editor.current_code = o;
+            try {
+                curl([o.module_name()], function(module) {
+                    module[module_func] && module[module_func]();
+                    callback && callback(module);
+                    editor.current_code = null;
+                }, function() {})
+            } catch (err) {}
+        }
+        if (!iter) {
+            insert_code()
+            // setTimeout(curl_func, 400);
+        }
+        // else 
+            curl_func();
+    }
+    o.load = function() {
+        if (_load) _load()
+        o.run_module_func("editor")
+    }
 
     var iter = 0;
     o.module_name = function() { return "module_" + o.id + "_" + iter; }
@@ -798,17 +820,22 @@ Hive.App.Code = function(o){
     var insert_code = function(callback){
         o.code_element.remove();
         ++iter;
-        o.code_element.on('load')
+        // o.code_element.on('load')
+        // jquery insert doesn't allow debugging, so we use straight js
         o.code_element.html(module_code()).appendTo('body')
+        // var script   = document.createElement("script");
+        // script.type  = "text/javascript";
+        // script.text  = module_code();
+        // document.body.appendChild(script);
+        // o.code_element = $(script);
     }
     // var try_code_call = function(func_name){
     var animate_go
     o.run = function() {
         o.stop();
         insert_code()
-
-        curl([o.module_name()], function(module) {
-            module.run && module.run();
+        
+        o.run_module_func("run", function(module) {
             if(!module.animate) return
             var animate_frame = function(){
                 module.animate()
@@ -823,32 +850,16 @@ Hive.App.Code = function(o){
     o.stop = function() {
         // insert_code();
         if (!iter) return;
-        try {
-            curl([o.module_name()], function(module) {
-                module.stop && module.stop();
-            }, function() {})
-        } catch (err) {}
-        animate_go = 0
+        o.run_module_func("stop", function() {
+            animate_go = 0
+        })
     }
     o.edit = function() {
         if (o.created_controls.length == 0) {
-            editor.current_code = o
-            var edit = function() {
-                try {
-                    curl([o.module_name()], function(module) {
-                        module.edit && module.edit();
-                    }, function() {})
-                } catch (err) {}
-                fixup_controls(null, true);
-            }
-            if (!iter) {
-                insert_code()
-                setTimeout(edit, 1000);
-            }
-            else 
-                edit();
+            o.run_module_func("edit", function() { fixup_controls() })
         } else {
             var apps = env.Apps.filtered(function(a) { return a.client_visible; })
+            // remove the associated edit controls from their apps
             while (o.created_controls.length) {
                 var control = o.created_controls.pop();
                 js_util.array_delete(active_controls, control);
@@ -872,12 +883,15 @@ Hive.App.Code = function(o){
         //     'change', function(){
         //         o.app.init_state.show_in_view = showinview.prop('checked') })
     }
+    controls.single_type = true
     o.make_controls.push(memoize('code_buttons', controls))
     Hive.App.has_shield(o)
 
-    var fixup_controls = function(controls, force_on) {
+    var fixup_controls = function(controls) {
         controls = controls || env.Selection.controls;
-        if (force_on || o.created_controls.length > 0) {
+        if (!controls) return
+        // set the toggle state of the edit button
+        if (o.created_controls.length > 0) {
             controls.div.find(".button.edit")
                 .css({"background-color":"black", "color": "white"
                     ,"background-size":0})
@@ -2631,8 +2645,8 @@ Hive.App.has_opacity = function(o) {
             app.opacity, app.opacity_set, 'change opacity') },
         function(){ history_point.save() }
     );
-    var opacity = o.init_state.opacity === undefined ? 1 : o.init_state.opacity;
-    o.opacity = function(){ return opacity; };
+    var opacity = o.init_state.opacity === undefined ? 1 : o.init_state.opacity; 
+   o.opacity = function(){ return opacity; };
     o.opacity_set = function(s){
         opacity = s;
         o.content_element.css('opacity', s);
