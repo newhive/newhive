@@ -1221,11 +1221,11 @@ Hive.App.Image = function(o) {
     Hive.App.has_border_radius(o);
 
     o.img = $();
+    Hive.App.has_border_width(o);
+    Hive.App.has_color(o, "stroke");
     o.state_update(o.init_state);
     o.url_set(o.init_state.url);
     Hive.App.has_image_drop(o);
-    Hive.App.has_border_width(o);
-    Hive.App.has_color(o, "stroke");
 
     return o;
 }
