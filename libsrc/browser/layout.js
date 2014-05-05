@@ -57,16 +57,22 @@ define(['browser/jquery', 'ui/util'], function($, util) {
                     c['width'] * Math.max(1, s))
                 c2['left'] = Math.max(30, r * (win_width - c2['width']))
                 c2['font-size'] = ( c['font-size'] *
-                    Math.max(1, c2['width'] / c['width']) ) + 'em'
+                    Math.max(1, c2['width'] / c['width']) )
                 delete c['width']
                 delete c['left']
                 delete c['font-size']
             }
-            for(var p in c) {
-                if(p == 'font-size') c2[p] = (c[p] * s) + 'em';
-                else c2[p] = Math.round(c[p] * s);
+            for(var p in c2) {
+                c2[p] = c[p] ? (c[p] * s) : c2[p]
+                if(p == 'font-size') {
+                    c2[p] += 'em';
+                } else {
+                    c2[p] = Math.round(c2[p]) + 'px';
+                }
             }
-            e.css(c2);
+            // e.css(c2);
+            // is this faster?
+            util.inline_style(e[0], c2)
             
             if (e.hasClass('hive_image')) {
                 var img = e.find('img'), ic = $.extend({}, img.data('css'))
