@@ -119,8 +119,8 @@ body.edit {
         vertical-align: top;
     }
 }
-.menu_item.change_zoom img { height: 30px; margin-left: -10px; }
-
+.menu_item.change_zoom img { height: 30px; } //margin-left: -10px; } 
+.misc_menu .menu_item { padding: 7px 7px; text-align: center; }
 // So that using the form doesn't cause the window to scroll
 #media_upload { position: fixed; }
 #bg {
