@@ -380,7 +380,7 @@ Hive.App = function(init_state, opts) {
     o.hide_controls = function(){
         if(!o.controls) return
         hidden_controls = o.controls
-        o.controls.div.hidehide()
+        o.controls.fixed_div.hidehide()
         o.controls = false
     }
     o.show_controls = function(){
@@ -392,7 +392,7 @@ Hive.App = function(init_state, opts) {
         }
         o.controls = hidden_controls
         hidden_controls = false
-        o.controls.div.showshow()
+        o.controls.fixed_div.showshow()
         o.controls.layout()
     }
 
@@ -1289,7 +1289,7 @@ Hive.App.has_ctrl_points = function(o){
         js.range(app.points_len()).map(function(i){
             p_els[i] = $('<div>')
                 .addClass('control point')
-                .appendTo(o.div)
+                .appendTo(o.fixed_div)
                 .on('dragstart', function(ev){
                     dragging = true
                     app.transform_start(i)

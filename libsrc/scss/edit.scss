@@ -211,6 +211,18 @@ body.edit {
 
 .controls_src { display : none; }
 .control { position: absolute; }
+.fixed_controls { 
+    position: absolute; 
+    width:0; height:0;
+    z-index: 4;
+
+    .point {
+        background-color: $color_selected;
+        margin: -7px 0 0 -7px;
+        width: 14px; height:14px;
+        border-radius: 7px;
+    }
+}
 .controls {
     position:absolute;
     width:0; height:0;
@@ -225,12 +237,6 @@ body.edit {
     .control.drawer {
         text-align: left;
         display: none;
-    }
-    .point {
-        background-color: $color_selected;
-        margin: -7px 0 0 -7px;
-        width: 14px; height:14px;
-        border-radius: 7px;
     }
 
     .stack { white-space : nowrap; }
