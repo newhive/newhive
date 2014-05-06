@@ -692,21 +692,23 @@ o.Selection = function(o) {
     o.get_stack = function(){
         return elements.sort(function(a, b){ a.layer() - b.layer() });
     };
-    o.stack_top = function(ev){
+    o.stack_end = function(dir){
+        env.History.begin();
+        $.each(o.get_stack().reverse(), function(i, el){ 
+            dir > 0 ? el.stack_top() : el.stack_bottom() })
+        env.History.group('stack to ' + ((dir > 0) ? "top": "bottom"));
+    };
+    o.stack_top = function(ev) {
         if (!ev.shiftKey) {
             return o.stack_shift(1)
         }
-        env.History.begin();
-        $.each(o.get_stack().reverse(), function(i, el){ el.stack_top() })
-        env.History.group('stack group to top');
-    };
+        o.stack_end(1)
+    }
     o.stack_bottom = function(ev){
         if (!ev.shiftKey) {
             return o.stack_shift(-1)
         }
-        env.History.begin();
-        $.each(o.get_stack().reverse(), function(i, el){ el.stack_bottom() })
-        env.History.group('stack group to bottom');
+        o.stack_end(-1)
     };
     o.stack_shift = function(offset) {
         env.History.begin();
@@ -716,6 +718,8 @@ o.Selection = function(o) {
             up_offset = 0
         }
         overlaps = u.except(overlaps, elements)
+        if (overlaps.length == 0)
+            return o.stack_end(offset)
         var z_indexes = $.map(overlaps, function(a) { return a.layer(); })
         z_indexes.sort(js.op['-'])
 
@@ -729,7 +733,7 @@ o.Selection = function(o) {
             if (u._sign(new_layer - layer) == u._sign(offset))
                 a.stack_to(new_layer)
         })
-        env.History.group('stack group ' + ((offset > 0) ? 'up' : 'down'));
+        env.History.group('stack ' + ((offset > 0) ? 'up' : 'down'));
     }
 
     var parent = o;
