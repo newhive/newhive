@@ -116,7 +116,7 @@ define([
             ui_page.add_grid_borders();
             return ordered_ids;
         }
-        $("form.save_bar").on('before_submit', function(e) {
+        $("form.save_bar").off('before_submit').on('before_submit', function(e){
             var ordered_ids = reorder();
             $(this).find("input[name=new_order]").val(ordered_ids.join(","));
             $(this).find("input[name=deletes]").val(card_deletes);
