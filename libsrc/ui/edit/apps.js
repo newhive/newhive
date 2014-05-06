@@ -1285,13 +1285,11 @@ Hive.App.has_ctrl_points = function(o){
             })
         }
 
-        var dragging
         js.range(app.points_len()).map(function(i){
             p_els[i] = $('<div>')
                 .addClass('control point')
                 .appendTo(o.fixed_div)
                 .on('dragstart', function(ev){
-                    dragging = true
                     app.transform_start(i)
                     env.Selection.hide_controls()
                     ev.stopPropagation()
@@ -1301,16 +1299,10 @@ Hive.App.has_ctrl_points = function(o){
                     app.point_move(i, delta)
                 })
                 .on('dragend', function(ev){
-                    dragging = false
                     env.Selection.show_controls()
                     ev.stopPropagation()
                 })
         })
-
-        app.mouseup = function(ev){
-            if(dragging)
-                ev.stopPropagation()
-        }
     })
     o.make_controls[o.make_controls.length - 1].single = true;
 }
