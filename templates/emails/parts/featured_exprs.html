@@ -1,5 +1,5 @@
 {% macro expr_cards(exprs, user=None) %}
-  <a href="{{ server_url }}{{ user.name + "/profile" if user else "/home/expressions" }}">
+  <a href="{{ server_url }}{{ "/home/edit" }}">
     <div id="featured_exprs">
         {% if user and user.name %}
         <h4 class="user"><span>
@@ -7,12 +7,12 @@
         </h4></span>
         {% else %}
         <h3 class="site"><span>
-            Explore Expressions
+            Explore expressions
         </h3></span>
         {% endif %}
         {% for expr in exprs -%}
           <a href="{{expr.url}}" title="{{expr.title}}" id="{{expr.id}}"
-              ><img class="featured_thumb" src="{{expr.snapshot_name("small")}}"/
+              ><img class="featured_thumb" src="{{expr.snapshot_name_http("small")}}"/
           ></a>
         {%- endfor %}
     </div>

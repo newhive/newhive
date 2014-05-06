@@ -1,0 +1,5 @@
+<Alloy>
+	<TableViewRow id="gif_wall_row" class="row" dataId="" model="{id}">
+		<ImageView id="gif_wall_image" image="{photo_blob}"  opacity="{img_opacity}" />
+	</TableViewRow>
+</Alloy>

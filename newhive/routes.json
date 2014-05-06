@@ -7,6 +7,33 @@
     "empty": "These routes are community pages.",
     "empty": "-----------------------------------------",
 
+    "naked_expr_id": {
+        "page_route": "/<expr_id>",
+        "controller": "expr",
+        "method": "fetch_naked",
+        "content_domain": true
+    },
+    "naked_expr_name": {
+        "page_route": "/<owner_name>/<path:expr_name>",
+        "controller": "expr",
+        "method": "fetch_naked",
+        "content_domain": true
+    },
+    "blank_sandbox": {
+        "page_route": "/home/edit",
+        "controller": "expr",
+        "method": "editor_sandbox",
+        "content_domain": true,
+        "precedence": 1
+    },
+    "editor_sandbox": {
+        "page_route": "/home/edit/<expr_id>",
+        "controller": "expr",
+        "method": "editor_sandbox",
+        "content_domain": true,
+        "precedence": 1
+    },
+
     "home": {
         "page_route": "/",
         "api_route": "/api/feed/trending/",
@@ -27,7 +54,7 @@
         "page_route": "/<username>/profile/recent",
         "api_route": "/api/feed/recent/<username>",
         "controller": "community",
-        "method": "network",
+        "method": "network_recent",
         "client_method": "grid",
         "require_login": true
     },
@@ -185,11 +212,6 @@
         "method": "forms_signup",
         "client_method": "new_account"
     },
-    "old_signup": {
-        "page_route": "/create_account/<key>",
-        "controller": "community",
-        "method": "old_signup"
-    },
     "signup_create": {
         "api_route": "/api/user/create",
         "controller": "user",
@@ -251,7 +273,24 @@
         "api_route": "/api/expr/view/<owner_name>/<path:expr_name>",
         "controller": "community",
         "method": "expr",
-        "client_method": "expr"
+        "client_method": "expr",
+        "precedence": -1
+    },
+    "view_expr_custom_domain_home": {
+        "page_route": "/",
+        "api_route": "/api/expr/url",
+        "controller": "community",
+        "method": "expr_custom_domain",
+        "client_method": "expr",
+        "host": "<host>"
+    },
+    "view_expr_custom_domain": {
+        "page_route": "/<path:path>",
+        "api_route": "/api/expr/url/<path:url>",
+        "controller": "community",
+        "method": "expr_custom_domain",
+        "client_method": "expr",
+        "host": "<host>"
     },
 
     "create_expr": {
@@ -272,6 +311,11 @@
         "controller": "expr",
         "method": "save"
     },
+    "expr_unused_name": {
+        "api_route": "/api/expr/unused_name",
+        "controller": "expr",
+        "method": "unused_name"
+    },
     "expr_delete": {
         "api_route": "/api/expr/delete",
         "controller": "expr",
@@ -279,6 +323,7 @@
     },
     "expr_snapshot": {
         "controller": "TODO-cleanup: Jordan believes this is deprecated",
+        "controller": "Abram believes this is for returning the most recent snapshot of a given expr. Whether we use this or not at the moment, it's useful",
         "page_route": "/api/expr/snapshot/<expr_id>",
         "api_route": "/api/expr/snapshot/<expr_id>",
         "controller": "expr",
@@ -331,7 +376,7 @@
         "method": "expr_share"
     },
     "password_recover": {
-        "api_route": "/api/community/password_recover",
+        "api_route": "/api/user/password_email",
         "controller": "user",
         "method": "password_recover"
     },
@@ -356,6 +401,12 @@
         "api_route": "/api/file/create",
         "controller": "file",
         "method": "create"
+    },
+    "file_create_content": {
+        "api_route": "/api/file/create",
+        "controller": "file",
+        "method": "create",
+        "content_domain": true
     },
 
     "empty": "-----------------------------------------",

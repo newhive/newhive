@@ -1,5 +1,6 @@
 import json
 from collections import Counter
+from werkzeug import Response
 
 from newhive import mail
 from newhive.ui_strings import en as ui_str
@@ -7,48 +8,49 @@ from newhive.utils import dfilter, now, abs_url, AbsUrl
 from newhive.controllers.controller import Controller
 
 class Community(Controller):
-    def featured(self, tdata, request, **paging_args):
+    def featured(self, tdata, request, db_args={}, **args):
         return {
-            "cards": self.db.query('#Featured', viewer=tdata.user, **paging_args),
+            "cards": self.db.query('#Featured', **db_args),
             'header': ("The Hive",), 'card_type': 'expr',
             'title': "The Hive",
         }
 
-    def empty(self, tdata, request, **paging_args):
+    def empty(self, tdata, request, **args):
         return False
 
-    def recent(self, tdata, request, **paging_args):
+    def recent(self, tdata, request, db_args={}, **args):
         return {
-            "cards": self.db.query('#Recent', viewer=tdata.user, **paging_args),
+            "cards": self.db.query('#Recent', **db_args),
             'header': ("ALL Expressions",), 'card_type': 'expr',
             'title': "NewHive - ALL",
         }
 
-    def trending(self, tdata, request, username=None, **paging_args):
+    def trending(self, tdata, request, username=None, db_args={}, **args):
         user = self.db.User.named(username)
         if not user:
             user = tdata.user
         # Logged out users see featured.
         if not user or not user.id:
-            return self.featured(tdata, request, **paging_args)
+            return self.featured(tdata, request, db_args=db_args, **args)
         return {
             "network_help": (len(user.starred_user_ids) <= 1),
-            "cards": user.feed_trending(**paging_args),
+            # "cards": self.db.query('#Network', **db_args),
+            "cards": user.feed_trending(**db_args),
             'header': ("Network",), 'card_type': 'expr',
             'title': "Network",
         }
 
-    def network(self, tdata, request, username=None, **paging_args):
+    def network_recent(self, tdata, request, username=None, db_args={}, **args):
         user = self.db.User.named(username)
         if not user:
             user = tdata.user
         return {
-            "cards": user.feed_recent(**paging_args),
+            "cards": user.feed_recent(**db_args),
             "header": ("Recent",), 'card_type': 'expr',
             "title": 'Recent',
         }
 
-    def forms_signup(self, tdata, request, username=None, **paging_args):
+    def forms_signup(self, tdata, request, username=None, **args):
         referral = self.db.Referral.find({'key': request.args.get('key')})
         resp = {'form': 'create_account', 'title': "NewHive - Sign Up", }
         if not self.flags.get('open_signup'):
@@ -58,7 +60,7 @@ class Community(Controller):
                 resp['fullname'] = referral.get('name')
         return resp
 
-    def expressions_for(self, tdata, cards, owner):
+    def expressions_for(self, tdata, cards, owner, **args):
         if 0 == len(cards) and tdata.user == owner:
             # New user has no cards; give him the "edit" card
             # TODO: replace thenewhive with a config string
@@ -72,50 +74,51 @@ class Community(Controller):
             'title': 'Expressions by ' + owner['name'],
         }
 
-    def expressions_public_tags(self, tdata, request, owner_name=None, at=0, **args):
+    def expressions_public_tags(self, tdata, request, owner_name=None, db_args={}, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         if args.get('tag_name'): return self.expressions_tag(
-            tdata, request, owner_name=owner_name, **args)
+            tdata, request, owner_name=owner_name, db_args=db_args, **args)
         spec = {'owner_name': owner_name}
-        cards = self.db.Expr.page(spec, viewer=tdata.user, auth='public', at=at, **args)
+        cards = self.db.Expr.page(spec, auth='public', **db_args)
         return self.expressions_for(tdata, cards, owner)
 
-    def expressions_public(self, tdata, request, owner_name=None, at=0, **args):
+    def expressions_public(self, tdata, request, owner_name=None, db_args={}, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
-        cards = owner.profile(at=at)
+        cards = owner.profile(at=db_args.get('at', 0))
         return self.expressions_for(tdata, cards, owner)
 
     def expressions_tag(self, tdata, request, owner_name=None, 
-            entropy=None, tag_name=None, at=0, **args):
+            entropy=None, tag_name=None, db_args={}, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         if entropy and entropy != owner.get('tag_entropy', {}).get(tag_name, ''):
             return None
         if entropy or owner.id == tdata.user.id:
-            args['override_unlisted'] = True
+            db_args['override_unlisted'] = True
         profile = owner.client_view(viewer=tdata.user)
 
         result, search = self.db.query_echo("@" + owner_name + " #" + tag_name,
-            viewer=tdata.user, at=at, **args)
+            **db_args)
 
         data = {
             "cards": result,
             "card_type": "expr",
             "tag_selected": tag_name,
             'owner': profile,
+            'entropy': entropy,
             'title': 'Expressions by ' + owner['name'],
         }
         if owner.id == tdata.user.id:
             data.update({"tag_entropy": owner.get('tag_entropy', {}).get(tag_name)})
         return data
 
-    def expressions_private(self, tdata, request, owner_name=None, **args):
+    def expressions_private(self, tdata, request, owner_name=None, db_args={}, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         spec = {'owner_name': owner_name}
-        cards = self.db.Expr.page(spec, viewer=tdata.user, auth='password', **args)
+        cards = self.db.Expr.page(spec, auth='password', **db_args)
         return {
             'cards': cards, 'owner': owner.client_view(), 'card_type':'expr',
             'title': 'Your Private Expressions',
@@ -209,16 +212,19 @@ class Community(Controller):
             'title': 'Edit your profile',
         }
 
-    def loves(self, tdata, request, owner_name=None, **args):
-        # TODO: properly handle private expressions by passing viewer to cards
-
+    def loves(self, tdata, request, owner_name=None, db_args={}, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         # Get the feeds starred by owner_name...
         spec = {'initiator_name': owner_name, 'entity_class':'Expr' }
         # ...and grab its expressions.
+        # TODO: deal with privacy by doing a mapreduce
+        # _db_args = {} if owner_name != tdata.user.get('name') else db_args
         cards = self.db.Expr.fetch(map(lambda en:en['entity'], 
-            self.db.Star.page(spec, viewer=tdata.user, **args)))
+            self.db.Star.page(spec, **db_args)))
+        # if owner_name != tdata.user.get('name'):
+        #     spec['auth'] = 'public'
+
         profile = owner.client_view(viewer=tdata.user)
         return {
             'cards': cards, 'owner': profile, 'card_type':'expr',
@@ -243,14 +249,14 @@ class Community(Controller):
     #         'about_text': 'Comments',
     #     }
 
-    def following(self, tdata, request, owner_name=None, **args):
+    def following(self, tdata, request, owner_name=None, db_args={}, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         # Get the users starred by owner_name...
         spec = {'initiator_name': owner_name, 'entity_class':'User' }
         # ...and grab its users.
         users = self.db.User.fetch(map(lambda en:en['entity'], 
-            self.db.Star.page(spec, viewer=tdata.user, **args)))
+            self.db.Star.page(spec, **db_args)))
         profile = owner.client_view(viewer=tdata.user)
         tags = owner.get('tags_following', [])
         return {
@@ -260,10 +266,10 @@ class Community(Controller):
         }
 
     # TODO: extract commonality from these methods.
-    def followers(self, tdata, request, owner_name=None, **args):
+    def followers(self, tdata, request, owner_name=None, db_args={}, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
-        users = owner.starrer_page(**args)
+        users = owner.starrer_page(**db_args)
         profile = owner.client_view(viewer=tdata.user)
         return {
             'special': {'mini_expressions': 3},
@@ -271,27 +277,49 @@ class Community(Controller):
             'title': owner['name'] + ': Followers', 'about_text': 'Followers',
         }
 
-    def expr(self, tdata, request, id=None, owner_name=None, expr_name=''):
+    def expr(self, tdata, request, id=None, owner_name=None, expr_name='', **args):
         expr = ( self.db.Expr.fetch(id) if id else
             self.db.Expr.named(owner_name, expr_name) )
-        if not expr: return None
+        if not expr:
+            if args.get('route_name') == 'user_home':
+                return self.redirect(self.response,
+                    abs_url('/' + owner_name + '/profile'))
+            return None
+        return self.serve_expr(tdata, request, expr)
 
+    def expr_custom_domain(self, tdata, request, path='', **args):
+        url = request.host + ('/' if path else '') + path
+        expr = self.db.Expr.find({'url': url})
+        tdata.context['domain'] = request.host
+        return self.controllers['expr'].serve_naked(
+            tdata, request, self.response, expr)
+        # page_data = self.serve_expr(tdata, request, expr)
+        # page_data['domain'] = request.host
+        # return page_data
+
+    def serve_expr(self, tdata, request, expr):
         meta = {}
         resp = {
-            'expr_id': expr.id,
-            'content_url': abs_url(domain=self.config.content_domain, 
-                secure=request.is_secure) + expr.id,
-            'expr': expr.client_view(viewer=tdata.user, activity=10)
+            'expr_id': expr.id
+            ,'content_url': abs_url(domain=self.config.content_domain, 
+                secure=request.is_secure) + expr.id
+            ,'expr': expr.client_view(viewer=tdata.user, activity=10)
+            ,'title': expr.get('title', '[Untitled]')
         }
 
         if (not tdata.user.can_view(expr)
             and not expr.cmp_password(request.form.get('password'))
+            and not expr.cmp_password(request.args.get('pw'))
         ):
             resp['expr'] = dfilter(resp['expr'], ['owner', 'auth', 'id', 'name'])
             resp['expr']['title'] = '[password required]'
             resp['error'] = 'password'
         else:
-            meta['img_url'] = expr.snapshot_name('big')
+            snap_url = expr.snapshot_name('big')
+            if snap_url and not snap_url.startswith("http"):
+                meta['img_url'] = "http:" + snap_url  
+            else: 
+                meta['img_url'] = snap_url  
             expr_owner = expr.get_owner()
             if expr_owner and expr_owner['analytics'].get('views_by'):
                 expr_owner.increment({'analytics.views_by': 1})
@@ -300,7 +328,7 @@ class Community(Controller):
         resp['meta'] = meta
         return resp
 
-    def edit_expr(self, tdata, request, id=None):
+    def edit_expr(self, tdata, request, id=None, **args):
         expr = self.db.Expr.fetch(id)
         if not expr or (
             (not tdata.user.can_view(expr)) and expr.get('password')
@@ -310,28 +338,52 @@ class Community(Controller):
             "remix" not in expr.get('tags_index', [])):
             return None
         expr['id'] = expr.id
+
+        # editor currently depends on URL attribute
+        apps = expr.get('apps', [])
+        for a in apps:
+            # print 'app ', a
+            file_id = a.get('file_id') 
+            if file_id and not a.get('url'):
+                # print (self.db.File.fetch(file_id) or {}).get('url')
+                a['url'] = (self.db.File.fetch(file_id) or {}).get('url')
+
         return { 'expr': expr }
 
-    def search(self, tdata, request, id=None, owner_name=None, expr_name=None, **args):
-        if not request.args.has_key('q'): return None
+    def search(self, tdata, request, id=None, owner_name=None, expr_name=None,
+        db_args={}, **args
+    ):
+        q = request.args.get('q')
+        if not q: return None
         id = request.args.get('id', None)
-        result, search = self.db.query_echo(request.args['q'],
-            viewer=tdata.user, id=id, **args)
-        print('executed search', search)
+        entropy = request.args.get('e', None)
+        owner = self.db.User.named(owner_name)
+        search = self.db.parse_query(q)
         tags = search.get('tags', [])
+        text = search.get('text', [])
+        if entropy and search.get('user') and len(tags) == 1:
+            user = self.db.User.named(search.get('user'))
+            if user and user.get('tag_entropy',{}).get(tags[0], None) == entropy:
+                db_args['override_unlisted'] = True
+
+        result, search = self.db.query_echo(q, id=id, **db_args)
+        # print('executed search', search)
+        # Treat single-word text search as a tag search (show tag page)
+        if len(search) == 1 and len(text) == 1:
+            tags = text
         data = {
             "cards": result,
             "card_type": "expr",
             'title': 'Search',
             'header': ("Search", request.args['q']),
         }
-        if (len(search) == 1 and len(tags) == 1):
+        if len(search) == 1 and len(tags) == 1:
             profile = tdata.user
             profile = dfilter(profile, ['tags_following'])
             data.update({'tags_search': tags, 'page': 'tag_search', 'viewer': profile})
         return data
 
-    def admin_query(self, tdata, request, **args):
+    def admin_query(self, tdata, request, db_args={}):
         if not self.flags.get('admin'):
             return {}
 
@@ -373,24 +425,22 @@ class Community(Controller):
         if query is None:
             return self.serve_404(tdata, request, response, json=json)
         # Handle pagination
-        pagination_args = dfilter(request.args, ['at', 'by', 'limit', 'sort', 'order'])
+        db_args = dfilter(request.args, ['at', 'by', 'limit', 'sort', 'order'])
         for k in ['at', 'order']:
-            if k in pagination_args: pagination_args[k] = int(pagination_args[k])
-        # Call controller function with query and pagination args
-        passable_keyword_args = dfilter(kwargs, ['username', 'owner_name', 
-            'entropy', 'expr_name', 'id', 'tag_name'])
-        merged_args = dict(passable_keyword_args.items() + pagination_args.items())
-
-        page_data = query(tdata, request, **merged_args)
-        owner = self.db.User.named(kwargs.get('owner_name',''))
+            if k in db_args: db_args[k] = int(db_args[k])
+        db_args['viewer'] = tdata.user
+        # Call controller with route and pagination args
+        page_data = query(tdata, request, db_args=db_args, **kwargs)
         if not page_data:
             print request
-            # TODO-cleanup: make this less hacky
-            if kwargs.get('route_name') == 'user_home':
-                return self.redirect(response, abs_url(
-                    '/' + kwargs.get('owner_name') + '/profile'))
             return self.serve_404(tdata, request, response, json=json)
+        if(type(page_data) is Response):
+            return page_data
+            
+        page_data.setdefault('title', 'NewHive')
+
         if type(page_data.get('cards')) is list:
+            owner = self.db.User.named(kwargs.get('owner_name',''))
             page_data['cards_route'] = { 'route_args': kwargs,
                 'query': request.args }
             special = page_data.get('special', {})
@@ -428,6 +478,7 @@ class Community(Controller):
             for card in page_data['cards']:
                 feed = card.get('feed', [])
                 card['feed'] = map(lambda x: x.client_view(), feed)
+
         if json:
             return self.serve_json(response, page_data)
         else:
@@ -435,8 +486,5 @@ class Community(Controller):
             if page_data.get('meta'):
                 tdata.context.update(page_data['meta'])
                 del page_data['meta']
-            if page_data.get('expr'):
-                tdata.context.update(meta_title=page_data.get('expr').get('title'))
-            tdata.context.update(meta_url=request.url)
 
             return self.serve_loader_page('pages/main.html', tdata, request, response)

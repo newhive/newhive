@@ -1,0 +1,32 @@
+<Alloy>
+	<Window id="save_window">
+		
+		<View id="top_nav">
+			<Button id="image_back" backgroundImage="/images/arrow_back.png"></Button>
+			<Label id="label_save">Publish</Label>	
+		</View>
+		
+		<View id="form_elems_view">
+
+			<TextField id="tf_title" hintText="TITLE"></TextField>
+		
+			<TextField id="tf_url" hintText="URL"></TextField>
+			<TextField id="tf_tags" hintText="#TAGS"></TextField>
+
+			<View id="remix_view">
+				<Label class="btn_label" text="Allow Others to Remix" />
+				<Switch class="btn" id="remix_switch" value="true" />
+			</View>
+
+			<View id="public_view">
+				<Label class="btn_label" text="Is Public" />
+				<Switch class="btn" id="public_switch" value="true" />
+			</View>
+		</View>
+
+		
+		<View id="buttons_view">
+			<Button id="btn_save">Publish</Button>
+		</View>
+	</Window>
+</Alloy>

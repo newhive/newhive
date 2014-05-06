@@ -4,7 +4,7 @@
 # TODO: Snapshot batching. namely, CutyCapt should be able to take a list of 
 
 import envoy
-import os
+import os, urllib
 from os.path import join
 from sys import platform
 from subprocess import call, Popen, PIPE
@@ -24,17 +24,24 @@ def snapshot_test():
 
 class Snapshots(object):
     # TODO-cleanup (everything about this)
-    def take_snapshot(self,expr_id,out_filename,dimensions=(1024,768),full_page=False):
+    def take_snapshot(self,expr_id,out_filename,dimensions=(1024,768),
+        full_page=False, pw=''):
         host = utils.url_host(on_main_domain=False,secure=False)
         # host = "localhost:3737"
         # url = 'http://' + host + ExpressionSnapshotURI(expr_id)
-        url = 'http://' + host + '/' + expr_id + '?snapshot'
+        if isinstance(pw, basestring) and len(pw) > 0:
+            host = utils.url_host(on_main_domain=False,secure=True)
+            url = 'http://' + host + '/' + expr_id + '?snapshot&' + urllib.urlencode({'pw': pw})
+        else:
+            url = 'http://' + host + '/' + expr_id + '?snapshot'
         # print url
         if platform == 'linux' or platform == 'linux2':
             ratio = 1.0 * dimensions[0] / dimensions[1];
             snap_dimensions = list(dimensions)
             snap_dimensions = [ 1000, 1000./dimensions[0]*dimensions[1] ]
-            cmd = ( join(config.src_home, 'bin/CutyCapt/CutyCapt') + ' --delay=1000 --max-wait=90000 --min-width=%s --min-height=%s --plugins=on --url=%s --out=%s'
+            cmd = ( ( join(config.src_home, 'bin/CutyCapt/CutyCapt') + 
+                ' --delay=10000 --max-wait=90000 --min-width=%s --min-height=%s' +
+                ' --plugins=on --url="%s" --out=%s' )
                 % (snap_dimensions[0],snap_dimensions[1],url,out_filename) )
             # cmd = ('webkit2png --feature=javascript --display=:99 '+                
             #     '--geometry=%s %s --output=%s %s' % (dimensions[0],dimensions[1],out_filename,url))

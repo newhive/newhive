@@ -2,21 +2,27 @@ define([
     'browser/jquery',
     'server/context',
     'browser/layout',
+    'ui/util',
     'ui/menu',
     'ui/dialog',
+
     'sj!templates/activity.html',
     'sj!templates/social_overlay.html',
     'sj!templates/edit_btn.html',
+    'sj!templates/expr_actions.html',
     'sj!templates/comment.html'
 ], function(
     $,
     context,
     browser_layout,
+    util,
     menu,
     dialog,
+
     activity_template,
     social_overlay_template,
     edit_btn_template,
+    expr_actions_template,
     comment_template
 ) {
     var o = {}, 
@@ -24,7 +30,7 @@ define([
         overlay_columns = 0, wide_overlay = false,
         animation_timeout = undefined, last_found = -1;
     o.cache_offsets = [1, -1, 2];
-    o.anim_duration = 400;
+    o.anim_duration = (util.mobile()) ? 400 : 400;
 
     // pagination functions here
     o.set_page = function(page){
@@ -39,7 +45,7 @@ define([
         // TODO-cleanup-HACK: There should be a unified flow for merging
         // the new data
         ui_page.render_new_cards(data);
-        if(data.cards.length < 20)
+        if(data.cards.length == 0)
             more_cards = false;
     };
 
@@ -48,54 +54,51 @@ define([
         // context.is_secure not set until after module instantiation
         o.content_url_base = (context.is_secure ?
                 context.config.secure_content_url : context.config.content_url);
-        $("#page_prev").click(o.page_prev);
-        $("#page_next").click(o.page_next);
+        $(".page_btn.page_prev").click(o.page_prev);
+        $(".page_btn.page_next").click(o.page_next);
         $("#social_plus").click(o.social_toggle);
         window.addEventListener('message', o.handle_message, false);
     };
-    o.exit = function(){
-        o.last_found = -1;
-        hide_exprs();
-        o.hide_panel();
-        $('#site').showshow();
-        $('.page_btn').hidehide();
-    };
 
     o.hide_panel = function(){
-        $("#signup_create").hidehide();
-        $("#content_btns").hidehide();
-        $("#signup_create .signup").addClass("hide");
-        $("#signup_create .create").addClass("hide");
+        $(".overlay.panel").hidehide();
         $(".panel .social_btn").addClass("hide");
-        $(".panel .edit_ui .icon").hidehide();
+        $(".panel .edit_ui").hidehide();
     }
 
     o.resize = function(){
-        browser_layout.center($('#page_prev'), undefined, {'h': false});
-        browser_layout.center($('#page_next'), undefined, {'h': false});
+        if (!util.mobile()) {
+            browser_layout.center($('.page_btn.page_prev'), undefined, {'h': false});
+            browser_layout.center($('.page_btn.page_next'), undefined, {'h': false});
+        }
 
         var wide = ($(window).width() >= 1180) ? true : false;
         var columns = ($(window).width() >= 980) ? 2 : 1;
-        if (o.overlay_columns != columns) {
+        if (o.overlay_columns != columns || o.wide_overlay != wide) {
             o.overlay_columns = columns;
-            $("#popup_content .left_pane").width((columns == 1) ? 508 : 430);
-            $("#popup_content > *").css('display', (columns == 1) ? 'block' : 'inline-block');
-            $("#popup_content .right_pane").css('text-align', (columns == 1) ? 'left' : 'right').
-                css("max-width", (columns == 1) ? '522px' : '470px');
-            if (columns == 1)
-                $("#popup_content .empty").showshow();
-            else
-                $("#popup_content .empty").hidehide();
-        }
-        if (o.wide_overlay != wide) {
             o.wide_overlay = wide;
+            $("#popup_content > *").css('display', (columns == 1) ? 'block' : 'inline-block');
+            $("#popup_content .right_pane")
+                .css('text-align', (columns == 1) ? 'left' : 'right')
+                .css("max-width", (columns == 1) ? '522px' : '470px');
+            if (columns == 1) {
+                $("#popup_content .empty").showshow();
+                $("#popup_content .left_pane")
+                    .css("max-width", '522px').width("auto");
+            } else {
+                $("#popup_content .empty").hidehide();
+                $("#popup_content .left_pane")
+                    .css("max-width", '522px').width((wide) ? 600 : 430);
+            }
+
             $("#popup_content").css("max-width", (wide) ? 980+600-430 : 980);
-            $("#popup_content .left_pane").width((wide) ? 600 : 430);
         }
     };
     var resize_icon = function(el) {
-        if (el.find(".counts").text().length > 0)
-            el.width(Math.min(90, 90 + el.find(".counts").width()));
+        var count = el.find('.counts')
+        if(!count.length) return
+        if (count.text().length > 0)
+            el.width(Math.min(90, 90 + count.width()));
         else
             el.width(60);
      };
@@ -107,16 +110,24 @@ define([
     o.render = function(page_data){
         // TODO: should the HTML render on page load? Or delayed?
         o.expr = page_data.expr;
+        o.page_data = page_data;
+        ui_page.form_page_exit()
 
+        $('body').addClass('expr')
         $('title').text(o.expr.title);
         $('#site').hidehide();
         $("#popup_content").remove();
         $("#dia_comments").remove();
+        $('.overlay.panel .expr_actions').replaceWith(
+            expr_actions_template(page_data))
         $('#social_overlay').append(
-            social_overlay_template(context.page_data));
+            social_overlay_template(page_data));
         $('#popup_content .counts_icon').each(function(i, el) {
             resize_icon($(this));
         });
+        // Move the plus buttons inside the tag list
+        $("#social_overlay .tags_box .moveme").children()
+            .prependTo($("#social_overlay .tag_list"));
         // Reset scroll to top
         $("body").scrollTop(0);
         
@@ -126,33 +137,11 @@ define([
             " frameborder='0' vspace='0' hspace='0'></iframe>");
 
         // Set toggle state for love, broadcast, comment
-        o.action_set_state($("#love_icon"), o.action_get_state("loves"));
-        o.action_set_state($("#broadcast_icon"), o.action_get_state("broadcast"));
-        o.action_set_state($("#comment_icon"), o.action_get_state("comment"));
+        o.action_set_state($(".love_btn"), o.action_get_state("love"));
+        o.action_set_state($(".republish_btn"), o.action_get_state("republish"));
+        o.action_set_state($(".comment_btn"), o.action_get_state("comment"));
 
-        if (page_data.cards == undefined) {
-            // In case of direct link with no context,
-            // fetch cards from q param, or the default context, @owner
-
-            var set_cards = function(data){
-                page_data.cards = data.cards };
-
-            if(context.query.q){
-                var query = {q: context.query.q, id: o.expr.id };
-                o.controller.get('search', {}, set_cards, query);
-                context.page_data.cards_route = {
-                    query: query,
-                    route_args: { route_name: 'search' }
-                };
-            }
-            else {
-                o.controller.get('expressions_public', {
-                    owner_name: page_data.expr.owner.name }, set_cards)
-                context.page_data.cards_route = {
-                    route_args: { route_name: 'expressions_public' }
-                };
-            }
-        }
+        fetch_cards();
 
         var found = find_card(o.expr.id);
         if (found >= 0) {
@@ -164,32 +153,41 @@ define([
         animate_expr();
 
         o.hide_panel();
-        $("#content_btns").showshow();
+        $(".overlay.panel").showshow();
+        $(".overlay.panel .signup").hidehide()
         $(".social_btn").removeClass("hide");
-        if (!context.user.logged_in) {
-            $("#signup_create").showshow();
-            $("#signup_create .signup").removeClass("hide");
-            // $('#social_plus').hidehide();
-        } else {
-            $("#signup_create").showshow();
-            $("#signup_create .create").removeClass("hide");
-            if (context.user.id == o.expr.owner.id) {
-                page_data.remix = false;
-                $('#content_btns .edit_ui').replaceWith(edit_btn_template(page_data));
-                $('#content_btns .edit_ui .icon').showshow();
-            } else if (page_data.expr.tags &&
-                page_data.expr.tags.indexOf("remix") >= 0) {
-                page_data.remix = true;
-                $('#content_btns .edit_ui').replaceWith(edit_btn_template(page_data));
-                $('#content_btns .edit_ui .icon').showshow();
-            }
-            $('#dia_delete_ok').each(function(i, e){
-                $(e).data('dialog').opts.handler = function(e, data){
-                    o.controller.open('expressions_public',
-                        {'owner_name': context.user.name });
-                }
-            });
+
+        var show_edit = false
+        if(page_data.expr.tags
+            && page_data.expr.tags.indexOf("remix") >= 0
+        ) page_data.remix = true;
+
+        if (context.user.logged_in && context.user.id == o.expr.owner.id) {
+            page_data.remix = false
+            show_edit = true
         }
+        if(show_edit || page_data.remix) {
+            $('.overlay.panel .edit_ui').replaceWith(
+                edit_btn_template(page_data) )
+            $('.overlay.panel .remix')
+                .showhide(ui_page.tags && ui_page.tags.indexOf('remix') >= 0)
+        }
+        ui_page.form_page_enter()
+
+        o.overlay_columns = 0;
+        o.wide_overlay = 0;
+        o.resize();
+    }
+
+    o.exit = function(){
+        o.last_found = -1;
+        $('body').removeClass('expr')
+        hide_exprs();
+        o.hide_panel();
+        $('#site').showshow();
+        $('.page_btn').hidehide();
+        $('.overlay.panel .expr_actions').hidehide()
+        $(".overlay.panel .signup").showshow()
     };
 
     // Check to see if tags overflows its bounds.
@@ -224,6 +222,44 @@ define([
         }
     };
 
+    var fetch_cards = function () {
+        var page_data = o.page_data;
+        if (page_data.cards == undefined) {
+            // In case of direct link with no context,
+            // fetch cards from q param, or the default context, @owner
+
+            var set_cards = function(data){
+                page_data.cards = data.cards };
+
+            if(context.query.q){
+                var query = {q: context.query.q, id: o.expr.id };
+                if (context.query.e) 
+                    query.e = context.query.e;
+                o.controller.get('search', {}, set_cards, query);
+                context.page_data.cards_route = {
+                    query: query,
+                    route_args: { route_name: 'search' }
+                };
+            }
+            else {
+                var route_args = { route_name: 'expressions_public'
+                    ,owner_name: page_data.expr.owner.name }
+                o.controller.get(route_args.route_name, route_args, set_cards)
+                context.page_data.cards_route = { route_args: route_args }
+            }
+        }
+    };
+    var id_from_card_count = function(n, fetch){
+        var page_data = o.page_data;
+        fetch = util.defalt(fetch, true);
+        // No data for card n.
+        if (!page_data.cards || !page_data.cards[n]) {
+            if (fetch)
+                fetch_cards();
+            return "";
+        }
+        return page_data.cards[n].id;
+    };
     var find_card = function(expr_id){
         var found = -1;
         var page_data = context.page_data;
@@ -288,9 +324,8 @@ define([
         contentFrame.load(function () {
             contentFrame.data('loaded', true);
             debug("loaded frame: " + found);
-
             if (contentFrame.hasClass('expr_visible')) 
-                contentFrame.get(0).contentWindow.postMessage({action: 'show'}, '*');
+                o.expr_show(contentFrame)
             for (var i = 0, el; el = loading_frame_list[i]; i++) {
                 if (el.prop("id") == contentFrame.prop("id")) {
                     loaded_frame_list.concat(loading_frame_list.splice(i, 1));
@@ -313,6 +348,10 @@ define([
         return contentFrame;
     };
 
+    o.expr_show = function(frame_el){
+        frame_el.get(0).contentWindow.postMessage({action: 'show'}, '*')
+    }
+
     o.play_timer = false;
     // Animate the new visible expression, bring it to top of z-index.
     function animate_expr (){
@@ -325,13 +364,10 @@ define([
         $('.social_btn').showshow();
 
         var contentFrame = o.get_expr(expr_id);
-        if (contentFrame.length == 0) {
+        if (contentFrame.length == 0)
             contentFrame = o.cache_frames([expr_id], true);
-        }
-        else {
-            contentFrame.get(0).contentWindow.
-                postMessage({action: 'show'}, '*');
-        }
+        else
+            o.expr_show(contentFrame)
         contentFrame.addClass('expr_visible').removeClass('expr_hidden').showshow();
         contentFrame.showshow();
         $('#exprs .expr').not('.expr_visible').css({'z-index': 0 });
@@ -339,12 +375,48 @@ define([
         var anim_direction = 0;
         if (o.last_found >= 0 && found >= 0) {
             var dir = found - o.last_found;
-            if (Math.abs(dir) > 5)
+            if (Math.abs(dir) > 1)
                 dir *= -1;
             anim_direction = (dir > 0) ? 1 : -1;
         }
         o.last_found = found;
-        if (anim_direction == 0 || expr_curr.length != 1 || o.animation_timeout != undefined) {
+        o.animating = false;
+        if (0 && util.mobile() && found > 0) {
+            frames = [ found - 1, found, found + 1 ];
+            frames = frames.map(function(v) {
+                return o.get_expr(id_from_card_count(v));
+            })
+            $('#exprs .expr').addClass('.expr_hidden');
+            var x = 0, win_width = $(window).width(), scroll_goal=-1;
+            for (var i = 0; i < 3; ++i) {
+                if (frames[i].length) {
+                    frames[i].css("left", x).showshow().removeClass('.expr_hidden');
+                    if (i == 1)
+                        scroll_goal = x;
+                    x += win_width;
+                }
+            }
+            if (scroll_goal > 0) {
+                $("#exprs").css("overflow-x","auto").scrollLeft(scroll_goal);
+                // $('#exprs .expr .expr_hidden').hidehide();
+                $('#exprs .expr.expr_hidden').remove();
+                $("#exprs").unbind("scroll").on("scroll", function (ev) {
+                    if (o.animating) {
+                        ev.currentTarget.scrollLeft = scroll_goal;
+                        return;
+                    }
+                    var x = ev.currentTarget.scrollLeft;
+                    if (scroll_goal - x > win_width / 3) {
+                        o.navigate_page(-1);
+                    } else if (x - scroll_goal > win_width / 3) {
+                        o.navigate_page(1);
+                    }
+                });
+            }
+        } else if (anim_direction == 0
+            || expr_curr.length != 1
+            || o.animation_timeout != undefined
+        ) {
             contentFrame.css({
                 'left': 0,
                 'top': -contentFrame.height() + 'px',
@@ -382,7 +454,7 @@ define([
 
         // postMessage only works after the page loads.
         // So page buttons are always visible during expr loading,
-        // and once expr loads, they behave normally #page_btn_load_hack
+        // and once expr loads, they behave normally .page_btn.page_btn_load_hack
         if(!contentFrame.data('loaded')){
             // bugbug: sometimes this is never followed by a contentFrame.load
             // console.log('showing');
@@ -409,7 +481,7 @@ define([
 
         if(page_data.error == 'password'){
             dialog.create(password_dia).open();
-            password_dia.find('form.site').on('response', function(ev, data) {
+            password_dia.find('form.site').on('success', function(ev, data) {
                 if(data.error) {
                     $('#dia_expr_password .error').showshow();
                     return;
@@ -473,15 +545,23 @@ define([
     o.attach_handlers = function(){
         $("#social_close").unbind('click').click(o.social_toggle);
         $(".social_btn").unbind('click').click(o.social_toggle);
+        if (context.flags.fade_controls) {
+            $(".panel.overlay").css("opacity",.4)
+                .off("mouseenter").on("mouseenter", function(ev) {
+                    $(this).stop(true).animate({"opacity":1},{duration:200}) } )
+                .on("mouseleave", function(ev) { 
+                    $(this).animate({"opacity":.4},{duration:200}) } )
+        }
         if ($("#site").children().length && context.page_data.cards_route)
             $(".title_spacer .title").addClass("pointer").unbind('click').click(function() {
+                // clicking the title in social overlay returns to the collection
                 o.exit();
                 o.controller.direct_fake_open(context.page_data.cards_route.route_args);
                 $("body").scrollTop(o.controller.scroll_top);
                 o.controller.scroll_top = 0;
             });
 
-        // $('#comment_form').unbind('response').on('response', o.comment_response);
+        // $('#comment_form').unbind('success').on('success', o.comment_response);
         var dia_comments = $("#dia_comments").data("dialog");
         dia_comments.opts.open = function(){
             $("#dia_comments textarea").focus();
@@ -492,6 +572,13 @@ define([
             $("#dia_comments input[type=submit]").prop('disabled', true);
         });
 
+        $('.expr_actions .comment_btn').click(dia_comments.open)
+        $('.expr_actions .share.btn').click(function(ev){
+            var el = $(ev.target).closest('a')
+            browser_layout.new_window(el.attr('href'), 550, 550)
+            return false
+        })
+
         $(".feed_item").each(function(i, el) {
             edit_button = $(el).find('button[name=edit]');
             delete_button = $(el).find('button[name=delete]');
@@ -501,16 +588,16 @@ define([
                     o.edit_comment($(el));
                 });
             }
-            $(el).find('form').unbind('response').
-                on('response', function(event, data) {
+            $(el).find('form').unbind('success').
+                on('success', function(event, data) {
                 o.edit_comment_response($(el), data);
             });
         });
 
-        $("#love_icon").unbind('click').click(function (event) {
-            o.social_btn_click(event, $(this), "loves"); });
-        $("#broadcast_icon").click(function (event) {
-            o.social_btn_click(event, $(this), "broadcast"); });
+        $(".love_btn").unbind('click').click(function(){
+            o.social_btn_click("love") })
+        $(".republish_btn").click(function(){
+            o.social_btn_click("republish") })
 
         $('.page_btn').bind_once('mouseenter', function(event){
             o.page_btn_animate($(this), "in");
@@ -518,12 +605,12 @@ define([
             o.page_btn_animate($(this), "out");
         });
 
-        try {
-            var d = dialog.create($("#dia_login_or_join"));
-            $(".overlay .signup_btn").unbind('click').click(d.open);
-            d = dialog.create($("#login_menu"));
-            $(".overlay .login_btn").unbind('click').click(d.open);
-        } catch(err) {;}
+        $('#dia_delete_ok').each(function(i, e){
+            $(e).data('dialog').opts.handler = function(e, data){
+                o.controller.open('expressions_public',
+                    {'owner_name': context.user.name });
+            }
+        });
     };
 
     o.page_btn_animate = function (el, into) {
@@ -564,14 +651,13 @@ define([
         });
     };
 
-    o.social_btn_click = function(e, el, btn) {
+    o.social_btn_click = function(btn) {
         if (!context.user.logged_in)
             return;
 
-        var el_drawer = $("[data-handle=#" + el.prop("id") + "]");
-        // var el_form = el.parent();
-        var el_form = $("form." + ((btn == "loves") ? "love" : "republish"));
-        var el_counts = el.find($(".counts"));
+        var el_drawer = $('#' + btn + '_menu')
+        var el = $('.' + btn + '_btn')
+        var el_form = $("form." + btn)
 
         // Toggle the state on the server
         // own_item is the toggled state, thus the opposite of current.
@@ -587,7 +673,7 @@ define([
         } else {
             items = [o.fake_item(btn)].concat(items);
         }
-        if (btn == "loves") 
+        if (btn == "love") 
             o.expr.loves = items;
         else
             o.expr.broadcast = items;
@@ -602,14 +688,14 @@ define([
         count += ((own_item) ? 1 : -1);
         count = (count) ? ("" + count) : "";
         el_counts.text(count);
-        resize_icon(el);
+        resize_icon(el.filter('.counts_icon'));
         o.action_set_state(el, own_item);
     };
 
     var get_items = function(btn){
-        d = { "loves": o.expr.loves,
+        d = { "love": o.expr.loves,
               "comment": o.expr.comments,
-              "broadcast": o.expr.broadcast  };
+              "republish": o.expr.broadcast  };
         return d[btn] ? d[btn] : [];
     };
     o.action_get_state = function(btn){
@@ -632,8 +718,8 @@ define([
     o.fake_item = function(btn) {
         return {
             entity_class: "Expr",
-            action:  (btn == "loves") ? "Love" : "Broadcast",
-            class_name:  (btn == "loves") ? "Star" : "Broadcast",
+            action:  (btn == "love") ? "Love" : "Broadcast",
+            class_name:  (btn == "love") ? "Star" : "Broadcast",
             initiator_name:  context.user.name,
             initiator_thumb_small:  context.user.thumb_small
         };
@@ -689,7 +775,7 @@ define([
             // update count and highlight state
             $(".counts_icon.comment").find(".counts").text(json.comments.length);
             resize_icon($("#social_overlay .counts_icon.comment"));
-            o.action_set_state($("#comment_icon"), o.action_get_state("comment"));
+            o.action_set_state($(".comment_btn"), o.action_get_state("comment"));
         }
         // TODO-cleanup: merge somehow with existing code to update activity menu
         if (json.user != undefined) {
@@ -710,15 +796,20 @@ define([
     o.page_prev = function() { o.navigate_page(-1); };
     o.page_next = function() { o.navigate_page(1); };
     o.navigate_page = function(offset){
+        o.animating = true;
         var page_data = context.page_data;
         if (page_data.cards != undefined) {
             var len = page_data.cards.length
             var found = find_card(page_data.expr_id);
             // TODO: do we need error handling?
             if (found >= 0) {
-                // TODO: need to asynch fetch more expressions and concat to cards.
+                var orig_found = found;
                 found = (found + len + offset) % len;
-                if (offset > 0 && found + 5 > len) {
+                debug("navigate (" + offset + ") to " + found);
+                if ((offset < 0 && found > orig_found) 
+                    || (offset > 0 && found + 5 > len))
+                {
+                    // Async fetch more expressions and concat to cards.
                     on_scroll_add_page();
                 }
                 // Cache upcoming expressions
@@ -753,17 +844,23 @@ define([
     };
     // Handles messages from PostMessage (from other frames)
     o.handle_message = function(m){
-        if (m.data == "expr_click") {
+        var msg = m.data;
+        if (msg == "expr_click") {
             popup = $('#social_overlay');
             if (popup.css('display') != 'none')
                 o.social_toggle();
             return
+        } else if(msg == 'prev' || msg == 'next') {
+            o.navigate_page((msg == "prev") ? -1 : 1);
+        } else {
+            o.page_btn_handle(msg);
         }
-        else o.page_btn_handle(m.data);
     };
 
     var page_btn_state = '';
     o.page_btn_handle = function(msg){
+        if(util.mobile())
+            return
         if (!msg)
             msg = page_btn_state;
         // don't render the page buttons if there is nothing to page through!
@@ -774,17 +871,17 @@ define([
         }
 
         if(msg == 'show_prev') {
-            $('#page_prev').showshow();
-            $('#page_next').hidehide();
+            $('.page_btn.page_prev').showshow();
+            $('.page_btn.page_next').hidehide();
         } else if(msg == 'show_next') {
-            $('#page_next').showshow();
-            $('#page_prev').hidehide();
+            $('.page_btn.page_next').showshow();
+            $('.page_btn.page_prev').hidehide();
         } else if(msg == 'hide') {
             $('.page_btn').hidehide();
         }
 
         // should reflect whether left or right page_btn should be visible if
-        // page is not loading. See #page_btn_load_hack
+        // page is not loading. See .page_btn.page_btn_load_hack
         page_btn_state = msg;
     };
 

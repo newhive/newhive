@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-import os, json, cgi, base64
+import os, json, cgi, base64, re
 from pymongo.errors import DuplicateKeyError
 from functools import partial
 
@@ -25,6 +25,37 @@ class Expr(ModelController):
         return self.serve_json(response, resp)
 
         
+    def unused_name(self, tdata, request, response, **args):
+        """ Returns an unused expression name matching the base name provided """
+
+        resp = {}
+        name = request.form.get("name") or request.args.get("name","")
+        owner_id = request.form.get("owner_id") or request.args.get("owner_id", "")
+        owner = self.db.User.fetch(owner_id)
+
+        if not name or not len(name) or not owner:
+            raise ValueError('Expr / user not found')
+
+        m = re.match("(.*)-([0-9]+)$", name)
+        if m:
+            base_name = m.group(1)
+            num = int(m.group(2))
+        else:
+            base_name = name
+            num = 0
+        expr_names = [e['name'] for e in list(self.db.Expr.search({
+            'owner': owner_id, 'name': re.compile("^" + base_name + ".*")
+        }))]
+        while True:
+            if num:
+                name = base_name + "-" + str(num)
+            else:
+                name = base_name
+            if name not in expr_names:
+                resp['name'] = name
+                return self.serve_json(response, resp)
+            num += 1
+
     def save(self, tdata, request, response, **args):
         """ Parses JSON object from POST variable 'exp' and stores it in database.
             If the name (url) does not match record in database, create a new record."""
@@ -34,8 +65,11 @@ class Expr(ModelController):
         if not expr: raise ValueError('Missing or malformed expr')
 
         res = self.db.Expr.fetch(expr.id)
-        allowed_attributes = ['name', 'domain', 'title', 'apps', 'dimensions',
-            'auth', 'password', 'tags', 'background', 'thumb', 'images', 'remix_parent_id']
+        allowed_attributes = [
+            'name', 'url', 'title', 'apps', 'dimensions', 'auth', 'password',
+            'tags', 'background', 'thumb', 'images', 'remix_parent_id',
+            'container'
+        ]
         # TODO: fixed expressions, styles, and scripts, need to be done right
         # if tdata.user.is_admin:
         #     allowed_attributes.extend(['fixed_width', 'script', 'style'])
@@ -61,7 +95,7 @@ class Expr(ModelController):
                 ,'file_id' : file_res.id
             })
 
-        if not res or upd['name'] != res['name'] or upd['domain'] != res['domain']:
+        if not res or upd['name'] != res['name']:
             try:
               new_expression = True
               # Handle remixed expressions
@@ -94,9 +128,9 @@ class Expr(ModelController):
                 # remix_expr.save(updated=False)
 
               tdata.user.flag('expr_new')
-              if tdata.user.get('flags').get('add_invites_on_save'):
-                  tdata.user.unflag('add_invites_on_save')
-                  tdata.user.give_invites(5)
+              #if tdata.user.get('flags').get('add_invites_on_save'):
+              #    tdata.user.unflag('add_invites_on_save')
+              #    tdata.user.give_invites(5)
             except DuplicateKeyError:
                 if expr.get('overwrite'):
                     self.db.Expr.named(tdata.user['name'], upd['name']).delete()
@@ -127,6 +161,10 @@ class Expr(ModelController):
         res['id'] = res.id
         return self.serve_json(response, res)
 
+    # the whole editor except the save dialog and upload code goes in sandbox
+    def editor_sandbox(self, tdata, request, response, **args):
+        return self.serve_page(tdata, response, 'pages/edit_sandbox.html')
+
     def snapshot(self, tdata, request, response, expr_id, **args):
         expr_obj = self.db.Expr.fetch(expr_id)
         if expr_obj.private and tdata.user.id != expr_obj.owner.id:
@@ -139,22 +177,29 @@ class Expr(ModelController):
         return self.serve_404(tdata, request, response)
 
     def fetch_naked(self, tdata, request, response, expr_id=None,
-        owner_name=None, expr_name=None
+        owner_name=None, expr_name=None, **args
     ):
         # Request must come from content_domain, as this serves untrusted content
-        snapshot_mode = request.args.get('snapshot') is not None
         if expr_id:
-            # hack for overlap of /owner_name/expr_name and /expr_id routes
+            # hack for overlap of /owner_name and /expr_id routes
             expr_obj = self.db.Expr.fetch(expr_id) or self.db.Expr.named(expr_id, '')
         else:
             expr_obj = self.db.Expr.named(owner_name, expr_name)
-        if not expr_obj: return self.serve_404(tdata, request, response)
-        if expr_obj.get('auth') == 'password' and not expr_obj.cmp_password(
-            request.form.get('password')): 
+        return self.serve_naked(tdata, request, response, expr_obj)
+
+    def serve_naked(self, tdata, request, response, expr_obj):
+        if not expr_obj:
+            return self.serve_404(tdata, request, response)
+
+        if (expr_obj.get('auth') == 'password'
+            and not expr_obj.cmp_password(request.form.get('password'))
+            and not expr_obj.cmp_password(request.args.get('pw'))):
             expr_obj = { 'auth': 'password' }
+
         # TODO: consider allowing analytics for content frame.
         viewport = [int(x) for x in
             request.args.get('viewport', '1000x750').split('x')]
+        snapshot_mode = request.args.get('snapshot') is not None
         tdata.context.update(
             html = self.expr_to_html(expr_obj, snapshot_mode=snapshot_mode,
                 viewport=viewport),
@@ -163,6 +208,19 @@ class Expr(ModelController):
         )
         if snapshot_mode:
             tdata.context['css'] = "body { overflow-x: hidden; }"
+        client_data = {}
+        for app in expr_obj.get('apps',[]):
+            app_id = app.get('id', 'app_' + str(app['z']))
+            data = app.get('client_data', {})
+            data.update(media=app.get('media'))
+            if app['type'] == 'hive.code':
+                data.update(dfilter(app, ['content', 'url']))
+            if app['type'] == 'hive.image':
+                data.update(dfilter(app, ['url']))
+            if data:
+                data['type'] = app['type']
+                client_data[app_id] = data
+        tdata.context.update(client_data=client_data)
         return self.serve_page(tdata, response, 'pages/expr.html')
         
     def expr_to_html(self, exp, snapshot_mode=False, viewport=(1000, 750)):
@@ -176,30 +234,39 @@ class Expr(ModelController):
         html_for_app = partial(self.html_for_app, scale=expr_scale,
             snapshot_mode=snapshot_mode)
         app_html = map(html_for_app, exp.get('apps', []))
-        if exp.has_key('dimensions') and 'gifwall' not in exp.get('tags_index',[]):
-            app_html.append("<div id='expr_spacer' class='happ' style='top: {}px;'></div>".format(exp['dimensions'][1]))
+        # if exp.has_key('dimensions') and 'gifwall' not in exp.get('tags_index',[]):
+        #     app_html.append("<div id='expr_spacer' class='happ' style='top: {}px;'></div>".format(exp['dimensions'][1]))
         return ''.join(app_html)
 
     def html_for_app(self, app, scale=1, snapshot_mode=False):
         content = app.get('content', '')
         more_css = ''
+        dimensions = app.get('dimensions', [100,100])
         type = app.get('type')
-        if type == 'hive.image':
-            media = self.db.File.fetch(app.get('file_id'))
-            if media: content = media.get_resample(
-                app.get('dimensions', [100,100])[0] * scale
-            )
+        klass = type.replace('.', '_')
+        app_id = app.get('id', 'app_' + str(app['z']))
 
-            html = "<img src='%s'>" % content
+        if type != 'hive.rectangle':
+            # rectangles have css as their content; all other apps have extra
+            # css in 'css_state'
+            c = app.get('css_state', {})
+            more_css = ';'.join([p + ':' + str(c[p]) for p in c])
+        if type == 'hive.image':
+            url = app.get('url') or content
+            media = self.db.File.fetch(app.get('file_id'))
+            if media: url = media.get_resample(dimensions[0] * scale)
+
+            html = "<img src='%s'>" % url
             scale_x = app.get('scale_x')
             if scale_x:
-                css = 'width:%f%%' % (100*scale_x)
+                klass += " crop_box"
+                scale_x *= dimensions[0]
+                css = 'width:%fpx' % (scale_x)
                 if app.get('offset'):
-                    scale_x *= app.get('dimensions', 1)[0]
                     offset = [x * scale_x for x in app.get('offset')]
                     css = '%s;margin-left:%spx;margin-top:%spx' % (
                         css, offset[0], offset[1] )
-                html = "<div class='crop_box'><img src='%s' style='%s'></div>" % (content, css)
+                html = "<img src='%s' style='%s'>" % (url, css)
             link = app.get('href')
             if link: html = "<a href='%s'>%s</a>" % (link, html)
         elif type == 'hive.sketch':
@@ -210,11 +277,10 @@ class Expr(ModelController):
             html = ''
         elif type == 'hive.html':
             html_original = '%s' % (app.get('content',''))
-            # print 'found hive.html'
             if snapshot_mode:
                 def get_embed_img_html(url):
                     ret_html = ''
-                    oembed = utils.get_embedly_oembed(url)
+                    oembed = utils.get_embedly_oembed(url) if url else ''
                     if oembed and oembed.get('thumbnail_url'):
                         ret_html += '<img src="%s"/>' % oembed['thumbnail_url']
                     return ret_html
@@ -230,37 +296,67 @@ class Expr(ModelController):
                         if param.get('name') == 'movie':
                             html += get_embed_img_html(param.get('value'))
                             more_css += ";overflow:hidden"
-                            # print 'found Youtube.'
                 if not html:
-                    # print 'found iframe'
                     for iframe in hivehtml.find_all('iframe'):
                         html = get_embed_img_html(iframe.get('src'))
                         if not html:
                             error = True
-                            # print 'error.'
                     if error:
                         html = html_original
             else:
                 encoded_content = cgi.escape(app.get('content',''), quote=True)
                 html = '%s' % (app.get('content',''))
+        elif type == 'hive.polygon':
+            html = (
+                  "<svg xmlns='http://www.w3.org/2000/svg'"
+                + " viewbox='0 0 %f %f" % tuple(dimensions)
+                + "'>"
+                + "<filter id='%s_blur'" % app_id 
+                + " filterUnits='userSpaceOnUse'><feGaussianBlur stdDeviation='"
+                + "%f'></filter>" % app.get('blur', 0)
+                + "<polygon points='"
+                + ' '.join( map( lambda p: "%f %f" % (p[0], p[1]),
+                    app.get('points', []) ) )
+                + "' style='filter:url(#%s_blur)'/></svg>" % app_id
+            )
+            style = app.get('style', {})
+            more_css = ';'.join([ k+':'+str(v) for k,v in style.items()])
+        elif type == 'hive.code':
+            ctype = app.get('code_type', 'js')
+            if ctype == 'js':
+                tag = 'script'
+                if app.get('url'):
+                    html = "<script src='%s'></script>" % app.get('url')
+                else:
+                    html = ( "<script>curl(['ui/expression'],function(expr){"
+                        + "expr.load_code(%s)" % json.dumps(app.get('content'))
+                        + "})</script>" )
+            if ctype == 'css':
+                tag = 'style'
+                # TODO-code-editor: put style tag in head
+                html =  "<style id='%s'>%s</style>" % (
+                    app_id, app.get('content') )
+            return html
         else:
             html = content
 
         data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
         data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
-        app_id = app.get('id', app['z'])
-        return "<div class='happ %s' id='app%s' style='%s'%s>%s</div>" %\
-            (type.replace('.', '_'), app_id, css_for_app(app) + more_css, data, html)
+        return "<div class='happ %s %s' id='%s' style='%s'%s>%s</div>" % (
+            klass, app.get('css_class', ''), app_id,
+            css_for_app(app) + more_css, data, html
+        )
 
 # TODO-bug fix resizing after loading by sending pre-scaled expr
 # Requires client layout_apps() to use scaled expr dimensions
 def css_for_app(app):
+    dimensions = app.get('dimensions', [100,100])
     css = {
             'left': app['position'][0]
             , 'top': app['position'][1]
             , 'z-index': app['z']
-            , 'width': app['dimensions'][0]
-            , 'height': app['dimensions'][1]
+            , 'width': dimensions[0]
+            , 'height': dimensions[1]
             , 'opacity': app.get('opacity', 1)
             , 'font-size': app.get('scale')
             }

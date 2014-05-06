@@ -1,5 +1,5 @@
 from __future__ import division
-import time, random, re, base64, copy, pytz, pandas
+import time, random, re, base64, copy, pytz, pandas, copy
 from datetime import datetime
 import urlparse
 import werkzeug.urls
@@ -10,11 +10,17 @@ import numpy
 import operator
 import json
 import urllib,urllib2
+import threading
 #import pyes
 
 import newhive
 from newhive import config
 from newhive.config import abs_url, url_host
+
+# TODO-cleanup: move this into query helpers
+def filter_query(query, filter):
+    query.setdefault('$and', [])
+    query['$and'].append(filter)
 
 class Apply(object):
     error = []
@@ -31,21 +37,62 @@ class Apply(object):
         Apply.success = []
 
     @staticmethod
-    def apply_all(func, l, print_frequency=100):
+    def apply_continue(func, klass, query={}, print_frequency=100, dryrun=False, 
+            reset=False, runcount=1):
+        _query = copy.copy(query)
+        if not reset:
+            or_clause = { '$or': [
+                {'migrated': {'$exists':False}}, 
+                {'migrated': {'$lt': 1}}
+                ] }
+            filter_query(_query, or_clause)
+            dict.update(_query, {'$or': [{'migrated': {'$exists':False}}, 
+                {'migrated': {'$lt': 1}}]})
+            Apply.apply_all(func, klass.search(_query), 
+                print_frequency=print_frequency, dryrun=dryrun)
+        else:
+            dict.update(_query, {'migrated': {'$gt': 0}})
+            klass._col.update(_query, {'$unset': {'migrated':0}}, multi=True)
+
+    @staticmethod
+    def apply_all(func, l, print_frequency=100, dryrun=False):
         l = list(l)
         total = len(l)
         initial_success = len(Apply.success)
         print "Running on %s items." % total
         i = 0
         for e in l:
-            if not func(e):
+            i = i + 1
+            if not func(e, dryrun=dryrun):
                 Apply.error.append(e)
             else:
                 Apply.success.append(e)
-            i = i + 1
+                if not dryrun:
+                    e.inc('migrated')
             if (i % print_frequency == 0):
                 print "(%d of %d) items processed... " % (i, total)
         print "success (%d of %d)" % (len(Apply.success) - initial_success, total)
+
+def threaded_timeout(func, args=(), kwargs={}, timeout_duration=10, default=None):
+    """This function will spawn a thread and run the given function
+    using the args, kwargs and return the given default value if the
+    timeout_duration is exceeded.
+    """
+    # import threading 
+    class InterruptableThread(threading.Thread):
+        def __init__(self):
+            threading.Thread.__init__(self)
+            self.result = default
+        def run(self):
+            self.result = func(*args, **kwargs)
+    it = InterruptableThread()
+    it.daemon = True
+    it.start()
+    it.join(timeout_duration)
+    if it.isAlive():
+        return it.result
+    else:
+        return default
 
 def lset(l, i, e, *default):
     default = default[0] if default else [None]
@@ -231,32 +278,48 @@ def b64decode(s, add_padding=True, url_safe=True):
     else:
         return base64.b64decode(s1)
 
+def memoized(obj):
+    """Decorator that caches return values of function, method, or class"""
+    cache = {}
 
-class memoized(object):
-   """Decorator that caches a function's return value each time it is called.
-   If called later with the same arguments, the cached value is returned, and
-   not re-evaluated.
-   """
-   def __init__(self, func):
-      self.func = func
-      self.cache = {}
-   def __call__(self, *args):
-      try:
-         return self.cache[args]
-      except KeyError:
-         value = self.func(*args)
-         self.cache[args] = value
-         return value
-      except TypeError:
-         # uncachable -- for instance, passing a list as an argument.
-         # Better to not cache than to blow up entirely.
-         return self.func(*args)
-   def __repr__(self):
-      """Return the function's docstring."""
-      return self.func.__doc__
-   def __get__(self, obj, objtype):
-      """Support instance methods."""
-      return functools.partial(self.__call__, obj)
+    def memoizer(*args, **kwargs):
+        """function, method, or class decorated with memoized
+        src property is the decorated function, class or method and
+        cache property is the dictionary of return values"""
+        key = str(args) + str(kwargs)
+        if key not in cache:
+            cache[key] = obj(*args, **kwargs)
+        return cache[key]
+
+    memoizer.src = obj
+    memoizer.cache = cache
+    return memoizer
+
+# class memoized(object):
+#    """Decorator that caches a function's return value each time it is called.
+#    If called later with the same arguments, the cached value is returned, and
+#    not re-evaluated.
+#    """
+#    def __init__(self, func):
+#       self.func = func
+#       self.cache = {}
+#    def __call__(self, *args):
+#       try:
+#          return self.cache[args]
+#       except KeyError:
+#          value = self.func(*args)
+#          self.cache[args] = value
+#          return value
+#       except TypeError:
+#          # uncachable -- for instance, passing a list as an argument.
+#          # Better to not cache than to blow up entirely.
+#          return self.func(*args)
+#    def __repr__(self):
+#       """Return the function's docstring."""
+#       return self.func.__doc__
+#    def __get__(self, obj, objtype):
+#       """Support instance methods."""
+#       return functools.partial(self.__call__, obj)
 
 
 def cached(fn):

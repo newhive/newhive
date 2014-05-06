@@ -1,0 +1,18 @@
+<Alloy>
+	<Window id="login_window" title="Login" class="login" layout="composite">
+		<View id="textfields_view" class="content_tile">
+			<TextField id="tf_username" class='textfield-username' hintText='username'/>
+			<TextField id="tf_password" class='textfield-pwd'
+				hintText='password' passwordMask='true'/>
+			<Label id="error_message">Unrecognized username or password.</Label>
+			<Button id="retrieve_password">Retrieve password</Button>
+		</View>
+		
+		<WebView id="web_view" url="../../login_view.html">
+		</WebView>
+
+		<View id="blank_view" class="content_tile">
+			<ImageView id="watermark" image="/images/logo.png"></ImageView>
+		</View>
+	</Window>
+</Alloy>	

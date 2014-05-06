@@ -11,13 +11,20 @@ class User(ModelController):
         return self.serve_json(response, resp)
 
     def login(self, tdata, request, response, **args):
-        authed = auth.handle_login(self.db, request, response)
         error = False
-        if type(authed) == self.db.User.entity: 
-            resp = authed.client_view()
-        else: 
-            resp = { 'error': 'Incorrect username or password.' }
-            error = "login"
+        if tdata.user.logged_in:
+            resp = tdata.user.client_view()
+        else:
+            authed = auth.handle_login(self.db, request, response)
+            if type(authed) == self.db.User.entity: 
+                resp = authed.client_view()
+            else: 
+                resp = { 'error': 'Incorrect username or password.' }
+                error = "login"
+
+        if request.args.get('json') or request.form.get('json'):
+            return self.serve_json(response, resp)
+
         query = ""
         if error:
             query = "#error=" + error
@@ -57,7 +64,7 @@ class User(ModelController):
         new_order += old_order[len(new_order) + deletes:]
 
         # remove the tag on owned expression
-        if tag_name not in ['remixed']:
+        if tag_name not in ['remixed', 'Gifwall']:
             removed = set(old_order) - set(new_order)
             for expr_id in removed:
                 expr = self.db.Expr.fetch(expr_id)
@@ -115,18 +122,22 @@ class User(ModelController):
         resp = {}
         logged_user = tdata.user
         email = request.form.get('email')
-        user = self.db.User.find({'email': email})
+        users = list(self.db.User.search({'email': email}))
 
         if logged_user and logged_user.id:
             resp = { 'error': 'Already logged in.' }
-        elif not user:
+        elif not users:
             resp = { 'error': 'Sorry, that email address is not in our records.' }
         else:
-            key = junkstr(16)
-            recovery_link = abs_url(secure=True) + "home/community/password_reset?key=" + key + '&user=' + user.id
-            mail.TemporaryPassword(jinja_env=self.jinja_env, db=self.db).send(user, recovery_link)
-            user.update(password_recovery = key)
-
+            for user in users:
+                key = junkstr(16)
+                user.recovery_link = (abs_url(secure=True)
+                    + "home/community/password_reset?key="
+                    + key + '&user=' + user.id
+                )
+                user.update(password_recovery = key)
+            mail.TemporaryPassword(jinja_env=self.jinja_env, db=self.db
+                ).send(users)
         return self.serve_json(response, resp)
 
     # Show password reset dialog, filled with user name 
@@ -555,6 +566,17 @@ class User(ModelController):
             return self.serve_json(response, { 'error':
                 'username exists or invalid username' })
 
+        email_lists = map(lambda email_list: {
+            'name': email_list.name
+        }, mail.MetaMailer.unsubscribable('user'))
+        subscribed = []
+        for email_list in email_lists:
+            subscribed.append(email_list['name'])
+            email_list['subscribed'] = True
+        update = {}
+        update['email_subscriptions'] = subscribed
+        user.update(**update)
+
         # TODO: offer suggested users to follow.
         # new user follows NewHive
         self.db.Star.create(user, self.db.User.site_user)
@@ -581,7 +603,7 @@ class User(ModelController):
                 contact = self.db.Contact.find({'referral_id': referral.id})
                 if contact: contact.update(user_created=user.id)
 
-        user.give_invites(config.initial_invite_count)
+        #user.give_invites(config.initial_invite_count)
         if args.has_key('thumb_file_id'):
             file = self.db.File.fetch(args.get('thumb_file_id'))
             if file:

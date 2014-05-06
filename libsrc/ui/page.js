@@ -11,6 +11,8 @@ define([
     'server/context',
     'browser/layout',
     'ui/page/pages',
+
+    'sj!templates/form_overlay.html',
     'sj!templates/password_reset.html',
     'sj!templates/collections.html',
     'sj!templates/overlay.html',
@@ -46,6 +48,8 @@ define([
     context,
     browser_layout,
     pages,
+
+    form_overlay_template,
     password_template,
     collections_template,
     overlay_template,
@@ -61,7 +65,6 @@ define([
 ){
     var o = {}, expr_page = false, grid_width, controller,
         border_width = 1,
-        column_layout = false,
         render_new_cards_func,
         anim_direction; // 0 = up, +/-1 = right/left
     const anim_duration = 700;
@@ -79,9 +82,10 @@ define([
         // $('#login_form').submit(o.login);
         $('#login_form [name=from]').val(window.location);
         if(!context.user.logged_in){
-            o.login_dialog = dialog.create('#login_menu',  
-                { open: function(){ $("#login_menu input[name=username]").focus(); },
-                  handler: function(e, json) {
+            o.login_dialog = dialog.create('#dia_login', {
+                open: function(){
+                    $("#login_form .username").focus(); },
+                handler: function(e, json) {
                     if (json.error != undefined) {
                         $('#login_form .error_msg').text(json.error).showshow().fadeIn("slow");
                     } else {
@@ -89,7 +93,12 @@ define([
                         o.on_login();
                     } }
                 } );
-            $('.login_btn').click(o.login_dialog.open);
+            $('#login_form .signup').click(function(){
+                context.login_form = {
+                    username: $("#login_form [name=username]").val()
+                    ,secret: $("#login_form [name=secret]").val()
+                }
+            })
 
             // request invite form handlers. This form also appears on home page,
             // so this applies to both, and must be done after the top level render
@@ -99,7 +108,7 @@ define([
                 });
             });
             context.after_render.add('.invite_form', function(e){
-                e.on('response', function(e, data){
+                e.on('success', function(e, data){
                     if(data){ // success
                         $('.request_invite').hidehide();
                         $('.request_sent').removeClass('hide');
@@ -110,23 +119,9 @@ define([
                     }
                 });
             });
-
-            // login_form already rendered in overlay_template()
-            // login can't set cookies from cross-domain request
-            // so must be done synchronously
-            // $('#login_form').on('response', function(e, data){
-            //     if(data){
-            //         context.user = data;
-            //         init_overlays();
-            //         o.controller.refresh();
-            //         $('#login_menu').data('dialog').close();
-            //     } else {
-            //         $('#login_form .error').showshow();
-            //     }
-            // });
         } else {
             $('#logout_btn').click(function(){ $('#logout_form').submit(); });
-            $('#logout_form').bind('response', o.on_logout);
+            $('#logout_form').bind('success', o.on_logout);
 
             /// notification count and activity menu code
 
@@ -152,7 +147,7 @@ define([
                 }
             };
             update_activity(context.user);
-            $('#activity_form').on('response', function(e, data){
+            $('#activity_form').on('success', function(e, data){
                 update_activity(data);
             });
             setInterval(function(){$('#activity_form').submit() }, 180000);
@@ -214,27 +209,35 @@ define([
         if (render_new_cards_func)
             render_new_cards_func(data);
         o.attach_handlers();
-        o.layout_columns();
+        if (o.column_layout)
+            o.layout_columns();
         o.add_grid_borders();
     }
     o.render = function(method, data){
-        var page_data = data.page_data;
+        var page_data = context.page_data, expr = page_data.expr
         if (page_data.title) $("head title").text(page_data.title);
         o.column_layout = false;
         o.columns = 0;
         new_page = pages[method];
         expr_page = (method == 'expr');
+
         page_data.layout = method;
+        
         dialog.close_all();
         if(context.error == "login" && o.login_dialog){
             o.login_dialog.open();
             $('#login_form .error_msg').showshow().fadeIn("slow");
+            delete context.error
         }
-        if (context.page != new_page) {
-            if (context.page && context.page.exit) 
-                context.page.exit();
+        if(context.page != new_page){
+            if(context.page && context.page.exit)
+                context.page.exit()
         }
+        o.form_page_exit()
+
         o.preprocess_context();
+        o.tags = (expr && (expr.tags_index || expr.tags))
+            || page_data.tags_search
         if (new_page && new_page.preprocess_page_data) 
             pages[method].preprocess_page_data(page_data);
         if (new_page) {
@@ -253,29 +256,30 @@ define([
         else
             render_site(page_data);
 
-        // fix up rounded borders on content_btns overlay
-        var btns = $('#content_btns').find('.btn');
-        btns.removeClass('left right');
-        for(var i = 0, e; (e = btns.eq(i++)).length;){
-            if(!e.hasClass('hide')) {
-                $(e).addClass('left');
-                break;
-            }
-        }
-        for(var i = btns.length - 1, e; (e = btns.eq(i--)).length;){
-            if(!e.hasClass('hide')) {
-                $(e).addClass('right');
-                break;
-            }
-        }
-
         // TODO: move to ./page/community
         if (page_data.page == "tag_search") {
             o.render_tag_page();
         }
 
+        o.form_page_enter()
         if (new_page && new_page.enter) new_page.enter();
         o.resize();
+
+        // fix up rounded borders on panel overlay
+        var btns = $('.overlay.panel').find('.btn');
+        btns.removeClass('left right');
+        for(var i = 0, e; (e = btns.eq(i++)).length;){
+            if(e.is(':visible')) {
+                $(e).addClass('left');
+                break;
+            }
+        }
+        for(var i = btns.length - 1, e; (e = btns.eq(i--)).length;){
+            if(e.is(':visible')) {
+                $(e).addClass('right');
+                break;
+            }
+        }
 
         o.attach_handlers();
     };
@@ -294,35 +298,28 @@ define([
                     });
                 }
             }
+            var form = $('.dialog.add_to_collection form')
+                ,el_tag_name = form.find('input[name=tag_name]')
+            form.off('after_submit').on('after_submit', o.dia_collections.close)
             o.dia_collections.open();
             var submit_add_to_collection = function(tag_name) {
-                $(".dialog.add_to_collection input[name=tag_name]").val(tag_name);
-                $(".dialog.add_to_collection form").submit();
-                o.dia_collections.close();
+                el_tag_name.val(tag_name)
+                form.submit()
             };
             var update_text = function (){
                 var text = $(".dialog.add_to_collection .tag_name")
-                    , val = $(text).val()
-                    , val_filtered = val.replace(/[^a-z0-9\_]+/i, '')
+                    ,val = $(text).val()
+                    ,val_filtered = val.replace(/[^a-z0-9\_]+/i, '').toLowerCase()
                 ;
                 if(val != val_filtered) $(text).val( val_filtered );
                 $(".dialog.add_to_collection .tag_new")
                     .text($(text).val()).showshow().addClass("tag_15");
                 if ('' == $(text).val())
                     $(".dialog.add_to_collection .tag_new").hidehide();
+                el_tag_name.val(val_filtered)
             }
-            $(".dialog.add_to_collection form").on('keypress', function (e) {
-                e = e || event;
-
-                if ((e.keyCode || e.which || e.charCode || 0) == 13) {
-                    submit_add_to_collection($(".dialog.add_to_collection .tag_name").val());
-                    return false;
-                }
-                return true;
-            });
-            $(".dialog.add_to_collection .tag_name").on('keyup', function (e) {
-                update_text();
-            });
+            $(".dialog.add_to_collection .tag_name")
+                .bind_once('keyup', update_text)
             $(".dialog.add_to_collection .tag_list .tag_label").
                 unbind('click').on('click', function (e) {
                 submit_add_to_collection($(this).text());
@@ -340,11 +337,12 @@ define([
         });
         if (!context.user.logged_in) {
             $(".needs_login").unbind("click").click(function(e) {
-                $("#dia_login_or_join").data("dialog").open();
-                e.preventDefault();
+                o.login_dialog.open();
+                e.preventDefault()
+                return false
             });
         }
-        $(".user_action_bar form.follow").unbind('response').on('response', 
+        $(".user_action_bar form.follow").unbind('success').on('success', 
             function(event, json) {
                 follow_response($(this), json); 
         });
@@ -378,16 +376,13 @@ define([
         // });
         
         // global keypress handler
-        $("body").unbind('keydown').keydown(function(e) {
+        var key_handler = function(e) {
             if (window.event)
                var key = window.event.keyCode;
             else if (e)
                var key = e.which;
             var keychar = String.fromCharCode(key);
-            if (e.keyCode == 27) { // escape
-                // If a dialog is up, kill it.
-                dialog.close_all();
-            } else if ((e.keyCode == 39 || e.keyCode == 37) &&
+            if ((e.keyCode == 39 || e.keyCode == 37) &&
                 !(e.metaKey || e.ctrlKey || e.altKey) &&
                 $(e.target).is("body")) {
                 // If paging, go to previous / next expression.
@@ -405,8 +400,9 @@ define([
             } else {
                 // alert('keyCode: ' + e.keyCode);
             }
-        });
-        $(window).scroll(function(e) {
+        }
+        $(document).off('keydown', key_handler).on("keydown", key_handler);
+        var scroll_handler = function(e) {
             if (c.route_name == "edit_expr")
                 return;
             return;
@@ -418,7 +414,8 @@ define([
                 if (c.route_name != "edit_expr")
                     $(".overlay.nav").stop().fadeIn("fast");
             }, 100);
-        });
+        }
+        $(window).off("scroll", scroll_handler).on("scroll", scroll_handler);
     };
     o.attach_handlers = function(){
         if(context.page && context.page.attach_handlers)
@@ -437,16 +434,48 @@ define([
         $("#site>.tag_list_container").replaceWith(
             tags_main_template(context.page_data));
     }
+
+    o.form_page_enter = function(){
+        // must be idempotent; called twice for expr pagethroughs
+        // TODO: make this work for #Forms beyond "gifwall."
+        var page_data = context.page_data
+        if(o.tags && o.tags.indexOf("gifwall") >= 0)
+            page_data.form_tag = 'gifwall'
+        else return
+
+        // only show the #GIFWALL on an expression page
+        if (page_data.expr) {
+            $("#logo").hidehide();
+            $('.overlay.form').remove()
+            $('#overlays').append(form_overlay_template(page_data));
+        }
+
+        var $create = $("#overlays .create")
+        if (!$create.data("href"))
+            $create.data("href", $create.attr("href"))
+        $create.attr("href", $create.data("href") + "?tags=" + page_data.form_tag)
+    }
+    o.form_page_exit = function(){
+        delete context.page_data.form_tag
+        // Clean up old #Form junk
+        $("#logo").showshow();
+        $('.overlay.form').remove();
+
+        var $create = $("#overlays .create")
+        if ($create.data("href"))
+            $create.attr("href", $create.data("href"))
+    }
+
     o.render_tag_page = function(){
         $('#tag_bar').remove();
-        $('#feed').prepend(tags_page_template(context.page_data));
+        $('.feed').prepend(tags_page_template(context.page_data));
         var tag_name = context.page_data.tags_search[0];
         $('title').text("#" + tag_name.toUpperCase());
         var header_prefix = ""; // "Search: "
         $('#header span').text("#" + tag_name);
         // var top_context = { "tagnum": 0, "item": tag_name };
         // $('#header span').text(header_prefix).append(tag_card_template(top_context));
-        $('#follow_tag_form').on('response', o.tag_response);
+        $('#follow_tag_form').on('success', o.tag_response);
     }
 
     o.tag_response = function (e, json){
@@ -474,7 +503,7 @@ define([
                 {owner_name: context.user.name });
             return false;
         });
-        $('#user_settings_form').on('response', function(e, data){
+        $('#user_settings_form').on('success', function(e, data){
             if(data.error) alert(data.error);
             else {
                 o.controller.open('expressions_public',
@@ -494,9 +523,9 @@ define([
     o.user_update = function(page_data){
         $('#site').empty().append(profile_edit_template(page_data));
         
-        $('#thumb_form').on('response',
+        $('#thumb_form').on('success',
             on_file_upload('#profile_thumb', '#thumb_id_input'));
-        $('#bg_form').on('response',
+        $('#bg_form').on('success',
             on_file_upload('#profile_bg', '#bg_id_input'));
         // Click-through help text to appropriate handler
         $(".help_bar").on("click", function(e) {
@@ -508,7 +537,7 @@ define([
                 {owner_name: context.user.name });
             return false;
         });
-        $('#user_update_form').on('response', function(e, data){
+        $('#user_update_form').on('success', function(e, data){
             if(data.error) alert(data.error);
             else {
                 o.controller.open('expressions_public',
@@ -561,7 +590,7 @@ define([
                             text(d.error);
                 };
                 show_error(page_data);
-                $('#user_settings_form').on('response', function(e, json) {
+                $('#user_settings_form').on('success', function(e, json) {
                     if(json.error)
                         show_error(json);   
                     else 
@@ -579,7 +608,7 @@ define([
         if(context.page_data.layout == 'grid' || context.page_data.layout == 'mini') {
             var columns = Math.max(1, Math.min(3, 
                 Math.floor($(window).width() / grid_width)));
-            $('#feed').css('width', columns * (grid_width + border_width));
+            $('.feed').css('width', columns * (grid_width + border_width));
             if (o.columns != columns || !done_layout) {
                 o.columns = columns;
                 if (o.column_layout)
@@ -595,6 +624,7 @@ define([
     // Move the expr.card's into the feed layout, shuffling them
     // into the shortest column.  
     o.layout_columns = function(ordered_ids){
+        o.column_layout = true;
         if (undefined == ordered_ids) {
             ordered_ids = $.map(context.page_data.cards, function(el) {
                 return el.id;
@@ -605,7 +635,7 @@ define([
             var col_width = 0;
             if (i < o.columns)
                 col_width = grid_width;
-            $("#feed .column_"+i).css("width", col_width);
+            $(".feed .column_"+i).css("width", col_width);
         }
 
         // Then add the cards into the shortest column
@@ -617,7 +647,7 @@ define([
             el_card = $("#card_" + card_id);
             var min = Math.min.apply(null, row_heights);
             var min_i = row_heights.indexOf(min);
-            var el_col = $("#feed .column_" + min_i);
+            var el_col = $(".feed .column_" + min_i);
             el_col.append(el_card);
             row_heights[min_i] += el_card.height();
         };
@@ -627,28 +657,30 @@ define([
     o.add_grid_borders = function(columns){
         var columns = o.columns;
         if(context.page_data.layout != 'grid') return;
-        var expr_cards = $('#feed .card');
+        var expr_cards = $('.feed .card');
         // Count of cards which fit to even multiple of columns
         var card_count = expr_cards.length - columns;// - (expr_cards.length % columns);
         expr_cards.each(function(i) {
+            var $el = $(this);
+            $el.removeAttr('style');
             if (o.column_layout) {
-                if (! $(this).parent().hasClass("column_0"))
-                    $(this).css("border-left", "1px solid black");
+                if (! $el.parent().hasClass("column_0"))
+                    $el.css("border-left", "1px solid black");
                 else
-                    $(this).css("border-left", "none");
-                if (! $(this).is(":first-child"))
-                    $(this).css("border-top", "1px solid black");
+                    $el.css("border-left", "none");
+                if (! $el.is(":first-child"))
+                    $el.css("border-top", "1px solid black");
                 else
-                    $(this).css("border-top", "none");
+                    $el.css("border-top", "none");
             } else {
                 if (i < card_count)
-                    $(this).css("border-bottom", "1px solid black");
+                    $el.css("border-bottom", "1px solid black");
                 else
-                    $(this).css("border-bottom", "none");
+                    $el.css("border-bottom", "none");
                 if ((i + 1) % columns != 0 && i + 1 < expr_cards.length)
-                    $(this).css("border-right", "1px solid black");
+                    $el.css("border-right", "1px solid black");
                 else
-                    $(this).css("border-right", "none");
+                    $el.css("border-right", "none");
             }
         });
     };

@@ -4,7 +4,7 @@
 #}
 <div class="tag_list {extra_classes}">
   {<if plus_menu}
-    <div class="icon plus_menu needs_login pointer"></div>
+    <div class="icon plus_menu needs_login pointer" title="Add to collection"></div>
     {<if flags.admin}
       <form {form_attrs "add_featured_queue"} method="POST">
         <input type="hidden" name="expr_id" value="{id}">

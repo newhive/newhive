@@ -1,0 +1,21 @@
+<html>
+<head>
+  <meta name="viewport" content="width=320, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+  <title>Sample HTML</title>
+  <style>
+    @import url(generic.css);
+  </style>
+  <script src="jquery-1.11.0.min.js"></script>
+  <script type="text/javascript">
+    inject_css=function(css){
+        var s=document.createElement("style");
+        s.setAttribute("type","text/css");s.innerHTML=css;
+        document.getElementsByTagName("head")[0].appendChild(s);
+    }
+  </script>
+</head>
+<body>
+    <button class="half select" onclick="Ti.App.fireEvent('app:btnAction', { btn: 'select' });">Select</button
+    ><button class="half take" onclick="Ti.App.fireEvent('app:btnAction', { btn: 'take' });">Take</button
+    ><button class="full publish" onclick="Ti.App.fireEvent('app:btnAction', { btn: 'publish' });">Publish</button>
+</body>

@@ -38,7 +38,8 @@ drag = $special.drag = {
 		handle: null, // selector to match handle target elements
 		relative: false, // true to use "position", false to use "offset"
 		drop: true, // false to suppress drop events, true or selector to allow
-		click: false // false to suppress click events after dragend (no proxy)
+		click: false, // false to suppress click events after dragend (no proxy)
+		bubble_mousedown: false
 	},
 	
 	// the key name for stored drag data
@@ -115,7 +116,7 @@ drag = $special.drag = {
 		if ( $( event.target ).is( dd.not ) ) 
 			return;
 		// check for handle selector
-		if ( dd.handle && !$( event.target ).closest( dd.handle, event.currentTarget ).length ) 
+		if ( dd.handle && !$( event.currentTarget ).closest( dd.handle ).length ) 
 			return;
 
 		drag.touched = event.type == 'touchstart' ? this : null;
@@ -150,11 +151,13 @@ drag = $special.drag = {
 		// bind additional events...
 		if ( drag.touched )
 			$event.add( drag.touched, "touchmove touchend", drag.handler, dd );
-		else 
+		else
 			$event.add( document, "mousemove mouseup", drag.handler, dd );
 		// helps prevent text selection or scrolling
 		if ( !drag.touched || dd.live )
-			return false;
+			event.preventDefault()
+		if(!dd.bubble_mousedown)
+			return false; // prevent simultaneous drags
 	},	
 	
 	// returns an interaction object

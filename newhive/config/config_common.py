@@ -9,6 +9,7 @@ database_port   = 27017
 email_port      = 2525
 media_path      = '/home/domains/thenewhive.com'
 redirect_domains = ['newhive.com', 'thenewhive.com']
+live_prefixes   = ['live-2', 'live-3', 'live-4', 'live-5', 'live-6']
 
 embedly_key     = '1774adc27ebd4753a2f20c3635d1508e'
 analytics_db    = 'analytics'
@@ -52,17 +53,28 @@ beta_testers = admins + [
 
 user_groups = { 'logged_in':set([]), 'logged_out':set(['logged_out']), 'all':set([]), 
     'admins':set(admins), 'beta_testers':set(beta_testers) }
-site_flags = { 
-    'admin': ['admins']
+site_flags = {
+    # Features
+    'show_hive_all': ['newduke','nd4']
     ,'merge_recent': ['cara', 'fatsycline']
-    ,'show_hive_all': ['newduke','nd4']
-    ,'logged': ['logged_out']
-    ,'rect_drag_drop': ['admins','nd4']
-    ,'shift_does_raise': ['newduke','nd4','abram']
-    ,'snap_crop': ['admins','nd4']
     ,'can_debug': ['admins','nd4']
     ,'open_signup': []
+    ,'mobile_web': ['nd4']
+    # Editor
+    ,'snap_crop': ['admins','nd4']
+    ,'shift_does_raise': ['newduke','nd4','abram']
+    ,'rect_drag_drop': ['admins','nd4']
     ,'modify_special_tags': ['admins','nd4']
+    ,'show_mini_selection_border': ['admins','nd4']
+    ,'copy_table': ['admins','nd4']
+    ,'button_options': ['admins']
+    ,'shapes': ['admins']
+    ,'custom_domain': []
+    ,'tile_multiple_images': ['admins', 'nd4']
+    # Admin
+    ,'admin': ['admins']
+    # Old / unused
+    ,'logged': ['logged_out']
 }
 
 site_user = 'newhive'

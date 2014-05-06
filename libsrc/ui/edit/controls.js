@@ -30,19 +30,20 @@ var o = {}
 // selection border, and all the buttons surounding the App when selected, and for
 // these button's behavior.  App specific behavior is added by
 // hive_app.App.Foo.Controls function, and a list of modifiers in app.make_controls
-o.Controls = function(app, multiselect) {
+o.Controls = function(app, multiselect, delegate) {
     if(app.controls) {
         // Check if existing controls are same type as requested
         if(app.controls.multiselect == multiselect) return;
         else app.controls.remove(); // otherwise destroy them and reconstruct requested type
     }
     var o = app.controls = {};
+    var sel_app = app.sel_app()
     o.app = app;
     o.multiselect = multiselect;
 
     o.remove = function() {
         o.div.remove();
-        o.app.controls = false;
+        app.controls = false;
     };
 
     o.append_link_picker = function(d, opts) {
@@ -64,7 +65,8 @@ o.Controls = function(app, multiselect) {
             // TODO: improve URL guessing
             if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && 
                 v.match(/\w+\.\w{2,}/)) v = 'http://' + v;
-            o.app.link(v);
+            o.app.link_set(v);
+            env.History.saver(sel_app.link, sel_app.link_set, 'link image').exec(v);
         };
 
         // Don't have to worry about duplicating handlers because all elements
@@ -113,10 +115,11 @@ o.Controls = function(app, multiselect) {
         o.div.append(c);
         return c;
     };
-    o.appendButton = function(c) {
-        var buttons = o.div.find('.buttons');
+    o.appendButton = function(c, klass) {
+        klass = klass || "buttons"
+        var buttons = o.div.find('.' + klass);
         if (buttons.length == 0)
-            buttons = $('<div class="control buttons"></div>').appendTo(o.div);
+            buttons = $('<div class="control ' + klass + '"></div>').appendTo(o.div);
         buttons.append(c);
         return c;
     }
@@ -124,36 +127,69 @@ o.Controls = function(app, multiselect) {
     o.addControl = function(ctrls) { 
         return $($.map(ctrls.clone(false), o.appendControl)); };
     o.addButton = function(ctrls) { 
-        return $($.map(ctrls.clone(false), o.appendButton)); };
+        return $($.map(ctrls.clone(false), function(x) {
+            return o.appendButton(x) } )); };
+    o.addTopButton = function(ctrls) { 
+        return $($.map(ctrls.clone(false), function(x) {
+            return o.appendButton(x, "top_buttons") } )); };
     o.addControls = function(ctrls) { 
         return $($.map(ctrls.clone(false).children(), o.appendControl)); };
+    o.addButtons = function(ctrls) {
+        $ctrls = ctrls.find(".control.buttons");
+        if ($ctrls.length == 0)
+            $ctrls = ctrls;
+        return $($.map($ctrls.clone(false).children(), function (x) {
+            o.appendButton(x) } )); };
     o.hover_menu = function(handle, drawer, opts) {
         return u.hover_menu(handle, drawer, $.extend({
-            auto_height: false, offset_y : o.padding - 4}, opts))
+            auto_height: false, offset_y : o.padding - 7}, opts))
     };
+    o.single = function() {
+        return (env.Selection.count() == 1) ? o.app.sel_app() : false }
 
+    o.padding = 4;
+    o.border_width = 5;
     var pad_ul = [45, 45], pad_br = [45, 110], min_d = [135, 40];
+    if(multiselect){
+        pad_ul = [3, 3];
+        pad_br = [3, 3];
+        min_d = [1, 1];
+        o.padding = 1;
+        if (!env.gifwall)
+            o.border_width = 2;
+    }
+    pad_ul = $.map(pad_ul, function(x) { return Math.max(x, o.border_width) });
+    pad_br = $.map(pad_br, function(x) { return Math.max(x, o.border_width) });
     var pos_dims = function(){
-        if(o.multiselect){
-            pad_ul = [3, 3];
-            pad_br = [3, 3];
-            min_d = [1, 1];
-        }
-        // TODO-bugbug: can still be pushed off screen with really small apps 
-        var ap = o.app.pos(),
-            win = $(window), wdims = [win.width(), win.height()],
-            pos = [ Math.max(pad_ul[0] + window.scrollX,
-                ap[0]), Math.max(pad_ul[1] + window.scrollY, ap[1]) ],
-            ad = o.app.dims(),
+        // TODO-bugbug-border-push:
+        //    * Can still be pushed off screen with really small apps 
+        //    * Add scroll height when pushed from bottom to prevent
+        //      overlap of controls with app content
+        // TODO-polish-border-push:
+        //    * Make pushed border segments dashed
+        //    * Create pushed controls container so controls meant to
+        //      overlay app content can be separated
+        // Maybe ditch border pushing entirely. Not convinced it's worth it
+        var ap = app.pos(),
+            // win = $(window), wdims = [win.width(), win.height()],
+            wdims = env.win_size,
+            pos = [ Math.max(pad_ul[0] + env.scrollX,
+                ap[0]), Math.max(pad_ul[1] + env.scrollY, ap[1]) ],
+            ad = app.dims(),
             dims = [ ap[0] - pos[0] + ad[0], ap[1] - pos[1] + ad[1] ];
-        if(dims[0] + pos[0] > wdims[0] + window.scrollX - pad_br[0])
-            dims[0] = wdims[0] + window.scrollX - pad_br[0] - pos[0];
-        if(dims[1] + pos[1] > wdims[1] + window.scrollY - pad_br[1])
-            dims[1] = wdims[1] + window.scrollY - pad_br[1] - pos[1];
+        if(dims[0] + pos[0] > wdims[0] + env.scrollX - pad_br[0])
+            dims[0] = wdims[0] + env.scrollX - pad_br[0] - pos[0];
+        if(dims[1] + pos[1] > wdims[1] + env.scrollY - pad_br[1])
+            dims[1] = wdims[1] + env.scrollY - pad_br[1] - pos[1];
 
         var minned_dims = [ Math.max(min_d[0], dims[0]),
             Math.max(min_d[1], dims[1]) ];
-        delta_dir = [ ap[0] < 0 ? 0 : -1, ap[1] < 0 ? 0 : -1 ];
+        var delta_dir = [ ap[0] < 0 ? 0 : -1, ap[1] < 0 ? 0 : -1 ];
+        if(env.gifwall && !o.multiselect) {
+            pos[1] = Math.max(pad_ul[1], ap[1]);
+            dims[1] = ap[1] - pos[1] + ad[1];
+            minned_dims = dims.slice();
+        }
         pos = u._add(pos)(u._mul(delta_dir)(u._sub(minned_dims)(dims)));
 
         return { pos: pos, dims: minned_dims };
@@ -162,21 +198,26 @@ o.Controls = function(app, multiselect) {
     o.dims = function(){ return pos_dims().dims };
 
     o.layout = function() {
+        // Fix parent layout if needed
+        // if (o.app.focused())
+        //     env.Selection.update_relative_coords();
+        //if (delegate && o.app.controls)
+        //    o.app.controls.layout();
         var pos = o.pos(), dims = o.dims(),
             cx = dims[0] / 2, cy = dims[1] / 2, p = o.padding,
             bw = o.border_width, outer_l = -cx -bw - p,
             outer_width = dims[0] + bw*2 + p*2, outer_height = dims[1] + p * 2 + 1;
 
-        o.div.css({ left: pos[0], top: pos[1] });
+        u.inline_style(o.div[0], { left: pos[0], top: pos[1] })
 
-        o.select_box.css({ left: cx, top: cy });
-        o.select_borders.eq(0).css({ left: outer_l,
+        u.inline_style(o.select_box[0], { left: cx, top: cy });
+        u.inline_style(o.select_borders[0], { left: outer_l,
             top: -cy -bw -p, width: outer_width, height: bw }); // top
-        o.select_borders.eq(1).css({ left: cx + p,
+        u.inline_style(o.select_borders[1], { left: cx + p,
             top: -cy -p - bw + 1, height: outer_height + bw * 2 -2, width: bw }); // right
-        o.select_borders.eq(2).css({ left: outer_l,
+        u.inline_style(o.select_borders[2], { left: outer_l,
             top: cy + p, width: outer_width, height: bw }); // bottom
-        o.select_borders.eq(3).css({ left: outer_l,
+        u.inline_style(o.select_borders[3], { left: outer_l,
             top: -cy -p - bw + 1, height: outer_height + bw * 2 -2, width: bw }); // left
         if(o.multiselect) return;
 
@@ -186,6 +227,7 @@ o.Controls = function(app, multiselect) {
         o.c.stack  .css({ left: dims[0] - 78 + p, top: dims[1] + 8 + p });
         o.c.buttons.css({ left: -bw - p, top: dims[1] + p + 10,
             width: dims[0] - 60 });
+        o.c.top_buttons.css({ left: -bw - p, top: -38 - p, width: dims[0] - 60 });
     };
 
     o.div = $('<div>').addClass('controls');
@@ -193,7 +235,7 @@ o.Controls = function(app, multiselect) {
 
     // add borders
     o.select_box = $("<div style='position: absolute'>");
-    var border = $('<div>').addClass('select_border drag ehapp');
+    var border = $('<div>').addClass('select_border drag happ');
     o.select_borders = border.add(border.clone().addClass('right'))
         .add(border.clone().addClass('bottom'))
         .add(border.clone().addClass('left'));
@@ -203,18 +245,16 @@ o.Controls = function(app, multiselect) {
         .on(o.select_borders, 'drag', o.app)
         .on(o.select_borders, 'dragend', o.app);
     o.div.append(o.select_box.append(o.select_borders));
-    o.select_box.click(function( e ){
-        e.stopPropagation();
-        o.app.unfocus();
+    o.select_box.click(function(){
+        var app = o.single()
+        if(app)
+            app.unfocus();
     });
 
-    o.padding = 4;
-    o.border_width = 5;
-    if(multiselect){
-        o.padding = 1;
-        o.border_width = 2;
-    }
-    else {
+    if(o.multiselect && o.app.angle)
+        o.select_box.rotate(o.app.angle());
+
+    if (!multiselect) {
         o.addControls($('#controls_common'));
         var d = o.div;
         o.c = {};
@@ -222,19 +262,86 @@ o.Controls = function(app, multiselect) {
         o.c.remove  = d.find('.remove' );
         o.c.resize  = d.find('.resize' );
         o.c.stack   = d.find('.stack'  );
-        o.c.remove.click(function() { o.app.remove(); });
+        o.c.remove.click(function(){
+            o.app.remove();
+            env.layout_apps() // in case scrollbar visibility changed
+        });
         o.c.copy    = d.find('.copy'   );
         o.c.copy.click(function(){
-            var copy = o.app.copy({ load: function(){
-                env.Selection.select(copy);
+            var copy = o.app.copy({ load: function(a){
+                env.Selection.select(a);
             } });
         });
+        if (env.copy_table) {
+            var ref_copy;
+            const copy_grid = 30;
+            var grid_size = function(offset) {
+                var round = function(x) {
+                    return Math.max(1, Math.ceil(x));
+                }
+                offset = u._sub(offset)(ref_copy);
+                offset = u._div(offset)([copy_grid, -copy_grid]);
+                offset = offset.map(round, offset)
+                return offset;
+            };
+            o.c.copy.on('dragstart', function(ev) {
+                ref_copy = [ev.clientX, ev.clientY];
+            })
+            .on('drag', function(ev) {
+                var grid = grid_size([ev.clientX, ev.clientY]);
+                d.find($(".copy_copy")).remove();
+                var copy = d.find(".copy");
+                var left = parseFloat(copy.css("left"));
+                var top = parseFloat(copy.css("top"));
+                for (var x = 0; x < grid[0]; ++x) {
+                    for (var y = 0; y < grid[1]; ++y) {
+                        if (x == 0 && y == 0)
+                            continue;
+                        var $el = copy.clone();
+                        $el.addClass("copy_copy")
+                            .css("left", left + x*copy_grid)
+                            .css("top", top - y*copy_grid)
+                            .appendTo(d);
+                    }
+                }
+            })
+            .on('dragend', function(ev) {
+                var grid = grid_size([ev.clientX, ev.clientY]);
+                d.find($(".copy_copy")).remove();
+                var count = grid[0] * grid[1] - 1;
+                copy_list = [o.app];
+                if (o.app.elements)
+                    copy_list = o.app.elements();
+                var padding = [env.padding(), env.padding()];
+                var grid_dims = u._add(padding)(u._mul(1/env.scale())(o.app.dims()));
+                env.History.begin();
+                for (var x = 0; x < grid[0]; ++x) {
+                    for (var y = 0; y < grid[1]; ++y) {
+                        if (x == 0 && y == 0)
+                            continue;
+                        var copy = o.app.copy({
+                            offset: u._mul([x, y])(grid_dims),
+                            load: function(){
+                                if (! --count)
+                                    env.Selection.select(copy_list);
+                            } });
+                        if (copy.concat)
+                            copy_list = copy_list.concat(copy)
+                        else
+                            copy_list.push(copy);
+                    }
+                }
+                env.Selection.select(copy_list);
+                env.History.group('copy grid');
+            });
+        }
         d.find('.stack_up').click(o.app.stack_top);
         d.find('.stack_down').click(o.app.stack_bottom);
 
         $.map(o.app.make_controls, function(f){ f(o) });
 
         o.c.buttons = d.find('.buttons');
+        o.c.top_buttons   = d.find('.top_buttons'  );
         d.find('.hoverable').each(function(i, el){ ui_util.hoverable($(el)) });
     }
 

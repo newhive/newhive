@@ -1,0 +1,9 @@
+<Alloy>
+	<Window id="compose_window">
+		<TableView id='gif_wall_table' dataCollection="Photos" dataTransform="doTransform">
+			<Require src="GIFWallRow"/>
+		</TableView>
+		<WebView id="web_view" url="../../generic.html">
+		</WebView>
+	</Window>
+</Alloy>

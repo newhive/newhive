@@ -13,10 +13,13 @@ define([
         return false;
     };
     o.asset_name_from_url = function(url){
-        if (url.slice(-9).slice(0,1) != ".")
-            return false;
+        // if (url.search(".png"))
+        //     return false;
+        url = url.replace("-hover", "")
         var asset_name = 
-            url.slice(0,-9).replace(/^(https?:)?(\/\/)?[^\/]+\//,"");
+            url.replace(/^(https?:)?(\/\/)?[^\/]+\/(lib\/)?/,"");
+        // Remove the cache-busting 8-char hex
+        asset_name = asset_name.replace(/\.[0-9a-z]{8}$/,"")
         if (_asset(asset_name))
             return asset_name;
         return false;
@@ -30,6 +33,24 @@ define([
         else
             return 0;
     }
+    o.defalt = function (x, def) {
+        if (x === 0 || x === false || x)
+            return x;
+        return def;
+    }
+    o.starts_with = function(haystack, needle) {
+        return haystack.substr(0, needle.length) == needle;
+    }
+
+    o.mobile = function() {
+        return (navigator.userAgent.match(/Android/i)
+            || navigator.userAgent.match(/webOS/i)
+            || navigator.userAgent.match(/iPhone/i)
+            || navigator.userAgent.match(/iPad/i)
+            || navigator.userAgent.match(/iPod/i)
+            || navigator.userAgent.match(/BlackBerry/i)
+            || navigator.userAgent.match(/Windows Phone/i));
+    };
 
     // Can extend jquery functions with custom behavior.
     o.extend_jquery = function() {
@@ -75,11 +96,9 @@ define([
                     elem.hidehide();
             };
         }(jQuery));
-        // TODO-cleanup: make this take in named functions only and unbind
-        // them by name.
         (function($){
             $.fn.bind_once = function( event_name, func ) {
-                return $(this).unbind(event_name).on(event_name, func);
+                return $(this).off(event_name, func).on(event_name, func);
             };
         }(jQuery));
     };
@@ -89,10 +108,14 @@ define([
         if(el.prop('src')) {
             el.data('src', el.prop('src'));
             el.data('src_hover', hover_url(el.prop('src')));
-            el.mouseover(function() { el.attr('src', el.data('src_hover')) }).
-                mouseout(function() { el.attr('src', el.data('src')) });
+            el.data('hover_showhide', function(showhide) { 
+                new_src = el.data(showhide ? 'src_hover' : 'src');
+                if (new_src) el.attr('src', new_src) 
+            });
+            el.mouseenter(function() {el.data('hover_showhide')(true)}).
+                mouseout(function() {el.data('hover_showhide')(false)});
         }
-        el.mouseover(function() {
+        el.mouseenter(function() {
             if(o.hoverable.disabled) return;
             $(this).addClass('active');
         }).mouseout(function() {
@@ -100,11 +123,21 @@ define([
         });
 
         function hover_url(url) {
-            var orig_asset = o.asset_name_from_url(url) || url;
+            var orig_asset = o.asset_name_from_url(url)
+            var missing_asset = !orig_asset
+            orig_asset = orig_asset || url;
             var h = orig_asset.replace(/(.png)|(-\w*)$/, '-hover.png');
-            h = _asset(h) || h;
-            var i = $("<img style='display:none'>").attr('src', h);
-            $(document.body).append(i);
+            if (missing_asset)
+                h = _asset(h) || h
+            else
+                h = _asset(h)
+            var old = $("#dynamic_group img").filter(function(e){
+                return $(this).attr("src") == h
+            })
+            if (old.length == 0 && h) {
+                var i = $("<img style='display:none'>").attr('src', h);
+                $("#dynamic_group").append(i);
+            }
             return h;
         }
     };

@@ -1,0 +1,31 @@
+"Window":{
+    backgroundColor: 'white',
+    layout: 'vertical',
+    font: {
+		fontSize: "20dp"
+	}
+}
+
+"TextField": {
+    width:'80%'
+    ,height: '40dp'
+    ,color: 'black'
+    ,backgroundColor: 'white'
+    ,borderWidth: 3
+    ,borderColor: 'black'
+    ,paddingLeft: 10
+    ,font: {
+        fontSize: 20
+        ,fontWeight: 'bold'
+    }
+    ,
+    autocapitalization: Ti.UI.TEXT_AUTOCAPITALIZATION_NONE
+    ,autocorrect: false
+}
+
+"Button": {
+    viewShadowColor: 'black'
+    ,viewShadowOffset: '(0,3)'
+    ,viewShadowRadius: '4'
+    ,backgroundImage: '/images/btn_back.png'
+}

@@ -4,11 +4,13 @@ body.edit {
 // for backwards-compatability with old editor.
 // TODO: Make Gibson default and migrate all old expressions to override
 // default
-.ehapp.text { font-family: Helvetica, Arial, sans-serif; }
+.happ.text { font-family: Helvetica, Arial, sans-serif; }
 .prompts.gifwall {display:none}
 &.default {
-    #edit_nav .change_zoom {display:none}
-    .ehapp .highlight {
+    #edit_nav > .change_zoom {display:none}
+    .happ .highlight {
+        position: absolute;
+        top: 0px; left: 0px; right: 0px; bottom:0px;
         background-color: $color_selected;
         opacity: .6;
     }
@@ -18,14 +20,16 @@ body.edit {
     .overlay .fluff {display:none !important}
     .control.stack {display:none}
     .control.rotate {display:none}
+    .control.copy {display:none}
     .control .set_bg {display:none}
     .control .opacity {display:none}
+    .control .rounding {display:none}
     .control .button.align {display:none}
     .prompts.gifwall {
         display:block;
-        padding-top: 160px;
-        padding-bottom: 160px;
-        // .hint { margin-top: 160px;}
+        // padding-top: 160px;
+        // padding-bottom: 160px;
+        .hint { pointer-events:auto; }
         img.plus_btn { 
             // display: none;
             width: 140px; 
@@ -53,8 +57,10 @@ body.edit {
         .highlight {
             width: 100%;
             height: 100%;
-            border: $color_selected 7px dashed;
+            border: $color_selected 10px dashed;
             @include box-sizing( border-box );
+            background-color: inherit;
+            opacity: inherit;
             // position: absolute;
             // top: 0px;
         }
@@ -75,9 +81,22 @@ body.edit {
 }
 #happs {
     position: absolute;
-    left: 0;
-    top: 0;
+    left: 0; top: 0; 
+    // right:0; bottom: 0;
     z-index: 3;
+}
+#overlay_frame {
+    width: 50%;
+    height: 100%;
+    position: fixed;
+    right: 0;
+    z-index: 4;
+    background-color: rgb(212, 62, 170);
+}
+#happs, #grid_guide {
+    // currently selection always gets events, but they can be intercepted
+    &.default .drag { cursor: move; }
+    &.draw { cursor: crosshair; }
 }
 
 .edit.overlay {
@@ -100,7 +119,10 @@ body.edit {
         vertical-align: top;
     }
 }
+.menu_item.change_zoom img { height: 30px; margin-left: -10px; }
 
+// So that using the form doesn't cause the window to scroll
+#media_upload { position: fixed; }
 #bg {
     z-index: 1;
 }
@@ -110,7 +132,7 @@ body.edit {
     width : 100%; height : 100%;
 }
 .editor_overlay {
-    z-index: 4;
+    z-index: 40;
     position: fixed;
     width : 100%; height : 100%;
     pointer-events:none;
@@ -123,7 +145,7 @@ body.edit {
     }
 }
 .prompts {
-    z-index: 3;
+    z-index: 4;
     position : absolute;
     width : 100%;
     pointer-events:none;
@@ -131,19 +153,22 @@ body.edit {
     font-size: 32px;
     font-weight: 700;
 }
-.ehapp, .ehapp > * { position : absolute; }
-// .ehapp { @include box-sizing( border-box ); }
-.ehapp .highlight {
+.happ, .happ > * {
+    position : absolute;
+}
+// .happ { @include box-sizing( border-box ); }
+.happ .highlight {
     width: 100%;
     height: 100%;
     pointer-events:none;
     z-index: 1336;
 }
-.ehapp .shield {
+.happ .shield {
     left : 0px; top : 0px;
     z-index: 2;
     width : 100%; height : 100%;
 }
+.happ .crop_box { width:100%; height:100%; z-index:2; }
 .select_border {
     background-color: $color_selected; position: absolute;
     border-color: $color_light_blue;
@@ -162,54 +187,76 @@ body.edit {
 }
 .app_select { position : absolute; }
 
-.content { z-index : 2 }
-/* it would be nice to make all .content 100%x100%, but that distorts new images */
-.content.rectangle { width : 100%; height : 100%; }
-.content.sketch { width : 100%; height : 100%; } 
-.content.code {
-    width: 100%; height: 100%;
-    border: none;
-    margin: 0;
-    box-sizing: border-box;
-    font-family: Bitstream Mono, fixed;
+.happ {
+    .content {
+        z-index : 2;
+        width: 100%; height: 100%;
+    }
+    &.svg {
+        pointer-events: none;
+        .content { * { pointer-events: visible } }
+    }
+    &.hive_code { border: 1px solid black; }
+    .content.code {
+        border: none;
+        margin: 0;
+        box-sizing: border-box;
+        font-family: Bitstream Mono, fixed;
+        background-color: white;
+        opacity: .9;
+    }
 }
 
-.controls_src { display : none; }
-.drag { cursor : move; }
+.drawer { background-color : white; }
 
+.controls_src { display : none; }
+.control { position: absolute; }
 .controls {
     position:absolute;
     width:0; height:0;
     z-index: 4;
-}
-.control { position : absolute; cursor : default; z-index : 1 }
-.control.resize_v { cursor : s-resize; }
-.control.resize_h { cursor : ew-resize; }
-.control.resize { cursor : se-resize; }
-.control.stack img { display : inline-block; margin-left : 5px; }
-.control.drawer { position : absolute; text-align : left; background-color : white; display : none; }
-.drawer { background-color : white; }
 
-.control.stack { white-space : nowrap; }
-.control.buttons {
-    pointer-events: none;
-    * { pointer-events: auto; }
-    .button {
-        margin-right: 4px;
-        float: left;
+    .control { position : absolute; cursor : default; z-index : 1 }
+
+    .resize_v { cursor : ns-resize; }
+    .resize_h { cursor : ew-resize; }
+    .resize { cursor : se-resize; }
+    .stack img { display : inline-block; margin-left : 5px; }
+    .control.drawer {
+        text-align: left;
+        display: none;
     }
+    .point {
+        background-color: $color_selected;
+        margin: -7px 0 0 -7px;
+        width: 14px; height:14px;
+        border-radius: 7px;
+    }
+
+    .stack { white-space : nowrap; }
+    .buttons,.top_buttons {
+        pointer-events: none;
+        * { pointer-events: auto; }
+        .button {
+            margin-right: 4px;
+            float: left;
+            &.bg {
+                background-image: asset_url('skin/edit/button.png');
+                display: inline-block;
+                width: 28px; height: 28px;
+                line-height: 28px;
+                text-align: center;
+                // font-weight: bold;
+            }
+        }
+    }
+
+    .drag { cursor: move; }
 }
+
 .drawer.brush .option:hover { background-color: $color_selected; }
 .drawer.brush .option.selected { background-color: $color_pale_yellow; }
 .control .button, .control .option { cursor : default; }
-.button.blank {
-    display: inline-block;
-    background-image: asset_url('skin/1/button.png');
-    width: 28px; height: 28px;
-    line-height: 28px;
-    text-align: center;
-    font-weight: bold;
-}
 .option.small { display : inline-block; }
 .drawer.bstyle { padding : 5px 5px 0 5px; }
 .bstyle .border { background-color : #54D3AC; border-color : #0A2655; border-width : 3px; width : 20px; height : 15px; margin-bottom : 10px; }
@@ -244,30 +291,6 @@ body.edit {
     .insert_file   { &.active { background-image: asset_url('skin/1/upload-hover.png'); } background-image: asset_url('skin/1/upload.png'); }
     // .change_zoom   { &.active { background-image: asset_url('skin/1/zoom-hover.png'); } background-image: asset_url('skin/1/zoom.png'); display:none; }
     .labs          { &.active { background-image: asset_url('skin/1/labs-hover.png');   } background-image: asset_url('skin/1/labs.png'); }
-}
-
-textarea.code {
-    font-family: monospace;
-}
-
-.code_editor{
-    width: auto;
-    h2 {
-        margin: 10px 0 0 5px;
-    }
-    p {
-        margin: 0 0 0 5px;
-    }
-    .small_text {
-        font-size: 12px;
-        color: $color_grey_medium;
-    }
-    textarea {
-        margin-top: 10px;
-        width: 600px;
-        min-height: 200px;
-        font-size: 14px;
-    }
 }
 
 #menu_image {
@@ -326,7 +349,7 @@ textarea.code {
 }
 
 #dia_edit_bg {
-    width: 560px;
+    width: 600px;
     padding: 20px;
 
     .small_text { font-size : x-small; }
@@ -337,12 +360,6 @@ textarea.code {
     #bg_opacity_label { margin : 5px; }
     #bg_opacity { font-size : xx-small; }
 }
-
-#btn_thumbnail_wrapper { padding-top: 8px; }
-#btn_thumbnail_text { float: left; margin-right: 5px; font-weight : bold; cursor : default; }
-#dia_thumbnail { width : 823px; max-height : 480px; overflow : auto; }
-#dia_thumbnail .thumb { float : left; margin : 5px; width : 190px; height : 190px; overflow : hidden; position : relative; }
-#dia_thumbnail .thumb img { width: 190px; height: 190px; }
 
 .menu.embed { padding: 10px; }
 .embed_box { margin: 8px 0; width: 250px; height: 4.5em; resize: none; }
@@ -362,8 +379,6 @@ input, textarea { font-size : inherit; }
 .fontsize .option:hover { background-color : $color_selected; color : $color_0; }
 .drawer.fontname .option:hover { background-color : $color_selected; }
 
-.dialogue_handle { background-color : $color_selected; }
-
 .hive_selection {
     background: $color_light_grey;
 }
@@ -371,4 +386,5 @@ input, textarea { font-size : inherit; }
     min-width: 100%;
     word-wrap: normal;
 }
+
 }

@@ -11,7 +11,16 @@ class RoutesManager(object):
         self.routes_obj = json.loads(
             open(os.path.join(config.src_home, routes_path), 'r').read())
     def get_routes(self):
-        return deepcopy(self.routes_obj)
+        routes_dict = deepcopy(self.routes_obj)
+        routes_list = []
+        for k, v in routes_dict.items():
+            v.setdefault('precedence', 0)
+            v.update(route_name=k)
+            routes_list.append(v)
+        routes_list.sort(reverse=True, key=lambda r: r['precedence'])
+        for r in routes_list:
+            del r['precedence']
+        return routes_list
 
 Routes = RoutesManager()
 

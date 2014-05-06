@@ -329,6 +329,8 @@ define(['browser/js', 'module'],
 	};
 
 	o.template = function(template_src, name, user_context){
+		if(!user_context) user_context = {}
+		if(!name) name = 'anonymous'
 		var ast = parse(template_src);
 		function template(data){
 			if(!data) data = {};
@@ -342,7 +344,7 @@ define(['browser/js', 'module'],
 		template.template_apply = function(stack){
 			return render_node(stack, ast);
 		};
-		template.template_name = name;
+		template.template_name = name
 
 		// add template_apply to context for rendering from within a template
 		set_reference(user_context, name, template.template_apply);
@@ -517,21 +519,24 @@ define(['browser/js', 'module'],
 		return obj.length;
 	};
 	context_base.and = function(context){
-		for(var i = 1; i < arguments.length; ++i){
+		// special case: (and) returns true. 
+		if (arguments.length == 1)
+			return true;
+		for(var i = 1; i < arguments.length - 1; ++i){
 			if (!arguments[i])
-				return false;
+				return arguments[i];
 		}
-		return true;
+		return arguments[i];
 	};
 	context_base.or = function(context){
 		// special case: (or) returns true. (or false) and (or true... false true) are false.
 		if (arguments.length == 1)
 			return true;
-		for(var i = 1; i < arguments.length; ++i){
+		for(var i = 1; i < arguments.length - 1; ++i){
 			if (arguments[i])
 				return arguments[i];
 		}
-		return false;
+		return arguments[i];
 	};
 	context_base.not = function(context, arg){
 		return ! arg;
@@ -542,13 +547,18 @@ define(['browser/js', 'module'],
 	context_base.neq = function(context, lhs, rhs){
 		return lhs != rhs;
 	};
+	context_base.cond = function(context, cond, truthy, falsy){
+		return cond ? truthy : falsy;
+	};
 	context_base.lower = function(context, s){ return s.toLowerCase(); };
 	// TODO-cleanup: add example cases to all these functions.
-	// {<for (reverse user.activity)}<item>{>}
+	// {<for (unique user.activity)}<item>{>}
 	context_base.unique = function(context, l){
 		var field = false;
 		if (arguments.length >= 3)
 			field = arguments[2];
+		if (!l.reduce)
+			return [];
 		return l.reduce(function(p, c) {
 			if (field) {
 	        	if (!p.filter(function(e) {return e[field]==c[field];}
@@ -559,7 +569,14 @@ define(['browser/js', 'module'],
 	        return p;
     	}, []);
 	};
-	context_base.reverse = function(context, l){ return l.concat().reverse(); };
+	// {reverse [1,2,3]} ==> [3,2,1]
+	// {reverse "not_a_list"} ==> []
+	// {<for (reverse user.activity)}<item>{>}
+	context_base.reverse = function(context, l){
+		if (!l.reverse)
+			return [];
+		return l.concat().reverse(); 
+	};
 
 	// TODO: write as accumulate
 	// {set "k" (plus 2 2 2)}

@@ -5,10 +5,10 @@
 
 .red_spacer {
     border-left: 2px solid red;
-    // height: 14px;
-    font-size: 13px;
-    margin-left: -2px;
-    margin-right: 3px;
+    display: inline-block;
+    height: 14px;
+    width: 0;
+    margin-right: -4px;
 }
 
 .page_btn {
@@ -17,21 +17,21 @@
     height: 55px;
     // background-size: 42px 55px;
     &:hover { background-color: black; }
-}
-#page_prev {
-    background-image: asset_url('skin/nav/page_prev.png');
-    &:hover { background-image: asset_url('skin/nav/page_prev-hover.png'); }
-    background-position: -4px 0px;
-    left: 14px;
-}
-#page_next {
-    background-image: asset_url('skin/nav/page_next.png');
-    &:hover { background-image: asset_url('skin/nav/page_next-hover.png'); }
-    background-position: -6px 0px;
-    right: 20px;
+    &.page_prev {
+        background-image: asset_url('skin/nav/page_prev.png');
+        &:hover { background-image: asset_url('skin/nav/page_prev-hover.png'); }
+        background-position: -4px 0px;
+        left: 14px;
+    }
+    &.page_next {
+        background-image: asset_url('skin/nav/page_next.png');
+        &:hover { background-image: asset_url('skin/nav/page_next-hover.png'); }
+        background-position: -6px 0px;
+        right: 20px;
+    }
 }
 
-#content_btns {
+.overlay.panel.nav {
     //display: block;
     position: fixed;
     z-index: $nav_layer;
@@ -83,12 +83,14 @@
     &.panel {
         height: 44px;
 
-        .icon {
+        .item {
             position: static;
             display: inline-block;
+            &:hover, &.active { background-color: black; }
+        }
+        .icon, .item {
             height: 44px; width: 44px;
             background-size: 44px 44px;
-            &:hover, &.active { background-color: black; }
         }
 
         .text_btn {
@@ -113,8 +115,27 @@
             background-color: black;
         }
     }
+    &.form {
+        display: block;
+        left: 20px;
+        bottom: 20px;
+        padding: 10px;
+        &:hover { background-color: black; color: white; }
+    }
 }
-
+.mobile .overlay {
+    &.form, &.logo {
+        bottom: 10px; left: 10px;
+    }
+    &.panel {
+        bottom: 10px; right: 10px;
+    }
+    &.page_btn {
+        bottom: 60px;
+        &.page_next { right: 10px; }
+        &.page_prev { left: 10px; }
+    }
+}
 #social_overlay {
     z-index: #{$nav_layer + 1};
     @include border-radius(25px 25px 0px 0px);
@@ -127,21 +148,22 @@
     // height: 180px;
     &:hover { background-color: white; }
 
-    .plus_menu, .icon.add_queue {
-        position: absolute;
+    .icon.plus_menu, .icon.add_queue {
+        // position: absolute;
         // background-color: black;
-        top: 18px;
-        right: 27px;
-        margin: 0px;
+        // top: 18px;
+        // right: 27px;
+        margin: -6px 0px 0px 0px;
+        float: right;
     }
-    .icon.add_queue { right: 77px; }
+    // .icon.add_queue { right: 77px; }
     #popup_content {
         //position:absolute;
         //top: 44px;
         max-width: 980px;
         overflow-x: auto;
         margin: auto;
-        padding: 20px 0px 0px 10px;
+        padding: 20px 20px 0px 20px;
         // position: relative;
         //height: 306px;
         //overflow: auto;
@@ -173,16 +195,12 @@
         width: 430px;
         padding-right: 5px;
 
-        .title_spacer { 
-            height: 78px;
-            display: table;
-        }
+        .title_box { height: 78px; }
         .title {
-            // TODO: change to box?
-            @include calc-width("100% - 10px");
-            height: 100%;
             vertical-align: middle;
-            display: table-cell;
+            // display: table-cell;
+            max-height: 64px;
+            overflow: hidden;
         }
         .user_action_bar { 
             float: right; 
@@ -207,20 +225,15 @@
 
     .right_pane {
         display: inline-block;
-        // width: 470px;
         width: 100%;
         max-width: 522px;
 
         text-align: right;
         margin-right: 70px;
 
-        .vcenter_spacer {
-            height: 80px;
-        }
+        .tags_box { height: 78px; }
         .tag_list {
-            // text-align: center;
-            max-height: 80px;
-            overflow: hidden;
+            max-height: 78px;
         }
         .stats_bar {
             margin-top: 10px;
@@ -246,7 +259,6 @@
             }
             &.on.active {
                 background-color: $color_selected;
-                background-image: none;
             }
         }
     }
@@ -256,6 +268,7 @@
 
 }
 
+// TODO-cleanup: move this to another file
 $action: love comment republish;
 .activity {
     .feed_item {
@@ -288,7 +301,7 @@ $action: love comment republish;
             }
             .show_hover {
                 // TODO-polish: understand why this is needed.
-                width: 89px;
+                // width: 89px;
                 position: absolute;
                 right: 8px;
                 top: 5px;
@@ -355,6 +368,7 @@ $action: love comment republish;
 // TODO-cleanup: merge with &.comment above.
 #dia_comments {
     padding: 23px;
+    width: 546px;
     .title { margin-bottom: 15px; }
     .activity {
         max-height: 450px;

@@ -336,12 +336,9 @@ class TemporaryPassword(Mailer):
     template = 'emails/password_recovery'
     subject = 'Password recovery for newhive.com'
 
-    def send(self, user, recovery_link):
-        self.recipient = user
-        context = {
-            'recovery_link': recovery_link
-            , 'recipient': self.recipient
-            }
+    def send(self, users):
+        self.recipient = users[0]
+        context = { 'users': users, 'recipient': self.recipient }
         self.send_mail(context)
 
 class ExprAction(Mailer):
@@ -464,7 +461,7 @@ class Welcome(Mailer):
         user_home_url = re.sub(r'/[^/]*$', '', user_profile_url)
         context = {
             'recipient': user
-            , 'create_link' : abs_url(secure=True) + "edit"
+            , 'create_link' : abs_url(secure=True) + "/home/edit"
             , 'create_icon': self.asset('skin/1/create.png')
             , 'featured_exprs': self.db.Expr.featured(6)
             }

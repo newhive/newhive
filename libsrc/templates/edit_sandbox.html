@@ -1,0 +1,349 @@
+<div id="dynamic_group"></div>
+
+<div id="menu_group">
+<div id='dia_edit_bg' class='dialog border selected'>
+ <h2>Edit Background</h2>
+ <div id='edit_bg_image'>
+  <div id='bg_preview' class='border'><img id='bg_preview_img'></div>
+  <div id='bg_opacity_label' class='small_text'>opacity: <input id='bg_opacity'
+    type='text' size='3' value='100%'></div>
+  <label for='bg_input'><div id='bg_upload_btn'
+    class='btn black small_text rounded'>Upload Image</div></label>
+  <div id='bg_remove' class='btn black small_text rounded'>Clear</div>
+ </div>
+ <div id='color_pick' style='float : right; position : relative;'></div>
+</div>
+
+<div id='edit_nav' class='edit nav overlay'
+  ><div class='center pad'><img id='btn_undo' title='Undo' class='hoverable'
+    src='{"skin/edit/undo.png"|asset}'></div
+  ><div class='center'><img id='btn_redo' title='Redo' class='hoverable'
+    src='{asset "skin/edit/redo.png"}'></div
+  ><div class='change_zoom center'><img title='Zoom' class='hoverable'
+    src='{asset "skin/1/zoom.png"}'></div
+  ><div class='change_zoom icon hoverable'></div
+  ><div class='fluff pad'></div
+  ><div class='fluff center pad handle misc'><img title="Misc" 
+    src='{asset "skin/edit/padding.png"}'></div
+  ><div class='fluff smpad'></div
+  ><div class='fluff center hoverable text text_btn black_active' title="Editor help" id='btn_help'>?</div
+  ><div id='btn_save' class='save upper text text_btn hoverable center pad black_active'
+    >Save <div class='inline arrow'></div>
+    <img src='{asset "skin/edit/loading.gif"}' class='hide loading'
+  ></div
+></div>
+
+<div class='menu drawer medbold hide' data-handle=".handle.misc" 
+  data-menu-opts='"layout_x":"center"'>
+  {#<div class='menu_item'>
+    <img id='btn_grid' title="Show grid" src='{asset "skin/edit/grid-off.png"}'>
+  </div>#}
+  <div class='menu_item change_zoom icon hoverable'>
+    <img title='Zoom' class='hoverable' src='{asset "skin/1/zoom.png"}'>
+  </div>
+  <div class='menu_item change_padding icon hoverable'>
+    <img title='Universal snapping / padding' class='' src='{asset "skin/edit/padding.png"}'>
+  </div>
+</div>
+<div class="dialog iframe" id="dia_editor_help" data-handle="#btn_help">
+  {<defer}
+    <iframe src="{config.content_url}{config.site_user}/default-instructional"></iframe>
+  {>}
+</div>
+
+<div class='app_btns edit overlay panel'
+ ><div class='insert_text icon hoverable'></div
+ ><div class='insert_image icon hoverable'></div
+ ><div class='insert_audio icon hoverable'></div
+ ><div class='insert_embed icon hoverable'></div
+ ><div class='insert_shape icon hoverable'></div
+ ><div class='insert_file icon hoverable'></div
+></div>
+
+<div id='menu_text' class='menu drawer medbold'>
+ <div id='text_header' class='menu_item'>Header</div>
+ <div id='text_default' class='menu_item default'>Normal</div>
+</div>
+
+<div id='menu_image' class='menu drawer medbold'>
+  <div id='image_from_url' class='menu_item'>Image URL</div>
+  <div id='image_background' class='menu_item'>Background</div>
+  <label for='media_input'><div id='image_upload'
+    class='menu_item default'>Upload image</div></label>
+  <!--<div id='image_webcam' class='menu_item'>Take picture</div>
+  <div id='image_search' class='menu_item'>Google images</div>-->
+  <div id='image_embed_submenu' class='menu drawer embed'
+    data-menu-opts='"layout_x":"submenu"'
+  >
+    <form id='embed_image_form'>
+      <input type='text' id='image_embed_code' placeholder='Paste URL here...'> {# #}
+      &nbsp;&nbsp;<input
+        id='image_embed_done' type='submit'
+        class='black_btn upper embed_button' value='Enter'>
+    </form>
+  </div>
+</div>
+
+<div id='menu_audio' class='menu drawer medbold'>
+  <label for='media_input'><div id='audio_upload'
+    class='menu_item default'>Upload Audio</div>
+</div>
+
+<div id='menu_embed' class='menu drawer embed'>
+  <span class='medbold'>Embed</span><br>
+  <div class='description'>{# TODO: ui.embed_code_description #}</div>
+    <textarea id='embed_code' class='embed_box'
+      placeholder='Paste in your YouTube / Vimeo URL or embed code here.'>{# #}
+    </textarea>
+    <div style='text-align : center'><input id='embed_done' type='submit'
+      class='black_btn upper embed_button' value='Enter'></div>
+</div>
+
+<div id='menu_shape' class='menu drawer medbold'>
+  {<if flags.shapes}
+    <div class='menu_item hexagon'>Hexagon</div>
+    <div class='menu_item pentagram'>Star</div>
+  {>}
+  <div class='menu_item sketch'>Sketch</div>
+  {<if flags.shapes}
+    <div class='menu_item free_form'>Free form</div>
+    {#<div class='menu_item line'>Line</div>#}
+    <div class='menu_item triangle'>Triangle</div>
+  {>}
+  <div class='menu_item default rect'>Rectangle</div>
+</div>
+
+<div id='menu_file' class='menu drawer medbold'>
+ <label for='link_input'><div class='menu_item menu_hover default'
+   >Upload file to link</div></label>
+</div>
+</div>{# id="menu_group" #}
+
+<div id="controls_group">
+<div id='controls_common' class='controls_src'>
+ <img class='control remove tip_NE' src='{asset "skin/edit/delete_app.png"}' title='Delete'>
+ <div class='control stack'><img class='stack_up hoverable' src='{asset "skin/edit/stack_up.png"}' title='Move to front'><img class='stack_down hoverable' src='{asset "skin/edit/stack_down.png"}' title='Move to back'></div>
+ <img class='control copy tip_N' src='{asset "skin/edit/copy.png"}'
+   title='Duplicate element'>
+</div>
+
+<div id='controls_text' class='controls_src'>
+ <div class='control buttons'
+  ><img class='button link tip_W'   title='Add link' 
+    src='{asset "skin/edit/link.png"}'
+  ><img class='button fontname'     title="Font" 
+    src='{asset "skin/edit/font.png"}'
+  ><img class='button color'        title="Text color" 
+    src='{asset "skin/edit/color.png"}'
+  ><img class='button bold'         title="Bold" 
+    src='{asset "skin/edit/bold.png"}'          cmd='+bold'
+  ><img class='button italic'       title="Italic" 
+    src='{asset "skin/edit/italic.png"}'        cmd='+italic'
+  ><img class='button align'        title="Alignment" 
+    src='{asset "skin/edit/justify.png"}'  
+  ><img class='button unformat'     title="Remove formatting" 
+    src='{asset "skin/edit/unformat.png"}'      cmd='+removeFormat'
+  >
+  {# 
+  <!--<img class='button fontsize' src='{asset "skin/edit/text_size.png"}'
+  >-->
+  <!--<div class='control drawer border fontsize'
+    ><span class='option fs1' style='font-size : .75em' val = '.75'>a</span
+    > <span class='option fs2' style='font-size :   1em' val =   '1'>a</span
+    > <span class='option fs3' style='font-size : 1.5em' val = '1.5'>a</span
+    > <span class='option fs4' style='font-size :   2em' val =   '2'>a</span
+    > <span class='option fs5' style='font-size :   3em' val =   '3'>a</span
+    > <span class='option fs5' style='font-size :   5em' val =   '5'>a</span
+    > <span class='option fs5' style='font-size :   8em' val =   '8'>a</span
+  ></div
+  >-->
+  #}
+  <div class='control drawer border fontname'
+   ><div class='option' style='font-family:Helvetica'         cmd='+fontName' val='Helvetica'        >Helvetica       </div
+   ><div class='option' style='font-family:Museo'         cmd='+fontName' val='Museo'        >Museo       </div
+   ><div class='option' style='font-family:Lobster'         cmd='+fontName' val='Lobster'        >Lobster       </div
+   ><div class='option' style='font-family:Quicksand'         cmd='+fontName' val='Quicksand'        >Quicksand       </div
+   ><div class='option' style='font-family:St Ryde'         cmd='+fontName' val='St Ryde'        >St Ryde       </div
+   ><div class='option' style='font-family:BEBAS'         cmd='+fontName' val='BEBAS'        >BEBAS       </div
+   ><div class='option' style='font-family:Questrial'         cmd='+fontName' val='Questrial'        >Questrial       </div
+   ><div class='option' style='font-family:Nixie One'         cmd='+fontName' val='Nixie One'        >Nixie One       </div
+   ><div class='option' style='font-family:Bpscript'         cmd='+fontName' val='Bpscript'        >Bpscript       </div
+   ><div class='option' style='font-family:Oswald'         cmd='+fontName' val='Oswald'        >Oswald       </div
+   ><div class='option' style='font-family:Coustard'         cmd='+fontName' val='Coustard'        >Coustard       </div
+   ><div class='option' style='font-family:Clicker Script'         cmd='+fontName' val='Clicker Script'        >Clicker Script       </div
+   ><div class='option' style='font-family:Abel'         cmd='+fontName' val='Abel'        >Abel       </div
+   ><div class='option' style='font-family:Chunk Five'         cmd='+fontName' val='Chunk Five'        >Chunk Five       </div
+   ><div class='option' style='font-family:Miniver'         cmd='+fontName' val='Miniver'        >Miniver       </div
+   ><div class='option' style='font-family:Josefin Sans'         cmd='+fontName' val='Josefin Sans'        >Josefin Sans       </div
+   ><div class='option' style='font-family:Josefin Slab'         cmd='+fontName' val='Josefin Slab'        >Josefin Slab       </div
+   ><div class='option' style='font-family:CODYSTAR'         cmd='+fontName' val='CODYSTAR'        >CODYSTAR       </div
+   ><div class='option' style='font-family:Montserrat'         cmd='+fontName' val='Montserrat'        >Montserrat       </div
+   ><div class='option' style='font-family:Arvo'         cmd='+fontName' val='Arvo'        >Arvo       </div
+   ><div class='option' style='font-family:Cookie'         cmd='+fontName' val='Cookie'        >Cookie       </div
+   ><div class='option' style='font-family:Oxygen'         cmd='+fontName' val='Oxygen'        >Oxygen       </div
+   ><div class='option' style='font-family:Courier New'         cmd='+fontName' val='Courier New'        >Courier New       </div
+   ><div class='option' style='font-family:Cherry Swash'         cmd='+fontName' val='Cherry Swash'        >Cherry Swash       </div
+   ><div class='option' style='font-family:Raleway'         cmd='+fontName' val='Raleway'        >Raleway       </div
+   ><div class='option' style='font-family:Libre Baskerille'         cmd='+fontName' val='Libre Baskerille'        >Libre Baskerille       </div
+   ><div class='option longish' style='font-family:Petit Formal Script'         cmd='+fontName' val='Petit Formal Script'        >Petit Formal Script       </div
+   ><div class='option' style='font-family:Nunito'         cmd='+fontName' val='Nunito'        >Nunito       </div
+   ><div class='option' style='font-family:Flamenco'         cmd='+fontName' val='Flamenco'        >Flamenco       </div
+   ><div class='option' style='font-family:Novecento'         cmd='+fontName' val='Novecento'        >Novecento       </div
+   ><div class='option' style='font-family:BenchNine'         cmd='+fontName' val='BenchNine'        >BenchNine       </div
+   ><div class='option' style='font-family:Podkova'         cmd='+fontName' val='Podkova'        >Podkova       </div
+   ><div class='option' style='font-family:Code'         cmd='+fontName' val='Code'        >Code       </div
+   ><div class='option' style='font-family:Lane'         cmd='+fontName' val='Lane'        >Lane       </div
+   ><div class='option' style='font-family:Rokkitt'         cmd='+fontName' val='Rokkitt'        >Rokkitt       </div
+   ><div class='option' style='font-family:Special Elite'         cmd='+fontName' val='Special Elite'        >Special Elite       </div
+   ><div class='option' style='font-family:Lato'         cmd='+fontName' val='Lato'        >Lato       </div
+   ><div class='option' style='font-family:Times'         cmd='+fontName' val='Times'        >Times       </div
+   ><div class='option' style='font-family:Komika Title'         cmd='+fontName' val='Komika Title'        >Komika Title       </div
+   ><div class='option' style='font-family:Archivo Narrow'         cmd='+fontName' val='Archivo Narrow'        >Archivo Narrow       </div
+   ><div class='option' style='font-family:Lusitana'         cmd='+fontName' val='Lusitana'        >Lusitana       </div
+   ><div class='option' style='font-family:League Gothic'         cmd='+fontName' val='League Gothic'        >League Gothic       </div
+   ><div class='option' style='font-family:Open Sans'         cmd='+fontName' val='Open Sans'        >Open Sans       </div
+   ><div class='option' style='font-family:Cutive'         cmd='+fontName' val='Cutive'        >Cutive       </div
+   ><div class='option' style='font-family:Pacifico'         cmd='+fontName' val='Pacifico'        >Pacifico       </div
+  ></div
+  ><div class='control drawer border color'></div
+  ><div class='control drawer border align'
+   ><div><nobr
+    ><img class='option small hoverable'                title='Flush left'
+      src='{asset "skin/edit/justify_left.png"}'        cmd='+justifyLeft'
+    ><img class='option small hoverable'                title='Flush right'
+      src='{asset "skin/edit/justify_right.png"}'       cmd='+justifyRight'
+   ></nobr></div
+   ><div
+    ><img class='option small hoverable'                title='Centered'
+      src='{asset "skin/edit/justify_center.png"}'      cmd='+justifyCenter'
+    ><img class='option small hoverable'                title='Flush left and right'
+      src='{asset "skin/edit/justify_full.png"}'        cmd='+justifyFull'
+   ></div
+  ></div
+ ></div>
+</div>
+
+<div id='controls_image' class='controls_src'>
+ <div class='control buttons'
+  {# Link belongs in controls_misc #}
+  ><img class='button link tip_W' src='{asset "skin/edit/link.png"}' title='Link'
+  ><img class='button set_bg' src='{asset "skin/edit/fullscreen.png"}' title='Make background'
+ ></div
+></div>
+
+<div id='controls_rounding' class='controls_src'>
+  <img class='button rounding tip_N'
+    src='{asset "skin/edit/rounded_corners.png"}' title='Corner rounding'
+></div>
+
+<div id='controls_multi' class='controls_src'>
+  {<if flags.tile_multiple_images}
+    <img class='button change_aspect' title="Tile aspect" 
+      src='{asset "skin/edit/tiling-aspect.png"}'>
+    <img class='button change_padding' title="Tile padding" 
+      src='{asset "skin/edit/tiling-padding.png"}'>
+    <img class='button change_columns' title="Tile columns"
+      src='{asset "skin/edit/tiling-columns.png"}'>
+  {>}
+</div>
+
+<div id='controls_misc' class='controls_src'>
+  <img class='control drag resize hoverable tip_SE' 
+    src='{asset "skin/edit/resize.png"}' title="Resize">
+  <img class='control drag resize_h hoverable tip_E' 
+    src='{asset "skin/edit/resize_h.png"}' title="Resize">
+  <img class='control drag resize_v hoverable tip_S' 
+    src='{asset "skin/edit/resize_v.png"}' title="Resize">
+  
+  <img class='button color' src='{asset "skin/edit/color.png"}' title="Color">
+  <div class='control drawer color border'></div>
+
+  <img class='button opacity tip_N' 
+    src='{asset "skin/edit/opacity.png"}' title='Opacity'>
+  
+  <img class='button align' src='{asset "skin/edit/justify.png"}' title='Alignment'>
+  <div class='control drawer border align'>
+   <div><nobr>
+    <img class='option small hoverable'             title='Align left'
+      src='{asset "skin/edit/justify_left.png"}'      cmd='+alignLeft'>
+    <img class='option small hoverable'             title='Align right'
+      src='{asset "skin/edit/justify_right.png"}'     cmd='+alignRight'>
+   </nobr></div><div>
+    <img class='option small hoverable'             title='Center'
+      src='{asset "skin/edit/justify_center.png"}'    cmd='+alignCenter'>
+    <img class='option small hoverable'             title='Full width'
+      src='{asset "skin/edit/justify_full.png"}'      cmd='+alignFull'>
+   </div>
+  </div>
+
+  {# polygon #}
+  <img class='button blank stroke-width tip_N' src='{asset "skin/edit/border_width.png"}' title='Stroke width'
+  ><img class='button stroke tip_N' src='{asset "skin/edit/border_color.png"}' title='Stroke color'
+  ><img class='button blur tip_N' src='{asset "skin/edit/border_color.png"}' title='Gaussian blur'>
+
+  <div class='button bg run' title='Run'>&rarr;</div>
+  <div class='button bg stop' title='Stop'>&Chi;</div>
+  <div class='button bg edit' title='Edit'>&Xi;</div>
+</div>
+
+<div id='controls_sketch' class='controls_src'>
+ <div class='control buttons'
+  {#><img class='button link tip_W'     src='{asset "skin/edit/link.png"}' title='Add link'#}
+  ><img class='button fill tip_N' src='{asset "skin/edit/color.png"}' title='Fill color'
+  ><img class='button brush rounding tip_N' src='{asset "skin/edit/brush_icon.png"}' title='Brush'
+  ><img class='button eraser rounding' src='{asset "skin/edit/eraser_icon.png"}' title='Eraser'
+  ><img class='button size rounding tip_N' src='{asset "skin/edit/brush_size.png"}' title='Brush size'
+
+  ><div class='control drawer fill border'></div
+  ><div class='control drawer border brush'
+   ><div class='option' val="sketchy">sketchy</div
+   ><div class='option' val="shaded" >shaded </div
+   ><div class='option' val="chrome" >chrome </div
+   ><div class='option' val="fur"    >fur    </div
+   ><div class='option' val="longfur">longfur</div
+   ><div class='option' val="web"    >web    </div
+   ><div class='option' val="simple" >simple </div
+   ><div class='option' val="squares">squares</div
+   ><div class='option' val="ribbon" >ribbon </div
+   ><div class='option' val="circles">circles</div
+   ><div class='option' val="grid"   >grid   </div
+  ></div
+ ></div>
+</div>
+<div id='controls'></div>
+</div> {# id="controls_group" #}
+
+<div id="overlays_group">
+<div class='editor_overlay hide'>
+  <div class='inset'></div>
+</div>
+<div class="gifwall prompts centered">
+  <div class="highlight_box"><div class="highlight hide"></div></div>
+  <div class="js_vcenter">
+    <label for="media_input">
+      <div class="hint">Drag-in GIFs or click + to create your #GIFWALL.</div>
+      <img class="plus_btn hoverable" src='{asset "skin/edit/plus.png"}'>
+    </label>
+  </div>
+</div>
+</div> {# id="overlays_group" #}
+
+{# globals #}
+{# <iframe id="overlay_frame" src="http://google.com"></iframe> #}
+<div id='grid_guide'></div>
+<div id='bg' class='happfill'><img src='{expr.background.url}'
+  class='hide'></div>
+<div id='happs'></div>
+
+<form {form_attrs "file_create"} method='POST' id='media_upload'>
+  <input type='file' id='media_input' name='files'
+    data-drop-area='#grid_guide,.prompts' multiple>
+</form>
+
+<form {form_attrs "file_create"} method='POST' class='hide' id='bg_upload'>
+  <input type='file' id='bg_input' name='files' accept='image/*'>
+</form>
+
+<form {form_attrs "file_create"} method='POST' class='hide' id='link_upload'>
+  <input type='file' id='link_input' name='files'>
+</form>

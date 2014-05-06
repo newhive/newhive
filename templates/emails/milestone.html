@@ -7,7 +7,8 @@
             <h1>{{ milestone | large_number }}</h1>
         </td>
         <td>
-            <img src="{{ server_url }}lib/skin/nav/views_lg.png">
+            <img src="{{ 'skin/nav/views-lg.png'
+              |asset_url(abs=True, http=True) }}">
         </td>
     </tr></table>
     <h3>

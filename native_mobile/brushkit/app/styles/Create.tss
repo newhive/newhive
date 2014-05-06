@@ -1,0 +1,43 @@
+"#create_window": {
+	layout:"composite"
+}
+
+"#logo": {
+	top:"40dp"
+}
+
+"#label_create": {
+	top:"42%",
+	font: {fontSize:'20dp', fontWeight:'bold'},
+	textAlign: Ti.UI.TEXT_ALIGNMENT_CENTER
+
+}
+
+"#select": {
+	width: "50%",
+	height:"12.5%",
+	left:"0dp",
+	bottom:"0dp",
+	color:"#000000",
+	borderColor:"#3e3e3e",
+	borderWidth: "1dp",
+	backgroundColor: "#aef0e8",
+	font: {
+		fontSize: "20dp",
+		fontWeight: "bold"
+	}
+}
+"#take": {
+	width: "50%",
+	height:"12.5%",
+	right:"0dp",	
+	bottom:"0dp",
+	color:"#000000",
+	borderColor:"#3e3e3e",
+	borderWidth: "1dp",
+	backgroundColor: "#aef0e8",
+	font: {
+		fontSize: "20dp",
+		fontWeight: "bold"
+	}
+}

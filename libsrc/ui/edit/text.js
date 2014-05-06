@@ -22,9 +22,21 @@ var Text = o = {};
 o.Text = function(o) {
     hive_app.App.has_resize(o);
     hive_app.App.has_resize_h(o);
+    hive_app.App.has_opacity(o);
     hive_app.App.has_shield(o, {auto: false});
     // for now, having internal and external alignment is too weird.
     o.has_align = false;  
+
+    // When this app is multiselected, have color act on all foreground text
+    o.color = function() { return o.div.find("font").css("color") }
+    o.color_set = function(v) { 
+        // o.div.find("font").css("color", v)
+        o.rte.makeEditable()
+        o.rte.focusAndPlaceCursorAtStart()
+        document.execCommand('selectAll');
+        o.rte.exec_command('+foreColor', v) 
+        o.rte.focusAndPlaceCursorAtStart()
+    }
 
     o.get_aspect = function() {
         var dims = o.dims();
@@ -71,17 +83,17 @@ o.Text = function(o) {
     o.focus.add(function(){
         o.refresh_size();
         o.edit_mode(true);
+        o.div.removeClass('drag')
     });
     o.unfocus.add(function(){
         o.edit_mode(false);
+        o.div.addClass('drag')
     });
 
-    o.link = function(v) {
-        if(typeof(v) == 'undefined') return o.rte.get_link();
-        //if(!v) o.rte.edit('unlink');
-        //else o.rte.make_link(v);
-        o.rte.make_link(v);
-    };
+    o.link = function(){
+        return o.rte.get_link(); }
+    o.link_set = function(v){
+        o.rte.make_link(v) }
 
     o.calcWidth = function() {
         return o.content_element.width();
@@ -92,6 +104,8 @@ o.Text = function(o) {
 
     o.refresh_size = function() {
         o.resize_h([o.calcWidth(), o.dims()[1]]);
+        if (env.Selection.selected(o)) 
+            env.Selection.update_relative_coords();
     };
 
     hive_app.has_scale(o);
@@ -112,11 +126,23 @@ o.Text = function(o) {
     }
     var _dims_relative_set = o.dims_relative_set;
     o.dims_relative_set = function(dims) {
+        var old_dims = o.dims_relative();
         _dims_relative_set(dims);
-        if (!dims_ref) return;
+        if (!o.initialized) return;
+        if (dims[1] == old_dims[1]) {
+            // Horizontal resize limited by content element.
+            dims = dims.slice();
+            dims[0] = Math.max(dims[0], o.calcWidth() / env.scale());
+            _dims_relative_set(dims);
+            return;
+        }
 
-        var scale_by = o.dims()[0] / dims_ref[0];
-        o.scale_set(scale_ref * scale_by);
+        if (!dims_ref) return
+        var new_scale = scale_ref * o.dims()[0] / dims_ref[0];
+        o.scale_set(new_scale);
+
+        // should not scale for resize_h
+        // new_scale = o.scale() * o.dims_relative()[0] / old_dims[0];
     }
     
     var _load = o.load;
@@ -139,15 +165,18 @@ o.Text = function(o) {
     };
 
     function controls(o) {
-        var common = $.extend({}, o), d = o.div;
+        var d = o.div;
+        // These controls can only ever apply to a single app.
+        if (!o.single()) return
+        var app = o.app.sel_app();
 
         o.addControls($('#controls_text'));
 
         var link_open = function(){
-            var link = o.app.rte.get_link();
+            var link = app.rte.get_link();
         }
         o.link_menu = o.append_link_picker(d.find('.buttons'),
-                        {open: link_open, field_to_focus: o.app.content_element});
+                        {open: link_open, field_to_focus: app.content_element});
 
         var cmd_buttons = function(query, func) {
             $(query).each(function(i, e) {
@@ -160,10 +189,10 @@ o.Text = function(o) {
         o.color_picker = u.append_color_picker(
             d.find('.drawer.color'),
             function(v) {
-                o.app.rte.exec_command('+foreColor', v);
+                app.rte.exec_command('+foreColor', v);
             },
             undefined,
-            {field_to_focus: o.app.content_element, iframe: true}
+            {field_to_focus: app.content_element, iframe: true}
         );
         o.color_menu = o.hover_menu(
             d.find('.button.color'),
@@ -173,9 +202,9 @@ o.Text = function(o) {
                 open: function(){
                     // Update current color. Range should usually exist, but
                     // better to do nothing than throw error if not
-                    var range = o.app.rte.getRange();
+                    var range = app.rte.getRange();
                     if (range){
-                        var current_color = $(o.app.rte.getRange().getContainerElement()).css('color');
+                        var current_color = $(app.rte.getRange().getContainerElement()).css('color');
                         o.color_picker.set_color(current_color);
                     }
                 },
@@ -193,13 +222,8 @@ o.Text = function(o) {
             $(el).on('mousedown', function(e) {
                 e.preventDefault();
             }).click(function(){
-                o.app.rte.exec_command($(el).attr('cmd'), $(el).attr('val'));
+                app.rte.exec_command($(el).attr('cmd'), $(el).attr('val'));
             });
-        });
-
-        o.select_box.click(function(e){
-            e.stopPropagation();
-            o.app.edit_mode(false);
         });
 
         return o;

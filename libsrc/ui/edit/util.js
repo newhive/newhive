@@ -16,7 +16,7 @@ define([
     ,context
     ,colors
     ,color_picker_template
-    ,Menu
+    ,menu
     ,dialog
 
     ,env
@@ -25,8 +25,49 @@ define([
 var o = {}
     ,bound = js.bound;
 
-// TODO-refactor: move into util
-o.capitalize = function(str) { return str[0].toUpperCase() + str.slice(1); };
+// For performance-critical ops, do not use jquery style
+o.inline_style = function(el, styles) {
+    var el_style = el.style
+    $.each(styles, function(style_name, style_val) {
+        el_style[style_name] = style_val + 'px'
+    })
+}
+
+// Returns true for a pseudo-control key (control on real computers, meta on macs)
+o.is_ctrl = function(ev){
+    ev = ev || env.ev;
+    return ev && (ev.ctrlKey || ev.metaKey);
+}
+o.should_snap = function(ev) {
+    ev = ev || env.ev;
+    return !ev || !(ev.altKey);
+}
+
+// convert from pos/dims into a dict with left/right/width/height
+o.css_coords = function(el, pos, dims){
+    return el.css({ left: pos[0], top: pos[1]
+        ,width: dims[0], height: dims[1] })
+}
+
+// convert between degrees and radians
+o.rad2deg = function(angle) { return angle * (180. / Math.PI) }
+o.deg2rad = function(angle) { return angle * (Math.PI / 180.) }
+
+// rotate the given 2-vector counterclockwise (y-up) through angle radians
+o.rotate = function(pt, angle) {
+    var cos = Math.cos(angle);
+    var sin = Math.sin(angle);
+    var res = [];
+    res[0] = pt[0]*cos - pt[1]*sin;
+    res[1] = pt[1]*cos + pt[0]*sin;
+    return res;
+}
+
+// rotate the given point counterclockwise (y-up) through angle radians
+// about a particular point in 2-space
+o.rotate_about = function(pt, cent, angle) {
+    return o._add(cent)(o.rotate(o._sub(pt)(cent), angle));
+}
 
 // Return -1 if x < 0, 1 if x > 0, or 0 if x == 0.
 o._sign = function(x) {
@@ -34,37 +75,41 @@ o._sign = function(x) {
 }
 
 o._apply = function(func, scale) {
-    if (typeof(scale) == "number") {
-        return function(l) {
-            return $.map(l, function(x) { return func(scale, x); });
-        }
-    } else {
+    var scalar_functor = function(l) {
+        if (typeof(l) == "number") return func(scale, l);
+        return $.map(l, function(x) { return func(scale, x); });
+    }
+    var vector_functor = function(l) {
         // TODO: error handling?
-        return function(l) {
-            if (typeof(l) == "number") {
-                return $.map(scale, function(x, i) { return func(x, l); });
-            } else {
-                return $.map(l, function(x, i) { return func(scale[i], x); });
-            }
+        if (typeof(l) == "number") {
+            return $.map(scale, function(x, i) { return func(x, l); });
+        } else {
+            return $.map(l, function(x, i) { return func(scale[i], x); });
         }
     }
+    var variadic_functor = function(s) {
+        return (typeof(s) == "number") ? scalar_functor : vector_functor;
+    }
+    if (arguments.length < 3)
+        return variadic_functor(scale);
+    // var accum = (scale.slice) ? scale.slice() : scale;
+    for (var i = 2; i < arguments.length; ++i) {
+        // scale = accum;
+        scale = variadic_functor(scale)(arguments[i]);
+    }
+    return scale;
 };
 
-o._mul = function(scale) {
-    return o._apply(function(x, y){ return x * y; }, scale);
-};
-o._add = function(scale) {
-    return o._apply(function(x, y){ return x + y; }, scale);
-};
-o._div = function(scale) {
-    return o._apply(function(x, y){ return x / y; }, scale);
-};
-o._sub = function(scale) {
-    return o._apply(function(a, b) { return a - b; }, scale);
-};
-o._inv = function(l){
-    return l.map(function(x){ return 1/x; });
-};
+o._mul = function(){ return o._apply.apply(null, 
+    [js.op['*']].concat(Array.prototype.slice.call(arguments, 0))) }
+o._add = function(){ return o._apply.apply(null, 
+    [js.op['+']].concat(Array.prototype.slice.call(arguments, 0))) }
+o._div = function(){ return o._apply.apply(null, 
+    [js.op['/']].concat(Array.prototype.slice.call(arguments, 0))) }
+o._sub = function(){ return o._apply.apply(null, 
+    [js.op['-']].concat(Array.prototype.slice.call(arguments, 0))) }
+o._inv = function(l){ return l.map(function(x){ return 1/x; }) }
+
 // Linear interpolation
 // Return a value that is alpha (scalar) of the way between old_val
 // and new_val.  The values can be numbers or equal-length vectors.
@@ -78,12 +123,19 @@ o._lerp = function(alpha, old_val, new_val) {
     }
 };
 
-o.max = function(array){
-    return Math.max.apply(Math, array);
-};
-o.min = function(array){
-    return Math.min.apply(Math, array);
-};
+o.points_rect = function(ps){
+    var f = {
+        x: Infinity ,width: -Infinity
+        ,y: Infinity ,height: -Infinity
+    }
+    ps.map(function(p){
+        f.x = Math.min(f.x, p[0])
+        f.width = Math.max(f.width, p[0])
+        f.y = Math.min(f.y, p[1])
+        f.height = Math.max(f.height, p[1])
+    })
+    return f
+}
 
 // Returns the nonnegative (nonoverlapping) distance btw two intervals.
 o.interval_dist = function(a, b) {
@@ -120,36 +172,284 @@ o.has_shuffle = function(arr) {
         arr.splice(to, 0, e);
     };
 };
+// Shallow array comparison
+o.array_equals = function(a, b) {
+  if (a === b) return true;
+  if (a == null || b == null) return false;
+  if (a.length != b.length) return false;
 
-o.array_unique = function(a) {
-    return a.reduce(function(p, c) {
-        if (p.indexOf(c) < 0) p.push(c);
-        return p;
-    }, []);
+  for (var i = 0; i < a.length; ++i) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+// returns the array of the nth element of every member array
+o.nth = function(array, n) {
+    return array.map(function(x) { return x[n] })
+}
+o.max = function(array){
+    return Math.max.apply(Math, array);
 };
-o.array_delete = function(arr, e) {
-    for(var n = 0; n < arr.length; n++) {
-        if(arr[n] == e) {
-            arr.splice(n, 1);
-            return true;
+o.min = function(array){
+    return Math.min.apply(Math, array);
+};
+
+// Add stable merge sort to Array and jQuery prototypes
+// Note: We wrap it in a closure so it doesn't pollute the global
+//       namespace, but we don't put it in $(document).ready, since it's
+//       not dependent on the DOM
+// http://stackoverflow.com/questions/1427608/fast-stable-sorting-algorithm-implementation-in-javascript
+(function() {
+
+  // expose to Array and jQuery
+  Array.prototype.merge_sort = jQuery.fn.merge_sort = merge_sort;
+  Object.defineProperty(Array.prototype, "merge_sort", {enumerable: false})
+  function merge_sort(compare) {
+
+    var length = this.length,
+        middle = Math.floor(length / 2);
+
+    if (!compare) {
+      compare = function(left, right) {
+        if (left < right)
+          return -1;
+        if (left == right)
+          return 0;
+        else
+          return 1;
+      };
+    }
+
+    if (length < 2)
+      return this;
+
+    return merge(
+      this.slice(0, middle).merge_sort(compare),
+      this.slice(middle, length).merge_sort(compare),
+      compare
+    );
+  }
+
+  function merge(left, right, compare) {
+
+    var result = [];
+
+    while (left.length > 0 || right.length > 0) {
+      if (left.length > 0 && right.length > 0) {
+        if (compare(left[0], right[0]) <= 0) {
+          result.push(left[0]);
+          left = left.slice(1);
+        }
+        else {
+          result.push(right[0]);
+          right = right.slice(1);
+        }
+      }
+      else if (left.length > 0) {
+        result.push(left[0]);
+        left = left.slice(1);
+      }
+      else if (right.length > 0) {
+        result.push(right[0]);
+        right = right.slice(1);
+      }
+    }
+    return result;
+  }
+})();
+
+var checkIfAllArgumentsAreArrays = function (functionArguments) {
+    for (var i = 0; i < functionArguments.length; i++) {
+        if (!(functionArguments[i] instanceof Array)) {
+            throw new Error('Every argument must be an array!');
         }
     }
-    return false;
-}
-o.array_sum = function( a, b ){
-    if (a.length != b.length) { throw "Arrays must be equal length" };
-    rv = [];
-    for (i=0; i< a.length; i++){
-        rv[i] = a[i] + b[i]
-    }
-    return rv;
 }
 
-// used for app id
+o.distinct = function (array) {
+    if (arguments.length != 1) throw new Error('There must be exactly 1 array argument!');
+    checkIfAllArgumentsAreArrays(arguments);
+
+    var result = [];
+
+    for (var i = 0; i < array.length; i++) {
+        var item = array[i];
+
+        if ($.inArray(item, result) === -1) {
+            result.push(item);
+        }
+    }
+
+    return result;
+ }
+
+ o.union = function (/* minimum 2 arrays */) {
+    if (arguments.length == 0 ) return []
+    else if (arguments.length == 1) return arguments[0];
+    checkIfAllArgumentsAreArrays(arguments);
+
+    var result = o.distinct(arguments[0]);
+
+    for (var i = 1; i < arguments.length; i++) {
+        var arrayArgument = arguments[i];
+
+        for (var j = 0; j < arrayArgument.length; j++) {
+            var item = arrayArgument[j];
+
+            if ($.inArray(item, result) === -1) {
+                result.push(item);
+            }
+        }
+    }
+
+    return result;
+ }
+
+ o.intersect = function (/* minimum 2 arrays */) {
+     if (arguments.length < 2) throw new Error('There must be minimum 2 array arguments!');
+     checkIfAllArgumentsAreArrays(arguments);
+
+     var result = [];
+     var distinctArray = o.distinct(arguments[0]);
+     if (distinctArray.length === 0) return [];
+
+     for (var i = 0; i < distinctArray.length; i++) {
+         var item = distinctArray[i];
+
+         var shouldAddToResult = true;
+
+         for (var j = 1; j < arguments.length; j++) {
+             var array2 = arguments[j];
+             if (array2.length == 0) return [];
+
+             if ($.inArray(item, array2) === -1) {
+                 shouldAddToResult = false;
+                 break;
+             }
+         }
+
+         if (shouldAddToResult) {
+             result.push(item);
+         }
+     }
+
+     return result;
+ }
+
+ o.except = function (/* minimum 2 arrays */) {
+     if (arguments.length < 2) throw new Error('There must be minimum 2 array arguments!');
+     checkIfAllArgumentsAreArrays(arguments);
+
+     var result = [];
+     var distinctArray = o.distinct(arguments[0]);
+     var otherArraysConcatenated = [];
+
+     for (var i = 1; i < arguments.length; i++) {
+         var otherArray = arguments[i];
+         otherArraysConcatenated = otherArraysConcatenated.concat(otherArray);
+     }
+
+     for (var i = 0; i < distinctArray.length; i++) {
+         var item = distinctArray[i];
+
+         if ($.inArray(item, otherArraysConcatenated) === -1) {
+             result.push(item);
+         }
+     }
+
+     return result;
+ }
+
+ // used for app id
 o.random_str = function(){ return Math.random().toString(16).slice(2); };
 
+o.polygon = function(sides){
+    js.range(sides - 1).map(function(i){
+        var a = i == 0 ? 0 : Math.PI * 2 / i
+        return [Math.cos(a), Math.sin(a)]
+    })
+}
 
 //// BEGIN-editor-refactor belongs in editor specific utils
+// Sort two apps, first by top, then by left
+o.topo_cmp = function(app1, app2) {
+    var a = app2.min_pos(), b = app1.min_pos();
+    if (a[1] != b[1])
+        return b[1] - a[1];
+    return b[0] - a[0];
+}
+o.retile = function(opts) {
+    opts = $.extend({ 
+            start_pos:env.Selection.min_pos().slice()
+            ,width:env.Selection.max_pos()[0] - env.Selection.min_pos()[0]
+        }
+        ,env.tiling, opts)
+    var apps = env.Selection.sorted()
+    env.History.change_start(apps)
+    env.Apps.begin_layout()
+    if (opts.natural) {
+        opts.aspects = apps.map(function(a) { return a.aspect || a.get_aspect() })
+    } else {
+        opts.aspects = apps.map(function(a) { return a.get_aspect() })
+    }
+    var regions = o.tile_magic(apps.length, opts)
+    for (var i = 0; i < apps.length; ++i) {
+        var app = apps[i]
+        if (opts.natural && app.aspect) {
+            if (app.init_state.scale_x)
+                app.init_state.scale_x = 1
+            app.fit_to({pos:regions[i][0], dims:regions[i][1]
+                , scaled:[app.aspect,1]})
+        } else {
+            app.pos_relative_set(regions[i][0])
+            app.dims_relative_set(regions[i][1])
+        }
+        if (app.recenter) app.recenter()
+    }
+    env.Apps.end_layout()
+    env.Selection.update_relative_coords();
+    env.History.change_end("retile", {collapse: true})
+}
+// return an ordered list of count [pos, dims] pairs to tile
+o.tile_magic = function(count, opts) {
+    opts = $.extend({
+        columns:3               // max columns in any row
+        ,width:1000             // width to fill
+        ,aspect:1.61            // preferred aspect ratio of elements
+        ,padding:env.padding()  // padding between elements
+        ,start_pos: [0, 0]      // where to position the 0th element
+        ,aspects:[]             // list of aspects for each object
+    }, opts)
+    var max_columns = opts.columns, row_width = opts.width, aspect = opts.aspect
+        ,padding = opts.padding, start_pos = opts.start_pos
+        ,rows = Math.ceil(count / max_columns), pos = start_pos.slice()
+        ,remainder = count, mod = count / rows, surplus = 0
+        ,res = [], n = 0
+    for (var y = 0; y < rows; ++y) {
+        surplus += mod
+        var columns = Math.round(surplus)
+            ,total_pad = (columns - 1)*padding
+            ,total_width = (row_width - total_pad)
+            ,dims = [aspect, 1]
+            ,first_n = n, row_aspect = 0
+        for (var x = 0; x < columns; ++x) {
+            var new_aspect = opts.aspects[n++] || aspect
+            row_aspect += new_aspect
+        }
+        dims[1] = total_width / row_aspect
+        n = first_n
+        for (var x = 0; x < columns; ++x) {
+            var new_aspect = opts.aspects[n++] || aspect
+            dims[0] = dims[1] * new_aspect
+            res.push([pos.slice(), dims.slice()])
+            pos[0] += dims[0] + padding
+        }
+        pos[0] = start_pos[0]
+        pos[1] += dims[1] + padding
+        surplus -= columns
+    }
+    return res
+}
 o.region_from_app = function(app) {
     var min_pos = app.min_pos(), max_pos = app.max_pos();
     return { left: min_pos[0], right: max_pos[0],
@@ -190,9 +490,18 @@ o.app_bounds = function(elements) {
     };
 };
 
+// Ensure that the given point is viewable in the scroll range
+o.scroll_to_view = function(pt) {
+    var $body = $("body"), top = $body.scrollTop(), bottom = top + $body.height()
+    if (pt[1] < top)
+        $body.scrollTop(pt[1])
+    else if (pt[1] > bottom)
+        $body.scrollTop(pt[1] - (bottom - top))
+}
+
 // wrappers
 o.hover_menu = function(handle, drawer, opts){
-    return Menu(handle, drawer, $.extend({ auto_height: false }, opts));
+    return menu(handle, drawer, $.extend({ auto_height: false }, opts));
 };
 o.show_dialog = function(jq, opts){
     var d = dialog.create(jq, opts);
@@ -303,10 +612,26 @@ o.new_file = function(files, opts, app_opts, filter) {
     // TODO-feature: depending on type and number of files, create grouping of
     // media objects. Multiple audio files should be assembled into a play
     // list. Multiple images should be placed in a table, or slide-show
-
-    return $.map(files, function(file, i){
+    env.History.begin();
+    if (context.flags.tile_multiple_images && files.length > 1) {
+        var gutter = 20, width = 1000-2*gutter, columns = 3.5, padding = env.padding()
+        if (opts.dimensions) width = opts.dimensions[0]
+        columns = Math.max(1, columns * width / 1000)
+        var start_pos = opts.position || 
+            [gutter, Math.max(0, o.app_bounds(env.Apps.all()).bottom) + padding]
+        var regions = o.tile_magic(files.length, {start_pos:start_pos, columns:columns
+            ,aspect: 1.61, width:width, padding:padding 
+        })
+    }
+    var loaded_count = 0;
+    var apps = $.map(files, function(file, i){
         var app = $.extend({ file_name: file.name, file_id: file.id,
             file_meta: file.meta }, opts);
+        if (regions) {
+            app.position = regions[i][0]
+            app.dimensions = regions[i][1]
+            app.fit = 2
+        }
 
         // TODO: html files should just be saved on s3 and inserted as an <iframe>
         // if(file.mime.match(/text\/html/)){
@@ -333,22 +658,58 @@ o.new_file = function(files, opts, app_opts, filter) {
             // app.read_only = true;
         }
         app.url = file.url;
+        app.file_name = file.name
+
         if (filter && !filter(app))
             return;
 
-        return env.new_app(app, $.extend({ offset: [20*i, 20*i] }, app_opts) );
+        loaded_count++;
+        var loaded = function() {
+            if (!--loaded_count) {
+                env.Selection.update(apps)
+                if (context.flags.tile_multiple_images && files.length > 1)
+                    o.retile({natural:1})//, start_pos:start_pos})
+                env.Selection.scroll_to_view();
+            }
+        }
+        if (!context.flags.tile_multiple_images)
+            return env.new_app(app, $.extend({ offset: [20*i, 20*i], load:loaded }, app_opts) );
+        else
+            return env.new_app(app, $.extend({no_select:true, load:loaded}, app_opts) );
     });
-
-    return false;
+    env.History.group('create');
+    env.Selection.update(apps);
+    if (regions)
+        env.Selection.scroll_to_view();
+    return apps;
 };
 
 env.layout_apps = o.layout_apps = function(){
     env.scale_set();
     $.map(env.Apps, function(a){ a.layout() });
-    if(env.Selection.controls) env.Selection.controls.layout();
-    var height = Math.max(0, o.app_bounds(env.Apps.all()).bottom) * env.scale();
-    $(".prompts").css("top", height);
-    $(".prompts .highlight_box").css("width", 100*env.zoom() + "%");
+    // handled by App.layout
+    // if(env.Selection.controls) env.Selection.controls.layout();
+
+    var zoom = 100*env.zoom();
+    var padding_left = (zoom == 100) ? "30px" : zoom + "%";
+    var padding_right = (zoom == 100) ? "30px" : "20px";
+    $(".prompts .js_vcenter").css("padding-left", padding_left)
+        .css("padding-right", padding_right);
+    $(".prompts .highlight_box").css("width", zoom + "%");
+
+    var min_height = 2*160 + $(".prompts .js_vcenter").height();
+    var top = Math.max(0, o.app_bounds(env.Apps.all()).bottom) * env.scale();
+    var bottom = Math.max(top + min_height, $(window).height());
+    var margin = (bottom - top - $(".prompts .js_vcenter").height()) / 2;
+    $(".prompts").css("top", top).height(bottom - top);
+    $(".prompts .js_vcenter").css("margin-top", margin);
+
+    // Set #happs to take the full scroll dimensions of the window.
+    // Need to set to 0 first to allow for shrinking dimensions.
+    // drag_base is no longer #happs
+    // var body = $("body")[0];
+    // $("#happs").height(0).height(body.scrollHeight)
+    //     .width(0).width(body.scrollWidth);
 };
 
 o.snap_helper = function(my_tuple, opts) {
@@ -362,14 +723,14 @@ o.snap_helper = function(my_tuple, opts) {
         snap_radius: 10,        // Snap at most this far away
         sensitivity: 0,         // Exponent for falloff in the dimension of snap 
                                 // (makes it not snap far away)
-        padding: 10,            // Editor units to add to object snapping against each other
+        padding: env.padding(), // Editor units to add to object snapping against each other
         guide_0: true,          // show horizontal guide
         guide_1: true,          // show vertical guide
     }, opts );
     var s = env.scale(),
         exclude_ids = opts.exclude_ids,
         snap_strength = opts.snap_strength,
-        snap_radius = opts.snap_radius,
+        snap_radius = opts.snap_radius * env.padding()/10.,
         sensitivity = opts.sensitivity,
         padding = opts.padding,
         pos = [], show_guide = [];
@@ -390,6 +751,8 @@ o.snap_helper = function(my_tuple, opts) {
             break;
     }
     var tuple = [[],[]], new_pos = pos.slice();
+    if (snap_radius < 0.5)
+        return new_pos;
     // TODO-perf: save this array only after drag/drop
     // And keep it sorted
     var apps = env.Apps.all().filter(function(app) {
@@ -560,8 +923,17 @@ o.append_color_picker = function(container, callback, init_color, opts){
         manual_input = div.find('.color_input'),
         pickers = div.find('.color_select');
 
-    var to_rgb = function(c) {
-        return $.map($('<div>').css('color', c).css('color')
+    var color_probe = $('#color_probe'), color_probe_0 = $('<div>')
+    if(!color_probe.length)
+        color_probe = $("<div id='color_probe'>").appendTo('body')
+    var normalize = function(c){
+        return color_probe_0.css('color', '').css('color', c).css('color') }
+    var to_rgb = function(c){
+        if (c.length == 3) return c;
+        var c = normalize(c)
+        if(!c) return
+        // this handles color names like "blue"
+        return $.map(getComputedStyle(color_probe.css('color', c)[0]).color
             .replace(/[^\d,]/g,'').split(','), function(v){ return parseInt(v) });
     }, to_hex = function(color){
         if (typeof(color) == "string") color = to_rgb(color);
@@ -581,12 +953,14 @@ o.append_color_picker = function(container, callback, init_color, opts){
         }).on('mousedown', function(e){ e.preventDefault()});
     });
 
-    var hex_changed = false;
     o.update_hex = function() {
-        if (!hex_changed) return;
-        hex_changed = false;
         var v = manual_input.val();
-        var c = $('<div>').css('color', v).css('color');
+        var c = normalize(v)
+        if(!c){
+            c = normalize('#'+v)
+            if(!c) return
+        }
+        o.set_color(c, true)
         callback(c, to_rgb(c));
     };
 
@@ -597,12 +971,23 @@ o.append_color_picker = function(container, callback, init_color, opts){
         shades.css('background-color', 'rgb(' + hsvToRgb(hsv[0], 1, 1).join(',') + ')');
         calc_color();
     };
+    div.bind('mousewheel', function(e){
+        // initialize()
+        var amt = e.originalEvent.wheelDelta / 40
+        if(!amt) return
+        hsv[0] = js.bound(hsv[0] + amt/100, 0, 1)
+        var c = calc_color()
+        o.set_color(c);
 
-    o.set_color = function(color){
+        e.preventDefault()
+    })
+
+
+    o.set_color = function(color, manual){
         var rgb = to_rgb(color);
         hsv = rgbToHsv(rgb[0], rgb[1], rgb[2]);
         shades.css('background-color', 'rgb(' + hsvToRgb(hsv[0], 1, 1).join(',') + ')');
-        manual_input.val(to_hex(color));
+        if(rgb && !manual) manual_input.val(to_hex(color));
     };
 
     var get_shade = function(e) {
@@ -616,6 +1001,7 @@ o.append_color_picker = function(container, callback, init_color, opts){
         var hex = to_hex(color);
         manual_input.val(hex);
         callback(hex, color);
+        return color;
     }
 
     function hsvToRgb(h, s, v){
@@ -665,13 +1051,7 @@ o.append_color_picker = function(container, callback, init_color, opts){
     bar.click(get_hue).drag(get_hue);
     o.set_color(init_color);
 
-    // Prevent unwanted nudging of app when moving cursor in manual_input
-    manual_input.on('mousedown keydown', function(e){
-        hex_changed = true;
-        e.stopPropagation();
-    });
-
-    manual_input.blur(o.update_hex).keypress(function(e){
+    manual_input.on('keyup input paste', function(e){
         if(e.keyCode == 13) {
             if (opts && opts.field_to_focus){
                 opts.field_to_focus.focus();
@@ -679,6 +1059,7 @@ o.append_color_picker = function(container, callback, init_color, opts){
                 manual_input.blur();
             }
         }
+        o.update_hex()
     });
 
     // if (opts.iframe){
@@ -690,6 +1071,11 @@ o.append_color_picker = function(container, callback, init_color, opts){
     return o;
 };
 
+var cursor_name
+o.cursor_set = function(name){
+    env.apps_e.add('#grid_guide').removeClass(cursor_name).addClass(name)
+    cursor_name = name
+}
 //// END-editor-refactor
 
 
@@ -702,21 +1088,6 @@ o.sel = function(n) {
 }
 
 o.foc = function(n){ env.Selection.update([env.Apps[n]]) };
-
-o.rect_test = function(w, h){
-    if(!w) w = 20;
-    if(!h) h = 20;
-    js.range(w).map(function(x){
-        js.range(h).map(function(y){
-            Hive.App({
-                position: [x*50, y*50],
-                dimensions: [48, 48],
-                type: 'hive.rectangle',
-                content: {color:colors[(x+y)%36]}
-            })
-        })
-    });
-};
 
 // Rejigger the selected elements into their "best"
 // snapped positions (and sizes TBD)
@@ -754,12 +1125,12 @@ o.debug = function(a){
 
 o.remove_all_apps = function() {
     // store a copy of Apps so we can destructively update it
-    var aps = $.map(hive_app.Apps, id); 
+    var apps = $.map(hive_app.Apps, id); 
     $.map(apps, function(a) { a.remove() });
 };
 
 //// END-debugging
-
+env.util = o
 return o;
 
 });
