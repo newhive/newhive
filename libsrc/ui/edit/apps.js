@@ -1321,6 +1321,10 @@ Hive.App.Polygon = function(o){
     js.setdefault(state.style, style)
     var points = state.points
 
+    o.get_aspect = function() { 
+        var dims = o.dims_relative(); 
+        return dims[0]/dims[1]
+    }
     o.points = function(){ return points.slice() }
     o.points_len = function(){ return points.length }
     o.point_insert = function(index){
