@@ -289,6 +289,9 @@ Hive.init_global_handlers = function(){
         var expr = Hive.state();
         Hive.send({save_dialog: 1})
     })
+    // Prevent hidden forms from stealing focus 
+    // (fixes ctrl-a going to client, and doing native select-all)
+    $("input[readonly]").on("focus",function(e){ $(this).blur() })
 };
 
 Hive.receive = function(ev){

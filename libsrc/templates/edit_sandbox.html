@@ -336,14 +336,14 @@
 <div id='happs'></div>
 
 <form {form_attrs "file_create"} method='POST' id='media_upload'>
-  <input type='file' id='media_input' name='files'
+  <input readonly type='file' id='media_input' name='files'
     data-drop-area='#grid_guide,.prompts' multiple>
 </form>
 
 <form {form_attrs "file_create"} method='POST' class='hide' id='bg_upload'>
-  <input type='file' id='bg_input' name='files' accept='image/*'>
+  <input readonly type='file' id='bg_input' name='files' accept='image/*'>
 </form>
 
 <form {form_attrs "file_create"} method='POST' class='hide' id='link_upload'>
-  <input type='file' id='link_input' name='files'>
+  <input readonly type='file' id='link_input' name='files'>
 </form>
