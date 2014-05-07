@@ -374,7 +374,7 @@ o.polygon = function(sides){
 // Sort two apps, first by top, then by left
 o.topo_cmp = function(app1, app2) {
     var a = app2.min_pos(), b = app1.min_pos();
-    if (a[1] != b[1])
+    if (Math.abs(a[1] - b[1]) > 0.5)
         return b[1] - a[1];
     return b[0] - a[0];
 }

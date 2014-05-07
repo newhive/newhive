@@ -454,13 +454,11 @@ Hive.App = function(init_state, opts) {
         return corners;
     }
     o.max_pos = function() {
-        // return o._max_pos();
         var c = o.pts();
-        return [Math.max.apply(null, u.nth(c, 0)), 
+        return [Math.max.apply(null, u.nth(c, 0)),
                 Math.max.apply(null, u.nth(c, 1))];
     }
     o.min_pos = function() {
-        // return o._min_pos();
         var c = o.pts();
         return [Math.min.apply(null, u.nth(c, 0)), 
                 Math.min.apply(null, u.nth(c, 1))];
@@ -1285,13 +1283,11 @@ Hive.App.has_ctrl_points = function(o){
             })
         }
 
-        var dragging
         js.range(app.points_len()).map(function(i){
             p_els[i] = $('<div>')
                 .addClass('control point')
                 .appendTo(o.fixed_div)
                 .on('dragstart', function(ev){
-                    dragging = true
                     app.transform_start(i)
                     env.Selection.hide_controls()
                     ev.stopPropagation()
@@ -1301,16 +1297,10 @@ Hive.App.has_ctrl_points = function(o){
                     app.point_move(i, delta)
                 })
                 .on('dragend', function(ev){
-                    dragging = false
                     env.Selection.show_controls()
                     ev.stopPropagation()
                 })
         })
-
-        app.mouseup = function(ev){
-            if(dragging)
-                ev.stopPropagation()
-        }
     })
     o.make_controls[o.make_controls.length - 1].single = true;
 }
@@ -1329,6 +1319,10 @@ Hive.App.Polygon = function(o){
     js.setdefault(state.style, style)
     var points = state.points
 
+    o.get_aspect = function() { 
+        var dims = o.dims_relative(); 
+        return dims[0]/dims[1]
+    }
     o.points = function(){ return points.slice() }
     o.points_len = function(){ return points.length }
     o.point_insert = function(index){
@@ -1364,8 +1358,31 @@ Hive.App.Polygon = function(o){
         var off = state.style['stroke-width'] / 2 + o.blur() * 1.5
         return [off, off]
     }
+    var _min_pos = o.min_pos, _max_pos = o.max_pos
+    o.min_pos = function() {
+        return u._sub(_min_pos(), o.point_offset())
+    }
+    o.max_pos = function() {
+        return u._add(_max_pos(), o.point_offset())
+    }
     // TODO-polish-polygon-transform: make a version of reframe
     // that doesn't change coords, for use during transformations
+    o.repoint = function(display_only){
+        var  old_points = points//(display_only ? points : ref_points)
+            ,f = u.points_rect(old_points)
+
+        var  pad = o.point_offset()
+            ,points_delta = u._add(pad)([-f.x, -f.y])
+            ,old_bounds = [f.width - f.x, f.height - f.y]
+            ,new_dims = u._sub(o.dims_relative(), u._mul(pad, 2))
+            ,dims_ratio = u._div(new_dims, old_bounds)
+            ,new_off = u._sub( pad, u._mul([f.x, f.y], dims_ratio) )
+
+        old_points.map(function(p, i){
+            o.point_update(i, u._add(u._mul(p, dims_ratio), new_off))
+        })
+    }
+
     o.reframe = function(display_only){
         var  old_points = (display_only ? points : ref_points)
             ,f = u.points_rect(old_points)
@@ -1390,6 +1407,7 @@ Hive.App.Polygon = function(o){
             o.pos_relative_set(new_pos)
             o.dims_relative_set(new_dims)
         }
+        // ref_dims = undefined
     }
     var ref_point = [0,0] ,ref_points ,ref_pos ,ref_dims
         ,ref_center ,ref_stroke_width
@@ -1434,38 +1452,25 @@ Hive.App.Polygon = function(o){
         if(s.points) o.points_set(s.points)
     }
 
-    o.add_to('resize_start', function(){
-        o.transform_start(0)
-    })
-    var _resize = o.resize, _resize_end = o.resize_end
-    o.resize = function(delta){
-        var dims = _resize(delta)
-        scale = u._div(dims)(ref_dims)
-        ref_points.map(function(p, i){
-            o.point_update(i, u._mul(p)(scale))
-        })
-        o.size_update(o.dims_relative())
-    }
-    o.resize_end = function(skip_history){
-        _resize_end(skip_history)
-        scale = u._div(o.dims_relative())(ref_dims)
-        ref_points.map(function(p, i){
-            o.point_update(i, u._mul(p)(scale))
-        })
-        o.size_update(o.dims_relative())
-
-        o.transform_start(0)
-        o.reframe()
+    var _dims_relative_set = o.dims_relative_set
+    o.dims_relative_set = function(dims) {
+        _dims_relative_set(dims)
+        o.size_update(dims)
+        o.repoint()
     }
 
     // TODO-cleanup: these functions belong in App
     o.set_css = function(props, no_reframe) {
-        poly_el.css(props)
         $.extend(state.style, props);
         var restroke = (typeof props['stroke-width'] != 'undefined')
         if(restroke){
             var v = parseInt(props['stroke-width'])
             if(!v) v = 0
+            dims = o.dims_relative()
+            props['stroke-width'] = Math.min(v, .5*dims[0], .5*dims[1])
+        }
+        poly_el.css(props)
+        if(restroke){
             o.transform_start(0)
             o.reframe(true)
         }
@@ -1495,10 +1500,11 @@ Hive.App.Polygon = function(o){
 
     o.make_controls.push(function(o){
         o.addButtons($('#controls_path'));
-        var app = o.single()
+        var app = o.app
         app.stroke_update(app.stroke_width())
     });
     o.make_controls[o.make_controls.length - 1].single = true;
+    o.make_controls[o.make_controls.length - 1].display_order = 9;
     
     Hive.App.has_stroke_width(o)
     Hive.App.has_color(o, "stroke");
@@ -1511,7 +1517,7 @@ Hive.App.Polygon = function(o){
         ref_points.map(function(p, i){
             o.point_update(i, u.rotate_about(p, ref_center, u.deg2rad(a)))
         })
-        // o.reframe(true)
+        o.reframe(true)
     }
     o.rotate_end = function(){
         o.transform_start(0)
@@ -1523,14 +1529,13 @@ Hive.App.Polygon = function(o){
     o.stroke_width = o.css_getter('stroke-width')
     o.stroke_width_set = o.css_setter('stroke-width')
     o.stroke_update = function(v){
-        var stroke_ctrl = o.controls.div.find('.button.stroke')
+        var stroke_ctrl = env.Selection.controls.div.find('.button.stroke')
         stroke_ctrl.showhide(v)
     }
     Hive.App.has_opacity(o)
 
     if(!points.length)
         points.push.apply(points, [ [0, 0], [50, 100], [100, 0] ])
-    o.dims_relative_set(o.init_state.dimensions || [100, 100])
     o.div.addClass('svg')
     o.content_element = $("<svg xmlns='http://www.w3.org/2000/svg'"
         + " class='drag content' viewbox='0 0 100 100'"
@@ -1543,6 +1548,8 @@ Hive.App.Polygon = function(o){
     poly_el.attr('points', points.map(function(p){ return p[0]+','+p[1] })
         .join(' '))
     blur_el = o.content_element.find('feGaussianBlur')
+
+    o.dims_relative_set(o.init_state.dimensions || [100, 100])
     o.set_css(state.style)
     o.blur_set(o.blur())
     o.transform_start(0)
