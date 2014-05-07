@@ -610,7 +610,7 @@ Hive.App = function(init_state, opts) {
 
     // initialize
 
-    o.div = $('<div class="happ drag">').appendTo(env.apps_e);
+    o.div = $('<div class="happ drag">').appendTo(env.apps_e).attr('id', o.id);
     if (o.init_state.client_data) 
         o.div.data(o.init_state.client_data)
     o.css_class_set(o.css_class())
