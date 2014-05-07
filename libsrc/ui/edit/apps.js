@@ -1417,7 +1417,7 @@ Hive.App.Polygon = function(o){
         ref_pos = o.pos_relative()
         ref_dims = o.dims_relative()
         ref_center = u._sub(o.centroid_relative())(ref_pos)
-        ref_stroke_width = o.stroke_width()
+        ref_stroke_width = o.border_width()
     }
     o.point_update = function(i, p, display_only){
         if(!display_only) points[i] = p.slice()
@@ -1498,15 +1498,7 @@ Hive.App.Polygon = function(o){
         o.reframe(true)
     }
 
-    o.make_controls.push(function(o){
-        o.addButtons($('#controls_path'));
-        var app = o.app
-        app.stroke_update(app.stroke_width())
-    });
-    o.make_controls[o.make_controls.length - 1].single = true;
-    o.make_controls[o.make_controls.length - 1].display_order = 9;
-    
-    Hive.App.has_stroke_width(o)
+    Hive.App.has_border_width(o) //, {slider_opts:{max:100}})
     Hive.App.has_color(o, "stroke");
     Hive.App.has_blur(o)
     Hive.App.has_rotate(o)
@@ -1526,8 +1518,8 @@ Hive.App.Polygon = function(o){
     Hive.App.has_color(o)
     Hive.App.has_color(o, 'stroke')
     var history_point
-    o.stroke_width = o.css_getter('stroke-width')
-    o.stroke_width_set = o.css_setter('stroke-width')
+    o.border_width = o.css_getter('stroke-width')
+    o.border_width_set = o.css_setter('stroke-width')
     o.stroke_update = function(v){
         var stroke_ctrl = env.Selection.controls.div.find('.button.stroke')
         stroke_ctrl.showhide(v)
@@ -2669,40 +2661,29 @@ Hive.App.has_opacity = function(o) {
             o.opacity_set(opacity);
     });
 };
-Hive.App.has_border_width = function(o) {
+// opts.name: function to call to get the value
+// opts.setter: function to call to set the value
+// opts.slider_opts: options to pass to slider
+Hive.App.has_border_width = function(o, opts) {
+    opts = $.extend({name:"border_width"}, opts)
     var history_point, sel = env.Selection
-    var name = "border_width"
-    if (!o[name]) o[name] = o['g' + name]
-    if (!o[name + "_set"]) o[name + "_set"] = o['g' + name + "_set"]
+        ,getter = opts.name, setter = opts.setter || getter + "_set"
+    // If getter/setter undefined, default to globals
+    if (!o[getter]) o[getter] = o['g' + getter]
+    if (!o[setter]) o[setter] = o['g' + setter]
 
     Hive.App.has_slider_menu(o, '.stroke-width'
         ,function(v){
-            sel.border_width_set(v)
+            sel[setter](v)
         }
         ,sel.border_width
         ,function(){ history_point = env.History.saver(
-            sel.border_width, sel.border_width_set, 'stroke') }
+            sel[getter], sel[setter], 'stroke') }
         ,function(){
             history_point.save()
             sel.reframe()
         }
-        ,{max:20, quant:1}
-    )
-}
-Hive.App.has_stroke_width = function(o) {
-    var history_point, sel = env.Selection
-    Hive.App.has_slider_menu(o, '.stroke-width'
-        ,function(v){
-            sel.stroke_update(v)
-            sel.stroke_width_set(v)
-        }
-        ,sel.stroke_width
-        ,function(){ history_point = env.History.saver(
-            sel.stroke_width, sel.stroke_width_set, 'stroke') }
-        ,function(){
-            history_point.save()
-            sel.reframe()
-        }
+        ,$.extend({max:40, quant:1, handle_name: getter}, opts.slider_opts)
     )
 }
 Hive.App.has_blur = function(o) {
