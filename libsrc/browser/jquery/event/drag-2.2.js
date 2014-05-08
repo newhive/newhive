@@ -194,7 +194,10 @@ drag = $special.drag = {
 			case 'mousemove':
 				if ( dd.dragging ){
 					// trigger "drag"		
-					drag.hijack( event, "drag", dd );
+					if(!event.which) // drag ended outside window
+						drag.hijack( event, "dragend", dd );
+					else
+						drag.hijack( event, "drag", dd );
 					if ( dd.propagates ){
 						// manage drop events
 						if ( dd.drop !== false && $special.drop )
@@ -204,8 +207,8 @@ drag = $special.drag = {
 					event.type = "mouseup"; // helps "drop" handler behave
 				}
 			// mouseup, stop dragging
-			case 'touchend': 
-			case 'mouseup': 
+			case 'touchend':
+			case 'mouseup':
 			default:
 				if ( drag.touched )
 					$event.remove( drag.touched, "touchmove touchend", drag.handler ); // remove touch events

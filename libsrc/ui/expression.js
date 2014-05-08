@@ -161,7 +161,7 @@ define([
 
     // called from script element generated from
     // python newhive.controller.expr.html_for_app for each code app
-    var code_srcs = [], code_modules = [], animate_go = 1
+    var code_srcs = [], code_modules = [], animate_go
     o.load_code = function(code_src){
         code_srcs.push(code_src) }
 
@@ -170,6 +170,7 @@ define([
     
         code_module.run && code_module.run()
         if(!code_module.animate) return
+        animate_go = 1
         var animate_frame = function(){
             code_module.animate()
             // TODO-compat: if requestAnimationFrame not supported,
