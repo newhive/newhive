@@ -945,6 +945,7 @@ Hive.registerApp(Hive.App.Code, 'hive.code')
 
 Hive.App.Image = function(o) {
     o.is_image = true;
+    // o.fixed_aspect = true;
     o.has_crop = false;
     Hive.App.has_resize(o);
     // TODO-cleanup: aspects should be y/x
@@ -2195,6 +2196,8 @@ Hive.App.has_resize = function(o) {
         dims = u._div(dims)(env.scale());
         // everything past this point is in editor space.
         var aspect = o.get_aspect();
+        if (!o.fixed_aspect && env.ev.shiftKey)
+            aspect = false
 
         if (aspect) {
             var newWidth = dims[1] * aspect;

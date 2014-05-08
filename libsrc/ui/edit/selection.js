@@ -44,6 +44,7 @@ o.Selection = function(o) {
     o.add_to_collection = false;
     o.has_align = false;
     o.is_selection = true;
+    o.fixed_aspect = true;
     o.make_controls = [];
     o.handler_type = 2;
 
