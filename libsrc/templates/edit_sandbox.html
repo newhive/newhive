@@ -101,16 +101,24 @@
 
 <div id='menu_shape' class='menu drawer medbold'>
   {<if flags.shapes}
-    <div class='menu_item hexagon'>Hexagon</div>
-    <div class='menu_item pentagram'>Star</div>
+    <div class='menu_item hexagon'>
+      <img title="Hexagon" src='{asset "skin/edit/shapes_icons/hexagon.png"}'></div>
+    <div class='menu_item pentagram'>
+      <img title="Star" src='{asset "skin/edit/shapes_icons/star.png"}'></div>
   {>}
-  <div class='menu_item sketch'>Sketch</div>
+  <div class='menu_item sketch'>
+    <img title="Sketch" src='{asset "skin/edit/shapes_icons/sketch.png"}'></div>
   {<if flags.shapes}
-    <div class='menu_item free_form'>Free form</div>
-    {#<div class='menu_item line'>Line</div>#}
-    <div class='menu_item triangle'>Triangle</div>
+    <div class='menu_item free_form'>
+      <img title="Free form" src='{asset "skin/edit/shapes_icons/freeform.png"}'></div>
+    {#<div class='menu_item line'>
+      <img title="Line" src='{asset "skin/edit/shapes_icons/line.png"}'></div>
+    #}
+    <div class='menu_item triangle'>
+      <img title="Triangle" src='{asset "skin/edit/shapes_icons/triangle.png"}'></div>
   {>}
-  <div class='menu_item default rect'>Rectangle</div>
+  <div class='menu_item default rect'>
+    <img title="Rectangle" src='{asset "skin/edit/shapes_icons/square.png"}'></div>
 </div>
 
 <div id='menu_file' class='menu drawer medbold'>
@@ -279,7 +287,7 @@
   {# polygon #}
   <img class='button blank stroke-width tip_N' src='{asset "skin/edit/border_width.png"}' title='Stroke width'
   ><img class='button stroke tip_N' src='{asset "skin/edit/border_color.png"}' title='Stroke color'
-  ><img class='button blur tip_N' src='{asset "skin/edit/border_color.png"}' title='Gaussian blur'>
+  ><img class='button blur tip_N' src='{asset "skin/edit/blur.png"}' title='Gaussian blur'>
 
   <div class='button bg run' title='Run'>&rarr;</div>
   <div class='button bg stop' title='Stop'>&Chi;</div>
