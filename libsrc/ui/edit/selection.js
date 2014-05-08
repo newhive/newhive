@@ -169,6 +169,7 @@ o.Selection = function(o) {
         }
 
         if(!o.start) return;
+        old_selection = []
         o.drag_dims = [Math.abs(dd.deltaX), Math.abs(dd.deltaY)];
         o.drag_pos = [dd.deltaX < 0 ? ev.pageX : o.start[0],
             dd.deltaY < 0 ? ev.pageY : o.start[1]];
@@ -195,7 +196,7 @@ o.Selection = function(o) {
         selecting = false
         return false;
     }
-    var old_mod = false, old_selection = []
+    var old_mod = false, old_selection
     o.update_focus = function(event){
         var s = env.scale();
         var select = { 
