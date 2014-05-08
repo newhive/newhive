@@ -501,7 +501,6 @@ Hive.App = function(init_state, opts) {
 
     o.copy = function(opts){
         if(!opts) opts = {};
-        if(!opts.offset) opts.offset = [ 0, o.dims()[1] + 20 ];
         var app_state = $.extend({}, true, o.state());
         delete app_state.id;
         if(opts.z_offset) app_state.z += opts.z_offset;

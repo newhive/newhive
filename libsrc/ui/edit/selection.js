@@ -660,7 +660,7 @@ o.Selection = function(o) {
     o.copy = function(opts){
         var load_count = elements.length + 1, copies, _load = opts.load;
         opts = $.extend({ 
-            offset: [ 0, o.dims()[1] + 20 ],
+            offset: [ 0, o.dims_relative()[1] + 20 ],
             // 'z_offset': elements.length 
             },
             opts)
