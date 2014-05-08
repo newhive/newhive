@@ -662,6 +662,7 @@ o.Selection = function(o) {
         var load_count = elements.length + 1, copies, _load = opts.load;
         opts = $.extend({ 
             offset: [ 0, o.dims()[1] + 20 ],
+            no_select: 1,
             // 'z_offset': elements.length 
             },
             opts)
@@ -693,11 +694,14 @@ o.Selection = function(o) {
     };
 
     o.get_stack = function(){
-        return elements.sort(function(a, b){ a.layer() - b.layer() });
+        return elements.slice().sort(function(a, b){ return a.layer() - b.layer() });
     };
     o.stack_end = function(dir){
         env.History.begin();
-        $.each(o.get_stack().reverse(), function(i, el){ 
+        stack = o.get_stack();
+        if (dir < 0)
+            stack.reverse();
+        $.each(stack, function(i, el){ 
             dir > 0 ? el.stack_top() : el.stack_bottom() })
         env.History.group('stack to ' + ((dir > 0) ? "top": "bottom"));
     };
@@ -716,9 +720,10 @@ o.Selection = function(o) {
     o.stack_shift = function(offset) {
         env.History.begin();
         var overlaps = u.overlapped_apps(u.region_from_app(o))
-            , elements = o.get_stack().reverse(), up_offset = -1
+            , elements = o.get_stack(), up_offset = -1
         if (offset < 0) {
             up_offset = 0
+            elements.reverse()
         }
         overlaps = u.except(overlaps, elements)
         if (overlaps.length == 0)
@@ -735,6 +740,8 @@ o.Selection = function(o) {
             var new_layer = z_indexes[i];
             if (u._sign(new_layer - layer) == u._sign(offset))
                 a.stack_to(new_layer)
+            // z_indexes = $.map(overlaps, function(a) { return a.layer(); })
+            // z_indexes.sort(js.op['-'])
         })
         env.History.group('stack ' + ((offset > 0) ? 'up' : 'down'));
     }
