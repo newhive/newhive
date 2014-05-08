@@ -232,18 +232,18 @@ Hive.App = function(init_state, opts) {
     o.gborder_width_set = function(v) {
         o.css_setter_px('border-width')(v);
         if (env.Selection.controls)
-            fixup_controls(env.Selection.controls);
+            o.fixup_border_controls(env.Selection.controls);
         o.layout();
     }
-    function fixup_controls(o) {
+    o.fixup_border_controls = function(o) {
         var has_border = false
         env.Selection.each(function(i, a) {
             has_border |= (a.border_width && a.border_width() > 0)
         })
         o.div.find('.buttons .button.stroke').showhide(has_border);
     };
-    fixup_controls.display_order = 9;
-    o.make_controls.push(memoize("fixup_controls", fixup_controls));
+    o.fixup_border_controls.display_order = 9;
+    o.make_controls.push(memoize("o.fixup_border_controls", o.fixup_border_controls));
 
     var _client_data = function() {
         o.init_state.client_data = o.init_state.client_data || {};
@@ -1376,7 +1376,7 @@ Hive.App.Polygon = function(o){
 
         var  pad = o.point_offset()
             ,points_delta = u._add(pad)([-f.x, -f.y])
-            ,old_bounds = [f.width - f.x, f.height - f.y]
+            ,old_bounds = u._apply(Math.max, 1, [f.width - f.x, f.height - f.y])
             ,new_dims = u._sub(o.dims_relative(), u._mul(pad, 2))
             ,dims_ratio = u._div(new_dims, old_bounds)
             ,new_off = u._sub( pad, u._mul([f.x, f.y], dims_ratio) )
@@ -1469,8 +1469,10 @@ Hive.App.Polygon = function(o){
         if(restroke){
             var v = parseInt(props['stroke-width'])
             if(!v) v = 0
-            dims = o.dims_relative()
-            props['stroke-width'] = Math.min(v, .5*dims[0], .5*dims[1])
+            var max_width = u._apply(function(a,b) {
+                    return Math.ceil(a*b)
+                }, .5, o.dims_relative())
+            // props['stroke-width'] = Math.min(v, max_width[0], max_width[1])
         }
         poly_el.css(props)
         if(restroke){
@@ -1522,10 +1524,10 @@ Hive.App.Polygon = function(o){
     Hive.App.has_color(o, 'stroke')
     var history_point
     o.border_width = o.css_getter('stroke-width')
-    o.border_width_set = o.css_setter('stroke-width')
-    o.stroke_update = function(v){
-        var stroke_ctrl = env.Selection.controls.div.find('.button.stroke')
-        stroke_ctrl.showhide(v)
+    o.border_width_set = function(v) {
+        o.css_setter('stroke-width')(v)
+        if (env.Selection.controls)
+            o.fixup_border_controls(env.Selection.controls);
     }
     Hive.App.has_opacity(o)
 
@@ -1576,7 +1578,13 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         }
     }
 
-    o.finish = function(){
+    o.finish = function(ev){
+        if (!u.is_ctrl(ev)) {
+            // Default is adding single shape. Ctrl+click to add several
+            o.unfocus()
+        }
+        if (!creating)
+            return false
         if(creating.points_len() < 2){
             creating._remove()
             return false
@@ -1626,6 +1634,7 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         var s = from_template()
         template = Hive.new_app(s, {no_select: 1})
         template.center_relative_set(pos(ev))
+        o.finish(ev)
     }
 
     handle_template.dragstart = function(ev, dd){
@@ -1666,15 +1675,18 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
 
         ref_pos = creating.pos_relative()
         var cur_p = creating.point(point_i)
-            ,close_d = u._sub(creating.point(0))(cur_p)
+            ,close_d = u._apply(u.dist, creating.point(0), cur_p)
 
         if(u.array_equals( cur_p, creating.point(point_i-1) )
-            || Math.abs(close_d[0] + close_d[1]) < 5
+            || close_d[0] + close_d[1] < 5
         ){
             // double click ends creating
             creating.point_remove(point_i)
-            o.finish()
-            return false
+            o.finish(ev)
+            creating = false
+            // HACKHACK: Somehow this is creating a drag event.  Suppress it.
+            // $.data( document, "suppress.mousemove" , new Date().getTime() + 1000)
+            return true//false
         }
 
         // add point
@@ -1699,7 +1711,7 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
                 return creating = false
             }
             else if(ev.keyCode == 13){ // enter
-                o.finish()
+                o.finish(ev)
                 return false
             }
         }

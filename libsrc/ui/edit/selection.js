@@ -155,6 +155,7 @@ o.Selection = function(o) {
             o.unfocus();
         }
     };
+    o.cancel_drag = function() { dragging = false }
     o.drag = function(ev, dd){
         if (!dragging) return;
         ev.stopPropagation()

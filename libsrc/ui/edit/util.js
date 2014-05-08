@@ -145,6 +145,10 @@ o.interval_dist = function(a, b) {
     return Math.min(Math.abs(c[0]), Math.abs(c[1]));
 };
 
+o.dist = function(a, b) {
+    if (b) return o.interval_size([a,b])
+    return o.interval_size(a)
+}
 o.interval_size = function(i) { return Math.abs(i[1] - i[0]); };
 // Returns the least interval containing both inputs
 o.interval_bounds = function(a, b) {
