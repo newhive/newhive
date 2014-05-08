@@ -1288,6 +1288,7 @@ Hive.App.has_ctrl_points = function(o){
                 .addClass('control point')
                 .appendTo(o.fixed_div)
                 .on('dragstart', function(ev){
+                    env.History.change_start();
                     app.transform_start(i)
                     env.Selection.hide_controls()
                     ev.stopPropagation()
@@ -1299,6 +1300,7 @@ Hive.App.has_ctrl_points = function(o){
                 .on('dragend', function(ev){
                     env.Selection.show_controls()
                     ev.stopPropagation()
+                    env.History.change_end("Adjust shape");
                 })
         })
     })
