@@ -231,16 +231,19 @@ body.edit {
 
     .control { position : absolute; cursor : default; z-index : 1 }
 
+    .drag { cursor: move; }
     .resize_v { cursor : ns-resize; }
     .resize_h { cursor : ew-resize; }
     .resize { cursor : se-resize; }
-    .stack img { display : inline-block; margin-left : 5px; }
+    .stack { 
+        white-space : nowrap; 
+        img { display : inline-block; margin-left : 5px; }
+    }
     .control.drawer {
         text-align: left;
         display: none;
     }
 
-    .stack { white-space : nowrap; }
     .buttons,.top_buttons {
         pointer-events: none;
         * { pointer-events: auto; }
@@ -258,9 +261,9 @@ body.edit {
         }
     }
 
-    .drag { cursor: move; }
 }
 
+// TODO: organize
 .drawer.brush .option:hover { background-color: $color_selected; }
 .drawer.brush .option.selected { background-color: $color_pale_yellow; }
 .control .button, .control .option { cursor : default; }
