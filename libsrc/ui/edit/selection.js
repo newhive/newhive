@@ -140,7 +140,7 @@ o.Selection = function(o) {
         o.offset = env.apps_e.offset().left;
         u.reset_sensitivity();
 
-        o.new_selection = [];
+        old_selection = []
         $('.app_select').remove();
         o.div = $("<div class='app_select'>").css('z-index', 3);
         o.select_box = $("<div class='select_box border selected dragbox'>")
@@ -169,7 +169,6 @@ o.Selection = function(o) {
         }
 
         if(!o.start) return;
-        old_selection = []
         o.drag_dims = [Math.abs(dd.deltaX), Math.abs(dd.deltaY)];
         o.drag_pos = [dd.deltaX < 0 ? ev.pageX : o.start[0],
             dd.deltaY < 0 ? ev.pageY : o.start[1]];
