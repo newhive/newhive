@@ -14,7 +14,7 @@
  <div id='color_pick' style='float : right; position : relative;'></div>
 </div>
 
-<div id='edit_nav' class='edit nav overlay'
+<div id='edit_nav' class='edit nav overlay bottom'
   ><div class='center pad'><img id='btn_undo' title='Undo' class='hoverable'
     src='{"skin/edit/undo.png"|asset}'></div
   ><div class='center'><img id='btn_redo' title='Redo' class='hoverable'
@@ -51,7 +51,7 @@
   {>}
 </div>
 
-<div class='app_btns edit overlay panel'
+<div class='app_btns edit overlay bottom panel'
  ><div class='insert_text icon hoverable'></div
  ><div class='insert_image icon hoverable'></div
  ><div class='insert_audio icon hoverable'></div
@@ -99,25 +99,27 @@
       class='black_btn upper embed_button' value='Enter'></div>
 </div>
 
-<div id='menu_shape' class='menu drawer medbold'>
+<div id='menu_shape' class='menu drawer medbold'
+  data-menu-opts='"layout_x":"center"'
+>
   {<if flags.shapes}
     <div class='menu_item hexagon'>
-      <img title="Hexagon" src='{asset "skin/edit/shapes_icons/hexagon.png"}'></div>
-    <div class='menu_item pentagram'>
-      <img title="Star" src='{asset "skin/edit/shapes_icons/star.png"}'></div>
+      <img title="Hexagon" src='{asset "skin/edit/shapes_icons/hexagon.png"}'></div
+    ><div class='menu_item pentagram'>
+      <img title="Star" src='{asset "skin/edit/shapes_icons/star.png"}'></div
   {>}
-  <div class='menu_item sketch'>
-    <img title="Sketch" src='{asset "skin/edit/shapes_icons/sketch.png"}'></div>
+  ><div class='menu_item sketch'>
+    <img title="Sketch" src='{asset "skin/edit/shapes_icons/sketch.png"}'></div
   {<if flags.shapes}
-    <div class='menu_item free_form'>
-      <img title="Free form" src='{asset "skin/edit/shapes_icons/freeform.png"}'></div>
+    ><div class='menu_item free_form'>
+      <img title="Free form" src='{asset "skin/edit/shapes_icons/freeform.png"}'></div
     {#<div class='menu_item line'>
-      <img title="Line" src='{asset "skin/edit/shapes_icons/line.png"}'></div>
+      ><img title="Line" src='{asset "skin/edit/shapes_icons/line.png"}'></div
     #}
-    <div class='menu_item triangle'>
-      <img title="Triangle" src='{asset "skin/edit/shapes_icons/triangle.png"}'></div>
+    ><div class='menu_item triangle'>
+      <img title="Triangle" src='{asset "skin/edit/shapes_icons/triangle.png"}'></div
   {>}
-  <div class='menu_item default rect'>
+  ><div class='menu_item default rect'>
     <img title="Rectangle" src='{asset "skin/edit/shapes_icons/square.png"}'></div>
 </div>
 
