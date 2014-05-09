@@ -1369,26 +1369,42 @@ Hive.App.Polygon = function(o){
     o.max_pos = function() {
         return u._add(_max_pos(), o.point_offset())
     }
-    // TODO-polish-polygon-transform: make a version of reframe
-    // that doesn't change coords, for use during transformations
-    o.repoint = function(display_only){
-        var  old_points = points//(display_only ? points : ref_points)
+    o.repoint = function(){
+        var  old_points = points
             ,f = u.points_rect(old_points)
 
         var  pad = o.point_offset()
             ,min_pos = u.nth(f, 0)
             ,points_delta = u._sub(pad)(min_pos)
-            ,old_bounds = u._apply(Math.max, 1, u._sub(u.nth(f,1), min_pos))
-            // should be 2, but this prevents degeneracy
-            ,new_dims = u._sub(o.dims_relative(), u._mul(pad, 2.00001))
-            ,dims_ratio = u._div(new_dims, old_bounds)
+            ,old_bounds = u._apply(Math.max, 0.000001, u._sub(u.nth(f,1), min_pos))
+            ,new_dims = u._sub(o.dims_relative(), u._mul(pad, 2))
+                .map(Math.abs)
+            ,fudge_coords = [0, 0]
+        // For polygons (at least 3 points), prevents degeneracy by bumping
+        // dimensions by a small amount
+        if (points.length > 2) {
+            new_dims.map(function(c, i) {
+                if (Math.abs(c) < 0.0001)
+                    fudge_coords[i] = 0.0002
+            })
+            if (!u.array_equals(fudge_coords, [0, 0])) {
+                new_dims = u._add(new_dims, fudge_coords)
+            }
+        }
+
+        var dims_ratio = u._div(new_dims, old_bounds)
             ,new_off = u._sub( pad, u._mul(min_pos, dims_ratio) )
 
         old_points.map(function(p, i){
             o.point_update(i, u._add(u._mul(p, dims_ratio), new_off))
         })
+        if (!u.array_equals(fudge_coords, [0, 0])) {
+            _dims_relative_set(u._add(o.dims_relative(), fudge_coords))
+            return
+        }
     }
 
+    // display-only: don't change coords, for use during transformations
     o.reframe = function(display_only){
         var  old_points = (display_only ? points : ref_points)
             ,f = u.points_rect(old_points)
@@ -1464,8 +1480,8 @@ Hive.App.Polygon = function(o){
         var f = u.points_rect(points)
             ,pad = o.point_offset()
         dims.map(function(v, i) {
-            if (u.dist(f[i]) < 0.001)
-                dims[i] = pad[i]
+            if (u.dist(f[i]) < 0.01)
+                dims[i] = 2*pad[i]
         })
         _dims_relative_set(dims)
         o.size_update(dims)
@@ -1574,8 +1590,12 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
 // Polygon creation tool
 (function(o){
     var creating, template, point_i, handle_template = {}, handle_freeform = {}
+        // , orig_dims
     o.handler_type = 1
 
+    o.setup = function() {
+        // orig_dims = template.dims_relative()
+    }
     o.mode = function(_template){
         // set creation mode.
         // If _template is false, make free form (points picked by clicks)
@@ -1589,12 +1609,15 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
             for(k in handle_template) delete o[k]
             $.extend(o, handle_freeform)
         }
+        o.setup()
     }
 
     o.finish = function(ev){
         if (!u.is_ctrl(ev)) {
             // Default is adding single shape. Ctrl+click to add several
             o.unfocus()
+            // Focus last template
+            env.Selection.update([template])
         }
         if (!creating)
             return false
@@ -1605,6 +1628,7 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         creating.reframe()
         creating = false
         point_i = false
+        o.setup()
     }
 
     o.focus = function(){
@@ -1650,29 +1674,38 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         o.finish(ev)
     }
 
-    var orig_pos;
+    var orig_pos, orig_dims, orig_aspect;
     handle_template.dragstart = function(ev, dd){
         // absolutely no idea why this is being called twice
         ev.stopPropagation()
         if(creating) return
         var s = from_template()
         s.position = pos(ev)
-        orig_pos = s.position.slice()
+        orig_pos = u._mul(env.scale(), s.position)
         creating = template = Hive.new_app(s, {no_select: 1})
+        orig_dims = template.dims();
+        orig_aspect = orig_dims[0] / orig_dims[1]
     }
     handle_template.drag = function(ev, dd){
         no_click = true
         // TODO-merge-conflict?
         if(!creating) return
-        var new_pos = orig_pos.slice(), new_dims = [dd.deltaX, dd.deltaY]
-            ,max_pos = u._add(new_pos, new_dims)
-            ,bounds = new_pos.map(function(p,i) { return [p, p + new_dims[i]] })
-        bounds.map(function(v) { v.sort() })
-        new_pos = u.nth(bounds, 0)
+        var new_dims = [dd.deltaX, dd.deltaY]
+            , new_aspect = new_dims[0] / new_dims[1]
+        // maintain original aspect ratio
+        if (ev.shiftKey) {
+            new_dims = (orig_aspect > new_aspect) ?
+                [new_dims[0], new_dims[0]/orig_aspect] :
+                [new_dims[1]*orig_aspect, new_dims[1]]
+        } else {
+            orig_aspect = new_aspect
+        }
+        var bounds = orig_pos.map(function(p,i) { return [p, p + new_dims[i]] })
+        bounds.map(function(v) { v.sort(js.op['-']) })
         new_dims = bounds.map(function(v) {
             return Math.max(1, v[1] - v[0])
         })
-        creating.pos_set(new_pos)
+        creating.pos_set(u.nth(bounds, 0))
         creating.dims_set(new_dims)
     }
     handle_template.dragend = function(ev, dd){
@@ -2558,13 +2591,14 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
             // initialized = true;
         }
 
-        var update_val = function(){
+        var update_val = function(opts){
+            opts = $.extend({num_input:true, range:true}, opts)
             if (typeof(val) == "number") {
-                num_input.val((Math.round(val*1000)/1000).toString())
-                range.val((val - min)/(max - min)*100)
+                if (opts.num_input) num_input.val((Math.round(val*1000)/1000).toString())
+                if (opts.range) range.val((val - min)/(max - min)*100)
             } else {
-                num_input.val()
-                range.val(0)
+                if (opts.num_input) num_input.val()
+                if (opts.range) range.val(0)
             }
         }
         var clamp_set = function(n) {
@@ -2606,7 +2640,7 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
             if(isNaN(v)) return;
             val = v;
             clamp_set(val);
-            update_val()
+            update_val({num_input:false})
         })
 
         return o
