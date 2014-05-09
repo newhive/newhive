@@ -945,7 +945,7 @@ Hive.registerApp(Hive.App.Code, 'hive.code')
 
 Hive.App.Image = function(o) {
     o.is_image = true;
-    // o.fixed_aspect = true;
+    o.fixed_aspect = true;
     o.has_crop = false;
     Hive.App.has_resize(o);
     // TODO-cleanup: aspects should be y/x
@@ -1377,7 +1377,6 @@ Hive.App.Polygon = function(o){
             ,points_delta = u._sub(pad)(min_pos)
             ,old_bounds = u._apply(Math.max, 0.000001, u._sub(u.nth(f,1), min_pos))
             ,new_dims = u._sub(o.dims_relative(), u._mul(pad, 2))
-                .map(Math.abs)
             ,fudge_coords = [0, 0]
         // For polygons (at least 3 points), prevents degeneracy by bumping
         // dimensions by a small amount
@@ -1386,9 +1385,17 @@ Hive.App.Polygon = function(o){
                 if (Math.abs(c) < 0.0001)
                     fudge_coords[i] = 0.0002
             })
-            if (!u.array_equals(fudge_coords, [0, 0])) {
-                new_dims = u._add(new_dims, fudge_coords)
-            }
+        } else {
+            // for lines, force degeneracy
+            new_dims.map(function(v, i) {
+                if (v < 0)
+                    fudge_coords[i] = -v
+            })
+        }
+        new_dims = new_dims.map(Math.abs)
+
+        if (!u.array_equals(fudge_coords, [0, 0])) {
+            new_dims = u._add(new_dims, fudge_coords)
         }
 
         var dims_ratio = u._div(new_dims, old_bounds)
@@ -1442,9 +1449,11 @@ Hive.App.Polygon = function(o){
     }
     o.point_update = function(i, p, display_only){
         if(!display_only) points[i] = p.slice()
-        var svg_p = poly_el[0].points.getItem(i)
-        svg_p.x = p[0]
-        svg_p.y = p[1]
+        for (var j = 0; j < points.length; ++j) {
+            var svg_p = poly_el[0].points.getItem(j)
+            svg_p.x = ((i==j) ? p : points[j])[0]
+            svg_p.y = ((i==j) ? p : points[j])[1]
+        }
     }
     o.point_move = function(i, p){
         ref_points[i] = u._add(ref_point)(p)
@@ -1692,12 +1701,14 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         var new_dims = [dd.deltaX, dd.deltaY]
             , new_aspect = new_dims[0] / new_dims[1]
         // maintain original aspect ratio
-        if (ev.shiftKey) {
-            new_dims = (orig_aspect > new_aspect) ?
-                [new_dims[0], new_dims[0]/orig_aspect] :
-                [new_dims[1]*orig_aspect, new_dims[1]]
+        if (!ev.shiftKey) {
+            var sgn = u._sign(new_aspect)
+            new_dims = (orig_aspect > Math.abs(new_aspect)) ?
+                [new_dims[0], new_dims[0]/orig_aspect*sgn] :
+                [new_dims[1]*orig_aspect*sgn, new_dims[1]]
         } else {
-            orig_aspect = new_aspect
+            // save new proportion
+            // orig_aspect = new_aspect
         }
         var bounds = orig_pos.map(function(p,i) { return [p, p + new_dims[i]] })
         bounds.map(function(v) { v.sort(js.op['-']) })
@@ -2265,8 +2276,13 @@ Hive.App.has_resize = function(o) {
         dims = u._div(dims)(env.scale());
         // everything past this point is in editor space.
         var aspect = o.get_aspect();
-        if (!o.fixed_aspect && env.ev.shiftKey)
-            aspect = false
+        if (!o.fixed_aspect) {
+            var old_dims = o.dims_relative()
+            if (!env.ev.shiftKey)
+                aspect = false
+            else
+                aspect = aspect || [ old_dims[0] / old_dims[1] ]
+        }
 
         if (aspect) {
             var newWidth = dims[1] * aspect;
