@@ -123,16 +123,15 @@ o._lerp = function(alpha, old_val, new_val) {
     }
 };
 
+// returns list of intervals in x- and y- dimensions which bound the input 
+// points exactly
 o.points_rect = function(ps){
-    var f = {
-        x: Infinity ,width: -Infinity
-        ,y: Infinity ,height: -Infinity
-    }
+    var f = [[Infinity, -Infinity], [Infinity, -Infinity]]
     ps.map(function(p){
-        f.x = Math.min(f.x, p[0])
-        f.width = Math.max(f.width, p[0])
-        f.y = Math.min(f.y, p[1])
-        f.height = Math.max(f.height, p[1])
+        f[0][0] = Math.min(f[0][0], p[0])
+        f[0][1] = Math.max(f[0][1], p[0])
+        f[1][0] = Math.min(f[1][0], p[1])
+        f[1][1] = Math.max(f[1][1], p[1])
     })
     return f
 }

@@ -402,9 +402,10 @@ Hive.App = function(init_state, opts) {
             return true;
         }
         var pos = pos || o.pos(), dims = dims || o.dims();
+        var css_ify = function(k) { return Math.max(1, Math.round(k)) }
         u.inline_style(o.div[0], { 'left' : pos[0], 'top' : pos[1] 
             // rounding fixes SVG layout bug in Chrome
-            ,width: Math.round(dims[0]), height: Math.round(dims[1])});
+            ,width: css_ify(dims[0]), height: css_ify(dims[1])});
         if(o.controls)
             o.controls.layout();
         // If this app == selection, update selection. 
@@ -1375,11 +1376,13 @@ Hive.App.Polygon = function(o){
             ,f = u.points_rect(old_points)
 
         var  pad = o.point_offset()
-            ,points_delta = u._add(pad)([-f.x, -f.y])
-            ,old_bounds = u._apply(Math.max, 1, [f.width - f.x, f.height - f.y])
-            ,new_dims = u._sub(o.dims_relative(), u._mul(pad, 2))
+            ,min_pos = u.nth(f, 0)
+            ,points_delta = u._sub(pad)(min_pos)
+            ,old_bounds = u._apply(Math.max, 1, u._sub(u.nth(f,1), min_pos))
+            // should be 2, but this prevents degeneracy
+            ,new_dims = u._sub(o.dims_relative(), u._mul(pad, 2.00001))
             ,dims_ratio = u._div(new_dims, old_bounds)
-            ,new_off = u._sub( pad, u._mul([f.x, f.y], dims_ratio) )
+            ,new_off = u._sub( pad, u._mul(min_pos, dims_ratio) )
 
         old_points.map(function(p, i){
             o.point_update(i, u._add(u._mul(p, dims_ratio), new_off))
@@ -1391,10 +1394,10 @@ Hive.App.Polygon = function(o){
             ,f = u.points_rect(old_points)
 
         var  pad = o.point_offset()
-            ,points_delta = u._add(pad)([-f.x, -f.y])
-            ,new_dims = u._add([f.width - f.x, f.height - f.y])(
-                u._mul(pad)(2) )
-            ,new_pos = u._sub(ref_pos)( u._add([-f.x, -f.y])(pad) )
+            ,min_pos = u.nth(f, 0)
+            ,points_delta = u._sub(pad, min_pos)
+            ,new_dims = u._add(u._sub(u.nth(f,1), min_pos), u._mul(pad)(2) )
+            ,new_pos = u._sub(ref_pos, points_delta )
 
         old_points.map(function(p, i){
             o.point_update(i, u._add(p)(points_delta), display_only)
@@ -1457,6 +1460,13 @@ Hive.App.Polygon = function(o){
 
     var _dims_relative_set = o.dims_relative_set
     o.dims_relative_set = function(dims) {
+        dims = u._apply(Math.max, 1, dims)
+        var f = u.points_rect(points)
+            ,pad = o.point_offset()
+        dims.map(function(v, i) {
+            if (u.dist(f[i]) < 0.001)
+                dims[i] = pad[i]
+        })
         _dims_relative_set(dims)
         o.size_update(dims)
         o.repoint()
@@ -1465,20 +1475,17 @@ Hive.App.Polygon = function(o){
     // TODO-cleanup: these functions belong in App
     o.set_css = function(props, no_reframe) {
         $.extend(state.style, props);
-        var restroke = (typeof props['stroke-width'] != 'undefined')
-        if(restroke){
-            var v = parseInt(props['stroke-width'])
-            if(!v) v = 0
-            var max_width = u._apply(function(a,b) {
-                    return Math.ceil(a*b)
-                }, .5, o.dims_relative())
-            // props['stroke-width'] = Math.min(v, max_width[0], max_width[1])
-        }
+        // var restroke = (typeof props['stroke-width'] != 'undefined')
+        // if(restroke){
+        //     var v = parseInt(props['stroke-width'])
+        //     if(!v) v = 0
+        //     // limit stroke width to dimensions
+        //     // var max_width = u._apply(function(a,b) {
+        //     //         return Math.ceil(a*b)
+        //     //     }, .5, o.dims_relative())
+        //     // props['stroke-width'] = Math.min(v, max_width[0], max_width[1])
+        // }
         poly_el.css(props)
-        if(restroke){
-            o.transform_start(0)
-            o.reframe(true)
-        }
     }
     o.css_setter = function(css_prop){ return function(v) {
         var ps = {}; ps[css_prop] = v; o.set_css(ps); } }
@@ -1526,6 +1533,8 @@ Hive.App.Polygon = function(o){
     o.border_width = o.css_getter('stroke-width')
     o.border_width_set = function(v) {
         o.css_setter('stroke-width')(v)
+        o.transform_start(0)
+        o.reframe(true)
         if (env.Selection.controls)
             o.fixup_border_controls(env.Selection.controls);
     }
@@ -1546,6 +1555,10 @@ Hive.App.Polygon = function(o){
         .join(' '))
     blur_el = o.content_element.find('feGaussianBlur')
 
+    if (points.length && !o.init_state.dimensions) {
+        var f = u.points_rect(points)
+        o.init_state.dimensions = u._sub(u.nth(f,1), u.nth(f,0))
+    }
     o.dims_relative_set(o.init_state.dimensions || [100, 100])
     o.set_css(state.style)
     o.blur_set(o.blur())
@@ -1568,7 +1581,7 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         // If _template is false, make free form (points picked by clicks)
         // Otherwise create a shape defined by a template Polygon object,
         if(_template){
-            template = _template
+            template = $.extend(true, {}, _template)
             for(k in handle_freeform) delete o[k]
             $.extend(o, handle_template)
         }
@@ -1637,22 +1650,34 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         o.finish(ev)
     }
 
+    var orig_pos;
     handle_template.dragstart = function(ev, dd){
         // absolutely no idea why this is being called twice
         ev.stopPropagation()
         if(creating) return
         var s = from_template()
         s.position = pos(ev)
+        orig_pos = s.position.slice()
         creating = template = Hive.new_app(s, {no_select: 1})
     }
     handle_template.drag = function(ev, dd){
         no_click = true
         // TODO-merge-conflict?
         if(!creating) return
-        creating.dims_set([dd.deltaX, dd.deltaY])
+        var new_pos = orig_pos.slice(), new_dims = [dd.deltaX, dd.deltaY]
+            ,max_pos = u._add(new_pos, new_dims)
+            ,bounds = new_pos.map(function(p,i) { return [p, p + new_dims[i]] })
+        bounds.map(function(v) { v.sort() })
+        new_pos = u.nth(bounds, 0)
+        new_dims = bounds.map(function(v) {
+            return Math.max(1, v[1] - v[0])
+        })
+        creating.pos_set(new_pos)
+        creating.dims_set(new_dims)
     }
     handle_template.dragend = function(ev, dd){
         creating = false
+        o.finish(ev)
         ev.stopPropagation()
     }
 

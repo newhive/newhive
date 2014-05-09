@@ -66,6 +66,8 @@ define(['browser/jquery', 'ui/util'], function($, util) {
                 c2[p] = c[p] ? (c[p] * s) : c2[p]
                 if(p == 'font-size') {
                     c2[p] += 'em';
+                } else if (p == 'width' || p == 'height'){
+                    c2[p] = Math.max(1, Math.round(c2[p])) + 'px';
                 } else {
                     c2[p] = Math.round(c2[p]) + 'px';
                 }
