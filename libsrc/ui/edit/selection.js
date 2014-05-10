@@ -402,8 +402,10 @@ o.Selection = function(o) {
                 el.angle_set(rotation_refs[i].ref_angle + a);
             var cent = u.rotate_about(rotation_refs[i].ref_cen,
                     ref_center, u.deg2rad(a))
-                ,new_pos = u._sub(el.pos_relative())(el.centroid_relative())
-            el.pos_relative_set(u._add(rotation_refs[i].ref_pos)(cent));
+            if (el.centroid_relative_set) {
+                el.centroid_relative_set(cent)
+            } else
+                el.pos_relative_set(u._add(rotation_refs[i].ref_pos)(cent));
         });
     }
     o.rotate_end = function(){

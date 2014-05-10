@@ -1438,8 +1438,9 @@ Hive.App.Polygon = function(o){
         // ref_dims = undefined
     }
     var ref_point = [0,0] ,ref_points ,ref_pos ,ref_dims
-        ,ref_center ,ref_stroke_width
+        ,ref_center ,ref_stroke_width, ref_angle
     o.transform_start = function(i){
+        ref_angle = 0
         ref_point = points[i].slice()
         ref_points = o.points()
         ref_pos = o.pos_relative()
@@ -1545,11 +1546,22 @@ Hive.App.Polygon = function(o){
     o.rotate_start = function(){
         o.transform_start(0)
     }
-    o.angle_set = function(a){
+    o.centroid_relative_set = function(centroid) {
+        // ref_center = u._sub(o.centroid_relative())(ref_pos)
+        o.pos_relative_set(u._add(o.pos_relative(), 
+            u._sub(centroid, o.centroid_relative())))
+    }
+    o.angle_set = function(angle){
+        var a = angle - ref_angle
         ref_points.map(function(p, i){
             o.point_update(i, u.rotate_about(p, ref_center, u.deg2rad(a)))
         })
-        o.reframe(true)
+        if (env.Selection.count() > 1) {
+            o.transform_start(0)
+            o.reframe()
+            ref_angle = angle
+        } else
+            o.reframe(true)
     }
     o.rotate_end = function(){
         o.transform_start(0)
