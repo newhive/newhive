@@ -137,6 +137,10 @@ Hive.init_menus = function() {
         "type":"hive.polygon",
         "points":[[50,0],[100, 100*Math.sqrt(3)/2],[0, 100*Math.sqrt(3)/2]]
     }
+    Hive.template_line = { // line
+        "type":"hive.polygon",
+        "points":[[0,0],[100, 0]]
+    }
     Hive.template_pentagram = $.extend({}, Hive.template_triangle, {
         points: js.range(10).map(function(i){
             var d = ((i == 0 ? 0 : Math.PI*2*i/10) + Math.PI/10)
@@ -156,6 +160,10 @@ Hive.init_menus = function() {
     })
     $('#menu_shape .triangle').click(function(){
         poly.mode(Hive.template_triangle)
+        poly.focus()
+    })
+    $('#menu_shape .line').click(function(){
+        poly.mode(Hive.template_line)
         poly.focus()
     })
     $('#menu_shape .pentagram').click(function(){

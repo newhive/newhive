@@ -1392,11 +1392,11 @@ Hive.App.Polygon = function(o){
                     fudge_coords[i] = -v
             })
         }
-        new_dims = new_dims.map(Math.abs)
 
         if (!u.array_equals(fudge_coords, [0, 0])) {
             new_dims = u._add(new_dims, fudge_coords)
         }
+        new_dims = new_dims.map(Math.abs)
 
         var dims_ratio = u._div(new_dims, old_bounds)
             ,new_off = u._sub( pad, u._mul(min_pos, dims_ratio) )
@@ -1449,11 +1449,15 @@ Hive.App.Polygon = function(o){
     }
     o.point_update = function(i, p, display_only){
         if(!display_only) points[i] = p.slice()
-        for (var j = 0; j < points.length; ++j) {
-            var svg_p = poly_el[0].points.getItem(j)
-            svg_p.x = ((i==j) ? p : points[j])[0]
-            svg_p.y = ((i==j) ? p : points[j])[1]
-        }
+        // set all the points?
+        // for (var j = 0; j < points.length; ++j) {
+        //     var svg_p = poly_el[0].points.getItem(j)
+        //     svg_p.x = ((i==j) ? p : points[j])[0]
+        //     svg_p.y = ((i==j) ? p : points[j])[1]
+        // }
+        var svg_p = poly_el[0].points.getItem(i)
+        svg_p.x = p[0]
+        svg_p.y = p[1]
     }
     o.point_move = function(i, p){
         ref_points[i] = u._add(ref_point)(p)
@@ -1693,6 +1697,14 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         creating = template = Hive.new_app(s, {no_select: 1})
         orig_dims = template.dims();
         orig_aspect = orig_dims[0] / orig_dims[1]
+        if (creating.points_len() == 2) {
+            // To make moving the point around relatively equivalent to
+            // absolute, just set it to 0,0.
+            creating.point_set(0, [0,0])
+            creating.point_set(1, [0,0])
+            creating.transform_start(1)
+            // creating.border_width_set(2)
+        }
     }
     handle_template.drag = function(ev, dd){
         no_click = true
@@ -1700,8 +1712,19 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         if(!creating) return
         var new_dims = [dd.deltaX, dd.deltaY]
             , new_aspect = new_dims[0] / new_dims[1]
+        if (creating.points_len() == 2) {
+            // console.log(creating.points())
+            if (ev.shiftKey) {
+                if (Math.abs(new_dims[0]) > Math.abs(new_dims[1]))
+                    new_dims[1] = 0
+                else
+                    new_dims[0] = 0
+            }
+            creating.point_move(1, u._div(new_dims, env.scale()))
+            return
+        }
         // maintain original aspect ratio
-        if (!ev.shiftKey) {
+        if (ev.shiftKey) {
             var sgn = u._sign(new_aspect)
             new_dims = (orig_aspect > Math.abs(new_aspect)) ?
                 [new_dims[0], new_dims[0]/orig_aspect*sgn] :
@@ -1719,6 +1742,8 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         creating.dims_set(new_dims)
     }
     handle_template.dragend = function(ev, dd){
+        if (creating.points_len() == 2)
+            creating.reframe()
         creating = false
         o.finish(ev)
         ev.stopPropagation()
@@ -2320,8 +2345,7 @@ Hive.App.has_resize = function(o) {
     };
     o.resize_to = function(delta){
         dims_ref = dims_ref || o.dims();
-        return [ Math.max(1, dims_ref[0] + delta[0]), 
-            Math.max(1, dims_ref[1] + delta[1]) ];
+        return u._apply(Math.max, env.scale(), u._add(dims_ref, delta))
     };
     o.resize_to_pos = function(pos, doit) {
         var _pos = o.pos_relative();
@@ -2345,7 +2369,7 @@ Hive.App.has_resize = function(o) {
         _dims[1] = pos[1] - _pos[1];
         if (o.full_coord != undefined)
             _dims[o.full_coord] = 1000;
-        _dims = [ Math.max(1, _dims[0]), Math.max(1, _dims[1]) ];
+        _dims = u._apply(Math.max, env.scale(), _dims);
         if (doit || doit == undefined)
             o.dims_relative_set(_dims);
         return _dims;
