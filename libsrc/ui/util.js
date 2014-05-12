@@ -100,6 +100,9 @@ define([
             $.fn.bind_once = function( event_name, func ) {
                 return $(this).off(event_name, func).on(event_name, func);
             };
+            $.fn.bind_once_anon = function( event_name, func ) {
+                return $(this).off(event_name).on(event_name, func);
+            };
         }(jQuery));
     };
     o.extend_jquery();
