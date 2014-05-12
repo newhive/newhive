@@ -245,6 +245,8 @@ class Expr(ModelController):
         type = app.get('type')
         klass = type.replace('.', '_')
         app_id = app.get('id', 'app_' + str(app['z']))
+        if type == 'hive.circle':
+            type = 'hive.rectangle'
 
         if type != 'hive.rectangle':
             # rectangles have css as their content; all other apps have extra

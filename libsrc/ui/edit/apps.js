@@ -1244,16 +1244,14 @@ Hive.App.Image = function(o) {
 }
 Hive.registerApp(Hive.App.Image, 'hive.image');
 
-
-Hive.App.Rectangle = function(o) {
+Hive.App.Rectangle_Parent = function(o) {
     Hive.App.has_resize(o);
-    var Parent = $.extend({}, o);
     o.init_state.css_state = $.extend(o.init_state.content, o.init_state.css_state);
 
     Hive.App.has_rotate(o);
     Hive.App.has_color(o);
-    o.make_controls[o.make_controls.length - 1].display_order = 1
-    Hive.App.has_border_radius(o);
+    o.make_controls[o.make_controls.length - 1].display_order = 2
+    // Hive.App.has_border_radius(o);
     Hive.App.has_opacity(o);
     Hive.App.has_border_width(o);
     Hive.App.has_color(o, "stroke");
@@ -1261,10 +1259,26 @@ Hive.App.Rectangle = function(o) {
     o.content_element = o.div //$("<div class='content drag'>").appendTo(o.div);
     setTimeout(function(){ o.load() }, 1);
 
+    // Hive.App.has_image_drop(o);
+    return o;
+};
+
+Hive.App.Rectangle = function(o) {
+    Hive.App.Rectangle_Parent(o);
+
+    Hive.App.has_border_radius(o);
     Hive.App.has_image_drop(o);
     return o;
 };
 Hive.registerApp(Hive.App.Rectangle, 'hive.rectangle');
+
+Hive.App.Circle = function(o) {
+    Hive.App.Rectangle_Parent(o);
+    // Hive.App.has_image_drop(o);
+    o.set_css({'border-radius':'50%'});
+    return o;
+};
+Hive.registerApp(Hive.App.Circle, 'hive.circle');
 
 Hive.App.has_ctrl_points = function(o){
     // TODO-feature-polish-control-points: make control points actual objects

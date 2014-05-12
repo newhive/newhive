@@ -122,10 +122,18 @@ Hive.init_menus = function() {
     $('#embed_done').click(function() { Hive.embed_code('#embed_code'); embed_menu.close(); });
 
     u.hover_menu('.insert_shape', '#menu_shape');
-    $('#menu_shape .rect').click(function(e) {
+    $('#menu_shape .rect').click(function(ev) {
         hive_app.new_app({ type : 'hive.rectangle', css_state :
             { 'background-color' : colors[24], 'border-color' : 'black', 'border-width' : 0,
                 'border-style' : 'solid' } });
+    });
+    $('#menu_shape .circle').click(function(ev) {
+        hive_app.new_app({ type : 'hive.circle', dimensions: [200, 200]
+            ,css_state : { 
+                'background-color' : "#000"
+                ,'border-color' : 'black'
+                ,'border-width' : 1
+                ,'border-style' : 'solid' } });
     });
     $('#menu_shape .sketch').click(function(e) {
         hive_app.new_app({ type: 'hive.sketch', dimensions: [700, 700 / 1.6]
