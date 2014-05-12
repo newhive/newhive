@@ -129,6 +129,7 @@ o.History.init = function(){
     //// BEGIN-Utility functions
     var old_states = [], save_targets = [];
     var get_states = function(){
+        if (!save_targets.slice(-1)[0]) return [];
         return save_targets.slice(-1)[0].map(function(a){ return a.state_relative(); }) 
     };
     // apps == true: save all state

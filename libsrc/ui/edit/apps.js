@@ -1407,9 +1407,7 @@ Hive.App.Polygon = function(o){
             })
         }
 
-        if (!u.array_equals(fudge_coords, [0, 0])) {
-            new_dims = u._add(new_dims, fudge_coords)
-        }
+        new_dims = u._add(new_dims, fudge_coords)
         new_dims = new_dims.map(Math.abs)
 
         var dims_ratio = u._div(new_dims, old_bounds)
@@ -1420,6 +1418,7 @@ Hive.App.Polygon = function(o){
         })
         if (!u.array_equals(fudge_coords, [0, 0])) {
             _dims_relative_set(u._add(o.dims_relative(), fudge_coords))
+            //u.set_debug_info({new_dims:new_dims, curr_dims:o.dims_relative(),f:f})
             return
         }
     }
@@ -1504,12 +1503,15 @@ Hive.App.Polygon = function(o){
     var _dims_relative_set = o.dims_relative_set
     o.dims_relative_set = function(dims) {
         dims = u._apply(Math.max, 1, dims)
-        var f = u.points_rect(points)
-            ,pad = o.point_offset()
-        dims.map(function(v, i) {
-            if (u.dist(f[i]) < 0.01)
-                dims[i] = 2*pad[i]
-        })
+        if (points.length == 2) {
+            // Keep degenerate lines degenerate
+            var f = u.points_rect(points)
+                ,pad = o.point_offset()
+            dims.map(function(v, i) {
+                if (u.dist(f[i]) < 0.01)
+                    dims[i] = 2*pad[i]
+            })
+        }
         _dims_relative_set(dims)
         o.size_update(dims)
         o.repoint()
