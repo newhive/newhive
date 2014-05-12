@@ -283,6 +283,34 @@ define([
 
         o.attach_handlers();
     };
+
+    // global keypress handler
+    var keydown = function(e) {
+        if (window.event)
+           var key = window.event.keyCode;
+        else if (e)
+           var key = e.which;
+        var keychar = String.fromCharCode(key);
+        if ((e.keyCode == 39 || e.keyCode == 37) &&
+            !(e.metaKey || e.ctrlKey || e.altKey) &&
+            $(e.target).is("body")) {
+            // If paging, go to previous / next expression.
+            if (context.page && context.page.navigate_page) {
+                var speed = (e.shiftKey) ? 2 : 1;
+                context.page.navigate_page((e.keyCode == 39) ? speed : -speed);
+            }
+        } else if (/*$("#search_box").is(":visible") && */!$(":focus").length
+            && (( /[A-Z0-9]/.test(keychar) && ! e.shiftKey) ||
+            (/[A-Z23]/.test(keychar) && e.shiftKey))) {
+            // Wow that was complicated. keychar will be the *unmodified* state,
+            // so to check for @, #, it's 2,3 with shift held.
+            $(".search_bar").showshow();
+            $("#search_box").focus();
+        } else {
+            // alert('keyCode: ' + e.keyCode);
+        }
+    }
+
     var local_attach_handlers = function(){
         // Add expression to collection
         $(".plus_menu").unbind('click').on('click', function(e) {
@@ -375,33 +403,7 @@ define([
         //     $(".search_bar").submit();
         // });
         
-        // global keypress handler
-        var key_handler = function(e) {
-            if (window.event)
-               var key = window.event.keyCode;
-            else if (e)
-               var key = e.which;
-            var keychar = String.fromCharCode(key);
-            if ((e.keyCode == 39 || e.keyCode == 37) &&
-                !(e.metaKey || e.ctrlKey || e.altKey) &&
-                $(e.target).is("body")) {
-                // If paging, go to previous / next expression.
-                if (context.page && context.page.navigate_page) {
-                    var speed = (e.shiftKey) ? 2 : 1;
-                    context.page.navigate_page((e.keyCode == 39) ? speed : -speed);
-                }
-            } else if (/*$("#search_box").is(":visible") && */!$(":focus").length
-                && (( /[A-Z0-9]/.test(keychar) && ! e.shiftKey) ||
-                (/[A-Z23]/.test(keychar) && e.shiftKey))) {
-                // Wow that was complicated. keychar will be the *unmodified* state,
-                // so to check for @, #, it's 2,3 with shift held.
-                $(".search_bar").showshow();
-                $("#search_box").focus();
-            } else {
-                // alert('keyCode: ' + e.keyCode);
-            }
-        }
-        $(document).off('keydown', key_handler).on("keydown", key_handler);
+        $(document).off('keydown', keydown).on("keydown", keydown);
         var scroll_handler = function(e) {
             if (c.route_name == "edit_expr")
                 return;

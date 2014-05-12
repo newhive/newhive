@@ -127,14 +127,16 @@ define([
             });
         }
 
-        //$(document.body).on('keydown', function(e){
-        //    if(e.keyCode == 32) // space
-        //        if(document.body.scrollTop + $(window).height() == document.body.scrollHeight) o.page_next();
-        //    if(e.keyCode == 39) // right arrow
-        //        if(document.body.scrollLeft + $(window).width() == document.body.scrollWidth) o.page_next();
-        //    if(e.keyCode == 37)
-        //        if(document.body.scrollLeft == 0) o.page_prev();
-        //});
+        $(document.body).on('keydown', function(e){
+           if(e.keyCode == 32) // space
+               if(document.body.scrollTop + $(window).height()
+                    == document.body.scrollHeight) o.page_next()
+           if(e.keyCode == 39) // right arrow
+               if(document.body.scrollLeft + $(window).width()
+                    == document.body.scrollWidth) o.page_next()
+           if(e.keyCode == 37)
+               if(document.body.scrollLeft == 0) o.page_prev()
+        })
 
         $('a, form').each(function(i, e){ o.link_target(e) });
 
