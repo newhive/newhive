@@ -1,10 +1,14 @@
 @import "common";
 
 body.edit {
+
+background-color: lightgrey;
+
 // for backwards-compatability with old editor.
 // TODO: Make Gibson default and migrate all old expressions to override
 // default
 .happ.text { font-family: Helvetica, Arial, sans-serif; }
+
 .prompts.gifwall {display:none}
 &.default {
     #edit_nav > .change_zoom {display:none}
@@ -84,6 +88,11 @@ body.edit {
     left: 0; top: 0; 
     // right:0; bottom: 0;
     z-index: 3;
+    &.zoomed {
+        border-color: black;
+        border-style: dashed;
+        border-width: 0 2px 2px 2px;
+    }
 }
 #overlay_frame {
     width: 50%;
@@ -133,7 +142,10 @@ body.edit {
 // So that using the form doesn't cause the window to scroll
 #media_upload { position: fixed; }
 #bg {
-    z-index: 1;
+    position: fixed;
+    z-index: 0;
+    background-color: white;
+    overflow: hidden;
 }
 #grid_guide {
     z-index: 2;
@@ -231,6 +243,9 @@ body.edit {
         width: 14px; height:14px;
         border-radius: 7px;
     }
+}
+#controls {
+    position: absolute;
 }
 .controls {
     position:absolute;

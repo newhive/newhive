@@ -252,19 +252,13 @@ Hive.init_dialogs = function() {
 };
 
 Hive.layout = function(){
-    u.layout_apps();
+    env.canvas_size_update()
     layout.center('.app_btns', 'body', {v: false});        
 }
 
 Hive.init_global_handlers = function(){
     // Global event handlers
-    $(window).on('resize', function(ev) {
-        var old_scale = env.scale();
-        env.scale_set();
-        var new_scale = env.scale();
-        if(old_scale == new_scale) return;
-        Hive.layout()
-    });
+    $(window).on('resize', Hive.layout)
     Hive.layout()
 
     $(window).on('scroll', Hive.scroll);
@@ -274,7 +268,7 @@ Hive.init_global_handlers = function(){
     evs.on('body', 'mousedown');
     evs.on('body', 'mouseup');
     // evs.on('body', 'click');
-    var drag_base = $('#grid_guide, .prompts')
+    var drag_base = $('body')
     evs.on(drag_base, 'dragenter');
     evs.on(drag_base, 'dragleave');
     evs.on(drag_base, 'drop');
@@ -345,10 +339,10 @@ Hive.pre_init = function(){
 
 Hive.init = function(exp, site_context){
     // this reference must be maintained, do not assign to Exp
-    env.Exp = Hive.Exp = exp;
+    env.Exp = Hive.Exp = exp
     // Hive.edit_page = page;
-    if(!exp.auth) exp.auth = 'public';
-    env.scale_set();
+    if(!exp.auth) exp.auth = 'public'
+    env.scale_set()
 
     $.extend(context, site_context)
     env.copy_table = context.flags.copy_table || false;
@@ -382,8 +376,10 @@ Hive.init = function(exp, site_context){
     // TODO-cleanup: remove Selection from registered apps, and factor out
     // shared functionality into has_coords
     env.Selection = hive_app.new_app({ type : 'hive.selection' });
+    env.Background = hive_app.App.Background()
     hive_app.Apps.init(Hive.Exp.apps);
     hive_app.Apps.restack();
+    env.zoom_set(1)
 
     $('.edit.overlay').showshow()
     Hive.init_global_handlers()
@@ -627,6 +623,7 @@ Hive.scroll = function(ev){
         env.Selection.controls.layout();
     env.Selection.elements().map(function(app){
         if(app.controls) app.controls.layout() });
+    env.Background.layout()
 };
 // END-Events /////////////////////////////////////////////////////////
 

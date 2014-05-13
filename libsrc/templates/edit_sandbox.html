@@ -321,7 +321,6 @@
   ></div
  ></div>
 </div>
-<div id='controls'></div>
 </div> {# id="controls_group" #}
 
 <div id="overlays_group">
@@ -341,12 +340,11 @@
 
 {# globals #}
 {# <iframe id="overlay_frame" src="http://google.com"></iframe> #}
-<div id='grid_guide'></div>
-<div id='bg' class='happfill'><img src='{expr.background.url}'
-  class='hide'></div>
-<div id='happs'></div>
+<div id='controls'></div>
+<div id='happs'><div id='bg' class='happfill'><img src='{expr.background.url}'
+  class='hide'><div id='grid_guide'></div></div></div>
 
-<form {form_attrs "file_create"} method='POST' id='media_upload'>
+<form {form_attrs "file_create"} method='POST' id='media_upload' class='hide'>
   <input readonly type='file' id='media_input' name='files'
     data-drop-area='#grid_guide,.prompts' multiple>
 </form>

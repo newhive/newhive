@@ -149,7 +149,7 @@ o.Controls = function(app, multiselect, delegate) {
 
     o.padding = 4;
     o.border_width = 5;
-    var pad_ul = [45, 45], pad_br = [45, 110], min_d = [135, 40];
+    var pad_ul = [45, 45], pad_br = [45, 120], min_d = [135, 40];
     if(multiselect){
         pad_ul = [3, 3];
         pad_br = [3, 3];
@@ -166,11 +166,9 @@ o.Controls = function(app, multiselect, delegate) {
         //    * Add scroll height when pushed from bottom to prevent
         //      overlap of controls with app content
         // TODO-polish-border-push:
-        //    * Make pushed border segments dashed
-        //    * Create pushed controls container so controls meant to
-        //      overlay app content can be separated
+        //    * Maybe make pushed border segments dashed
         // Maybe ditch border pushing entirely. Not convinced it's worth it
-        var ap = app.pos(),
+        var ap = u._add(app.pos(), env.offset), // add zoom offset
             // win = $(window), wdims = [win.width(), win.height()],
             wdims = env.win_size,
             pos = [ Math.max(pad_ul[0] + env.scrollX, ap[0]), 
@@ -190,7 +188,8 @@ o.Controls = function(app, multiselect, delegate) {
             dims[1] = ap[1] - pos[1] + ad[1];
             minned_dims = dims.slice();
         }
-        pos = u._add(pos)(u._mul(delta_dir)(u._sub(minned_dims)(dims)));
+        pos = u._add(pos)(u._mul(delta_dir)(u._sub(minned_dims)(dims)))
+        pos = u._sub(pos, env.offset) // remove zoom offset
 
         return { pos: pos, dims: minned_dims };
     };

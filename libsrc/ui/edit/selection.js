@@ -110,6 +110,18 @@ o.Selection = function(o) {
         else o.update([ app ])
     }
 
+    o.transform_start = function(){
+        o.hide_controls()
+        // prevents chrome from pooping selection borders
+        o.each(function(i,a){ a.hide_controls() })
+    }
+    o.transform_end = function(){
+        o.layout()
+        o.show_controls()
+        o.each(function(i,a){ a.show_controls() })
+        env.canvas_size_update()
+    }
+
     var dragging = false, drag_target, selecting = false;
     o.drag_target = function(){ return drag_target; };
     o.dragstart = function(ev, dd){
@@ -127,7 +139,6 @@ o.Selection = function(o) {
                 // alt + drag = duplicate
                 drag_target.copy({offset:[0, 0]})
             }
-            o.hide_controls()
             o.move_start();
             return;
         }
@@ -137,7 +148,7 @@ o.Selection = function(o) {
             return;
         }
         selecting = true
-        o.offset = env.apps_e.offset().left;
+        o.offset = [env.apps_e.offset().left, 0]
         u.reset_sensitivity();
 
         old_selection = []
@@ -179,7 +190,6 @@ o.Selection = function(o) {
     o.dragend = function (ev, dd) {
         if(!dragging) return;
         dragging = false;
-        o.show_controls()
 
         var app = ev.data;
         if(app && !selecting){
@@ -199,9 +209,9 @@ o.Selection = function(o) {
     o.update_focus = function(event){
         var s = env.scale();
         var select = { 
-            left: (o.drag_pos[0] - o.offset) / s,
-            right: (o.drag_pos[0] + o.drag_dims[0]) / s,
-            top: (o.drag_pos[1] - o.offset) / s, 
+            left: (o.drag_pos[0] - o.offset[0]) / s,
+            right: (o.drag_pos[0] + o.drag_dims[0] - o.offset[0]) / s,
+            top: o.drag_pos[1] / s, 
             bottom: (o.drag_pos[1] + o.drag_dims[1]) / s, 
         };
         var new_selection = u.overlapped_apps(select);
@@ -306,6 +316,7 @@ o.Selection = function(o) {
             return a.full_coord != undefined; });
     }
     o.move_start = function(){
+        o.transform_start()
         set_full_apps();
         // if (context.flags.full_bleed && full_apps.length)
         if (full_apps.length) {
@@ -345,7 +356,6 @@ o.Selection = function(o) {
             o.pushing_move(pos);
         drag_target.pos_relative_set(pos);
         env.Apps.end_layout();
-        //o.layout();
     };
     o.move_handler = function(ev, delta){
         delta = u._div(delta)(env.scale());
@@ -362,8 +372,8 @@ o.Selection = function(o) {
             o.update(prev_selection);
             full_apps = [];
         }
-        o.layout();
-    };
+        o.transform_end()
+    }
 
     o.centroid_relative = function(){
         // centroids of selected apps
@@ -380,6 +390,7 @@ o.Selection = function(o) {
         return 0; 
     };
     o.rotate_start = function(angle) {
+        o.transform_start()
         ref_angle = angle;
         ref_center = o.centroid_relative()
         rotation_refs = []
@@ -413,10 +424,12 @@ o.Selection = function(o) {
             if(a.rotate_end) a.rotate_end()
         })
         env.History.change_end('rotate')
+        o.transform_end()
     }
     hive_app.App.has_resize(o);
     var ref_dims, _ref_dims, _resize = o.resize;
     o.before_resize = function() {
+        o.transform_start()
         set_full_apps();
         o.each(function(i, a) { 
             if (a.resize_start) a.resize_start(); });
@@ -439,9 +452,10 @@ o.Selection = function(o) {
         // env.History.group('resize');
 
         full_apps = [];
-        drag_target = ref_dims = undefined;
-        o.show_controls()
-        return true;
+        drag_target = ref_dims = undefined
+
+        o.transform_end()
+        return true
     }
     var _dims_relative_set = o.dims_relative_set;
     // Multiselect doesn't handle non-aspect-preserving resize.

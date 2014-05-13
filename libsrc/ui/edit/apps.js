@@ -109,7 +109,8 @@ env.Apps = Hive.Apps = (function(){
     };
 
     var defer_layout = false
-    o.defer_layout = function() { return defer_layout }
+    o.defer_layout = function() {
+        return defer_layout }
     o.begin_layout = function() { 
         defer_layout = true
     }
@@ -126,6 +127,14 @@ env.Apps = Hive.Apps = (function(){
             }
         })
         // controls.appendTo("#controls_group")
+    }
+
+    o.dims = function(){
+        var dims = [0, 0]
+        o.all().map(function(a){
+            dims = u._apply(Math.max, u._add(a.pos(), a.dims()), dims)
+        })
+        return dims
     }
 
     var stack = []
@@ -345,18 +354,12 @@ Hive.App = function(init_state, opts) {
     o.get_aspect = function() { return false; };
     o.has_full_bleed = function() { return false; };
     o.angle = function(){ return 0; };
-    o.pos = function(){
-        var s = env.scale();
-        return [ _pos[0] * s, _pos[1] * s ];
-    };
+    o.pos = function(){ return u._mul(_pos, env.scale()) }
     o.pos_set = function(pos){
         var s = env.scale();
         o.pos_relative_set( [ pos[0] / s, pos[1] / s ] );
     };
-    o.dims = function() {
-        var s = env.scale();
-        return [ _dims[0] * s, _dims[1] * s ];
-    };
+    o.dims = function(){ return u._mul(_dims, env.scale()) }
     o.dims_set = function(dims){
         var s = env.scale();
         o.dims_relative_set( [ dims[0] / s, dims[1] / s ] );
@@ -616,7 +619,9 @@ Hive.App = function(init_state, opts) {
     o.css_class_set(o.css_class())
 
     o.has_align = o.add_to_collection = o.client_visible = true;
+
     o.type(o); // add type-specific properties
+
     o.div.addClass(o.type.tname.replace(".", "_"))
     if (o.content_element && o.init_state.css_state)
         o.set_css(o.init_state.css_state);
@@ -625,6 +630,7 @@ Hive.App = function(init_state, opts) {
     if (o.add_to_collection)
         o.apps.add(o); // add to apps collection
     o.make_controls = o.make_controls.concat(active_controls)
+
     // TODO-cleanup-events: attach app object to these events on app div without
     // creating duplicate event handlers, allowing for easier overriding
     evs.on(o.div, 'dragstart', o, {bubble_mousedown: true, handle: '.drag'})
@@ -647,12 +653,11 @@ Hive.App.PseudoApp = function(o) {
 
 };
 Hive.registerApp(Hive.App.PseudoApp, 'hive.pseudo');
+
 Hive.App.Root = function(o) {
     // Automatic top level app for layout and template logic
 
 };
-Hive.registerApp(Hive.App.Root, 'hive.root');
-
 
 // This App shows an arbitrary single HTML tag.
 Hive.App.Html = function(o) {
@@ -2886,6 +2891,18 @@ Hive.App.has_color = function(o, name){
     }))
 }
 
+// TODO-cleanup: move background functionality here
+Hive.App.Background = function(o) {
+    var o = {}
+    o.layout = function(){
+        layout.img_fill(o.img)
+    }
+
+    o.div = $('#bg')
+    o.img = o.div.find('img')
+
+    return o
+}
 
 //TODO: integrate this code into root app
 Hive.init_background_dialog = function(){
@@ -2953,8 +2970,8 @@ Hive.bg_set = function(bg, load) {
 
     imgs.attr('src', bg.url);
     img.load(function(){
-        setTimeout(layout.place_apps, 0);
-        if(load) load();
+        env.Background.layout()
+        if(load) load()
     });
     if(bg.opacity) imgs.css('opacity', bg.opacity);
 };

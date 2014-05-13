@@ -24,6 +24,7 @@ define([
 
 var o = {}
     ,bound = js.bound;
+env.u = o
 
 // For performance-critical ops, do not use jquery style
 o.inline_style = function(el, styles) {
@@ -690,6 +691,7 @@ o.new_file = function(files, opts, app_opts, filter) {
 env.layout_apps = o.layout_apps = function(){
     env.scale_set();
     $.map(env.Apps, function(a){ a.layout() });
+    env.Background.layout()
     // handled by App.layout
     // if(env.Selection.controls) env.Selection.controls.layout();
 
@@ -903,7 +905,7 @@ o.snap_helper = function(my_tuple, opts) {
             var rule = $(klass);
             if (0 == rule.length) {
                 rule = $('<div class="ruler ruler' + coord + '">');
-                rule.appendTo($("body"));
+                rule.appendTo(env.apps_e)
             }
             rule.showshow();
             rule.css({
