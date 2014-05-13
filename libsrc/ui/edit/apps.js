@@ -782,7 +782,6 @@ Hive.App.Code = function(o){
     o.created_controls = []
 
     o.content = function(){ return o.editor.getValue() }
-    var _load = o.load
     o.run_module_func = function(module_func, callback) {
         var curl_func = function() {
             editor.current_code = o;
@@ -801,6 +800,7 @@ Hive.App.Code = function(o){
         // else 
             curl_func();
     }
+    var _load = o.load
     o.load = function() {
         if (_load) _load()
         o.run_module_func("editor")
@@ -1665,7 +1665,7 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
             creating._remove()
             return false
         }
-        creating.reframe()
+        creating.reframe && creating.reframe()
         creating = false
         point_i = false
         o.setup()
@@ -1709,7 +1709,11 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
             return
         }
         var s = from_template()
-        template = Hive.new_app(s, {no_select: 1})
+        var dims = s.dimensions
+        template = Hive.new_app(s, {no_select: 1, position: [0,0]
+            , load: function(a) {
+                a.center_relative_set(pos(ev))
+            }})
         template.center_relative_set(pos(ev))
         o.finish(ev)
     }
@@ -1725,7 +1729,7 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         creating = template = Hive.new_app(s, {no_select: 1})
         orig_dims = template.dims();
         orig_aspect = orig_dims[0] / orig_dims[1]
-        if (creating.points_len() == 2) {
+        if (creating.points_len && creating.points_len() == 2) {
             // To make moving the point around relatively equivalent to
             // absolute, just set it to 0,0.
             creating.point_set(0, [0,0])
@@ -1740,7 +1744,7 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         if(!creating) return
         var new_dims = [dd.deltaX, dd.deltaY]
             , new_aspect = new_dims[0] / new_dims[1]
-        if (creating.points_len() == 2) {
+        if (creating.points_len && creating.points_len() == 2) {
             // console.log(creating.points())
             if (ev.shiftKey) {
                 if (Math.abs(new_dims[0]) > Math.abs(new_dims[1]))
@@ -1770,7 +1774,7 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         creating.dims_set(new_dims)
     }
     handle_template.dragend = function(ev, dd){
-        if (creating.points_len() == 2)
+        if (creating.points_len && creating.points_len() == 2)
             creating.reframe()
         creating = false
         o.finish(ev)

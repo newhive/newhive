@@ -122,18 +122,34 @@ Hive.init_menus = function() {
     $('#embed_done').click(function() { Hive.embed_code('#embed_code'); embed_menu.close(); });
 
     u.hover_menu('.insert_shape', '#menu_shape');
+    Hive.template_rect = { 
+        type : 'hive.rectangle'
+        , dimensions: [200, 200]
+        , css_state : {
+            'background-color' : "#000"
+            // 'background-color' : colors[24]
+            , 'border-color' : 'black'
+            , 'border-width' : 0
+            , 'border-style' : 'solid' 
+        }
+    };
     $('#menu_shape .rect').click(function(ev) {
-        hive_app.new_app({ type : 'hive.rectangle', css_state :
-            { 'background-color' : colors[24], 'border-color' : 'black', 'border-width' : 0,
-                'border-style' : 'solid' } });
+        poly.mode(Hive.template_rect)
+        poly.focus()
     });
+    Hive.template_circle = {
+        type : 'hive.circle'
+        , dimensions: [200, 200]
+        ,css_state : { 
+            'background-color' : "#000"
+            ,'border-color' : 'black'
+            ,'border-width' : 1
+            ,'border-style' : 'solid' 
+        }
+    };
     $('#menu_shape .circle').click(function(ev) {
-        hive_app.new_app({ type : 'hive.circle', dimensions: [200, 200]
-            ,css_state : { 
-                'background-color' : "#000"
-                ,'border-color' : 'black'
-                ,'border-width' : 1
-                ,'border-style' : 'solid' } });
+        poly.mode(Hive.template_circle)
+        poly.focus()
     });
     $('#menu_shape .sketch').click(function(e) {
         hive_app.new_app({ type: 'hive.sketch', dimensions: [700, 700 / 1.6]
@@ -141,29 +157,29 @@ Hive.init_menus = function() {
     });
     // polygon shapes
     var poly = hive_app.App.Polygon
+    var phi = (Math.sqrt(5) + 1) / 2
     Hive.template_triangle = { // triangle
         "type":"hive.polygon",
-        "points":[[50,0],[100, 100*Math.sqrt(3)/2],[0, 100*Math.sqrt(3)/2]]
+        "points":[[100,0], [200, 200*Math.sqrt(3)/2], [0, 200*Math.sqrt(3)/2]]
     }
     Hive.template_line = { // line
-        "type":"hive.polygon",
-        "points":[[0,0],[100, 0]]
+        "type":"hive.polygon"
+        ,"points":[[0,0], [200, 0]]
+        ,"style": {"stroke-width": 4}
     }
     Hive.template_pentagram = $.extend({}, Hive.template_triangle, {
         points: js.range(10).map(function(i){
             var d = ((i == 0 ? 0 : Math.PI*2*i/10) + Math.PI/10)
-                ,o = [47.705200572253005, 45.72550799853835] // dims/2
-                ,r = (i % 2) ? 50 : 19.0983005625
+                ,r = (i % 2) ? 100 : 100*(1 - 1 / phi)
                 ,p = [Math.cos(d), Math.sin(d)]
-            return u._add(o)( u._mul(p)(r) )
+            return u._mul(p, r)
         })
     })
     Hive.template_hexagon = $.extend({}, Hive.template_triangle, {
         points: js.range(6).map(function(i){
             var d = (i == 0 ? 0 : Math.PI*2*i/6)
-                ,o = [50.5, 43.80127018922194] // dims/2
                 ,p = [Math.cos(d), Math.sin(d)]
-            return u._add(o)( u._mul(p)(50) )
+            return u._mul(p, 100)
         })
     })
     $('#menu_shape .triangle').click(function(){
