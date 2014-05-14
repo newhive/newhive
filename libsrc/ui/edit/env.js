@@ -173,8 +173,9 @@ o.History.init = function(){
         opts = $.extend({
             collapse: false   // collapse undos with the same name and app list
         }, opts)
-        var new_states = get_states(), targets = save_targets.pop().slice()
-            ,start_states = old_states.pop().slice()
+        var new_states = get_states()
+            ,targets = save_targets.length ? save_targets.pop().slice() : []
+            ,start_states = old_states.length ? old_states.pop().slice() : []
             ,last_save = o.slice(o.current)[0]
             ,undo = function(){ $.each(targets, function(i, a){
                 a.state_relative_set(start_states[i]) }) }
