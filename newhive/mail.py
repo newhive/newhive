@@ -167,6 +167,7 @@ class Mailer(object):
     unsubscribable = True
     inline_css = True
     bcc = False
+    template = None
 
     def __init__(self, jinja_env=None, db=None, smtp=None):
         self.db = db
