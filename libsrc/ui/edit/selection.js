@@ -538,6 +538,10 @@ o.Selection = function(o) {
         });
         // Previously unfocused elements that should be focused
         $.each(apps, function(i, el){ 
+            if (apps.length > 1)
+                el.unfocus();
+            else
+                el.focus();
             if($.inArray(el, elements) == -1)
                 o.app_select(el, apps.length > 1); 
         });
