@@ -81,7 +81,7 @@ Hive.init_menus = function() {
             ,group: $(".misc.handle").data("menu")
             ,auto_height: false 
         }
-    }) ()
+    }).controls()
     $('#text_default').click(function(e) {
         hive_app.new_app({ type : 'hive.text', content : '' });
     });
@@ -345,8 +345,9 @@ Hive.init = function(exp, site_context){
     env.scale_set()
 
     $.extend(context, site_context)
+    env.show_css_class = false;
     env.copy_table = context.flags.copy_table || false;
-    env.gifwall = $.inArray('gifwall', exp.tags_index) > -1
+    env.gifwall = ($.inArray('gifwall', exp.tags_index) > -1)
     env.squish_full_bleed = env.gifwall;
     env.show_mini_selection_border = 
         env.gifwall || context.flags.show_mini_selection_border;
