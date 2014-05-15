@@ -136,6 +136,14 @@ env.Apps = Hive.Apps = (function(){
         })
         return dims
     }
+    o.dims_relative = function(){
+        var dims = [0, 0]
+        o.all().map(function(a){
+            dims = u._apply(Math.max, u._add(a.pos_relative(),
+                a.dims_relative()), dims)
+        })
+        return dims
+    }
 
     var stack = []
     u.has_shuffle(stack);

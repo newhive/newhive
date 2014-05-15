@@ -206,30 +206,23 @@ class Expr(ModelController):
             expr = expr_obj,
             use_ga = False,
         )
-        if snapshot_mode:
-            tdata.context['css'] = "body { overflow-x: hidden; }"
-        client_data = {}
-        for app in expr_obj.get('apps',[]):
-            app_id = app.get('id', 'app_' + str(app['z']))
-            data = app.get('client_data', {})
-            data.update(media=app.get('media'))
-            if app['type'] == 'hive.code':
-                data.update(dfilter(app, ['content', 'url']))
-            if app['type'] == 'hive.image':
-                data.update(dfilter(app, ['url']))
-            if data:
-                data['type'] = app['type']
-                client_data[app_id] = data
-        tdata.context.update(client_data=client_data)
+
+        body_style = ''
+        if snapshot_mode or expr_obj.get('clip_x'):
+            body_style = 'overflow-x: hidden;'
+        if expr_obj.get('clip_y'):
+            body_style += 'overflow-y: hidden;'
+        if body_style:
+            tdata.context['css'] = 'body {' + body_style + '}'
+
+        tdata.context.update(expr=expr_obj.client_view(mode='page'))
         return self.serve_page(tdata, response, 'pages/expr.html')
         
     def expr_to_html(self, exp, snapshot_mode=False, viewport=(1000, 750)):
         """Converts JSON object representing an expression to HTML"""
-
         if not exp: return ''
-        expr_dims = exp.get('dimensions', [1000, 750])
         # TODO-feature-expr-orientation (use y)
-        expr_scale = float(viewport[0]) / expr_dims[0]
+        expr_scale = float(viewport[0]) / 1000
 
         html_for_app = partial(self.html_for_app, scale=expr_scale,
             snapshot_mode=snapshot_mode)
