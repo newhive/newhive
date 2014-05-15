@@ -201,6 +201,13 @@ env.Apps = Hive.Apps = (function(){
     return o;
 })();
 
+var code_controls = function(o) {
+    if (!env.show_css_class) return
+
+    var handle = find_or_create_button(o, ".css_classes", "Change css classes");
+    
+}
+code_controls.display_order = 8
 // Creates generic initial object for all App types.
 Hive.App = function(init_state, opts) {
     var o = {};
@@ -252,7 +259,8 @@ Hive.App = function(init_state, opts) {
         o.div.find('.buttons .button.stroke').showhide(has_border);
     };
     o.fixup_border_controls.display_order = 9;
-    o.make_controls.push(memoize("o.fixup_border_controls", o.fixup_border_controls));
+    o.make_controls.push(memoize("o.fixup_border_controls", 
+        o.fixup_border_controls));
 
     var _client_data = function() {
         o.init_state.client_data = o.init_state.client_data || {};
@@ -599,6 +607,14 @@ Hive.App = function(init_state, opts) {
         o.div.removeClass(o.css_class()).addClass(s)
         o.init_state.css_class = s
     }
+    o.css_class_add = function(s){
+        s = h.u.union(o.css_class().split(" "), s.split(" ")).join(" ")
+        o.css_class_set(s);
+    }
+    o.css_class_remove = function(s){
+        s = h.u.except(o.css_class().split(" "), s.split(" ")).join(" ")
+        o.css_class_set(s);
+    }
 
     o.load = Funcs(function() {
         if( ! o.init_state.position ) o.init_state.position = [ 100, 100 ];
@@ -629,7 +645,10 @@ Hive.App = function(init_state, opts) {
         Hive.App.has_align(o);
     if (o.add_to_collection)
         o.apps.add(o); // add to apps collection
+    // Add the currently active controls from editor extensions
     o.make_controls = o.make_controls.concat(active_controls)
+    if (o.client_visible && context.flags.css_classes)
+        o.make_controls.push(code_controls);
 
     // TODO-cleanup-events: attach app object to these events on app div without
     // creating duplicate event handlers, allowing for easier overriding
@@ -785,6 +804,8 @@ Hive.App.Code = function(o){
     o.client_visible = false
     Hive.App.has_resize(o)
     o.created_controls = []
+    // ... or require a code to have been focused
+    env.show_css_class = true
 
     o.content = function(){ return o.editor.getValue() }
     o.run_module_func = function(module_func, callback) {
@@ -2607,11 +2628,78 @@ Hive.App.has_rotate = function(o) {
     o.make_controls.push(memoize("rotate_controls", controls));
 }
 
+var has_menu = function(handle_jq, opts) {
+    var o = {}
+    opts = $.extend({
+        single: false // make this menu only available to singly-selected apps
+
+        , container:null // add controls to container instead of menu
+        , handle:$()  // provide the handle selector instead of looking for it
+        , handle_name:"" // provide a generic button's name instead of an icon
+        , drawer_jq:""    // selector for the drawer's prototype in sandbox
+
+        , menu_opts:null // pass options to the menu constructor
+
+        , start:noop        // called at menu creation (history etc.)
+        , end:noop        // called at menu completion (history etc.)
+        , init:noop         // f(): called to retrieve initial state
+        , set:noop          // f(v): called to set value
+    }, opts)
+    var single = opts.single, handle = opts.handle, container = opts.container
+        , handle_name = opts.handle_name, menu_opts = opts.menu_opts
+        , start = opts.start, end = opts.end, app = opts.app
+        //, initial, val, initialized = false
+
+    o.initialize = function(){
+        o.initial = o.val = init();
+    }
+    o.render = function() { return $(o.drawer_jq).clone() }
+    o.attach_handlers = function() {}
+    o.controls = function(controls) {
+        var hover_menu = (controls && controls.hover_menu) || u.hover_menu
+
+        var drawer = o.render()
+        if (container) {
+            drawer.appendTo(container)
+        } else {
+            handle = find_or_create_button(controls, handle_jq, handle_name);
+            handle.parent().append(drawer)
+        }
+        // For named handles with no icon, give them the text of the first 
+        // character of their name
+        if (handle_name && !handle_jq) {
+            handle.html(handle_name[0]);
+        }
+
+        if (handle && handle.length) {
+            var m = hover_menu(handle, drawer, $.extend (
+                menu_opts, {
+                open: function(){
+                    o.initialize()
+                    start()
+                },
+                close: function(){
+                    if(o.val != o.initial) end()
+                }
+            }))
+        }
+        o.attach_handlers()
+        return controls
+    }
+    if (app) {
+        if (single) o.controls.single = true
+        o.controls = memoize('slider' + ((single) ? '_S' : '') + 
+            handle_jq + handle_name, o.controls)
+        app.make_controls.push(o.controls)
+    }
+    return o
+}
+
 // set: f(v): tell the app to set its state to the slider value
 // init: f(): get the app's state
 // start: called on menu open (for history)
 // end: called on menu close (for history)
-Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
+Hive.App.has_slider_menu = function(app, handle_jq, set, init, start, end, opts) {
     opts = $.extend({
         single: false // true to make this menu only available to singly-selected apps
         , min:0       // minimum setting on range
@@ -2623,34 +2711,32 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
         , handle:$()  // provide the handle selector instead of looking for it
         , container:null // add controls to container instead of menu
         , handle_name:"" // provide a generic button's name instead of an icon
+
+        , set:set, init:init, start:start, end:end, app:app
     }, opts)
+    var o = has_menu(handle_jq, opts)
     var handle = opts.handle, min = opts.min, max = opts.max
         , container = opts.container, menu_opts = opts.menu_opts
         , initial, val, initialized = false, handle_name = opts.handle_name
         , quant = opts.quant, clamp_min = opts.clamp_min && opts.clamp
         , clamp_max = opts.clamp && opts.clamp_max, single = opts.single
-    function controls(o) {
-        if(!start) start = noop
-        if(!end) end = noop
-        var hover_menu = (o && o.hover_menu) || u.hover_menu
 
-        var drawer = $('<div>').addClass('control border drawer slider hide')
-            ,range = $("<input type='range' min='0' max='100'>")
+    var num_input, drawer, range, val
+    o.initialize = function(){
+        num_input.focus().select()
+        initial = val = init();
+        update_val()
+    }
+    o.render = function() {
+        drawer = $('<div>').addClass('control border drawer slider hide')
+        range = $("<input type='range' min='0' max='100'>")
                 .appendTo(drawer)
                 .css('vertical-align', 'middle')
-            ,num_input = $("<input type='text' size='3'>")
+        num_input = $("<input type='text' size='3'>")
                 .appendTo(drawer)
-        if (container) {
-            drawer.appendTo(container)
-        } else {
-            handle = find_or_create_button(o, handle_q, handle_name);
-            handle.parent().append(drawer)
-        }
-        // For named handles with no icon, give them the text of the first 
-        // character of their name
-        if (handle_name && !handle_q) {
-            handle.html(handle_name[0]);
-        }
+        return drawer
+    }
+    o.attach_handlers = function() {
         handle.add(drawer).bind('mousewheel', function(e){
             // Need to initialize here because mousewheel can fire before 
             // menu is opened
@@ -2660,47 +2746,6 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
             update_val()
             e.preventDefault()
         })
-
-        var initialize = function(){
-            // if(initialized) return;
-            initial = val = init();
-            // initialized = true;
-        }
-
-        var update_val = function(opts){
-            opts = $.extend({num_input:true, range:true}, opts)
-            if (typeof(val) == "number") {
-                if (opts.num_input) num_input.val((Math.round(val*1000)/1000).toString())
-                if (opts.range) range.val((val - min)/(max - min)*100)
-            } else {
-                if (opts.num_input) num_input.val()
-                if (opts.range) range.val(0)
-            }
-        }
-        var clamp_set = function(n) {
-            val = n
-            if (quant)
-                val = Math.round(val / quant) * quant;
-            if (clamp_min) val = Math.max(val, min)
-            if (clamp_max) val = Math.min(val, max)
-            set(val)
-            return val
-        }
-
-        if (handle && handle.length) {
-            var m = hover_menu(handle, drawer, $.extend (
-                menu_opts, {
-                open: function(){
-                    num_input.focus().select()
-                    initialize()
-                    update_val()
-                    start()
-                },
-                close: function(){
-                    if(val != initial) end()
-                }
-            }))
-        }
 
         range.on('input change', function(){
             var v = parseFloat(range.val());
@@ -2718,17 +2763,29 @@ Hive.App.has_slider_menu = function(o, handle_q, set, init, start, end, opts) {
             clamp_set(val);
             update_val({num_input:false})
         })
+    }
+    var clamp_set = function(n) {
+        val = n
+        if (quant)
+            val = Math.round(val / quant) * quant;
+        if (clamp_min) val = Math.max(val, min)
+        if (clamp_max) val = Math.min(val, max)
+        set(val)
+        return val
+    }
 
-        return o
+    var update_val = function(opts){
+        opts = $.extend({num_input:true, range:true}, opts)
+        if (typeof(val) == "number") {
+            if (opts.num_input) num_input.val((Math.round(val*1000)/1000).toString())
+            if (opts.range) range.val((val - min)/(max - min)*100)
+        } else {
+            if (opts.num_input) num_input.val()
+            if (opts.range) range.val(0)
+        }
     }
-    var res = controls
-    if (o) {
-        if (single) controls.single = true
-        res = memoize('slider' + ((single) ? '_S' : '') + 
-            handle_q + handle_name, controls)
-        o.make_controls.push(res)
-    }
-    return res
+
+    return o
 }
 
 Hive.App.has_align = function(o) {
