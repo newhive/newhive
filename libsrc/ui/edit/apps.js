@@ -201,13 +201,6 @@ env.Apps = Hive.Apps = (function(){
     return o;
 })();
 
-var code_controls = function(o) {
-    if (!env.show_css_class) return
-
-    var handle = find_or_create_button(o, ".css_classes", "Change css classes");
-    
-}
-code_controls.display_order = 8
 // Creates generic initial object for all App types.
 Hive.App = function(init_state, opts) {
     var o = {};
@@ -647,9 +640,19 @@ Hive.App = function(init_state, opts) {
         o.apps.add(o); // add to apps collection
     // Add the currently active controls from editor extensions
     o.make_controls = o.make_controls.concat(active_controls)
-    if (o.client_visible && context.flags.css_classes)
-        o.make_controls.push(code_controls);
-
+    if (o.client_visible && o.add_to_collection){//!! && context.flags.css_classes)
+        // o.make_controls.push(code_controls);
+        var history_point, sel = env.Selection
+        Hive.App.has_text_menu(".css_classes", {
+            filter: function(app) { return env.show_css_class }
+            , app: o
+            , start: function(){ history_point = env.History.saver(
+                sel.css_class, sel.css_class_set, 'border radius'); }
+            , end: function(){ history_point.save() }
+            , init: sel.css_class
+            , set: sel.css_class_set
+        }).controls.display_order = 8
+    }
     // TODO-cleanup-events: attach app object to these events on app div without
     // creating duplicate event handlers, allowing for easier overriding
     evs.on(o.div, 'dragstart', o, {bubble_mousedown: true, handle: '.drag'})
@@ -2632,6 +2635,7 @@ var has_menu = function(handle_jq, opts) {
     var o = {}
     opts = $.extend({
         single: false // make this menu only available to singly-selected apps
+        , filter: null      // only show controls if (filter(app))
 
         , container:null // add controls to container instead of menu
         , handle:$()  // provide the handle selector instead of looking for it
@@ -2641,29 +2645,40 @@ var has_menu = function(handle_jq, opts) {
         , menu_opts:null // pass options to the menu constructor
 
         , start:noop        // called at menu creation (history etc.)
-        , end:noop        // called at menu completion (history etc.)
+        , end:noop          // called at menu completion (history etc.)
         , init:noop         // f(): called to retrieve initial state
         , set:noop          // f(v): called to set value
     }, opts)
-    var single = opts.single, handle = opts.handle, container = opts.container
-        , handle_name = opts.handle_name, menu_opts = opts.menu_opts
-        , start = opts.start, end = opts.end, app = opts.app
-        //, initial, val, initialized = false
+    var single = opts.single, filter = opts.filter
+        , container = opts.container, handle = opts.handle
+        , handle_name = opts.handle_name, drawer_jq = opts.drawer_jq
+        , menu_opts = opts.menu_opts
+        , start = opts.start, end = opts.end, init = opts.init, set = opts.set
+        , initial, val //, initialized = false
+    o.app = opts.app
 
     o.initialize = function(){
-        o.initial = o.val = init();
+        initial = val = init()
+        o.val_set(val, false)
     }
-    o.render = function() { return $(o.drawer_jq).clone() }
+    o.val_set = function(v, doit) {
+        o.val = v
+        if (doit !== false) 
+            set(v)
+    }
+    o.val = function() { return val }
+    o.render = function() { return $(drawer_jq).clone() }
     o.attach_handlers = function() {}
     o.controls = function(controls) {
+        if (filter && !filter(o.app)) return
         var hover_menu = (controls && controls.hover_menu) || u.hover_menu
 
-        var drawer = o.render()
+        o.drawer = o.render()
         if (container) {
-            drawer.appendTo(container)
+            o.drawer.appendTo(container)
         } else {
             handle = find_or_create_button(controls, handle_jq, handle_name);
-            handle.parent().append(drawer)
+            handle.parent().append(o.drawer)
         }
         // For named handles with no icon, give them the text of the first 
         // character of their name
@@ -2671,26 +2686,49 @@ var has_menu = function(handle_jq, opts) {
             handle.html(handle_name[0]);
         }
 
+        o.handle = $()
         if (handle && handle.length) {
-            var m = hover_menu(handle, drawer, $.extend (
+            o.handle = handle
+            o.menu = hover_menu(handle, o.drawer, $.extend (
                 menu_opts, {
                 open: function(){
                     o.initialize()
                     start()
                 },
                 close: function(){
-                    if(o.val != o.initial) end()
+                    if(o.val != initial) end()
                 }
             }))
         }
         o.attach_handlers()
         return controls
     }
-    if (app) {
+    if (o.app) {
         if (single) o.controls.single = true
         o.controls = memoize('slider' + ((single) ? '_S' : '') + 
             handle_jq + handle_name, o.controls)
-        app.make_controls.push(o.controls)
+        o.app.make_controls.push(o.controls)
+    }
+    return o
+}
+
+Hive.App.has_text_menu = function(handle_jq, opts) {
+    opts = $.extend({
+        drawer_jq:"#control_drawers .generic_edit"
+    }, opts)
+    var o = has_menu(handle_jq, opts), edit
+    var _val_set = o.val_set
+    o.val_set = function(v) {
+        _val_set(v)
+        edit.val(v)
+    }
+    o.attach_handlers = function() {
+        edit = o.drawer.find("input")
+
+        edit.on('input keyup change', function(ev){
+            if(ev.keyCode == 13) { edit.blur(); o.menu.close(); }
+            o.val_set(edit.val())
+        }).focus()
     }
     return o
 }
@@ -2701,34 +2739,28 @@ var has_menu = function(handle_jq, opts) {
 // end: called on menu close (for history)
 Hive.App.has_slider_menu = function(app, handle_jq, set, init, start, end, opts) {
     opts = $.extend({
-        single: false // true to make this menu only available to singly-selected apps
-        , min:0       // minimum setting on range
+          min:0       // minimum setting on range
         , max:100     // maximum setting on range
         , quant:0     // quantization of slider (1 ==> integers .1 ==> integer/10, etc)
         , clamp:true  // disallow values outside [min, max]
         , clamp_min:true  // disallow values outside [min, max]
         , clamp_max:true  // disallow values outside [min, max]
-        , handle:$()  // provide the handle selector instead of looking for it
-        , container:null // add controls to container instead of menu
-        , handle_name:"" // provide a generic button's name instead of an icon
 
         , set:set, init:init, start:start, end:end, app:app
     }, opts)
     var o = has_menu(handle_jq, opts)
-    var handle = opts.handle, min = opts.min, max = opts.max
-        , container = opts.container, menu_opts = opts.menu_opts
-        , initial, val, initialized = false, handle_name = opts.handle_name
-        , quant = opts.quant, clamp_min = opts.clamp_min && opts.clamp
-        , clamp_max = opts.clamp && opts.clamp_max, single = opts.single
+    var min = opts.min, max = opts.max, quant = opts.quant
+        , clamp_min = opts.clamp_min && opts.clamp
+        , clamp_max = opts.clamp_max && opts.clamp
 
-    var num_input, drawer, range, val
+    var num_input, range, val
     o.initialize = function(){
         num_input.focus().select()
-        initial = val = init();
+        val = init();
         update_val()
     }
     o.render = function() {
-        drawer = $('<div>').addClass('control border drawer slider hide')
+        var drawer = $('<div>').addClass('control border drawer slider hide')
         range = $("<input type='range' min='0' max='100'>")
                 .appendTo(drawer)
                 .css('vertical-align', 'middle')
@@ -2737,7 +2769,7 @@ Hive.App.has_slider_menu = function(app, handle_jq, set, init, start, end, opts)
         return drawer
     }
     o.attach_handlers = function() {
-        handle.add(drawer).bind('mousewheel', function(e){
+        o.handle.add(o.drawer).bind('mousewheel', function(e){
             // Need to initialize here because mousewheel can fire before 
             // menu is opened
             val = val || init();
@@ -2756,7 +2788,7 @@ Hive.App.has_slider_menu = function(app, handle_jq, set, init, start, end, opts)
         })
 
         num_input.on('input keyup change', function(ev){
-            if(ev.keyCode == 13) { num_input.blur(); m.close(); }
+            if(ev.keyCode == 13) { num_input.blur(); o.menu.close(); }
             var v = parseFloat(num_input.val());
             if(isNaN(v)) return;
             val = v;
@@ -2783,6 +2815,7 @@ Hive.App.has_slider_menu = function(app, handle_jq, set, init, start, end, opts)
             if (opts.num_input) num_input.val()
             if (opts.range) range.val(0)
         }
+        o.val_set(val)
     }
 
     return o
