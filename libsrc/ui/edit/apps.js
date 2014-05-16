@@ -655,10 +655,10 @@ Hive.App = function(init_state, opts) {
             filter: function(app) { return env.show_css_class }
             , app: o
             , start: function(){ history_point = env.History.saver(
-                sel.css_class, sel.css_class_set, 'border radius'); }
+                sel.css_class, sel.css_class_set, 'css classes'); }
             , end: function(){ history_point.save() }
-            , init: sel.css_class
-            , set: sel.css_class_set
+            , init: sel.css_class_sel
+            , set: sel.css_class_sel_set
         }).controls.display_order = 8
     }
     // TODO-cleanup-events: attach app object to these events on app div without
@@ -2786,7 +2786,7 @@ Hive.App.has_text_menu = function(handle_jq, opts) {
 
         edit.on('input keyup change', function(ev){
             if(ev.keyCode == 13) { edit.blur(); o.menu.close(); }
-            o.val_set(edit.val())
+            _val_set(edit.val())
         }).focus()
     }
     return o

@@ -860,6 +860,24 @@ o.Selection = function(o) {
     delegates.map(function(fn_name) {
         o[fn_name] = delegate_fn(fn_name);
     });
+    
+    var common_classes
+    o.css_class_sel = function() {
+        var all_classes = o.css_class("history").slice(1)
+            .map(function(klasses) { return klasses.split(" ")})
+        // common_classes = u.intersect.apply(null, all_classes)
+        common_classes = u.union.apply(null, all_classes)
+        return common_classes.join(" ")
+    }
+    o.css_class_sel_set = function(klasses) {
+        klasses = klasses.split(" ")
+        var res, added = u.except(klasses, common_classes)
+            , removed = u.except(common_classes, klasses)
+        res = delegate_fn("css_class_add")(added.join(" "))
+        res = delegate_fn("css_class_remove")(removed.join(" "))
+        common_classes = klasses
+        return res
+    }
 
     // prevent selection keyhandler from eating events when nothing is selected
     hive_app.App.has_nudge(o, function(){ return elements.length > 0 })
