@@ -215,7 +215,7 @@ class Expr(ModelController):
         if body_style:
             tdata.context['css'] = 'body {' + body_style + '}'
 
-        tdata.context.update(expr=expr_obj.client_view(mode='page'))
+        tdata.context.update(expr=expr_obj)
         return self.serve_page(tdata, response, 'pages/expr.html')
         
     def expr_to_html(self, exp, snapshot_mode=False, viewport=(1000, 750)):

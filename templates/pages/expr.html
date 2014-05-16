@@ -24,7 +24,7 @@
   {% include 'page_parts/expr_body.html' %}
   <script>
     curl(['ui/expression'], function(expression) {
-      expression.init({{ expr|json }});
+      expression.init({{ expr.client_view(mode='page')|json }});
     });
   </script>
 {% endblock %}
