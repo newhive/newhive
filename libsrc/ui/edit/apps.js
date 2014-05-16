@@ -688,8 +688,15 @@ Hive.App.Root = function(o) {
 
 // This App shows an arbitrary single HTML tag.
 Hive.App.Html = function(o) {
-    Hive.App.has_resize(o);
-    o.content = function() { return o.content_element[0].outerHTML; };
+    Hive.App.has_resize(o)
+
+    o.content = function(){
+        return o.content_element[0].outerHTML }
+    o.content_set = function(v){
+        var new_content = $(v)
+        o.content_element.replaceWith(new_content)
+        o.content_element = new_content
+    }
 
     var content = o.init_state.content;
     // TODO: turn off autoplay when editing.
@@ -706,6 +713,41 @@ Hive.App.Html = function(o) {
         o.set_shield = function(){ return true; }
         o.shield();
     }
+
+    var text_editor = $('<textarea>').addClass('content').hide().appendTo(o.div)
+        ,editing = false
+    o._edit_intent = false
+    o.edit_mode = function(enabled){
+        if(editing == enabled) return
+        editing = enabled
+        if(editing){
+            text_editor.val(o.content()).show()
+            o.content_element.detach()
+            text_editor.focus()
+        }
+        else{
+            env.History.saver(o.content, o.content_set, 'edit html').exec(
+                text_editor.blur().hide().val())
+            o.content_element.appendTo(o.div)
+        }
+    }
+    o.focus.add(function(){
+        o.edit_mode(o._edit_intent) })
+    o.unfocus.add(function(){
+        o.edit_mode(false) })
+
+    var edit_src = memoize('edit_src', function(controls){
+        var app = controls.single()
+            ,btn = controls.addButton($('#controls_misc .edit_src'))
+                .addremoveClass('on', app._edit_intent)
+        btn.on('click', function(){
+            app._edit_intent = !app._edit_intent
+            app.edit_mode(app._edit_intent)
+            btn.addremoveClass('on', app._edit_intent)
+        })
+    })
+    edit_src.single = true
+    o.make_controls.push(edit_src)
 
     Hive.App.has_opacity(o)
     // TODO: migrate this and use init_state.media
@@ -2900,7 +2942,7 @@ Hive.App.has_border_width = function(o, opts) {
             history_point.save()
             sel.reframe()
         }
-        ,$.extend({max:40, quant:1, handle_name: getter}, opts.slider_opts)
+        ,$.extend({max:40, clamp_max:false, quant:1}, opts.slider_opts)
     )
 }
 Hive.App.has_blur = function(o) {
