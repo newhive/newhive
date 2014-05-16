@@ -39,7 +39,13 @@ define([
     //     o.send_top('layout=' + $(window).width() + ',' + $(window).height());
     // };
 
-    o.init = function(client_data){
+    var layout_coord = 0
+    o.layout = function(){
+        layout.place_apps(layout_coord) }
+
+    o.init = function(expr){
+        layout_coord = expr.layout_coord || 0
+        client_data = expr['apps']
         $.each(client_data, function(app_id, data){
             $('#'+app_id).data(data) })
 
@@ -59,7 +65,7 @@ define([
             var zoom = layout.get_zoom()
             $(window).resize(function(){
                 var new_zoom = layout.get_zoom()
-                if(new_zoom == zoom) layout.place_apps()
+                if(new_zoom == zoom) o.layout()
                 zoom = new_zoom
             })
         }
@@ -74,7 +80,7 @@ define([
                     o.page_prev()
             })
         }
-    };
+    }
 
     o.expr_receive = function(ev){
         if ( ev.data.action == "show" ) {
@@ -142,7 +148,7 @@ define([
 
         jplayer.init_jplayer();
 
-        // layout.place_apps();
+        // o.layout()
     };
 
     o.link_target = function(a){
@@ -201,7 +207,7 @@ define([
             $div.html($div.attr('data-content'));
         });
         
-        layout.place_apps();
+        o.layout()
 
         o.update_targets();
 

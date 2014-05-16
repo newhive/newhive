@@ -1729,7 +1729,11 @@ class Expr(HasSocial):
 
     public = property(lambda self: self.get('auth') == "public")
 
-    def client_view(self, viewer=None, special={}, activity=0):
+    def client_view(self, mode='card', viewer=None, special={}, activity=0):
+        """ data for expr card, seen in community pages """
+        if mode == 'page':
+            return self.client_view_page()
+
         counts = dict([ ( k, v.get('count', 0) ) for
             k, v in self.get('analytics', {}).iteritems() ])
         counts['Views'] = self.views
@@ -1769,6 +1773,23 @@ class Expr(HasSocial):
             # dict.update( expr, activity =
             #     map(lambda r: r.client_view(),
             #         self.db.Feed.search({'entity':self.id})) [0:activity] )
+        return expr
+
+    def client_view_page(self):
+        """ data for expr page """
+        expr = dfilter(self, ['layout_coord', 'clip_x', 'clip_y'])
+        apps = expr['apps'] = {}
+        for app in self.get('apps',[]):
+            app_id = app.get('id', 'app_' + str(app['z']))
+            data = app.get('client_data', {})
+            data.update(media=app.get('media'))
+            if app['type'] == 'hive.code':
+                data.update(dfilter(app, ['content', 'url']))
+            if app['type'] == 'hive.image':
+                data.update(dfilter(app, ['url']))
+            if data:
+                data['type'] = app['type']
+                apps[app_id] = data
         return expr
 
     def loves_feed(self, count=-1, at=0):

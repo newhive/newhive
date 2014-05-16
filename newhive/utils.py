@@ -105,7 +105,7 @@ def large_number(number):
     elif 10000 <= number < 1000000:
         return str(int(number/1000)) + "K"
     elif 1000000 <= number < 10000000:
-        return str(math.floor(number/100000)/10) + "M"
+        return str(int(number/100000)/10) + "M"
     elif 10000000 <= number:
         return "{:,}".format(int(number/1000000)) + "M"
 
@@ -156,6 +156,8 @@ def datetime_to_id(d):
 
 def now(): return time.time()
 
+def mktime(*args):
+    return time.mktime(datetime.datetime(*args).timetuple())
 
 def time_s(t):
     return int(t.strftime('%s')) if (type(t) == datetime) else t

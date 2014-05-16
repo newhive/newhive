@@ -9,11 +9,12 @@ define(['browser/jquery', 'ui/util'], function($, util) {
         return window.devicePixelRatio
     }
 
-    o.place_apps = function() {
+    o.place_apps = function(layout_coord) {
         // if(util.mobile()) return
+        var scale_from = layout_coord ? $(window).width() : $(window).height()
+            ,s = scale_from / 1000
+        if(util.mobile()) s = .5
 
-        var win_width = $(window).width();
-        if(util.mobile()) win_width = 500;
         // TODO: bg code should respect win_width
         $('.happfill').each(function(i, div) {
             var e = $(div);
@@ -23,7 +24,6 @@ define(['browser/jquery', 'ui/util'], function($, util) {
 
         $('.happ').each(function(i, app_div) {
             var e = $(this);
-            var s = win_width / 1000;
             if(!e.data('css')) {
                 var c = {}, props = ['left', 'top', 'width', 'height'],
                     border = $(app_div).css('border-radius')

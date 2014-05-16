@@ -136,6 +136,14 @@ env.Apps = Hive.Apps = (function(){
         })
         return dims
     }
+    o.dims_relative = function(){
+        var dims = [0, 0]
+        o.all().map(function(a){
+            dims = u._apply(Math.max, u._add(a.pos_relative(),
+                a.dims_relative()), dims)
+        })
+        return dims
+    }
 
     var stack = []
     u.has_shuffle(stack);
@@ -683,8 +691,15 @@ Hive.App.Root = function(o) {
 
 // This App shows an arbitrary single HTML tag.
 Hive.App.Html = function(o) {
-    Hive.App.has_resize(o);
-    o.content = function() { return o.content_element[0].outerHTML; };
+    Hive.App.has_resize(o)
+
+    o.content = function(){
+        return o.content_element[0].outerHTML }
+    o.content_set = function(v){
+        var new_content = $(v)
+        o.content_element.replaceWith(new_content)
+        o.content_element = new_content
+    }
 
     var content = o.init_state.content;
     // TODO: turn off autoplay when editing.
@@ -701,6 +716,41 @@ Hive.App.Html = function(o) {
         o.set_shield = function(){ return true; }
         o.shield();
     }
+
+    var text_editor = $('<textarea>').addClass('content').hide().appendTo(o.div)
+        ,editing = false
+    o._edit_intent = false
+    o.edit_mode = function(enabled){
+        if(editing == enabled) return
+        editing = enabled
+        if(editing){
+            text_editor.val(o.content()).show()
+            o.content_element.detach()
+            text_editor.focus()
+        }
+        else{
+            env.History.saver(o.content, o.content_set, 'edit html').exec(
+                text_editor.blur().hide().val())
+            o.content_element.appendTo(o.div)
+        }
+    }
+    o.focus.add(function(){
+        o.edit_mode(o._edit_intent) })
+    o.unfocus.add(function(){
+        o.edit_mode(false) })
+
+    var edit_src = memoize('edit_src', function(controls){
+        var app = controls.single()
+            ,btn = controls.addButton($('#controls_misc .edit_src'))
+                .addremoveClass('on', app._edit_intent)
+        btn.on('click', function(){
+            app._edit_intent = !app._edit_intent
+            app.edit_mode(app._edit_intent)
+            btn.addremoveClass('on', app._edit_intent)
+        })
+    })
+    edit_src.single = true
+    o.make_controls.push(edit_src)
 
     Hive.App.has_opacity(o)
     // TODO: migrate this and use init_state.media
@@ -832,7 +882,8 @@ Hive.App.Code = function(o){
     var _load = o.load
     o.load = function() {
         if (_load) _load()
-        o.run_module_func("editor")
+        if(o.init_state.code_type == 'js')
+            o.run_module_func("editor")
     }
 
     var iter = 0;
@@ -845,22 +896,27 @@ Hive.App.Code = function(o){
             "; return self; })";
     }
     var insert_code = function(callback){
-        o.code_element.remove();
-        ++iter;
-        // o.code_element.on('load')
+        var code
+        if(o.init_state.code_type == 'js'){
+            ++iter;
+            code = module_code()
+        }
+        else code = o.content()
+        o.code_element.html(code).appendTo('body')
+
         // jquery insert doesn't allow debugging, so we use straight js
-        o.code_element.html(module_code()).appendTo('body')
         // var script   = document.createElement("script");
         // script.type  = "text/javascript";
         // script.text  = module_code();
         // document.body.appendChild(script);
         // o.code_element = $(script);
     }
-    // var try_code_call = function(func_name){
+
     var animate_go
     o.run = function() {
         o.stop();
         insert_code()
+        if(o.init_state.code_type != 'js') return
         
         o.run_module_func("run", function(module) {
             if(!module.animate) return
@@ -876,10 +932,13 @@ Hive.App.Code = function(o){
     }
     o.stop = function() {
         // insert_code();
-        if (!iter) return;
-        o.run_module_func("stop", function() {
-            animate_go = 0
-        })
+        if(o.init_state.code_type == 'js'){
+            if (!iter) return;
+            o.run_module_func("stop", function() {
+                animate_go = 0
+            })
+        }
+        o.code_element.remove()
     }
     o.edit = function() {
         if (o.created_controls.length == 0) {
@@ -2925,7 +2984,7 @@ Hive.App.has_border_width = function(o, opts) {
             history_point.save()
             sel.reframe()
         }
-        ,$.extend({max:40, quant:1, handle_name: getter}, opts.slider_opts)
+        ,$.extend({max:40, clamp_max:false, quant:1}, opts.slider_opts)
     )
 }
 Hive.App.has_blur = function(o) {
