@@ -11,7 +11,7 @@ define(['browser/jquery', 'ui/util'], function($, util) {
 
     o.place_apps = function(layout_coord) {
         // if(util.mobile()) return
-        var scale_from = layout_coord ? $(window).width() : $(window).height()
+        var scale_from = [$(window).width(), $(window).height()][layout_coord]
             ,s = scale_from / 1000
         if(util.mobile()) s = .5
 
