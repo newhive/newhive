@@ -879,7 +879,8 @@ Hive.App.Code = function(o){
     var _load = o.load
     o.load = function() {
         if (_load) _load()
-        o.run_module_func("editor")
+        if(o.init_state.code_type == 'js')
+            o.run_module_func("editor")
     }
 
     var iter = 0;
@@ -892,22 +893,27 @@ Hive.App.Code = function(o){
             "; return self; })";
     }
     var insert_code = function(callback){
-        o.code_element.remove();
-        ++iter;
-        // o.code_element.on('load')
+        var code
+        if(o.init_state.code_type == 'js'){
+            ++iter;
+            code = module_code()
+        }
+        else code = o.content()
+        o.code_element.html(code).appendTo('body')
+
         // jquery insert doesn't allow debugging, so we use straight js
-        o.code_element.html(module_code()).appendTo('body')
         // var script   = document.createElement("script");
         // script.type  = "text/javascript";
         // script.text  = module_code();
         // document.body.appendChild(script);
         // o.code_element = $(script);
     }
-    // var try_code_call = function(func_name){
+
     var animate_go
     o.run = function() {
         o.stop();
         insert_code()
+        if(o.init_state.code_type != 'js') return
         
         o.run_module_func("run", function(module) {
             if(!module.animate) return
@@ -924,9 +930,11 @@ Hive.App.Code = function(o){
     o.stop = function() {
         // insert_code();
         if (!iter) return;
-        o.run_module_func("stop", function() {
-            animate_go = 0
-        })
+        if(o.init_state.code_type == 'js')
+            o.run_module_func("stop", function() {
+                animate_go = 0
+            })
+        o.code_element.remove()
     }
     o.edit = function() {
         if (o.created_controls.length == 0) {
