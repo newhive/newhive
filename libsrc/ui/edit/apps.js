@@ -2712,7 +2712,8 @@ var has_menu = function(handle_jq, opts) {
         , container = opts.container, handle = opts.handle
         , handle_name = opts.handle_name, drawer_jq = opts.drawer_jq
         , menu_opts = opts.menu_opts
-        , start = opts.start, end = opts.end, init = opts.init, set = opts.set
+        , start = opts.start || noop, end = opts.end || noop
+        , init = opts.init || noop, set = opts.set || noop
         , initial, val //, initialized = false
     o.app = opts.app
 
@@ -2721,7 +2722,7 @@ var has_menu = function(handle_jq, opts) {
         o.val_set(val, false)
     }
     o.val_set = function(v, doit) {
-        o.val = v
+        val = v
         if (doit !== false) 
             set(v)
     }
@@ -2755,7 +2756,7 @@ var has_menu = function(handle_jq, opts) {
                     start()
                 },
                 close: function(){
-                    if(o.val != initial) end()
+                    if(o.val() != initial) end()
                 }
             }))
         }
@@ -2812,10 +2813,11 @@ Hive.App.has_slider_menu = function(app, handle_jq, set, init, start, end, opts)
         , clamp_min = opts.clamp_min && opts.clamp
         , clamp_max = opts.clamp_max && opts.clamp
 
-    var num_input, range, val
-    o.initialize = function(){
+    var num_input, range, val, _initialize = o.initialize
+    o.initialize = function() {
+        _initialize()
         num_input.focus().select()
-        val = init();
+        val = o.val();
         update_val()
     }
     o.render = function() {
@@ -2861,7 +2863,8 @@ Hive.App.has_slider_menu = function(app, handle_jq, set, init, start, end, opts)
             val = Math.round(val / quant) * quant;
         if (clamp_min) val = Math.max(val, min)
         if (clamp_max) val = Math.min(val, max)
-        set(val)
+        // set(val)
+        o.val_set(val)
         return val
     }
 
@@ -2874,7 +2877,7 @@ Hive.App.has_slider_menu = function(app, handle_jq, set, init, start, end, opts)
             if (opts.num_input) num_input.val()
             if (opts.range) range.val(0)
         }
-        o.val_set(val)
+        // o.val_set(val)
     }
 
     return o

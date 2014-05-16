@@ -180,6 +180,7 @@ o.has_shuffle = function(arr) {
 o.array_equals = function(a, b) {
   if (a === b) return true;
   if (a == null || b == null) return false;
+  if (a.length === undefined || b.length === undefined) return false;
   if (a.length != b.length) return false;
 
   for (var i = 0; i < a.length; ++i) {

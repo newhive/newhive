@@ -20,6 +20,7 @@ define([
     ,'sj!templates/edit_sandbox.html'
 
     ,'./text'
+    ,'./history'
 
     ,'browser/jquery/jplayer/skin'
     ,'browser/jquery/rotate.js'
