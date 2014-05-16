@@ -929,11 +929,12 @@ Hive.App.Code = function(o){
     }
     o.stop = function() {
         // insert_code();
-        if (!iter) return;
-        if(o.init_state.code_type == 'js')
+        if(o.init_state.code_type == 'js'){
+            if (!iter) return;
             o.run_module_func("stop", function() {
                 animate_go = 0
             })
+        }
         o.code_element.remove()
     }
     o.edit = function() {
