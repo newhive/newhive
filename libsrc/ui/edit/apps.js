@@ -603,7 +603,7 @@ Hive.App = function(init_state, opts) {
     };
 
     o.css_class = function(){
-        return o.init_state.css_class }
+        return o.init_state.css_class || "" }
     o.css_class_set = function(s){
         o.div.removeClass(o.css_class()).addClass(s)
         o.init_state.css_class = s
@@ -822,7 +822,7 @@ editor.add_slider = function(name, opts) {
                 return env.Selection.client_data_set(name, v)
             }, function() {
                 return env.Selection.client_data(name)
-            }, null, null, opts)
+            }, null, null, opts).controls
         if (i == 0) {
             editor.current_code.created_controls.push(slider);
             active_controls.push(slider);
