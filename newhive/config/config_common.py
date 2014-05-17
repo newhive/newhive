@@ -34,6 +34,8 @@ default_email_subscriptions = ['love', 'listen', 'share_expr', 'comment', 'broad
 milestones = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000,
               20000, 50000, 100000, 200000, 500000, 1000000, 10000000]
 
+devs = [ 'newduke', 'abram', 'spiffeh', 'nd4' ]
+
 beta_testers = admins + [
     'andrew'
     ,'darkluna'
@@ -52,7 +54,7 @@ beta_testers = admins + [
 ]
 
 user_groups = { 'logged_in':set([]), 'logged_out':set(['logged_out']), 'all':set([]), 
-    'admins':set(admins), 'beta_testers':set(beta_testers) }
+    'admins':set(admins), 'beta_testers':set(beta_testers), 'devs':set(devs) }
 site_flags = {
     # Features
     'show_hive_all': ['newduke','nd4']
@@ -71,6 +73,8 @@ site_flags = {
     ,'shapes': ['admins']
     ,'custom_domain': []
     ,'tile_multiple_images': ['admins', 'nd4']
+    ,'css_classes': ['admins', 'devs']
+    ,'shape_link': ['admins', 'devs']
     # Admin
     ,'admin': ['admins']
     # Old / unused

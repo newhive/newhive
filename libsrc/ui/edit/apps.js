@@ -648,8 +648,7 @@ Hive.App = function(init_state, opts) {
         o.apps.add(o); // add to apps collection
     // Add the currently active controls from editor extensions
     o.make_controls = o.make_controls.concat(active_controls)
-    if (o.client_visible && o.add_to_collection){//!! && context.flags.css_classes)
-        // o.make_controls.push(code_controls);
+    if (o.client_visible && o.add_to_collection && context.flags.css_classes) {
         var history_point, sel = env.Selection
         Hive.App.has_text_menu(".css_classes", {
             filter: function(app) { return env.show_css_class }
@@ -866,7 +865,8 @@ Hive.App.Code = function(o){
             editor.current_code = o;
             try {
                 curl([o.module_name()], function(module) {
-                    module[module_func] && module[module_func]();
+                    if (module && typeof(module[module_func]) == "function")
+                        module[module_func]();
                     callback && callback(module);
                     editor.current_code = null;
                 }, function() {})
@@ -1047,12 +1047,6 @@ Hive.App.Image = function(o) {
         return o.init_state.url;
     }
 
-    o.link_set = function(v){ 
-        o.init_state.href = v;
-    };
-    o.link = function(v) {
-        return o.init_state.href;
-    };
     // Hive.App.has_color(o)
     var _state_update = o.state_update, _state_relative = o.state_relative
         ,_state_relative_set = o.state_relative_set
@@ -1310,11 +1304,11 @@ Hive.App.Image = function(o) {
 
     function controls(o) {
         o.addButtons($('#controls_image'));
-        o.append_link_picker(o.div.find('.buttons'));
         o.div.find('.button.set_bg').click(function() {
             Hive.bg_change(o.single().state()) });
     };
     controls.single = true;
+    Hive.App.has_link_picker(o);
     o.make_controls.push(controls);
 
     Hive.App.has_rotate(o);
@@ -1354,8 +1348,11 @@ Hive.App.Rectangle_Parent = function(o) {
 Hive.App.Rectangle = function(o) {
     Hive.App.Rectangle_Parent(o);
 
+    if (context.flags.shape_link)
+        Hive.App.has_link_picker(o);
     Hive.App.has_border_radius(o);
     Hive.App.has_image_drop(o);
+
     return o;
 };
 Hive.registerApp(Hive.App.Rectangle, 'hive.rectangle');
@@ -2112,6 +2109,21 @@ Hive.registerApp(Hive.App.Audio, 'hive.audio');
 
 
 // TODO-refactor: move into app_modifiers
+Hive.App.has_link_picker = function(app) {
+    app.link_set = function(v){ 
+        app.init_state.href = v;
+    };
+    app.link = function(v) {
+        return app.init_state.href;
+    };
+    var controls = function(controls) {
+        // var app = controls.single()
+        find_or_create_button(controls, ".link")
+        controls.append_link_picker(controls.div.find('.buttons'));
+    }
+    controls.single = true
+    app.make_controls.push(memoize("link_picker", controls))
+}
 
 Hive.App.has_nudge = function(o, condition){
     // TODO-bugbug: implement undo/redo of this. Because nudge is naturally
@@ -3001,10 +3013,10 @@ Hive.App.has_blur = function(o) {
         }
     )
 }
-var find_or_create_button = function(app, btn_name, btn_title) {
-    var btn = app.div.find('.button' + btn_name);
+var find_or_create_button = function(controls, btn_name, btn_title) {
+    var btn = controls.div.find('.button' + btn_name);
     if (!btn_name || !btn.length) {
-        btn = app.addButton($('#controls_misc .button' + (btn_name || ".run")));
+        btn = controls.addButton($('#controls_misc .button' + (btn_name || ".run")));
         if (btn_title) {
             btn.attr("title", btn_title);
             if (!btn_name)
