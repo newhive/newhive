@@ -180,6 +180,7 @@ o.has_shuffle = function(arr) {
 o.array_equals = function(a, b) {
   if (a === b) return true;
   if (a == null || b == null) return false;
+  if (a.length === undefined || b.length === undefined) return false;
   if (a.length != b.length) return false;
 
   for (var i = 0; i < a.length; ++i) {
@@ -285,9 +286,9 @@ o.distinct = function (array) {
     }
 
     return result;
- }
+}
 
- o.union = function (/* minimum 2 arrays */) {
+o.union = function (/* minimum 2 arrays */) {
     if (arguments.length == 0 ) return []
     else if (arguments.length == 1) return arguments[0];
     checkIfAllArgumentsAreArrays(arguments);
@@ -307,64 +308,67 @@ o.distinct = function (array) {
     }
 
     return result;
- }
+}
 
- o.intersect = function (/* minimum 2 arrays */) {
-     if (arguments.length < 2) throw new Error('There must be minimum 2 array arguments!');
-     checkIfAllArgumentsAreArrays(arguments);
+o.intersect = function (/* minimum 2 arrays */) {
+    if (arguments.length == 0 ) return []
+    else if (arguments.length == 1) return arguments[0];
+    // if (arguments.length < 2) 
+    //    throw new Error('There must be minimum 2 array arguments!');
+    checkIfAllArgumentsAreArrays(arguments);
 
-     var result = [];
-     var distinctArray = o.distinct(arguments[0]);
-     if (distinctArray.length === 0) return [];
+    var result = [];
+    var distinctArray = o.distinct(arguments[0]);
+    if (distinctArray.length === 0) return [];
 
-     for (var i = 0; i < distinctArray.length; i++) {
-         var item = distinctArray[i];
+    for (var i = 0; i < distinctArray.length; i++) {
+        var item = distinctArray[i];
 
-         var shouldAddToResult = true;
+        var shouldAddToResult = true;
 
-         for (var j = 1; j < arguments.length; j++) {
-             var array2 = arguments[j];
-             if (array2.length == 0) return [];
+        for (var j = 1; j < arguments.length; j++) {
+            var array2 = arguments[j];
+            if (array2.length == 0) return [];
 
-             if ($.inArray(item, array2) === -1) {
-                 shouldAddToResult = false;
-                 break;
-             }
-         }
+            if ($.inArray(item, array2) === -1) {
+                shouldAddToResult = false;
+                break;
+            }
+        }
 
-         if (shouldAddToResult) {
-             result.push(item);
-         }
-     }
+        if (shouldAddToResult) {
+            result.push(item);
+        }
+    }
 
-     return result;
- }
+    return result;
+}
 
- o.except = function (/* minimum 2 arrays */) {
-     if (arguments.length < 2) throw new Error('There must be minimum 2 array arguments!');
-     checkIfAllArgumentsAreArrays(arguments);
+o.except = function (/* minimum 2 arrays */) {
+    if (arguments.length < 2) throw new Error('There must be minimum 2 array arguments!');
+    checkIfAllArgumentsAreArrays(arguments);
 
-     var result = [];
-     var distinctArray = o.distinct(arguments[0]);
-     var otherArraysConcatenated = [];
+    var result = [];
+    var distinctArray = o.distinct(arguments[0]);
+    var otherArraysConcatenated = [];
 
-     for (var i = 1; i < arguments.length; i++) {
-         var otherArray = arguments[i];
-         otherArraysConcatenated = otherArraysConcatenated.concat(otherArray);
-     }
+    for (var i = 1; i < arguments.length; i++) {
+        var otherArray = arguments[i];
+        otherArraysConcatenated = otherArraysConcatenated.concat(otherArray);
+    }
 
-     for (var i = 0; i < distinctArray.length; i++) {
-         var item = distinctArray[i];
+    for (var i = 0; i < distinctArray.length; i++) {
+        var item = distinctArray[i];
 
-         if ($.inArray(item, otherArraysConcatenated) === -1) {
-             result.push(item);
-         }
-     }
+        if ($.inArray(item, otherArraysConcatenated) === -1) {
+            result.push(item);
+        }
+    }
 
-     return result;
- }
+    return result;
+}
 
- // used for app id
+// used for app id
 o.random_str = function(){ return Math.random().toString(16).slice(2); };
 
 o.polygon = function(sides){

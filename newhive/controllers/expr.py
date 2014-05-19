@@ -262,8 +262,6 @@ class Expr(ModelController):
                     css = '%s;margin-left:%spx;margin-top:%spx' % (
                         css, offset[0], offset[1] )
                 html = "<img src='%s' style='%s'>" % (url, css)
-            link = app.get('href')
-            if link: html = "<a href='%s'>%s</a>" % (link, html)
         elif type == 'hive.sketch':
             html = "<img src='%s'>" % content.get('src')
         elif type == 'hive.rectangle':
@@ -337,10 +335,13 @@ class Expr(ModelController):
 
         data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
         data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
-        return "<div class='happ %s %s' id='%s' style='%s'%s>%s</div>" % (
+        html = "<div class='happ %s %s' id='%s' style='%s'%s>%s</div>" % (
             klass, app.get('css_class', ''), app_id,
             css_for_app(app) + more_css, data, html
         )
+        link = app.get('href')
+        if link: html = "<a href='%s'>%s</a>" % (link, html)
+        return html
 
 # TODO-bug fix resizing after loading by sending pre-scaled expr
 # Requires client layout_apps() to use scaled expr dimensions

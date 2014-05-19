@@ -603,7 +603,7 @@ Hive.App = function(init_state, opts) {
     };
 
     o.css_class = function(){
-        return o.init_state.css_class }
+        return o.init_state.css_class || "" }
     o.css_class_set = function(s){
         o.div.removeClass(o.css_class()).addClass(s)
         o.init_state.css_class = s
@@ -648,17 +648,16 @@ Hive.App = function(init_state, opts) {
         o.apps.add(o); // add to apps collection
     // Add the currently active controls from editor extensions
     o.make_controls = o.make_controls.concat(active_controls)
-    if (o.client_visible && o.add_to_collection){//!! && context.flags.css_classes)
-        // o.make_controls.push(code_controls);
+    if (o.client_visible && o.add_to_collection && context.flags.css_classes) {
         var history_point, sel = env.Selection
         Hive.App.has_text_menu(".css_classes", {
             filter: function(app) { return env.show_css_class }
             , app: o
             , start: function(){ history_point = env.History.saver(
-                sel.css_class, sel.css_class_set, 'border radius'); }
+                sel.css_class, sel.css_class_set, 'css classes'); }
             , end: function(){ history_point.save() }
-            , init: sel.css_class
-            , set: sel.css_class_set
+            , init: sel.css_class_sel
+            , set: sel.css_class_sel_set
         }).controls.display_order = 8
     }
     // TODO-cleanup-events: attach app object to these events on app div without
@@ -820,7 +819,7 @@ editor.add_slider = function(name, opts) {
                 return env.Selection.client_data_set(name, v)
             }, function() {
                 return env.Selection.client_data(name)
-            }, null, null, opts)
+            }, null, null, opts).controls
         if (i == 0) {
             editor.current_code.created_controls.push(slider);
             active_controls.push(slider);
@@ -863,7 +862,8 @@ Hive.App.Code = function(o){
             editor.current_code = o;
             try {
                 curl([o.module_name()], function(module) {
-                    module[module_func] && module[module_func]();
+                    if (module && typeof(module[module_func]) == "function")
+                        module[module_func]();
                     callback && callback(module);
                     editor.current_code = null;
                 }, function() {})
@@ -1044,12 +1044,6 @@ Hive.App.Image = function(o) {
         return o.init_state.url;
     }
 
-    o.link_set = function(v){ 
-        o.init_state.href = v;
-    };
-    o.link = function(v) {
-        return o.init_state.href;
-    };
     // Hive.App.has_color(o)
     var _state_update = o.state_update, _state_relative = o.state_relative
         ,_state_relative_set = o.state_relative_set
@@ -1307,11 +1301,11 @@ Hive.App.Image = function(o) {
 
     function controls(o) {
         o.addButtons($('#controls_image'));
-        o.append_link_picker(o.div.find('.buttons'));
         o.div.find('.button.set_bg').click(function() {
             Hive.bg_change(o.single().state()) });
     };
     controls.single = true;
+    Hive.App.has_link_picker(o);
     o.make_controls.push(controls);
 
     Hive.App.has_rotate(o);
@@ -1351,8 +1345,11 @@ Hive.App.Rectangle_Parent = function(o) {
 Hive.App.Rectangle = function(o) {
     Hive.App.Rectangle_Parent(o);
 
+    if (context.flags.shape_link)
+        Hive.App.has_link_picker(o);
     Hive.App.has_border_radius(o);
     Hive.App.has_image_drop(o);
+
     return o;
 };
 Hive.registerApp(Hive.App.Rectangle, 'hive.rectangle');
@@ -2109,6 +2106,21 @@ Hive.registerApp(Hive.App.Audio, 'hive.audio');
 
 
 // TODO-refactor: move into app_modifiers
+Hive.App.has_link_picker = function(app) {
+    app.link_set = function(v){ 
+        app.init_state.href = v;
+    };
+    app.link = function(v) {
+        return app.init_state.href;
+    };
+    var controls = function(controls) {
+        // var app = controls.single()
+        find_or_create_button(controls, ".link")
+        controls.append_link_picker(controls.div.find('.buttons'));
+    }
+    controls.single = true
+    app.make_controls.push(memoize("link_picker", controls))
+}
 
 Hive.App.has_nudge = function(o, condition){
     // TODO-bugbug: implement undo/redo of this. Because nudge is naturally
@@ -2709,7 +2721,8 @@ var has_menu = function(handle_jq, opts) {
         , container = opts.container, handle = opts.handle
         , handle_name = opts.handle_name, drawer_jq = opts.drawer_jq
         , menu_opts = opts.menu_opts
-        , start = opts.start, end = opts.end, init = opts.init, set = opts.set
+        , start = opts.start || noop, end = opts.end || noop
+        , init = opts.init || noop, set = opts.set || noop
         , initial, val //, initialized = false
     o.app = opts.app
 
@@ -2718,7 +2731,7 @@ var has_menu = function(handle_jq, opts) {
         o.val_set(val, false)
     }
     o.val_set = function(v, doit) {
-        o.val = v
+        val = v
         if (doit !== false) 
             set(v)
     }
@@ -2752,7 +2765,7 @@ var has_menu = function(handle_jq, opts) {
                     start()
                 },
                 close: function(){
-                    if(o.val != initial) end()
+                    if(o.val() != initial) end()
                 }
             }))
         }
@@ -2783,7 +2796,7 @@ Hive.App.has_text_menu = function(handle_jq, opts) {
 
         edit.on('input keyup change', function(ev){
             if(ev.keyCode == 13) { edit.blur(); o.menu.close(); }
-            o.val_set(edit.val())
+            _val_set(edit.val())
         }).focus()
     }
     return o
@@ -2809,10 +2822,11 @@ Hive.App.has_slider_menu = function(app, handle_jq, set, init, start, end, opts)
         , clamp_min = opts.clamp_min && opts.clamp
         , clamp_max = opts.clamp_max && opts.clamp
 
-    var num_input, range, val
-    o.initialize = function(){
+    var num_input, range, val, _initialize = o.initialize
+    o.initialize = function() {
+        _initialize()
         num_input.focus().select()
-        val = init();
+        val = o.val();
         update_val()
     }
     o.render = function() {
@@ -2858,7 +2872,8 @@ Hive.App.has_slider_menu = function(app, handle_jq, set, init, start, end, opts)
             val = Math.round(val / quant) * quant;
         if (clamp_min) val = Math.max(val, min)
         if (clamp_max) val = Math.min(val, max)
-        set(val)
+        // set(val)
+        o.val_set(val)
         return val
     }
 
@@ -2871,7 +2886,7 @@ Hive.App.has_slider_menu = function(app, handle_jq, set, init, start, end, opts)
             if (opts.num_input) num_input.val()
             if (opts.range) range.val(0)
         }
-        o.val_set(val)
+        // o.val_set(val)
     }
 
     return o
@@ -2995,10 +3010,10 @@ Hive.App.has_blur = function(o) {
         }
     )
 }
-var find_or_create_button = function(app, btn_name, btn_title) {
-    var btn = app.div.find('.button' + btn_name);
+var find_or_create_button = function(controls, btn_name, btn_title) {
+    var btn = controls.div.find('.button' + btn_name);
     if (!btn_name || !btn.length) {
-        btn = app.addButton($('#controls_misc .button' + (btn_name || ".run")));
+        btn = controls.addButton($('#controls_misc .button' + (btn_name || ".run")));
         if (btn_title) {
             btn.attr("title", btn_title);
             if (!btn_name)
