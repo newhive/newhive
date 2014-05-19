@@ -268,6 +268,7 @@ background-color: lightgrey;
         * { pointer-events: auto; }
         .button {
             margin-right: 4px;
+            margin-bottom: 4px;
             float: left;
             &.bg {
                 background-image: asset_url('skin/edit/button.png');
@@ -353,32 +354,38 @@ background-color: lightgrey;
 #right * { vertical-align : middle }
 
 .color_picker {
-    width: 300px; height: 176px;
-    & > * { position: absolute; }
-}
-.color_picker img { width : 100%; }
-.color_picker .palette {
-    left: 7px; top: 7px;
-    width: 150px; height: 150px;
-}
-.color_picker .color_select {
-    display: inline-block;
-    width: 20px; height: 20px;
-    float: left;
-    margin: 2px;
-}
-.color_picker .hue_bar {
-    width: 10px; height: 170px;
-    left: 149px; top: 9px;
-    margin: 2px 10px;
-}
-.color_picker .shades {
-    width : 120px; height : 120px;
-    left: 179px; top: 9px;
-}
-.color_picker .color_input {
-    left: 187px; top: 134px;
-    width: 100px;
+    padding: 5px;
+
+    & > * {
+        display: inline-block;
+        vertical-align: top;
+    }
+
+    img { width : 100%; }
+
+    .palette {
+        width: 174px; height: 172px;
+        margin: -2px 0 0 -2px;
+
+        .color_select {
+            display: inline-block;
+            width: 25px; height: 25px;
+            float: left;
+            margin: 2px;
+        }
+    }
+
+    .hue_bar {
+        width: 25px; height: 170px;
+        margin: 0px 8px 0 8px;
+    }
+    .shades {
+        width : 128px; height : 128px;
+    }
+    .color_input {
+        margin-top: 10px;
+        width: 128px; height: 32px;
+    }
 }
 
 #dia_edit_bg {

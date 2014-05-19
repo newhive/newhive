@@ -1000,8 +1000,9 @@ o.append_color_picker = function(container, callback, init_color, opts){
     };
 
     var get_shade = function(e) {
-        hsv[2] = bound((e.pageX - shades.offset().left) / 120, 0, 1);
-        hsv[1] = bound((e.pageY - shades.offset().top) / 120, 0, 1);
+        var shades_size = shades.width()
+        hsv[2] = bound((e.pageX - shades.offset().left) / shades_size, 0, 1);
+        hsv[1] = bound((e.pageY - shades.offset().top) / shades_size, 0, 1);
         calc_color();
     };
 
