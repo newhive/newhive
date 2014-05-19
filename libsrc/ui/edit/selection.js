@@ -765,14 +765,6 @@ o.Selection = function(o) {
         env.History.group('stack ' + ((offset > 0) ? 'up' : 'down'));
     }
 
-    var parent = o;
-    o.make_controls.push(function(o){
-        o.padding = 7;
-        // TODO-cleanup-selection: add this back after app controls is moved into selection
-        // o.div.drag(parent.move_handler).drag('start', parent.move_start)
-        //     .drag('end', parent.move_end);
-    });
-
     o.layout = function(){
         if (hive_app.Apps.defer_layout()) {
             o.needs_layout = true;

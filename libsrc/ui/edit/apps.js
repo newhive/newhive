@@ -2519,10 +2519,10 @@ Hive.App.has_resize = function(o) {
             var p = o.padding;
             var dims = o.dims();
             if (app.has_full_bleed())
-                o.c.resize.css({ top: dims[1] - 18 + o.padding,
-                    left: Math.min(dims[0] / 2 - 18, dims[0] - 54) });
+                o.c.resize.css({ top: dims[1] - 13 + o.padding,
+                    left: Math.min(dims[0] / 2 - 13, dims[0] - 54) });
             else
-                o.c.resize.css({ left: dims[0] -18 + p, top: dims[1] - 18 + p });
+                o.c.resize.css({ left: dims[0] -13 + p, top: dims[1] - 13 + p });
         };
 
         o.c.resize.drag('start', function(ev, dd) {
@@ -2622,7 +2622,7 @@ Hive.App.has_rotate = function(o) {
             common.layout();
             var p = o.padding;
             var dims = o.dims();
-            o.rotateHandle.css({ left: dims[0] - 18 + o.padding,
+            o.rotateHandle.css({ left: dims[0] - 10 + o.padding,
                 top: Math.min(dims[1] / 2 - 20, dims[1] - 54) });
         }
 

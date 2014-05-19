@@ -147,7 +147,7 @@ o.Controls = function(app, multiselect, delegate) {
     o.single = function() {
         return (env.Selection.count() == 1) ? o.app.sel_app() : false }
 
-    o.padding = 4;
+    o.padding = 12;
     o.border_width = 5;
     var pad_ul = [45, 45], pad_br = [45, 120], min_d = [135, 40];
     if(multiselect){
