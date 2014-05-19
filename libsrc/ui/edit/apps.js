@@ -2766,6 +2766,8 @@ var has_menu = function(handle_jq, opts) {
                 open: function(){
                     o.initialize()
                     start()
+                    o.drawer.find("input").focus()
+                    o.drawer.find("textarea,input[type=text]").focus()
                 },
                 close: function(){
                     if(o.val() != initial) end()

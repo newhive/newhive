@@ -940,7 +940,7 @@ o.append_color_picker = function(container, callback, init_color, opts){
     var to_rgb = function(c){
         if (c.length == 3) return c;
         var c = normalize(c)
-        if(!c) return
+        if(!c) return [0,0,0]
         // this handles color names like "blue"
         return $.map(getComputedStyle(color_probe.css('color', c)[0]).color
             .replace(/[^\d,]/g,'').split(','), function(v){ return parseInt(v) });
@@ -967,7 +967,7 @@ o.append_color_picker = function(container, callback, init_color, opts){
         var c = normalize(v)
         if(!c){
             c = normalize('#'+v)
-            if(!c) return
+            if(!c && v) return
         }
         o.set_color(c, true)
         callback(c, to_rgb(c));
@@ -1061,13 +1061,21 @@ o.append_color_picker = function(container, callback, init_color, opts){
     o.set_color(init_color);
 
     manual_input.on('keyup input paste', function(e){
-        if(e.keyCode == 13) {
+        // if (e.keyCode == 27 ||                      // esc
+        if (e.keyCode == 13)                        // enter
+        {
+            // Cancel edit, returning to initial color
+            // Sadly, we don't actually have the initial color,
+            // only the color when the drawer was created
+            // if (e.keyCode == 27) {
+            //     o.set_color(init_color);
+            // }
             if (opts && opts.field_to_focus){
                 opts.field_to_focus.focus();
             } else {
                 manual_input.blur();
             }
-        }
+        } else 
         o.update_hex()
     });
 
