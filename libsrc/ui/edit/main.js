@@ -123,9 +123,14 @@ Hive.init_menus = function() {
     $('#embed_done').click(function() { Hive.embed_code('#embed_code'); embed_menu.close(); });
 
     u.hover_menu('.insert_shape', '#menu_shape');
+    var default_size = [150, 150]
+    Hive.template_shape_base = {
+        "type": "hive.polygon"
+        , "style": {"stroke-width": 0}
+    }
     Hive.template_rect = { 
         type : 'hive.rectangle'
-        , dimensions: [200, 200]
+        , dimensions: default_size
         , css_state : {
             'background-color' : "#000"
             // 'background-color' : colors[24]
@@ -134,20 +139,20 @@ Hive.init_menus = function() {
             , 'border-style' : 'solid' 
         }
     };
+    Hive.template_circle = {
+        type : 'hive.circle'
+        , dimensions: default_size
+        , css_state : { 
+            'background-color' : "#000"
+            ,'border-color' : 'black'
+            ,'border-width' : 0 // 1
+            ,'border-style' : 'solid' 
+        }
+    };
     $('#menu_shape .rect').click(function(ev) {
         poly.mode(Hive.template_rect)
         poly.focus()
     });
-    Hive.template_circle = {
-        type : 'hive.circle'
-        , dimensions: [200, 200]
-        ,css_state : { 
-            'background-color' : "#000"
-            ,'border-color' : 'black'
-            ,'border-width' : 1
-            ,'border-style' : 'solid' 
-        }
-    };
     $('#menu_shape .circle').click(function(ev) {
         poly.mode(Hive.template_circle)
         poly.focus()
@@ -156,31 +161,34 @@ Hive.init_menus = function() {
         hive_app.new_app({ type: 'hive.sketch', dimensions: [700, 700 / 1.6]
             ,content: { brush: 'simple', brush_size: 10 } });
     });
+
     // polygon shapes
     var poly = hive_app.App.Polygon
     var phi = (Math.sqrt(5) + 1) / 2
-    Hive.template_triangle = { // triangle
-        "type":"hive.polygon",
-        "points":[[100,0], [200, 200*Math.sqrt(3)/2], [0, 200*Math.sqrt(3)/2]]
+    var scale_default = function(points) {
+        return points.map(function(p) { return u._mul(default_size, p) })
     }
-    Hive.template_line = { // line
-        "type":"hive.polygon"
-        ,"points":[[0,0], [200, 0]]
+    Hive.template_line = $.extend({}, Hive.template_shape_base, {
+        "points": scale_default([[0, 0], [1, 0]])
         ,"style": {"stroke-width": 4}
-    }
-    Hive.template_pentagram = $.extend({}, Hive.template_triangle, {
+    })
+    Hive.template_triangle = $.extend({}, Hive.template_shape_base, {
+        "points": scale_default(
+            [[.5,0], [1, Math.sqrt(3)/2], [0, Math.sqrt(3)/2]])
+    })
+    Hive.template_pentagram = $.extend({}, Hive.template_shape_base, {
         points: js.range(10).map(function(i){
             var d = ((i == 0 ? 0 : Math.PI*2*i/10) + Math.PI/10)
-                ,r = (i % 2) ? 100 : 100*(1 - 1 / phi)
+                ,r = (i % 2) ? 1 : (1 - 1 / phi)
                 ,p = [Math.cos(d), Math.sin(d)]
-            return u._mul(p, r)
+            return u._mul(p, r, .5, default_size)
         })
     })
-    Hive.template_hexagon = $.extend({}, Hive.template_triangle, {
+    Hive.template_hexagon = $.extend({}, Hive.template_shape_base, {
         points: js.range(6).map(function(i){
             var d = (i == 0 ? 0 : Math.PI*2*i/6)
                 ,p = [Math.cos(d), Math.sin(d)]
-            return u._mul(p, 100)
+            return u._mul(p, .5, default_size)
         })
     })
     $('#menu_shape .triangle').click(function(){
