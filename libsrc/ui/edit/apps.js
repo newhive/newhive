@@ -753,15 +753,12 @@ Hive.App.Html = function(o) {
 
     Hive.App.has_opacity(o)
     // TODO: migrate this and use init_state.media
-    m = content.match(/(youtube)|(vimeo)/);
-    if (m) {
-        o.make_controls.push(memoize("full_screen_control", function(o) {
-            o.addButton($('#controls_image .set_bg'));
-            o.div.find('.button.set_bg').click(function() {
-                Hive.bg_change(o.single().state()) });
-        }))
-        o.make_controls[o.make_controls.length - 1].single = true;
-    }
+    o.make_controls.push(memoize("full_screen_control", function(o) {
+        o.addButton($('#controls_image .set_bg'));
+        o.div.find('.button.set_bg').click(function() {
+            Hive.bg_change(o.single().state()) });
+    }))
+    o.make_controls[o.make_controls.length - 1].single = true;
 
     setTimeout(function(){ o.load(); }, 100);
 
