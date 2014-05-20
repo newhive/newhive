@@ -1537,6 +1537,8 @@ Hive.App.Polygon = function(o){
         ref_points = o.points()
         ref_pos = o.pos_relative()
         ref_dims = o.dims_relative()
+        // TODO: Use real centroid
+        // http://stackoverflow.com/questions/16282330/find-centerpoint-of-polygon-in-javascript
         ref_center = u._sub(o.centroid_relative())(ref_pos)
         ref_stroke_width = o.border_width()
     }

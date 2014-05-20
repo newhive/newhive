@@ -154,15 +154,18 @@ define([
     o.link_target = function(a){
         a = $(a);
         if (a.attr('target')) return;
+        // TODO: Match against internal links and use routing system
 
-        var re = new RegExp('^https?://[\\w-]*.?(' +
+        var re = new RegExp('^(https?:)?//[\\w-]*.?(' +
             context.config.server_domain + '|' +
             context.config.content_domain + ')');
         var href = a.attr('href') || a.attr('xlink:href') || a.attr('action')
+            , non_relative = 
+                (href.indexOf('http') === 0 || href.slice(0,2) == "//")
 
-        if(href && href.indexOf('http') === 0 && !re.test(href)) {
+        if (href && non_relative && !re.test(href)) {
             a.attr('target', '_blank');
-        } else if (href && href.indexOf('http') === 0 && re.test(href)) {
+        } else if (href && non_relative && re.test(href)) {
             a.attr('target', '_top');
         }
     };
