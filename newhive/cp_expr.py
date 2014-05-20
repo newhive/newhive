@@ -9,6 +9,7 @@ from newhive import state
 def cp_expr(expr, dest_db):
     new_expr = dest_db.Expr.new(expr)
     try:
+        del new_expr['snapshot_id']
         new_expr.create()
     except DuplicateKeyError:
         print('skipping copying existing expr ' + new_expr.url)
