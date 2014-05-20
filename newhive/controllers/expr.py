@@ -266,8 +266,8 @@ class Expr(ModelController):
             html = "<img src='%s'>" % content.get('src')
         elif type == 'hive.rectangle':
             c = app.get('content', {})
-            more_css = ';'.join([p + ':' + str(c[p]) for p in c])
-            html = ''
+            css = ';'.join([p + ':' + str(c[p]) for p in c])
+            html = "<div style='%s' class='content'></div>" % css
         elif type == 'hive.html':
             html_original = '%s' % (app.get('content',''))
             if snapshot_mode:
