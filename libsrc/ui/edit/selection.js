@@ -116,9 +116,9 @@ o.Selection = function(o) {
         o.each(function(i,a){ a.hide_controls() })
     }
     o.transform_end = function(){
-        o.layout()
         o.show_controls()
         o.each(function(i,a){ a.show_controls() })
+        o.layout()
         env.canvas_size_update()
     }
 
@@ -713,12 +713,13 @@ o.Selection = function(o) {
     };
 
     o.get_stack = function(){
-        return elements.slice().sort(function(a, b){ return a.layer() - b.layer() });
+        return elements.slice().sort(function(a, b){
+            return b.layer() - a.layer() });
     };
     o.stack_end = function(dir){
         env.History.begin();
         stack = o.get_stack();
-        if (dir < 0)
+        if (dir > 0)
             stack.reverse();
         $.each(stack, function(i, el){ 
             dir > 0 ? el.stack_top() : el.stack_bottom() })
@@ -739,7 +740,7 @@ o.Selection = function(o) {
     o.stack_shift = function(offset) {
         env.History.begin();
         var overlaps = u.overlapped_apps(u.region_from_app(o))
-            , elements = o.get_stack(), up_offset = -1
+            , elements = o.get_stack().reverse(), up_offset = -1
         if (offset < 0) {
             up_offset = 0
             elements.reverse()

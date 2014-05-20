@@ -241,7 +241,7 @@ Hive.App = function(init_state, opts) {
     o.css_setter_px = function(css_prop) { return o.css_setter(css_prop, 'px') }
 
     // Generic setters and getters
-    o.gcolor = function(){ return o.css_state['background-color'] || 'transparent' };
+    o.gcolor = function(){ return o.css_state['background-color'] || '' };
     o.gcolor_set = o.css_setter('background-color');
     o.gstroke = function(){ return o.css_state['border-color'] || '#000' };
     o.gstroke_set = o.css_setter('border-color');
@@ -2624,6 +2624,9 @@ Hive.App.has_rotate = function(o) {
             var dims = o.dims();
             o.rotateHandle.css({ left: dims[0] - 10 + o.padding,
                 top: Math.min(dims[1] / 2 - 20, dims[1] - 54) });
+            env.Selection.each(function(i,a){
+                if(a.controls)
+                    a.controls.select_box.rotate(a.angle()) })
         }
 
         o.rotate = function(a){
@@ -2679,8 +2682,6 @@ Hive.App.has_rotate = function(o) {
             angle = a;
             if(o.content_element)
                 o.content_element.rotate(a);
-            if(o.controls && o.controls.multiselect)
-                o.controls.select_box.rotate(a);
         }
         o.load.add(function() { o.angle_set(o.angle()) });
 
