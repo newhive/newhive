@@ -423,7 +423,7 @@ input, textarea { font-size : inherit; }
 .hive_selection {
     background: $color_light_grey;
 }
-.text_content_element {
+.hive_text .content {
     min-width: 100%;
     word-wrap: normal;
 }
