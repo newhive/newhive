@@ -2680,9 +2680,8 @@ Hive.App.has_rotate = function(o) {
         var angle = o.init_state.angle ? o.init_state.angle : 0;
         o.angle = function(){ return angle; };
         o.angle_set = function(a){
-            angle = a;
-            if(o.content_element)
-                o.content_element.rotate(a);
+            angle = a
+            o.div.rotate(a)
         }
         o.load.add(function() { o.angle_set(o.angle()) });
 
