@@ -1356,7 +1356,7 @@ Hive.registerApp(Hive.App.Rectangle, 'hive.rectangle');
 
 Hive.App.Circle = function(o) {
     Hive.App.Rectangle_Parent(o);
-    // Hive.App.has_image_drop(o);
+    Hive.App.has_image_drop(o);
     o.set_css({'border-radius':'50%'});
     return o;
 };
