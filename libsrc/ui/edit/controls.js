@@ -142,7 +142,7 @@ o.Controls = function(app, multiselect, delegate) {
             o.appendButton(x) } )); };
     o.hover_menu = function(handle, drawer, opts) {
         return u.hover_menu(handle, drawer, $.extend({
-            auto_height: false }, opts))
+            auto_height: false, offset_y: 5 }, opts))
     };
     o.single = function() {
         return (env.Selection.count() == 1) ? o.app.sel_app() : false }
