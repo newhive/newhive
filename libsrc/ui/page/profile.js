@@ -30,7 +30,7 @@ define([
     var ui_page, win = $(window), card_type, card_layout;
     o.more_cards = true;
     var on_scroll_add_page = function(){
-        if((win.scrollTop() > ($('.feed').height() - win.height()))
+        if((win.scrollTop() + win.height() + 100 > document.body.scrollHeight)
             && o.more_cards
         ){
             o.controller.next_cards(ui_page.render_new_cards);
