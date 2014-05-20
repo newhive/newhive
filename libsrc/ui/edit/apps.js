@@ -1671,7 +1671,7 @@ Hive.App.Polygon = function(o){
     o.border_width_set = function(v) {
         o.css_setter('stroke-width')(v)
         o.transform_start(0)
-        o.reframe(true)
+        o.repoint()
         if (env.Selection.controls)
             o.fixup_border_controls(env.Selection.controls);
     }
