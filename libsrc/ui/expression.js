@@ -158,7 +158,7 @@ define([
         var re = new RegExp('^https?://[\\w-]*.?(' +
             context.config.server_domain + '|' +
             context.config.content_domain + ')');
-        var href = a.attr('href') || a.attr('action');
+        var href = a.attr('href') || a.attr('xlink:href') || a.attr('action')
 
         if(href && href.indexOf('http') === 0 && !re.test(href)) {
             a.attr('target', '_blank');

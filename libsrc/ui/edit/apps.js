@@ -1334,6 +1334,8 @@ Hive.App.Rectangle_Parent = function(o) {
     Hive.App.has_opacity(o);
     Hive.App.has_border_width(o);
     Hive.App.has_color(o, "stroke");
+    if (context.flags.shape_link)
+        Hive.App.has_link_picker(o);
 
     o.content_element = o.div //$("<div class='content drag'>").appendTo(o.div);
     setTimeout(function(){ o.load() }, 1);
@@ -1345,8 +1347,6 @@ Hive.App.Rectangle_Parent = function(o) {
 Hive.App.Rectangle = function(o) {
     Hive.App.Rectangle_Parent(o);
 
-    if (context.flags.shape_link)
-        Hive.App.has_link_picker(o);
     Hive.App.has_border_radius(o);
     Hive.App.has_image_drop(o);
 
@@ -1677,6 +1677,8 @@ Hive.App.Polygon = function(o){
             o.fixup_border_controls(env.Selection.controls);
     }
     Hive.App.has_opacity(o)
+    if (context.flags.shape_link)
+        Hive.App.has_link_picker(o);
 
     if(!points.length)
         points.push.apply(points, [ [0, 0], [50, 100], [100, 0] ])
