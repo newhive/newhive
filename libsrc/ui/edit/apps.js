@@ -241,7 +241,7 @@ Hive.App = function(init_state, opts) {
     o.css_setter_px = function(css_prop) { return o.css_setter(css_prop, 'px') }
 
     // Generic setters and getters
-    o.gcolor = function(){ return o.css_state['background-color'] || 'transparent' };
+    o.gcolor = function(){ return o.css_state['background-color'] || '' };
     o.gcolor_set = o.css_setter('background-color');
     o.gstroke = function(){ return o.css_state['border-color'] || '#000' };
     o.gstroke_set = o.css_setter('border-color');
@@ -1334,6 +1334,8 @@ Hive.App.Rectangle_Parent = function(o) {
     Hive.App.has_opacity(o);
     Hive.App.has_border_width(o);
     Hive.App.has_color(o, "stroke");
+    if (context.flags.shape_link)
+        Hive.App.has_link_picker(o);
 
     o.content_element = o.div //$("<div class='content drag'>").appendTo(o.div);
     setTimeout(function(){ o.load() }, 1);
@@ -1345,8 +1347,6 @@ Hive.App.Rectangle_Parent = function(o) {
 Hive.App.Rectangle = function(o) {
     Hive.App.Rectangle_Parent(o);
 
-    if (context.flags.shape_link)
-        Hive.App.has_link_picker(o);
     Hive.App.has_border_radius(o);
     Hive.App.has_image_drop(o);
 
@@ -1356,7 +1356,7 @@ Hive.registerApp(Hive.App.Rectangle, 'hive.rectangle');
 
 Hive.App.Circle = function(o) {
     Hive.App.Rectangle_Parent(o);
-    // Hive.App.has_image_drop(o);
+    Hive.App.has_image_drop(o);
     o.set_css({'border-radius':'50%'});
     return o;
 };
@@ -1679,6 +1679,8 @@ Hive.App.Polygon = function(o){
             o.fixup_border_controls(env.Selection.controls);
     }
     Hive.App.has_opacity(o)
+    if (context.flags.shape_link)
+        Hive.App.has_link_picker(o);
 
     if(!points.length)
         points.push.apply(points, [ [0, 0], [50, 100], [100, 0] ])
@@ -2626,6 +2628,9 @@ Hive.App.has_rotate = function(o) {
             var dims = o.dims();
             o.rotateHandle.css({ left: dims[0] - 10 + o.padding,
                 top: Math.min(dims[1] / 2 - 20, dims[1] - 54) });
+            env.Selection.each(function(i,a){
+                if(a.controls)
+                    a.controls.select_box.rotate(a.angle()) })
         }
 
         o.rotate = function(a){
@@ -2681,8 +2686,6 @@ Hive.App.has_rotate = function(o) {
             angle = a;
             if(o.content_element)
                 o.content_element.rotate(a);
-            if(o.controls && o.controls.multiselect)
-                o.controls.select_box.rotate(a);
         }
         o.load.add(function() { o.angle_set(o.angle()) });
 

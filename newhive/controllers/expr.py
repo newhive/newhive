@@ -300,17 +300,23 @@ class Expr(ModelController):
                 encoded_content = cgi.escape(app.get('content',''), quote=True)
                 html = '%s' % (app.get('content',''))
         elif type == 'hive.polygon':
+            link = app.get('href')
+            link_text = ('','')
+            if link: link_text = ("<a xlink:href='%s'>" % link,"</a>")
+
             html = (
                   "<svg xmlns='http://www.w3.org/2000/svg'"
+                + " xmlns:xlink='http://www.w3.org/1999/xlink'"
                 + " viewbox='0 0 %f %f" % tuple(dimensions)
                 + "'>"
                 + "<filter id='%s_blur'" % app_id 
                 + " filterUnits='userSpaceOnUse'><feGaussianBlur stdDeviation='"
                 + "%f'></filter>" % app.get('blur', 0)
-                + "<polygon points='"
+                + "%s<polygon points='" % link_text[0]
                 + ' '.join( map( lambda p: "%f %f" % (p[0], p[1]),
                     app.get('points', []) ) )
-                + "' style='filter:url(#%s_blur)'/></svg>" % app_id
+                + "' style='filter:url(#%s_blur)'/>%s</svg>" % (
+                    app_id, link_text[1])
             )
             style = app.get('style', {})
             more_css = ';'.join([ k+':'+str(v) for k,v in style.items()])
@@ -339,8 +345,11 @@ class Expr(ModelController):
             klass, app.get('css_class', ''), app_id,
             css_for_app(app) + more_css, data, html
         )
-        link = app.get('href')
-        if link: html = "<a href='%s'>%s</a>" % (link, html)
+
+        if type != 'hive.polygon':
+            link = app.get('href')
+            if link: html = "<a href='%s'>%s</a>" % (link, html)
+
         return html
 
 # TODO-bug fix resizing after loading by sending pre-scaled expr
