@@ -261,9 +261,9 @@ class Expr(ModelController):
                     offset = [x * scale_x for x in app.get('offset')]
                     css = '%s;margin-left:%spx;margin-top:%spx' % (
                         css, offset[0], offset[1] )
-                html = "<img src='%s' style='%s'>" % (url, css)
+                html = "<img src='%s' style='%s' class='content'>" % (url, css)
         elif type == 'hive.sketch':
-            html = "<img src='%s'>" % content.get('src')
+            html = "<img src='%s' class='content'>" % content.get('src')
         elif type == 'hive.rectangle':
             c = app.get('content', {})
             css = ';'.join([p + ':' + str(c[p]) for p in c])
@@ -305,7 +305,7 @@ class Expr(ModelController):
             if link: link_text = ("<a xlink:href='%s'>" % link,"</a>")
 
             html = (
-                  "<svg xmlns='http://www.w3.org/2000/svg'"
+                  "<svg class='content' xmlns='http://www.w3.org/2000/svg'"
                 + " xmlns:xlink='http://www.w3.org/1999/xlink'"
                 + " viewbox='0 0 %f %f" % tuple(dimensions)
                 + "'>"
