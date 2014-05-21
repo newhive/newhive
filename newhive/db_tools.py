@@ -21,13 +21,24 @@ def dbs(name):
     return state.Database(conf)
 
 # returns cursor with expressions at most %days% old which have > 1 fail count
-def recent_fails(days=1):
+def recent_snapshot_fails(days=1):
     return db.Expr.search({ 'snapshot_fails':{'$gt':1}
         ,'updated':{'$gt': now() - days*86400} })
 
 # resets the fail count of given list or cursor of expressions
-def reset_fails(exprs):
-    map(lambda x:x.update(updated=False,snapshot_fails=0),list(exprs))
+def snapshot_reset(exprs):
+    exprs = list(exprs)
+    if isinstance(exprs[0], basestring):
+        exprs = db.Expr.fetch(exprs)
+    for r in exprs:
+        r.update(updated=False, snapshot_fails=0)
+
+def snapshot_redo_collection(username='zach', collection='brokensnapshots', retry=5):
+    rs = db.Expr.fetch(list(set(db.User.named('zach')['tagged']['brokensnapshots'])))
+    for a in range(retry):
+        for r in rs:
+            if not r.get('snapshot_id'):
+                r.take_snapshots()
 
 def show_sizeof(x, level=0, show_deep=0):
     if (level <= show_deep):
