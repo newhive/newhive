@@ -1,10 +1,14 @@
 @import "common";
 
 body.edit {
+
+background-color: lightgrey;
+
 // for backwards-compatability with old editor.
 // TODO: Make Gibson default and migrate all old expressions to override
 // default
 .happ.text { font-family: Helvetica, Arial, sans-serif; }
+
 .prompts.gifwall {display:none}
 &.default {
     #edit_nav > .change_zoom {display:none}
@@ -84,6 +88,11 @@ body.edit {
     left: 0; top: 0; 
     // right:0; bottom: 0;
     z-index: 3;
+    &.zoomed {
+        border-color: black;
+        border-style: dashed;
+        border-width: 0 2px 2px 2px;
+    }
 }
 #overlay_frame {
     width: 50%;
@@ -107,7 +116,7 @@ body.edit {
 }
 
 #edit_nav {
-    right: 20px; bottom: 20px;
+    right: 20px;
     .change_zoom {
         padding: 6px 0px;
         img { width: 40px; }
@@ -119,12 +128,24 @@ body.edit {
         vertical-align: top;
     }
 }
-.menu_item.change_zoom img { height: 30px; margin-left: -10px; }
+#menu_shape {
+    // width: 150px;
+    white-space: normal;
 
+    .menu_item {
+        padding: 0;
+        display: inline-block;
+    }
+}
+.menu_item.change_zoom img { height: 30px; } //margin-left: -10px; } 
+.misc_menu .menu_item { padding: 7px 7px; text-align: center; }
 // So that using the form doesn't cause the window to scroll
 #media_upload { position: fixed; }
 #bg {
-    z-index: 1;
+    position: fixed;
+    z-index: 0;
+    background-color: white;
+    overflow: hidden;
 }
 #grid_guide {
     z-index: 2;
@@ -188,10 +209,6 @@ body.edit {
 .app_select { position : absolute; }
 
 .happ {
-    .content {
-        z-index : 2;
-        width: 100%; height: 100%;
-    }
     &.svg {
         pointer-events: none;
         .content { * { pointer-events: visible } }
@@ -211,6 +228,22 @@ body.edit {
 
 .controls_src { display : none; }
 .control { position: absolute; }
+.fixed_controls { 
+    position: absolute; 
+    width:0; height:0;
+    z-index: 4;
+
+    .point {
+        background-color: $color_selected;
+        margin: -7px 0 0 -7px;
+        width: 14px; height:14px;
+        border-radius: 7px;
+        z-index: 5;
+    }
+}
+#controls {
+    position: absolute;
+}
 .controls {
     position:absolute;
     width:0; height:0;
@@ -218,27 +251,25 @@ body.edit {
 
     .control { position : absolute; cursor : default; z-index : 1 }
 
+    .drag { cursor: move; }
     .resize_v { cursor : ns-resize; }
     .resize_h { cursor : ew-resize; }
     .resize { cursor : se-resize; }
-    .stack img { display : inline-block; margin-left : 5px; }
+    .stack { 
+        white-space : nowrap; 
+        img { display : inline-block; margin-left : 5px; }
+    }
     .control.drawer {
         text-align: left;
         display: none;
     }
-    .point {
-        background-color: $color_selected;
-        margin: -7px 0 0 -7px;
-        width: 14px; height:14px;
-        border-radius: 7px;
-    }
 
-    .stack { white-space : nowrap; }
     .buttons,.top_buttons {
         pointer-events: none;
         * { pointer-events: auto; }
         .button {
             margin-right: 4px;
+            margin-bottom: 4px;
             float: left;
             &.bg {
                 background-image: asset_url('skin/edit/button.png');
@@ -248,12 +279,16 @@ body.edit {
                 text-align: center;
                 // font-weight: bold;
             }
+            &.bg.on {
+                background-image: asset_url('skin/edit/button-on.png');
+                color: white;
+            }
         }
     }
 
-    .drag { cursor: move; }
 }
 
+// TODO: organize
 .drawer.brush .option:hover { background-color: $color_selected; }
 .drawer.brush .option.selected { background-color: $color_pale_yellow; }
 .control .button, .control .option { cursor : default; }
@@ -271,7 +306,7 @@ body.edit {
 .fontsize .option { line-height : 100px; vertical-align : middle; }
 
 .app_btns {
-    bottom: 20px;
+    left: 20%;
     min-width: 354px; /* for centering before loading complete */
 
     .insert_btn { cursor: default; }
@@ -320,32 +355,38 @@ body.edit {
 #right * { vertical-align : middle }
 
 .color_picker {
-    width: 300px; height: 176px;
-    & > * { position: absolute; }
-}
-.color_picker img { width : 100%; }
-.color_picker .palette {
-    left: 7px; top: 7px;
-    width: 150px; height: 150px;
-}
-.color_picker .color_select {
-    display: inline-block;
-    width: 20px; height: 20px;
-    float: left;
-    margin: 2px;
-}
-.color_picker .hue_bar {
-    width: 10px; height: 170px;
-    left: 149px; top: 9px;
-    margin: 2px 10px;
-}
-.color_picker .shades {
-    width : 120px; height : 120px;
-    left: 179px; top: 9px;
-}
-.color_picker .color_input {
-    left: 187px; top: 134px;
-    width: 100px;
+    padding: 5px;
+
+    & > * {
+        display: inline-block;
+        vertical-align: top;
+    }
+
+    img { width : 100%; }
+
+    .palette {
+        width: 174px; height: 172px;
+        margin: -2px 0 0 -2px;
+
+        .color_select {
+            display: inline-block;
+            width: 25px; height: 25px;
+            float: left;
+            margin: 2px;
+        }
+    }
+
+    .hue_bar {
+        width: 25px; height: 170px;
+        margin: 0px 8px 0 8px;
+    }
+    .shades {
+        width : 128px; height : 128px;
+    }
+    .color_input {
+        margin-top: 10px;
+        width: 128px; height: 32px;
+    }
 }
 
 #dia_edit_bg {
@@ -382,7 +423,7 @@ input, textarea { font-size : inherit; }
 .hive_selection {
     background: $color_light_grey;
 }
-.text_content_element {
+.hive_text .content {
     min-width: 100%;
     word-wrap: normal;
 }

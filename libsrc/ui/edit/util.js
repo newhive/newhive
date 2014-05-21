@@ -24,6 +24,7 @@ define([
 
 var o = {}
     ,bound = js.bound;
+env.u = o
 
 // For performance-critical ops, do not use jquery style
 o.inline_style = function(el, styles) {
@@ -123,16 +124,15 @@ o._lerp = function(alpha, old_val, new_val) {
     }
 };
 
+// returns list of intervals in x- and y- dimensions which bound the input 
+// points exactly
 o.points_rect = function(ps){
-    var f = {
-        x: Infinity ,width: -Infinity
-        ,y: Infinity ,height: -Infinity
-    }
+    var f = [[Infinity, -Infinity], [Infinity, -Infinity]]
     ps.map(function(p){
-        f.x = Math.min(f.x, p[0])
-        f.width = Math.max(f.width, p[0])
-        f.y = Math.min(f.y, p[1])
-        f.height = Math.max(f.height, p[1])
+        f[0][0] = Math.min(f[0][0], p[0])
+        f[0][1] = Math.max(f[0][1], p[0])
+        f[1][0] = Math.min(f[1][0], p[1])
+        f[1][1] = Math.max(f[1][1], p[1])
     })
     return f
 }
@@ -145,6 +145,10 @@ o.interval_dist = function(a, b) {
     return Math.min(Math.abs(c[0]), Math.abs(c[1]));
 };
 
+o.dist = function(a, b) {
+    if (b) return o.interval_size([a,b])
+    return o.interval_size(a)
+}
 o.interval_size = function(i) { return Math.abs(i[1] - i[0]); };
 // Returns the least interval containing both inputs
 o.interval_bounds = function(a, b) {
@@ -176,6 +180,7 @@ o.has_shuffle = function(arr) {
 o.array_equals = function(a, b) {
   if (a === b) return true;
   if (a == null || b == null) return false;
+  if (a.length === undefined || b.length === undefined) return false;
   if (a.length != b.length) return false;
 
   for (var i = 0; i < a.length; ++i) {
@@ -281,9 +286,9 @@ o.distinct = function (array) {
     }
 
     return result;
- }
+}
 
- o.union = function (/* minimum 2 arrays */) {
+o.union = function (/* minimum 2 arrays */) {
     if (arguments.length == 0 ) return []
     else if (arguments.length == 1) return arguments[0];
     checkIfAllArgumentsAreArrays(arguments);
@@ -303,64 +308,67 @@ o.distinct = function (array) {
     }
 
     return result;
- }
+}
 
- o.intersect = function (/* minimum 2 arrays */) {
-     if (arguments.length < 2) throw new Error('There must be minimum 2 array arguments!');
-     checkIfAllArgumentsAreArrays(arguments);
+o.intersect = function (/* minimum 2 arrays */) {
+    if (arguments.length == 0 ) return []
+    else if (arguments.length == 1) return arguments[0];
+    // if (arguments.length < 2) 
+    //    throw new Error('There must be minimum 2 array arguments!');
+    checkIfAllArgumentsAreArrays(arguments);
 
-     var result = [];
-     var distinctArray = o.distinct(arguments[0]);
-     if (distinctArray.length === 0) return [];
+    var result = [];
+    var distinctArray = o.distinct(arguments[0]);
+    if (distinctArray.length === 0) return [];
 
-     for (var i = 0; i < distinctArray.length; i++) {
-         var item = distinctArray[i];
+    for (var i = 0; i < distinctArray.length; i++) {
+        var item = distinctArray[i];
 
-         var shouldAddToResult = true;
+        var shouldAddToResult = true;
 
-         for (var j = 1; j < arguments.length; j++) {
-             var array2 = arguments[j];
-             if (array2.length == 0) return [];
+        for (var j = 1; j < arguments.length; j++) {
+            var array2 = arguments[j];
+            if (array2.length == 0) return [];
 
-             if ($.inArray(item, array2) === -1) {
-                 shouldAddToResult = false;
-                 break;
-             }
-         }
+            if ($.inArray(item, array2) === -1) {
+                shouldAddToResult = false;
+                break;
+            }
+        }
 
-         if (shouldAddToResult) {
-             result.push(item);
-         }
-     }
+        if (shouldAddToResult) {
+            result.push(item);
+        }
+    }
 
-     return result;
- }
+    return result;
+}
 
- o.except = function (/* minimum 2 arrays */) {
-     if (arguments.length < 2) throw new Error('There must be minimum 2 array arguments!');
-     checkIfAllArgumentsAreArrays(arguments);
+o.except = function (/* minimum 2 arrays */) {
+    if (arguments.length < 2) throw new Error('There must be minimum 2 array arguments!');
+    checkIfAllArgumentsAreArrays(arguments);
 
-     var result = [];
-     var distinctArray = o.distinct(arguments[0]);
-     var otherArraysConcatenated = [];
+    var result = [];
+    var distinctArray = o.distinct(arguments[0]);
+    var otherArraysConcatenated = [];
 
-     for (var i = 1; i < arguments.length; i++) {
-         var otherArray = arguments[i];
-         otherArraysConcatenated = otherArraysConcatenated.concat(otherArray);
-     }
+    for (var i = 1; i < arguments.length; i++) {
+        var otherArray = arguments[i];
+        otherArraysConcatenated = otherArraysConcatenated.concat(otherArray);
+    }
 
-     for (var i = 0; i < distinctArray.length; i++) {
-         var item = distinctArray[i];
+    for (var i = 0; i < distinctArray.length; i++) {
+        var item = distinctArray[i];
 
-         if ($.inArray(item, otherArraysConcatenated) === -1) {
-             result.push(item);
-         }
-     }
+        if ($.inArray(item, otherArraysConcatenated) === -1) {
+            result.push(item);
+        }
+    }
 
-     return result;
- }
+    return result;
+}
 
- // used for app id
+// used for app id
 o.random_str = function(){ return Math.random().toString(16).slice(2); };
 
 o.polygon = function(sides){
@@ -374,7 +382,7 @@ o.polygon = function(sides){
 // Sort two apps, first by top, then by left
 o.topo_cmp = function(app1, app2) {
     var a = app2.min_pos(), b = app1.min_pos();
-    if (a[1] != b[1])
+    if (Math.abs(a[1] - b[1]) > 0.5)
         return b[1] - a[1];
     return b[0] - a[0];
 }
@@ -687,6 +695,7 @@ o.new_file = function(files, opts, app_opts, filter) {
 env.layout_apps = o.layout_apps = function(){
     env.scale_set();
     $.map(env.Apps, function(a){ a.layout() });
+    env.Background.layout()
     // handled by App.layout
     // if(env.Selection.controls) env.Selection.controls.layout();
 
@@ -900,7 +909,7 @@ o.snap_helper = function(my_tuple, opts) {
             var rule = $(klass);
             if (0 == rule.length) {
                 rule = $('<div class="ruler ruler' + coord + '">');
-                rule.appendTo($("body"));
+                rule.appendTo(env.apps_e)
             }
             rule.showshow();
             rule.css({
@@ -931,7 +940,7 @@ o.append_color_picker = function(container, callback, init_color, opts){
     var to_rgb = function(c){
         if (c.length == 3) return c;
         var c = normalize(c)
-        if(!c) return
+        if(!c) return [0,0,0]
         // this handles color names like "blue"
         return $.map(getComputedStyle(color_probe.css('color', c)[0]).color
             .replace(/[^\d,]/g,'').split(','), function(v){ return parseInt(v) });
@@ -958,7 +967,7 @@ o.append_color_picker = function(container, callback, init_color, opts){
         var c = normalize(v)
         if(!c){
             c = normalize('#'+v)
-            if(!c) return
+            if(!c && v) return
         }
         o.set_color(c, true)
         callback(c, to_rgb(c));
@@ -991,8 +1000,9 @@ o.append_color_picker = function(container, callback, init_color, opts){
     };
 
     var get_shade = function(e) {
-        hsv[2] = bound((e.pageX - shades.offset().left) / 120, 0, 1);
-        hsv[1] = bound((e.pageY - shades.offset().top) / 120, 0, 1);
+        var shades_size = shades.width()
+        hsv[2] = bound((e.pageX - shades.offset().left) / shades_size, 0, 1);
+        hsv[1] = bound((e.pageY - shades.offset().top) / shades_size, 0, 1);
         calc_color();
     };
 
@@ -1052,13 +1062,21 @@ o.append_color_picker = function(container, callback, init_color, opts){
     o.set_color(init_color);
 
     manual_input.on('keyup input paste', function(e){
-        if(e.keyCode == 13) {
+        // if (e.keyCode == 27 ||                      // esc
+        if (e.keyCode == 13)                        // enter
+        {
+            // Cancel edit, returning to initial color
+            // Sadly, we don't actually have the initial color,
+            // only the color when the drawer was created
+            // if (e.keyCode == 27) {
+            //     o.set_color(init_color);
+            // }
             if (opts && opts.field_to_focus){
                 opts.field_to_focus.focus();
             } else {
                 manual_input.blur();
             }
-        }
+        } else 
         o.update_hex()
     });
 

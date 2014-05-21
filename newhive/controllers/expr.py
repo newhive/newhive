@@ -206,30 +206,23 @@ class Expr(ModelController):
             expr = expr_obj,
             use_ga = False,
         )
-        if snapshot_mode:
-            tdata.context['css'] = "body { overflow-x: hidden; }"
-        client_data = {}
-        for app in expr_obj.get('apps',[]):
-            app_id = app.get('id', 'app_' + str(app['z']))
-            data = app.get('client_data', {})
-            data.update(media=app.get('media'))
-            if app['type'] == 'hive.code':
-                data.update(dfilter(app, ['content', 'url']))
-            if app['type'] == 'hive.image':
-                data.update(dfilter(app, ['url']))
-            if data:
-                data['type'] = app['type']
-                client_data[app_id] = data
-        tdata.context.update(client_data=client_data)
+
+        body_style = ''
+        if snapshot_mode or expr_obj.get('clip_x'):
+            body_style = 'overflow-x: hidden;'
+        if expr_obj.get('clip_y'):
+            body_style += 'overflow-y: hidden;'
+        if body_style:
+            tdata.context['css'] = 'body {' + body_style + '}'
+
+        tdata.context.update(expr=expr_obj)
         return self.serve_page(tdata, response, 'pages/expr.html')
         
     def expr_to_html(self, exp, snapshot_mode=False, viewport=(1000, 750)):
         """Converts JSON object representing an expression to HTML"""
-
         if not exp: return ''
-        expr_dims = exp.get('dimensions', [1000, 750])
         # TODO-feature-expr-orientation (use y)
-        expr_scale = float(viewport[0]) / expr_dims[0]
+        expr_scale = float(viewport[0]) / 1000
 
         html_for_app = partial(self.html_for_app, scale=expr_scale,
             snapshot_mode=snapshot_mode)
@@ -245,6 +238,8 @@ class Expr(ModelController):
         type = app.get('type')
         klass = type.replace('.', '_')
         app_id = app.get('id', 'app_' + str(app['z']))
+        if type == 'hive.circle':
+            type = 'hive.rectangle'
 
         if type != 'hive.rectangle':
             # rectangles have css as their content; all other apps have extra
@@ -266,15 +261,13 @@ class Expr(ModelController):
                     offset = [x * scale_x for x in app.get('offset')]
                     css = '%s;margin-left:%spx;margin-top:%spx' % (
                         css, offset[0], offset[1] )
-                html = "<img src='%s' style='%s'>" % (url, css)
-            link = app.get('href')
-            if link: html = "<a href='%s'>%s</a>" % (link, html)
+                html = "<img src='%s' style='%s' class='content'>" % (url, css)
         elif type == 'hive.sketch':
-            html = "<img src='%s'>" % content.get('src')
+            html = "<img src='%s' class='content'>" % content.get('src')
         elif type == 'hive.rectangle':
             c = app.get('content', {})
-            more_css = ';'.join([p + ':' + str(c[p]) for p in c])
-            html = ''
+            css = ';'.join([p + ':' + str(c[p]) for p in c])
+            html = "<div style='%s' class='content'></div>" % css
         elif type == 'hive.html':
             html_original = '%s' % (app.get('content',''))
             if snapshot_mode:
@@ -307,17 +300,23 @@ class Expr(ModelController):
                 encoded_content = cgi.escape(app.get('content',''), quote=True)
                 html = '%s' % (app.get('content',''))
         elif type == 'hive.polygon':
+            link = app.get('href')
+            link_text = ('','')
+            if link: link_text = ("<a xlink:href='%s'>" % link,"</a>")
+
             html = (
-                  "<svg xmlns='http://www.w3.org/2000/svg'"
+                  "<svg class='content' xmlns='http://www.w3.org/2000/svg'"
+                + " xmlns:xlink='http://www.w3.org/1999/xlink'"
                 + " viewbox='0 0 %f %f" % tuple(dimensions)
                 + "'>"
                 + "<filter id='%s_blur'" % app_id 
                 + " filterUnits='userSpaceOnUse'><feGaussianBlur stdDeviation='"
                 + "%f'></filter>" % app.get('blur', 0)
-                + "<polygon points='"
+                + "%s<polygon points='" % link_text[0]
                 + ' '.join( map( lambda p: "%f %f" % (p[0], p[1]),
                     app.get('points', []) ) )
-                + "' style='filter:url(#%s_blur)'/></svg>" % app_id
+                + "' style='filter:url(#%s_blur)'/>%s</svg>" % (
+                    app_id, link_text[1])
             )
             style = app.get('style', {})
             more_css = ';'.join([ k+':'+str(v) for k,v in style.items()])
@@ -337,15 +336,23 @@ class Expr(ModelController):
                 html =  "<style id='%s'>%s</style>" % (
                     app_id, app.get('content') )
             return html
+        elif type == 'hive.text':
+            html = "<div class='content'>%s</div>" % content
         else:
-            html = content
+            html = "<div class='content'>%s</div>" % content
 
         data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
         data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
-        return "<div class='happ %s %s' id='%s' style='%s'%s>%s</div>" % (
+        html = "<div class='happ %s %s' id='%s' style='%s'%s>%s</div>" % (
             klass, app.get('css_class', ''), app_id,
             css_for_app(app) + more_css, data, html
         )
+
+        if type != 'hive.polygon':
+            link = app.get('href')
+            if link: html = "<a href='%s'>%s</a>" % (link, html)
+
+        return html
 
 # TODO-bug fix resizing after loading by sending pre-scaled expr
 # Requires client layout_apps() to use scaled expr dimensions

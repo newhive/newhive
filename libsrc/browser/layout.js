@@ -9,11 +9,12 @@ define(['browser/jquery', 'ui/util'], function($, util) {
         return window.devicePixelRatio
     }
 
-    o.place_apps = function() {
+    o.place_apps = function(layout_coord) {
         // if(util.mobile()) return
+        var scale_from = [$(window).width(), $(window).height()][layout_coord]
+            ,s = scale_from / 1000
+        if(util.mobile()) s = .5
 
-        var win_width = $(window).width();
-        if(util.mobile()) win_width = 500;
         // TODO: bg code should respect win_width
         $('.happfill').each(function(i, div) {
             var e = $(div);
@@ -23,7 +24,6 @@ define(['browser/jquery', 'ui/util'], function($, util) {
 
         $('.happ').each(function(i, app_div) {
             var e = $(this);
-            var s = win_width / 1000;
             if(!e.data('css')) {
                 var c = {}, props = ['left', 'top', 'width', 'height'],
                     border = $(app_div).css('border-radius')
@@ -57,16 +57,24 @@ define(['browser/jquery', 'ui/util'], function($, util) {
                     c['width'] * Math.max(1, s))
                 c2['left'] = Math.max(30, r * (win_width - c2['width']))
                 c2['font-size'] = ( c['font-size'] *
-                    Math.max(1, c2['width'] / c['width']) ) + 'em'
+                    Math.max(1, c2['width'] / c['width']) )
                 delete c['width']
                 delete c['left']
                 delete c['font-size']
             }
-            for(var p in c) {
-                if(p == 'font-size') c2[p] = (c[p] * s) + 'em';
-                else c2[p] = Math.round(c[p] * s);
+            for(var p in c2) {
+                c2[p] = c[p] ? (c[p] * s) : c2[p]
+                if(p == 'font-size') {
+                    c2[p] += 'em';
+                } else if (p == 'width' || p == 'height'){
+                    c2[p] = Math.max(1, Math.round(c2[p])) + 'px';
+                } else {
+                    c2[p] = Math.round(c2[p]) + 'px';
+                }
             }
-            e.css(c2);
+            // e.css(c2);
+            // is this faster?
+            util.inline_style(e[0], c2)
             
             if (e.hasClass('hive_image')) {
                 var img = e.find('img'), ic = $.extend({}, img.data('css'))

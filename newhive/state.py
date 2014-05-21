@@ -107,7 +107,7 @@ class Database:
                     # look for specific ordered list in user record
                     owner = self.User.named(user)
                 if owner and owner.get('tagged', {}).has_key(tags[0]):
-                    results = self.Expr.cards(owner['tagged'][tags[0]], **args)
+                    results = self.Expr.page(owner['tagged'][tags[0]], **args)
                 else:
                     if search.get('tags'):
                         spec['tags_index'] = {'$all': search['tags']}
@@ -235,11 +235,6 @@ class Collection(object):
             return res
         return Cursor(self, self._col.find(spec=spec, **opts))
 
-    # Should be overridden to omit fields not used in list views
-    # TODO: fix privacy for viewer
-    def cards(self, spec, viewer=None, **opts):
-        return self.search(spec, **opts)
-
     def last(self, spec={}, **opts):
         opts.update({'sort' : [('_id', -1)]})
         return self.find(spec, **opts)
@@ -257,7 +252,7 @@ class Collection(object):
 
             # if at and sort: spec[sort] = { '$lt' if order == -1 else '$gt': at }
 
-            res = self.cards(spec, sort=[(sort, order)], skip=at, **args)
+            res = self.search(spec, sort=[(sort, order)], skip=at, **args)
 
             # if there's a limit, collapse to list, get sort value of last item
             if limit:
@@ -292,7 +287,7 @@ class Collection(object):
                 else:
                     return []
 
-            res = self.cards(sub_spec)
+            res = self.search(sub_spec)
             return res
 
     # default implementation of pagination, intended to be overridden by
@@ -1156,7 +1151,6 @@ class User(HasSocial):
             (update['tagged_ordered'], update['tagged']) = self.get_tags(True)
             dict.update(user, update)
         if special.has_key("mini_expressions") and g_flags['mini_expressions']:
-            # exprs = self.db.Expr.cards({'owner': self.id}, limit=3)
             exprs = self.get_top_expressions(g_flags['mini_expressions'])
             dict.update(user, dict(
                 mini_expressions = map(lambda e:e.mini_view(), exprs)))
@@ -1242,31 +1236,6 @@ class Expr(HasSocial):
 
         def named(self, username, name): return self.find({'owner_name': username, 'name': name})
 
-        def cards(self, spec, auth=None, viewer=None, override_unlisted=False, **opts):
-            filter = {}
-            spec2 = spec if type(spec) == dict else filter
-            # Hack for Zach. TODO-cleanup: verify with Zach that this link
-            # isn't needed anymore and remove
-            if (spec2.has_key('tags_index') 
-                and ['deck2014'] in spec2.get('tags_index').values()):
-                    override_unlisted = True
-            # Set up auth filtering
-            if auth:
-                spec2.update(auth=auth)
-            if override_unlisted:
-                pass
-            elif viewer and viewer.logged_in:
-                if auth == 'password':
-                    spec2.update({'owner': viewer.id})
-                elif not override_unlisted:
-                    spec2.setdefault('$and', [])
-                    spec2['$and'].append({'$or': [{'auth': 'public'},
-                        {'owner': viewer.id}]})
-            else:
-                spec2.update({'auth': 'public'})
-            opts.setdefault('fields', self.ignore_not_meta)
-            return self.search(spec, filter, **opts)
-
         def fetch(self, key, keyname='_id', meta=False):
             fields = { 'text_index': 0, 'title_index': 0 }
             if meta: fields.update(self.ignore_not_meta)
@@ -1294,10 +1263,36 @@ class Expr(HasSocial):
             [user, name] = urllib2.urlparse.urlparse(url).path[1:].split('/', 1)
             return cls.named(user, name)
 
-        def page(self, spec, sort='updated', **args):
+        def page(self, spec, sort='updated', viewer=None, auth=None,
+            override_unlisted=False, **args
+        ):
             assert(sort in ['updated', 'random'])
             args.update(sort=sort)
-            rs = self.paginate(spec, **args)
+
+            filter = {}
+            spec2 = spec if type(spec) == dict else filter
+            # Hack for Zach. TODO-cleanup: verify with Zach that this link
+            # isn't needed anymore and remove
+            if (spec2.has_key('tags_index') 
+                and ['deck2014'] in spec2.get('tags_index').values()):
+                    override_unlisted = True
+            # Set up auth filtering
+            if auth:
+                spec2.update(auth=auth)
+            if override_unlisted:
+                pass
+            elif viewer and viewer.logged_in:
+                if auth == 'password':
+                    spec2.update({'owner': viewer.id})
+                elif not override_unlisted:
+                    spec2.setdefault('$and', [])
+                    spec2['$and'].append({'$or': [{'auth': 'public'},
+                        {'owner': viewer.id}]})
+            else:
+                spec2.update({'auth': 'public'})
+
+            args.setdefault('fields', self.ignore_not_meta)
+            rs = self.paginate(spec, filter=filter, **args)
 
             # remove random static patterns from random index
             # to make it _really_ random
@@ -1734,7 +1729,11 @@ class Expr(HasSocial):
 
     public = property(lambda self: self.get('auth') == "public")
 
-    def client_view(self, viewer=None, special={}, activity=0):
+    def client_view(self, mode='card', viewer=None, special={}, activity=0):
+        """ data for expr card, seen in community pages """
+        if mode == 'page':
+            return self.client_view_page()
+
         counts = dict([ ( k, v.get('count', 0) ) for
             k, v in self.get('analytics', {}).iteritems() ])
         counts['Views'] = self.views
@@ -1774,6 +1773,23 @@ class Expr(HasSocial):
             # dict.update( expr, activity =
             #     map(lambda r: r.client_view(),
             #         self.db.Feed.search({'entity':self.id})) [0:activity] )
+        return expr
+
+    def client_view_page(self):
+        """ data for expr page """
+        expr = dfilter(self, ['layout_coord', 'clip_x', 'clip_y'])
+        apps = expr['apps'] = {}
+        for app in self.get('apps',[]):
+            app_id = app.get('id', 'app_' + str(app['z']))
+            data = app.get('client_data', {})
+            data.update(media=app.get('media'))
+            if app['type'] == 'hive.code':
+                data.update(dfilter(app, ['content', 'url']))
+            if app['type'] == 'hive.image':
+                data.update(dfilter(app, ['url']))
+            if data:
+                data['type'] = app['type']
+                apps[app_id] = data
         return expr
 
     def loves_feed(self, count=-1, at=0):

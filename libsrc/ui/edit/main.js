@@ -20,6 +20,7 @@ define([
     ,'sj!templates/edit_sandbox.html'
 
     ,'./text'
+    ,'./history'
 
     ,'browser/jquery/jplayer/skin'
     ,'browser/jquery/rotate.js'
@@ -81,7 +82,7 @@ Hive.init_menus = function() {
             ,group: $(".misc.handle").data("menu")
             ,auto_height: false 
         }
-    }) ()
+    }).controls()
     $('#text_default').click(function(e) {
         hive_app.new_app({ type : 'hive.text', content : '' });
     });
@@ -122,40 +123,80 @@ Hive.init_menus = function() {
     $('#embed_done').click(function() { Hive.embed_code('#embed_code'); embed_menu.close(); });
 
     u.hover_menu('.insert_shape', '#menu_shape');
-    $('#menu_shape .rect').click(function(e) {
-        hive_app.new_app({ type : 'hive.rectangle', css_state :
-            { 'background-color' : colors[24], 'border-color' : 'black', 'border-width' : 0,
-                'border-style' : 'solid' } });
+    var default_size = [150, 150]
+    Hive.template_shape_base = {
+        "type": "hive.polygon"
+        , "style": {"stroke-width": 0}
+    }
+    Hive.template_rect = { 
+        type : 'hive.rectangle'
+        , dimensions: default_size
+        , css_state : {
+            'background-color' : "#000"
+            // 'background-color' : colors[24]
+            , 'border-color' : 'black'
+            , 'border-width' : 0
+            , 'border-style' : 'solid' 
+        }
+    };
+    Hive.template_circle = {
+        type : 'hive.circle'
+        , dimensions: default_size
+        , css_state : { 
+            'background-color' : "#000"
+            ,'border-color' : 'black'
+            ,'border-width' : 0 // 1
+            ,'border-style' : 'solid' 
+        }
+    };
+    $('#menu_shape .rect').click(function(ev) {
+        poly.mode(Hive.template_rect)
+        poly.focus()
+    });
+    $('#menu_shape .circle').click(function(ev) {
+        poly.mode(Hive.template_circle)
+        poly.focus()
     });
     $('#menu_shape .sketch').click(function(e) {
         hive_app.new_app({ type: 'hive.sketch', dimensions: [700, 700 / 1.6]
             ,content: { brush: 'simple', brush_size: 10 } });
     });
+
     // polygon shapes
     var poly = hive_app.App.Polygon
-    Hive.template_triangle = { // triangle
-        "type":"hive.polygon",
-        "points":[[50,0],[100, 100*Math.sqrt(3)/2],[0, 100*Math.sqrt(3)/2]]
+    var phi = (Math.sqrt(5) + 1) / 2
+    var scale_default = function(points) {
+        return points.map(function(p) { return u._mul(default_size, p) })
     }
-    Hive.template_pentagram = $.extend({}, Hive.template_triangle, {
+    Hive.template_line = $.extend({}, Hive.template_shape_base, {
+        "points": scale_default([[0, 0], [1, 0]])
+        ,"style": {"stroke-width": 4}
+    })
+    Hive.template_triangle = $.extend({}, Hive.template_shape_base, {
+        "points": scale_default(
+            [[.5,0], [1, Math.sqrt(3)/2], [0, Math.sqrt(3)/2]])
+    })
+    Hive.template_pentagram = $.extend({}, Hive.template_shape_base, {
         points: js.range(10).map(function(i){
             var d = ((i == 0 ? 0 : Math.PI*2*i/10) + Math.PI/10)
-                ,o = [47.705200572253005, 45.72550799853835] // dims/2
-                ,r = (i % 2) ? 50 : 19.0983005625
+                ,r = (i % 2) ? 1 : (1 - 1 / phi)
                 ,p = [Math.cos(d), Math.sin(d)]
-            return u._add(o)( u._mul(p)(r) )
+            return u._mul(p, r, .5, default_size)
         })
     })
-    Hive.template_hexagon = $.extend({}, Hive.template_triangle, {
+    Hive.template_hexagon = $.extend({}, Hive.template_shape_base, {
         points: js.range(6).map(function(i){
             var d = (i == 0 ? 0 : Math.PI*2*i/6)
-                ,o = [50.5, 43.80127018922194] // dims/2
                 ,p = [Math.cos(d), Math.sin(d)]
-            return u._add(o)( u._mul(p)(50) )
+            return u._mul(p, .5, default_size)
         })
     })
     $('#menu_shape .triangle').click(function(){
         poly.mode(Hive.template_triangle)
+        poly.focus()
+    })
+    $('#menu_shape .line').click(function(){
+        poly.mode(Hive.template_line)
         poly.focus()
     })
     $('#menu_shape .pentagram').click(function(){
@@ -220,19 +261,13 @@ Hive.init_dialogs = function() {
 };
 
 Hive.layout = function(){
-    u.layout_apps();
+    env.canvas_size_update()
     layout.center('.app_btns', 'body', {v: false});        
 }
 
 Hive.init_global_handlers = function(){
     // Global event handlers
-    $(window).on('resize', function(ev) {
-        var old_scale = env.scale();
-        env.scale_set();
-        var new_scale = env.scale();
-        if(old_scale == new_scale) return;
-        Hive.layout()
-    });
+    $(window).on('resize', Hive.layout)
     Hive.layout()
 
     $(window).on('scroll', Hive.scroll);
@@ -242,7 +277,7 @@ Hive.init_global_handlers = function(){
     evs.on('body', 'mousedown');
     evs.on('body', 'mouseup');
     // evs.on('body', 'click');
-    var drag_base = $('#grid_guide, .prompts')
+    var drag_base = $('body')
     evs.on(drag_base, 'dragenter');
     evs.on(drag_base, 'dragleave');
     evs.on(drag_base, 'drop');
@@ -289,6 +324,9 @@ Hive.init_global_handlers = function(){
         var expr = Hive.state();
         Hive.send({save_dialog: 1})
     })
+    // Prevent hidden forms from stealing focus 
+    // (fixes ctrl-a going to client, and doing native select-all)
+    $("input[readonly]").on("focus",function(e){ $(this).blur() })
 };
 
 Hive.receive = function(ev){
@@ -310,14 +348,15 @@ Hive.pre_init = function(){
 
 Hive.init = function(exp, site_context){
     // this reference must be maintained, do not assign to Exp
-    env.Exp = Hive.Exp = exp;
+    env.Exp = Hive.Exp = exp
     // Hive.edit_page = page;
-    if(!exp.auth) exp.auth = 'public';
-    env.scale_set();
+    if(!exp.auth) exp.auth = 'public'
+    env.scale_set()
 
     $.extend(context, site_context)
+    env.show_css_class = false;
     env.copy_table = context.flags.copy_table || false;
-    env.gifwall = $.inArray('gifwall', exp.tags_index) > -1
+    env.gifwall = ($.inArray('gifwall', exp.tags_index) > -1)
     env.squish_full_bleed = env.gifwall;
     env.show_mini_selection_border = 
         env.gifwall || context.flags.show_mini_selection_border;
@@ -347,8 +386,10 @@ Hive.init = function(exp, site_context){
     // TODO-cleanup: remove Selection from registered apps, and factor out
     // shared functionality into has_coords
     env.Selection = hive_app.new_app({ type : 'hive.selection' });
+    env.Background = hive_app.App.Background()
     hive_app.Apps.init(Hive.Exp.apps);
     hive_app.Apps.restack();
+    env.zoom_set(1)
 
     $('.edit.overlay').showshow()
     Hive.init_global_handlers()
@@ -592,6 +633,7 @@ Hive.scroll = function(ev){
         env.Selection.controls.layout();
     env.Selection.elements().map(function(app){
         if(app.controls) app.controls.layout() });
+    env.Background.layout()
 };
 // END-Events /////////////////////////////////////////////////////////
 

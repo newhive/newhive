@@ -1,4 +1,4 @@
-<div class='overlay panel nav {<if query.clean}stay_hidden{>}'>
+<div class='overlay bottom panel nav {<if query.clean}stay_hidden{>}'>
   {# create or signup/login #}
   {<unless user.logged_in}
     <span class='signup'>
@@ -20,12 +20,14 @@
   {# + button to open overlay #}
   <div class='social_btn item btn hide hoverable'></div>
 </div>
-{<if (or 1 (not flags.mobile))}
-  <div class='social overlay page_btn page_prev {<if query.clean}stay_hidden{>}'></div>
-  <div class='social overlay page_btn page_next {<if query.clean}stay_hidden{>}'></div>
+{<if (not flags.mobile)}
+  <div class='social overlay left page_btn page_prev
+    {<if query.clean}stay_hidden{>}'></div>
+  <div class='social overlay right page_btn page_next
+    {<if query.clean}stay_hidden{>}'></div>
 {>}
 {# hive logo button #}
-<div id='logo' class='overlay nav logo icon left right {<if query.clean}stay_hidden{>}'></div>
+<div id='logo' class='overlay bottom nav logo icon {<if query.clean}stay_hidden{>}'></div>
 
 {# menu: logo #}
 <div id='logo_menu' class='menu drawer' data-handle='#logo'>

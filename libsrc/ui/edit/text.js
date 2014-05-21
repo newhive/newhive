@@ -232,8 +232,8 @@ o.Text = function(o) {
 
     o.div.addClass('text');
     if(!o.init_state.dimensions) o.dims_set([ 300, 20 ]);
-    o.content_element = $('<div></div>');
-    o.content_element.attr('id', u.random_str()).addClass('text_content_element');
+    o.content_element = $("<div class='content'>")
+    o.content_element.attr('id', u.random_str())
     o.div.append(o.content_element);
     o.rte = new Text.goog_rte(o.content_element, o);
     goog.events.listen(o.rte.undo_redo.undoManager_,

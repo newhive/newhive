@@ -100,9 +100,26 @@ define([
             $.fn.bind_once = function( event_name, func ) {
                 return $(this).off(event_name, func).on(event_name, func);
             };
+            $.fn.bind_once_anon = function( event_name, func ) {
+                return $(this).off(event_name).on(event_name, func);
+            };
         }(jQuery));
     };
     o.extend_jquery();
+
+    // For performance-critical ops, do not use jquery style
+    o.inline_style = function(el, styles) {
+        var el_style = el.style
+        $.each(styles, function(style_name, style_val) {
+            el_style[style_name] = style_val
+        })
+    }
+    o.inline_style_px = function(el, styles) {
+        var el_style = el.style
+        $.each(styles, function(style_name, style_val) {
+            el_style[style_name] = style_val + 'px'
+        })
+    }
 
     o.hoverable = function(el){
         if(el.prop('src')) {
