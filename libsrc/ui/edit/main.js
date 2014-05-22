@@ -376,7 +376,15 @@ Hive.init = function(exp, site_context){
 
     Hive.init_dialogs();
     Hive.init_menus();
-    // Hive.init_autosave();
+    var last_autosave = {}
+    setInterval(function() {
+        // Only autosave if something has changed
+        var expr = Hive.state()
+        if (!u.deep_equals(last_autosave, expr)) {
+            last_autosave = $.extend(true, {}, expr)
+            Hive.send({save: expr, autosave:1})
+        }
+    } , 1000)
 
     env.apps_e = $('#happs'); // container element for all interactive apps
     env.History.init();
@@ -534,17 +542,27 @@ Hive.embed_code = function(element) {
 }; 
 
 // TODO-feature-autosave: implement 
-Hive.init_autosave = function (){
-    setInterval(Hive.set_draft, 5000);
-    try { Hive.set_draft(); }
-    catch(e) { return "If you leave this page any unsaved changes to your expression will be lost."; }
-    var draft = Hive.get_draft();
-    if(draft) Hive.Exp = draft;
-    Hive.get_draft = function() {
-        return localStorage.expr_draft ? JSON.parse(localStorage.expr_draft) : null }
-    Hive.set_draft = function() { localStorage.expr_draft = JSON.stringify(Hive.state()); }
-    Hive.del_draft = function() { delete localStorage.expr_draft; }
-}
+// See also https://developer.mozilla.org/en-US/docs/Web/Guide/API/DOM/Storage
+// Hive.init_autosave = function (){
+//     o = {}
+
+//     o.save_draft = function() {
+//         Hive.send({save: Hive.state(), autosave:1})
+//     }
+//     o.get_draft = function() {}
+    
+//     // setInterval(Hive.set_draft, 5000);
+//     // try { Hive.set_draft(); }
+//     // catch(e) { return "If you leave this page any unsaved changes to your expression will be lost."; }
+//     // var draft = Hive.get_draft();
+//     // if(draft) Hive.Exp = draft;
+//     // Hive.get_draft = function() {
+//     //     return localStorage.expr_draft ? JSON.parse(localStorage.expr_draft) : null }
+//     // Hive.set_draft = function() { localStorage.expr_draft = JSON.stringify(Hive.state()); }
+//     // Hive.del_draft = function() { delete localStorage.expr_draft; }
+
+//     return o
+// }
 
 
 // Get and set the JSON object Hive.Exp which represents the edited expression
@@ -554,11 +572,7 @@ Hive.state = function() {
     Hive.Exp.apps = hive_app.Apps.state();
 
     // get height
-    var h = 0;
-    for(var i in Hive.Exp.apps) {
-        var a = Hive.Exp.apps[i], y = a.dimensions[1] + a.position[1];
-        if(y > h) h = y;
-    }
+    var h = u.app_bounds(env.Apps.all()).bottom
     Hive.Exp.dimensions = [1000, Math.ceil(h)];
 
     return Hive.Exp;

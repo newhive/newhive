@@ -43,7 +43,6 @@ define([
    };
     
     o.exit = function(){
-        // TODO: implement autosave
         $('link.edit').remove();
         $('#site').empty();
         $("body").removeClass("edit");
@@ -189,6 +188,8 @@ define([
         if(msg.save){
             expr.background = msg.save.background
             expr.apps = msg.save.apps
+
+            $('#expr_save input[name=autosave]').val(msg.autosave ? 1 : 0)
             $('#expr_save').submit()
         }
         if(msg.ready) o.edit_expr()
@@ -205,6 +206,12 @@ define([
     o.edit_expr = function(){
         // pass context from server to editor
         var edit_context = js.dfilter(context, ['user', 'flags', 'query'])
+        // Autosave: restore draft if more recent than save
+        if (expr.draft && expr.updated && expr.draft.updated 
+            && expr.draft.updated > expr.updated) 
+        {
+            expr = $.extend(true, {}, expr, expr.draft)
+        }
         o.sandbox_send({ init: true, expr: expr, context: edit_context})
     }
 
