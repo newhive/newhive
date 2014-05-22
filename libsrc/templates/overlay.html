@@ -1,4 +1,4 @@
-<div class='overlay bottom panel nav {<if query.clean}stay_hidden{>}'>
+<div class='overlay bottom panel nav {<if query.clean} stay_hidden{>}'>
   {# create or signup/login #}
   {<unless user.logged_in}
     <span class='signup'>
@@ -27,7 +27,8 @@
     {<if query.clean} stay_hidden{>}'></div>
 {>}
 {# hive logo button #}
-<div id='logo' class='overlay bottom nav logo icon {<if query.clean}stay_hidden{>}'></div>
+<div id='logo' class='overlay bottom nav logo icon 
+  {<if (and query.clean (eq query.clean "nologo"))} stay_hidden{>}'></div>
 
 {# menu: logo #}
 <div id='logo_menu' class='menu drawer' data-handle='#logo'>

@@ -3,8 +3,7 @@ import os, json, cgi, base64, re
 from pymongo.errors import DuplicateKeyError
 from functools import partial
 
-from newhive import utils
-from newhive.utils import dfilter
+from newhive.utils import dfilter, now, get_embedly_oembed
 from newhive.controllers.controller import ModelController
 
 class Expr(ModelController):
@@ -14,7 +13,6 @@ class Expr(ModelController):
         resp = {}
         expr_id = request.form.get("expr_id")
 
-        print expr_id
         expr = self.db.Expr.fetch(expr_id)
         if not expr:
             resp = { 'error': 'Expression not found.' }
@@ -55,10 +53,12 @@ class Expr(ModelController):
                 resp['name'] = name
                 return self.serve_json(response, resp)
             num += 1
-
+    
     def save(self, tdata, request, response, **args):
         """ Parses JSON object from POST variable 'exp' and stores it in database.
             If the name (url) does not match record in database, create a new record."""
+
+        autosave = (request.form.get('autosave') == "1")
 
         try: expr = self.db.Expr.new(json.loads(request.form.get('expr', '0')))
         except: expr = False
@@ -96,6 +96,10 @@ class Expr(ModelController):
             })
 
         if not res or upd['name'] != res['name']:
+            if autosave:
+                # TODO-autosave: create anonymous expression
+                return self.serve_json(response, {})
+
             try:
               new_expression = True
               # Handle remixed expressions
@@ -143,11 +147,21 @@ class Expr(ModelController):
         else:
             if not res['owner'] == tdata.user.id:
                 raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
+
             # remix: ensure that the remix tag is not deletable
             if res.get('remix_parent_id'):
                 upd['tags'] += " #remixed" # + remix_name
             reserved_tags = ["remixed", "gifwall"];
-            # TODO: disallow removal of reserved tags
+            # disallow removal of reserved tags
+            if not self.flags.get('modify_special_tags'):
+                for tag in reserved_tags:
+                    if res.get('tags_index', []):
+                        upd['tags'] += " #" + tag
+            if autosave:
+                upd['updated'] = now()
+                res.update(updated=False, draft=upd)
+                return self.serve_json(response, {})
+
             res.update(**upd)
             if not self.config.live_server and (upd.get('apps') or upd.get('background')):
                 res.threaded_snapshot(retry=120)
@@ -159,6 +173,7 @@ class Expr(ModelController):
         # TODO-cleanup: create client_view for full expression record, instead
         # of just feed cards
         res['id'] = res.id
+
         return self.serve_json(response, res)
 
     # the whole editor except the save dialog and upload code goes in sandbox
@@ -273,7 +288,7 @@ class Expr(ModelController):
             if snapshot_mode:
                 def get_embed_img_html(url):
                     ret_html = ''
-                    oembed = utils.get_embedly_oembed(url) if url else ''
+                    oembed = get_embedly_oembed(url) if url else ''
                     if oembed and oembed.get('thumbnail_url'):
                         ret_html += '<img src="%s"/>' % oembed['thumbnail_url']
                     return ret_html

@@ -188,6 +188,31 @@ o.array_equals = function(a, b) {
   }
   return true;
 }
+
+// deep object comparison
+o.deep_equals = function(o1, o2) {
+    if (o1 == null || o2 == null)
+        return o1 == o2 
+
+    var k1 = Object.keys(o1).sort();
+    var k2 = Object.keys(o2).sort();
+    if (k1.length != k2.length) 
+        return false;
+    for (var i in k1) {
+        var key1 = k1[i], key2 = k2[i]
+        if (key1 != key2) 
+            return false
+        var a = o1[key1], b = o2[key2]
+        if(typeof(a) == "object" && typeof(b) == "object"){
+            if (!o.deep_equals(a, b))
+                return false
+        } else if (a != b) {
+            return false
+        }
+    }
+    return true
+}
+
 // returns the array of the nth element of every member array
 o.nth = function(array, n) {
     return array.map(function(x) { return x[n] })
