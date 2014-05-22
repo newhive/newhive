@@ -351,8 +351,10 @@ class Expr(ModelController):
                 html =  "<style id='%s'>%s</style>" % (
                     app_id, app.get('content') )
             return html
+        elif type == 'hive.text':
+            html = "<div class='content'>%s</div>" % content
         else:
-            html = content
+            html = "<div class='content'>%s</div>" % content
 
         data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
         data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''

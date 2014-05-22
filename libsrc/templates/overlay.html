@@ -20,7 +20,7 @@
   {# + button to open overlay #}
   <div class='social_btn item btn hide hoverable'></div>
 </div>
-{<if (or 1 (not flags.mobile))}
+{<if (not flags.mobile)}
   <div class='social overlay left page_btn page_prev
     {<if query.clean}stay_hidden{>}'></div>
   <div class='social overlay right page_btn page_next

@@ -5,6 +5,7 @@
 */
 define([
     'browser/jquery'
+    ,'browser/js'
     ,'server/context'
     ,'browser/layout'
     ,'ui/jplayer'
@@ -13,7 +14,7 @@ define([
     ,'browser/jquery/jplayer/skin'
     ,'browser/jquery/rotate.js'
     ,'browser/jquery.mobile.custom'
-], function($, context, layout, jplayer, util){
+], function($, js, context, layout, jplayer, util){
     var o = {};
     o.initialized = false;
 
@@ -80,6 +81,70 @@ define([
                     o.page_prev()
             })
         }
+
+        // Swipe to prev and next for mobile web
+
+        var touch_start = false, swiping = false, swipe_x = 0, swipe_max = 75
+            , swipe_container_el, swipe_el, swipe_dir
+        var swipe_start = function(x){
+            swiping = true
+            swipe_dir = x > 0 ? 1 : -1
+            swipe_container_el = $("<div class='swipe_feedback'>"
+                + "<div class='icon'></div></div>").appendTo('body')
+                .addClass(x < 0 ? 'right' : 'left')
+            swipe_el = swipe_container_el.find('.icon')
+        }, swipe = function(x){
+            if(swipe_dir == 1)
+                swipe_x = js.bound(x, 0, swipe_max)
+            else
+                swipe_x = js.bound(x, -swipe_max, 0)
+            if(swipe_x < 0) swipe_el.css('left', 140 + swipe_x)
+            else swipe_el.css('right', 140 - swipe_x)
+            swipe_el.addremoveClass('on', Math.abs(swipe_x) == swipe_max)
+        }, swipe_end = function(){
+            swiping = touch_start = false
+            swipe_container_el.remove()
+
+            if(Math.abs(swipe_x) < swipe_max) return
+            if(swipe_x < 0)
+                o.page_prev()
+            else
+                o.page_next()
+        }
+        $(document).on('touchstart', function(ev){
+            var touches = ev.originalEvent.touches
+            if(touches && touches.length)
+                touch_start = [touches[0].clientX, touches[0].clientY]
+        }).on('touchmove', function(ev){
+            if(!touch_start) return
+
+            var touches = ev.originalEvent.touches, touch_now
+            if(touches && touches.length)
+                touch_now = [touches[0].clientX, touches[0].clientY]
+
+            var delta = [touch_now[0] - touch_start[0], touch_now[1] - touch_start[1]]
+            if(swiping) swipe(delta[0])
+
+            // differentiate between scrolling and horizontal swiping
+            // by assuming scroll if there's scrolling left in that direction
+            // and otherwise assuming scroll if delta-Y is greater than delta-X
+
+            if( (delta[0] > 0 && document.body.scrollLeft > 0) // left scroll remains
+                || (delta[0] < 0 && (document.body.scrollLeft // right scroll remains
+                    + document.body.clientWidth < document.body.scrollWidth)
+                )
+            ){
+                return
+            }
+            var h_mag = Math.abs(delta[0])
+            if(h_mag >= 10 && h_mag > Math.abs(delta[1])){
+                ev.preventDefault()
+                if(!swiping) swipe_start(delta[0])
+            }
+        }).on('touchend touchcancel touchleave', function(ev){
+            if(!ev.originalEvent.touches.length && swiping)
+                swipe_end()
+        })
     }
 
     o.expr_receive = function(ev){

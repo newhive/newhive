@@ -860,28 +860,26 @@ Hive.App.Code = function(o){
     o.run_module_func = function(module_func, callback) {
         var curl_func = function() {
             editor.current_code = o;
-            try {
-                curl([o.module_name()], function(module) {
-                    if (module && typeof(module[module_func]) == "function")
-                        module[module_func]();
-                    callback && callback(module);
-                    editor.current_code = null;
-                }, function() {})
-            } catch (err) {}
+            curl([o.module_name()], function(module) {
+                if (module && typeof(module[module_func]) == "function")
+                    module[module_func]();
+                callback && callback(module);
+                editor.current_code = null;
+            }, function() {})
         }
-        if (!iter) {
-            insert_code()
-            // setTimeout(curl_func, 400);
-        }
-        // else 
-            curl_func();
+        curl_func()
     }
-    var _load = o.load
-    o.load = function() {
-        if (_load) _load()
-        if(o.init_state.code_type == 'js')
-            o.run_module_func("editor")
-    }
+
+    // With commented load, if script has a syntax error, all editor code aborts
+    // TODO: if we definitely want custom code to execute when editor loads,
+    // investigate using eval instead of <script> tag. Test debugging of code
+    // run from eval
+    // var _load = o.load
+    // o.load = function() {
+    //     if (_load) _load()
+    //     if(o.init_state.code_type == 'js')
+    //         o.run_module_func("editor")
+    // }
 
     var iter = 0;
     o.module_name = function() { return "module_" + o.id + "_" + iter; }
@@ -928,7 +926,6 @@ Hive.App.Code = function(o){
         })
     }
     o.stop = function() {
-        // insert_code();
         if(o.init_state.code_type == 'js'){
             if (!iter) return;
             o.run_module_func("stop", function() {
@@ -939,6 +936,7 @@ Hive.App.Code = function(o){
     }
     o.edit = function() {
         if (o.created_controls.length == 0) {
+            insert_code()
             o.run_module_func("edit", function() { fixup_controls() })
         } else {
             var apps = env.Apps.filtered(function(a) { return a.client_visible; })
