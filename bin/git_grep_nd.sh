@@ -2,7 +2,7 @@
 # Usage: add the following line to your ~/.bashrc
 # source ~/src/newhive/newduke/bin/git_grep_nd.sh
 
-source git_grep.sh
+source $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/git_grep.sh
 
 alias a="git_grep"
 alias n='a -o -n'
