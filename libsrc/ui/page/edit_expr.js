@@ -59,8 +59,9 @@ define([
             $('#expr_name').html(expr.name);
             $('#dia_overwrite').data('dialog').open();
             o.save_enabled_set(true)
-        }
-        else if(ret.id){
+        } else if(ret.autosave) {
+            o.sandbox_send({ autosave: (new Date()).getTime() })
+        } else if(ret.id){
             o.controller.set_exit_warning(false)
             o.view_expr(ret)
         }
@@ -188,6 +189,12 @@ define([
         if(msg.save){
             expr.background = msg.save.background
             expr.apps = msg.save.apps
+            if (msg.autosave) {
+                if (o.controller.ajax_pending())
+                    return
+                o.update_expr()
+                // last_autosave_time = (new Date()).getTime()
+            }
 
             $('#expr_save input[name=autosave]').val(msg.autosave ? 1 : 0)
             $('#expr_save').submit()
@@ -211,6 +218,7 @@ define([
             && expr.draft.updated > expr.updated) 
         {
             expr = $.extend(true, {}, expr, expr.draft)
+            o.update_form()
         }
         o.sandbox_send({ init: true, expr: expr, context: edit_context})
     }
@@ -228,7 +236,17 @@ define([
     };
 
     o.init_save_dialog = function(){
-        // TODO: communicate tags to sandbox
+        var autosave_timer
+        $("#expr_info").find("input, textarea").bind_once_anon("change", 
+            function(ev) {
+                if (autosave_timer) 
+                    clearTimeout(autosave_timer)
+                autosave_timer = setTimeout(function() {
+                    o.update_expr()
+                    o.sandbox_receive({ data: { save: expr, autosave: 1 } })
+                }, 1000)
+        })
+        // TODO: (why?) communicate tags to sandbox
         // canonicalize tags field.
         $("#tags_input").change(tags_input_changed)
         $(".remix_label input").change(function(e) {

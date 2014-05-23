@@ -265,6 +265,7 @@ Hive.layout = function(){
     layout.center('.app_btns', 'body', {v: false});        
 }
 
+Hive.save_safe = true
 Hive.init_global_handlers = function(){
     // Global event handlers
     $(window).on('resize', Hive.layout)
@@ -311,10 +312,12 @@ Hive.init_global_handlers = function(){
     var busy_e = $('.save .loading');
     $(document).ajaxStart(function(){
         busy_e.showshow();
-        Hive.send({save_safe: false})
+        Hive.save_safe = false
+        Hive.send({save_safe: Hive.save_safe})
     }).ajaxStop(function(){
         busy_e.hidehide();
-        Hive.send({save_safe: true})
+        Hive.save_safe = true
+        Hive.send({save_safe: Hive.save_safe})
     }).ajaxError(function(ev, jqXHR, ajaxOptions){
         // TODO-polish-upload-error: show some warning, and somehow indicate
         // which app(s) failed to save
@@ -331,12 +334,15 @@ Hive.init_global_handlers = function(){
 
 Hive.receive = function(ev){
     var msg = ev.data
-    if(msg.init)
+    if (msg.init) {
         Hive.init(msg.expr, msg.context)
-    if(msg.focus)
+    } else if(msg.autosave) {
+        Hive.autosave_time = msg.autosave
+    } else if(msg.focus) {
         window.focus()
-    if(msg.save_request)
+    } else if(msg.save_request) {
         Hive.send({save: Hive.state()})
+    }
 }
 Hive.send = function(m){
     window.parent.postMessage(m, '*') }
@@ -376,11 +382,12 @@ Hive.init = function(exp, site_context){
 
     Hive.init_dialogs();
     Hive.init_menus();
-    var last_autosave = {}
+    var last_autosave = {}, last_autosave_time = 0
+    Hive.autosave_time = 0
     setInterval(function() {
         // Only autosave if something has changed
         var expr = Hive.state()
-        if (!u.deep_equals(last_autosave, expr)) {
+        if (Hive.save_safe && !u.deep_equals(last_autosave, expr)) {
             last_autosave = $.extend(true, {}, expr)
             Hive.send({save: expr, autosave:1})
         }
@@ -571,9 +578,9 @@ Hive.state = function() {
     hive_app.Apps.restack(); // collapse layers of deleted apps
     Hive.Exp.apps = hive_app.Apps.state();
 
-    // get height
-    var h = u.app_bounds(env.Apps.all()).bottom
-    Hive.Exp.dimensions = [1000, Math.ceil(h)];
+    // TODO: get height/maximum dimension
+    // var h = u.app_bounds(env.Apps.all()).bottom
+    // Hive.Exp.dimensions = [1000, Math.ceil(h)];
 
     return Hive.Exp;
 }

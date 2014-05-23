@@ -141,6 +141,18 @@ button {
         }
     }
 }
+._2column {
+    .left.fixed {
+        float: left;
+    }
+    .right.fixed {
+        float: right;
+    }
+    .left.fill, .right.fill {
+        // width: 100%;
+        overflow: hidden;
+    }
+}
 
 // vertical centering
 .vcenter_spacer {

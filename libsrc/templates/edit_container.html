@@ -2,12 +2,17 @@
   id='editor'></iframe>
 
 {# dialog triggered by postMessage from edit sandbox #}
-<div id='dia_save' class='standard dialog'>
+<div id='dia_save' class='standard dialog _2column'>
   <form id='expr_info' method='POST'>
     
   <div class="heading expr title">Save</div>
+  
+  <label for="title" class='left fixed upper label medbold'>Title</label>
+  <div class='right fill'><input type="text" autofocus id='title'></input></div>
+  {#
   <div class='upper label medbold'>Title</div>
   <textarea rows="1" autofocus id='title'></textarea>
+  #}
 
   <div class='upper label medbold'>URL</div>
   <div class=''>newhive.com/{user.name}/</div>
