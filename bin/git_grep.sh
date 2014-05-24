@@ -3,7 +3,7 @@
 # source ~/src/newhive/newduke/bin/git_grep.sh
 
 function open_file {
-    which e && e $* || $EDITOR $*
+    (which e > /dev/null) && e $* || $EDITOR $*
 }
 # TODO: comment me
 function git_grep {(
