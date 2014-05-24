@@ -345,9 +345,9 @@ background-color: lightgrey;
     // correctly sized, with automatic hover.
     div.arrow { 
         background-image: asset_url('skin/nav/small_arrow.png');
-        width: 22px;
-        height: 42px;
-        margin-top: -10px;
+        width: 17px;
+        height: 16px;
+        margin-top: 3px;
     }
     &:hover div.arrow { background-image: asset_url('skin/nav/small_arrow_hover.png'); }
 }

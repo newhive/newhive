@@ -21,6 +21,10 @@
     }
     */
 }
+.inline_middle {
+    display: inline-block;
+    vertical-align: middle;
+}
 .posbox {
     position: relative;
 }
@@ -142,13 +146,13 @@ button {
     }
 }
 ._2column {
-    .left.fixed {
+    &>.left.fixed {
         float: left;
     }
-    .right.fixed {
+    &>.right.fixed {
         float: right;
     }
-    .left.fill, .right.fill {
+    &>.left.fill, &>.right.fill {
         // width: 100%;
         overflow: hidden;
     }

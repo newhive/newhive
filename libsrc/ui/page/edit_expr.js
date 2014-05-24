@@ -85,13 +85,13 @@ define([
     }
 
     o.update_expr = function(){
-        expr.name = $('#url').val()
-        expr.title = $('#title').val() || '[Untitled]'
-        expr.tags = $('#tags_input').val();
+        expr.name = $('#save_url').val()
+        expr.title = $('#save_title').val() || '[Untitled]'
+        expr.tags = $('#save_tags').val();
         expr.auth = $('#menu_privacy .selected').attr('val');
         if(expr.auth == 'password') 
             expr.password = $('#password').val();
-        tags_input_changed()
+        save_tags_changed()
         if($('#use_custom_domain').val())
             expr.url = $('#custom_url').val()
         expr.container = {}
@@ -105,10 +105,10 @@ define([
         $('title').text('edit - ' + expr.title)
     }
     o.update_form = function(){
-        $('#url').val(expr.name)
-        $('#title').val(expr.title)
-        $('#tags_input').val(expr.tags)
-        tags_input_changed()
+        $('#save_url').val(expr.name)
+        $('#save_title').val(expr.title)
+        $('#save_tags').val(expr.tags)
+        save_tags_changed()
         $('#custom_url').val(expr.url)
         if(expr.auth) $('#menu_privacy [val=' + expr.auth +']').click()
         $('#use_custom_domain').prop('checked', expr.url ? 1 : 0).
@@ -248,18 +248,18 @@ define([
         })
         // TODO: (why?) communicate tags to sandbox
         // canonicalize tags field.
-        $("#tags_input").change(tags_input_changed)
+        $("#save_tags").change(save_tags_changed)
         $(".remix_label input").change(function(e) {
             if ($(e.target).prop("checked")) {
-                $("#tags_input").val("#remix " + $("#tags_input").val());
-                tags_input_changed()
+                $("#save_tags").val("#remix " + $("#save_tags").val());
+                save_tags_changed()
             } else {
                 var i = expr.tags_index.indexOf("remix")
                 if (i >= 0) {
                     expr.tags_index.splice(i, 1)
                     var tags = o.canonical_tags(expr.tags_index)
-                    $("#tags_input").val(tags);
-                    tags_input_changed()
+                    $("#save_tags").val(tags);
+                    save_tags_changed()
                 }
             }
         });
@@ -275,33 +275,47 @@ define([
         
         // Automatically update url unless it's an already saved
         // expression or the user has modified the url manually
-        $('#dia_save #title')
+        $('#dia_save #save_title')
             .text(expr.title)
             .on('keydown keyup', function(){
-                if (!(expr.home || expr.created || $('#url').hasClass('modified') )) {
-                    $('#url').val($('#title').val().replace(/[^0-9a-zA-Z]/g, "-")
+                if (!(expr.home || expr.created || $('#save_url').hasClass('modified') )) {
+                    $('#save_url').val($('#save_title').val().replace(/[^0-9a-zA-Z]/g, "-")
                         .replace(/--+/g, "-").replace(/-$/, "").toLowerCase());
                 }
             }).keydown()
             .blur(function(){
-                $('#title').val($('#title').val().trim());
+                $('#save_title').val($('#save_title').val().trim());
             }).blur();
 
-        $('#dia_save #url')
+        $('#dia_save #save_url')
             .focus(function(){
                 $(this).addClass('modified');
             })
-            .change(o.check_url);
+            .change(o.check_url)
+            .on("input", function(ev) {
+                $('#dia_save .url_bar label span').text($(this).val())
+            })
 
+        $('#dia_save #save_show_url').on("change", function(ev) {
+            $("#dia_save .showhide").showhide($(this).prop("checked"))
+            if (!context.flags.custom_domain)
+                $("#dia_save #custom_url_box").hidehide();
+
+        })
         menu('#privacy', '#menu_privacy')
         $('#menu_privacy').click(function(e) {
             $('#menu_privacy div').removeClass('selected');
             var t = $(e.target);
             t.addClass('selected');
-            $('#privacy').text(t.text());
+            $('#privacy .privacy_text').text(t.text());
             var v = t.attr('val');
-            if(v == 'password') $('#password_ui').showshow();
-            else $('#password_ui').hidehide();
+            if(v == 'password') {
+                $('#password_ui').showshow();
+                $("#save_submit").text("Save")
+            } else {
+                $('#password_ui').hidehide();
+                $("#save_submit").text("Publish")
+            }
         });
 
         $('#use_custom_domain').change(function(){
@@ -316,7 +330,7 @@ define([
             $('#custom_url').val(url)
         })
 
-        $('.buttons_toggle').click(function(){
+        $('.button_options').click(function(){
             var check = $.makeArray($('.button_options input')).filter(
                 function(el){ return !$(el).prop('checked') }).length > 0
             $('.button_options input').each(function(i, el){
@@ -326,10 +340,10 @@ define([
 
     o.check_url = function(){
         // validate URL
-        var name = $('#url').val()
+        var name = $('#save_url').val()
         if(name.match(/[^\w.\/-]/)) {
             alert("Please just use letters, numbers, dash, period and slash in URLs.");
-            $('#url').focus();
+            $('#save_url').focus();
             return false;
         }
         if(name.match(/^(profile|tag)(\/|$)/)) {
@@ -339,12 +353,12 @@ define([
         return true
     }
 
-    var tags_input_changed = function(){
-        var el = $('#tags_input')
+    var save_tags_changed = function(){
+        var el = $('#save_tags')
         var tags = el.val().trim();
         var tag_list = o.tag_list(tags);
         tags = o.canonical_tags(tag_list)
-        $("#tags_input").val(tags);
+        $("#save_tags").val(tags);
         expr.tags_index = o.tag_list(tags)
         var search_tags = " " + tags.toLowerCase() + " ";
         $(".remix_label input").prop("checked",
