@@ -3104,8 +3104,6 @@ Hive.init_background_dialog = function(){
         Hive.bg_set(env.Exp.background);
     });
 
-    Hive.bg_set(env.Exp.background);
-
     $('#bg_upload').on('with_files', function(ev, files){
         Hive.bg_set(files[0]);
     }).on('success', function(ev, files){

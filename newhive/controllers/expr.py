@@ -160,7 +160,7 @@ class Expr(ModelController):
             if autosave:
                 upd['updated'] = now()
                 res.update(updated=False, draft=upd)
-                return self.serve_json(response, { autosave: 1 } )
+                return self.serve_json(response, { 'autosave': 1 } )
 
             res.update(**upd)
             if not self.config.live_server and (upd.get('apps') or upd.get('background')):

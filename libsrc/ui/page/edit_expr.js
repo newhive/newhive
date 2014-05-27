@@ -82,6 +82,7 @@ define([
     }
     o.save_submit = function(){
         $('#expr_save .expr').val(JSON.stringify(expr))
+        clearTimeout(autosave_timer)
     }
 
     o.update_expr = function(){
@@ -95,7 +96,7 @@ define([
         if($('#use_custom_domain').val())
             expr.url = $('#custom_url').val()
         expr.container = {}
-        $('.button_options input').each(function(i, el){
+        $('.button_options_menu input').each(function(i, el){
             el = $(el)
             var btn = el.attr('name')
             if(el.prop('checked'))
@@ -130,14 +131,14 @@ define([
         if (expr.owner_name != context.user.name || context.query.remix !== undefined) {
             expr.owner_name = context.user.name;
             expr.owner = context.user.id;
-            expr.remix_parent_id = expr.id;
+            if (expr.id) expr.remix_parent_id = expr.id;
             expr.id = expr._id = '';
-            expr.created = undefined;
+            delete expr.created;
             remixed = true
         }
         if (context.query.copy !== undefined){
             expr.id = expr._id = '';
-            expr.created = undefined;
+            delete expr.created;
             remixed = true
         }
         if (remixed) {
@@ -180,6 +181,8 @@ define([
 
         o.init_save_dialog()
         o.update_form()
+        // update form will trigger an autosave, so cancel it
+        clearTimeout(autosave_timer)
     };
 
     o.sandbox_receive = function(ev){
@@ -213,14 +216,16 @@ define([
     o.edit_expr = function(){
         // pass context from server to editor
         var edit_context = js.dfilter(context, ['user', 'flags', 'query'])
+            , revert = {}
         // Autosave: restore draft if more recent than save
         if (expr.draft && expr.updated && expr.draft.updated 
             && expr.draft.updated > expr.updated) 
         {
+            revert = $.extend(true, {}, expr)
             expr = $.extend(true, {}, expr, expr.draft)
             o.update_form()
         }
-        o.sandbox_send({ init: true, expr: expr, context: edit_context})
+        o.sandbox_send({ init: true, expr: expr, context: edit_context, revert: revert})
     }
 
     o.view_expr = function(expr){
@@ -235,8 +240,8 @@ define([
         });
     };
 
+    var autosave_timer
     o.init_save_dialog = function(){
-        var autosave_timer
         $("#expr_info").find("input, textarea").bind_once_anon("change", 
             function(ev) {
                 if (autosave_timer) 
@@ -279,8 +284,10 @@ define([
             .text(expr.title)
             .on('keydown keyup', function(){
                 if (!(expr.home || expr.created || $('#save_url').hasClass('modified') )) {
-                    $('#save_url').val($('#save_title').val().replace(/[^0-9a-zA-Z]/g, "-")
-                        .replace(/--+/g, "-").replace(/-$/, "").toLowerCase());
+                    var new_val = $('#save_title').val().replace(/[^0-9a-zA-Z]/g, "-")
+                        .replace(/--+/g, "-").replace(/-$/, "").toLowerCase()   
+                    $('#save_url').val(new_val);
+                    $('#dia_save .url_bar label span').text(new_val)
                 }
             }).keydown()
             .blur(function(){
@@ -330,10 +337,10 @@ define([
             $('#custom_url').val(url)
         })
 
-        $('.button_options').click(function(){
-            var check = $.makeArray($('.button_options input')).filter(
+        $('.extra_buttons .button_options').click(function(){
+            var check = $.makeArray($('.button_options_menu input')).filter(
                 function(el){ return !$(el).prop('checked') }).length > 0
-            $('.button_options input').each(function(i, el){
+            $('.button_options_menu input').each(function(i, el){
                 $(el).prop('checked', check) })
         })
     }

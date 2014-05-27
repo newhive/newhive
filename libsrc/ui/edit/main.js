@@ -327,6 +327,30 @@ Hive.init_global_handlers = function(){
         var expr = Hive.state();
         Hive.send({save_dialog: 1})
     })
+    var has_revert = (revert.apps || revert.background)
+    $(".menu_item.revert").addremoveClass("disabled", !has_revert)
+        .prop('disabled', !has_revert)
+    $(".menu_item.revert").bind_once_anon("click", function(ev) {
+        if (!has_revert) return
+        env.History.begin()
+        // Delete the current version of all apps
+        hive_app.Apps.all().map(function(a) {
+            a.remove()
+        })
+        // Add in all the apps in the revert save
+        if (revert.apps)
+            $.map(revert.apps, function(a){ env.new_app(a) } )
+        if (revert.background) {
+            // TODO-refactor: move this into a bg_set_history func
+            history_point = env.History.saver(
+                function(){ return $.extend(true, {}, env.Exp.background) },
+                hive_app.bg_set, 'change background')
+            hive_app.bg_set(revert.background);
+            history_point.save()
+        }
+
+        env.History.group("revert")
+    })
     // Prevent hidden forms from stealing focus 
     // (fixes ctrl-a going to client, and doing native select-all)
     $("input[readonly]").on("focus",function(e){ $(this).blur() })
@@ -335,9 +359,10 @@ Hive.init_global_handlers = function(){
 Hive.receive = function(ev){
     var msg = ev.data
     if (msg.init) {
-        Hive.init(msg.expr, msg.context)
+        Hive.init(msg.expr, msg.context, msg.revert)
     } else if(msg.autosave) {
         Hive.autosave_time = msg.autosave
+        env.exit_safe_set(true)
     } else if(msg.focus) {
         window.focus()
     } else if(msg.save_request) {
@@ -352,7 +377,9 @@ Hive.pre_init = function(){
     Hive.send({ready: true})
 }
 
-Hive.init = function(exp, site_context){
+var revert = {}
+Hive.init = function(exp, site_context, _revert){
+    revert = _revert
     // this reference must be maintained, do not assign to Exp
     env.Exp = Hive.Exp = exp
     // Hive.edit_page = page;
@@ -382,7 +409,7 @@ Hive.init = function(exp, site_context){
 
     Hive.init_dialogs();
     Hive.init_menus();
-    var last_autosave = {}, last_autosave_time = 0
+    var last_autosave, last_autosave_time = 0
     Hive.autosave_time = 0
     setInterval(function() {
         // Only autosave if something has changed
@@ -390,6 +417,7 @@ Hive.init = function(exp, site_context){
         if (Hive.save_safe && !u.deep_equals(last_autosave, expr)) {
             last_autosave = $.extend(true, {}, expr)
             Hive.send({save: expr, autosave:1})
+            env.exit_safe_set(false)
         }
     } , 1000)
 
@@ -401,9 +429,11 @@ Hive.init = function(exp, site_context){
     // TODO-cleanup: remove Selection from registered apps, and factor out
     // shared functionality into has_coords
     env.Selection = hive_app.new_app({ type : 'hive.selection' });
+    hive_app.bg_set(env.Exp.background);
     env.Background = hive_app.App.Background()
     hive_app.Apps.init(Hive.Exp.apps);
     hive_app.Apps.restack();
+    last_autosave = $.extend(true, {}, Hive.state())
     env.zoom_set(1)
 
     $('.edit.overlay').showshow()

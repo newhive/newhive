@@ -9,22 +9,6 @@
     <div class="heading expr title">Save</div>
   #}
 
-  {# Title #}
-  <div class="label _2column">
-    <label for="save_title" class='left fixed upper label medbold'>Title</label>
-    <div class='right fill'
-      ><input type="text" autofocus id='save_title'></input
-    ></div>
-  </div>
-
-  {# Tags #}  
-  <div class="label _2column">
-    <label for="save_tags" class='left fixed upper label medbold'>#Tags</label>
-    <div class='right fill'
-      ><input type="text" value='' id='save_tags'></input
-    ></div>
-  </div>
-  
   {# URL #}  
   <div class="url_bar">
     <input class="hide" type='checkbox' id='save_show_url'>
@@ -48,7 +32,7 @@
   <div class='label _2column hide showhide' id='custom_url_box'>
     <div class='upper label medbold'>
       Custom Domain
-      <a href='#' id='domain_help' class='floatright'>(help)</a></div>
+      <a href='#' id='domain_help' class='note floatright'>Help</a></div>
     <input id='custom_url' type='text' value=''>
   </div>
 
@@ -57,6 +41,22 @@
       ></iframe>{>}
   </div>
 
+  {# Title #}
+  <div class="label _2column">
+    <label for="save_title" class='left fixed upper label medbold'>Title</label>
+    <div class='right fill'
+      ><input type="text" autofocus id='save_title'></input
+    ></div>
+  </div>
+
+  {# Tags #}  
+  <div class="label _2column">
+    <label for="save_tags" class='left fixed upper label medbold'>#Tags</label>
+    <div class='right fill'
+      ><input type="text" value='' id='save_tags'></input
+    ></div>
+  </div>
+  
   {# Extra buttons: remix, sharing options #}
   <div class="extra_buttons _2column">
     <div class="right fixed remix_label">
