@@ -82,6 +82,7 @@ define([
     }
     o.save_submit = function(){
         $('#expr_save .expr').val(JSON.stringify(expr))
+        clearTimeout(autosave_timer)
     }
 
     o.update_expr = function(){
@@ -283,8 +284,10 @@ define([
             .text(expr.title)
             .on('keydown keyup', function(){
                 if (!(expr.home || expr.created || $('#save_url').hasClass('modified') )) {
-                    $('#save_url').val($('#save_title').val().replace(/[^0-9a-zA-Z]/g, "-")
-                        .replace(/--+/g, "-").replace(/-$/, "").toLowerCase());
+                    var new_val = $('#save_title').val().replace(/[^0-9a-zA-Z]/g, "-")
+                        .replace(/--+/g, "-").replace(/-$/, "").toLowerCase()   
+                    $('#save_url').val(new_val);
+                    $('#dia_save .url_bar label span').text(new_val)
                 }
             }).keydown()
             .blur(function(){

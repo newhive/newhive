@@ -362,6 +362,7 @@ Hive.receive = function(ev){
         Hive.init(msg.expr, msg.context, msg.revert)
     } else if(msg.autosave) {
         Hive.autosave_time = msg.autosave
+        env.exit_safe_set(true)
     } else if(msg.focus) {
         window.focus()
     } else if(msg.save_request) {
@@ -416,6 +417,7 @@ Hive.init = function(exp, site_context, _revert){
         if (Hive.save_safe && !u.deep_equals(last_autosave, expr)) {
             last_autosave = $.extend(true, {}, expr)
             Hive.send({save: expr, autosave:1})
+            env.exit_safe_set(false)
         }
     } , 1000)
 
