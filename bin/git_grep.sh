@@ -2,13 +2,13 @@
 # Usage: add the following line to your ~/.bashrc
 # source ~/src/newhive/newduke/bin/git_grep.sh
 
+filter_broken="/old/|/broken/|/curl/|google_closure.js|/d3/|codemirror.js|jquery-ui|/jquery/"
 function open_file {
     (which e > /dev/null) && e $* || $EDITOR $*
 }
 # TODO: comment me
 function git_grep {(
     path_match=""
-    filter_broken="/history.js|/jquery-1|/old|/broken|/curl|google_closure.js|/d3/|codemirror.js|jquery-ui|/jquery/"
     while true; do
         case "$1" in
             -c) case=true;shift;;

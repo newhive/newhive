@@ -4,6 +4,8 @@
 
 source $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/git_grep.sh
 
+filter_broken="${filter_broken}|history/history|/jquery-1|/old|/broken|/curl|google_closure.js|/d3/|codemirror.js|jquery-ui|/jquery/"
+
 alias a="git_grep"
 alias n='a -o -n'
 alias nh='a -o -p "*.html" -n'
@@ -26,7 +28,8 @@ alias o1='o 1'
 alias o2='o 2'
 alias o3='o 3'
 alias o4='o 4'
-alias o4='o 5'
+alias o5='o 5'
+
 # rerun last list 
 alias on='grep . ~/.efffiles | grep -n -i `tail -1 ~/.eff.log`'
 # rerun last list, but only accept matches in last file part
