@@ -28,7 +28,7 @@
 {>}
 {# hive logo button #}
 <div id='logo' class='overlay bottom nav logo icon 
-  {<if (and query.clean (eq query.clean "nologo"))} stay_hidden{>}'></div>
+  {<if (and query.clean (neq query.clean "logo"))} stay_hidden{>}'></div>
 
 {# menu: logo #}
 <div id='logo_menu' class='menu drawer' data-handle='#logo'>
