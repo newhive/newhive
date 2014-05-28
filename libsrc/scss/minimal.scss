@@ -10,12 +10,20 @@ a { color : inherit; text-decoration : none; }
     position : absolute;
     .content { width: 100%; height: 100%; }
 }
-.happ img { width : 100%; }
 .crop_box { 
-    overflow: hidden; @include box-sizing(border-box); border: 0px solid; }
-.happ.hive_text img { width: inherit; }
+    overflow: hidden; 
+    @include box-sizing(border-box); border: 0px solid; 
+}
 .happ.hive_rectangle .content, .happ.hive_circle .content { 
     @include box-sizing(border-box); }
+.happ.hive_image img { 
+    // TODO-cleanup: we ought not need to override w/ defaults.
+    height: auto; 
+    // TODO: This is only needed currently for sketch. Should merge w/ image.
+    width : 100%;
+}
+.happ.hive_text img { width: inherit; }
+
 .happfill { position : fixed; top : 0; left : 0; width : 100%; height : 100%; }
 .happfill img { position : absolute; left : 0; top : 0; }
 .text_column .softbr { display: none; }
