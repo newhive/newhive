@@ -271,17 +271,24 @@ background-color: lightgrey;
             margin-right: 4px;
             margin-bottom: 4px;
             float: left;
+            display: inline-block;
+            width: 28px; height: 28px;
+            
             &.bg {
                 background-image: asset_url('skin/edit/button.png');
-                display: inline-block;
-                width: 28px; height: 28px;
                 line-height: 28px;
                 text-align: center;
                 // font-weight: bold;
+                &.on {
+                    background-image: asset_url('skin/edit/button-on.png');
+                    color: white;
+                }
             }
-            &.bg.on {
-                background-image: asset_url('skin/edit/button-on.png');
-                color: white;
+            &.edit_src {
+                background-image: asset_url('skin/edit/edit.png');
+                &.on {
+                    background-image: asset_url('skin/edit/edit-on.png');
+                }
             }
         }
     }
