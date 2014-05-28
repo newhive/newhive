@@ -885,10 +885,12 @@ Hive.App.Code = function(o){
     o.module_name = function() { return "module_" + o.id + "_" + iter; }
     var module_code = function() {
         // return o.content();
-        return "define('" + o.module_name() + "', " +
-            "['browser/jquery'], function($) { var self = {}; " + 
-            o.content() + 
-            "; return self; })";
+        return ( "define('" + o.module_name() + "', "
+            + "['browser/jquery'], function($) {\n"
+            + "var self = {}\n\n"
+            + o.content() + "\n\n"
+            + "return self\n})"
+        )
     }
     var insert_code = function(callback){
         var code
@@ -897,14 +899,20 @@ Hive.App.Code = function(o){
             code = module_code()
         }
         else code = o.content()
-        o.code_element.html(code).appendTo('body')
 
-        // jquery insert doesn't allow debugging, so we use straight js
-        // var script   = document.createElement("script");
-        // script.type  = "text/javascript";
-        // script.text  = module_code();
-        // document.body.appendChild(script);
-        // o.code_element = $(script);
+        // jquery script insert messes up debugging, so we use straight js
+        // o.code_element.html(code).appendTo('body')
+        var script   = document.createElement("script")
+        // use data url so syntax errors are reported properly
+        script.setAttribute( 'src',
+            'data:application/javascript;base64,' + btoa(module_code()) )
+        try{
+            document.body.appendChild(script)
+        }
+        catch(e){
+            console.log('oops')
+        }
+        o.code_element = $(script)
     }
 
     var animate_go
@@ -1449,7 +1457,7 @@ Hive.App.Polygon = function(o){
     }
 
     o.point_offset = function(){
-        var off = state.style['stroke-width'] / 2 + o.blur() * 1.5
+        var off = state.style['stroke-width'] / 2 + o.blur() * 2
         return [off, off]
     }
     var _min_pos = o.min_pos, _max_pos = o.max_pos

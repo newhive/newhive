@@ -2,13 +2,12 @@
 
 /**
  * curl js! cram plugin
- *
- * TODO: figure out when to return window.<exported-thing> vs. global.<exported-thing> vs just <exported-thing>
  */
-define(['./jsEncode'], function (jsEncode) {
-	var stripOrderOptionRx;
+define(function (require) {
 
-	stripOrderOptionRx = /!order/;
+	var _define = require('./_define');
+
+	var stripOrderOptionRx = /!order/;
 
 	return {
 
@@ -22,7 +21,7 @@ define(['./jsEncode'], function (jsEncode) {
 		},
 
 		compile: function (pluginId, resId, req, io /*, config*/) {
-			var absId, exportsPos, bangPos, exports;
+			var absId, exportsPos, bangPos, exports, url;
 
 			absId = pluginId + '!' + resId;
 			exportsPos = resId.indexOf('!exports=');
@@ -30,17 +29,16 @@ define(['./jsEncode'], function (jsEncode) {
 			bangPos = resId.indexOf('!');
 			if (bangPos >= 0) resId = resId.slice(0, bangPos);
 
-			io.read(resId, function (text) {
+			url = req.toUrl(resId);
+			if (url.substr(url.length - 3) !== ".js") {
+				url += ".js";
+			}
+
+			io.read(url, function (text) {
 				var moduleText;
 
 				moduleText = text + ';\n'
-					+ 'define("' + absId + '", function () {\n';
-
-				moduleText += exports
-					? '\treturn ' + exports
-					: '\treturn void 0';
-
-				moduleText += ';\n});\n';
+					+ _define(absId, '', '', '', exports);
 
 				io.write(moduleText);
 
