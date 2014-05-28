@@ -52,7 +52,7 @@ function git_grep {(
 )}
 
 # nth filename:lineno: in ~/.efffiles
-function nnn {(
+function matched_file_and_line {(
     line=$1
     if [ -z $line ]; then
         line="1"
@@ -60,11 +60,11 @@ function nnn {(
     echo $(sed ${line}'q;d' $HOME/.efffiles | awk '{print $1}'|sed 's/\(:[0-9]\+:\).*/\1/')
 )}
 # print the nth filename
-function nn {(
-    echo $(nnn $1 | sed 's/:[0-9]\+://')
+function matched_file {(
+    echo $(matched_file_and_line $1 | sed 's/:[0-9]\+://')
 )}
 # open nth file in ~/.efffiles
 function open_nth {(
-    open_file `nnn $1`
+    open_file `matched_file_and_line $1`
 )}
 
