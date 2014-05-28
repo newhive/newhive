@@ -1449,7 +1449,7 @@ Hive.App.Polygon = function(o){
     }
 
     o.point_offset = function(){
-        var off = state.style['stroke-width'] / 2 + o.blur() * 1.5
+        var off = state.style['stroke-width'] / 2 + o.blur() * 2
         return [off, off]
     }
     var _min_pos = o.min_pos, _max_pos = o.max_pos
