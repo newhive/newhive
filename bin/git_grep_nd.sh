@@ -16,12 +16,7 @@ alias ah='a -o -p "*.html"'
 alias as='a -o -p "*.scss"'
 alias ap='a -o -p "*.py"'
 alias aj='a -o -p "*.js"'
-# Search python definition
-function ad {(
-    grepvar=$1
-    shift
-    a -o -p "*.py" $* "def[^(]*$grepvar"
-)}
+alias ad=grep_python_def
 
 alias o='open_nth'
 alias o1='o 1'
@@ -31,9 +26,11 @@ alias o4='o 4'
 alias o5='o 5'
 
 # rerun last list 
-alias on='grep . ~/.efffiles | grep -n -i `tail -1 ~/.eff.log`'
+alias on=rerun_results
 # rerun last list, but only accept matches in last file part
-alias oe='grep . ~/.efffiles | grep -n -i `tail -1 ~/.eff.log`[^/]*$'
+alias oe=filepart_results
+# rerun last list, filtered through grep
+alias og=grep_results
 
 alias routes='n newhive/routes.json'
 alias config='e `ff /config.py$`'

@@ -3,7 +3,7 @@ import os, json, cgi, base64, re, time
 from pymongo.errors import DuplicateKeyError
 from functools import partial
 
-from newhive.utils import dfilter, now, get_embedly_oembed
+from newhive.utils import dfilter, now, get_embedly_oembed, tag_string
 from newhive.controllers.controller import ModelController
 
 class Expr(ModelController):
@@ -79,7 +79,8 @@ class Expr(ModelController):
         #     allowed_attributes.extend(['fixed_width', 'script', 'style'])
         upd = dfilter(expr, allowed_attributes)
         upd['name'] = upd.get('name','').lower().strip('/ ')
-        if res and res.get('draft') and orig_name:
+        draft = res and res.get('draft')
+        if draft and orig_name:
             res['name'] = upd['name']
 
         # deal with inline base64 encoded images from Sketch app
@@ -101,6 +102,7 @@ class Expr(ModelController):
                 ,'file_id' : file_res.id
             })
 
+        duplicate = False
         if not res or upd['name'] != res['name']:
             if autosave:
                 # TODO-autosave: create anonymous expression
@@ -150,14 +152,7 @@ class Expr(ModelController):
               #    tdata.user.unflag('add_invites_on_save')
               #    tdata.user.give_invites(5)
             except DuplicateKeyError:
-                if expr.get('overwrite'):
-                    self.db.Expr.named(tdata.user['name'], upd['name']).delete()
-                    res = tdata.user.expr_create(upd)
-                    self.db.ActionLog.create(tdata.user, "new_expression_save", data={'expr_id': res.id, 'overwrite': True})
-                else:
-                     #'An expression already exists with the URL: ' + upd['name']
-                    return self.serve_json(response, { 'error' : 'overwrite' })
-                    self.db.ActionLog.create(tdata.user, "new_expression_save_fail", data={'expr_id': res.id, 'error': 'overwrite'})
+                duplicate = True
         else:
             if not res['owner'] == tdata.user.id:
                 raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
@@ -166,7 +161,9 @@ class Expr(ModelController):
             if res.get('remix_parent_id'):
                 upd['tags'] += " #remixed" # + remix_name
             reserved_tags = ["remixed", "gifwall"];
-            # TODO-autosave: force "#draft" on draft? Remove it on first save?
+            # force "#draft" on draft
+            if autosave and draft:
+                reserved_tags += ["draft"]
             # disallow removal of reserved tags
             if not self.flags.get('modify_special_tags'):
                 for tag in reserved_tags:
@@ -181,11 +178,31 @@ class Expr(ModelController):
                     res.update(updated=False, draft=upd)
                 return self.serve_json(response, { 'autosave': 1 } )
 
-            res.update(**upd)
-            new_expression = False
+            try:
+                res.update(**upd)
+                    
+                new_expression = False
 
-            self.db.UpdatedExpr.create(res.owner, res)
-            self.db.ActionLog.create(tdata.user, "update_expression", data={'expr_id': res.id})
+                self.db.UpdatedExpr.create(res.owner, res)
+                self.db.ActionLog.create(tdata.user, "update_expression", data={'expr_id': res.id})
+            except DuplicateKeyError:
+                duplicate = True
+
+        if duplicate:
+            if expr.get('overwrite'):
+                self.db.Expr.named(tdata.user['name'], upd['name']).delete()
+                res = tdata.user.expr_create(upd)
+                self.db.ActionLog.create(tdata.user, "new_expression_save", data={'expr_id': res.id, 'overwrite': True})
+            else:
+                 #'An expression already exists with the URL: ' + upd['name']
+                return self.serve_json(response, { 'error' : 'overwrite' })
+                self.db.ActionLog.create(tdata.user, "new_expression_save_fail", data={'expr_id': res.id, 'error': 'overwrite'})
+
+        # autosave: Remove "draft" on first save
+        if draft and not autosave:
+            new_tags = res['tags_index']
+            if "draft" in new_tags: new_tags.remove("draft")
+            res.update(tags=tag_string(new_tags))
 
         if not self.config.live_server and (upd.get('apps') or upd.get('background')):
             res.threaded_snapshot(retry=120)
