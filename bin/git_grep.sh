@@ -6,6 +6,7 @@ filter_broken="/old/|/broken/|/curl/|google_closure.js|/d3/|codemirror.js|jquery
 function open_file {
     (which e > /dev/null) && e $* || $EDITOR $*
 }
+alias grep_cmd="grep -E"
 # TODO: comment me
 function git_grep {(
     path_match=""
@@ -26,25 +27,25 @@ function git_grep {(
     if [ $case ]; then case_flag=''; fi
 
     if [ $search_name ]; then
-        git ls-files "$path_match" | grep $case_flag $* > ~/.efffiles
+        git ls-files "$path_match" | grep_cmd $case_flag $* > ~/.efffiles
         if [ $filter_broken ]; then
-            grep -E -v $filter_broken ~/.efffiles > ~/.efffiles_temp
+            grep_cmd -v $filter_broken ~/.efffiles > ~/.efffiles_temp
             mv -f ~/.efffiles_temp ~/.efffiles
         fi
-        # echo "git ls-files \"$path_match\" | grep $case_flag $* > ~/.efffiles"
+        # echo "git ls-files \"$path_match\" | grep_cmd $case_flag $* > ~/.efffiles"
     else
         git grep $case_flag -n --no-color $* -- "$path_match" > ~/.efffiles
         if [ $filter_broken ]; then
-            grep -E -v $filter_broken ~/.efffiles > ~/.efffiles_temp
+            grep_cmd -v $filter_broken ~/.efffiles > ~/.efffiles_temp
             mv -f ~/.efffiles_temp ~/.efffiles
         fi
-        # echo "git grep $case_flag -n --no-color $* -- \"$path_match\" > ~/.efffiles"
+        # echo "git grep_cmd $case_flag -n --no-color $* -- \"$path_match\" > ~/.efffiles"
     fi
 
     # list (and number) the matches
     effpat=$(echo $@|awk '{print $NF}')
     echo $effpat >> ~/.eff.log
-    grep $case_flag --color $effpat -n ~/.efffiles
+    grep_cmd $case_flag --color $effpat -n ~/.efffiles
 
     if [ $open ] && ( [ $force ] || [ 1 == $(wc -l < ~/.efffiles) ] ); then
         open_nth 1
@@ -68,16 +69,16 @@ function open_nth {(
     open_file `matched_file_and_line $1`
 )}
 # rerun last list 
-alias rerun_results='grep . ~/.efffiles | grep -n -i `tail -1 ~/.eff.log`'
+alias rerun_results='grep_cmd . ~/.efffiles | grep_cmd -n -i `tail -1 ~/.eff.log`'
 # rerun last list, but only accept matches in last file part
-alias filepart_results='grep . ~/.efffiles | grep -n -i `tail -1 ~/.eff.log`[^/]*$'
-# rerun last list, filtered through grep
+alias filepart_results='grep_cmd . ~/.efffiles | grep_cmd -n -i `tail -1 ~/.eff.log`[^/]*$'
+# rerun last list, filtered through grep_cmd
 function grep_results {(
     # echo to stdout w/ color
-    on|grep $1| grep --color=always -i `tail -1 ~/.eff.log`
-    on|grep $1| grep --color=never -i `tail -1 ~/.eff.log` > ~/.og_tmp
-    if [ 1 == $(wc -l < ~/.og_tmp) ]; then
-        file="$(cat ~/.og_tmp|awk '{print $1}'|sed 's/\(:[0-9]\+:\).*/\1/'|sed 's/^[0-9]\+://')"
+    rerun_results|grep_cmd $*| grep_cmd --color=always -i `tail -1 ~/.eff.log`
+    rerun_results|grep_cmd $*| grep_cmd --color=never -i `tail -1 ~/.eff.log` > ~/.grep_results
+    if [ 1 == $(wc -l < ~/.grep_results) ]; then
+        file="$(cat ~/.grep_results|awk '{print $1}'|sed 's/\(:[0-9]\+:\).*/\1/'|sed 's/^[0-9]\+://')"
         echo "opening $file"
         open_file $file
     fi
