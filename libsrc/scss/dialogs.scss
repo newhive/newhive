@@ -434,6 +434,7 @@ form.login {
         margin-top: 5px;
     }
     .note { color: $color_grey_medium }
+    .pointer:hover { color: $color_bright_red; }
     form { // form scope to not change menu hovers
         .active, .active .teal_btn { background-color: black; color: white; }
         .active div.drop_arrow { 

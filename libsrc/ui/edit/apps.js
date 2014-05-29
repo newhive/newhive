@@ -1413,7 +1413,7 @@ Hive.App.Polygon = function(o){
     var common = $.extend({}, o), poly_el, blur_el
 
     var style = {}, state = o.init_state
-    style['stroke-width'] = 1
+    style['stroke-width'] = 0
     style['stroke'] = '#000'
     style['stroke-linejoin'] = 'round'
     style['fill'] = '#000'
