@@ -3,7 +3,7 @@ import os, json, cgi, base64, re, time
 from pymongo.errors import DuplicateKeyError
 from functools import partial
 
-from newhive.utils import dfilter, now, get_embedly_oembed
+from newhive.utils import dfilter, now, get_embedly_oembed, tag_string
 from newhive.controllers.controller import ModelController
 
 class Expr(ModelController):
@@ -79,7 +79,8 @@ class Expr(ModelController):
         #     allowed_attributes.extend(['fixed_width', 'script', 'style'])
         upd = dfilter(expr, allowed_attributes)
         upd['name'] = upd.get('name','').lower().strip('/ ')
-        if res and res.get('draft') and orig_name:
+        draft = res and res.get('draft')
+        if draft and orig_name:
             res['name'] = upd['name']
 
         # deal with inline base64 encoded images from Sketch app
@@ -166,7 +167,9 @@ class Expr(ModelController):
             if res.get('remix_parent_id'):
                 upd['tags'] += " #remixed" # + remix_name
             reserved_tags = ["remixed", "gifwall"];
-            # TODO-autosave: force "#draft" on draft? Remove it on first save?
+            # force "#draft" on draft
+            if autosave and draft:
+                reserved_tags += ["draft"]
             # disallow removal of reserved tags
             if not self.flags.get('modify_special_tags'):
                 for tag in reserved_tags:
@@ -182,6 +185,12 @@ class Expr(ModelController):
                 return self.serve_json(response, { 'autosave': 1 } )
 
             res.update(**upd)
+            # autosave: Remove "draft" on first save
+            if draft and not autosave:
+                new_tags = res['tags_index']
+                if "draft" in new_tags: new_tags.remove("draft")
+                res.update(tags=tag_string(new_tags))
+                
             new_expression = False
 
             self.db.UpdatedExpr.create(res.owner, res)
