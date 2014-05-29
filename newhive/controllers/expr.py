@@ -102,6 +102,7 @@ class Expr(ModelController):
                 ,'file_id' : file_res.id
             })
 
+        duplicate = False
         if not res or upd['name'] != res['name']:
             if autosave:
                 # TODO-autosave: create anonymous expression
@@ -151,14 +152,7 @@ class Expr(ModelController):
               #    tdata.user.unflag('add_invites_on_save')
               #    tdata.user.give_invites(5)
             except DuplicateKeyError:
-                if expr.get('overwrite'):
-                    self.db.Expr.named(tdata.user['name'], upd['name']).delete()
-                    res = tdata.user.expr_create(upd)
-                    self.db.ActionLog.create(tdata.user, "new_expression_save", data={'expr_id': res.id, 'overwrite': True})
-                else:
-                     #'An expression already exists with the URL: ' + upd['name']
-                    return self.serve_json(response, { 'error' : 'overwrite' })
-                    self.db.ActionLog.create(tdata.user, "new_expression_save_fail", data={'expr_id': res.id, 'error': 'overwrite'})
+                duplicate = True
         else:
             if not res['owner'] == tdata.user.id:
                 raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
@@ -184,17 +178,31 @@ class Expr(ModelController):
                     res.update(updated=False, draft=upd)
                 return self.serve_json(response, { 'autosave': 1 } )
 
-            res.update(**upd)
-            # autosave: Remove "draft" on first save
-            if draft and not autosave:
-                new_tags = res['tags_index']
-                if "draft" in new_tags: new_tags.remove("draft")
-                res.update(tags=tag_string(new_tags))
-                
-            new_expression = False
+            try:
+                res.update(**upd)
+                    
+                new_expression = False
 
-            self.db.UpdatedExpr.create(res.owner, res)
-            self.db.ActionLog.create(tdata.user, "update_expression", data={'expr_id': res.id})
+                self.db.UpdatedExpr.create(res.owner, res)
+                self.db.ActionLog.create(tdata.user, "update_expression", data={'expr_id': res.id})
+            except DuplicateKeyError:
+                duplicate = True
+
+        if duplicate:
+            if expr.get('overwrite'):
+                self.db.Expr.named(tdata.user['name'], upd['name']).delete()
+                res = tdata.user.expr_create(upd)
+                self.db.ActionLog.create(tdata.user, "new_expression_save", data={'expr_id': res.id, 'overwrite': True})
+            else:
+                 #'An expression already exists with the URL: ' + upd['name']
+                return self.serve_json(response, { 'error' : 'overwrite' })
+                self.db.ActionLog.create(tdata.user, "new_expression_save_fail", data={'expr_id': res.id, 'error': 'overwrite'})
+
+        # autosave: Remove "draft" on first save
+        if draft and not autosave:
+            new_tags = res['tags_index']
+            if "draft" in new_tags: new_tags.remove("draft")
+            res.update(tags=tag_string(new_tags))
 
         if not self.config.live_server and (upd.get('apps') or upd.get('background')):
             res.threaded_snapshot(retry=120)

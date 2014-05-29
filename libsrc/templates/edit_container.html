@@ -36,11 +36,6 @@
     <input id='custom_url' type='text' value='' placeholder="mydomain.com">
   </div>
 
-  <div class="dialog iframe" id="dia_domain_help" data-handle="#domain_help">
-    {<defer}<iframe src="{config.content_url}{config.site_user}/domain-help"
-      ></iframe>{>}
-  </div>
-
   {# Title #}
   <div class="label _2column">
     <label for="save_title" class='left fixed upper label medbold'>Title</label>
@@ -111,6 +106,11 @@
       <img src='{asset "skin/nav/comment.png"}'>
     </label>
   </div>
+</div>
+
+<div class="dialog iframe" id="dia_domain_help" data-handle="#domain_help">
+  {<defer}<iframe src="{config.content_url}{config.site_user}/domain-help"
+    ></iframe>{>}
 </div>
 
 <div id='menu_privacy' class='menu drawer medbold' style='width : 125px;'>

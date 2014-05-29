@@ -323,7 +323,7 @@ Hive.init_global_handlers = function(){
         // which app(s) failed to save
     });
 
-    $('#btn_save').click(function(){
+    $('#btn_save span').click(function(){
         var expr = Hive.state();
         Hive.send({save_dialog: 1})
     })
@@ -361,6 +361,7 @@ Hive.receive = function(ev){
     if (msg.init) {
         Hive.init(msg.expr, msg.context, msg.revert)
     } else if(msg.autosave) {
+        $("#btn_save span").text("Saved ")
         Hive.autosave_time = msg.autosave
         env.exit_safe_set(true)
     } else if(msg.focus) {
@@ -415,6 +416,7 @@ Hive.init = function(exp, site_context, _revert){
         // Only autosave if something has changed
         var expr = Hive.state()
         if (Hive.save_safe && !u.deep_equals(last_autosave, expr)) {
+            $("#btn_save span").text("Saving ")
             last_autosave = $.extend(true, {}, expr)
             Hive.send({save: expr, autosave:1})
             env.exit_safe_set(false)
