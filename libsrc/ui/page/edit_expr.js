@@ -61,6 +61,12 @@ define([
             o.save_enabled_set(true)
         } else if(ret.autosave) {
             o.sandbox_send({ autosave: (new Date()).getTime() })
+            if (ret.expr) {
+                $.extend(expr, ret.expr)
+                o.update_form()
+                // update form will trigger an autosave, so cancel it
+                clearTimeout(autosave_timer)
+            }
         } else if(ret.id){
             o.controller.set_exit_warning(false)
             o.view_expr(ret)
@@ -76,6 +82,9 @@ define([
     o.info_submit = function(){
         if(!o.check_url()) return false
         o.update_expr()
+        expr.orig_name = expr.name
+        expr.name = $('#save_url').val()
+        expr.draft = false
         o.sandbox_send({save_request: 1})
         // fake form never submits
         return false
@@ -86,9 +95,9 @@ define([
     }
 
     o.update_expr = function(){
-        expr.name = $('#save_url').val()
-        expr.title = $('#save_title').val() || '[Untitled]'
-        expr.tags = $('#save_tags').val();
+        // expr.name = $('#save_url').val()
+        expr.title = $('#save_title').val()
+        expr.tags = $('#save_tags').val()
         expr.auth = $('#menu_privacy .selected').attr('val');
         if(expr.auth == 'password') 
             expr.password = $('#password').val();
@@ -106,12 +115,15 @@ define([
         $('title').text('edit - ' + expr.title)
     }
     o.update_form = function(){
-        $('#save_url').val(expr.name)
-        $('#save_title').val(expr.title)
-        $('#save_tags').val(expr.tags)
-        save_tags_changed()
+        $('#save_url').val(expr.name).trigger("input")
         $('#custom_url').val(expr.url)
-        if(expr.auth) $('#menu_privacy [val=' + expr.auth +']').click()
+        $('#save_tags').val(expr.tags)
+        $('#save_title').val(expr.title).keydown()
+        save_tags_changed()
+        // TODO-autosave: remember user's auth choice when draft
+        var auth = expr.draft ? "public" : expr.auth
+        // var auth = expr.auth
+        if (auth) $('#menu_privacy [val=' + auth +']').click()
         $('#use_custom_domain').prop('checked', expr.url ? 1 : 0).
             trigger('change')
         var container = expr.container || {} // $.extend({}, default_expr.container)
@@ -283,11 +295,12 @@ define([
         $('#dia_save #save_title')
             .text(expr.title)
             .on('keydown keyup', function(){
-                if (!(expr.home || expr.created || $('#save_url').hasClass('modified') )) {
+                if ((expr.draft || !(expr.home || expr.created))
+                    && ! $('#save_url').hasClass('modified') ) 
+                {
                     var new_val = $('#save_title').val().replace(/[^0-9a-zA-Z]/g, "-")
                         .replace(/--+/g, "-").replace(/-$/, "").toLowerCase()   
-                    $('#save_url').val(new_val);
-                    $('#dia_save .url_bar label span').text(new_val)
+                    $('#save_url').val(new_val).trigger("input")
                 }
             }).keydown()
             .blur(function(){
@@ -299,8 +312,8 @@ define([
                 $(this).addClass('modified');
             })
             .change(o.check_url)
-            .on("input", function(ev) {
-                $('#dia_save .url_bar label span').text($(this).val())
+            .on("input change", function(ev) {
+                $('#dia_save .url_bar label span').text($(this).val() || expr.name)
             })
 
         $('#dia_save #save_show_url').on("change", function(ev) {

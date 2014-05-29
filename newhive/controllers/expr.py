@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-import os, json, cgi, base64, re
+import os, json, cgi, base64, re, time
 from pymongo.errors import DuplicateKeyError
 from functools import partial
 
@@ -22,15 +22,7 @@ class Expr(ModelController):
 
         return self.serve_json(response, resp)
 
-        
-    def unused_name(self, tdata, request, response, **args):
-        """ Returns an unused expression name matching the base name provided """
-
-        resp = {}
-        name = request.form.get("name") or request.args.get("name","")
-        owner_id = request.form.get("owner_id") or request.args.get("owner_id", "")
-        owner = self.db.User.fetch(owner_id)
-
+    def _unused_name(self, name, owner):
         if not name or not len(name) or not owner:
             raise ValueError('Expr / user not found')
 
@@ -42,7 +34,7 @@ class Expr(ModelController):
             base_name = name
             num = 0
         expr_names = [e['name'] for e in list(self.db.Expr.search({
-            'owner': owner_id, 'name': re.compile("^" + base_name + ".*")
+            'owner': owner.id, 'name': re.compile("^" + base_name + ".*")
         }))]
         while True:
             if num:
@@ -50,9 +42,19 @@ class Expr(ModelController):
             else:
                 name = base_name
             if name not in expr_names:
-                resp['name'] = name
-                return self.serve_json(response, resp)
+                return name
             num += 1
+
+    def unused_name(self, tdata, request, response, **args):
+        """ Returns an unused expression name matching the base name provided """
+
+        resp = {}
+        name = request.form.get("name") or request.args.get("name","")
+        owner_id = request.form.get("owner_id") or request.args.get("owner_id", "")
+        owner = self.db.User.fetch(owner_id)
+
+        resp['name'] = _unused_name(name, owner)
+        self.serve_json(response, resp)
     
     def save(self, tdata, request, response, **args):
         """ Parses JSON object from POST variable 'exp' and stores it in database.
@@ -64,20 +66,24 @@ class Expr(ModelController):
         except: expr = False
         if not expr: raise ValueError('Missing or malformed expr')
 
+        # Name of the expression before rename
+        orig_name = expr.get('orig_name')
         res = self.db.Expr.fetch(expr.id)
         allowed_attributes = [
             'name', 'url', 'title', 'apps', 'dimensions', 'auth', 'password',
             'tags', 'background', 'thumb', 'images', 'remix_parent_id',
-            'container'
+            'container', 'draft'
         ]
         # TODO: fixed expressions, styles, and scripts, need to be done right
         # if tdata.user.is_admin:
         #     allowed_attributes.extend(['fixed_width', 'script', 'style'])
         upd = dfilter(expr, allowed_attributes)
-        upd['name'] = upd['name'].lower().strip('/ ')
+        upd['name'] = upd.get('name','').lower().strip('/ ')
+        if res and res.get('draft') and orig_name:
+            res['name'] = upd['name']
 
         # deal with inline base64 encoded images from Sketch app
-        for app in upd['apps']:
+        for app in upd.get('apps',[]):
             if app['type'] != 'hive.sketch': continue
             data = base64.decodestring(app.get('content').get('src').split(',',1)[1])
             f = os.tmpfile()
@@ -98,7 +104,14 @@ class Expr(ModelController):
         if not res or upd['name'] != res['name']:
             if autosave:
                 # TODO-autosave: create anonymous expression
-                return self.serve_json(response, {})
+                if upd.get('name','') == '':
+                    upd['name'] = self._unused_name(time.strftime("%Y_%m_%d"), tdata.user)
+                upd['auth'] = "private"
+                upd['tags'] += " #draft"
+                upd['draft'] = True
+                res = tdata.user.expr_create(upd)
+                # print res
+                return self.serve_json(response, { "autosave": 1, "expr": res })
 
             try:
               new_expression = True
@@ -122,7 +135,8 @@ class Expr(ModelController):
                 upd['tags'] += " #remixed" # + remix_name
 
               res = tdata.user.expr_create(upd)
-              self.db.ActionLog.create(tdata.user, "new_expression_save", data={'expr_id': res.id})
+              self.db.ActionLog.create(tdata.user, "new_expression_save"
+                , data={'expr_id': res.id})
 
               # TODO-remix: handle moving ownership of remix list, especially if original is
               # made private or deleted.
@@ -152,24 +166,29 @@ class Expr(ModelController):
             if res.get('remix_parent_id'):
                 upd['tags'] += " #remixed" # + remix_name
             reserved_tags = ["remixed", "gifwall"];
+            # TODO-autosave: force "#draft" on draft? Remove it on first save?
             # disallow removal of reserved tags
             if not self.flags.get('modify_special_tags'):
                 for tag in reserved_tags:
                     if res.get('tags_index', []):
                         upd['tags'] += " #" + tag
             if autosave:
-                upd['updated'] = now()
-                res.update(updated=False, draft=upd)
+                if res.get('draft'):
+                    upd['auth'] = 'private'
+                    res.update(**upd)
+                else:
+                    upd['updated'] = now()
+                    res.update(updated=False, draft=upd)
                 return self.serve_json(response, { 'autosave': 1 } )
 
             res.update(**upd)
-            if not self.config.live_server and (upd.get('apps') or upd.get('background')):
-                res.threaded_snapshot(retry=120)
             new_expression = False
 
             self.db.UpdatedExpr.create(res.owner, res)
             self.db.ActionLog.create(tdata.user, "update_expression", data={'expr_id': res.id})
 
+        if not self.config.live_server and (upd.get('apps') or upd.get('background')):
+            res.threaded_snapshot(retry=120)
         # TODO-cleanup: create client_view for full expression record, instead
         # of just feed cards
         res['id'] = res.id

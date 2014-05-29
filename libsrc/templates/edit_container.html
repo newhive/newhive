@@ -31,9 +31,9 @@
   {# Custom Domain #}  
   <div class='label _2column hide showhide' id='custom_url_box'>
     <div class='upper label medbold'>
-      Custom Domain
-      <a href='#' id='domain_help' class='note floatright'>Help</a></div>
-    <input id='custom_url' type='text' value=''>
+      <label for="custom_url" >Custom Domain</label>
+      <span id='domain_help' class='pointer note floatright'>Help</span></div>
+    <input id='custom_url' type='text' value='' placeholder="mydomain.com">
   </div>
 
   <div class="dialog iframe" id="dia_domain_help" data-handle="#domain_help">
@@ -45,7 +45,7 @@
   <div class="label _2column">
     <label for="save_title" class='left fixed upper label medbold'>Title</label>
     <div class='right fill'
-      ><input type="text" autofocus id='save_title'></input
+      ><input type="text" autofocus id='save_title' placeholder="[Untitled]"></input
     ></div>
   </div>
 
@@ -53,7 +53,7 @@
   <div class="label _2column">
     <label for="save_tags" class='left fixed upper label medbold'>#Tags</label>
     <div class='right fill'
-      ><input type="text" value='' id='save_tags'></input
+      ><input type="text" value='' id='save_tags' placeholder="#sawitonnewhive"></input
     ></div>
   </div>
   
