@@ -67,4 +67,25 @@ function matched_file {(
 function open_nth {(
     open_file `matched_file_and_line $1`
 )}
+# rerun last list 
+alias rerun_results='grep . ~/.efffiles | grep -n -i `tail -1 ~/.eff.log`'
+# rerun last list, but only accept matches in last file part
+alias filepart_results='grep . ~/.efffiles | grep -n -i `tail -1 ~/.eff.log`[^/]*$'
+# rerun last list, filtered through grep
+function grep_results {(
+    # echo to stdout w/ color
+    on|grep $1| grep --color=always -i `tail -1 ~/.eff.log`
+    on|grep $1| grep --color=never -i `tail -1 ~/.eff.log` > ~/.og_tmp
+    if [ 1 == $(wc -l < ~/.og_tmp) ]; then
+        file="$(cat ~/.og_tmp|awk '{print $1}'|sed 's/\(:[0-9]\+:\).*/\1/'|sed 's/^[0-9]\+://')"
+        echo "opening $file"
+        open_file $file
+    fi
+)}
 
+# Search python definition
+function grep_python_def {(
+    grepvar=$1
+    shift
+    a -o -p "*.py" $* "def[^(]*$grepvar"
+)}
