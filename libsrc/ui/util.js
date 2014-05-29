@@ -108,18 +108,25 @@ define([
     o.extend_jquery();
 
     // For performance-critical ops, do not use jquery style
-    o.inline_style = function(el, styles) {
+    var css_style = function(el, styles) {
+        $(el).css(styles)
+    }
+    var inline_style = function(el, styles) {
         var el_style = el.style
         $.each(styles, function(style_name, style_val) {
             el_style[style_name] = style_val
         })
     }
-    o.inline_style_px = function(el, styles) {
+    var inline_style_px = function(el, styles) {
         var el_style = el.style
         $.each(styles, function(style_name, style_val) {
             el_style[style_name] = style_val + 'px'
         })
     }
+    o.inline_style = 
+        navigator.userAgent.match(/Mozilla/) ? css_style : inline_style
+    o.inline_style_px = 
+        navigator.userAgent.match(/Mozilla/) ? css_style : inline_style_px
 
     o.hoverable = function(el){
         if(el.prop('src')) {

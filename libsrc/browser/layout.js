@@ -72,9 +72,9 @@ define(['browser/jquery', 'ui/util'], function($, util) {
                     c2[p] = Math.round(c2[p]) + 'px';
                 }
             }
-            // e.css(c2);
+            e.css(c2);
             // is this faster?
-            util.inline_style(e[0], c2)
+            // util.inline_style(e[0], c2)
             
             if (e.hasClass('hive_image')) {
                 var img = e.find('img'), ic = $.extend({}, img.data('css'))
