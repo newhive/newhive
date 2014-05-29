@@ -34,6 +34,16 @@ alias o5='o 5'
 alias on='grep . ~/.efffiles | grep -n -i `tail -1 ~/.eff.log`'
 # rerun last list, but only accept matches in last file part
 alias oe='grep . ~/.efffiles | grep -n -i `tail -1 ~/.eff.log`[^/]*$'
-
+# rerun last list, filtered through grep
+function og {(
+    # echo to stdout w/ color
+    on|grep $1| grep --color=always -i `tail -1 ~/.eff.log`
+    on|grep $1| grep --color=never -i `tail -1 ~/.eff.log` > ~/.og_tmp
+    if [ 1 == $(wc -l < ~/.og_tmp) ]; then
+        file="$(cat ~/.og_tmp|awk '{print $1}'|sed 's/\(:[0-9]\+:\).*/\1/'|sed 's/^[0-9]\+://')"
+        echo "opening $file"
+        open_file $file
+    fi
+)}
 alias routes='n newhive/routes.json'
 alias config='e `ff /config.py$`'
