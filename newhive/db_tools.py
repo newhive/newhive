@@ -30,20 +30,19 @@ def recent_fails(days=1):
 def reset_fails(exprs):
     map(lambda x:x.update(updated=False,snapshot_fails=0),list(exprs))
 
+def collection_of(collection):
+    try:
+        return getattr(db, collection.title())
+    except AttributeError, e:
+        return None
+
 def undelete(trash):
-    collection = None
-    if trash['collection'] == 'expr':
-        collection = db.Expr
-    elif trash['collection'] == 'user':
-        collection = db.User
+    collection = collection_of(trash['collection'])
 
     if collection:
-        try:
-            collection.create(trash['record'])
-            trash.purge()
-        except Exception, e:
-            pass
-
+        collection.create(trash['record'])
+        trash.purge()
+    
 def undelete_exprs(user_name, time=0):
     if not time:
         time = now() - 3600
@@ -53,7 +52,7 @@ def undelete_exprs(user_name, time=0):
         undelete(expr)
 
 def undelete_user(user_name):
-    user = db.Trash.search({"collection":"user", "record.name":user_name }))
+    user = db.Trash.search({"collection":"user", "record.name":user_name })
     if not user:
         return
     undelete(user)
