@@ -323,7 +323,7 @@ Hive.init_global_handlers = function(){
         // which app(s) failed to save
     });
 
-    $('#btn_save span').click(function(){
+    $('#btn_save').click(function(){
         var expr = Hive.state();
         Hive.send({save_dialog: 1})
     })
