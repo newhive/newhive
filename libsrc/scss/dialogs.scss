@@ -16,6 +16,7 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
 .dialog {
     display: none; 
     position: fixed;
+    
     padding: 10px;
     z-index: 201;
     width: 500px;
@@ -78,6 +79,13 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
         font-size: 17px;
         input { margin-right: 5px; }
     }
+
+    // for confirmation dialogs like overwrite and delete
+    &.confirm {
+    width: 320px;
+    text-align: center;
+    button[type=cancel] {float: left;}
+    }   
     .submit { float: right; }
 }
 
@@ -96,7 +104,17 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
         height: 100%;
     }
 }
+.confirm {
+    width: 320px;
+    text-align: center;
+    button[type=cancel] {float: left;}
+}
 
+#dia_overwrite{
+    padding : 20px;
+    width : 20em;
+    button[type=cancel] { float: left; }
+}
 #dia_delete_ok {
     padding: 20px;
     width: 320px;
