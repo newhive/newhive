@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <link rel='shortcut icon' type='image/png' href='lib/skin/1/logo.png'>
+  <link id='css_minimal' rel='stylesheet' type='text/css' href='lib/libsrc/compiled.minimal.css'>
+  <script src='lib/libsrc/curl.js'></script>
+  <script>
+curl({
+    baseUrl: "lib/libsrc",
+    pluginPath: 'curl/plugin'
+});
+  </script>
+  <title>Network</title>
+  <link rel='stylesheet' type='text/css' href='lib/libsrc/compiled.app.css'>
+</head>
+<body class='mobile'>
+  <div id='overlays'></div>
+  <div id='site'></div>
+  <div id='exprs'><div class='expr blank'></div></div>
+  <script>
+curl(['server/context', 'ui/controller'], function(context, controller, js){
+  context.user = { logged_in: false }
+  context.flags = { mobile_web: true }
+  controller.init_mobile()
+});
+  </script>
+  <div id='dynamic_group>'></div>
+</body>
+</html>
