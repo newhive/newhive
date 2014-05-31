@@ -118,11 +118,11 @@
   <div val='public' class='menu_item'>Public</div>
 </div>
 
-<div id='dia_overwrite' class='dialog border selected center' style='width : 25em; padding : 20px'>
+<div id='dia_overwrite' class='dialog confirm border selected ' >
   <h2>Overwrite</h2>
   You already have an expression at "/<span id='expr_name'></span>". Are you sure you want to replace it?<br><br>
-  <input id='save_overwrite' type='button' class='black_btn upper' value='Yes'>&nbsp; &nbsp; &nbsp; 
-  <input id='cancel_overwrite' type='button' class='black_btn upper' value='No'>
+  <input id='cancel_overwrite' type='button' class='teal_btn upper' style="float: left" value='No'>
+  <input id='save_overwrite' type='button' class='grey_btn upper' value='Yes' style="float: right">&nbsp; &nbsp; &nbsp; 
 </div>
 
 <form {form_attrs "expr_save"} id='expr_save' method='POST'>
