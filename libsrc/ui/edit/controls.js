@@ -52,11 +52,11 @@ o.Controls = function(app, multiselect, delegate) {
         var cancel_btn = $("<img>").addClass('hoverable')
             .attr('src', asset('skin/edit/delete_app.png'))
             .attr('title', 'Clear link')
-            .css('margin', '12px 0 0 5px');
+            // .css('margin', '12px 0 0 5px');
         var input = $('<input type="text">');
 
         d.append(e);
-        input_frame(input, e);
+        e.append(input);
         e.append(cancel_btn);
 
         // set_link is called when input is blurred
@@ -344,30 +344,6 @@ o.Controls = function(app, multiselect, delegate) {
 
     o.layout();
     return o;
-};
-
-var input_frame = function(input, parent, opts){
-    opts = $.extend({width: 200, height: 45}, opts)
-
-    var frame_load = function(){
-        frame.contents().find('body')
-            .append(input)
-            .css({'margin': 0, 'overflow': 'hidden'});
-    };
-    var frame = $('<iframe>').load(frame_load)
-        .width(opts.width).height(opts.height)
-        .css({
-            'display': 'inline-block',
-            'float': 'left',
-            'margin-top': '5px'
-        });
-    parent.append(frame);
-    input.css({
-        'border': '5px solid hsl(164, 57%, 74%)',
-        'width': '100%',
-        'padding': '5px',
-        'font-size': '17px'
-    });
 };
 
 return o.Controls;
