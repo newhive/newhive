@@ -948,6 +948,8 @@ o.snap_helper = function(my_tuple, opts) {
     return new_pos;
 }
 
+// TODO-color-picker: move into controls, add parameters for getter 
+// and menu open (show) callback
 o.append_color_picker = function(container, callback, init_color, opts){
     // opts = $.extend({iframe: false}, opts);
     var o = {}, init_color = init_color || '#000000',
@@ -1087,8 +1089,9 @@ o.append_color_picker = function(container, callback, init_color, opts){
     o.set_color(init_color);
 
     manual_input.on('keyup input paste', function(e){
-        // if (e.keyCode == 27 ||                      // esc
-        if (e.keyCode == 13)                        // enter
+        // TODO-color-picker: make esc reset to color when last shown
+        if (//e.keyCode == 27 ||                      // esc
+            e.keyCode == 13)                        // enter
         {
             // Cancel edit, returning to initial color
             // Sadly, we don't actually have the initial color,
