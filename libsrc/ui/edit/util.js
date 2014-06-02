@@ -393,6 +393,7 @@ o.except = function (/* minimum 2 arrays */) {
     return result;
 }
 
+// TODO: create consecutive, type-named id's (text_1 text_2 image_0...)
 // used for app id
 o.random_str = function(){ 
     var str = ('a' + Math.random().toString(16).slice(2) + '0000000').slice(0, 8);
