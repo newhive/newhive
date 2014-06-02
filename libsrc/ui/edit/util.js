@@ -394,7 +394,9 @@ o.except = function (/* minimum 2 arrays */) {
 }
 
 // used for app id
-o.random_str = function(){ return Math.random().toString(16).slice(2); };
+o.random_str = function(){ 
+    var str = ('a' + Math.random().toString(16).slice(2) + '0000000').slice(0, 8);
+};
 
 o.polygon = function(sides){
     js.range(sides - 1).map(function(i){
