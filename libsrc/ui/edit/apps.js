@@ -870,6 +870,9 @@ Hive.App.Code = function(o){
         curl_func()
     }
 
+    // TODO: fix auto-loading by running first within try-catch, and if it 
+    // has errors, defer it to run after editor load (setTimeout sufficient?)
+
     // With commented load, if script has a syntax error, all editor code aborts
     // TODO: if we definitely want custom code to execute when editor loads,
     // investigate using eval instead of <script> tag. Test debugging of code

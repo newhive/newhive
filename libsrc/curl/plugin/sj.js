@@ -8,7 +8,7 @@ define(
 			// currently curl can not handle a module loader loading another
 			// module loader (server/context depends on the json loader)
 			var context = require(['server/context'], function(context){
-	            fetchText('/lib/libsrc/' + resourceId, function(text){
+	            fetchText(config.baseUrl + '/' + resourceId, function(text){
 					var t = sj.template(text, resourceId, context);
 					callback(t);
 	            });
