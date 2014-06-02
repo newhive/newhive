@@ -123,6 +123,7 @@ o.Text = function(o) {
     }
     o.after_resize = function() {
         scale_ref = dims_ref = undefined;
+        o.refresh_size();
     }
     var _dims_relative_set = o.dims_relative_set;
     o.dims_relative_set = function(dims) {

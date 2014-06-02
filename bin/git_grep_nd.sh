@@ -25,6 +25,8 @@ alias o3='o 3'
 alias o4='o 4'
 alias o5='o 5'
 
+alias nnn=matched_file_and_line
+alias nn=matched_file
 # rerun last list 
 alias on=rerun_results
 # rerun last list, but only accept matches in last file part
