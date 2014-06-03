@@ -1,3 +1,4 @@
+from numbers import Number
 from bs4 import BeautifulSoup
 import os, json, cgi, base64, re
 from pymongo.errors import DuplicateKeyError
@@ -257,7 +258,7 @@ class Expr(ModelController):
                 klass += " crop_box"
                 scale_x *= dimensions[0]
                 css = 'width:%fpx' % (scale_x)
-                if app.get('offset'):
+                if isinstance(app.get('offset', None), Number):
                     offset = [x * scale_x for x in app.get('offset')]
                     css = '%s;margin-left:%spx;margin-top:%spx' % (
                         css, offset[0], offset[1] )
