@@ -170,8 +170,8 @@ class Expr(ModelController):
                     if res.get('tags_index', []):
                         upd['tags'] += " #" + tag
             if autosave:
-                if res.get('draft'):
-                    upd['auth'] = 'private'
+                if draft:
+                    upd['auth'] = 'password'
                     res.update(**upd)
                 else:
                     upd['updated'] = now()
