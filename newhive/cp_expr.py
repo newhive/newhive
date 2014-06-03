@@ -10,6 +10,7 @@ def cp_expr(expr, dest_db):
     new_expr = dest_db.Expr.new(expr)
     try:
         del new_expr['snapshot_id']
+        del new_expr['snapshot_time']
         new_expr.create()
     except DuplicateKeyError:
         print('skipping copying existing expr ' + new_expr.url)

@@ -52,10 +52,12 @@ o.Controls = function(app, multiselect, delegate) {
         var cancel_btn = $("<img>").addClass('hoverable')
             .attr('src', asset('skin/edit/delete_app.png'))
             .attr('title', 'Clear link')
-            .css('margin', '12px 0 0 5px');
+            // .css('margin', '12px 0 0 5px');
         var input = $('<input type="text">');
 
         d.append(e);
+        // Protect the input in its own frame so it doesn't change the selection
+        // of the current frame
         input_frame(input, e);
         e.append(cancel_btn);
 
