@@ -254,7 +254,7 @@ define([
 
     var autosave_timer
     o.init_save_dialog = function(){
-        $("#expr_info").find("input, textarea").bind_once_anon("change", 
+        $("#dia_save").find("input, textarea").bind_once_anon("change", 
             function(ev) {
                 if (autosave_timer) 
                     clearTimeout(autosave_timer)
