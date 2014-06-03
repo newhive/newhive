@@ -439,7 +439,11 @@
         "client_method": "profile",
         "require_login": true
     },
-
+    "test_dialogs": {
+        "page_route": "/home/admin/test_dialogs",
+        "client_method": "test_dialogs",
+        "require_login": true
+    },
     "empty": "-----------------------------------------",
     "empty": "Dev tools.",
 
