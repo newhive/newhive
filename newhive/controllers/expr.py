@@ -54,7 +54,7 @@ class Expr(ModelController):
         owner_id = request.form.get("owner_id") or request.args.get("owner_id", "")
         owner = self.db.User.fetch(owner_id)
 
-        resp['name'] = _unused_name(name, owner)
+        resp['name'] = self._unused_name(name, owner)
         self.serve_json(response, resp)
     
     def save(self, tdata, request, response, **args):
