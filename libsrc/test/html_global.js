@@ -58,14 +58,14 @@ define([
     .add("html").css("background-color", "rgb(84, 113, 175)")
 
     return o
- o.render = function(){
-         $("body").empty().append(all_divs.find(".dialog").css({
-        margin: '15px'
-        , display: 'inline-block'
-        , position: 'static'
-        , float: 'left'
-    }).showshow())
-    .add("html").css("background-color", "rgb(84, 113, 175)")
+    o.render = function(){
+        $("body").empty().append(all_divs.find(".dialog").css({
+            margin: '15px'
+            , display: 'inline-block'
+            , position: 'static'
+                , float: 'left'
+        }).showshow())
+        .add("html").css("background-color", "rgb(84, 113, 175)")
     };
 
     return o;
