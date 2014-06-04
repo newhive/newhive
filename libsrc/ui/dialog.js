@@ -128,7 +128,7 @@ define([
         };
 
         o.undefer = function(){
-            $.each(this_dia.find(".defer"), function (i, el) {
+            $.each(o.opts.dialog.find(".defer"), function (i, el) {
                 $(el).replaceWith($($(el).attr("data-content")))
             })
         }
