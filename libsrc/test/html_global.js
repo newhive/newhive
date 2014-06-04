@@ -58,6 +58,10 @@ define([
             , "float": 'left'
         }).showshow())
         .add("html").css("background-color", "rgb(84, 113, 175)")
+
+        $('.dialog .defer').each(function(i, el){
+            $(el).parent().data('dialog').undefer()
+        })
     };
 
     return o;
