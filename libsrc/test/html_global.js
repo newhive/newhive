@@ -54,6 +54,7 @@ define([
             margin: '15px'
             , display: 'inline-block'
             , position: 'static'
+            // HOLY CODE SMELL!  YUI compressor barfs on keyword "float"
             , "float": 'left'
         }).showshow())
         .add("html").css("background-color", "rgb(84, 113, 175)")
