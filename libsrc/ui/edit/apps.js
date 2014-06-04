@@ -1645,10 +1645,6 @@ Hive.App.Polygon = function(o){
         o.reframe(true)
     }
 
-    Hive.App.has_border_width(o) //, {slider_opts:{max:100}})
-    Hive.App.has_color(o, "stroke");
-    Hive.App.has_blur(o)
-    Hive.App.has_rotate(o)
     o.rotate_start = function(){
         o.transform_start(0)
     }
@@ -1673,18 +1669,32 @@ Hive.App.Polygon = function(o){
         o.transform_start(0)
         o.reframe()
     }
-    Hive.App.has_color(o)
-    Hive.App.has_color(o, 'stroke')
     var history_point
     o.border_width = o.css_getter('stroke-width')
     o.border_width_set = function(v) {
+        v = Math.max(v, o.init_state.is_line ? .5 : 0)
         o.css_setter('stroke-width')(v)
         o.transform_start(0)
         o.repoint()
         if (env.Selection.controls)
             o.fixup_border_controls(env.Selection.controls);
     }
+    Hive.App.has_rotate(o)
+    Hive.App.has_color(o);
+    Hive.App.has_border_width(o) //, {slider_opts:{max:100}})
+    Hive.App.has_color(o, "stroke");
+    o.make_controls.slice(-1)[0].no_line = true
+    Hive.App.has_blur(o)
     Hive.App.has_opacity(o)
+    o.line_set = function() {
+        o.init_state.is_line = true
+        // remove stroke color and make color actually change stroke color
+        o.color = o.stroke
+        o.color_set = o.stroke_set
+        o.make_controls = o.make_controls.filter(function(c) {
+            return !c.no_line
+        })
+    }
     if (context.flags.shape_link)
         Hive.App.has_link_picker(o);
 
@@ -1712,6 +1722,8 @@ Hive.App.Polygon = function(o){
     o.blur_set(o.blur())
     o.transform_start(0)
     o.reframe()
+    if (o.init_state.is_line)
+        o.line_set()
 
     o.load()
 
@@ -1866,8 +1878,10 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         creating.dims_set(new_dims)
     }
     handle_template.dragend = function(ev, dd){
-        if (creating.points_len && creating.points_len() == 2)
+        if (creating.points_len && creating.points_len() == 2) {
             creating.reframe()
+            creating.line_set()
+        }
         creating = false
         o.finish(ev)
         ev.stopPropagation()
