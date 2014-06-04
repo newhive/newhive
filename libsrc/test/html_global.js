@@ -54,7 +54,7 @@ define([
             margin: '15px'
             , display: 'inline-block'
             , position: 'static'
-            , float: 'left'
+            , "float": 'left'
         }).showshow())
         .add("html").css("background-color", "rgb(84, 113, 175)")
     };
