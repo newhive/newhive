@@ -3,9 +3,7 @@
 /**
  * curl json! cram plugin
  */
-define(function (require) {
-
-	var _define = require('./define');
+define(['./jsEncode'], function (jsEncode) {
 
 	return {
 
@@ -15,15 +13,18 @@ define(function (require) {
 			absId = pluginId + '!' + resId;
 
 			io.read(
-				req.toUrl(resId),
+				resId,
 				function (source) {
-					var moduleText;
 					if (config.strictJSONParse) {
 						try { JSON.parse(source); } catch (ex) { io.error(ex); }
 					}
 					// write-out define(id,function(){return{/* json here */}});
-					moduleText = _define(absId, '', '', '', source);
-					io.write(moduleText);
+					source = 'define("'
+						+ absId
+						+ '", function () { return '
+						+ source
+						+ '; });';
+					io.write(source);
 				},
 				io.error
 			);
