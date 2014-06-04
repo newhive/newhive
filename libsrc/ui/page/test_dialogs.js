@@ -6,7 +6,7 @@ define([
     var o = {};
 
     o.render = function(){
-    test_dialogs
+        test_dialogs.render()
     };
 
     return o;
