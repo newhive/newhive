@@ -1107,6 +1107,7 @@ class User(HasSocial):
             'fullname', 'name', 'email', 'profile_about', 'profile_thumb',
             'profile_bg', 'thumb_file_id', 'tags', 'updated', 'created', 'feed'
         ] ) )
+        user['type'] = "user"
         ###########################################################
         # TODO: make sure this field is updated wherever views changes elsewhere
         # TODO: figure out best thing to do for empty user
@@ -1740,6 +1741,7 @@ class Expr(HasSocial):
         counts['Comment'] = self.comment_count
         expr = dfilter(self, ['name', 'title', 'feed', 'created',
             'updated', 'password', 'container'])
+        expr['type'] = "expr"
         dict.update(expr, {
             'tags': self.get('tags_index'),
             'id': self.id,
@@ -1778,6 +1780,7 @@ class Expr(HasSocial):
     def client_view_page(self):
         """ data for expr page """
         expr = dfilter(self, ['layout_coord', 'clip_x', 'clip_y'])
+        expr['type'] = "expr"
         apps = expr['apps'] = {}
         for app in self.get('apps',[]):
             app_id = app.get('id', 'app_' + str(app['z']))
@@ -2057,6 +2060,7 @@ class File(Entity):
 
     def client_view(self, viewer=None, activity=0):
         r = dfilter(self, ['name', 'mime', 'owner', 'thumbs'])
+        r['type'] = "file"
         dict.update(r, id=self.id, url=self.url,
             thumb_big=self.get_thumb(222,222),
             thumb_small=self.get_thumb(70,70))
@@ -2180,6 +2184,7 @@ class Feed(Entity):
 
     def client_view(self):
         r = self.collection.new(self)
+        r['type'] = "feed"
         # TODO: no good way to assert on broken db
         if self.initiator == None:
             return r
