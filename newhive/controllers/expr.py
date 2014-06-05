@@ -1,3 +1,4 @@
+from numbers import Number
 from bs4 import BeautifulSoup
 import os, json, cgi, base64, re, time
 from pymongo.errors import DuplicateKeyError
@@ -53,7 +54,7 @@ class Expr(ModelController):
         owner_id = request.form.get("owner_id") or request.args.get("owner_id", "")
         owner = self.db.User.fetch(owner_id)
 
-        resp['name'] = _unused_name(name, owner)
+        resp['name'] = self._unused_name(name, owner)
         self.serve_json(response, resp)
     
     def save(self, tdata, request, response, **args):
@@ -170,8 +171,8 @@ class Expr(ModelController):
                     if res.get('tags_index', []):
                         upd['tags'] += " #" + tag
             if autosave:
-                if res.get('draft'):
-                    upd['auth'] = 'private'
+                if draft:
+                    upd['auth'] = 'password'
                     res.update(**upd)
                 else:
                     upd['updated'] = now()
@@ -308,7 +309,7 @@ class Expr(ModelController):
                 klass += " crop_box"
                 scale_x *= dimensions[0]
                 css = 'width:%fpx' % (scale_x)
-                if app.get('offset'):
+                if isinstance(app.get('offset'), Number):
                     offset = [x * scale_x for x in app.get('offset')]
                     css = '%s;margin-left:%spx;margin-top:%spx' % (
                         css, offset[0], offset[1] )
@@ -355,6 +356,7 @@ class Expr(ModelController):
             link_text = ('','')
             if link: link_text = ("<a xlink:href='%s'>" % link,"</a>")
 
+            points = filter(lambda v: isinstance(v, Number), app.get('points', []))
             html = (
                   "<svg class='content' xmlns='http://www.w3.org/2000/svg'"
                 + " xmlns:xlink='http://www.w3.org/1999/xlink'"
@@ -364,8 +366,7 @@ class Expr(ModelController):
                 + " filterUnits='userSpaceOnUse'><feGaussianBlur stdDeviation='"
                 + "%f'></filter>" % app.get('blur', 0)
                 + "%s<polygon points='" % link_text[0]
-                + ' '.join( map( lambda p: "%f %f" % (p[0], p[1]),
-                    app.get('points', []) ) )
+                + ' '.join(map(lambda p: "%f %f" % (p[0], p[1]), points))
                 + "' style='filter:url(#%s_blur)'/>%s</svg>" % (
                     app_id, link_text[1])
             )

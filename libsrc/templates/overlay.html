@@ -28,16 +28,16 @@
 {>}
 {# hive logo button #}
 <div id='logo' class='overlay bottom nav logo icon 
-  {<if (and query.clean (eq query.clean "nologo"))} stay_hidden{>}'></div>
+  {<if (and query.clean (neq query.clean "logo"))} stay_hidden{>}'></div>
 
 {# menu: logo #}
 <div id='logo_menu' class='menu drawer' data-handle='#logo'>
   {<if user.logged_in}
     <form {form_attrs "logout"} method='POST' id='logout_form'></form>
+    <div id='logout_btn' class='menu_item'>Logout</div>
     <a {anchor_attrs "view_expr"
       "owner_name" config.site_user "expr_name" "about"}
-      class='menu_item'>About NewHive</a>
-    <div id='logout_btn' class='menu_item'>Logout</div>
+      class='menu_item'>About</a>
     {# <div id='invite_btn' class='menu_item'>Invites</div> #}
     <div id='activity_btn' class='menu_item hoverable'>
         <div class='icon'></div>
@@ -67,14 +67,14 @@
 {>}{<else}
   <div id='dia_login' class='dialog login' data-handle='.login_btn'>
     {#<a href="{facebook_authentication_url}" target="_top"
-      <img src='{"skin/1/fb_sign_in.png"|asset_url}' style='margin: 2px 0 2px -4px;'>
+      <img src='{"skin/1/fb_sign_in.png"|asset_url}' style='margin: 20px 0 2px -4px;'>
     </a>#}
     <div class="title">Log in:</div>
     {|templates/login_form.html}
   </div>
   
   <div id="dia_recover" class="standard dialog" data-handle='.password_recovery'>
-    <div class="error title expr">Reset your password:</div>
+    <div class="title expr">Reset your password:</div>
     <div class="subheading error_msg"></div>
     {<vcenter "success_show heading pointer"}
       <div class="centered">A password reset link was sent to your email.</div>

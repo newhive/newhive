@@ -140,7 +140,8 @@ define([
             || $.extend({}, default_expr) )
         // Handle remix
         var remixed = false
-        if (expr.owner_name != context.user.name || context.query.remix !== undefined) {
+        if ((expr.owner_name && expr.owner_name != context.user.name)
+            || context.query.remix !== undefined) {
             expr.owner_name = context.user.name;
             expr.owner = context.user.id;
             if (expr.id) expr.remix_parent_id = expr.id;
@@ -254,7 +255,7 @@ define([
 
     var autosave_timer
     o.init_save_dialog = function(){
-        $("#expr_info").find("input, textarea").bind_once_anon("change", 
+        $("#dia_save").find("input, textarea").bind_once_anon("change", 
             function(ev) {
                 if (autosave_timer) 
                     clearTimeout(autosave_timer)
