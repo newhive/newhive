@@ -34,10 +34,10 @@
 <div id='logo_menu' class='menu drawer' data-handle='#logo'>
   {<if user.logged_in}
     <form {form_attrs "logout"} method='POST' id='logout_form'></form>
+    <div id='logout_btn' class='menu_item'>Logout</div>
     <a {anchor_attrs "view_expr"
       "owner_name" config.site_user "expr_name" "about"}
-      class='menu_item'>About NewHive</a>
-    <div id='logout_btn' class='menu_item'>Logout</div>
+      class='menu_item'>About</a>
     {# <div id='invite_btn' class='menu_item'>Invites</div> #}
     <div id='activity_btn' class='menu_item hoverable'>
         <div class='icon'></div>
