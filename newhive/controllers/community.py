@@ -371,6 +371,10 @@ class Community(Controller):
         # Treat single-word text search as a tag search (show tag page)
         if len(search) == 1 and len(text) == 1:
             tags = text
+            if len(text[0]) > 2:
+                # Also search for users matching the given text
+                users = self.db.User.paginate({'name': {'$regex': text[0]}}, limit=20)
+                result = users + result
         data = {
             "cards": result,
             "card_type": "expr",
