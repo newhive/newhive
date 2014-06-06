@@ -305,7 +305,9 @@ class Expr(ModelController):
             link_text = ('','')
             if link: link_text = ("<a xlink:href='%s'>" % link,"</a>")
 
-            points = filter(lambda v: isinstance(v, Number), app.get('points', []))
+            points = filter(lambda p:
+                 all([isinstance(v, Number) for v in p])
+                ,app.get('points', []))
             html = (
                   "<svg class='content' xmlns='http://www.w3.org/2000/svg'"
                 + " xmlns:xlink='http://www.w3.org/1999/xlink'"
