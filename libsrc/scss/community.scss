@@ -578,12 +578,12 @@ body {
         }
     }
 
+    .feed.grid.user .user.card { width: 222px; }
     .feed.grid {
         /* max-width: 1256px; */
         // margin: auto;
         width: 1230px;
         .user.card {
-            width: 222px;
             vertical-align: top;
             &> * { vertical-align: bottom; }
             .counts_icon .counts {
