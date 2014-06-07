@@ -243,11 +243,14 @@ class Expr(ModelController):
         if not expr_obj:
             return self.serve_404(tdata, request, response)
 
+
         if (expr_obj.get('auth') == 'password'
             and not expr_obj.cmp_password(request.form.get('password'))
             and not expr_obj.cmp_password(request.args.get('pw'))):
             expr_obj = { 'auth': 'password' }
-
+            expr_client = expr_obj
+        else:
+            expr_client = expr_obj.client_view(mode='page')
         # TODO: consider allowing analytics for content frame.
         viewport = [int(x) for x in
             request.args.get('viewport', '1000x750').split('x')]
@@ -267,7 +270,15 @@ class Expr(ModelController):
         if body_style:
             tdata.context['css'] = 'body {' + body_style + '}'
 
-        tdata.context.update(expr=expr_obj)
+        # TODO: figure out 
+        # if hasattr(expr_obj,'client_view') :
+        #     tdata.context.update(expr=expr_obj.client_view(mode='page'))
+        # else:
+        #     tdata.context.update(expr_obj)
+        
+        return self.serve_page(tdata, response, 'pages/expr.html')
+
+        tdata.context.update(expr=expr_obj, expr_client=expr_client)
         return self.serve_page(tdata, response, 'pages/expr.html')
         
     def expr_to_html(self, exp, snapshot_mode=False, viewport=(1000, 750)):
