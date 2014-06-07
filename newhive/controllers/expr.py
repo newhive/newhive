@@ -168,7 +168,7 @@ class Expr(ModelController):
             # disallow removal of reserved tags
             if not self.flags.get('modify_special_tags'):
                 for tag in reserved_tags:
-                    if res.get('tags_index', []):
+                    if tag in res.get('tags_index', []):
                         upd['tags'] += " #" + tag
             if autosave:
                 if draft:
