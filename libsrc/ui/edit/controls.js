@@ -66,8 +66,8 @@ o.Controls = function(app, multiselect, delegate) {
             var v = input.val();
             // TODO: improve URL guessing.  
             // Auto-add mailto://
-            if (v.match(/@\w+\.\w{2,}/) && !v.match(/\/\//))
-                v = 'mailto://' + v;
+            if (v.match(/@\w+\.\w{2,}/) && !v.match(/:/))
+                v = 'mailto:' + v;
             // Auto-add http:// to urls
             else if (!v.match(/^\//) && !v.match(/\/\//) && v.match(/\w+\.\w{2,}/)) 
                 v = 'http://' + v;
