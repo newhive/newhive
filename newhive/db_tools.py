@@ -41,34 +41,6 @@ def snapshot_redo_collection(username='zach', collection='brokensnapshots', retr
             if not r.get('snapshot_id'):
                 r.take_snapshots()
 
-def collection_of(collection):
-    try:
-        return getattr(db, collection.title())
-    except AttributeError, e:
-        return None
-
-def undelete(trash):
-    collection = collection_of(trash['collection'])
-
-    if collection:
-        collection.create(trash['record'])
-        trash.purge()
-    
-def undelete_exprs(user_name, time=0):
-    if not time:
-        time = now() - 3600
-    exprs = list(db.Trash.search({"collection":"expr"
-        ,"record.owner_name":user_name, "updated":{"$gt":time}}))
-    for expr in exprs:
-        undelete(expr)
-
-def undelete_user(user_name):
-    user = db.Trash.search({"collection":"user", "record.name":user_name })
-    if not user:
-        return
-    undelete(user)
-    undelete_exprs(user_name, user['updated'] - 1000)
-
 def show_sizeof(x, level=0, show_deep=0):
     if (level <= show_deep):
         print "\t" * level, x.__class__, sys.getsizeof(x), x

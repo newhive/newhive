@@ -445,7 +445,6 @@ form.login {
     .url_bar { margin-bottom: 3px; }
     input { margin: auto; }
     .remix_label {
-        // font-family: Arial;
         margin-top: 5px;
     }
     .note { color: $color_grey_medium }
@@ -462,31 +461,24 @@ form.login {
         height: 16px;
     }
     .extra_buttons { 
-        margin: 14px 0px 6px 0px; 
+        margin: 14px 0px 14px 0px; 
         div.drop_arrow { @include transform(rotate(-90deg)) }
     }
     span.teal_btn { cursor: default; }
-    #password_ui { float: right; }
+    #password_ui { float: right; margin-bottom: 10px; }
     #password { width:300px; }
 
-    // .button_options.active span {
-    //     color: white;
-    //     background-color: black;
-    // }
     .button_options {
         padding: 7px 7px 7px 0;
         span { padding: 4px; }
     }
     #privacy {
         padding-right: 7px;
-        margin-top: 15px;
     }
     #save_submit {
         clear: both;
-        margin-top: 15px;
         float: right;
     }
-
 
     .button_options_menu {
         .menu_item {

@@ -169,7 +169,7 @@ class Expr(ModelController):
             # disallow removal of reserved tags
             if not self.flags.get('modify_special_tags'):
                 for tag in reserved_tags:
-                    if res.get('tags_index', []):
+                    if tag in res.get('tags_index', []):
                         upd['tags'] += " #" + tag
             if autosave:
                 if draft:
@@ -244,7 +244,6 @@ class Expr(ModelController):
         if not expr_obj:
             return self.serve_404(tdata, request, response)
 
-
         if (expr_obj.get('auth') == 'password'
             and not expr_obj.cmp_password(request.form.get('password'))
             and not expr_obj.cmp_password(request.args.get('pw'))):
@@ -277,8 +276,6 @@ class Expr(ModelController):
         # else:
         #     tdata.context.update(expr_obj)
         
-        return self.serve_page(tdata, response, 'pages/expr.html')
-
         tdata.context.update(expr=expr_obj, expr_client=expr_client)
         return self.serve_page(tdata, response, 'pages/expr.html')
         
@@ -299,6 +296,10 @@ class Expr(ModelController):
         content = app.get('content', '')
         more_css = ''
         dimensions = app.get('dimensions', [100,100])
+        if not all([ isinstance(v, Number) for v in
+            dimensions + app.get('position', [])
+        ]): return ''
+
         type = app.get('type')
         klass = type.replace('.', '_')
         app_id = app.get('id', 'app_' + str(app['z']))
@@ -368,7 +369,9 @@ class Expr(ModelController):
             link_text = ('','')
             if link: link_text = ("<a xlink:href='%s'>" % link,"</a>")
 
-            points = filter(lambda v: isinstance(v, Number), app.get('points', []))
+            points = filter(lambda p:
+                 all([isinstance(v, Number) for v in p])
+                ,app.get('points', []))
             html = (
                   "<svg class='content' xmlns='http://www.w3.org/2000/svg'"
                 + " xmlns:xlink='http://www.w3.org/1999/xlink'"

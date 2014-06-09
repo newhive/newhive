@@ -2,7 +2,7 @@
 
 PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:$PATH"
 # TODO: if running on AWS, remove this server from load balancer
-rm -rf libsrc/.webassets-cache libsrc/.cram # TODO: override this with flag
+rm lib/libsrc
 bin/build_assets.py
 sudo apache2ctl graceful
 # TODO: run automated tests

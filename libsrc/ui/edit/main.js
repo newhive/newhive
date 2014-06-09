@@ -388,6 +388,7 @@ Hive.init = function(exp, site_context, _revert){
     env.scale_set()
 
     $.extend(context, site_context)
+    Hive.context = context
     env.show_css_class = false;
     env.copy_table = context.flags.copy_table || false;
     env.gifwall = ($.inArray('gifwall', exp.tags_index) > -1)

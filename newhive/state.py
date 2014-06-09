@@ -438,6 +438,9 @@ class Entity(dict):
             self.db.Trash.create(self.cname, self)
         return res
 
+    def undelete(self, trash=None):
+        pass
+
     def purge(self):
         res = self._col.remove(spec_or_id=self.id, safe=True)
         return res
@@ -1167,7 +1170,8 @@ class User(HasSocial):
         self.facebook_disconnect()
 
         # Feed Cleanup
-        for feed_item in self.db.Feed.search({'$or': [{'initiator': self.id}, {'entity': self.id}]}):
+        for feed_item in self.db.Feed.search(
+                {'$or': [{'initiator': self.id}, {'entity': self.id}]}):
             feed_item.delete()
 
         # Expressions Cleanup
@@ -1175,6 +1179,24 @@ class User(HasSocial):
             e.delete()
 
         return super(User, self).delete()
+
+    def undelete(self, trash):
+        # TODO-undelete: reconnect FB?
+        # TODO-undelete: Fix following / followers
+        # TODO-undelete: index record.owner
+        time = trash.get('updated', now()) - 3600
+        for expr in self.db.Trash.search({
+            'record.owner': self.id
+            ,"updated": {"$gt": time}
+            ,'collection': 'expr'
+        }):
+            expr.undelete() 
+        for feed in self.db.Trash.search({
+            '$or': [{'record.initiator': self.id}, {'record.entity': self.id}]
+            ,"updated": {"$gt": time}
+            ,'collection': 'feed'
+        }):
+            feed.undelete()
 
     def has_group(self, group, level=None):
         groups = self.get('groups')
@@ -2374,6 +2396,16 @@ class Broken(Entity):
             entity['record'] = record
             return super(Broken.Collection, self).create(entity)
 
+def collection_of(db, collection):
+    try:
+        return getattr(db, collection.title())
+    except AttributeError, e:
+        return None
+
+# def search_trash(db, spec, collection):
+#     spec = { 'record.' + k: v for k, v in spec }
+#     spec.update({'collection': collection})
+#     return db.Trash.search(spec)
 
 @register
 class Trash(Entity):
@@ -2382,6 +2414,14 @@ class Trash(Entity):
 
     cname = 'trash'
     indexes = ['record.id','record.created','record.updated']
+
+    def undelete(self):
+        collection = collection_of(self.db, self['collection'])
+
+        if collection:
+            entity = collection.create(self['record'])
+            entity.undelete(self)
+            self.purge()
 
     class Collection(Collection):
         trashable = False
