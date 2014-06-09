@@ -305,6 +305,7 @@ class Expr(ModelController):
             link_text = ('','')
             if link: link_text = ("<a xlink:href='%s'>" % link,"</a>")
 
+            points = filter(lambda v: isinstance(v, Number), app.get('points', []))
             html = (
                   "<svg class='content' xmlns='http://www.w3.org/2000/svg'"
                 + " xmlns:xlink='http://www.w3.org/1999/xlink'"
@@ -314,8 +315,7 @@ class Expr(ModelController):
                 + " filterUnits='userSpaceOnUse'><feGaussianBlur stdDeviation='"
                 + "%f'></filter>" % app.get('blur', 0)
                 + "%s<polygon points='" % link_text[0]
-                + ' '.join( map( lambda p: "%f %f" % (p[0], p[1]),
-                    app.get('points', []) ) )
+                + ' '.join(map(lambda p: "%f %f" % (p[0], p[1]), points))
                 + "' style='filter:url(#%s_blur)'/>%s</svg>" % (
                     app_id, link_text[1])
             )
