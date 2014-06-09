@@ -158,7 +158,8 @@
         // top: 18px;
         // right: 27px;
         margin: -6px 0px 0px 0px;
-        float: right;
+        display: inline-block;
+        float: inherit;
     }
     // .icon.add_queue { right: 77px; }
     #popup_content {

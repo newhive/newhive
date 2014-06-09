@@ -24,6 +24,7 @@ define([
                 }
             }
         };
+        factory.generic_dialog_handler = generic_dialog_handler
 
         $.extend(opts, {
             dialog: $(element),
