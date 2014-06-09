@@ -64,9 +64,13 @@ o.Controls = function(app, multiselect, delegate) {
         // set_link is called when input is blurred
         var set_link = function(){
             var v = input.val();
-            // TODO: improve URL guessing
-            if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && 
-                v.match(/\w+\.\w{2,}/)) v = 'http://' + v;
+            // TODO: improve URL guessing.  
+            // Auto-add mailto://
+            if (v.match(/@\w+\.\w{2,}/) && !v.match(/\/\//))
+                v = 'mailto://' + v;
+            // Auto-add http:// to urls
+            else if (!v.match(/^\//) && !v.match(/\/\//) && v.match(/\w+\.\w{2,}/)) 
+                v = 'http://' + v;
             o.app.link_set(v);
             env.History.saver(sel_app.link, sel_app.link_set, 'link image').exec(v);
         };
