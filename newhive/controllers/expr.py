@@ -236,6 +236,10 @@ class Expr(ModelController):
         content = app.get('content', '')
         more_css = ''
         dimensions = app.get('dimensions', [100,100])
+        if not all([ isinstance(v, Number) for v in
+            dimensions + app.get('position', [])
+        ]): return ''
+
         type = app.get('type')
         klass = type.replace('.', '_')
         app_id = app.get('id', 'app_' + str(app['z']))
