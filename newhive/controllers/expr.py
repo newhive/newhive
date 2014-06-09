@@ -243,7 +243,6 @@ class Expr(ModelController):
         if not expr_obj:
             return self.serve_404(tdata, request, response)
 
-
         if (expr_obj.get('auth') == 'password'
             and not expr_obj.cmp_password(request.form.get('password'))
             and not expr_obj.cmp_password(request.args.get('pw'))):
@@ -276,8 +275,6 @@ class Expr(ModelController):
         # else:
         #     tdata.context.update(expr_obj)
         
-        return self.serve_page(tdata, response, 'pages/expr.html')
-
         tdata.context.update(expr=expr_obj, expr_client=expr_client)
         return self.serve_page(tdata, response, 'pages/expr.html')
         
