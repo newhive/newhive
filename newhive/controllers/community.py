@@ -377,6 +377,7 @@ class Community(Controller):
                 result = users + result
         data = {
             "cards": result,
+            'special': {'mini_expressions': 3},
             "card_type": "expr",
             'title': 'Search',
             'header': ("Search", request.args['q']),

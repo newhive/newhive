@@ -584,6 +584,7 @@ body {
         // margin: auto;
         width: 1230px;
         .user.card {
+            height: 369px;
             vertical-align: top;
             &> * { vertical-align: bottom; }
             .counts_icon .counts {
@@ -597,6 +598,7 @@ body {
         }
         .card {
             width: 390px;
+            height: 369px;
             position: relative;
             // float: left;
             display: inline-block;
