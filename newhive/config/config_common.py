@@ -28,7 +28,7 @@ cloudfront_domains = {
     'asset': None
 }
 
-admins          = ['abram', 'cara', 'zach', 'newduke', 'fatsycline','root','newhive']
+admins          = ['it1','abram', 'cara', 'zach', 'newduke', 'fatsycline','root','newhive']
 
 default_email_subscriptions = ['love', 'listen', 'share_expr', 'comment', 'broadcast', 'featured', 'milestone']
 milestones = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000,
@@ -93,10 +93,10 @@ email_password  = False
 facebook_app_id = ''
 facebook_client_secret = ''
 
-streamified_client_id = 'pjzkv2y4twdsutl3n0mkv1yajv1y5y3e'
-streamified_client_secret = ''
-streamified_networks = ['twitter']
-streamified_url = 'https://streamified.me/api/'
+#streamified_client_id = 'pjzkv2y4twdsutl3n0mkv1yajv1y5y3e'
+#streamified_client_secret = ''
+#streamified_networks = ['twitter']
+#streamified_url = 'https://streamified.me/api/'
 
 signup_group    = 2
 

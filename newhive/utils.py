@@ -241,10 +241,11 @@ def normalize_tags(ws):
         l2 = re.split(r'[\s]', ws_no_quotes, flags=re.UNICODE)
     return list(set(filter(None,map(format_tags, l1+l2))))
 
+def tag_string(tags):
+    return " ".join([ "#" + x for x in tags ])
 
 def tagList(row):
     return normalize_tags(row.get('tags', ''))
-
 
 def getTagCnt(data):
     tagCnt = Counter()

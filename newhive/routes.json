@@ -244,11 +244,6 @@
         "client_method": "user_update",
         "require_login": true
     },
-    "manage_tags": {
-        "page_route": "deprecated?",
-        "page_route": "/<owner_name>/profile/manage_tags",
-        "client_method": "manage_tags"
-    },
     "add_to_collection": {
         "api_route": "/<owner_name>/profile/add_to_collection",
         "controller": "user",
@@ -439,7 +434,11 @@
         "client_method": "profile",
         "require_login": true
     },
-
+    "test_dialogs": {
+        "page_route": "/home/admin/test_dialogs",
+        "client_method": "test_dialogs",
+        "require_login": true
+    },
     "empty": "-----------------------------------------",
     "empty": "Dev tools.",
 

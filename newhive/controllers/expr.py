@@ -1,11 +1,10 @@
 from numbers import Number
 from bs4 import BeautifulSoup
-import os, json, cgi, base64, re
+import os, json, cgi, base64, re, time
 from pymongo.errors import DuplicateKeyError
 from functools import partial
 
-from newhive import utils
-from newhive.utils import dfilter
+from newhive.utils import dfilter, now, get_embedly_oembed, tag_string
 from newhive.controllers.controller import ModelController
 
 class Expr(ModelController):
@@ -15,7 +14,6 @@ class Expr(ModelController):
         resp = {}
         expr_id = request.form.get("expr_id")
 
-        print expr_id
         expr = self.db.Expr.fetch(expr_id)
         if not expr:
             resp = { 'error': 'Expression not found.' }
@@ -25,15 +23,7 @@ class Expr(ModelController):
 
         return self.serve_json(response, resp)
 
-        
-    def unused_name(self, tdata, request, response, **args):
-        """ Returns an unused expression name matching the base name provided """
-
-        resp = {}
-        name = request.form.get("name") or request.args.get("name","")
-        owner_id = request.form.get("owner_id") or request.args.get("owner_id", "")
-        owner = self.db.User.fetch(owner_id)
-
+    def _unused_name(self, name, owner):
         if not name or not len(name) or not owner:
             raise ValueError('Expr / user not found')
 
@@ -45,7 +35,7 @@ class Expr(ModelController):
             base_name = name
             num = 0
         expr_names = [e['name'] for e in list(self.db.Expr.search({
-            'owner': owner_id, 'name': re.compile("^" + base_name + ".*")
+            'owner': owner.id, 'name': re.compile("^" + base_name + ".*")
         }))]
         while True:
             if num:
@@ -53,32 +43,49 @@ class Expr(ModelController):
             else:
                 name = base_name
             if name not in expr_names:
-                resp['name'] = name
-                return self.serve_json(response, resp)
+                return name
             num += 1
 
+    def unused_name(self, tdata, request, response, **args):
+        """ Returns an unused expression name matching the base name provided """
+
+        resp = {}
+        name = request.form.get("name") or request.args.get("name","")
+        owner_id = request.form.get("owner_id") or request.args.get("owner_id", "")
+        owner = self.db.User.fetch(owner_id)
+
+        resp['name'] = self._unused_name(name, owner)
+        self.serve_json(response, resp)
+    
     def save(self, tdata, request, response, **args):
         """ Parses JSON object from POST variable 'exp' and stores it in database.
             If the name (url) does not match record in database, create a new record."""
+
+        autosave = (request.form.get('autosave') == "1")
 
         try: expr = self.db.Expr.new(json.loads(request.form.get('expr', '0')))
         except: expr = False
         if not expr: raise ValueError('Missing or malformed expr')
 
+        # Name of the expression before rename
+        orig_name = expr.get('orig_name')
         res = self.db.Expr.fetch(expr.id)
         allowed_attributes = [
             'name', 'url', 'title', 'apps', 'dimensions', 'auth', 'password',
             'tags', 'background', 'thumb', 'images', 'remix_parent_id',
-            'container'
+            'container', 'draft'
         ]
         # TODO: fixed expressions, styles, and scripts, need to be done right
         # if tdata.user.is_admin:
         #     allowed_attributes.extend(['fixed_width', 'script', 'style'])
         upd = dfilter(expr, allowed_attributes)
-        upd['name'] = upd['name'].lower().strip('/ ')
+        upd['name'] = upd.get('name','').lower().strip('/ ')
+        draft = res and res.get('draft')
+        if draft and orig_name:
+            res['name'] = upd['name']
 
         # deal with inline base64 encoded images from Sketch app
-        for app in upd['apps']:
+        for app in upd.get('apps',[]):
             if app['type'] != 'hive.sketch': continue
             data = base64.decodestring(app.get('content').get('src').split(',',1)[1])
             f = os.tmpfile()
@@ -96,7 +103,19 @@ class Expr(ModelController):
                 ,'file_id' : file_res.id
             })
 
+        duplicate = False
         if not res or upd['name'] != res['name']:
+            if autosave:
+                # TODO-autosave: create anonymous expression
+                if upd.get('name','') == '':
+                    upd['name'] = self._unused_name(time.strftime("%Y_%m_%d"), tdata.user)
+                upd['auth'] = "private"
+                upd['tags'] += " #draft"
+                upd['draft'] = True
+                res = tdata.user.expr_create(upd)
+                # print res
+                return self.serve_json(response, { "autosave": 1, "expr": res })
+
             try:
               new_expression = True
               # Handle remixed expressions
@@ -119,7 +138,8 @@ class Expr(ModelController):
                 upd['tags'] += " #remixed" # + remix_name
 
               res = tdata.user.expr_create(upd)
-              self.db.ActionLog.create(tdata.user, "new_expression_save", data={'expr_id': res.id})
+              self.db.ActionLog.create(tdata.user, "new_expression_save"
+                , data={'expr_id': res.id})
 
               # TODO-remix: handle moving ownership of remix list, especially if original is
               # made private or deleted.
@@ -133,33 +153,64 @@ class Expr(ModelController):
               #    tdata.user.unflag('add_invites_on_save')
               #    tdata.user.give_invites(5)
             except DuplicateKeyError:
-                if expr.get('overwrite'):
-                    self.db.Expr.named(tdata.user['name'], upd['name']).delete()
-                    res = tdata.user.expr_create(upd)
-                    self.db.ActionLog.create(tdata.user, "new_expression_save", data={'expr_id': res.id, 'overwrite': True})
-                else:
-                     #'An expression already exists with the URL: ' + upd['name']
-                    return self.serve_json(response, { 'error' : 'overwrite' })
-                    self.db.ActionLog.create(tdata.user, "new_expression_save_fail", data={'expr_id': res.id, 'error': 'overwrite'})
+                duplicate = True
         else:
             if not res['owner'] == tdata.user.id:
                 raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
+
             # remix: ensure that the remix tag is not deletable
             if res.get('remix_parent_id'):
                 upd['tags'] += " #remixed" # + remix_name
             reserved_tags = ["remixed", "gifwall"];
-            # TODO: disallow removal of reserved tags
-            res.update(**upd)
-            if not self.config.live_server and (upd.get('apps') or upd.get('background')):
-                res.threaded_snapshot(retry=120)
-            new_expression = False
+            # force "#draft" on draft
+            if autosave and draft:
+                reserved_tags += ["draft"]
+            # disallow removal of reserved tags
+            if not self.flags.get('modify_special_tags'):
+                for tag in reserved_tags:
+                    if tag in res.get('tags_index', []):
+                        upd['tags'] += " #" + tag
+            if autosave:
+                if draft:
+                    upd['auth'] = 'password'
+                    res.update(**upd)
+                else:
+                    upd['updated'] = now()
+                    res.update(updated=False, draft=upd)
+                return self.serve_json(response, { 'autosave': 1 } )
 
-            self.db.UpdatedExpr.create(res.owner, res)
-            self.db.ActionLog.create(tdata.user, "update_expression", data={'expr_id': res.id})
+            try:
+                res.update(**upd)
+                    
+                new_expression = False
 
+                self.db.UpdatedExpr.create(res.owner, res)
+                self.db.ActionLog.create(tdata.user, "update_expression", data={'expr_id': res.id})
+            except DuplicateKeyError:
+                duplicate = True
+
+        if duplicate:
+            if expr.get('overwrite'):
+                self.db.Expr.named(tdata.user['name'], upd['name']).delete()
+                res = tdata.user.expr_create(upd)
+                self.db.ActionLog.create(tdata.user, "new_expression_save", data={'expr_id': res.id, 'overwrite': True})
+            else:
+                 #'An expression already exists with the URL: ' + upd['name']
+                return self.serve_json(response, { 'error' : 'overwrite' })
+                self.db.ActionLog.create(tdata.user, "new_expression_save_fail", data={'expr_id': res.id, 'error': 'overwrite'})
+
+        # autosave: Remove "draft" on first save
+        if draft and not autosave:
+            new_tags = res['tags_index']
+            if "draft" in new_tags: new_tags.remove("draft")
+            res.update(tags=tag_string(new_tags))
+
+        if not self.config.live_server and (upd.get('apps') or upd.get('background')):
+            res.threaded_snapshot(retry=120)
         # TODO-cleanup: create client_view for full expression record, instead
         # of just feed cards
         res['id'] = res.id
+
         return self.serve_json(response, res)
 
     # the whole editor except the save dialog and upload code goes in sandbox
@@ -196,7 +247,9 @@ class Expr(ModelController):
             and not expr_obj.cmp_password(request.form.get('password'))
             and not expr_obj.cmp_password(request.args.get('pw'))):
             expr_obj = { 'auth': 'password' }
-
+            expr_client = expr_obj
+        else:
+            expr_client = expr_obj.client_view(mode='page')
         # TODO: consider allowing analytics for content frame.
         viewport = [int(x) for x in
             request.args.get('viewport', '1000x750').split('x')]
@@ -216,7 +269,13 @@ class Expr(ModelController):
         if body_style:
             tdata.context['css'] = 'body {' + body_style + '}'
 
-        tdata.context.update(expr=expr_obj)
+        # TODO: figure out 
+        # if hasattr(expr_obj,'client_view') :
+        #     tdata.context.update(expr=expr_obj.client_view(mode='page'))
+        # else:
+        #     tdata.context.update(expr_obj)
+        
+        tdata.context.update(expr=expr_obj, expr_client=expr_client)
         return self.serve_page(tdata, response, 'pages/expr.html')
         
     def expr_to_html(self, exp, snapshot_mode=False, viewport=(1000, 750)):
@@ -236,6 +295,10 @@ class Expr(ModelController):
         content = app.get('content', '')
         more_css = ''
         dimensions = app.get('dimensions', [100,100])
+        if not all([ isinstance(v, Number) for v in
+            dimensions + app.get('position', [])
+        ]): return ''
+
         type = app.get('type')
         klass = type.replace('.', '_')
         app_id = app.get('id', 'app_' + str(app['z']))
@@ -258,7 +321,7 @@ class Expr(ModelController):
                 klass += " crop_box"
                 scale_x *= dimensions[0]
                 css = 'width:%fpx' % (scale_x)
-                if isinstance(app.get('offset', None), Number):
+                if isinstance(app.get('offset'), Number):
                     offset = [x * scale_x for x in app.get('offset')]
                     css = '%s;margin-left:%spx;margin-top:%spx' % (
                         css, offset[0], offset[1] )
@@ -274,7 +337,7 @@ class Expr(ModelController):
             if snapshot_mode:
                 def get_embed_img_html(url):
                     ret_html = ''
-                    oembed = utils.get_embedly_oembed(url) if url else ''
+                    oembed = get_embedly_oembed(url) if url else ''
                     if oembed and oembed.get('thumbnail_url'):
                         ret_html += '<img src="%s"/>' % oembed['thumbnail_url']
                     return ret_html
@@ -305,7 +368,9 @@ class Expr(ModelController):
             link_text = ('','')
             if link: link_text = ("<a xlink:href='%s'>" % link,"</a>")
 
-            points = filter(lambda v: isinstance(v, Number), app.get('points', []))
+            points = filter(lambda p:
+                 all([isinstance(v, Number) for v in p])
+                ,app.get('points', []))
             html = (
                   "<svg class='content' xmlns='http://www.w3.org/2000/svg'"
                 + " xmlns:xlink='http://www.w3.org/1999/xlink'"

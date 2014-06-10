@@ -3,12 +3,16 @@
 /**
  * cram CommonJS modules/1.1 plugin
  */
-define(['./jsEncode', '../loader/cjsm11'], function (jsEncode, wrapCjsm11) {
+define(['../loader/cjsm11'], function (wrapCjsm11) {
 
 	return {
 		compile: function (pluginId, resId, req, io, config) {
-			io.read(resId, function (text) {
-				io.write(jsEncode(wrapCjsm11(text, resId)));
+			var url = req.toUrl(resId);
+			if (url.substr(url.length - 3) !== ".js") {
+				url += ".js";
+			}
+			io.read(url, function (text) {
+				io.write(wrapCjsm11(text, resId));
 			}, io.error);
 		}
 	};
