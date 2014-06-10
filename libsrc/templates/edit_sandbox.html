@@ -1,7 +1,7 @@
 <div id="dynamic_group"></div>
 
 <div id="menu_group">
-<div id='dia_edit_bg' class='dialog border selected'>
+<div id='dia_edit_bg' class='dialog'>
  <h2>Edit Background</h2>
  <div id='edit_bg_image'>
   <div id='bg_preview' class='border'><img id='bg_preview_img'></div>
@@ -28,10 +28,14 @@
   ><div class='fluff smpad'></div
   ><div class='fluff center hoverable text text_btn black_active' title="Editor help" id='btn_help'>?</div
   ><div id='btn_save' class='save upper text text_btn hoverable center pad black_active'
-    >Save <div class='inline arrow'></div>
+    ><span>Save </span><div class='inline arrow'></div>
     <img src='{asset "skin/edit/loading.gif"}' class='hide loading'
   ></div
 ></div>
+
+<div class="menu drawer hide" data-handle="#btn_save">
+  <div class="menu_item upper revert" title="Revert to last saved">Revert</div>
+</div>
 
 <div class='menu drawer medbold misc_menu hide' data-handle=".handle.misc" 
   data-menu-opts='"layout_x":"center"'>
@@ -51,13 +55,14 @@
   {>}
 </div>
 
+{# TODO: create better title text #}
 <div class='app_btns edit overlay bottom panel'
- ><div class='insert_text icon hoverable'></div
- ><div class='insert_image icon hoverable'></div
- ><div class='insert_audio icon hoverable'></div
- ><div class='insert_embed icon hoverable'></div
- ><div class='insert_shape icon hoverable'></div
- ><div class='insert_file icon hoverable'></div
+ ><div class='insert_text icon hoverable' title="Insert text"></div
+ ><div class='insert_image icon hoverable' title="Insert image"></div
+ ><div class='insert_audio icon hoverable' title="Insert audio"></div
+ ><div class='insert_embed icon hoverable' title="Insert embed"></div
+ ><div class='insert_shape icon hoverable' title="Insert shape"></div
+ ><div class='insert_file icon hoverable' title="Insert file"></div
 ></div>
 
 <div id='menu_text' class='menu drawer medbold'>
@@ -301,9 +306,9 @@
     src='{asset "skin/edit/blur.png"}'          title='Gaussian blur'>
 
   {# Code editor #}
-  <div class='button bg run' title='Run'>&rarr;</div>
-  <div class='button bg stop' title='Stop'>&Chi;</div>
-  <div class='button bg edit' title='Edit'>&Xi;</div>
+  <img class='button run' src='{asset "skin/edit/run.png"}'  title='Run'>
+  <img class='button stop' src='{asset "skin/edit/stop.png"}'  title='Stop'>
+  <img class='button edit' src='{asset "skin/edit/edit.png"}'  title='Edit'>
 
   <img class='button css_classes tip_N'
     src='{asset "skin/edit/css_class.png"}'  title='Change css classes'>

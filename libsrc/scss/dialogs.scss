@@ -5,7 +5,7 @@
   position:fixed;
   width:100%;
   height:100%;
-  z-index: 200;
+  z-index: 201;
   top: 0;
 }
 .dialog_shield.fade { background-color:black; opacity:0.33; }
@@ -16,6 +16,7 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
 .dialog {
     display: none; 
     position: fixed;
+    
     padding: 10px;
     z-index: 201;
     width: 500px;
@@ -78,7 +79,26 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
         font-size: 17px;
         input { margin-right: 5px; }
     }
+
     .submit { float: right; }
+
+    // For dialogs which contain just an iframe
+    &.iframe {
+        width: 90%;
+        height: 60%;
+        // max-width: 1000px;
+        iframe {
+            width: 100%;
+            height: 100%;
+        }
+    }
+
+    // for confirmation dialogs like overwrite and delete
+    &.confirm {
+        width: 320px;
+        text-align: center;
+        button[type=cancel] { float: left; }
+    }   
 }
 
 .btn_dialog_close, #btn_dialog_close {
@@ -87,16 +107,11 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
 }
 .btn_dialog_close:hover, #btn_dialog_close:hover {background-image: asset_url("skin/1/close-hover.png")}
 
-.dialog.iframe {
-    width: 90%;
-    height: 60%;
-    // max-width: 1000px;
-    iframe {
-        width: 100%;
-        height: 100%;
-    }
+#dia_overwrite{
+    padding : 20px;
+    width : 20em;
+    button[type=cancel] { float: left; }
 }
-
 #dia_delete_ok {
     padding: 20px;
     width: 320px;
@@ -415,44 +430,68 @@ form.login {
 #dia_save {
     font-family: Gibson;
     font-size: 17px;
-    textarea { 
-        height : 2.5em;
+
+    .label._2column {
+        margin: 15px 0px;
+        &:first-child { margin-top: 0px; }
+        .right.fill {
+            padding-left: 10px;
+        }
+        .left { 
+            min-width: 63px; 
+            margin-top: 9px;
+        }
     }
-    textarea, input {
-        margin: 0px;
-        margin-top: 3px;
-    }
-    .upper.label {
-        margin-top: 14px;
-    }
+    .url_bar { margin-bottom: 3px; }
+    input { margin: auto; }
     .remix_label {
-        font-family: Arial;
-        input { margin-right: 10px; }
-        margin: 15px 0;
+        margin-top: 5px;
     }
     .note { color: $color_grey_medium }
+    .pointer:hover { color: $color_bright_red; }
+    form { // form scope to not change menu hovers
+        .active, .active .teal_btn { background-color: black; color: white; }
+        .active div.drop_arrow { 
+            background-image: asset_url('skin/nav/small_arrow_hover.png');
+        }
+    }
     div.drop_arrow { 
         background-image: asset_url('skin/nav/small_arrow.png');
-        width: 22px;
-        height: 42px;
-        margin-top: -10px;
+        width: 17px;
+        height: 16px;
     }
-    #save_submit {
-        float: right;
-        position: absolute;
-        right: 20px;
-        bottom: 20px;
+    .extra_buttons { 
+        margin: 14px 0px 14px 0px; 
+        div.drop_arrow { @include transform(rotate(-90deg)) }
     }
     span.teal_btn { cursor: default; }
+    #password_ui { float: right; margin-bottom: 10px; }
     #password { width:300px; }
 
     .button_options {
-        margin: 15px 0 30px;
-        img {
-            width: 30px;
-            vertical-align: middle
+        padding: 7px 7px 7px 0;
+        span { padding: 4px; }
+    }
+    #privacy {
+        padding-right: 7px;
+    }
+    #save_submit {
+        clear: both;
+        float: right;
+    }
+
+    .button_options_menu {
+        .menu_item {
+            padding: 5px;
+            display: inline-block;
         }
-        label { margin-right: 10px; }
+        img {
+            vertical-align: middle;
+            margin: -2px 0px 0px -2px;
+        }
+        label { 
+            margin-right: 2px; 
+        }
     }
 }
 #menu_privacy .selected { display : none; }

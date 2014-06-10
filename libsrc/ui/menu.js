@@ -213,11 +213,16 @@ var menu = function(handle, drawer, options) {
                 + handle.outerHeight();
             // hp.top + opts.offset_y;
         }
-        else if(opts.layout == 'bottom'){
-            var oy = handle.outerHeight() + opts.offset_y;
-            css_opts.top = (handle.offset().top + oy + d_size.height > ($(window).height() + window.scrollY))
-                && (handle.offset().top - oy - d_size.height - window.scrollY > 0) ?
-                hp.top - d_size.height - opts.offset_y : hp.top + oy;
+        else if(opts.layout == 'bottom' || opts.layout == 'top'){
+            var oy = handle.outerHeight() + opts.offset_y
+                , win_bottom = $(window).height() + window.scrollY
+                , layout = opts.layout
+            if (handle.offset().top + oy + d_size.height > win_bottom)
+                layout = 'top'
+            if (handle.offset().top - opts.offset_y - d_size.height < window.scrollY)
+                layout = 'bottom'
+            css_opts.top = (layout == 'top')
+                ? hp.top - d_size.height - opts.offset_y : hp.top + oy;
 
             var layout_x = opts.layout_x;
             if( layout_x == 'auto' ) {

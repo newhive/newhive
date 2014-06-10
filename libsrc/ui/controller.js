@@ -23,6 +23,9 @@ define([
 ){
     var o = { back: false }, route;
 
+    var ajax_pending = false
+    o.ajax_pending = function() { return ajax_pending }
+    
     o.init = function(route_args){
         window.c = context; // useful for debugging
         setup_google_analytics();
@@ -51,6 +54,16 @@ define([
         });
         o.dispatch(route_args.route_name, context.page_data);
         wrapLinks();
+
+        $(document).ajaxStart(function(){
+            ajax_pending = true
+        }).ajaxStop(function(){
+            ajax_pending = false
+        }).ajaxError(function(ev, jqXHR, ajaxOptions){
+            // TODO-polish-upload-error: show some warning, and somehow indicate
+            // which app(s) failed to save
+        });
+
     };
     o.dispatch = function(route_name, page_data){
         track_pageview(route_name);

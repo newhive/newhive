@@ -35,6 +35,9 @@ body, form, .form_text {
     &.active {
     	font-weight: bold;
     }
+    &.disabled {
+        color: grey;
+    }
     font-family: Gibson Semibold;
     font-size: 16px;
 }

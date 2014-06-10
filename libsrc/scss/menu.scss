@@ -102,7 +102,8 @@
         padding: 7px 15px;
         display: block;
         white-space: nowrap;
-        &.active { background-color: $color_selected; }
+        &.active:not(.disabled) { background-color: $color_selected; }
+        &.disabled { color: grey; }
     }
     $icon_width: 55px;
     $icon_padding: 5px;

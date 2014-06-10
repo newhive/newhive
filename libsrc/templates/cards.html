@@ -1,10 +1,10 @@
 {<for cards}
-  {<if card_type "user"}
+  {<if type "user"}
     <div class='user card' id='card_{id}' draggable='false'>
       {|templates/user_card.html}
     </div>
   {>}
-  {<if card_type "expr"}
+  {<if type "expr"}
     <div class='expr activity card hoverable
     {<if auth} unlisted{>}' id='card_{id}' draggable='false'>
       {<if layout "grid"}

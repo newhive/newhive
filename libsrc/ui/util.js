@@ -24,6 +24,14 @@ define([
             return asset_name;
         return false;
     }
+    o.urlize = function(url) {
+        if (url.match(/^http(s)?:\/\//))
+            return url
+        if (url.match(/^\/\//))
+            return window.location.protocol + url
+        throw "bad URL"
+        window.location.protocol + "//" + url
+    }
 
     o.val = function(x) {
         if (typeof(x) == "number")
@@ -97,6 +105,16 @@ define([
             };
         }(jQuery));
         (function($){
+            // TODO: make menus aware of being disabled
+            var wrapper_func = function( event_name, func ) {
+                if (["click"].indexOf(event_name) == -1)
+                    return func
+                return function() {
+                    if ($(this).hasClass("disabled")) 
+                        return
+                    return func.apply(this, arguments)
+                }
+            }
             $.fn.bind_once = function( event_name, func ) {
                 return $(this).off(event_name, func).on(event_name, func);
             };
