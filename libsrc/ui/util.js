@@ -104,6 +104,16 @@ define([
                     elem.hidehide();
             };
         }(jQuery));
+        // Send extra debug info to the server on every AJAX call
+        var debug_ajax = function($) {
+            var ajax = $.fn.ajax
+                ,call_stack = printStackTrace().join('\n\n')
+            $.fn.ajax = function() {
+                ajax.apply(this, arguments)
+            };
+        };
+        if (0) // to enable ajax debugging
+            debug_ajax(jquery);
         (function($){
             // TODO: make menus aware of being disabled
             var wrapper_func = function( event_name, func ) {

@@ -1,5 +1,5 @@
 # install ant
-cordova create hello com.example.hello "Hello World"
+sudo apt-get install ant
 
 # download, install, and symlink android SDK
 https://developer.android.com/sdk/installing/index.html
