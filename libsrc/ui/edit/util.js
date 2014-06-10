@@ -23,6 +23,7 @@ define([
 ){
 
 var o = {}
+    ,u = o
     ,bound = js.bound;
 env.u = o
 
@@ -426,7 +427,8 @@ o.retile = function(opts) {
     if (opts.natural) {
         opts.aspects = apps.map(function(a) { return a.aspect || a.get_aspect() })
     } else {
-        opts.aspects = apps.map(function(a) { return a.get_aspect() })
+        opts.aspects = apps.map(function(a) { 
+            return a.get_aspect() ? a.current_aspect() : a.get_aspect() })
     }
     var regions = o.tile_magic(apps.length, opts)
     for (var i = 0; i < apps.length; ++i) {
@@ -437,8 +439,9 @@ o.retile = function(opts) {
             app.fit_to({pos:regions[i][0], dims:regions[i][1]
                 , scaled:[app.aspect,1]})
         } else {
-            app.pos_relative_set(regions[i][0])
-            app.dims_relative_set(regions[i][1])
+            app.aabb_set([ regions[i][0], u._add(regions[i][0], regions[i][1]) ])
+            // app.pos_relative_set(regions[i][0])
+            // app.dims_relative_set(regions[i][1])
         }
         if (app.recenter) app.recenter()
     }

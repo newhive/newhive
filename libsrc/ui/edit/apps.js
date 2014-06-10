@@ -361,6 +361,10 @@ Hive.App = function(init_state, opts) {
     var _pos = [-999, -999], _dims = [-1, -1];
 
     o.get_aspect = function() { return false; };
+    o.current_aspect = function() { 
+        var aabb = o.aabb(), dims = u._sub(aabb[1], aabb[0])
+        return dims[0] / dims[1]
+    }
     o.has_full_bleed = function() { return false; };
     o.angle = function(){ return 0; };
     o.pos = function(){ return u._mul(_pos, env.scale()) }
@@ -442,6 +446,16 @@ Hive.App = function(init_state, opts) {
         _pos = pos.slice();
         _dims = dims.slice();
         o.layout();
+    }
+    o.aabb = function() {
+        return [o.min_pos(), o.max_pos()]
+    }
+    o.aabb_set = function(aabb) {
+        var my_aabb = o.aabb()
+        my_aabb[1] = u._sub(my_aabb[1], my_aabb[0])
+        aabb[1] = u._sub(aabb[1], aabb[0])
+        o.bounds_relative_set(u._add(o.pos_relative(), u._sub(aabb[0], my_aabb[0]))
+            , u._add(o.dims_relative(), u._sub(aabb[1], my_aabb[1])))
     }
     o.pos_center_relative = function(){
         var dims = o.dims_relative();
