@@ -63,7 +63,7 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
         margin-bottom: 20px;
     }
     .subheading {
-        margin-bottom: -5px;
+        margin-bottom: 5px;
         margin-top: 10px;
     }
     .btns {
@@ -114,7 +114,7 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
     hr { margin-bottom: 20px; }
     textarea, input[type=text] {
         width: 100%;
-        margin: 10px 0px;
+        margin: 0px 0px;
     }
     textarea {
         resize: none;
@@ -136,13 +136,13 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
     textarea {
         width: 100%;
         resize: none;
-        margin: 10px 0px;
+        margin: 0px 0px;
         white-space: pre-wrap;
         &.copy {
             height: 100px;
         }
         &.image_link {
-            height: 60px;
+            height: 40px;
         }
     }
 }

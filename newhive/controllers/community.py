@@ -398,7 +398,7 @@ class Community(Controller):
     # TODO-cleanup: currently used for redirects. Remove this, make propper
     # redirect controller
     #redirect-cleanup
-    def empty(self, tdata, request, **args):
+    def empty(self, tdata, request, **kwargs):
         return {}
 
     @classmethod

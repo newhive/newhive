@@ -135,6 +135,7 @@ define([
         $('#dia_embed .copy.embed_code').val("<iframe src='" + embed_url + 
             "' style='width: 100%; height: 100%' marginwidth='0' marginheight='0'" +
             " frameborder='0' vspace='0' hspace='0'></iframe>");
+        
 
         // Set toggle state for love, broadcast, comment
         o.action_set_state($(".love_btn"), o.action_get_state("love"));
@@ -560,6 +561,35 @@ define([
                 $("body").scrollTop(o.controller.scroll_top);
                 o.controller.scroll_top = 0;
             });
+        $(".fullscreen input").change(function(ev) {
+            var expr = context.page_data.expr
+                , host = ''
+                , url = ''
+            var x = 2  
+            if ($(ev.target).prop("checked"))
+                host = util.urlize(context.config.content_url)
+            else
+                host = util.urlize(context.config.server_url)
+            
+            url = host + expr.owner.name + '/' + expr.name
+            $("#dia_share textarea.dark").val()
+        });
+        $("#dia_embed input[type=radio]").change(function(ev) {
+            var host = context.config.server_url
+            host = util.urlize(host)
+            var params =''
+            if ($(this).val() === "exclude_nav")
+                host = util.urlize(context.config.content_url)
+            else if ($(this).val() === "include_collection")
+                 if (context.query.q)
+                    params = "q=" + window.encodeURIComponent(context.query.q)
+            var embed_url = host.replace(/\/$/,"") + window.location.pathname + '?template=embed';      
+            embed_url ="<iframe src='" + embed_url + params + 
+                "' style='width: 100%; height: 100%' marginwidth='0' marginheight='0'" +
+                " frameborder='0' vspace='0' hspace='0'></iframe>" 
+            console.log(embed_url)
+            $('#dia_embed .copy.embed_code').val(embed_url); 
+        });
 
         // $('#comment_form').unbind('success').on('success', o.comment_response);
         var dia_comments = $("#dia_comments").data("dialog");
