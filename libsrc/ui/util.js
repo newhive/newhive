@@ -24,6 +24,14 @@ define([
             return asset_name;
         return false;
     }
+    o.urlize = function(url) {
+        if (url.match(/^http(s)?:\/\//))
+            return url
+        if (url.match(/^\/\//))
+            return window.location.protocol + url
+        throw "bad URL"
+        window.location.protocol + "//" + url
+    }
 
     o.val = function(x) {
         if (typeof(x) == "number")
