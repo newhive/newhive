@@ -284,6 +284,27 @@ define([
         o.attach_handlers();
     };
 
+    // BEGIN-layout-methods
+    o.profile = function(page_data){
+        render_site(page_data)
+        expr_column()
+    }
+
+    o.grid = function(page_data){
+        grid_width = 410;
+        render_site(page_data);
+        // TODO: BUGBUG: should be data driven
+        o.column_layout = (context.route_name == "network");
+    }
+
+    // TODO: User cards should use same card size as expression only in search
+    o.mini = function(page_data){
+        page_data.layout = 'grid';
+        grid_width = 222 + 2*10; // padding = 10 + 10
+        render_site(page_data);
+    };
+    // END-layout-methods
+    
     // global keypress handler
     var keydown = function(e) {
         if (window.event)
@@ -425,13 +446,6 @@ define([
         local_attach_handlers();
     }
 
-    o.grid = function(page_data){
-        grid_width = 410;
-        render_site(page_data);
-        // TODO: BUGBUG: should be data driven
-        o.column_layout = (context.route_name == "network");
-    }
-
     o.render_main_tags = function(){
         $("#site>.tag_list_container").replaceWith(
             tags_main_template(context.page_data));
@@ -489,11 +503,6 @@ define([
     o.home = function(page_data){
         page_data.layout = 'profile';
         $('#site').empty().append(home_template(page_data));
-    };
-
-    o.profile = function(page_data){
-        render_site(page_data);
-        expr_column();
     };
 
     // js for settings. TODO: add to separate module
@@ -574,13 +583,6 @@ define([
     //     render_site(page_data);
     // };
 
-    // TODO: User cards should use same card size as expression only in search
-    o.mini = function(page_data){
-        page_data.layout = 'grid';
-        grid_width = 222 + 2*10; // padding = 10 + 10
-        render_site(page_data);
-    };
-    
     function render_site(page_data){
         if (page_data.page) {
             // TODO-polish: These functions belong in another module.

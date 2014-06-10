@@ -5,7 +5,7 @@
   position:fixed;
   width:100%;
   height:100%;
-  z-index: 200;
+  z-index: 201;
   top: 0;
 }
 .dialog_shield.fade { background-color:black; opacity:0.33; }
@@ -16,6 +16,7 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
 .dialog {
     display: none; 
     position: fixed;
+    
     padding: 10px;
     z-index: 201;
     width: 500px;
@@ -78,7 +79,26 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
         font-size: 17px;
         input { margin-right: 5px; }
     }
+
     .submit { float: right; }
+
+    // For dialogs which contain just an iframe
+    &.iframe {
+        width: 90%;
+        height: 60%;
+        // max-width: 1000px;
+        iframe {
+            width: 100%;
+            height: 100%;
+        }
+    }
+
+    // for confirmation dialogs like overwrite and delete
+    &.confirm {
+        width: 320px;
+        text-align: center;
+        button[type=cancel] { float: left; }
+    }   
 }
 
 .btn_dialog_close, #btn_dialog_close {
@@ -87,16 +107,11 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
 }
 .btn_dialog_close:hover, #btn_dialog_close:hover {background-image: asset_url("skin/1/close-hover.png")}
 
-.dialog.iframe {
-    width: 90%;
-    height: 60%;
-    // max-width: 1000px;
-    iframe {
-        width: 100%;
-        height: 100%;
-    }
+#dia_overwrite{
+    padding : 20px;
+    width : 20em;
+    button[type=cancel] { float: left; }
 }
-
 #dia_delete_ok {
     padding: 20px;
     width: 320px;
@@ -430,7 +445,6 @@ form.login {
     .url_bar { margin-bottom: 3px; }
     input { margin: auto; }
     .remix_label {
-        // font-family: Arial;
         margin-top: 5px;
     }
     .note { color: $color_grey_medium }
@@ -447,31 +461,24 @@ form.login {
         height: 16px;
     }
     .extra_buttons { 
-        margin: 14px 0px 6px 0px; 
+        margin: 14px 0px 14px 0px; 
         div.drop_arrow { @include transform(rotate(-90deg)) }
     }
     span.teal_btn { cursor: default; }
-    #password_ui { float: right; }
+    #password_ui { float: right; margin-bottom: 10px; }
     #password { width:300px; }
 
-    // .button_options.active span {
-    //     color: white;
-    //     background-color: black;
-    // }
     .button_options {
         padding: 7px 7px 7px 0;
         span { padding: 4px; }
     }
     #privacy {
         padding-right: 7px;
-        margin-top: 15px;
     }
     #save_submit {
         clear: both;
-        margin-top: 15px;
         float: right;
     }
-
 
     .button_options_menu {
         .menu_item {

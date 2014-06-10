@@ -23,6 +23,7 @@ define([
 ){
 
 var o = {}
+    ,u = o
     ,bound = js.bound;
 env.u = o
 
@@ -393,8 +394,11 @@ o.except = function (/* minimum 2 arrays */) {
     return result;
 }
 
+// TODO: create consecutive, type-named id's (text_1 text_2 image_0...)
 // used for app id
-o.random_str = function(){ return Math.random().toString(16).slice(2); };
+o.random_str = function(){ 
+    return ('a' + Math.random().toString(16).slice(2) + '0000000').slice(0, 8);
+};
 
 o.polygon = function(sides){
     js.range(sides - 1).map(function(i){
@@ -423,7 +427,8 @@ o.retile = function(opts) {
     if (opts.natural) {
         opts.aspects = apps.map(function(a) { return a.aspect || a.get_aspect() })
     } else {
-        opts.aspects = apps.map(function(a) { return a.get_aspect() })
+        opts.aspects = apps.map(function(a) { 
+            return a.get_aspect() ? a.current_aspect() : a.get_aspect() })
     }
     var regions = o.tile_magic(apps.length, opts)
     for (var i = 0; i < apps.length; ++i) {
@@ -434,8 +439,9 @@ o.retile = function(opts) {
             app.fit_to({pos:regions[i][0], dims:regions[i][1]
                 , scaled:[app.aspect,1]})
         } else {
-            app.pos_relative_set(regions[i][0])
-            app.dims_relative_set(regions[i][1])
+            app.aabb_set([ regions[i][0], u._add(regions[i][0], regions[i][1]) ])
+            // app.pos_relative_set(regions[i][0])
+            // app.dims_relative_set(regions[i][1])
         }
         if (app.recenter) app.recenter()
     }
@@ -948,6 +954,8 @@ o.snap_helper = function(my_tuple, opts) {
     return new_pos;
 }
 
+// TODO-color-picker: move into controls, add parameters for getter 
+// and menu open (show) callback
 o.append_color_picker = function(container, callback, init_color, opts){
     // opts = $.extend({iframe: false}, opts);
     var o = {}, init_color = init_color || '#000000',
@@ -1087,8 +1095,9 @@ o.append_color_picker = function(container, callback, init_color, opts){
     o.set_color(init_color);
 
     manual_input.on('keyup input paste', function(e){
-        // if (e.keyCode == 27 ||                      // esc
-        if (e.keyCode == 13)                        // enter
+        // TODO-color-picker: make esc reset to color when last shown
+        if (//e.keyCode == 27 ||                      // esc
+            e.keyCode == 13)                        // enter
         {
             // Cancel edit, returning to initial color
             // Sadly, we don't actually have the initial color,

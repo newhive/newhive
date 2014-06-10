@@ -1,3 +1,4 @@
+from numbers import Number
 from bs4 import BeautifulSoup
 import os, json, cgi, base64, re, time
 from pymongo.errors import DuplicateKeyError
@@ -53,7 +54,7 @@ class Expr(ModelController):
         owner_id = request.form.get("owner_id") or request.args.get("owner_id", "")
         owner = self.db.User.fetch(owner_id)
 
-        resp['name'] = _unused_name(name, owner)
+        resp['name'] = self._unused_name(name, owner)
         self.serve_json(response, resp)
     
     def save(self, tdata, request, response, **args):
@@ -167,11 +168,11 @@ class Expr(ModelController):
             # disallow removal of reserved tags
             if not self.flags.get('modify_special_tags'):
                 for tag in reserved_tags:
-                    if res.get('tags_index', []):
+                    if tag in res.get('tags_index', []):
                         upd['tags'] += " #" + tag
             if autosave:
-                if res.get('draft'):
-                    upd['auth'] = 'private'
+                if draft:
+                    upd['auth'] = 'password'
                     res.update(**upd)
                 else:
                     upd['updated'] = now()
@@ -246,7 +247,9 @@ class Expr(ModelController):
             and not expr_obj.cmp_password(request.form.get('password'))
             and not expr_obj.cmp_password(request.args.get('pw'))):
             expr_obj = { 'auth': 'password' }
-
+            expr_client = expr_obj
+        else:
+            expr_client = expr_obj.client_view(mode='page')
         # TODO: consider allowing analytics for content frame.
         viewport = [int(x) for x in
             request.args.get('viewport', '1000x750').split('x')]
@@ -266,7 +269,13 @@ class Expr(ModelController):
         if body_style:
             tdata.context['css'] = 'body {' + body_style + '}'
 
-        tdata.context.update(expr=expr_obj)
+        # TODO: figure out 
+        # if hasattr(expr_obj,'client_view') :
+        #     tdata.context.update(expr=expr_obj.client_view(mode='page'))
+        # else:
+        #     tdata.context.update(expr_obj)
+        
+        tdata.context.update(expr=expr_obj, expr_client=expr_client)
         return self.serve_page(tdata, response, 'pages/expr.html')
         
     def expr_to_html(self, exp, snapshot_mode=False, viewport=(1000, 750)):
@@ -286,6 +295,10 @@ class Expr(ModelController):
         content = app.get('content', '')
         more_css = ''
         dimensions = app.get('dimensions', [100,100])
+        if not all([ isinstance(v, Number) for v in
+            dimensions + app.get('position', [])
+        ]): return ''
+
         type = app.get('type')
         klass = type.replace('.', '_')
         app_id = app.get('id', 'app_' + str(app['z']))
@@ -308,7 +321,7 @@ class Expr(ModelController):
                 klass += " crop_box"
                 scale_x *= dimensions[0]
                 css = 'width:%fpx' % (scale_x)
-                if app.get('offset'):
+                if isinstance(app.get('offset'), Number):
                     offset = [x * scale_x for x in app.get('offset')]
                     css = '%s;margin-left:%spx;margin-top:%spx' % (
                         css, offset[0], offset[1] )
@@ -355,6 +368,9 @@ class Expr(ModelController):
             link_text = ('','')
             if link: link_text = ("<a xlink:href='%s'>" % link,"</a>")
 
+            points = filter(lambda p:
+                 all([isinstance(v, Number) for v in p])
+                ,app.get('points', []))
             html = (
                   "<svg class='content' xmlns='http://www.w3.org/2000/svg'"
                 + " xmlns:xlink='http://www.w3.org/1999/xlink'"
@@ -364,8 +380,7 @@ class Expr(ModelController):
                 + " filterUnits='userSpaceOnUse'><feGaussianBlur stdDeviation='"
                 + "%f'></filter>" % app.get('blur', 0)
                 + "%s<polygon points='" % link_text[0]
-                + ' '.join( map( lambda p: "%f %f" % (p[0], p[1]),
-                    app.get('points', []) ) )
+                + ' '.join(map(lambda p: "%f %f" % (p[0], p[1]), points))
                 + "' style='filter:url(#%s_blur)'/>%s</svg>" % (
                     app_id, link_text[1])
             )

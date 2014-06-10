@@ -361,6 +361,10 @@ Hive.App = function(init_state, opts) {
     var _pos = [-999, -999], _dims = [-1, -1];
 
     o.get_aspect = function() { return false; };
+    o.current_aspect = function() { 
+        var aabb = o.aabb(), dims = u._sub(aabb[1], aabb[0])
+        return dims[0] / dims[1]
+    }
     o.has_full_bleed = function() { return false; };
     o.angle = function(){ return 0; };
     o.pos = function(){ return u._mul(_pos, env.scale()) }
@@ -442,6 +446,16 @@ Hive.App = function(init_state, opts) {
         _pos = pos.slice();
         _dims = dims.slice();
         o.layout();
+    }
+    o.aabb = function() {
+        return [o.min_pos(), o.max_pos()]
+    }
+    o.aabb_set = function(aabb) {
+        var my_aabb = o.aabb()
+        my_aabb[1] = u._sub(my_aabb[1], my_aabb[0])
+        aabb[1] = u._sub(aabb[1], aabb[0])
+        o.bounds_relative_set(u._add(o.pos_relative(), u._sub(aabb[0], my_aabb[0]))
+            , u._add(o.dims_relative(), u._sub(aabb[1], my_aabb[1])))
     }
     o.pos_center_relative = function(){
         var dims = o.dims_relative();
@@ -869,6 +883,9 @@ Hive.App.Code = function(o){
         }
         curl_func()
     }
+
+    // TODO: fix auto-loading by running first within try-catch, and if it 
+    // has errors, defer it to run after editor load (setTimeout sufficient?)
 
     // With commented load, if script has a syntax error, all editor code aborts
     // TODO: if we definitely want custom code to execute when editor loads,
@@ -1642,10 +1659,6 @@ Hive.App.Polygon = function(o){
         o.reframe(true)
     }
 
-    Hive.App.has_border_width(o) //, {slider_opts:{max:100}})
-    Hive.App.has_color(o, "stroke");
-    Hive.App.has_blur(o)
-    Hive.App.has_rotate(o)
     o.rotate_start = function(){
         o.transform_start(0)
     }
@@ -1670,18 +1683,32 @@ Hive.App.Polygon = function(o){
         o.transform_start(0)
         o.reframe()
     }
-    Hive.App.has_color(o)
-    Hive.App.has_color(o, 'stroke')
     var history_point
     o.border_width = o.css_getter('stroke-width')
     o.border_width_set = function(v) {
+        v = Math.max(v, o.init_state.is_line ? .5 : 0)
         o.css_setter('stroke-width')(v)
         o.transform_start(0)
         o.repoint()
         if (env.Selection.controls)
             o.fixup_border_controls(env.Selection.controls);
     }
+    Hive.App.has_rotate(o)
+    Hive.App.has_color(o);
+    Hive.App.has_border_width(o) //, {slider_opts:{max:100}})
+    Hive.App.has_color(o, "stroke");
+    o.make_controls.slice(-1)[0].no_line = true
+    Hive.App.has_blur(o)
     Hive.App.has_opacity(o)
+    o.line_set = function() {
+        o.init_state.is_line = true
+        // remove stroke color and make color actually change stroke color
+        o.color = o.stroke
+        o.color_set = o.stroke_set
+        o.make_controls = o.make_controls.filter(function(c) {
+            return !c.no_line
+        })
+    }
     if (context.flags.shape_link)
         Hive.App.has_link_picker(o);
 
@@ -1709,6 +1736,8 @@ Hive.App.Polygon = function(o){
     o.blur_set(o.blur())
     o.transform_start(0)
     o.reframe()
+    if (o.init_state.is_line)
+        o.line_set()
 
     o.load()
 
@@ -1863,8 +1892,10 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         creating.dims_set(new_dims)
     }
     handle_template.dragend = function(ev, dd){
-        if (creating.points_len && creating.points_len() == 2)
+        if (creating.points_len && creating.points_len() == 2) {
             creating.reframe()
+            creating.line_set()
+        }
         creating = false
         o.finish(ev)
         ev.stopPropagation()

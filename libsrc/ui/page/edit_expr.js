@@ -140,7 +140,8 @@ define([
             || $.extend({}, default_expr) )
         // Handle remix
         var remixed = false
-        if (expr.owner_name != context.user.name || context.query.remix !== undefined) {
+        if ((expr.owner_name && expr.owner_name != context.user.name)
+            || context.query.remix !== undefined) {
             expr.owner_name = context.user.name;
             expr.owner = context.user.id;
             if (expr.id) expr.remix_parent_id = expr.id;
@@ -227,7 +228,7 @@ define([
 
     o.edit_expr = function(){
         // pass context from server to editor
-        var edit_context = js.dfilter(context, ['user', 'flags', 'query'])
+        var edit_context = js.dfilter(context, ['user', 'flags', 'query', 'config'])
             , revert = {}
         // Autosave: restore draft if more recent than save
         if (expr.draft && expr.updated && expr.draft.updated 
@@ -254,7 +255,7 @@ define([
 
     var autosave_timer
     o.init_save_dialog = function(){
-        $("#expr_info").find("input, textarea").bind_once_anon("change", 
+        $("#dia_save").find("input, textarea").bind_once_anon("change", 
             function(ev) {
                 if (autosave_timer) 
                     clearTimeout(autosave_timer)
@@ -298,8 +299,9 @@ define([
                 if ((expr.draft || !(expr.home || expr.created))
                     && ! $('#save_url').hasClass('modified') ) 
                 {
-                    var new_val = $('#save_title').val().replace(/[^0-9a-zA-Z]/g, "-")
-                        .replace(/--+/g, "-").replace(/-$/, "").toLowerCase()   
+                    var new_val = $('#save_title').val().toLowerCase()
+                        .replace(/[^0-9a-zA-Z]/g, "-")
+                        .replace(/--+/g, "-").replace(/-$/, "") || expr.name
                     $('#save_url').val(new_val).trigger("input")
                 }
             }).keydown()
@@ -311,9 +313,16 @@ define([
             .focus(function(){
                 $(this).addClass('modified');
             })
+            .blur(function() {
+                if (! $(this).val() && expr.name !== '')
+                    $(this).removeClass('modified');
+            })
             .change(o.check_url)
             .on("input change", function(ev) {
-                $('#dia_save .url_bar label span').text($(this).val() || expr.name)
+                var new_url = $(this).val()
+                if (expr.draft && !new_url)
+                    new_url = expr.name
+                $('#dia_save .url_bar label span').text(new_url)
             })
 
         $('#dia_save #save_show_url').on("change", function(ev) {

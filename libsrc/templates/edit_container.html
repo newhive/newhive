@@ -59,7 +59,7 @@
       <label for="save_remixable" class="upper">Remixable</label>
     </div>
 
-    <div class='left fill{<unless flags.button_options} hide{>}'
+    <div class='left fill'
       ><span class="hoverable button_options"
         ><span class='inline_middle upper arrow buttons_toggle'>
           Include buttons for: </span>
@@ -73,20 +73,17 @@
   </div>
 
   <div id='password_ui' style='display: none'>
-    <b>Optional password</b><br>
-    <input type='password' id='password' value=''>
+    <input type='password' id='password' placeholder='Optional password' value=''>
   </div>
 
   <button id='save_submit' class='save black_btn upper' type='submit'>
     <span class='label'>Save</span>
-    {#<img
-      src='{asset "skin/edit/loading.gif"}' class='hide loading'>
-    #}
   </button>
 
   </form>
 
   {# sharing options menu drawer #}
+  {# lives outside the form so it can have different css styling #}
   <div class="menu drawer button_options_menu hide" data-handle=".button_options"
     data-menu-opts='"offset_y":15,"layout_x":"submenu"'>
     <label class="menu_item">
@@ -118,11 +115,12 @@
   <div val='public' class='menu_item'>Public</div>
 </div>
 
-<div id='dia_overwrite' class='dialog border selected center' style='width : 25em; padding : 20px'>
-  <h2>Overwrite</h2>
+{# TODO-ilia: remove inline styling, fix styling in scss #}
+<div id='dia_overwrite' class='dialog confirm border selected'>
+  <div class="title">Overwrite</div>
   You already have an expression at "/<span id='expr_name'></span>". Are you sure you want to replace it?<br><br>
-  <input id='save_overwrite' type='button' class='black_btn upper' value='Yes'>&nbsp; &nbsp; &nbsp; 
-  <input id='cancel_overwrite' type='button' class='black_btn upper' value='No'>
+  <input id='cancel_overwrite' type='button' class='teal_btn upper' style="float: left" value='No'>
+  <input id='save_overwrite' type='button' class='grey_btn upper' value='Yes' style="float: right">&nbsp; &nbsp; &nbsp; 
 </div>
 
 <form {form_attrs "expr_save"} id='expr_save' method='POST'>

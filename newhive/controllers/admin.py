@@ -18,7 +18,8 @@ class Admin(Controller):
         """
 
         resp = {}
-        if len(request.form.keys()):
+        if len(request.form.keys()): 
+            
             print "Site_flags changed."
             print request.form
 
@@ -43,3 +44,9 @@ class Admin(Controller):
 
         self.db.User.root_user.add_to_collection(expr_id, "_featured", add_to_back=True)
         return self.serve_json(response, resp)
+
+# TODO: for when we implement permissions on testing
+    # def test_dialogs(self, tdata, request, response, **args):
+    #     resp = {}
+    #     return resp
+

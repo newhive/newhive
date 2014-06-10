@@ -48,15 +48,22 @@ define([
         var template = arguments[i]
         all_divs.append(template())
     }
-    // TODO: only grab dialogs
-    $("body").empty().append(all_divs.find(".dialog").css({
-        margin: '15px'
-        , display: 'inline-block'
-        , position: 'static'
-        , float: 'left'
-    }).showshow())
-    .add("html").css("background-color", "rgb(84, 113, 175)")
+    
+    o.render = function(){
+        $("body").empty().append(all_divs.find(".dialog").css({
+            margin: '15px'
+            , display: 'inline-block'
+            , position: 'static'
+            // HOLY CODE SMELL!  YUI compressor barfs on keyword "float"
+            , "float": 'left'
+        }).showshow())
+        .add("html").css("background-color", "rgb(84, 113, 175)")
 
-    return o
+        $('.dialog .defer').each(function(i, el){
+            $(el).parent().data('dialog').undefer()
+        })
+    };
 
-})
+    return o;
+});
+

@@ -2,8 +2,6 @@
 # Usage: add the following line to your ~/.bashrc
 # source ~/src/newhive/newduke/bin/git_grep_nd.sh
 
-source $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/git_grep.sh
-
 filter_broken="${filter_broken}|history/history|/jquery-1|/old|/broken|/curl|google_closure.js|/d3/|codemirror.js|jquery-ui|/jquery/|/codemirror/"
 
 alias a="git_grep"
@@ -25,8 +23,6 @@ alias o3='o 3'
 alias o4='o 4'
 alias o5='o 5'
 
-alias nnn=matched_file_and_line
-alias nn=matched_file
 # rerun last list 
 alias on=rerun_results
 # rerun last list, but only accept matches in last file part

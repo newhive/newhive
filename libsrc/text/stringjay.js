@@ -496,6 +496,9 @@ define(['browser/js', 'module'],
 	context_base.json = function(context, data){
 		return JSON.stringify(data);
 	};
+	context_base.strip_slash = function(context, str){
+		return str.replace(/^\/\//, '')
+	};
 	// TODO: write as accumulate
 	// {set "k" (concat "you " "are " "awesome")}
 	context_base.concat = function(context){

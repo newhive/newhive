@@ -24,7 +24,7 @@
       </form>
     {>}
     <div id="dia_mail" class="dialog" data-handle=".icon.mail_btn">
-      <div class="ellipsis username">Email @{name}:</div>
+      <div class="title ellipsis">Email @{name}:</div>
       <div class="error_msg"></div>
       <form {form_attrs "send_mail"} method="POST" id="form_send_mail">
         <textarea name="message" autofocus placeholder="Type your message to @{name} here."></textarea>
