@@ -161,7 +161,7 @@ define([
             return;
         o.set_exit_warning(false)
 
-        context.query;
+        // context.query;
 
         // remember scroll position.
         if (page_state.route_name != "view_expr") {
@@ -179,6 +179,7 @@ define([
                 dataType: 'json',
                 success: callback
             };
+            // console.log(api_call)
             $.ajax(api_call);
         } else 
             callback({});
