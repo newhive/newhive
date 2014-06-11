@@ -46,7 +46,7 @@
   </form>
 {>}
 <div class='feed {layout}{<unless route.private} public{>}
-  {<if (or (eq route_name "following") (eq route_name "following"))} user{>}'>
+  {<if (or (eq route_name "following") (eq route_name "followers"))} user{>}'>
   {# Insert 3-column layout here.  
     When unused, it's 0 height.
     When unused, the columns have 0 width #}
