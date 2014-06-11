@@ -1,5 +1,5 @@
 # install ant
-cordova create hello com.example.hello "Hello World"
+sudo apt-get install ant
 
 # download, install, and symlink android SDK
 https://developer.android.com/sdk/installing/index.html
@@ -19,3 +19,18 @@ cordova emulate android
 
 # To run on a device:
 cordova run android
+
+# if your android device does not work with adb, first ensure USB debugging is
+# enabled on the device. Then run `adb devices`. if no device is listed,
+# repeatedly plug in your device, then run bin/adb_poke.sh until it appears.
+# Also try `adb kill-server; adb start-server`.
+#
+# In linux, if the device appears like this
+# 016B756E0400E006  ????????????
+# Then you need to add permissions for it like this:
+# run `lsusb` and you should see a line like
+# Bus 002 Device 069: ID 04e8:6860 Samsung Electronics Co., Ltd GT-I9100 Phone [Galaxy S II]
+# get the vendor id from ^^^^ there (first hex word after "ID")
+# create a file /etc/udev/rules.d/80-android.rules containing this line,
+# replacing 04e8 with your devices vendor id:
+# SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", MODE="0666", GROUP="plugdev"

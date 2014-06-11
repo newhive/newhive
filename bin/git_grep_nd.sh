@@ -34,5 +34,7 @@ alias oe=filepart_results
 # rerun last list, filtered through grep
 alias og=grep_results
 
-alias routes='n newhive/routes.json'
+# git root dir
+alias groot="git rev-parse --show-toplevel"
+alias routes='e `groot`/newhive/routes.json'
 alias config='e `ff /config.py$`'

@@ -25,6 +25,13 @@ define([
 
     var ajax_pending = false
     o.ajax_pending = function() { return ajax_pending }
+
+    o.init_mobile = function(){
+        context.native_mobile = true;
+        // TODO: redirect code goes here
+        o.init({route_name: 'home', client_method: 'home'})
+        
+    }
     
     o.init = function(route_args){
         window.c = context; // useful for debugging
@@ -154,7 +161,7 @@ define([
             return;
         o.set_exit_warning(false)
 
-        context.query;
+        // context.query;
 
         // remember scroll position.
         if (page_state.route_name != "view_expr") {
@@ -172,6 +179,7 @@ define([
                 dataType: 'json',
                 success: callback
             };
+            // console.log(api_call)
             $.ajax(api_call);
         } else 
             callback({});

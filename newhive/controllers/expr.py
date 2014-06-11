@@ -116,6 +116,7 @@ class Expr(ModelController):
                 # print res
                 return self.serve_json(response, { "autosave": 1, "expr": res })
 
+            # TODO-cleanup: move try/catch around only user.expr_create
             try:
               new_expression = True
               # Handle remixed expressions

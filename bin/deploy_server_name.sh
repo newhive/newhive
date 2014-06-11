@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 PREFIX=$1
 HOSTNAME="$PREFIX.newhive.com"
