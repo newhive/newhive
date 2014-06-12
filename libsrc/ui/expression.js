@@ -72,18 +72,27 @@ define([
         }
         $(window).on("scroll", layout.on_scroll)
             .click(function(){ o.send_top('focus'); });
-        if (0 && util.mobile()) {
-            $.event.special.swipe.horizontalDistanceThreshold = 200;
-            $(document).on("swipe", function(ev) {
-                if (ev.swipestart.coords[0] > ev.swipestop.coords[0])
-                    o.page_next()
-                else
-                    o.page_prev()
-            })
+        //if (0 && util.mobile()) {
+        //    $.event.special.swipe.horizontalDistanceThreshold = 200;
+        //    $(document).on("swipe", function(ev) {
+        //        if (ev.swipestart.coords[0] > ev.swipestop.coords[0])
+        //            o.page_next()
+        //        else
+        //            o.page_prev()
+        //    })
+        //}
+
+        if(util.mobile()) o.init_mobile()
+    }
+
+    o.init_mobile = function(){
+        window.ondeviceorientation = function(){
+            o.layout()
         }
 
+        // TODO-cleanup: make into fake swipe event
+        // TODO-polish: ignore events with multiple touches (conflicts with zoom)
         // Swipe to prev and next for mobile web
-
         var touch_start = false, swiping = false, swipe_x = 0, swipe_max = 75
             , swipe_container_el, swipe_el, swipe_dir
         var swipe_start = function(x){
@@ -107,9 +116,9 @@ define([
 
             if(Math.abs(swipe_x) < swipe_max) return
             if(swipe_x < 0)
-                o.page_prev()
-            else
                 o.page_next()
+            else
+                o.page_prev()
         }
         $(document).on('touchstart', function(ev){
             var touches = ev.originalEvent.touches
