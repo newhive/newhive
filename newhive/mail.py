@@ -462,11 +462,11 @@ class Welcome(Mailer):
         user_home_url = re.sub(r'/[^/]*$', '', user_profile_url)
         context = {
             'recipient': user
-            , 'profile_link': abs_url(secure=True) + "/home/edit"
+            , 'profile_link': abs_url(secure=True) + "/home/my-profile"
             , 'profile_icon': self.asset('skin/site/welcome_email_images/profile_button.png') 
             , 'create_link': abs_url(secure=True) + "/home/edit"
             , 'create_icon': self.asset('skin/site/welcome_email_images/create_button.png') 
-            , 'follow_link': abs_url(secure=True) + "/home/edit"
+            , 'follow_link': abs_url(secure=True) + "/home/placeholder" #//!!
             , 'follow_icon': self.asset('skin/site/welcome_email_images/hive_button.png')
             , 'featured_exprs': self.db.Expr.featured(6)
             }

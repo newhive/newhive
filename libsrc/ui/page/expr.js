@@ -131,11 +131,6 @@ define([
         // Reset scroll to top
         $("body").scrollTop(0);
         
-        // var embed_url = 'https://' + window.location.host + window.location.pathname + '?template=embed';
-        // $('#dia_embed .copy.embed_code').val("<iframe src='" + embed_url + 
-        //     "' style='width: 100%; height: 100%' marginwidth='0' marginheight='0'" +
-        //     " frameborder='0' vspace='0' hspace='0'></iframe>");
-       
         // Set toggle state for love, broadcast, comment
         o.action_set_state($(".love_btn"), o.action_get_state("love"));
         o.action_set_state($(".republish_btn"), o.action_get_state("republish"));
@@ -563,39 +558,39 @@ define([
                 o.controller.scroll_top = 0;
             });
 
-        //updates link based on fullscreen toggle
+        // updates link based on fullscreen toggle
         $(".fullscreen input").on( "change", function(ev) {
             var expr = context.page_data.expr
                 , host = ''
                 , url = ''
-            var x = 2  
             if ($(ev.target).prop("checked"))
-                host = util.urlize(context.config.content_url)
+                host = context.config.content_url
             else
-                host = util.urlize(context.config.server_url)
+                host = context.config.server_url
             
-            url = host + expr.owner.name + '/' + expr.name
+            url = util.urlize(host) + expr.owner.name + '/' + expr.name
             $("#dia_share textarea.dark").val(url)
         }).trigger("change");
 
-        //updates embed links based on selection
+        // updates embed links based on selection
         $("#dia_embed input[type=radio]").on( "change", function(ev) {
             var host = '' 
                 , params = ''
-                , link= ''
+                , link = ''
                 , embed_url = ''
 
-            host = util.urlize(context.config.server_url)
+            host = context.config.server_url
             if ($(this).val() === "exclude_nav")
-                host = util.urlize(context.config.content_url)
+                host = context.config.content_url
             else if ($(this).val() === "include_collection")
                  if (context.query.q)
-                    params = "q=" + window.encodeURIComponent(context.query.q)
+                    params = "&q=" + window.encodeURIComponent(context.query.q)
             
-            link = host.replace(/\/$/,"") + window.location.pathname + '?template=embed';      
-            embed_url ="<iframe src='" + link + params + 
-                "' style='width: 100%; height: 100%' marginwidth='0' marginheight='0'" +
-                " frameborder='0' vspace='0' hspace='0'></iframe>" 
+            link = util.urlize(host).replace(/\/$/,"") + 
+                window.location.pathname + '?template=embed';      
+            embed_url ="<iframe src='" + link + params + "' " +
+                "style='width: 100%; height: 100%' marginwidth='0' " +
+                "marginheight='0' frameborder='0' vspace='0' hspace='0'></iframe>"
             
             $('#dia_embed .copy.embed_code').val(embed_url); 
             $('#dia_embed textarea.image_link').val(link); 
