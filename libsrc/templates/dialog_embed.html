@@ -2,9 +2,25 @@
 <div id="dia_embed" class="dialog" data-handle='#embed_form_btn'>
   <div class=" title expr">Embed</div>
   <div class="subheading">Interactive Expression:</div>
-  <textarea autofocus class='copy embed_code' id='expression_embed_code'
-    onclick='this.select()' readonly>
-  </textarea>
+  <div class= "_2column">
+    <div class="right fixed inline url_choice">
+      <input id = "embed_include_nav" type="radio" checked 
+        value="include_nav" name="url">
+      <label for ="embed_include_nav">Include navigation</label><br/><br/>
+      <input id = "embed_exclude_nav" type="radio" value="exclude_nav" 
+        name="url">
+      <label for ="embed_exclude_nav">No navigation</label> <br /><br/>
+      <input id = "embed_include_cllctn" type="radio"  value="include_collection" 
+        name="url">
+      <label for ="embed_include_cllctn">Include collection</label>
+    </div>
+    <div class="left fill">
+      <textarea autofocus class='copy embed_code' id='expression_embed_code'
+        onclick='this.select()' readonly>
+      </textarea>
+    </div>
+  </div>
+    
   <div class="subheading">Expression image link:</div>
   <textarea class="image_link" 
     onclick='this.select()' readonly>

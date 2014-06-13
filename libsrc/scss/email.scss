@@ -23,7 +23,12 @@ $space4: 5px;
     }
 }
 
+td, table{
+    width: 586px;
+}
+
 #body {
+    text-align: center;
     color: $color_email_black;
     padding: $space1 $space1 $space2 $space1;
     p, h1, h2, h3, h4, h5 {
@@ -89,6 +94,7 @@ $space4: 5px;
     
     #main_message{
         margin-top: $space3;
+        
         .sender, .active { color: $color_bright_red; }
         img {
             float: right;
@@ -207,7 +213,8 @@ $space4: 5px;
         padding-top: $space3;
         padding-bottom: $space3 + 3px;
         h2 {
-          line-height: 37px;
+          line-height: 20px;
+          font-size: 38px
         }
         h2 + p {
           margin-top: $space3;
@@ -254,9 +261,13 @@ $space4: 5px;
     }
 
     &.welcome {
+     padding: 30px 100px 30px 100px; 
       p {
         font-size: 20px;
         line-height: auto;
+      }
+      h3{
+        font-size: 20px;
       }
     }
 
