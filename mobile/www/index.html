@@ -2,28 +2,39 @@
 <html>
 <head>
   <link rel='shortcut icon' type='image/png' href='lib/skin/1/logo.png'>
-  <link id='css_minimal' rel='stylesheet' type='text/css' href='lib/libsrc/compiled.minimal.css'>
-  <script src='libsrc/curl.js'></script>
+  <link rel='stylesheet' type='text/css' href='main.css'>
+  <script src='jquery.js'></script>
+  <script src='main.js'></script>
+  <!--<script src='libsrc/curl.js'></script>
   <script>
 curl({
     baseUrl: "libsrc",
     pluginPath: 'curl/plugin'
 });
-  </script>
+  </script>-->
   <title>Network</title>
-  <link rel='stylesheet' type='text/css' href='libsrc/compiled.app.css'>
+  <meta name="viewport" content="user-scalable=1, width=500, initial-scale=.72, minimum-scale=.2, maximum-scale=10">
 </head>
 <body class='mobile'>
-  <div id='overlays'></div>
-  <div id='site'></div>
-  <div id='exprs'><div class='expr blank'></div></div>
-  <script>
+  <div id='overlays'>
+    <div class='prev icon'></div>
+    <div class='share icon'></div>
+  </div>
+  <div id='content'></div>
+  <!--<script>
 curl(['server/context', 'ui/controller'], function(context, controller, js){
-  context.user = { logged_in: false }
+  context.user = { logged_in: false, tagged: [] }
   context.flags = { mobile_web: true }
   controller.init_mobile()
 });
-  </script>
-  <div id='dynamic_group>'></div>
+  </script>-->
+  <div id='templates'>
+    <div class='expr_card'>
+      <img class='snapshot'>
+      <div class='title'></div>
+      <div class='byline'></div>
+    </div>
+  </div>
+  <script>init()</script>
 </body>
 </html>
