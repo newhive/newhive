@@ -108,13 +108,16 @@ env.Apps = Hive.Apps = (function(){
         return $.map(o.all(), function(app) { return app.state(); });
     };
 
-    var defer_layout = false
+    var defer_layout = false, in_layout = false
     o.defer_layout = function() {
         return defer_layout }
     o.begin_layout = function() { 
         defer_layout = true
     }
     o.end_layout = function() { 
+        // if (in_layout)
+        //     return
+        in_layout = true
         defer_layout = false
         var apps = o.all()
         apps.push(env.Selection)
@@ -126,6 +129,7 @@ env.Apps = Hive.Apps = (function(){
                 app.layout()
             }
         })
+        in_layout = false
         // controls.appendTo("#controls_group")
     }
 
@@ -412,13 +416,14 @@ Hive.App = function(init_state, opts) {
         o.controls.layout()
     }
 
+    var css_ify = function(k) { return Math.max(1, Math.round(k)) }
     o.layout = function(pos, dims){
         if (Hive.Apps.defer_layout()) {
             o.needs_layout = true;
             return true;
         }
+        o.needs_layout = false;
         var pos = pos || o.pos(), dims = dims || o.dims();
-        var css_ify = function(k) { return Math.max(1, Math.round(k)) }
         u.inline_style(o.div[0], { 'left' : pos[0], 'top' : pos[1] 
             // rounding fixes SVG layout bug in Chrome
             ,width: css_ify(dims[0]), height: css_ify(dims[1])});
@@ -432,6 +437,8 @@ Hive.App = function(init_state, opts) {
 
     o.pos_relative = function(){ return _pos.slice(); };
     o.pos_relative_set = function(pos){
+        // if (u.array_equals(_pos, pos))
+        //     return
         _pos = pos.slice();
         o.layout()
     };
@@ -439,6 +446,8 @@ Hive.App = function(init_state, opts) {
         return _dims.slice();
     }
     o.dims_relative_set = function(dims){
+        // if (u.array_equals(_dims, dims))
+        //     return
         _dims = dims.slice();
         o.layout();
     };
@@ -451,18 +460,17 @@ Hive.App = function(init_state, opts) {
         return [o.min_pos(), o.max_pos()]
     }
     o.aabb_set = function(aabb) {
-        var my_aabb = o.aabb()
+        var my_aabb = o.aabb(), aabb = aabb.slice()
         my_aabb[1] = u._sub(my_aabb[1], my_aabb[0])
         aabb[1] = u._sub(aabb[1], aabb[0])
-        o.bounds_relative_set(u._add(o.pos_relative(), u._sub(aabb[0], my_aabb[0]))
-            , u._add(o.dims_relative(), u._sub(aabb[1], my_aabb[1])))
+        o.pos_relative_set( u._add(o.pos_relative(),  u._sub(aabb[0], my_aabb[0])))
+        o.dims_relative_set(u._add(o.dims_relative(), u._sub(aabb[1], my_aabb[1])))
     }
     o.pos_center_relative = function(){
         var dims = o.dims_relative();
         var pos = o.pos_relative();
         return [ pos[0] + dims[0] / 2, pos[1] + dims[1] / 2 ];
     };
-    // TODO: make these two reflect axis aligned bounding box (when rotated, etc)
     var _min_pos = function(){ return o.pos_relative(); };
     var _max_pos = function(){ return u._add(o.pos_relative())(o.dims_relative()) };
     o.pts = function() {
@@ -480,6 +488,7 @@ Hive.App = function(init_state, opts) {
         }
         return corners;
     }
+    // These two return axis aligned bounding box (when rotated, etc)
     o.max_pos = function() {
         var c = o.pts();
         return [Math.max.apply(null, u.nth(c, 0)),
@@ -1667,6 +1676,8 @@ Hive.App.Polygon = function(o){
         o.pos_relative_set(u._add(o.pos_relative(), 
             u._sub(centroid, o.centroid_relative())))
     }
+    Hive.App.has_rotate(o)
+    o.angle = function() { return 0; }
     o.angle_set = function(angle){
         var a = angle - ref_angle
         ref_points.map(function(p, i){
@@ -1693,7 +1704,6 @@ Hive.App.Polygon = function(o){
         if (env.Selection.controls)
             o.fixup_border_controls(env.Selection.controls);
     }
-    Hive.App.has_rotate(o)
     Hive.App.has_color(o);
     Hive.App.has_border_width(o) //, {slider_opts:{max:100}})
     Hive.App.has_color(o, "stroke");
