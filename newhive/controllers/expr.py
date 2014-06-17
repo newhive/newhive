@@ -73,14 +73,14 @@ class Expr(ModelController):
         allowed_attributes = [
             'name', 'url', 'title', 'apps', 'dimensions', 'auth', 'password',
             'tags', 'background', 'thumb', 'images', 'remix_parent_id',
-            'container', 'draft'
+            'container'
         ]
         # TODO: fixed expressions, styles, and scripts, need to be done right
         # if tdata.user.is_admin:
         #     allowed_attributes.extend(['fixed_width', 'script', 'style'])
         upd = dfilter(expr, allowed_attributes)
         upd['name'] = upd.get('name','').lower().strip('/ ')
-        draft = res and res.get('draft')
+        draft = res and (res.get('draft') == True)
         if draft and orig_name:
             res['name'] = upd['name']
 
@@ -181,6 +181,8 @@ class Expr(ModelController):
                 return self.serve_json(response, { 'autosave': 1 } )
 
             try:
+                if draft:
+                    upd['draft'] = False
                 res.update(**upd)
                     
                 new_expression = False
