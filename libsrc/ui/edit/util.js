@@ -192,8 +192,8 @@ o.array_equals = function(a, b) {
 
 // deep object comparison
 o.deep_equals = function(o1, o2) {
-    if (o1 == null || o2 == null)
-        return o1 == o2 
+    if (o1 == null || o2 == null || typeof(o1) != "object" || typeof(o2) != "object")
+        return o1 == o2 || (isNaN(o1) && isNaN(o2))
 
     var k1 = Object.keys(o1).sort();
     var k2 = Object.keys(o2).sort();
@@ -201,13 +201,13 @@ o.deep_equals = function(o1, o2) {
         return false;
     for (var i in k1) {
         var key1 = k1[i], key2 = k2[i]
-        if (key1 != key2) 
+        if (key1 != key2) {
+            // console.log("Keys differ: " + key1 + " " + key2)
             return false
+        }
         var a = o1[key1], b = o2[key2]
-        if(typeof(a) == "object" && typeof(b) == "object"){
-            if (!o.deep_equals(a, b))
-                return false
-        } else if (a != b) {
+        if (!o.deep_equals(a, b)) {
+            // console.log("objects differ: " + key1 + " " + key2)
             return false
         }
     }
