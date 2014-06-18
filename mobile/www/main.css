@@ -1,0 +1,88 @@
+body{
+  margin: 0;
+  font-family: gibson;
+}
+
+iframe {
+  z-index: 1;
+  border: 0;
+  /*-webkit-transition: left 1s ease;
+  transition: left 2s ease;*/
+}
+iframe.next {
+  z-index: 2;
+  left: 100%;
+}
+.full {
+  position: absolute;
+  left: 0; top: 0;
+  width: 100%; height:100%;
+}
+
+#overlays > * {
+  z-index: 2;
+}
+#content {
+  position: absolute;
+  overflow: hidden;
+  z-index: 1;
+}
+#content.expr {
+  width: 100%;
+  height: 100%;
+}
+
+.prev.icon {
+  position: absolute;
+  left: 10px; bottom: 10px;
+  width: 50px; height:50px;
+  background-image: url('skin/prev.png');
+  background-size: 100% 100%;
+}
+.share.icon {
+  position: absolute;
+  right: 10px; bottom: 10px;
+  width: 50px; height:50px;
+  background-image: url('skin/share.png');
+  background-size: 100% 100%;
+}
+
+.expr_card {
+  display: inline-block;
+  width: 160px;
+  height: 133px;
+  margin: 6px 0 0 6px;
+  vertical-align: top;
+}
+.expr_card img {
+  width: 100%;
+}
+.expr_card .title {
+  font-weight: bold;
+  margin-top: 5px;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.expr_card .byline {
+  font-size: 10px;
+  margin-top: 4px;
+}
+.big .expr_card {
+  width: 100%;
+  height: auto;
+  margin: 0 0 8px 0;
+  padding-left: 6px;
+}
+.big .expr_card img { margin-left: -6px; }
+
+@font-face {
+  font-family: 'gibson';
+  src: url('fonts/gibson/gibson.ttf') format('opentype');   
+  font-weight: 400;
+}
+@font-face {
+  font-family: 'gibson';
+  src: url('fonts/gibson/gibson-semibold.ttf') format('opentype');   
+  font-weight: 600;
+}
