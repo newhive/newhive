@@ -3,8 +3,12 @@
 <head>
   <link rel='shortcut icon' type='image/png' href='lib/skin/1/logo.png'>
   <link rel='stylesheet' type='text/css' href='main.css'>
+
+  <!-- todo: replace with output of build system -->
   <script src='jquery.js'></script>
+  <script src='compiled.config.js'></script>
   <script src='main.js'></script>
+
   <!--<script src='libsrc/curl.js'></script>
   <script>
 curl({
@@ -17,8 +21,8 @@ curl({
 </head>
 <body class='mobile'>
   <div id='overlays'>
-    <div class='prev icon'></div>
-    <div class='share icon'></div>
+    <div class='prev icon'><div class='fg'></div></div>
+    <div class='share icon'><div class='fg'></div></div>
   </div>
   <div id='content'></div>
   <!--<script>

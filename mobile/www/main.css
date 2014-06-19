@@ -18,12 +18,19 @@ iframe.next {
   left: 0; top: 0;
   width: 100%; height:100%;
 }
+.fg {
+  width: 100%; height:100%;
+  background-size: 100% 100%;
+  background-position: 50% 50%;
+  background-repeat: no-repeat;
+}
 
 #overlays > * {
   z-index: 2;
 }
 #content {
   position: absolute;
+  width: 500px;
   overflow: hidden;
   z-index: 1;
 }
@@ -31,50 +38,79 @@ iframe.next {
   width: 100%;
   height: 100%;
 }
-
-.prev.icon {
-  position: absolute;
-  left: 10px; bottom: 10px;
-  width: 50px; height:50px;
-  background-image: url('skin/prev.png');
-  background-size: 100% 100%;
-}
-.share.icon {
-  position: absolute;
-  right: 10px; bottom: 10px;
-  width: 50px; height:50px;
-  background-image: url('skin/share.png');
-  background-size: 100% 100%;
+#content.landscape {
+  width: 833px;
 }
 
 .expr_card {
   display: inline-block;
-  width: 160px;
-  height: 133px;
-  margin: 6px 0 0 6px;
   vertical-align: top;
+
+  /* ~1x3 */
+  width: 370px;
+  height: 265px;
+  margin: 15px 65px 0;
+  font-size: 18px;
 }
+.landscape .expr_card { margin: 15px 23px; }
+
 .expr_card img {
   width: 100%;
 }
 .expr_card .title {
   font-weight: bold;
   margin-top: 5px;
-  font-size: 13px;
   white-space: nowrap;
   overflow: hidden;
 }
-.expr_card .byline {
-  font-size: 10px;
-  margin-top: 4px;
+.expr_card .byline { font-size: .77em; }
+
+.column1spaced .expr_card {
 }
-.big .expr_card {
+
+.column3 .expr_card .title {
+  width: 160px;
+  height: 133px;
+  margin: 6px 0 0 6px;
+  font-size: 13px;
+}
+.column3 .expr_card .byline { margin-top: 4px; }
+
+.expr_card.spinner .fg {
+  width: 100px; height: 100px;
+  margin: 50px auto;
+  background-image: url('skin/loading.gif');
+}
+
+.column1full .expr_card {
   width: 100%;
   height: auto;
   margin: 0 0 8px 0;
   padding-left: 6px;
 }
-.big .expr_card img { margin-left: -6px; }
+.column1full .expr_card img { margin-left: -6px; }
+
+.prev.icon {
+  position: absolute;
+  left: 10px; bottom: 10px;
+  width: 50px; height: 50px;
+}
+.share.icon {
+  position: absolute;
+  right: 10px; bottom: 10px;
+  width: 50px; height:50px;
+}
+.icon .fg {
+  background-size: 80% 80%;
+  background-color: white;
+  border-radius: 15px;
+}
+.prev .fg {
+  background-image: url('skin/prev.png');
+}
+.share .fg {
+  background-image: url('skin/share.png');
+}
 
 @font-face {
   font-family: 'gibson';
