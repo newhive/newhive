@@ -62,6 +62,7 @@ site_flags = {
     ,'can_debug': ['admins','nd4']
     ,'open_signup': []
     ,'mobile_web': ['nd4']
+    ,'user_search': ['nd4', 'newduke','abram','it1']
     # Editor
     ,'snap_crop': ['admins','nd4']
     ,'shift_does_raise': ['newduke','nd4','abram']
