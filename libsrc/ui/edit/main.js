@@ -313,6 +313,7 @@ Hive.init_global_handlers = function(){
     $(document).ajaxStart(function(){
         busy_e.showshow();
         Hive.save_safe = false
+        $("#btn_save span").text("Saving ")
         Hive.send({save_safe: Hive.save_safe})
     }).ajaxStop(function(){
         busy_e.hidehide();

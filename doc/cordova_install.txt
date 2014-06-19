@@ -34,3 +34,25 @@ cordova run android
 # create a file /etc/udev/rules.d/80-android.rules containing this line,
 # replacing 04e8 with your devices vendor id:
 # SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", MODE="0666", GROUP="plugdev"
+
+# install push plugin
+cordova plugin add com.phonegap.plugins.PushPlugin
+
+# For testing notifications, install ruby on rails
+\curl -L https://get.rvm.io | bash -s stable --ruby --autolibs=enable --auto-dotfiles --rails
+source ~/.rvm/scripts/rvm
+# and install pushmeup
+gem install pushmeup
+
+############################################################################
+# FAQ
+############################################################################
+
+Q: I got INSTALL_PARSE_FAILED_INCONSISTENT_CERTIFICATES when 
+    install app for the first time
+A: Try to first uninstalling the newhive app from your mobile.
+    see also: http://stackoverflow.com/questions/7157144/install-parse-failed-inconsistent-certificates-when-install-app-for-the-first-ti
+
+Q: How to I debug?
+A: Search for "newhive" in a chrome tab pointed at chrome://inspect/#devices
+
