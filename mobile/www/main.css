@@ -41,6 +41,7 @@ iframe.next {
 #content.landscape {
   width: 833px;
 }
+#templates { display: none; }
 
 .expr_card {
   display: inline-block;
@@ -100,17 +101,16 @@ iframe.next {
   right: 10px; bottom: 10px;
   width: 50px; height:50px;
 }
-.icon .fg {
-  background-size: 80% 80%;
+.icon .fg { background-size: 80% 80%; }
+.icon {
   background-color: white;
   border-radius: 15px;
 }
-.prev .fg {
-  background-image: url('skin/prev.png');
-}
-.share .fg {
-  background-image: url('skin/share.png');
-}
+.icon.hover { background-color: black; }
+.prev .fg { background-image: url('skin/prev.png'); }
+.prev.hover .fg { background-image: url('skin/prev-hover.png'); }
+.share .fg { background-image: url('skin/share.png'); }
+.share.hover .fg { background-image: url('skin/share-hover.png'); }
 
 @font-face {
   font-family: 'gibson';

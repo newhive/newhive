@@ -14,10 +14,6 @@ var init = function(){
     document.addEventListener('deviceready', function(){
         document.addEventListener('backbutton', back)
     })
-    bind_click('#overlays .prev', back)
-
-    // TODO: implement share_menu
-    // bind_click('#overlays .share', share_menu.open)
 
     window.onorientationchange = function(){
         var landscape = win.width() > win.height()
@@ -71,11 +67,12 @@ function load_next(){
 
 function page_exit(){
     window.onscroll = false
+    $('#overlays').empty()
 }
 
 function render_page_index(){
+    page_exit()
     $('#content').removeClass(view).addClass('index').empty()
-    $('#overlays').hide()
     view = 'index'
     render_cards(cards)
 
@@ -127,9 +124,12 @@ function render_cards(cards){
 
 function render_page_expr(card){
     page_exit()
-    $('#content').removeClass(view).addClass('expr').empty()
-    $('#overlays').show()
     view = 'expr'
+    $('#content').removeClass(view).addClass('expr').empty()
+    $('#overlays').append($('#templates .expr_overlays').clone().children())
+    button('.icon.prev', back)
+    // TODO: implement share_menu
+    // bind_click('#overlays .share', share_menu.open)
 
     get_page(card)
 }
@@ -142,4 +142,31 @@ function bind_click(el, func){
     // binding click somehow fires events on elements that haven't been rendered yet
     // $(el).on('click', func).on('touchend', func)
     $(el).on('touchend', func)
+}
+
+// TODO: implement multitouch?
+function button(sel, click){
+    var jq = $(sel), hover_el, hovering = false
+    $(jq).on('touchstart', function(){
+        var hover_el = this, hover_jq = $(hover_el)
+        hovering = true
+        hover_jq.addClass('hover').on('touchmove', function(ev){
+            var tch = ev.originalEvent.touches[0],
+                x = tch.clientX, y = tch.clientY,
+                over = document.elementFromPoint(x, y)
+            if(over == hover_el || $.contains(hover_el, over)){
+                if(!hovering){
+                    hover_jq.addClass('hover')
+                    hovering = true
+                }
+            }else{
+                hover_jq.removeClass('hover')
+                hovering = false
+            }
+            // android needs this, otherwise next touchmove isn't fired
+            ev.preventDefault()
+        })
+    }).on('touchend', function(){
+        if(hovering) click()
+    })
 }
