@@ -7,6 +7,7 @@ https://developer.android.com/sdk/installing/index.html
 
 # create 'hello world' app
 # Details here: http://cordova.apache.org/docs/en/3.0.0/guide_cli_index.md.html
+sudo npm install -g cordova
 cd ~/src # or whatever you want as the parent dir
 cordova create hello com.example.hello "Hello World"
 cd hello
