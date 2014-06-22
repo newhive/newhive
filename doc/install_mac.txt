@@ -12,4 +12,5 @@ sudo python setup.py install
 
 # For application dependencies
 sudo gem install compass
+brew install mongodb imagemagick ant
 brew services start mongodb
