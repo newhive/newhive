@@ -1,9 +1,5 @@
 Do whatever sections apply.
 
-LINUX
-  install from USB
-  sudo apt-get gnome-desktop-environment
-
 Git
   ## first, set up account on github (and get permissions from Abram)
   sudo apt-get install git
@@ -21,17 +17,10 @@ Python library dependency dependencies (Ubuntu packages)
 Python library dependencies
     sudo pip install ez_setup
     pip install PIL --allow-external PIL --allow-unverified PIL
-    sudo pip install werkzeug pymongo boto oauth2 oauth2client paramiko cssutils hsaudiotag
-    sudo pip install lxml webassets urllib3 apiclient httplib2 pytz jinja2 simplejson
-    sudo pip install envoy scipy webkit2png
-    sudo pip install pandas brownie google-api-python-client 
-    sudo pip install statprof yappi beautifulsoup
-
-    pyes -- https://github.com/aparo/pyes
-        werkzeug --- ??? what repo
+    sudo pip install werkzeug pymongo boto oauth2 oauth2client paramiko cssutils hsaudiotag lxml webassets urllib3 apiclient httplib2 pytz jinja2 simplejson yuicompressor envoy scipy webkit2png pandas brownie google-api-python-client  statprof yappi beautifulsoup4
 
 JavaScript dependencies
-    # ?? sudo apt-get install npm
+    sudo apt-get install npm
 
     node:
         wget http://nodejs.org/dist/v0.10.12/node-v0.10.12.tar.gz
@@ -46,11 +35,6 @@ JavaScript dependencies
 
 Application dependencies (Ubuntu packages)
     sudo apt-get install mongodb ruby-sass ruby-compass cutycapt libicu48 imagemagick
-    # these are on abram's machine.  scp
-    #elastic search -- http://www.elasticsearch.org/download/
-    #    sudo dpkg -i elasticsearch-0.20.5.deb
-    #    # might need fix dependencies: 
-    #    sudo apt-get -f install 
 
 To make Cutycapt:
     sudo apt-get install subversion libqt4-webkit libqt4-dev g++ xvfb
@@ -64,18 +48,13 @@ Get the db
     tar -xvf 2014*
     mongorestore --drop -d test --dir tmp/live-newhive
 
-Get the server config
-    create config file at : ~/newhive/newhive/config/config.py 
-    copy "from local import *"
-    save
-    
-Run the server
-    <from an enlistment>
+Set up and run the server
+    cd ~/newhive
+    echo 'from local import *' > newhive/config/config.py 
+    sudo sh -c 'echo 127.0.0.1 site content >> /etc/hosts'
     ./server.py
-
-Things that need to be run on live before a new push:
-    <empty>
-
+    
+    
 Ok, far easier to clone the working instance, staging.
 From AWS console, EC2 -> instances
 Right-click staging -> create image
