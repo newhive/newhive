@@ -113,7 +113,6 @@ class Expr(ModelController):
                 upd['tags'] += " #draft"
                 upd['draft'] = True
                 res = tdata.user.expr_create(upd)
-                # print res
                 return self.serve_json(response, { "autosave": 1, "expr": res })
 
             # TODO-cleanup: move try/catch around only user.expr_create
@@ -195,12 +194,16 @@ class Expr(ModelController):
         if duplicate:
             if expr.get('overwrite'):
                 self.db.Expr.named(tdata.user['name'], upd['name']).delete()
-                res = tdata.user.expr_create(upd)
+                if draft:
+                    res.update(**upd)
+                    self.db.UpdatedExpr.create(res.owner, res)
+                else:
+                    res = tdata.user.expr_create(upd)
                 self.db.ActionLog.create(tdata.user, "new_expression_save", data={'expr_id': res.id, 'overwrite': True})
             else:
                  #'An expression already exists with the URL: ' + upd['name']
                 return self.serve_json(response, { 'error' : 'overwrite' })
-                self.db.ActionLog.create(tdata.user, "new_expression_save_fail", data={'expr_id': res.id, 'error': 'overwrite'})
+                # self.db.ActionLog.create(tdata.user, "new_expression_save_fail", data={'expr_id': res.id, 'error': 'overwrite'})
 
         # autosave: Remove "draft" on first save
         if draft and not autosave:
