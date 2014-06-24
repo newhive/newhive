@@ -47,9 +47,9 @@ define([
         context.parse_query();
         // context.referer holds the site host of the containing frame, if one exists.
         // If it does not, it comes back as the same as server host, so we delete it here.
-        if (context.referer.replace(/.*\/\//,"") == 
-            context.server_url.replace(/.*\/\//,""))
-            context.referer = ''
+        if (context.referer && (context.referer.replace(/.*\/\//,"") == 
+            context.server_url.replace(/.*\/\//,"")))
+            context.referer = null
 
         routing.register_state(route_args);
         if (util.mobile()) {
