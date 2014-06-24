@@ -320,9 +320,11 @@ define([
                 var speed = (e.shiftKey) ? 2 : 1;
                 context.page.navigate_page((e.keyCode == 39) ? speed : -speed);
             }
-        } else if (/*$("#search_box").is(":visible") && */!$(":focus").length
+        } else if (/*$("#search_box").is(":visible") && */
+            ! $(":focus").length && !e.altKey && !e.ctrlKey
             && (( /[A-Z0-9]/.test(keychar) && ! e.shiftKey) ||
-            (/[A-Z23]/.test(keychar) && e.shiftKey))) {
+                (/[A-Z23]/.test(keychar) && e.shiftKey))) 
+        {
             // Wow that was complicated. keychar will be the *unmodified* state,
             // so to check for @, #, it's 2,3 with shift held.
             $(".search_bar").showshow();
