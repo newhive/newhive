@@ -45,6 +45,10 @@ define([
             context.config.secure_content_url : context.config.content_url;
 
         context.parse_query();
+        if (context.referer.replace(/.*\/\//,"") == 
+            context.server_url.replace(/.*\/\//,""))
+            context.referer = ''
+        
         routing.register_state(route_args);
         if (util.mobile()) {
             $("body").addClass('mobile');
