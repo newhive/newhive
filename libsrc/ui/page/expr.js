@@ -573,19 +573,42 @@ define([
         }).trigger("change");
 
         // updates embed links based on selection
-        $("#dia_embed input[type=radio]").on( "change", function(ev) {
+        $("#dia_embed input[type=checkbox]").click( function(ev) {
             var host = '' 
                 , params = ''
                 , link = ''
                 , embed_url = ''
-
+                , clean = ''
+                , any_checked = false
             host = context.config.server_url
-            if ($(this).val() === "exclude_nav")
-                host = context.config.content_url
-            else if ($(this).val() === "include_collection")
-                 if (context.query.q)
-                    params = "&q=" + window.encodeURIComponent(context.query.q)
+            params = "&clean="
+            if ($("#include_social").is(":checked")){
+                any_checked = true
+                if (clean.length === 0)
+                    clean = "social"
+                else
+                   clean = clean.concat("+social")
+            }
+            if ($("#include_collection").is(":checked")){
+                any_checked = true
+                 if (clean.length === 0)
+                    clean = "collection"
+                else
+                    clean = clean.concat("+collection")
+            }
+            if ($("#include_logo").is(":checked")){
+                any_checked = true
+                 if (clean.length === 0)
+                    clean = "logo"
+                else
+                    clean = clean.concat("+logo")
+            }
+            if (!any_checked)
+                params= ""
+
             
+            params = params.concat(clean)
+
             link = util.urlize(host).replace(/\/$/,"") + 
                 window.location.pathname + '?template=embed';      
             embed_url ="<iframe src='" + link + params + "' " +
@@ -594,7 +617,7 @@ define([
             
             $('#dia_embed .copy.embed_code').val(embed_url); 
             $('#dia_embed textarea.image_link').val(link); 
-        }).trigger("change");
+        }).trigger("click");
 
         // $('#comment_form').unbind('success').on('success', o.comment_response);
         var dia_comments = $("#dia_comments").data("dialog");

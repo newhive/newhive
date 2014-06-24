@@ -1,4 +1,4 @@
-<div class='overlay bottom panel nav {<if query.clean} stay_hidden{>}'>
+<div class='overlay bottom panel nav {<if (and query.clean (not (contains (string_to_list query.clean) "social")))} stay_hidden{>}'>
   {# create or signup/login #}
   {<unless user.logged_in}
     <span class='signup'>
@@ -22,13 +22,13 @@
 </div>
 {<if (not flags.mobile)}
   <div class='social overlay left page_btn page_prev
-    {<if query.clean} stay_hidden{>}'></div>
+    {<if (and query.clean (not (contains (string_to_list query.clean) "collection")))} stay_hidden{>}'></div>
   <div class='social overlay right page_btn page_next
-    {<if query.clean} stay_hidden{>}'></div>
+     {<if (and query.clean (not (contains (string_to_list query.clean) "collection")))} stay_hidden{>}'></div>
 {>}
 {# hive logo button #}
 <div id='logo' class='overlay bottom nav logo icon 
-  {<if (and query.clean (neq query.clean "logo"))} stay_hidden{>}'></div>
+    {<if (and query.clean (not (contains (string_to_list query.clean) "logo")))} stay_hidden{>}'></div>
 
 {# menu: logo #}
 <div id='logo_menu' class='menu drawer' data-handle='#logo'>
