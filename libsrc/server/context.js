@@ -89,7 +89,7 @@ define([
 
     var attrs = function(route_name, args, query_args, is_form, suppress){
         if(!suppress) suppress = [];
-        if (o.referer){
+        if (o.referer && !is_form){
             var page_state = o.page_state(route_name, args, query_args)
             if (page_state.page){
                 // slice is to remove the trailing "/"

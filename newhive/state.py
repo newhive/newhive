@@ -9,7 +9,7 @@ from lxml import html
 from wsgiref.handlers import format_date_time
 from newhive import social_stats
 from itertools import ifilter, islice, izip_longest, chain
-import PIL.Image as Img
+import Image as Img
 from PIL import ImageOps
 from bson.code import Code
 from crypt import crypt

@@ -1,0 +1,16 @@
+# install homebrew package manager:
+ruby -e "$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)"
+
+# For python dependencies, follow instructions in install.txt except for
+# pandas, which must be compiled:
+sudo pip install cython
+git clone git://github.com/pydata/pandas.git
+cd pandas
+sudo python setup.py install
+
+# install oracle jdk
+
+# For application dependencies
+sudo gem install compass
+brew install mongodb imagemagick ant
+brew services start mongodb
