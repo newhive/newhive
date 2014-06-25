@@ -131,6 +131,7 @@ function render_page_expr(card){
     $('#content').removeClass(view).addClass('expr').empty()
     $('#overlays').append($('#templates .expr_overlays').clone().children())
     button('.icon.prev', back)
+    button('.share', function(){ share_expr(card) })
     // TODO: implement share_menu
     // bind_click('#overlays .share', share_menu.open)
 
@@ -182,3 +183,8 @@ function button(sel, click){
 //         if(hovering) click()
 //     })
 // }
+
+function share_expr(card){
+    window.plugins.socialsharing.share('', // message
+        'Check out this NewHive page', card.snapshot_big, card.url)
+}

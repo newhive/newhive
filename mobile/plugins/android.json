@@ -11,6 +11,10 @@
                         {
                             "xml": "<feature name=\"PushPlugin\"><param name=\"android-package\" value=\"com.plugin.gcm.PushPlugin\" /></feature>",
                             "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"SocialSharing\"><param name=\"android-package\" value=\"nl.xservices.plugins.SocialSharing\" /></feature>",
+                            "count": 1
                         }
                     ]
                 }
@@ -45,6 +49,10 @@
                         {
                             "xml": "<uses-permission android:name=\"io.newhive.newhive.permission.C2D_MESSAGE\" />",
                             "count": 1
+                        },
+                        {
+                            "xml": "<uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\" />",
+                            "count": 1
                         }
                     ],
                     "/manifest/application": [
@@ -67,6 +75,9 @@
     },
     "installed_plugins": {
         "com.phonegap.plugins.PushPlugin": {
+            "PACKAGE_NAME": "io.newhive.newhive"
+        },
+        "nl.x-services.plugins.socialsharing": {
             "PACKAGE_NAME": "io.newhive.newhive"
         }
     },
