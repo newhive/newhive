@@ -898,7 +898,8 @@ define([
             msg = page_btn_state;
         // don't render the page buttons if there is nothing to page through!
         if (context.page_data.cards == undefined
-            || context.page_data.cards.length == 1) {
+            || context.page_data.cards.length == 1
+            || !context.page_data.expr) {
             $(".page_btn").hidehide();
             return;
         }
