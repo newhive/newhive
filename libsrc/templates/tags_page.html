@@ -9,11 +9,15 @@
     <form { form_attrs "tag_follow" } id='follow_tag_form' method='POST'>
       <input type="hidden" name="tag" value="{tags_search.0}">
       <input type="hidden" name="action" value="toggle">
-      <button type="submit" class="needs_login teal_btn upper hoverable follow" value="">
-      	{<contains viewer.tags_following tags_search.0}
-          <span class="hide_hover">Following #{tag_name}</span
-          ><span class="show_hover">Unfollow #{tag_name}</span>
-      	{>}{<else}Follow #{tag_name}{>}</button>
+      {<if (contains viewer.tags_following tags_search.0)}
+        <button type="submit" class="needs_login teal_btn upper hoverable follow" value="">
+        <span class="hide_hover">Following #{tag_name}</span>
+        <span class="show_hover">Unfollow #{tag_name}</span>
+        </button>
+      {>}
+      {<else}
+        <button type="submit" class="needs_login teal_btn upper create" value="">Follow #{tag_name}</button>
+      {>}
     </form>
     {# The click through on button "needs_login" goes to the <a>, so need
       to remove it if not logged in. #}
