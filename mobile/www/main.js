@@ -1,7 +1,8 @@
 config.content_url = 'http://staging.tnh.me/'
 
 var view = 'index', page_index = 0, cards = [], cards_complete = false,
-    cards_loading = false, current_page, next_page, win = $(window)
+    cards_loading = false, current_page, next_page, win = $(window),
+    page_index_scrollY = 0
 
 var init = function(){
     render_page_index()
@@ -75,6 +76,7 @@ function render_page_index(){
     $('#content').removeClass(view).addClass('index').empty()
     view = 'index'
     render_cards(cards)
+    window.scrollTo(0, page_index_scrollY)
 
     window.onscroll = function(ev){
         if(!cards_loading && (win.scrollTop() + win.height() + 100
@@ -123,6 +125,7 @@ function render_cards(cards){
 }
 
 function render_page_expr(card){
+    page_index_scrollY = window.scrollY
     page_exit()
     view = 'expr'
     $('#content').removeClass(view).addClass('expr').empty()
@@ -141,32 +144,41 @@ function back(){
 function bind_click(el, func){
     // binding click somehow fires events on elements that haven't been rendered yet
     // $(el).on('click', func).on('touchend', func)
-    $(el).on('touchend', func)
+    // $(el).on('touchend', func)
+    $(el).on('tap', func)
+}
+
+function button(sel, click){
+    $(sel).on('tapstart', function(){
+        $(this).addClass('hover')
+    }).on('tapend', function(){
+        $(this).removeClass('hover')
+    }).on('tap', click)
 }
 
 // TODO: implement multitouch?
-function button(sel, click){
-    var jq = $(sel), hover_el, hovering = false
-    $(jq).on('touchstart', function(){
-        var hover_el = this, hover_jq = $(hover_el)
-        hovering = true
-        hover_jq.addClass('hover').on('touchmove', function(ev){
-            var tch = ev.originalEvent.touches[0],
-                x = tch.clientX, y = tch.clientY,
-                over = document.elementFromPoint(x, y)
-            if(over == hover_el || $.contains(hover_el, over)){
-                if(!hovering){
-                    hover_jq.addClass('hover')
-                    hovering = true
-                }
-            }else{
-                hover_jq.removeClass('hover')
-                hovering = false
-            }
-            // android needs this, otherwise next touchmove isn't fired
-            ev.preventDefault()
-        })
-    }).on('touchend', function(){
-        if(hovering) click()
-    })
-}
+// function button(sel, click){
+//     var jq = $(sel), hover_el, hovering = false
+//     $(jq).on('touchstart', function(){
+//         var hover_el = this, hover_jq = $(hover_el)
+//         hovering = true
+//         hover_jq.addClass('hover').on('touchmove', function(ev){
+//             var tch = ev.originalEvent.touches[0],
+//                 x = tch.clientX, y = tch.clientY,
+//                 over = document.elementFromPoint(x, y)
+//             if(over == hover_el || $.contains(hover_el, over)){
+//                 if(!hovering){
+//                     hover_jq.addClass('hover')
+//                     hovering = true
+//                 }
+//             }else{
+//                 hover_jq.removeClass('hover')
+//                 hovering = false
+//             }
+//             // android needs this, otherwise next touchmove isn't fired
+//             ev.preventDefault()
+//         })
+//     }).on('touchend', function(){
+//         if(hovering) click()
+//     })
+// }
