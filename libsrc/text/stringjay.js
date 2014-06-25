@@ -546,8 +546,7 @@ define(['browser/js', 'module'],
 		return lhs != rhs;
 	};
 	context_base.contains = function(context, list, item){
-		var x= 2
-		var contains = list.lastIndexOf(item) >= 0;
+		var contains = (list.lastIndexOf(item) >= 0);
 		return contains;
 	};
 	context_base.cond = function(context, cond, truthy, falsy){
@@ -607,11 +606,8 @@ define(['browser/js', 'module'],
 		return n + suffix[i];
 	};
 	context_base.string_to_list = function (context, string){
-		var x=2;
-		var y=3;
-		var array =[];
-	  	array = string.split("[^\w']+");
-	  	if ( array.length <=1) return string;
+	  	var array = string.split("[^\w']+");
+	  	if ( array.length <= 1 ) return string;
 		else return array;
 	};
 

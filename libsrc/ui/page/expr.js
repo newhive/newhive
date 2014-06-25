@@ -573,7 +573,7 @@ define([
         }).trigger("change");
 
         // updates embed links based on selection
-        $("#dia_embed input[type=checkbox]").click( function(ev) {
+        $("#dia_embed input[type=checkbox]").on("change", function(ev) {
             var host = '' 
                 , params = ''
                 , link = ''
@@ -584,30 +584,20 @@ define([
             params = "&clean="
             if ($("#include_social").is(":checked")){
                 any_checked = true
-                if (clean.length === 0)
-                    clean = "social"
-                else
-                   clean = clean.concat("+social")
+                clean += "+social"
             }
             if ($("#include_collection").is(":checked")){
                 any_checked = true
-                 if (clean.length === 0)
-                    clean = "collection"
-                else
-                    clean = clean.concat("+collection")
+                clean += "+collection"
             }
             if ($("#include_logo").is(":checked")){
                 any_checked = true
-                 if (clean.length === 0)
-                    clean = "logo"
-                else
-                    clean = clean.concat("+logo")
+                clean += "+logo"
             }
             if (!any_checked)
                 params= ""
 
-            
-            params = params.concat(clean)
+            params = params.concat(clean.slice(1))
 
             link = util.urlize(host).replace(/\/$/,"") + 
                 window.location.pathname + '?template=embed';      
@@ -617,7 +607,7 @@ define([
             
             $('#dia_embed .copy.embed_code').val(embed_url); 
             $('#dia_embed textarea.image_link').val(link); 
-        }).trigger("click");
+        }).trigger("change");
 
         // $('#comment_form').unbind('success').on('success', o.comment_response);
         var dia_comments = $("#dia_comments").data("dialog");
