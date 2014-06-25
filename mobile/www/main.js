@@ -14,6 +14,10 @@ var init = function(){
 
     document.addEventListener('deviceready', function(){
         document.addEventListener('backbutton', back)
+
+        StatusBar.styleDefault()
+        StatusBar.backgroundColorByName('white')
+        StatusBar.overlaysWebView(false)
     })
 
     window.onorientationchange = function(){
@@ -75,6 +79,7 @@ function render_page_index(){
     page_exit()
     $('#content').removeClass(view).addClass('index').empty()
     view = 'index'
+    if(window.StatusBar) StatusBar.show()
     render_cards(cards)
     window.scrollTo(0, page_index_scrollY)
 
@@ -128,6 +133,7 @@ function render_page_expr(card){
     page_index_scrollY = window.scrollY
     page_exit()
     view = 'expr'
+    StatusBar.hide()
     $('#content').removeClass(view).addClass('expr').empty()
     $('#overlays').append($('#templates .expr_overlays').clone().children())
     button('.icon.prev', back)

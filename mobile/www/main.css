@@ -34,7 +34,7 @@ iframe.next {
   overflow: hidden;
   z-index: 1;
 }
-#content.index { padding-top: 40px; }
+#content.index { padding-top: 15px; }
 #content.expr {
   width: 100%;
   height: 100%;
