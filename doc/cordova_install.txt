@@ -12,6 +12,7 @@ sudo npm install -g cordova
 cd ~/src # or whatever you want as the parent dir
 cordova create hello com.example.hello "Hello World"
 cd hello
+
 cordova platform add android
 cordova build
 cordova build android
@@ -28,11 +29,22 @@ cordova run android
 # 016B756E0400E006  ????????????
 # Then you need to add permissions for it like this:
 
+############################################################################
+# Notifications
+############################################################################
+
 # install push plugin
 cordova plugin add com.phonegap.plugins.PushPlugin
 
+### Install google play services. 
+#? http://www.androidhive.info/2012/10/android-push-notifications-using-google-cloud-messaging-gcm-php-and-mysql/
+# http://developer.android.com/google/play-services/setup.html
+# http://developer.android.com/google/gcm/gs.html
+# GCM project# 73529491287
+# API key   AIzaSyDwFDcABJN8ldQKGCA2ohiO8kHoFst57X8
+
 # For testing notifications, install ruby on rails
-\curl -L https://get.rvm.io | bash -s stable --ruby --autolibs=enable --auto-dotfiles --rails
+curl -L https://get.rvm.io | bash -s stable --ruby --autolibs=enable --auto-dotfiles --rails
 source ~/.rvm/scripts/rvm
 # and install pushmeup
 gem install pushmeup
