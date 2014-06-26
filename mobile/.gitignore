@@ -1,4 +1,6 @@
+/npm-debug.log
 /config.xml
+
 www/lib/*
 www/libsrc/*
 

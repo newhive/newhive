@@ -11,6 +11,10 @@
                         {
                             "xml": "<feature name=\"PushPlugin\"><param name=\"android-package\" value=\"com.plugin.gcm.PushPlugin\" /></feature>",
                             "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"WebViewDebug\"><param name=\"android-package\" value=\"com.jamiestarke.webviewdebug.WebViewDebug\" /><param name=\"onload\" value=\"true\" /></feature>",
+                            "count": 1
                         }
                     ]
                 }
@@ -67,6 +71,9 @@
     },
     "installed_plugins": {
         "com.phonegap.plugins.PushPlugin": {
+            "PACKAGE_NAME": "io.newhive.newhive"
+        },
+        "com.jamiestarke.webviewdebug": {
             "PACKAGE_NAME": "io.newhive.newhive"
         }
     },
