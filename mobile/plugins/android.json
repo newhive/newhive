@@ -15,6 +15,14 @@
                         {
                             "xml": "<feature name=\"WebViewDebug\"><param name=\"android-package\" value=\"com.jamiestarke.webviewdebug.WebViewDebug\" /><param name=\"onload\" value=\"true\" /></feature>",
                             "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"SocialSharing\"><param name=\"android-package\" value=\"nl.xservices.plugins.SocialSharing\" /></feature>",
+                            "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"StatusBar\"><param name=\"android-package\" onload=\"true\" value=\"org.apache.cordova.statusbar.StatusBar\" /></feature>",
+                            "count": 1
                         }
                     ]
                 }
@@ -49,6 +57,10 @@
                         {
                             "xml": "<uses-permission android:name=\"io.newhive.newhive.permission.C2D_MESSAGE\" />",
                             "count": 1
+                        },
+                        {
+                            "xml": "<uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\" />",
+                            "count": 1
                         }
                     ],
                     "/manifest/application": [
@@ -73,7 +85,10 @@
         "com.phonegap.plugins.PushPlugin": {
             "PACKAGE_NAME": "io.newhive.newhive"
         },
-        "com.jamiestarke.webviewdebug": {
+        "nl.x-services.plugins.socialsharing": {
+            "PACKAGE_NAME": "io.newhive.newhive"
+        },
+        "org.apache.cordova.statusbar": {
             "PACKAGE_NAME": "io.newhive.newhive"
         }
     },

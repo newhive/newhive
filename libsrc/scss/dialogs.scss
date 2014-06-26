@@ -148,6 +148,14 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
     // textarea, input[type=text] {
     //     width: 100%;
     // }
+
+    .select_params {
+        margin: 3px 3px 3px 10px;
+    }
+    input[type="checkbox"] {
+        margin: 3px 3px 3px 0px;
+    }
+
     textarea {
         width: 100%;
         resize: none;
