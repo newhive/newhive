@@ -734,7 +734,8 @@ Hive.App.Html = function(o) {
         || o.content_element.is('embed')
         || o.content_element.is('iframe'))
     {
-        Hive.App.has_shield(o, {always: true});
+        Hive.App.has_shield(o)//, {always: true});
+        o.click_to_unshield = function() { return o.focused(); }
         o.set_shield = function(){ return true; }
         o.shield();
     }
@@ -884,9 +885,15 @@ Hive.App.Code = function(o){
         var curl_func = function() {
             editor.current_code = o;
             curl([o.module_name()], function(module) {
-                if (module && typeof(module[module_func]) == "function")
-                    module[module_func]();
-                callback && callback(module);
+                if (!module) {
+                    console.log("Module load error")
+                } else {
+                    if (typeof(module[module_func]) == "function")
+                        module[module_func].apply(null, 
+                            Array.prototype.slice.call(arguments, 0));
+
+                    callback && callback(module);
+                }
                 editor.current_code = null;
             }, function() {})
         }
@@ -900,12 +907,16 @@ Hive.App.Code = function(o){
     // TODO: if we definitely want custom code to execute when editor loads,
     // investigate using eval instead of <script> tag. Test debugging of code
     // run from eval
-    // var _load = o.load
-    // o.load = function() {
-    //     if (_load) _load()
-    //     if(o.init_state.code_type == 'js')
-    //         o.run_module_func("editor")
-    // }
+    var _load = o.load
+    o.load = function() {
+        if (_load) _load()
+        if(o.init_state.code_type == 'js') {
+            insert_code()
+            setTimeout(function() {
+                o.run_module_func("editor")
+            }, 1000)
+        }
+    }
 
     var iter = 0;
     o.module_name = function() { return "module_" + o.id + "_" + iter; }
@@ -918,7 +929,7 @@ Hive.App.Code = function(o){
             + "return self\n})"
         )
     }
-    var insert_code = function(callback){
+    var insert_code = function(){
         var code
         if(o.init_state.code_type == 'js'){
             ++iter;
@@ -927,18 +938,21 @@ Hive.App.Code = function(o){
         else code = o.content()
 
         // jquery script insert messes up debugging, so we use straight js
-        // o.code_element.html(code).appendTo('body')
-        var script   = document.createElement("script")
-        // use data url so syntax errors are reported properly
-        script.setAttribute( 'src',
-            'data:application/javascript;base64,' + btoa(module_code()) )
-        try{
-            document.body.appendChild(script)
+        if (1) {
+            o.code_element.html(code).appendTo('body')
+        } else {
+            var script   = document.createElement("script")
+            // use data url so syntax errors are reported properly
+            script.setAttribute( 'src',
+                'data:application/javascript;base64,' + btoa(module_code()) )
+            try{
+                document.body.appendChild(script)
+            }
+            catch(e){
+                console.log('oops')
+            }
+            o.code_element = $(script)
         }
-        catch(e){
-            console.log('oops')
-        }
-        o.code_element = $(script)
     }
 
     var animate_go
@@ -957,6 +971,8 @@ Hive.App.Code = function(o){
             }
             animate_go = 1
             animate_frame()
+        }, { 
+            editor: true 
         })
     }
     o.stop = function() {
@@ -2243,11 +2259,17 @@ Hive.App.has_shield = function(o, opts) {
     opts = $.extend({auto: true}, opts);
     o.dragging = false;
 
+    var clicks = 0
     o.shield = function() {
         if(o.shield_div) return;
         o.shield_div = $("<div class='drag shield'>");
         o.div.append(o.shield_div);
-        o.shield_div.css('opacity', 0.0);
+        clicks = 0
+        o.shield_div.css('opacity', 0.0)
+            .on('click', function() {
+                if (++clicks > 1 && o.click_to_unshield && o.click_to_unshield())
+                    o.unshield() 
+            });
     }
     o.unshield = function() {
         if (opts.always) return;
@@ -2266,6 +2288,7 @@ Hive.App.has_shield = function(o, opts) {
 
     var start = function(){
         o.dragging = true;
+        --clicks;
         o.update_shield();
     };
     var end = function(){
