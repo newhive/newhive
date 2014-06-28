@@ -911,8 +911,8 @@ Hive.App.Code = function(o){
     o.load = function() {
         if (_load) _load()
         if(o.init_state.code_type == 'js') {
-            insert_code()
             setTimeout(function() {
+                insert_code()
                 o.run_module_func("editor")
             }, 1000)
         }
