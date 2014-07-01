@@ -15,7 +15,7 @@ Python library dependency dependencies (Ubuntu packages)
     sudo apt-get install build-essential python-dev ipython
 
 Python library dependencies
-    sudo pip install ez_setup
+    sudo pip install ez_setup python-gcm
     pip install PIL --allow-external PIL --allow-unverified PIL
     sudo pip install werkzeug pymongo boto oauth2 oauth2client paramiko cssutils hsaudiotag lxml webassets urllib3 apiclient httplib2 pytz jinja2 simplejson yuicompressor envoy scipy webkit2png pandas brownie google-api-python-client  statprof yappi beautifulsoup4
 
