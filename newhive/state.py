@@ -243,6 +243,7 @@ class Collection(object):
         order=-1, filter=None, **args):
         # page_is_id = is_mongo_key(at)
         # if at and not page_is_id:
+
         at = int(at)
         limit = int(limit)
         if type(spec) == dict:
@@ -288,6 +289,7 @@ class Collection(object):
                     return []
 
             res = self.search(sub_spec)
+
             return res
 
     # default implementation of pagination, intended to be overridden by
@@ -909,7 +911,6 @@ class User(HasSocial):
         limit=int(limit)
         feed_items = self.network_feed_items()#limit=limit*4, at=at)
         tagged_exprs = list(self.exprs_tagged_following())
-
         # group feed items into expressions, alternate
         # these with tagged_exprs and de-duplicate
         exprs = {}
@@ -918,7 +919,11 @@ class User(HasSocial):
             r['feed'] = []
             exprs[r.id] = r
             return r
-        while len(result) < (limit + at):
+        
+        # TODO result is limited to size 500 to ensure that paginate works 
+        # properly on the list, however this is not optimally performant as the
+        # loop is forced to run much longer than necessary
+        while len(result) < (500):
             item = False
             # grab one from feed_items
             for r in feed_items:
@@ -939,8 +944,9 @@ class User(HasSocial):
                     result.append(item)
                     break
             if not item: break
-
-        return result[at:]
+        
+        sorted_result = sorted(result, key = lambda r: r['updated'], reverse = True)
+        return sorted_result[at:at+limit]
 
     def profile(self, limit=20, at=0):
         at=int(at)
