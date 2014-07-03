@@ -102,11 +102,19 @@ class Database:
                     results = viewer.feed_trending(**args)
             elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
                 owner = None
+                has_results = False
+                import ipdb; ipdb.set_trace() #//!!
+
                 if user and len(tags) == 1:
                     # if search has user and one tag,
                     # look for specific ordered list in user record
                     owner = self.User.named(user)
-                if owner and owner.get('tagged', {}).has_key(tags[0]):
+                    if owner and tags[0] == "Profile":
+                        results = owner.profile(**dfilter(['at', 'limit'], args))
+                        has_results = True
+                if has_results:
+                    pass
+                elif owner and owner.get('tagged', {}).has_key(tags[0]):
                     results = self.Expr.page(owner['tagged'][tags[0]], **args)
                 else:
                     if search.get('tags'):
@@ -130,6 +138,7 @@ class Database:
                 if not expr_only:
                     results = results + self.User.page(spec, **args)
                     results.sort(cmp=lambda x, y: cmp(x[sort], y[sort]), reverse=True)
+
             if not id or len(results) > 500 or args.get('limit', 27) > 1000:
                 break;
             if len(filter(lambda x: x.id==id,results)):
@@ -165,7 +174,12 @@ class Database:
                     'Activity', 'Followers', 'Following', 'Loves',
                 ]:
                     search['feed'] = pattern[1].lower()
-                else: search['tags'].append( pattern[1].lower() )
+                elif pattern[1] in [
+                    'Profile',
+                ]:
+                    search['tags'].append( pattern[1] )
+                else: 
+                    search['tags'].append( pattern[1].lower() )
             else: search['text'].append( pattern[0].lower() )
 
         for k in ['text', 'tags', 'phrases', 'feed']:
