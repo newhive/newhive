@@ -103,7 +103,6 @@ class Database:
             elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
                 owner = None
                 has_results = False
-                import ipdb; ipdb.set_trace() #//!!
 
                 if user and len(tags) == 1:
                     # if search has user and one tag,
