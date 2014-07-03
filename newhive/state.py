@@ -102,17 +102,13 @@ class Database:
                     results = viewer.feed_trending(**args)
             elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
                 owner = None
-                has_results = False
 
                 if user and len(tags) == 1:
                     # if search has user and one tag,
                     # look for specific ordered list in user record
                     owner = self.User.named(user)
-                    if owner and tags[0] == "Profile":
-                        results = owner.profile(**dfilter(['at', 'limit'], args))
-                        has_results = True
-                if has_results:
-                    pass
+                if owner and tags[0] == "Profile":
+                    results = owner.profile(**dfilter(['at', 'limit'], args))
                 elif owner and owner.get('tagged', {}).has_key(tags[0]):
                     results = self.Expr.page(owner['tagged'][tags[0]], **args)
                 else:
