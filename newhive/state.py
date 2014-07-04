@@ -1,6 +1,7 @@
 import newhive
 import re, pymongo, bson.objectid, random, urllib, urllib2, os, time, json, math
 import operator as op
+from ast import literal_eval
 from tempfile import mkstemp
 from os.path import join as joinpath
 from md5 import md5
@@ -31,6 +32,7 @@ from newhive.utils import *
 from newhive.routes import reserved_words
 
 from newhive.profiling import g_flags
+from newhive.notifications import gcm
 
 import logging
 logger = logging.getLogger(__name__)
@@ -957,12 +959,15 @@ class User(HasSocial):
         sorted_result = sorted(result, key = lambda r: r['updated'], reverse = True)
         return sorted_result[at:at+limit]
 
+    def profile_spec(self):
+        return {'initiator': self.id,
+            'class_name': {'$in': ['Broadcast','UpdatedExpr','NewExpr','Remix']}
+        }
+
     def profile(self, limit=20, at=0):
         at=int(at)
         limit=int(limit)
-        spec = {'initiator': self.id,
-            'class_name': {'$in': ['Broadcast','UpdatedExpr','NewExpr','Remix']}
-        }
+        spec = self.profile_spec()
         result = []
         exprs = {}
         for r in self.db.Feed.search(spec, order='created'):
@@ -2178,6 +2183,9 @@ class Feed(Entity):
 
         if self.entity.owner.id != self['initiator']: self.entity.owner.notify(self)
 
+        # Send any related notifications
+        self.db.Searches.run_for(self)
+
         return self
 
     def delete(self):
@@ -2445,6 +2453,62 @@ class Trash(Entity):
             entity['collection'] = collection_name
             entity['record'] = record
             return super(Trash.Collection, self).create(entity)
+
+@register
+class Searches(Entity):
+    """ This collection contains searches which should be executed whenever
+        the underlying data is updated """
+
+    cname = 'searches'
+    # TODO: update the db spec doc with this and trash and whatever else has
+    # changed recently
+    indexes = ['search', 'type']
+
+    def add_action(self, action):
+        self.setdefault('action', [])
+        self.update(action=self['action'] + [action])
+        pass
+
+    class Collection(Collection):
+        def run_for(self, entity):
+            col = entity._col
+            # TODO-perf: Need to be able to sample the list by user or
+            # similar to cut down possible search space
+            notify_data = { 
+                "message": entity.entity.get('name') or "[Untitled]"
+                ,"title": 'Push Notification Sample' 
+                ,"msgcnt": '3'
+                ,"soundname": 'beep.wav'
+            }
+            for search in self.db.Searches.search({'type': col.name}):
+                _search = search['search']
+                spec = literal_eval(_search)
+                spec['_id'] = entity.id
+                if col.find(spec).count():
+                    actions = search.get('action', [])
+                    for action in actions:
+                        act_type = action.get('type')
+                        if act_type == 'gcm_notify':
+                            gcm.notify(action.get('reg_id'), notify_data)
+
+        def get(self, search, _type="feed"):
+            _search = str(search)
+            entity = self.db.Searches.find({'search': _search})
+            if entity: return entity
+            return self.create(search, _type=_type)
+
+        def create(self, search, _type="feed", **args):
+            """ Helper function for searches creation
+            """
+            entity = args
+            # Mongo doesn't like some types of literals in dict's, 
+            # so don't store it.
+            # entity['_search'] = search
+            # Stringify to make it indexable
+            entity['search'] = str(search)
+            # assert search == literal_eval(str(search))
+            entity['type'] = _type
+            return super(Searches.Collection, self).create(entity)
 
 
 ## utils

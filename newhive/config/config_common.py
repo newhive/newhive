@@ -14,6 +14,7 @@ live_prefixes   = ['live-2', 'live-3', 'live-4', 'live-5', 'live-6']
 embedly_key     = '1774adc27ebd4753a2f20c3635d1508e'
 analytics_db    = 'analytics'
 
+google_api_key  = 'AIzaSyDwFDcABJN8ldQKGCA2ohiO8kHoFst57X8'
 ssl_ca          = False
 
 aws_id          = False
