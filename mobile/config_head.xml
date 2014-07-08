@@ -11,4 +11,6 @@
         NewHive
     </author>
 
+    <preference name="BackgroundColor" value="0xffffffff"/>
+    <preference name="Orientation" value="default" />
     <!-- version specific config goes here -->

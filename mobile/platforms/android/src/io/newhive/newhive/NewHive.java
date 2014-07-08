@@ -29,6 +29,9 @@ public class NewHive extends CordovaActivity
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
+        // if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        //     WebView.setWebContentsDebuggingEnabled(true);
+        // }
         super.onCreate(savedInstanceState);
         super.init();
         // Set by <content src="index.html" /> in config.xml

@@ -23,6 +23,8 @@ define([
 ){
     var o = { back: false }, route;
 
+    // So code modules can use this variable safely
+    editor = undefined
     var ajax_pending = false
     o.ajax_pending = function() { return ajax_pending }
 
@@ -45,6 +47,12 @@ define([
             context.config.secure_content_url : context.config.content_url;
 
         context.parse_query();
+        // context.referer holds the site host of the containing frame, if one exists.
+        // If it does not, it comes back as the same as server host, so we delete it here.
+        if (context.referer && (context.referer.replace(/.*\/\//,"") == 
+            context.server_url.replace(/.*\/\//,"")))
+            context.referer = null
+
         routing.register_state(route_args);
         if (util.mobile()) {
             $("body").addClass('mobile');

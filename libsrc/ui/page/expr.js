@@ -573,19 +573,32 @@ define([
         }).trigger("change");
 
         // updates embed links based on selection
-        $("#dia_embed input[type=radio]").on( "change", function(ev) {
+        $("#dia_embed input[type=checkbox]").on("change", function(ev) {
             var host = '' 
                 , params = ''
                 , link = ''
                 , embed_url = ''
-
+                , clean = ''
+                , any_checked = false
             host = context.config.server_url
-            if ($(this).val() === "exclude_nav")
-                host = context.config.content_url
-            else if ($(this).val() === "include_collection")
-                 if (context.query.q)
-                    params = "&q=" + window.encodeURIComponent(context.query.q)
-            
+            params = "&clean="
+            if ($("#include_social").is(":checked")){
+                any_checked = true
+                clean += "+social"
+            }
+            if ($("#include_collection").is(":checked")){
+                any_checked = true
+                clean += "+collection"
+            }
+            if ($("#include_logo").is(":checked")){
+                any_checked = true
+                clean += "+logo"
+            }
+            if (!any_checked)
+                params= ""
+
+            params = params.concat(clean.slice(1))
+
             link = util.urlize(host).replace(/\/$/,"") + 
                 window.location.pathname + '?template=embed';      
             embed_url ="<iframe src='" + link + params + "' " +
@@ -898,7 +911,8 @@ define([
             msg = page_btn_state;
         // don't render the page buttons if there is nothing to page through!
         if (context.page_data.cards == undefined
-            || context.page_data.cards.length == 1) {
+            || context.page_data.cards.length == 1
+            || !context.page_data.expr) {
             $(".page_btn").hidehide();
             return;
         }

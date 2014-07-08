@@ -1,6 +1,7 @@
 import newhive
 import re, pymongo, bson.objectid, random, urllib, urllib2, os, time, json, math
 import operator as op
+from ast import literal_eval
 from tempfile import mkstemp
 from os.path import join as joinpath
 from md5 import md5
@@ -31,6 +32,7 @@ from newhive.utils import *
 from newhive.routes import reserved_words
 
 from newhive.profiling import g_flags
+from newhive.notifications import gcm
 
 import logging
 logger = logging.getLogger(__name__)
@@ -102,11 +104,14 @@ class Database:
                     results = viewer.feed_trending(**args)
             elif any(k in search for k in ('tags', 'phrases', 'text', 'user')):
                 owner = None
+
                 if user and len(tags) == 1:
                     # if search has user and one tag,
                     # look for specific ordered list in user record
                     owner = self.User.named(user)
-                if owner and owner.get('tagged', {}).has_key(tags[0]):
+                if owner and tags[0] == "Profile":
+                    results = owner.profile(**dfilter(['at', 'limit'], args))
+                elif owner and owner.get('tagged', {}).has_key(tags[0]):
                     results = self.Expr.page(owner['tagged'][tags[0]], **args)
                 else:
                     if search.get('tags'):
@@ -130,6 +135,7 @@ class Database:
                 if not expr_only:
                     results = results + self.User.page(spec, **args)
                     results.sort(cmp=lambda x, y: cmp(x[sort], y[sort]), reverse=True)
+
             if not id or len(results) > 500 or args.get('limit', 27) > 1000:
                 break;
             if len(filter(lambda x: x.id==id,results)):
@@ -165,7 +171,12 @@ class Database:
                     'Activity', 'Followers', 'Following', 'Loves',
                 ]:
                     search['feed'] = pattern[1].lower()
-                else: search['tags'].append( pattern[1].lower() )
+                elif pattern[1] in [
+                    'Profile',
+                ]:
+                    search['tags'].append( pattern[1] )
+                else: 
+                    search['tags'].append( pattern[1].lower() )
             else: search['text'].append( pattern[0].lower() )
 
         for k in ['text', 'tags', 'phrases', 'feed']:
@@ -243,6 +254,7 @@ class Collection(object):
         order=-1, filter=None, **args):
         # page_is_id = is_mongo_key(at)
         # if at and not page_is_id:
+
         at = int(at)
         limit = int(limit)
         if type(spec) == dict:
@@ -288,6 +300,7 @@ class Collection(object):
                     return []
 
             res = self.search(sub_spec)
+
             return res
 
     # default implementation of pagination, intended to be overridden by
@@ -909,7 +922,6 @@ class User(HasSocial):
         limit=int(limit)
         feed_items = self.network_feed_items()#limit=limit*4, at=at)
         tagged_exprs = list(self.exprs_tagged_following())
-
         # group feed items into expressions, alternate
         # these with tagged_exprs and de-duplicate
         exprs = {}
@@ -918,7 +930,11 @@ class User(HasSocial):
             r['feed'] = []
             exprs[r.id] = r
             return r
-        while len(result) < (limit + at):
+        
+        # TODO result is limited to size 500 to ensure that paginate works 
+        # properly on the list, however this is not optimally performant as the
+        # loop is forced to run much longer than necessary
+        while len(result) < (500):
             item = False
             # grab one from feed_items
             for r in feed_items:
@@ -939,15 +955,19 @@ class User(HasSocial):
                     result.append(item)
                     break
             if not item: break
+        
+        sorted_result = sorted(result, key = lambda r: r['updated'], reverse = True)
+        return sorted_result[at:at+limit]
 
-        return result[at:]
+    def profile_spec(self):
+        return {'initiator': self.id,
+            'class_name': {'$in': ['Broadcast','UpdatedExpr','NewExpr','Remix']}
+        }
 
     def profile(self, limit=20, at=0):
         at=int(at)
         limit=int(limit)
-        spec = {'initiator': self.id,
-            'class_name': {'$in': ['Broadcast','UpdatedExpr','NewExpr','Remix']}
-        }
+        spec = self.profile_spec()
         result = []
         exprs = {}
         for r in self.db.Feed.search(spec, order='created'):
@@ -2163,6 +2183,9 @@ class Feed(Entity):
 
         if self.entity.owner.id != self['initiator']: self.entity.owner.notify(self)
 
+        # Send any related notifications
+        self.db.Searches.run_for(self)
+
         return self
 
     def delete(self):
@@ -2430,6 +2453,62 @@ class Trash(Entity):
             entity['collection'] = collection_name
             entity['record'] = record
             return super(Trash.Collection, self).create(entity)
+
+@register
+class Searches(Entity):
+    """ This collection contains searches which should be executed whenever
+        the underlying data is updated """
+
+    cname = 'searches'
+    # TODO: update the db spec doc with this and trash and whatever else has
+    # changed recently
+    indexes = ['search', 'type']
+
+    def add_action(self, action):
+        self.setdefault('action', [])
+        self.update(action=self['action'] + [action])
+        pass
+
+    class Collection(Collection):
+        def run_for(self, entity):
+            col = entity._col
+            # TODO-perf: Need to be able to sample the list by user or
+            # similar to cut down possible search space
+            notify_data = { 
+                "message": entity.entity.get('name') or "[Untitled]"
+                ,"title": 'Push Notification Sample' 
+                ,"msgcnt": '3'
+                ,"soundname": 'beep.wav'
+            }
+            for search in self.db.Searches.search({'type': col.name}):
+                _search = search['search']
+                spec = literal_eval(_search)
+                spec['_id'] = entity.id
+                if col.find(spec).count():
+                    actions = search.get('action', [])
+                    for action in actions:
+                        act_type = action.get('type')
+                        if act_type == 'gcm_notify':
+                            gcm.notify(action.get('reg_id'), notify_data)
+
+        def get(self, search, _type="feed"):
+            _search = str(search)
+            entity = self.db.Searches.find({'search': _search})
+            if entity: return entity
+            return self.create(search, _type=_type)
+
+        def create(self, search, _type="feed", **args):
+            """ Helper function for searches creation
+            """
+            entity = args
+            # Mongo doesn't like some types of literals in dict's, 
+            # so don't store it.
+            # entity['_search'] = search
+            # Stringify to make it indexable
+            entity['search'] = str(search)
+            # assert search == literal_eval(str(search))
+            entity['type'] = _type
+            return super(Searches.Collection, self).create(entity)
 
 
 ## utils

@@ -1,7 +1,8 @@
 config.content_url = 'http://staging.tnh.me/'
 
 var view = 'index', page_index = 0, cards = [], cards_complete = false,
-    cards_loading = false, current_page, next_page, win = $(window)
+    cards_loading = false, current_page, next_page, win = $(window),
+    page_index_scrollY = 0
 
 var init = function(){
     render_page_index()
@@ -13,6 +14,10 @@ var init = function(){
 
     document.addEventListener('deviceready', function(){
         document.addEventListener('backbutton', back)
+
+        StatusBar.styleDefault()
+        StatusBar.backgroundColorByName('white')
+        StatusBar.overlaysWebView(false)
     })
 
     window.onorientationchange = function(){
@@ -74,7 +79,9 @@ function render_page_index(){
     page_exit()
     $('#content').removeClass(view).addClass('index').empty()
     view = 'index'
+    if(window.StatusBar) StatusBar.show()
     render_cards(cards)
+    window.scrollTo(0, page_index_scrollY)
 
     window.onscroll = function(ev){
         if(!cards_loading && (win.scrollTop() + win.height() + 100
@@ -123,11 +130,14 @@ function render_cards(cards){
 }
 
 function render_page_expr(card){
+    page_index_scrollY = window.scrollY
     page_exit()
     view = 'expr'
+    StatusBar.hide()
     $('#content').removeClass(view).addClass('expr').empty()
     $('#overlays').append($('#templates .expr_overlays').clone().children())
     button('.icon.prev', back)
+    button('.share', function(){ share_expr(card) })
     // TODO: implement share_menu
     // bind_click('#overlays .share', share_menu.open)
 
@@ -141,32 +151,46 @@ function back(){
 function bind_click(el, func){
     // binding click somehow fires events on elements that haven't been rendered yet
     // $(el).on('click', func).on('touchend', func)
-    $(el).on('touchend', func)
+    // $(el).on('touchend', func)
+    $(el).on('tap', func)
+}
+
+function button(sel, click){
+    $(sel).on('tapstart', function(){
+        $(this).addClass('hover')
+    }).on('tapend', function(){
+        $(this).removeClass('hover')
+    }).on('tap', click)
 }
 
 // TODO: implement multitouch?
-function button(sel, click){
-    var jq = $(sel), hover_el, hovering = false
-    $(jq).on('touchstart', function(){
-        var hover_el = this, hover_jq = $(hover_el)
-        hovering = true
-        hover_jq.addClass('hover').on('touchmove', function(ev){
-            var tch = ev.originalEvent.touches[0],
-                x = tch.clientX, y = tch.clientY,
-                over = document.elementFromPoint(x, y)
-            if(over == hover_el || $.contains(hover_el, over)){
-                if(!hovering){
-                    hover_jq.addClass('hover')
-                    hovering = true
-                }
-            }else{
-                hover_jq.removeClass('hover')
-                hovering = false
-            }
-            // android needs this, otherwise next touchmove isn't fired
-            ev.preventDefault()
-        })
-    }).on('touchend', function(){
-        if(hovering) click()
-    })
+// function button(sel, click){
+//     var jq = $(sel), hover_el, hovering = false
+//     $(jq).on('touchstart', function(){
+//         var hover_el = this, hover_jq = $(hover_el)
+//         hovering = true
+//         hover_jq.addClass('hover').on('touchmove', function(ev){
+//             var tch = ev.originalEvent.touches[0],
+//                 x = tch.clientX, y = tch.clientY,
+//                 over = document.elementFromPoint(x, y)
+//             if(over == hover_el || $.contains(hover_el, over)){
+//                 if(!hovering){
+//                     hover_jq.addClass('hover')
+//                     hovering = true
+//                 }
+//             }else{
+//                 hover_jq.removeClass('hover')
+//                 hovering = false
+//             }
+//             // android needs this, otherwise next touchmove isn't fired
+//             ev.preventDefault()
+//         })
+//     }).on('touchend', function(){
+//         if(hovering) click()
+//     })
+// }
+
+function share_expr(card){
+    window.plugins.socialsharing.share('', // message
+        'Check out this NewHive page', card.snapshot_big, card.url)
 }

@@ -241,6 +241,10 @@ define([
             a.attr('target', '_blank');
         } else if (href && non_relative && re.test(href)) {
             a.attr('target', '_top');
+        } else if (!context.referer && href && !non_relative && href.match(/^\/\w/)) {
+            // force relative links to top
+            a.attr('href', context.config.server_url.replace(/\/$/, '') + href);
+            a.attr('target', '_top');
         }
     };
 
@@ -253,7 +257,7 @@ define([
     o.run_code = function(code_module){
         code_modules.push(code_module)
     
-        code_module.run && code_module.run()
+        code_module.run && code_module.run({view:true})
         if(!code_module.animate) return
         animate_go = 1
         var animate_frame = function(){
