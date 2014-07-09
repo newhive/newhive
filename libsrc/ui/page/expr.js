@@ -606,7 +606,6 @@ define([
                 "marginheight='0' frameborder='0' vspace='0' hspace='0'></iframe>"
             
             $('#dia_embed .copy.embed_code').val(embed_url); 
-            $('#dia_embed textarea.image_link').val(link); 
         }).trigger("change");
 
         // $('#comment_form').unbind('success').on('success', o.comment_response);
