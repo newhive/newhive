@@ -5,13 +5,25 @@
   {<vcenter "success_show heading cursor"}
     <div class="centered">Email sent.</div>
   {>}
+
+
+
   <div class="success_hide">
-    <div class="subheading">Expression link:</div>
-    <textarea readonly class="dark">newhive.com/{owner.name}/{expr.name}</textarea>
+    <div class= "_2column">
+      <div class="right fixed fullscreen">
+        <input id = "send_fullscreen" type="checkbox">
+        <label for ="send_fullscreen">Fullscreen</label>
+        </div>
+    <div class="left fill subheading">Expression:</div>
+  
+ 
+
+    <textarea readonly class="dark">PLACEHOLDER</textarea>
     <hr>
+    
     <form { form_attrs "expr_share" } id='form_expr_share' method='POST'>
-      <div class="subheading">Email(s):</div>
-      <input autofocus placeholder="Separate emails with commas." type="text" name="emails">
+      <div class="subheading">Email(s) and/or Usernames:</div>
+      <input autofocus placeholder="Separate emails/usernames with commas." type="text" name="emails">
 
       <div class="subheading">Message:</div>
       <textarea class="message" name="message"></textarea>
@@ -27,3 +39,4 @@
     </form>
   </div>
 </div>
+ 

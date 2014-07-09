@@ -52,19 +52,26 @@ o.Controls = function(app, multiselect, delegate) {
         var cancel_btn = $("<img>").addClass('hoverable')
             .attr('src', asset('skin/edit/delete_app.png'))
             .attr('title', 'Clear link')
-            .css('margin', '12px 0 0 5px');
+            // .css('margin', '12px 0 0 5px');
         var input = $('<input type="text">');
 
         d.append(e);
+        // Protect the input in its own frame so it doesn't change the selection
+        // of the current frame
         input_frame(input, e);
         e.append(cancel_btn);
 
         // set_link is called when input is blurred
         var set_link = function(){
             var v = input.val();
-            // TODO: improve URL guessing
-            if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && 
-                v.match(/\w+\.\w{2,}/)) v = 'http://' + v;
+            if (v.match(/@\w+\.\w{2,}/)) {
+                // Auto-add mailto:
+                if (! v.match(/:/))
+                    v = 'mailto:' + v;
+            } else if (!v.match(/^\//) && !v.match(/\/\//) && v.match(/\w+\.\w{2,}/)) 
+                // TODO: improve URL guessing.  
+                // Auto-add http:// to urls
+                v = 'http://' + v;
             o.app.link_set(v);
             env.History.saver(sel_app.link, sel_app.link_set, 'link image').exec(v);
         };

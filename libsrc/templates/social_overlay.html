@@ -116,13 +116,13 @@
         </div>
         {# Share menu drawer #}
         <div id="share_menu" class="menu drawer" data-handle='.social_share_btn'>
-          <div class='menu_item black_active'>
+          <div class='menu_item'>
             <a {href_attrs "expr_snapshot" "expr_id" id} id='save_jpg_btn'>Save as JPG
               {# TODO: this saves as png, need to process into jpg #}
             </a></div>
-          <div id='embed_form_btn' class='text_btn menu_item item text hoverable black_active'
+          <div id='embed_form_btn' class='text_btn menu_item item text hoverable'
               ><span class='text'>Embed Expression</span></div>
-          <div id='share_form_btn' class='text_btn menu_item item text hoverable black_active'
+          <div id='share_form_btn' class='text_btn menu_item item text hoverable'
               ><span class='text'>Share Expression</span></div>
         </div>
         {|templates/dialog_embed.html}
@@ -133,7 +133,7 @@
   </div>
 
   {# belongs in its own file? #}
-  <div id="dia_comments" class="dialog" data-handle='.comment_btn'>
+  <div id="dia_comments" class="dialog hide" data-handle='.comment_btn'>
     {# activity feed #}
     <div class="title text">Discussion</div>
     {# removing redundant comment icon

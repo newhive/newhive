@@ -1,4 +1,7 @@
-<div class='overlay bottom panel nav {<if query.clean} stay_hidden{>}'>
+{set "clean_options" (string_to_list query.clean)}
+{# TODO: create default for clean_options here. right now it is set it in dialog_embed.html #}
+
+<div class='overlay bottom panel nav {<if (and query.clean (not (contains clean_options "social")))} stay_hidden{>}'>
   {# create or signup/login #}
   {<unless user.logged_in}
     <span class='signup'>
@@ -22,19 +25,30 @@
 </div>
 {<if (not flags.mobile)}
   <div class='social overlay left page_btn page_prev
-    {<if query.clean} stay_hidden{>}'></div>
+    {<if (and query.clean (not (contains clean_options "collection")))} stay_hidden{>}'></div>
   <div class='social overlay right page_btn page_next
-    {<if query.clean} stay_hidden{>}'></div>
+     {<if (and query.clean (not (contains clean_options "collection")))} stay_hidden{>}'></div>
 {>}
-{# hive logo button #}
-<div id='logo' class='overlay bottom nav logo icon 
-  {<if (and query.clean (neq query.clean "logo"))} stay_hidden{>}'></div>
 
+{# hive logo button #}
+{<if (eq query.template "embed")}
+  <a {anchor_attrs "view_expr" "owner_name" page_data.expr.owner.name "expr_name" page_data.expr.name} 
+    id='logo' class='overlay bottom nav logo icon 
+      {<if (and query.clean (not (contains clean_options "logo")))} stay_hidden{>}'></a>
+{>}
+{<else}
+  <div id='logo' class='overlay bottom nav logo icon 
+      {<if (and query.clean (not (contains clean_options "logo")))} stay_hidden{>}'></div>
+{>}
+    
 {# menu: logo #}
-<div id='logo_menu' class='menu drawer' data-handle='#logo'>
+<div id='logo_menu' class='menu drawer {<if (eq query.template "embed")} stay_hidden{>}' data-handle='#logo'>
   {<if user.logged_in}
     <form {form_attrs "logout"} method='POST' id='logout_form'></form>
     <div id='logout_btn' class='menu_item'>Logout</div>
+    <a {anchor_attrs "view_expr"
+      "owner_name" config.site_user "expr_name" "about"}
+      class='menu_item'>About</a>
     {# <div id='invite_btn' class='menu_item'>Invites</div> #}
     <div id='activity_btn' class='menu_item hoverable'>
         <div class='icon'></div>
@@ -64,27 +78,27 @@
 {>}{<else}
   <div id='dia_login' class='dialog login' data-handle='.login_btn'>
     {#<a href="{facebook_authentication_url}" target="_top"
-      <img src='{"skin/1/fb_sign_in.png"|asset_url}' style='margin: 2px 0 2px -4px;'>
+      <img src='{"skin/1/fb_sign_in.png"|asset_url}' style='margin: 20px 0 2px -4px;'>
     </a>#}
     <div class="title">Log in:</div>
     {|templates/login_form.html}
   </div>
-  
-  <div id="dia_recover" class="standard dialog" data-handle='.password_recovery'>
-    <div class="error title expr">Reset your password:</div>
-    <div class="subheading error_msg"></div>
-    {<vcenter "success_show heading pointer"}
-      <div class="centered">A password reset link was sent to your email.</div>
-    {>}
-    <div class="success_hide">
-      <form { form_attrs "password_recover" } id='form_password_recover' method='POST'>
-        <div class="form_text">Enter your email address.</div>
-        <input autofocus placeholder="Email" type="text" name="email">
-        <button type="submit" class="submit teal_btn upper">Enter</button>
-      </form>
-    </div>
-  </div>
 {>}
+
+<div id="dia_recover" class="standard dialog" data-handle='.password_recovery'>
+  <div class="title expr">Reset your password:</div>
+  <div class="subheading error_msg"></div>
+  {<vcenter "success_show heading pointer"}
+    <div class="centered">A password reset link was sent to your email.</div>
+  {>}
+  <div class="success_hide">
+    <form { form_attrs "password_recover" } id='form_password_recover' method='POST'>
+      <ditv class="form_text">Enter your email address.</div>
+      <input autofocus placeholder="Email" type="text" name="email">
+      <button type="submit" class="submit teal_btn upper">Enter</button>
+    </form>
+  </div>
+</div>
 
 {# social overlay popup on expressions #}
 <div class='social overlay' id='social_overlay'></div>

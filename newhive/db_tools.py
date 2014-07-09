@@ -34,11 +34,11 @@ def snapshot_reset(exprs):
     for r in exprs:
         r.update(updated=False, snapshot_fails=0)
 
-def snapshot_redo_collection(username='zach', collection='brokensnapshots', retry=5):
-    rs = db.Expr.fetch(list(set(db.User.named('zach')['tagged']['brokensnapshots'])))
+def snapshot_redo_collection(username='zach', redo=False, collection='brokensnapshots', retry=5):
+    rs = db.Expr.fetch(list(set(db.User.named(username)['tagged'][collection])))
     for a in range(retry):
         for r in rs:
-            if not r.get('snapshot_id'):
+            if redo or r.get('snapshot_time', 0) < r.get('updated'):
                 r.take_snapshots()
 
 def show_sizeof(x, level=0, show_deep=0):

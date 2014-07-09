@@ -2,97 +2,128 @@
   id='editor'></iframe>
 
 {# dialog triggered by postMessage from edit sandbox #}
-<div id='dia_save' class='standard dialog'>
+<div id='dia_save' class='standard dialog _2column'>
   <form id='expr_info' method='POST'>
     
-  <div class="heading expr title">Save</div>
-  <div class='upper label medbold'>Title</div>
-  <textarea rows="1" autofocus id='title'></textarea>
+  {# 
+    <div class="heading expr title">Save</div>
+  #}
 
-  <div class='upper label medbold'>URL</div>
-  <div class=''>newhive.com/{user.name}/</div>
-  <div class='note'>
-    Change the URL to "Save As"
-    <div class='floatright {<unless flags.custom_domain}hide{>}'>
-      <input type='checkbox' id='use_custom_domain'>
-      <label for='use_custom_domain'>Custom domain</label>
-    </div>
+  {# URL #}  
+  <div class="url_bar">
+    <input class="hide" type='checkbox' id='save_show_url'>
+    <label for="save_show_url" class="pointer" title="Click to change"
+      >newhive.com/{user.name}/<span>{expr.name}</span></label>
   </div>
-  <input id='url' type='text' value=''>
+  <div class="label _2column hide showhide">
+    <span class='note hide'>
+      <div class='floatright {<unless flags.custom_domain}hide{>}'>
+        <input type='checkbox' id='use_custom_domain'>
+        <label for='use_custom_domain'>Custom domain</label>
+      </div>
+    </span>
+    <label for="save_url" class='left fixed upper label medbold'>URL</label>
+    <div class='right fill'
+      ><input type="text" value='' id='save_url'></input
+    ></div>
+  </div>
 
-  <div class='hide' id='custom_url_box'>
+  {# Custom Domain #}  
+  <div class='label _2column hide showhide' id='custom_url_box'>
     <div class='upper label medbold'>
-      Custom URL
-      <a href='#' id='domain_help' class='floatright'>(help)</a></div>
-    <input id='custom_url' type='text' value=''>
+      <label for="custom_url" >Custom Domain</label>
+      <span id='domain_help' class='pointer note floatright'>Help</span></div>
+    <input id='custom_url' type='text' value='' placeholder="mydomain.com">
   </div>
 
-  <div class="dialog iframe" id="dia_domain_help" data-handle="#domain_help">
-    {<defer}<iframe src="{config.content_url}{config.site_user}/domain-help"
-      ></iframe>{>}
+  {# Title #}
+  <div class="label _2column">
+    <label for="save_title" class='left fixed upper label medbold'>Title</label>
+    <div class='right fill'
+      ><input type="text" autofocus id='save_title' placeholder="[Untitled]"></input
+    ></div>
   </div>
 
-  <div class='upper label medbold'>#Tags</div>
-  <input id='tags_input' type='text' value=''>
-  <div class='spacer'></div>
+  {# Tags #}  
+  <div class="label _2column">
+    <label for="save_tags" class='left fixed upper label medbold'>#Tags</label>
+    <div class='right fill'
+      ><input type="text" value='' id='save_tags' placeholder="#sawitonnewhive"></input
+    ></div>
+  </div>
+  
+  {# Extra buttons: remix, sharing options #}
+  <div class="extra_buttons _2column">
+    <div class="right fixed remix_label">
+      <input id="save_remixable" type="checkbox">
+      <label for="save_remixable" class="upper">Remixable</label>
+    </div>
 
-  <div class="remix_label"><label>
-    <input type="checkbox">Allow others to remix this expression</label></div>
+    <div class='left fill'
+      ><span class="hoverable button_options"
+        ><span class='inline_middle upper arrow buttons_toggle'>
+          Include buttons for: </span>
+        <div class="inline_middle drop_arrow"></div>
+    </span></div>
+  </div>
 
-  <div class='button_options {<unless flags.button_options}hide{>}'>
-    <span class='arrow buttons_toggle'>Show buttons for: &nbsp; &nbsp;</span>
-    <label>
+  <div id='privacy' class="inline">
+    <div class="inline_middle teal_btn upper privacy_text">Unlisted</div>
+    <div class="inline_middle drop_arrow"></div>
+  </div>
+
+  <div id='password_ui' style='display: none'>
+    <input type='password' id='password' placeholder='Optional password' value=''>
+  </div>
+
+  <button id='save_submit' class='save black_btn upper' type='submit'>
+    <span class='label'>Save</span>
+  </button>
+
+  </form>
+
+  {# sharing options menu drawer #}
+  {# lives outside the form so it can have different css styling #}
+  <div class="menu drawer button_options_menu hide" data-handle=".button_options"
+    data-menu-opts='"offset_y":15,"layout_x":"submenu"'>
+    <label class="menu_item">
       <input type='checkbox' name='facebook_btn'>
       <img src='{asset "skin/nav/facebook.png"}'>
-    </label>
-    <label>
+    </label><label class="menu_item">
       <input type='checkbox' name='twitter_btn'>
       <img src='{asset "skin/nav/twitter.png"}'>
-    </label>
-    <label>
+    </label><label class="menu_item">
       <input type='checkbox' name='love_btn'>
       <img src='{asset "skin/nav/love.png"}'>
-    </label>
-    <label>
+    </label><label class="menu_item">
       <input type='checkbox' name='republish_btn'>
       <img src='{asset "skin/nav/republish.png"}'>
-    </label>
-    <label>
+    </label><label class="menu_item">
       <input type='checkbox' name='comment_btn'>
       <img src='{asset "skin/nav/comment.png"}'>
     </label>
   </div>
-
-  <span id='privacy' class='teal_btn upper'>Unlisted
-  </span><div class="inline drop_arrow"></div>
-
-  <button id='save_submit' class='save black_btn upper' type='submit'>
-    <span class='label'>Save</span>
-    {#<img
-      src='{asset "skin/edit/loading.gif"}' class='hide loading'>
-    #}
-  </button>
-
-  <div id='password_ui' style='display: none'>
-    <br>
-    <b>Optional password</b><br>
-    <input type='password' id='password' value=''>
-  </div>
-
-  </form>
 </div>
+
+<div class="dialog iframe" id="dia_domain_help" data-handle="#domain_help">
+  {<defer}<iframe src="{config.content_url}{config.site_user}/domain-help"
+    ></iframe>{>}
+</div>
+
 <div id='menu_privacy' class='menu drawer medbold' style='width : 125px;'>
   <div val='password' class='menu_item'>Unlisted</div>
   <div val='public' class='menu_item'>Public</div>
 </div>
 
-<div id='dia_overwrite' class='dialog border selected center' style='width : 25em; padding : 20px'>
- <h2>Overwrite?</h2>
- You already have an expression at "/<span id='expr_name'></span>". Are you sure you want to replace it?<br><br>
- <input id='save_overwrite' type='button' class='btn black rounded' value='Yes'>&nbsp; &nbsp; &nbsp; 
- <input id='cancel_overwrite' type='button' class='btn black rounded' value='No'>
+{# TODO-ilia: remove inline styling, fix styling in scss #}
+<div id='dia_overwrite' class='dialog confirm border selected'>
+  <div class="title">Overwrite</div>
+  You already have an expression at "/<span id='expr_name'></span>". Are you sure you want to replace it?<br><br>
+  <input id='cancel_overwrite' type='button' class='teal_btn upper' style="float: left" value='No'>
+  <input id='save_overwrite' type='button' class='grey_btn upper' value='Yes' style="float: right">&nbsp; &nbsp; &nbsp; 
 </div>
 
 <form {form_attrs "expr_save"} id='expr_save' method='POST'>
   <input type='hidden' name='expr' class='expr'>
+  <input type='hidden' name='autosave' class='autosave'>
 </form>

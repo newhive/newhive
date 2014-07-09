@@ -265,6 +265,7 @@ Hive.layout = function(){
     layout.center('.app_btns', 'body', {v: false});        
 }
 
+Hive.save_safe = true
 Hive.init_global_handlers = function(){
     // Global event handlers
     $(window).on('resize', Hive.layout)
@@ -311,10 +312,13 @@ Hive.init_global_handlers = function(){
     var busy_e = $('.save .loading');
     $(document).ajaxStart(function(){
         busy_e.showshow();
-        Hive.send({save_safe: false})
+        Hive.save_safe = false
+        $("#btn_save span").text("Saving ")
+        Hive.send({save_safe: Hive.save_safe})
     }).ajaxStop(function(){
         busy_e.hidehide();
-        Hive.send({save_safe: true})
+        Hive.save_safe = true
+        Hive.send({save_safe: Hive.save_safe})
     }).ajaxError(function(ev, jqXHR, ajaxOptions){
         // TODO-polish-upload-error: show some warning, and somehow indicate
         // which app(s) failed to save
@@ -324,6 +328,30 @@ Hive.init_global_handlers = function(){
         var expr = Hive.state();
         Hive.send({save_dialog: 1})
     })
+    var has_revert = (revert.apps || revert.background)
+    $(".menu_item.revert").addremoveClass("disabled", !has_revert)
+        .prop('disabled', !has_revert)
+    $(".menu_item.revert").bind_once_anon("click", function(ev) {
+        if (!has_revert) return
+        env.History.begin()
+        // Delete the current version of all apps
+        hive_app.Apps.all().map(function(a) {
+            a.remove()
+        })
+        // Add in all the apps in the revert save
+        if (revert.apps)
+            $.map(revert.apps, function(a){ env.new_app(a) } )
+        if (revert.background) {
+            // TODO-refactor: move this into a bg_set_history func
+            history_point = env.History.saver(
+                function(){ return $.extend(true, {}, env.Exp.background) },
+                hive_app.bg_set, 'change background')
+            hive_app.bg_set(revert.background);
+            history_point.save()
+        }
+
+        env.History.group("revert")
+    })
     // Prevent hidden forms from stealing focus 
     // (fixes ctrl-a going to client, and doing native select-all)
     $("input[readonly]").on("focus",function(e){ $(this).blur() })
@@ -331,12 +359,17 @@ Hive.init_global_handlers = function(){
 
 Hive.receive = function(ev){
     var msg = ev.data
-    if(msg.init)
-        Hive.init(msg.expr, msg.context)
-    if(msg.focus)
+    if (msg.init) {
+        Hive.init(msg.expr, msg.context, msg.revert)
+    } else if(msg.autosave) {
+        $("#btn_save span").text("Saved ")
+        Hive.autosave_time = msg.autosave
+        env.exit_safe_set(true)
+    } else if(msg.focus) {
         window.focus()
-    if(msg.save_request)
+    } else if(msg.save_request) {
         Hive.send({save: Hive.state()})
+    }
 }
 Hive.send = function(m){
     window.parent.postMessage(m, '*') }
@@ -346,7 +379,9 @@ Hive.pre_init = function(){
     Hive.send({ready: true})
 }
 
-Hive.init = function(exp, site_context){
+var revert = {}
+Hive.init = function(exp, site_context, _revert){
+    revert = _revert
     // this reference must be maintained, do not assign to Exp
     env.Exp = Hive.Exp = exp
     // Hive.edit_page = page;
@@ -354,6 +389,7 @@ Hive.init = function(exp, site_context){
     env.scale_set()
 
     $.extend(context, site_context)
+    Hive.context = context
     env.show_css_class = false;
     env.copy_table = context.flags.copy_table || false;
     env.gifwall = ($.inArray('gifwall', exp.tags_index) > -1)
@@ -376,7 +412,18 @@ Hive.init = function(exp, site_context){
 
     Hive.init_dialogs();
     Hive.init_menus();
-    // Hive.init_autosave();
+    var last_autosave, last_autosave_time = 0
+    Hive.autosave_time = 0
+    setInterval(function() {
+        // Only autosave if something has changed
+        var expr = Hive.state()
+        if (Hive.save_safe && !u.deep_equals(last_autosave, expr)) {
+            $("#btn_save span").text("Saving ")
+            last_autosave = $.extend(true, {}, expr)
+            Hive.send({save: expr, autosave:1})
+            env.exit_safe_set(false)
+        }
+    } , 1000)
 
     env.apps_e = $('#happs'); // container element for all interactive apps
     env.History.init();
@@ -386,9 +433,11 @@ Hive.init = function(exp, site_context){
     // TODO-cleanup: remove Selection from registered apps, and factor out
     // shared functionality into has_coords
     env.Selection = hive_app.new_app({ type : 'hive.selection' });
+    hive_app.bg_set(env.Exp.background);
     env.Background = hive_app.App.Background()
     hive_app.Apps.init(Hive.Exp.apps);
     hive_app.Apps.restack();
+    last_autosave = $.extend(true, {}, Hive.state())
     env.zoom_set(1)
 
     $('.edit.overlay').showshow()
@@ -534,17 +583,27 @@ Hive.embed_code = function(element) {
 }; 
 
 // TODO-feature-autosave: implement 
-Hive.init_autosave = function (){
-    setInterval(Hive.set_draft, 5000);
-    try { Hive.set_draft(); }
-    catch(e) { return "If you leave this page any unsaved changes to your expression will be lost."; }
-    var draft = Hive.get_draft();
-    if(draft) Hive.Exp = draft;
-    Hive.get_draft = function() {
-        return localStorage.expr_draft ? JSON.parse(localStorage.expr_draft) : null }
-    Hive.set_draft = function() { localStorage.expr_draft = JSON.stringify(Hive.state()); }
-    Hive.del_draft = function() { delete localStorage.expr_draft; }
-}
+// See also https://developer.mozilla.org/en-US/docs/Web/Guide/API/DOM/Storage
+// Hive.init_autosave = function (){
+//     o = {}
+
+//     o.save_draft = function() {
+//         Hive.send({save: Hive.state(), autosave:1})
+//     }
+//     o.get_draft = function() {}
+    
+//     // setInterval(Hive.set_draft, 5000);
+//     // try { Hive.set_draft(); }
+//     // catch(e) { return "If you leave this page any unsaved changes to your expression will be lost."; }
+//     // var draft = Hive.get_draft();
+//     // if(draft) Hive.Exp = draft;
+//     // Hive.get_draft = function() {
+//     //     return localStorage.expr_draft ? JSON.parse(localStorage.expr_draft) : null }
+//     // Hive.set_draft = function() { localStorage.expr_draft = JSON.stringify(Hive.state()); }
+//     // Hive.del_draft = function() { delete localStorage.expr_draft; }
+
+//     return o
+// }
 
 
 // Get and set the JSON object Hive.Exp which represents the edited expression
@@ -553,13 +612,9 @@ Hive.state = function() {
     hive_app.Apps.restack(); // collapse layers of deleted apps
     Hive.Exp.apps = hive_app.Apps.state();
 
-    // get height
-    var h = 0;
-    for(var i in Hive.Exp.apps) {
-        var a = Hive.Exp.apps[i], y = a.dimensions[1] + a.position[1];
-        if(y > h) h = y;
-    }
-    Hive.Exp.dimensions = [1000, Math.ceil(h)];
+    // TODO: get height/maximum dimension
+    // var h = u.app_bounds(env.Apps.all()).bottom
+    // Hive.Exp.dimensions = [1000, Math.ceil(h)];
 
     return Hive.Exp;
 }

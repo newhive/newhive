@@ -138,6 +138,11 @@ class Assets(object):
             print message % (name)
         print "\nPassed %s/%s" % (valid, total)
 
+    def system(self, *args):
+        status = os.system(*args)
+        if status != 0:
+            raise Exception('Build command failed: ' + str(args))
+
 
 class HiveAssets(Assets):
     def __init__(self):
@@ -168,7 +173,10 @@ class HiveAssets(Assets):
             self.assets_env.auto_build = False
             cmd = webassets.script.CommandLineEnvironment(self.assets_env, logger)
             print("Forcing rebuild of webassets")
-            cmd.build()
+            status = cmd.build()
+            # returns false positive fails
+            #if status != 0:
+            #    raise Exception('Webassets build cmd failed. very sory :\'(')
         # actually get webassets to build bundles (webassets is very lazy)
         for b in self.final_bundles:
             print 'starting', b
@@ -255,7 +263,7 @@ class HiveAssets(Assets):
             # can't figure out how to make cram work from another dir
             old_dir = os.getcwd()
             os.chdir(join(config.src_home, 'libsrc'))
-            os.system('./cram.sh')
+            self.system('./cram.sh')
             os.chdir(old_dir)
 
             self.assets_env.register('site.js', 'compiled.site.js',

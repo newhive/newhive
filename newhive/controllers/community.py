@@ -371,8 +371,13 @@ class Community(Controller):
         # Treat single-word text search as a tag search (show tag page)
         if len(search) == 1 and len(text) == 1:
             tags = text
+            if len(text[0]) > 2 and self.flags.get('user_search'):
+                # Also search for users matching the given text
+                users = self.db.User.paginate({'name': {'$regex': text[0]}}, limit=20)
+                result = users + result
         data = {
             "cards": result,
+            'special': {'mini_expressions': 3},
             "card_type": "expr",
             'title': 'Search',
             'header': ("Search", request.args['q']),
@@ -398,7 +403,7 @@ class Community(Controller):
     # TODO-cleanup: currently used for redirects. Remove this, make propper
     # redirect controller
     #redirect-cleanup
-    def empty(self, tdata, request, **args):
+    def empty(self, tdata, request, **kwargs):
         return {}
 
     @classmethod

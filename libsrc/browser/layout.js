@@ -13,7 +13,7 @@ define(['browser/jquery', 'ui/util'], function($, util) {
         // if(util.mobile()) return
         var scale_from = [$(window).width(), $(window).height()][layout_coord]
             ,s = scale_from / 1000
-        if(util.mobile()) s = .5
+        //if(util.mobile()) s = .5
 
         // TODO: bg code should respect win_width
         $('.happfill').each(function(i, div) {

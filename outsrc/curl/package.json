@@ -1,20 +1,18 @@
 {
-	"name": "curl",
-	"version": "0.7.4",
-	"description": "A small, fast module and resource loader with dependency management. (AMD, CommonJS Modules/1.1, CSS, HTML, etc.)",
-	"keywords": ["curl", "cujo", "amd", "loader", "module"],
+	"name": "curl-amd",
+	"version": "0.8.10",
+	"description": "curl.js is small, fast, extensible module loader that handles AMD, CommonJS Modules/1.1, CSS, HTML/text, and legacy scripts.",
+	"keywords": ["curl", "cujo", "amd", "loader", "module", "commonjs", "css", "html", "json"],
 	"licenses": [
 		{
 			"type": "MIT",
 			"url": "http://www.opensource.org/licenses/mit-license.php"
 		}
 	],
-	"repositories": [
-		{
-			"type": "git",
-			"url": "https://github.com/cujojs/curl"
-		}
-	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/cujojs/curl"
+	},
 	"bugs": "https://github.com/cujojs/curl/issues",
 	"maintainers": [
 		{
@@ -32,7 +30,7 @@
 			"web": "http://hovercraftstudios.com"
 		}
 	],
-	"main": "./src/curl",
+	"main": "./dist/curl-for-ssjs/curl.js",
 	"directories": {
 		"test": "test"
 	},

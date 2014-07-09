@@ -21,6 +21,10 @@
     }
     */
 }
+.inline_middle {
+    display: inline-block;
+    vertical-align: middle;
+}
 .posbox {
     position: relative;
 }
@@ -82,6 +86,7 @@ button {
     padding: 10px;
     font-family: Gibson;
     font-size: 17px;
+    margin: 2px;
     &:hover {
         color: white;
         background-color: black;
@@ -139,6 +144,18 @@ button {
         &> * {
             vertical-align: bottom;
         }
+    }
+}
+._2column {
+    &>.left.fixed {
+        float: left;
+    }
+    &>.right.fixed {
+        float: right;
+    }
+    &>.left.fill, &>.right.fill {
+        // width: 100%;
+        overflow: hidden;
     }
 }
 

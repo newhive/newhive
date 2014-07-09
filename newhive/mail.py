@@ -458,12 +458,14 @@ class Welcome(Mailer):
 
     def send(self, user):
         self.recipient = user
-        user_profile_url = user.url
-        user_home_url = re.sub(r'/[^/]*$', '', user_profile_url)
         context = {
             'recipient': user
-            , 'create_link' : abs_url(secure=True) + "/home/edit"
-            , 'create_icon': self.asset('skin/1/create.png')
+            , 'profile_link': user.url
+            , 'profile_icon': self.asset('skin/site/welcome_email_images/profile_button.png', http=True)
+            , 'create_link': abs_url(secure=True) + "home/edit"
+            , 'create_icon': self.asset('skin/site/welcome_email_images/create_button.png', http=True)
+            , 'follow_link': abs_url(secure=True) + "home/featured"
+            , 'follow_icon': self.asset('skin/site/welcome_email_images/hive_button.png', http=True)
             , 'featured_exprs': self.db.Expr.featured(6)
             }
         self.send_mail(context)
@@ -512,7 +514,7 @@ class ShareExpr(ExprAction):
         if not hasattr(self.recipient, 'id'):
             referral = initiator.new_referral(
                     {'to': recipient.get('email'), 'type': 'email'}
-                    , decrement=False)
+                   )
             context['signup_url'] = referral.url
         super(ShareExpr, self).send(context)
 

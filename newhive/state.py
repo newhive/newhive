@@ -9,7 +9,7 @@ from lxml import html
 from wsgiref.handlers import format_date_time
 from newhive import social_stats
 from itertools import ifilter, islice, izip_longest, chain
-import PIL.Image as Img
+import Image as Img
 from PIL import ImageOps
 from bson.code import Code
 from crypt import crypt
@@ -437,6 +437,9 @@ class Entity(dict):
         if self.Collection.trashable:
             self.db.Trash.create(self.cname, self)
         return res
+
+    def undelete(self, trash=None):
+        pass
 
     def purge(self):
         res = self._col.remove(spec_or_id=self.id, safe=True)
@@ -1107,6 +1110,7 @@ class User(HasSocial):
             'fullname', 'name', 'email', 'profile_about', 'profile_thumb',
             'profile_bg', 'thumb_file_id', 'tags', 'updated', 'created', 'feed'
         ] ) )
+        user['type'] = "user"
         ###########################################################
         # TODO: make sure this field is updated wherever views changes elsewhere
         # TODO: figure out best thing to do for empty user
@@ -1166,7 +1170,8 @@ class User(HasSocial):
         self.facebook_disconnect()
 
         # Feed Cleanup
-        for feed_item in self.db.Feed.search({'$or': [{'initiator': self.id}, {'entity': self.id}]}):
+        for feed_item in self.db.Feed.search(
+                {'$or': [{'initiator': self.id}, {'entity': self.id}]}):
             feed_item.delete()
 
         # Expressions Cleanup
@@ -1174,6 +1179,24 @@ class User(HasSocial):
             e.delete()
 
         return super(User, self).delete()
+
+    def undelete(self, trash):
+        # TODO-undelete: reconnect FB?
+        # TODO-undelete: Fix following / followers
+        # TODO-undelete: index record.owner
+        time = trash.get('updated', now()) - 3600
+        for expr in self.db.Trash.search({
+            'record.owner': self.id
+            ,"updated": {"$gt": time}
+            ,'collection': 'expr'
+        }):
+            expr.undelete() 
+        for feed in self.db.Trash.search({
+            '$or': [{'record.initiator': self.id}, {'record.entity': self.id}]
+            ,"updated": {"$gt": time}
+            ,'collection': 'feed'
+        }):
+            feed.undelete()
 
     def has_group(self, group, level=None):
         groups = self.get('groups')
@@ -1740,6 +1763,7 @@ class Expr(HasSocial):
         counts['Comment'] = self.comment_count
         expr = dfilter(self, ['name', 'title', 'feed', 'created',
             'updated', 'password', 'container'])
+        expr['type'] = "expr"
         dict.update(expr, {
             'tags': self.get('tags_index'),
             'id': self.id,
@@ -1778,6 +1802,7 @@ class Expr(HasSocial):
     def client_view_page(self):
         """ data for expr page """
         expr = dfilter(self, ['layout_coord', 'clip_x', 'clip_y'])
+        expr['type'] = "expr"
         apps = expr['apps'] = {}
         for app in self.get('apps',[]):
             app_id = app.get('id', 'app_' + str(app['z']))
@@ -2057,6 +2082,7 @@ class File(Entity):
 
     def client_view(self, viewer=None, activity=0):
         r = dfilter(self, ['name', 'mime', 'owner', 'thumbs'])
+        r['type'] = "file"
         dict.update(r, id=self.id, url=self.url,
             thumb_big=self.get_thumb(222,222),
             thumb_small=self.get_thumb(70,70))
@@ -2180,6 +2206,7 @@ class Feed(Entity):
 
     def client_view(self):
         r = self.collection.new(self)
+        r['type'] = "feed"
         # TODO: no good way to assert on broken db
         if self.initiator == None:
             return r
@@ -2369,6 +2396,16 @@ class Broken(Entity):
             entity['record'] = record
             return super(Broken.Collection, self).create(entity)
 
+def collection_of(db, collection):
+    try:
+        return getattr(db, collection.title())
+    except AttributeError, e:
+        return None
+
+# def search_trash(db, spec, collection):
+#     spec = { 'record.' + k: v for k, v in spec }
+#     spec.update({'collection': collection})
+#     return db.Trash.search(spec)
 
 @register
 class Trash(Entity):
@@ -2377,6 +2414,14 @@ class Trash(Entity):
 
     cname = 'trash'
     indexes = ['record.id','record.created','record.updated']
+
+    def undelete(self):
+        collection = collection_of(self.db, self['collection'])
+
+        if collection:
+            entity = collection.create(self['record'])
+            entity.undelete(self)
+            self.purge()
 
     class Collection(Collection):
         trashable = False

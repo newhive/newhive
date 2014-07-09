@@ -23,6 +23,16 @@ define([
 ){
     var o = { back: false }, route;
 
+    var ajax_pending = false
+    o.ajax_pending = function() { return ajax_pending }
+
+    o.init_mobile = function(){
+        context.native_mobile = true;
+        // TODO: redirect code goes here
+        o.init({route_name: 'home', client_method: 'home'})
+        
+    }
+    
     o.init = function(route_args){
         window.c = context; // useful for debugging
         setup_google_analytics();
@@ -35,6 +45,12 @@ define([
             context.config.secure_content_url : context.config.content_url;
 
         context.parse_query();
+        // context.referer holds the site host of the containing frame, if one exists.
+        // If it does not, it comes back as the same as server host, so we delete it here.
+        if (context.referer && (context.referer.replace(/.*\/\//,"") == 
+            context.server_url.replace(/.*\/\//,"")))
+            context.referer = null
+
         routing.register_state(route_args);
         if (util.mobile()) {
             $("body").addClass('mobile');
@@ -51,6 +67,16 @@ define([
         });
         o.dispatch(route_args.route_name, context.page_data);
         wrapLinks();
+
+        $(document).ajaxStart(function(){
+            ajax_pending = true
+        }).ajaxStop(function(){
+            ajax_pending = false
+        }).ajaxError(function(ev, jqXHR, ajaxOptions){
+            // TODO-polish-upload-error: show some warning, and somehow indicate
+            // which app(s) failed to save
+        });
+
     };
     o.dispatch = function(route_name, page_data){
         track_pageview(route_name);
@@ -141,7 +167,7 @@ define([
             return;
         o.set_exit_warning(false)
 
-        context.query;
+        // context.query;
 
         // remember scroll position.
         if (page_state.route_name != "view_expr") {
@@ -159,6 +185,7 @@ define([
                 dataType: 'json',
                 success: callback
             };
+            // console.log(api_call)
             $.ajax(api_call);
         } else 
             callback({});

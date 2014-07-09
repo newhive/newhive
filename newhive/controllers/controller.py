@@ -52,8 +52,9 @@ class Controller(object):
             # fields may be left alone to mirror the request, or validated and normalized
             form=dict(request.form.items()), error={},
             query=request.args, url=request.url,
-            is_secure=request.is_secure
-        ) )
+            is_secure=request.is_secure, referer=request.headers.get('referer')
+
+        ))
 
         authed = auth.authenticate_request(self.db, request, response)
         if type(authed) == self.db.User.entity:
@@ -88,6 +89,7 @@ class Controller(object):
                 user_flags[flag] = True
         tdata.context.update(flags=user_flags)
         self.flags = user_flags
+
 
         return (tdata, response)
 

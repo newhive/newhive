@@ -5,6 +5,7 @@ define([
 ){
     var o = {};
 
+    // TODO-refactor: move the tags functionality out of profile
     o.render = function(){
         $('#site').empty().append(manage_tags_template());
     };

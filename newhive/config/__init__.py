@@ -39,8 +39,8 @@ def client_view():
 	return dict(
         debug_mode=debug_mode,
         use_ga=live_server,
-	   	streamified_url=streamified_url,
-        streamified_client_id=streamified_client_id,
+	   	#streamified_url=streamified_url,
+        #streamified_client_id=streamified_client_id,
 
         site_user=site_user,
 
