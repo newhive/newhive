@@ -229,12 +229,11 @@ define([
     o.edit_expr = function(){
         // pass context from server to editor
         var edit_context = js.dfilter(context, ['user', 'flags', 'query', 'config'])
-            , revert = {}
+            , revert = $.extend(true, {}, expr)
         // Autosave: restore draft if more recent than save
         if (expr.draft && expr.updated && expr.draft.updated 
             && expr.draft.updated > expr.updated) 
         {
-            revert = $.extend(true, {}, expr)
             expr = $.extend(true, {}, expr, expr.draft)
             o.update_form()
         }
