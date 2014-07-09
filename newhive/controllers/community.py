@@ -395,6 +395,7 @@ class Community(Controller):
         q = json.loads(request.args.get('q', '{}'))
         # TODO-cleanup: handle sort arguments more generally in pre_dispatch
         db_args.update(sort=[(db_args.get('sort', 'updated'), db_args.get('order', -1))])
+        db_args.setdefault('limit', 20)
         res = self.db.Expr.search(q, **db_args)
         return {
             'cards': list(res),
