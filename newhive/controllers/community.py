@@ -388,13 +388,15 @@ class Community(Controller):
             data.update({'tags_search': tags, 'page': 'tag_search', 'viewer': profile})
         return data
 
-    def admin_query(self, tdata, request, db_args={}):
+    def admin_query(self, tdata, request, db_args={}, **kwargs):
         if not self.flags.get('admin'):
             return {}
 
         q = json.loads(request.args.get('q', '{}'))
-        res = self.db.Expr.search(q, limit=20, skip=args.get('at', 0),
-            sort=[(args.get('sort', 'updated'), args.get('order', -1))])
+        # TODO-cleanup: handle sort arguments more generally in pre_dispatch
+        db_args.update(sort=[(db_args.get('sort', 'updated'), db_args.get('order', -1))])
+        db_args.setdefault('limit', 20)
+        res = self.db.Expr.search(q, **db_args)
         return {
             'cards': list(res),
             'card_type': 'expr'
@@ -430,6 +432,8 @@ class Community(Controller):
         if query is None:
             return self.serve_404(tdata, request, response, json=json)
         # Handle pagination
+        # TODO-cleanup: move to another module so routes with
+        # pagination aren't forced into community
         db_args = dfilter(request.args, ['at', 'by', 'limit', 'sort', 'order'])
         for k in ['at', 'order']:
             if k in db_args: db_args[k] = int(db_args[k])

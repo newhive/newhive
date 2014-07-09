@@ -1140,7 +1140,7 @@ class User(HasSocial):
             updates = {}
             if not self['analytics'].has_key('views_by'):
                 updates.update({'views_by': 
-                    sum([r['views'] for r in self.db.Expr.search({'owner':self['_id']})])})
+                    sum([r.get('views', 0) for r in self.db.Expr.search({'owner':self['_id']})])})
             if not self['analytics'].has_key('loves_by'):
                 updates.update({'loves_by':
                     self.db.Feed.search({'entity_owner':self['_id'],
