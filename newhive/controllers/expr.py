@@ -3,8 +3,7 @@ import os, json, cgi, base64
 from pymongo.errors import DuplicateKeyError
 from functools import partial
 
-from newhive import utils
-from newhive.utils import dfilter
+from newhive.utils import dfilter, now, get_embedly_oembed, tag_string, set_trace
 from newhive.controllers.controller import ModelController
 
 class Expr(ModelController):
@@ -24,7 +23,40 @@ class Expr(ModelController):
 
         return self.serve_json(response, resp)
 
-        
+    def _unused_name(self, name, owner):
+        if not name or not len(name) or not owner:
+            raise ValueError('Expr / user not found')
+
+        m = re.match("(.*)-([0-9]+)$", name)
+        if m:
+            base_name = m.group(1)
+            num = int(m.group(2))
+        else:
+            base_name = name
+            num = 0
+        expr_names = [e['name'] for e in list(self.db.Expr.search({
+            'owner': owner.id, 'name': re.compile("^" + base_name + ".*")
+        }))]
+        while True:
+            if num:
+                name = base_name + "-" + str(num)
+            else:
+                name = base_name
+            if name not in expr_names:
+                return name
+            num += 1
+
+    def unused_name(self, tdata, request, response, **args):
+        """ Returns an unused expression name matching the base name provided """
+
+        resp = {}
+        name = request.form.get("name") or request.args.get("name","")
+        owner_id = request.form.get("owner_id") or request.args.get("owner_id", "")
+        owner = self.db.User.fetch(owner_id)
+
+        resp['name'] = self._unused_name(name, owner)
+        return self.serve_json(response, resp)
+    
     def save(self, tdata, request, response, **args):
         """ Parses JSON object from POST variable 'exp' and stores it in database.
             If the name (url) does not match record in database, create a new record."""
@@ -67,34 +99,8 @@ class Expr(ModelController):
         if not res or upd['name'] != res['name']:
             try:
               new_expression = True
-              # Handle remixed expressions
-              if upd.get('remix_parent_id'):
-                parent_id = upd.get('remix_parent_id')
-                remix_expr = self.db.Expr.fetch(parent_id)
-                while parent_id:
-                    remix_expr = self.db.Expr.fetch(parent_id)
-                    parent_id = remix_expr.get('remix_parent_id')
-                remix_owner = remix_expr.owner
-                upd['remix_root'] = remix_expr.id
-                remix_owner.setdefault('tagged', {})
-                remix_expr.setdefault('remix_name', remix_expr['name'])
-                remix_expr.setdefault('remix_root', remix_expr.id)
-                remix_expr.update(updated=False, remix_name=remix_expr['remix_name'],
-                    remix_root=remix_expr['remix_root'])
-                remix_name = 're:' + remix_expr['remix_name']
-                # include self in remix list
-                remix_owner['tagged'].setdefault(remix_name, [remix_expr.id])
-                upd['tags'] += " #remixed" # + remix_name
-
               res = tdata.user.expr_create(upd)
               self.db.ActionLog.create(tdata.user, "new_expression_save", data={'expr_id': res.id})
-
-              # TODO-remix: handle moving ownership of remix list, especially if original is
-              # made private or deleted.
-              if upd.get('remix_parent_id'):
-                remix_owner['tagged'][remix_name].append(res.id)
-                remix_owner.update(updated=False, tagged=remix_owner['tagged'])
-                # remix_expr.save(updated=False)
 
               tdata.user.flag('expr_new')
               #if tdata.user.get('flags').get('add_invites_on_save'):
@@ -125,6 +131,35 @@ class Expr(ModelController):
             self.db.UpdatedExpr.create(res.owner, res)
             self.db.ActionLog.create(tdata.user, "update_expression", data={'expr_id': res.id})
 
+        # Handle remixed expressions
+        if (res and not autosave and 
+          upd.get('remix_parent_id') and not upd.get('remix_root')):
+            # TODO-remix: handle moving ownership of remix list, especially if original is
+            # made private or deleted.
+            parent_id = upd.get('remix_parent_id')
+            remix_upd = {}
+            remix_expr = self.db.Expr.fetch(parent_id)
+            while parent_id:
+                remix_expr = self.db.Expr.fetch(parent_id)
+                parent_id = remix_expr.get('remix_parent_id')
+            remix_owner = remix_expr.owner
+            remix_upd['remix_root'] = remix_expr.id
+            remix_expr.setdefault('remix_name', remix_expr['name'])
+            remix_expr.setdefault('remix_root', remix_expr.id)
+            remix_expr.update(updated=False, remix_name=remix_expr['remix_name'],
+                remix_root=remix_expr['remix_root'])
+            remix_name = 're:' + remix_expr['remix_name']
+            # remix_upd['tags'] += " #remixed" # + remix_name
+            res.update(**remix_upd)
+
+            # include self in remix list
+            remix_owner.setdefault('tagged', {})
+            remix_owner['tagged'].setdefault(remix_name, [remix_expr.id])
+            remix_owner['tagged'][remix_name].append(res.id)
+            remix_owner.update(updated=False, tagged=remix_owner['tagged'])
+
+        if not self.config.live_server and (upd.get('apps') or upd.get('background')):
+            res.threaded_snapshot(retry=120)
         # TODO-cleanup: create client_view for full expression record, instead
         # of just feed cards
         res['id'] = res.id
