@@ -22,7 +22,7 @@ var init = function(){
 
     window.onorientationchange = function(){
         var landscape = win.width() > win.height()
-        $('#content').toggleClass('landscape', landscape)
+        $('body').toggleClass('landscape', landscape)
     }
 }
 
@@ -60,7 +60,7 @@ function page_next(){
 // }
 
 function get_page(card){
-    return $("<iframe class='full'>")
+    return $("<iframe>")
         .prop('src', content_url(card) + '?viewport=500x500')
         .appendTo('#content')
 }
@@ -132,16 +132,18 @@ function render_cards(cards){
 function render_page_expr(card){
     page_index_scrollY = window.scrollY
     page_exit()
-    view = 'expr'
     StatusBar.hide()
     $('#content').removeClass(view).addClass('expr').empty()
+    view = 'expr'
     $('#overlays').append($('#templates .expr_overlays').clone().children())
     button('.icon.prev', back)
     button('.share', function(){ share_expr(card) })
     // TODO: implement share_menu
     // bind_click('#overlays .share', share_menu.open)
 
-    get_page(card)
+    var frame_el = get_page(card)
+    window.scrollTo(0)
+    setTimeout(function(){ frame_el.addClass('expr') }, 100)
 }
 
 function back(){

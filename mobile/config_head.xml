@@ -12,5 +12,5 @@
     </author>
 
     <preference name="BackgroundColor" value="0xffffffff"/>
-    <preference name="Orientation" value="default" />
+    <preference name="Orientation" value="landscape" />
     <!-- version specific config goes here -->
