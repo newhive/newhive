@@ -5,6 +5,12 @@ var view = 'index', page_index = 0, cards = [], cards_complete = false,
     page_index_scrollY = 0
 
 var init = function(){
+    // zoom level is current-width / device-width
+    var  ideal_width = document.documentElement.clientWidth
+        ,initial_scale = ideal_width / 500
+    $('meta[name=viewport]').attr('content', 'user-scalable=1, width=500, '
+        + 'initial-scale=' + initial_scale)
+        // +', minimum-scale=.2, maximum-scale=10')
     render_page_index()
     fetch_cards()
 
