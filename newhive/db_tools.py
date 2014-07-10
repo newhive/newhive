@@ -27,13 +27,17 @@ def recent_snapshot_fails(days=1):
         ,'updated':{'$gt': now() - days*86400} })
 
 # resets the fail count of given list or cursor of expressions
-def snapshot_reset(exprs):
+# param{redo}: if True, take the snapshot in the current thread
+def snapshot_reset(exprs, redo=False):
     exprs = list(exprs)
     if len(exprs) == 0: return
     if isinstance(exprs[0], basestring):
         exprs = db.Expr.fetch(exprs)
     for r in exprs:
-        r.update(updated=False, snapshot_fails=0)
+        if redo:
+            r.take_snapshots()
+        else:
+            r.update(updated=False, snapshot_fails=0)
 
 def snapshot_redo_collection(username='zach', redo=False, collection='brokensnapshots', retry=5):
     rs = db.Expr.fetch(list(set(db.User.named(username)['tagged'][collection])))
