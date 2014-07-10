@@ -337,7 +337,7 @@ Hive.init_global_handlers = function(){
         Hive.send({save_dialog: 1})
     })
     var has_revert = (revert.apps || revert.background)
-    $(".menu_item.revert").addremoveClass("disabled", !has_revert)
+    $(".menu_item.revert").addremoveClass("hide", !has_revert)
         .prop('disabled', !has_revert)
     $(".menu_item.revert").bind_once_anon("click", function(ev) {
         if (!has_revert) return
@@ -348,7 +348,7 @@ Hive.init_global_handlers = function(){
         })
         // Add in all the apps in the revert save
         if (revert.apps)
-            $.map(revert.apps, function(a){ env.new_app(a) } )
+            $.map(revert.apps, function(a){ env.new_app(a, { no_select: true }) } )
         if (revert.background) {
             // TODO-refactor: move this into a bg_set_history func
             history_point = env.History.saver(
