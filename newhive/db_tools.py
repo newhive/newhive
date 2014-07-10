@@ -29,6 +29,7 @@ def recent_snapshot_fails(days=1):
 # resets the fail count of given list or cursor of expressions
 def snapshot_reset(exprs):
     exprs = list(exprs)
+    if len(exprs) == 0: return
     if isinstance(exprs[0], basestring):
         exprs = db.Expr.fetch(exprs)
     for r in exprs:
