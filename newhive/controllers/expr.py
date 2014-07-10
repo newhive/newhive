@@ -132,8 +132,9 @@ class Expr(ModelController):
             self.db.ActionLog.create(tdata.user, "update_expression", data={'expr_id': res.id})
 
         # Handle remixed expressions
-        if (res and not autosave and 
-          upd.get('remix_parent_id') and not upd.get('remix_root')):
+        if (res and not autosave and
+            upd.get('remix_parent_id') and not upd.get('remix_root')
+        ):
             # TODO-remix: handle moving ownership of remix list, especially if original is
             # made private or deleted.
             parent_id = upd.get('remix_parent_id')
@@ -143,20 +144,21 @@ class Expr(ModelController):
                 remix_expr = self.db.Expr.fetch(parent_id)
                 parent_id = remix_expr.get('remix_parent_id')
             remix_owner = remix_expr.owner
-            remix_upd['remix_root'] = remix_expr.id
-            remix_expr.setdefault('remix_name', remix_expr['name'])
-            remix_expr.setdefault('remix_root', remix_expr.id)
-            remix_expr.update(updated=False, remix_name=remix_expr['remix_name'],
-                remix_root=remix_expr['remix_root'])
-            remix_name = 're:' + remix_expr['remix_name']
-            # remix_upd['tags'] += " #remixed" # + remix_name
-            res.update(**remix_upd)
+            if (res.get('auth', '') == 'public' or remix_owner == tdata.user.id):
+                remix_upd['remix_root'] = remix_expr.id
+                remix_expr.setdefault('remix_name', remix_expr['name'])
+                remix_expr.setdefault('remix_root', remix_expr.id)
+                remix_expr.update(updated=False, remix_name=remix_expr['remix_name'],
+                    remix_root=remix_expr['remix_root'])
+                remix_name = 're:' + remix_expr['remix_name']
+                # remix_upd['tags'] += " #remixed" # + remix_name
+                res.update(**remix_upd)
 
-            # include self in remix list
-            remix_owner.setdefault('tagged', {})
-            remix_owner['tagged'].setdefault(remix_name, [remix_expr.id])
-            remix_owner['tagged'][remix_name].append(res.id)
-            remix_owner.update(updated=False, tagged=remix_owner['tagged'])
+                # include self in remix list
+                remix_owner.setdefault('tagged', {})
+                remix_owner['tagged'].setdefault(remix_name, [remix_expr.id])
+                remix_owner['tagged'][remix_name].append(res.id)
+                remix_owner.update(updated=False, tagged=remix_owner['tagged'])
 
         if not self.config.live_server and (upd.get('apps') or upd.get('background')):
             res.threaded_snapshot(retry=120)
