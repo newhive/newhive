@@ -47,6 +47,10 @@ Get the db
     scp dev.newhive.com:/tmp/2014* .
     tar -xvf 2014*
     mongorestore --drop -d test --dir tmp/live-newhive
+deal with records that break indexing:
+    mongo
+    db.expr.remove({owner_name: "joebussiere"})
+    db.expr.remove({$where: 'for(i in this.text_index){ if(this.text_index[i].length > 1000) return true } return false'})
 
 Set up and run the server
     cd ~/newhive

@@ -182,6 +182,10 @@ define([
                 },
             });
         }
+
+        // hack to make admin_query work
+        if(context.route_name == 'admin_query')
+            $('form.search_bar').removeAttr('action')
     };
 
     show_tags = function (show){

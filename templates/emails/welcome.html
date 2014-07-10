@@ -15,16 +15,10 @@
 
 
 {% block lower_content %}
-    <div id="profile">
-
-        <a href="{{profile_link}}" title="View Your Profile"><img src="{{profile_icon}}"/>
-    </div>
-    <div id="create">
-
-         <a href="{{create_link}}" title="Create an Expression"><img src="{{create_icon}}"/>
-    </div>
-    <div id="follow">
-
-        <a href="{{follow_link}}" title="Follow People and Collections"><img src="{{follow_icon}}"/>
-    </div>
+  <div id="profile"><a href="{{profile_link}}" title="View Your Profile"
+    ><img src="{{profile_icon}}"/></a></div>
+  <div id="create"><a href="{{create_link}}" title="Create an Expression"
+      ><img src="{{create_icon}}"/></a></div>
+  <div id="follow"><a href="{{follow_link}}" title="Follow People and Collections"
+      ><img src="{{follow_icon}}"/></a></div>
 {% endblock %}
