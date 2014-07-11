@@ -31,6 +31,10 @@
                         {
                             "xml": "<feature name=\"StatusBar\"><param name=\"android-package\" onload=\"true\" value=\"org.apache.cordova.statusbar.StatusBar\" /></feature>",
                             "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"FileTransfer\"><param name=\"android-package\" value=\"org.apache.cordova.filetransfer.FileTransfer\" /></feature>",
+                            "count": 1
                         }
                     ]
                 }
@@ -88,7 +92,7 @@
                     "/*": [
                         {
                             "xml": "<uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\" />",
-                            "count": 2
+                            "count": 3
                         },
                         {
                             "xml": "<uses-permission android:name=\"android.permission.RECORD_AUDIO\" />",
@@ -124,6 +128,9 @@
             "PACKAGE_NAME": "io.newhive.newhive"
         },
         "org.apache.cordova.statusbar": {
+            "PACKAGE_NAME": "io.newhive.newhive"
+        },
+        "org.apache.cordova.file-transfer": {
             "PACKAGE_NAME": "io.newhive.newhive"
         }
     },
