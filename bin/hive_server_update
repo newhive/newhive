@@ -7,7 +7,9 @@
 cd /var/www/newhive
 sudo chown www-data:dev -R .
 sudo chmod g+rwX -R .
-git pull
+
+# check for changes.  If no changes, exit
+git pull|grep Already && exit 0
 sudo chown www-data:dev -R .
 sudo chmod g+rwX -R .
 # restart server

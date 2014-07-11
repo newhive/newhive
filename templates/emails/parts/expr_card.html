@@ -1,5 +1,5 @@
 <div id="card">
-    {% call link(expr) %}
+    {% call link(expr, url=expr_url) %}
         <img src="{{ expr.snapshot_name_http("small") }}" />
     {% endcall %}
     <table height=190><tr><td style="vertical-align: middle">
@@ -27,5 +27,5 @@
     </td></tr></table>
 </div>
 <h3 id="text_link">
-    {% call link(expr) %}{{ expr.url | clean_url }}{% endcall %}
+    {% call link(expr, url=expr_url) %}{{ (expr_url or expr.url) | clean_url }}{% endcall %}
 </h3>
