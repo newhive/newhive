@@ -4,13 +4,15 @@ from datetime import datetime
 import urlparse
 import werkzeug.urls
 import pymongo
-from brownie.datastructures import OrderedSet
-from collections import Counter, OrderedDict
 import numpy
 import operator
 import json
 import urllib,urllib2
 import threading
+from brownie.datastructures import OrderedSet
+from collections import Counter, OrderedDict, Iterable
+# from functools import partial
+from numbers import Number
 #import pyes
 
 import newhive
@@ -21,6 +23,19 @@ from newhive.config import abs_url, url_host
 def filter_query(query, filter):
     query.setdefault('$and', [])
     query['$and'].append(filter)
+
+def is_number(v):
+    return isinstance(v, Number)
+
+def all_prop(l, prop, *args, **kwargs):
+    return all([prop(v, *args, **kwargs) for v in l])
+
+def is_number_list(l, length=0):
+    if not isinstance(l, Iterable): return False
+    return (length == 0 or length == len(l)) and all_prop(l, is_number)
+
+def is_number_list_list(l, length=0):
+    return all_prop(l, lambda v: is_number_list(v, length=length))
 
 class Apply(object):
     error = []
