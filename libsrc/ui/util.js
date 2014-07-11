@@ -13,13 +13,24 @@ define([
         return false;
     };
     o.asset_name_from_url = function(url){
-        if (url.slice(-9).slice(0,1) != ".")
-            return false;
+        // if (url.search(".png"))
+        //     return false;
+        url = url.replace("-hover", "")
         var asset_name = 
-            url.slice(0,-9).replace(/^(https?:)?(\/\/)?[^\/]+\//,"");
+            url.replace(/^(https?:)?(\/\/)?[^\/]+\/(lib\/)?/,"");
+        // Remove the cache-busting 8-char hex
+        asset_name = asset_name.replace(/\.[0-9a-z]{8}$/,"")
         if (_asset(asset_name))
             return asset_name;
         return false;
+    }
+    o.urlize = function(url) {
+        if (url.match(/^http(s)?:\/\//))
+            return url
+        if (url.match(/^\/\//))
+            return window.location.protocol + url
+        throw "bad URL"
+        window.location.protocol + "//" + url
     }
 
     o.val = function(x) {
@@ -93,24 +104,68 @@ define([
                     elem.hidehide();
             };
         }(jQuery));
-        // TODO-cleanup: make this take in named functions only and unbind
-        // them by name.
+        // Send extra debug info to the server on every AJAX call
+        var debug_ajax = function($) {
+            var ajax = $.fn.ajax
+                ,call_stack = printStackTrace().join('\n\n')
+            $.fn.ajax = function() {
+                ajax.apply(this, arguments)
+            };
+        };
+        if (0) // to enable ajax debugging
+            debug_ajax(jquery);
         (function($){
+            // TODO: make menus aware of being disabled
+            var wrapper_func = function( event_name, func ) {
+                if (["click"].indexOf(event_name) == -1)
+                    return func
+                return function() {
+                    if ($(this).hasClass("disabled")) 
+                        return
+                    return func.apply(this, arguments)
+                }
+            }
             $.fn.bind_once = function( event_name, func ) {
-                return $(this).unbind(event_name).on(event_name, func);
+                return $(this).off(event_name, func).on(event_name, func);
+            };
+            $.fn.bind_once_anon = function( event_name, func ) {
+                return $(this).off(event_name).on(event_name, func);
             };
         }(jQuery));
     };
     o.extend_jquery();
 
+    // For performance-critical ops, do not use jquery style
+    var css_style = function(el, styles) {
+        $(el).css(styles)
+    }
+    var inline_style = function(el, styles) {
+        var el_style = el.style
+        $.each(styles, function(style_name, style_val) {
+            el_style[style_name] = style_val
+        })
+    }
+    var inline_style_px = function(el, styles) {
+        var el_style = el.style
+        $.each(styles, function(style_name, style_val) {
+            el_style[style_name] = style_val + 'px'
+        })
+    }
+    o.inline_style = 
+        navigator.userAgent.match(/Mozilla/) ? css_style : inline_style
+    o.inline_style_px = 
+        navigator.userAgent.match(/Mozilla/) ? css_style : inline_style_px
+
     o.hoverable = function(el){
         if(el.prop('src')) {
             el.data('src', el.prop('src'));
             el.data('src_hover', hover_url(el.prop('src')));
-            el.data('hover_showhide', function(showhide) 
-                { el.attr('src', el.data(showhide ? 'src_hover' : 'src')) });
-            el.mouseenter(el.data('hover_showhide')(true)).
-                mouseout(el.data('hover_showhide')(false));
+            el.data('hover_showhide', function(showhide) { 
+                new_src = el.data(showhide ? 'src_hover' : 'src');
+                if (new_src) el.attr('src', new_src) 
+            });
+            el.mouseenter(function() {el.data('hover_showhide')(true)}).
+                mouseout(function() {el.data('hover_showhide')(false)});
         }
         el.mouseenter(function() {
             if(o.hoverable.disabled) return;
@@ -120,11 +175,21 @@ define([
         });
 
         function hover_url(url) {
-            var orig_asset = o.asset_name_from_url(url) || url;
+            var orig_asset = o.asset_name_from_url(url)
+            var missing_asset = !orig_asset
+            orig_asset = orig_asset || url;
             var h = orig_asset.replace(/(.png)|(-\w*)$/, '-hover.png');
-            h = _asset(h) || h;
-            var i = $("<img style='display:none'>").attr('src', h);
-            $(document.body).append(i);
+            if (missing_asset)
+                h = _asset(h) || h
+            else
+                h = _asset(h)
+            var old = $("#dynamic_group img").filter(function(e){
+                return $(this).attr("src") == h
+            })
+            if (old.length == 0 && h) {
+                var i = $("<img style='display:none'>").attr('src', h);
+                $("#dynamic_group").append(i);
+            }
             return h;
         }
     };

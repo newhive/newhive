@@ -7,9 +7,7 @@
  */
 
 (function (globalEval) {
-define(/*=='curl/plugin/json',==*/ ['./_fetchText', '../cram/json'],
-	function (fetchText, json_src)
-{
+define(/*=='curl/plugin/json',==*/ ['./_fetchText'], function (fetchText) {
 
 	var hasJsonParse, missingJsonMsg;
 
@@ -36,7 +34,7 @@ define(/*=='curl/plugin/json',==*/ ['./_fetchText', '../cram/json'],
 			fetchText(require['toUrl'](absId), evaluator, errback);
 
 			function evalSource (source) {
-				return globalEval('(' + source + ')');
+				loaded(globalEval('(' + source + ')'));
 			}
 
 			function parseSource (source) {
@@ -45,8 +43,8 @@ define(/*=='curl/plugin/json',==*/ ['./_fetchText', '../cram/json'],
 
 		},
 
-		// 'cramPlugin': '../cram/json'
-		compile: json_src.compile,
+		'cramPlugin': '../cram/json'
+
 	};
 
 	function error (ex) {
@@ -55,14 +53,12 @@ define(/*=='curl/plugin/json',==*/ ['./_fetchText', '../cram/json'],
 
 	function guard (evaluator, success, fail) {
 		return function (source) {
-			success(evaluator(source));
-			// Eats exceptions in success call back for some reason
-			// try {
-			// 	success(evaluator(source));
-			// }
-			// catch (ex) {
-			// 	fail(ex);
-			// }
+			try {
+				success(evaluator(source));
+			}
+			catch (ex) {
+				fail(ex);
+			}
 		}
 	}
 

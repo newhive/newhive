@@ -89,18 +89,28 @@ define([
 
     var attrs = function(route_name, args, query_args, is_form, suppress){
         if(!suppress) suppress = [];
-        var attributes = suppress.indexOf('attributes') >= 0 ? [] : 
-                [ ['data-route-name', route_name] ],
-            page_state = o.page_state(route_name, args, query_args)
+        if (o.referer && !is_form){
+            var page_state = o.page_state(route_name, args, query_args)
+            if (page_state.page){
+                // slice is to remove the trailing "/"
+                var abs_url =  o.config.server_url.slice(0,-1) + page_state.page
+            }
+            var attributes = 'target="_top"' + ' href="' + abs_url + '"';
+            return attributes;
+        } else {       
+            var attributes = suppress.indexOf('attributes') >= 0 ? [] : 
+                    [ ['data-route-name', route_name] ],
+                page_state = o.page_state(route_name, args, query_args)
 
-        if (is_form) {
-            attributes.push(['enctype', 'multipart/form-data']);
-            if(page_state.api) attributes.push(['action', page_state.api]);
-        } else {
-            if(suppress.indexOf('href') < 0 && page_state.page)
-                attributes.push(['href', page_state.page]);
-            if(suppress.indexOf('api') < 0 && page_state.api)
-                attributes.push(['data-api-path', page_state.api]);
+            if (is_form) {
+                attributes.push(['enctype', 'multipart/form-data']);
+                if(page_state.api) attributes.push(['action', page_state.api]);
+            } else {
+                if(suppress.indexOf('href') < 0 && page_state.page)
+                    attributes.push(['href', page_state.page]);
+                if(suppress.indexOf('api') < 0 && page_state.api)
+                    attributes.push(['data-api-path', page_state.api]);
+            }
         }
         // TODO-cleanup: make another func that just returns a dict of attrs
         return attributes.map(function(attribute_pair) {
@@ -166,7 +176,6 @@ define([
     // does the same as function above but for <form>s instead of <a>s
     o.form_attrs = function(scope, route_name){
         var args = get_route_args(arguments);
-
         return attrs(route_name, args, "", true);
     };
 

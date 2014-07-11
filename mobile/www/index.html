@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <link rel='shortcut icon' type='image/png' href='lib/skin/1/logo.png'>
+  <link rel='stylesheet' type='text/css' href='main.css'>
+
+  <!-- todo: replace with output of build system -->
+  <script src="cordova.js"></script>
+  <script src='jquery.js'></script>
+  <script src='jquery.mobile-events.js'></script>
+  <script src='compiled.config.js'></script>
+  <script src='main.js'></script>
+  <script type="text/javascript" src="HiveNotifications.js"></script>
+<!-- ####################################################################### -->
+  <!--<script type="text/javascript" charset="utf-8" src="cordova-2.2.0.js"></script>-->
+  <!-- <script type="text/javascript" charset="utf-8" src="phonegap.js"></script>
+  <script type="text/javascript" charset="utf-8" src="jquery_1.5.2.min.js"></script>
+  <script type="text/javascript" src="PushNotification.js"></script>
+  <div id="home">
+    <div id="app-status-div">
+      <ul id="app-status-ul">
+        <li>Cordova PushNotification Plugin Demo</li>
+      </ul>
+    </div>
+  </div>
+  -->
+<!-- ####################################################################### -->
+  <!--<script src='libsrc/curl.js'></script>
+
+  <script>
+curl({
+    baseUrl: "libsrc",
+    pluginPath: 'curl/plugin'
+});
+  </script>-->
+  <title>Network</title>
+  <meta name="viewport" content="user-scalable=1, width=500, initial-scale=1, minimum-scale=.2, maximum-scale=10">
+</head>
+<body class='mobile'>
+  <div id='overlays'></div>
+  <div id='content'></div>
+  <!--<script>
+    curl(['server/context', 'ui/controller'], function(context, controller, js){
+      context.user = { logged_in: false, tagged: [] }
+      context.flags = { mobile_web: true }
+      controller.init_mobile()
+    });
+  </script>-->
+  <div id='templates'>
+    <div class='expr_card'>
+      <img class='snapshot'>
+      <div class='title'></div>
+      <div class='byline'></div>
+    </div>
+    <div class='expr_overlays'>
+      <div class='prev icon'><div class='fg'></div></div>
+      <div class='share icon'><div class='fg'></div></div>
+    </div>
+  </div>
+
+
+  <script>init()</script>
+</body>
+</html>

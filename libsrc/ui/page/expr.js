@@ -45,7 +45,7 @@ define([
         // TODO-cleanup-HACK: There should be a unified flow for merging
         // the new data
         ui_page.render_new_cards(data);
-        if(data.cards.length < 20)
+        if(data.cards.length == 0)
             more_cards = false;
     };
 
@@ -131,11 +131,6 @@ define([
         // Reset scroll to top
         $("body").scrollTop(0);
         
-        var embed_url = 'https://' + window.location.host + window.location.pathname + '?template=embed';
-        $('#dia_embed .copy.embed_code').val("<iframe src='" + embed_url + 
-            "' style='width: 100%; height: 100%' marginwidth='0' marginheight='0'" +
-            " frameborder='0' vspace='0' hspace='0'></iframe>");
-
         // Set toggle state for love, broadcast, comment
         o.action_set_state($(".love_btn"), o.action_get_state("love"));
         o.action_set_state($(".republish_btn"), o.action_get_state("republish"));
@@ -166,14 +161,19 @@ define([
             page_data.remix = false
             show_edit = true
         }
-        if(show_edit || page_data.remix)
+        if(show_edit || page_data.remix) {
             $('.overlay.panel .edit_ui').replaceWith(
                 edit_btn_template(page_data) )
+            $('.overlay.panel .remix')
+                .showhide(ui_page.tags && ui_page.tags.indexOf('remix') >= 0)
+        }
         ui_page.form_page_enter()
 
         o.overlay_columns = 0;
         o.wide_overlay = 0;
         o.resize();
+
+            
     }
 
     o.exit = function(){
@@ -540,15 +540,73 @@ define([
     };
 
     o.attach_handlers = function(){
-        $("#social_close").unbind('click').click(o.social_toggle);
-        $(".social_btn").unbind('click').click(o.social_toggle);
+        $("#social_close").bind_once_anon("click", o.social_toggle);
+        $(".social_btn").bind_once_anon("click", o.social_toggle);
+        if (context.flags.fade_controls) {
+            $(".panel.overlay").css("opacity",.4)
+                .off("mouseenter").on("mouseenter", function(ev) {
+                    $(this).stop(true).animate({"opacity":1},{duration:200}) } )
+                .on("mouseleave", function(ev) { 
+                    $(this).animate({"opacity":.4},{duration:200}) } )
+        }
         if ($("#site").children().length && context.page_data.cards_route)
             $(".title_spacer .title").addClass("pointer").unbind('click').click(function() {
+                // clicking the title in social overlay returns to the collection
                 o.exit();
                 o.controller.direct_fake_open(context.page_data.cards_route.route_args);
                 $("body").scrollTop(o.controller.scroll_top);
                 o.controller.scroll_top = 0;
             });
+
+        // updates link based on fullscreen toggle
+        $(".fullscreen input").on( "change", function(ev) {
+            var expr = context.page_data.expr
+                , host = ''
+                , url = ''
+            if ($(ev.target).prop("checked"))
+                host = context.config.content_url
+            else
+                host = context.config.server_url
+            
+            url = util.urlize(host) + expr.owner.name + '/' + expr.name
+            $("#dia_share textarea.dark").val(url)
+        }).trigger("change");
+
+        // updates embed links based on selection
+        $("#dia_embed input[type=checkbox]").on("change", function(ev) {
+            var host = '' 
+                , params = ''
+                , link = ''
+                , embed_url = ''
+                , clean = ''
+                , any_checked = false
+            host = context.config.server_url
+            params = "&clean="
+            if ($("#include_social").is(":checked")){
+                any_checked = true
+                clean += "+social"
+            }
+            if ($("#include_collection").is(":checked")){
+                any_checked = true
+                clean += "+collection"
+            }
+            if ($("#include_logo").is(":checked")){
+                any_checked = true
+                clean += "+logo"
+            }
+            if (!any_checked)
+                params= ""
+
+            params = params.concat(clean.slice(1))
+
+            link = util.urlize(host).replace(/\/$/,"") + 
+                window.location.pathname + '?template=embed';      
+            embed_url ="<iframe src='" + link + params + "' " +
+                "style='width: 100%; height: 100%' marginwidth='0' " +
+                "marginheight='0' frameborder='0' vspace='0' hspace='0'></iframe>"
+            
+            $('#dia_embed .copy.embed_code').val(embed_url); 
+        }).trigger("change");
 
         // $('#comment_form').unbind('success').on('success', o.comment_response);
         var dia_comments = $("#dia_comments").data("dialog");
@@ -556,13 +614,13 @@ define([
             $("#dia_comments textarea").focus();
         }
         dia_comments.opts.handler = o.comment_response;
-        $("#comment_form").unbind('after_submit').on('after_submit', function() {
+        $("#comment_form").bind_once_anon('after_submit', function() {
             $("#dia_comments textarea[name=text]").prop('disabled', true);
             $("#dia_comments input[type=submit]").prop('disabled', true);
         });
 
-        $('.expr_actions .comment_btn').click(dia_comments.open)
-        $('.expr_actions .share.btn').click(function(ev){
+        $('.expr_actions .comment_btn').bind_once_anon("click", dia_comments.open)
+        $('.expr_actions .share.btn').bind_once_anon("click", function(ev){
             var el = $(ev.target).closest('a')
             browser_layout.new_window(el.attr('href'), 550, 550)
             return false
@@ -572,25 +630,23 @@ define([
             edit_button = $(el).find('button[name=edit]');
             delete_button = $(el).find('button[name=delete]');
             if (edit_button.length == 1) {
-                edit_button.unbind('click');
-                edit_button.click(function(event) {
+                edit_button.bind_once_anon('click', function(event) {
                     o.edit_comment($(el));
                 });
             }
-            $(el).find('form').unbind('success').
-                on('success', function(event, data) {
+            $(el).find('form').bind_once_anon('success', function(event, data) {
                 o.edit_comment_response($(el), data);
             });
         });
 
-        $(".love_btn").unbind('click').click(function(){
+        $(".love_btn").bind_once_anon('click', function(){
             o.social_btn_click("love") })
-        $(".republish_btn").click(function(){
+        $(".republish_btn").bind_once_anon("click", function(){
             o.social_btn_click("republish") })
 
-        $('.page_btn').bind_once('mouseenter', function(event){
+        $('.page_btn').bind_once_anon('mouseenter', function(event){
             o.page_btn_animate($(this), "in");
-        }).bind_once('mouseleave', function(e) {
+        }).bind_once_anon('mouseleave', function(e) {
             o.page_btn_animate($(this), "out");
         });
 
@@ -854,7 +910,8 @@ define([
             msg = page_btn_state;
         // don't render the page buttons if there is nothing to page through!
         if (context.page_data.cards == undefined
-            || context.page_data.cards.length == 1) {
+            || context.page_data.cards.length == 1
+            || !context.page_data.expr) {
             $(".page_btn").hidehide();
             return;
         }

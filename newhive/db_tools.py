@@ -2,9 +2,10 @@ import re
 
 import newhive
 from newhive import state
-from newhive.utils import now, time_u, Apply, lget
+from newhive.utils import now, time_u, Apply, lget, memoized
 from newhive.server_session import db, server_env
 from newhive.mongo_helpers import mq
+from newhive.cp_expr import cp_expr
 
 assets = server_env['assets']
 jinja_env = server_env['jinja_env']
@@ -15,14 +16,35 @@ nd = db.User.named('newduke')
 ac = db.User.named('abram')
 e1 = db.Expr.with_url('newhive/default-instructional')
 
+@memoized
+def dbs(name):
+    conf = __import__('newhive.config.' + name, fromlist=['newhive','config'])
+    return state.Database(conf)
+
 # returns cursor with expressions at most %days% old which have > 1 fail count
-def recent_fails(days=1):
+def recent_snapshot_fails(days=1):
     return db.Expr.search({ 'snapshot_fails':{'$gt':1}
         ,'updated':{'$gt': now() - days*86400} })
 
 # resets the fail count of given list or cursor of expressions
-def reset_fails(exprs):
-    map(lambda x:x.update(updated=False,snapshot_fails=0),list(exprs))
+# param{redo}: if True, take the snapshot in the current thread
+def snapshot_reset(exprs, redo=False):
+    exprs = list(exprs)
+    if len(exprs) == 0: return
+    if isinstance(exprs[0], basestring):
+        exprs = db.Expr.fetch(exprs)
+    for r in exprs:
+        if redo:
+            r.take_snapshots()
+        else:
+            r.update(updated=False, snapshot_fails=0)
+
+def snapshot_redo_collection(username='zach', redo=False, collection='brokensnapshots', retry=5):
+    rs = db.Expr.fetch(list(set(db.User.named(username)['tagged'][collection])))
+    for a in range(retry):
+        for r in rs:
+            if redo or r.get('snapshot_time', 0) < r.get('updated'):
+                r.take_snapshots()
 
 def show_sizeof(x, level=0, show_deep=0):
     if (level <= show_deep):

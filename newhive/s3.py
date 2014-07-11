@@ -5,14 +5,6 @@ import newhive
 from newhive import config
 import re
 
-def fixup_s3_url(url):
-    cloudfront = config.cloudfront_domains['media']
-    if cloudfront:
-        url = re.sub(r'^https?://.*?/', '//' + cloudfront + '/', url)
-    else:
-        url = re.sub(r'^https?:', '', url)
-    return re.sub(r'\?.*', '', url)
-
 class S3Interface(object):
     def __init__(self, config=None):
         config = self.config = config if config else newhive.config
@@ -31,9 +23,11 @@ class S3Interface(object):
             return True
         return False
 
-    def url(self, bucket='media', key=''):
-        return ('https://' + self.buckets[bucket].name
-            + '.s3.amazonaws.com/' + key)
+    def url(self, bucket='media', key='', bucket_name=None, http=False, secure=False):
+        url = self.bucket_url(bucket, bucket_name) + key
+        if http: url = 'http' + url
+        if secure: url = 'https' + url
+        return url
 
     def file_exists(self, bucket, path):
         k = S3Key(self.buckets[bucket])
@@ -54,15 +48,9 @@ class S3Interface(object):
         if mimetype: s3_headers['Content-Type'] = mimetype
         k.set_contents_from_file(file, headers=s3_headers)
         k.make_public()
-        url = k.generate_url(0, query_auth=False)
-        url = fixup_s3_url(url);
-        return url
+        return self.url(bucket, path)
 
-    def bucket_url(self, bucket='media'):
-        cloudfront = config.cloudfront_domains[bucket]
-        if cloudfront:
-            return '//' + cloudfront + '/'
-        else:
-            return '//%s.s3.amazonaws.com/' % self.config.s3_buckets[bucket]
-
-
+    def bucket_url(self, bucket='media', bucket_name=None):
+        return '//' + ( self.config.cloudfront_domains.get(bucket) or (
+            (bucket_name or self.config.s3_buckets[bucket])
+            + '.s3.amazonaws.com') ) + '/'

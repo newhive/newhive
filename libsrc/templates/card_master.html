@@ -1,12 +1,11 @@
 {|templates/network_nav.html}
-{#
-  {<if network_help}
-    <div class="centered">
-      <iframe src="{config.content_url}{config.site_user}/network-expression" 
-      class="network_help"></iframe>
-    </div>
-  {>}
-#}
+{<if network_help}
+  <div class="centered">
+    <iframe src="{config.content_url}{config.site_user}/network-expression" 
+      class="network_help">
+    </iframe>
+  </div>
+{>}
 {# display header #}
 {<if (and header (or user.logged_in (neq route_name "home")))}
   <div id='header' class='header'>
@@ -45,8 +44,8 @@
     <input type="hidden" name="deletes" value=0>
   </form>
 {>}
-<div class='feed {layout}{<unless route.private} public{>}'>
-  {|templates/cards.html}
+<div class='feed {layout}{<unless route.private} public{>}
+  {<if (or (eq route_name "following") (eq route_name "followers"))} user{>}'>
   {# Insert 3-column layout here.  
     When unused, it's 0 height.
     When unused, the columns have 0 width #}
@@ -55,6 +54,7 @@
       <div class="column column_{col_num}"></div>
     {>}
   </div>
+  {|templates/cards.html}
   {<if cards}
     <div class="footer"></div>
   {>}

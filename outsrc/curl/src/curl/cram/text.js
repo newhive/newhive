@@ -3,7 +3,10 @@
 /**
  * curl text! cram plugin
  */
-define(['./jsEncode'], function (jsEncode) {
+define(function (require) {
+
+	var jsEncode = require('./jsEncode');
+	var _define = require('./_define');
 
 	return {
 
@@ -12,12 +15,8 @@ define(['./jsEncode'], function (jsEncode) {
 
 			absId = pluginId + '!' + resId;
 
-			io.read(resId, function (text) {
-				io.write(
-					'define("' + absId + '", function () {\n' +
-					'\treturn "' + jsEncode(text) + '";\n' +
-					'});\n'
-				);
+			io.read(req.toUrl(resId), function (text) {
+				io.write(_define(absId, '', '', '', '"' + jsEncode(text) + '"'));
 			}, io.error);
 		}
 

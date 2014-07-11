@@ -209,11 +209,12 @@ define([
         if (render_new_cards_func)
             render_new_cards_func(data);
         o.attach_handlers();
-        o.layout_columns();
+        if (o.column_layout)
+            o.layout_columns();
         o.add_grid_borders();
     }
     o.render = function(method, data){
-        var page_data = data.page_data;
+        var page_data = context.page_data, expr = page_data.expr
         if (page_data.title) $("head title").text(page_data.title);
         o.column_layout = false;
         o.columns = 0;
@@ -235,6 +236,8 @@ define([
         o.form_page_exit()
 
         o.preprocess_context();
+        o.tags = (expr && (expr.tags_index || expr.tags))
+            || page_data.tags_search
         if (new_page && new_page.preprocess_page_data) 
             pages[method].preprocess_page_data(page_data);
         if (new_page) {
@@ -280,6 +283,57 @@ define([
 
         o.attach_handlers();
     };
+
+    // BEGIN-layout-methods
+    o.profile = function(page_data){
+        render_site(page_data)
+        expr_column()
+    }
+
+    o.grid = function(page_data){
+        grid_width = 410;
+        render_site(page_data);
+        // TODO: BUGBUG: should be data driven
+        o.column_layout = (context.route_name == "network");
+    }
+
+    // TODO: User cards should use same card size as expression only in search
+    o.mini = function(page_data){
+        page_data.layout = 'grid';
+        grid_width = 222 + 2*10; // padding = 10 + 10
+        render_site(page_data);
+    };
+    // END-layout-methods
+    
+    // global keypress handler
+    var keydown = function(e) {
+        if (window.event)
+           var key = window.event.keyCode;
+        else if (e)
+           var key = e.which;
+        var keychar = String.fromCharCode(key);
+        if ((e.keyCode == 39 || e.keyCode == 37) &&
+            !(e.metaKey || e.ctrlKey || e.altKey) &&
+            $(e.target).is("body")) {
+            // If paging, go to previous / next expression.
+            if (context.page && context.page.navigate_page) {
+                var speed = (e.shiftKey) ? 2 : 1;
+                context.page.navigate_page((e.keyCode == 39) ? speed : -speed);
+            }
+        } else if (/*$("#search_box").is(":visible") && */
+            ! $(":focus").length && !e.altKey && !e.ctrlKey
+            && (( /[A-Z0-9]/.test(keychar) && ! e.shiftKey) ||
+                (/[A-Z23]/.test(keychar) && e.shiftKey))) 
+        {
+            // Wow that was complicated. keychar will be the *unmodified* state,
+            // so to check for @, #, it's 2,3 with shift held.
+            $(".search_bar").showshow();
+            $("#search_box").focus();
+        } else {
+            // alert('keyCode: ' + e.keyCode);
+        }
+    }
+
     var local_attach_handlers = function(){
         // Add expression to collection
         $(".plus_menu").unbind('click').on('click', function(e) {
@@ -295,35 +349,28 @@ define([
                     });
                 }
             }
+            var form = $('.dialog.add_to_collection form')
+                ,el_tag_name = form.find('input[name=tag_name]')
+            form.off('after_submit').on('after_submit', o.dia_collections.close)
             o.dia_collections.open();
             var submit_add_to_collection = function(tag_name) {
-                $(".dialog.add_to_collection input[name=tag_name]").val(tag_name);
-                $(".dialog.add_to_collection form").submit();
-                o.dia_collections.close();
+                el_tag_name.val(tag_name)
+                form.submit()
             };
             var update_text = function (){
                 var text = $(".dialog.add_to_collection .tag_name")
-                    , val = $(text).val()
-                    , val_filtered = val.replace(/[^a-z0-9\_]+/i, '')
+                    ,val = $(text).val()
+                    ,val_filtered = val.replace(/[^a-z0-9\_]+/i, '').toLowerCase()
                 ;
                 if(val != val_filtered) $(text).val( val_filtered );
                 $(".dialog.add_to_collection .tag_new")
                     .text($(text).val()).showshow().addClass("tag_15");
                 if ('' == $(text).val())
                     $(".dialog.add_to_collection .tag_new").hidehide();
+                el_tag_name.val(val_filtered)
             }
-            $(".dialog.add_to_collection form").on('keypress', function (e) {
-                e = e || event;
-
-                if ((e.keyCode || e.which || e.charCode || 0) == 13) {
-                    submit_add_to_collection($(".dialog.add_to_collection .tag_name").val());
-                    return false;
-                }
-                return true;
-            });
-            $(".dialog.add_to_collection .tag_name").on('keyup', function (e) {
-                update_text();
-            });
+            $(".dialog.add_to_collection .tag_name")
+                .bind_once('keyup', update_text)
             $(".dialog.add_to_collection .tag_list .tag_label").
                 unbind('click').on('click', function (e) {
                 submit_add_to_collection($(this).text());
@@ -379,36 +426,8 @@ define([
         //     $(".search_bar").submit();
         // });
         
-        // global keypress handler
-        $("body").unbind('keydown').keydown(function(e) {
-            if (window.event)
-               var key = window.event.keyCode;
-            else if (e)
-               var key = e.which;
-            var keychar = String.fromCharCode(key);
-            if (e.keyCode == 27) { // escape
-                // If a dialog is up, kill it.
-                dialog.close_all();
-            } else if ((e.keyCode == 39 || e.keyCode == 37) &&
-                !(e.metaKey || e.ctrlKey || e.altKey) &&
-                $(e.target).is("body")) {
-                // If paging, go to previous / next expression.
-                if (context.page && context.page.navigate_page) {
-                    var speed = (e.shiftKey) ? 2 : 1;
-                    context.page.navigate_page((e.keyCode == 39) ? speed : -speed);
-                }
-            } else if (/*$("#search_box").is(":visible") && */!$(":focus").length
-                && (( /[A-Z0-9]/.test(keychar) && ! e.shiftKey) ||
-                (/[A-Z23]/.test(keychar) && e.shiftKey))) {
-                // Wow that was complicated. keychar will be the *unmodified* state,
-                // so to check for @, #, it's 2,3 with shift held.
-                $(".search_bar").showshow();
-                $("#search_box").focus();
-            } else {
-                // alert('keyCode: ' + e.keyCode);
-            }
-        });
-        $(window).scroll(function(e) {
+        $(document).off('keydown', keydown).on("keydown", keydown);
+        var scroll_handler = function(e) {
             if (c.route_name == "edit_expr")
                 return;
             return;
@@ -420,19 +439,13 @@ define([
                 if (c.route_name != "edit_expr")
                     $(".overlay.nav").stop().fadeIn("fast");
             }, 100);
-        });
+        }
+        $(window).off("scroll", scroll_handler).on("scroll", scroll_handler);
     };
     o.attach_handlers = function(){
         if(context.page && context.page.attach_handlers)
             context.page.attach_handlers();
         local_attach_handlers();
-    }
-
-    o.grid = function(page_data){
-        grid_width = 410;
-        render_site(page_data);
-        // TODO: BUGBUG: should be data driven
-        o.column_layout = (context.route_name == "network");
     }
 
     o.render_main_tags = function(){
@@ -443,15 +456,17 @@ define([
     o.form_page_enter = function(){
         // must be idempotent; called twice for expr pagethroughs
         // TODO: make this work for #Forms beyond "gifwall."
-        var page_data = context.page_data, expr = page_data.expr
-            ,tags = expr && (expr.tags_index || expr.tags)
-        if(tags && tags.indexOf("gifwall") >= 0)
+        var page_data = context.page_data
+        if(o.tags && o.tags.indexOf("gifwall") >= 0)
             page_data.form_tag = 'gifwall'
         else return
 
-        $("#logo").hidehide();
-        $('.overlay.form').remove()
-        $('#overlays').append(form_overlay_template(page_data));
+        // only show the #GIFWALL on an expression page
+        if (page_data.expr) {
+            $("#logo").hidehide();
+            $('.overlay.form').remove()
+            $('#overlays').append(form_overlay_template(page_data));
+        }
 
         var $create = $("#overlays .create")
         if (!$create.data("href"))
@@ -490,11 +505,6 @@ define([
     o.home = function(page_data){
         page_data.layout = 'profile';
         $('#site').empty().append(home_template(page_data));
-    };
-
-    o.profile = function(page_data){
-        render_site(page_data);
-        expr_column();
     };
 
     // js for settings. TODO: add to separate module
@@ -575,13 +585,6 @@ define([
     //     render_site(page_data);
     // };
 
-    // TODO: User cards should use same card size as expression only in search
-    o.mini = function(page_data){
-        page_data.layout = 'grid';
-        grid_width = 222 + 2*10; // padding = 10 + 10
-        render_site(page_data);
-    };
-    
     function render_site(page_data){
         if (page_data.page) {
             // TODO-polish: These functions belong in another module.

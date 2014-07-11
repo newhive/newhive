@@ -20,7 +20,8 @@ curl(['server/context', 'browser/js'], function(context, util){
         error: {{ error|json }},
         is_secure: {{ is_secure|json }},
         page_data: {{ page_data|json }},
-        flags: {{ flags|json }}
+        flags: {{ flags|json }},
+        referer: {{ referer|json }}
     }, context);
 });
   </script>

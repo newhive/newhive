@@ -353,7 +353,7 @@
 
 
 body.mobile {
-    .feed.profile, .feed.profile .card .snapshot { width: 500px; }
+    .feed.profile, .feed.profile .card .snapshot { width: 500px; height: 300px }
     #site #home_video { width: 500px; height: 281px; }
     .tag_list.main .drop_box { display:none; }
 }
@@ -407,7 +407,6 @@ body {
             &.expanded {
                 overflow-y: auto;
                 max-height: 380px;
-                min-width: initial;
             }
             .drop_box {
                 border-bottom: 1px solid black;
@@ -549,7 +548,7 @@ body {
 
             .snapshot {
                 width: 715px;
-                // height: 430px;
+                height: 430px;
             }
             .title_spacer {
                 padding: 0px 10px;
@@ -579,12 +578,16 @@ body {
         }
     }
 
+    .feed.grid.user .user.card { 
+        width: 222px; 
+        height: auto;
+    }
     .feed.grid {
         /* max-width: 1256px; */
         // margin: auto;
         width: 1230px;
         .user.card {
-            width: 222px;
+            height: 369px;
             vertical-align: top;
             &> * { vertical-align: bottom; }
             .counts_icon .counts {
@@ -631,7 +634,7 @@ body {
             // }
             .snapshot {
                 width: 390px;
-                // height: 235px;
+                height: 235px;
             }
         }
     }

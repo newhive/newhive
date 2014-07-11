@@ -31,7 +31,6 @@ class MailerTest(unittest.TestCase):
     def setUp(self):
         self.test_user = db.User.named('test')
         self.test_nonuser = {'email': 'test+nonuser@newhive.com', 'name': 'Nonuser'}
-        # pdb.set_trace()
 
     def get_expr(self):
         #return db.Expr.fetch("504fb8e063dade0b7401d422") # contains unicode title

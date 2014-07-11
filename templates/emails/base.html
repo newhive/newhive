@@ -24,8 +24,6 @@
 </h1>
 {%- endmacro %}
 
-{% set table_width = 'width="586px"' %}
-
 <html>
     <head>
         {% if css_debug %}
@@ -36,35 +34,27 @@
 <body style="font-family: Helvetica, Verdana, sans-serif;">
 
   {# Main layout table #}
-  <table {{ table_width }} style="border-collapse: collapse; border-spacing: 0;">
-    <tr><td {{ table_width }} style="padding: 0;">
-      <table {{ table_width }} style="border-collapse: collapse; border-spacing: 0;" border="0">
+  <table style="border-collapse: collapse; border-spacing: 0;">
+    <tr><td style="padding: 0;">
+      <table style="border-collapse: collapse; border-spacing: 0;" border="0">
 
       {% block header %}
       {% endblock %}
 
-        {# logotype approximation #}
-        <tr height="50px">
-          <td id="header_logotype" class="outer" colspan="9">
-            {% block header_logotype %}
-            <a href="http://newhive.com" style="text-decoration: none; color: #ffffff">newhive.com</a>
-            {% endblock %}
-          </td>
-        </tr>
-
       </table>
     </td></tr>
-    <tr><td id="body" class="{% block body_classes %}{% endblock %}" style="background-color: {% block body_color %}#D0E0F0{% endblock %};" {{ table_width }} >
+    <tr><td id="body" class="{% block body_classes %}{% endblock %}" style="background-color: {% block body_color %}#D0E0F0{% endblock %};" >
       {% block body %}
       {% endblock %}
     </td></tr>
-    <tr><td class="outer" height="30px" {{ table_width }}>
+    <tr><td height="30px">
+      <hr width ="70%">
       {% block footer %}
-      <p style="text-align: center; color: #ffffff;">
-        <a href="mailto:info@newhive.com" style="text-decoration: none; color: #ffffff;">info@newhive.com</a> 
-        | <a href="http://newhive.com" style="text-decoration: none; color: #ffffff;">newhive.com</a> 
-        | <a href="http://www.facebook.com/pages/The-New-Hive/122884201115568" style="text-decoration: none; color: #ffffff;">facebook </a>
-        | <a href="http://twitter.com/#!/NewHive" style="text-decoration: none; color: #ffffff;">twitter</a>
+      <p style="text-align: center;">
+        <a href="mailto:info@newhive.com" style="text-decoration: none; color: black">info@newhive.com</a> 
+        | <a href="http://newhive.com" style="text-decoration: none; color: black;">newhive.com</a> 
+        | <a href="http://www.facebook.com/pages/The-New-Hive/122884201115568" style="text-decoration: none; color: black;">facebook </a>
+        | <a href="http://twitter.com/#!/NewHive" style="text-decoration: none; color: black;">twitter</a>
       </p>
       {% endblock %}
     </td></tr>

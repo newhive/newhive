@@ -1,13 +1,17 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-<title>main curl test file</title>
+<title>test kitchen sink convenience build</title>
 
 <script>
 
 	curl = {
 		paths: {
-			curl: '../src/curl/'
+			curl: '../src/curl/',
+            cjs: {
+                location: 'support/commonjs',
+                config: { loader: 'curl/loader/cjsm11' }
+            }
 		}
 	};
 
@@ -20,12 +24,16 @@
 		[
 			'stuff/three',
 			'css!stuff/base',
-			'text!stuff/template.html'
+			'text!stuff/template.html',
+			'js!stuff/plain_old.js!exports=testDomain.foo',
+            'cjs/nakedDependentCjsm1.1'
 		]
 	).then(
-		function (three, link, template) {
-				(three == 3 ? success : failure)('A module with dependencies loaded.');
-				(typeof template == 'string' && template.length ? success : failure)('text resource loaded.');
+		function (three, link, template, script, cjs1) {
+            (three == 3 ? success : failure)('A module with dependencies loaded.');
+            (typeof template == 'string' && template.length ? success : failure)('text resource loaded.');
+            (script ? success : failure)('A script loaded with the js! plugin.');
+            (cjs1.stuff === 'stuff' ? success : failure)('A module loaded via cjsm11 loader extension.');
 		}
 	);
 

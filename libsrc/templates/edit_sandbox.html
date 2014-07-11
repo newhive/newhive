@@ -1,4 +1,20 @@
-<div id='edit_nav' class='edit nav overlay'
+<div id="dynamic_group"></div>
+
+<div id="menu_group">
+<div id='dia_edit_bg' class='dialog'>
+ <h2>Edit Background</h2>
+ <div id='edit_bg_image'>
+  <div id='bg_preview' class='border'><img id='bg_preview_img'></div>
+  <div id='bg_opacity_label' class='small_text'>opacity: <input id='bg_opacity'
+    type='text' size='3' value='100%'></div>
+  <label for='bg_input'><div id='bg_upload_btn'
+    class='btn black small_text rounded'>Upload Image</div></label>
+  <div id='bg_remove' class='btn black small_text rounded'>Clear</div>
+ </div>
+ <div id='color_pick' style='float : right; position : relative;'></div>
+</div>
+
+<div id='edit_nav' class='edit nav overlay bottom'
   ><div class='center pad'><img id='btn_undo' title='Undo' class='hoverable'
     src='{"skin/edit/undo.png"|asset}'></div
   ><div class='center'><img id='btn_redo' title='Redo' class='hoverable'
@@ -7,24 +23,30 @@
     src='{asset "skin/1/zoom.png"}'></div
   ><div class='change_zoom icon hoverable'></div
   ><div class='fluff pad'></div
-  ><div class='fluff center pad handle misc'><img title="Misc" src='{asset "skin/edit/grid-off.png"}'></div
+  ><div class='fluff center pad handle misc'><img title="Misc" 
+    src='{asset "skin/edit/padding.png"}'></div
   ><div class='fluff smpad'></div
   ><div class='fluff center hoverable text text_btn black_active' title="Editor help" id='btn_help'>?</div
   ><div id='btn_save' class='save upper text text_btn hoverable center pad black_active'
-    >Save <div class='inline arrow'></div>
+    ><span>Save </span><div class='inline arrow'></div>
     <img src='{asset "skin/edit/loading.gif"}' class='hide loading'
   ></div
 ></div>
 
-<div class='menu drawer medbold hide' data-handle=".handle.misc">
-  <div class='menu_item'>
+<div class="menu drawer hide" data-handle="#btn_save">
+  <div class="menu_item upper revert" title="Revert to last saved">Revert</div>
+</div>
+
+<div class='menu drawer medbold misc_menu hide' data-handle=".handle.misc" 
+  data-menu-opts='"layout_x":"center"'>
+  {#<div class='menu_item'>
     <img id='btn_grid' title="Show grid" src='{asset "skin/edit/grid-off.png"}'>
-  </div>
+  </div>#}
   <div class='menu_item change_zoom icon hoverable'>
     <img title='Zoom' class='hoverable' src='{asset "skin/1/zoom.png"}'>
   </div>
   <div class='menu_item change_padding icon hoverable'>
-    <img title='Universal padding / snapping' class='hoverable' src='{asset "skin/edit/padding.png"}'>
+    <img title='Universal snapping / padding' class='' src='{asset "skin/edit/padding.png"}'>
   </div>
 </div>
 <div class="dialog iframe" id="dia_editor_help" data-handle="#btn_help">
@@ -33,13 +55,14 @@
   {>}
 </div>
 
-<div class='app_btns edit overlay panel'
- ><div class='insert_text icon hoverable'></div
- ><div class='insert_image icon hoverable'></div
- ><div class='insert_audio icon hoverable'></div
- ><div class='insert_embed icon hoverable'></div
- ><div class='insert_shape icon hoverable'></div
- ><div class='insert_file icon hoverable'></div
+{# TODO: create better title text #}
+<div class='app_btns edit overlay bottom panel'
+ ><div class='insert_text icon hoverable' title="Insert text"></div
+ ><div class='insert_image icon hoverable' title="Insert image"></div
+ ><div class='insert_audio icon hoverable' title="Insert audio"></div
+ ><div class='insert_embed icon hoverable' title="Insert embed"></div
+ ><div class='insert_shape icon hoverable' title="Insert shape"></div
+ ><div class='insert_file icon hoverable' title="Insert file"></div
 ></div>
 
 <div id='menu_text' class='menu drawer medbold'>
@@ -81,25 +104,38 @@
       class='black_btn upper embed_button' value='Enter'></div>
 </div>
 
-<div id='menu_shape' class='menu drawer medbold'>
+<div id='menu_shape' class='menu drawer medbold'
+  data-menu-opts='"layout_x":"center"'
   {<if flags.shapes}
-    <div class='menu_item hexagon'>Hexagon</div>
-    <div class='menu_item pentagram'>Star</div>
+    ><div class='menu_item line'>
+      <img title="Line" src='{asset "skin/edit/shapes_icons/line.png"}'></div
+    ><div class='menu_item free_form'>
+      <img title="Free form" src='{asset "skin/edit/shapes_icons/freeform.png"}'></div
+    ><div class='menu_item pentagram'>
+      <img title="Star" src='{asset "skin/edit/shapes_icons/star.png"}'></div
+    ><div class='menu_item hexagon'>
+      <img title="Hexagon" src='{asset "skin/edit/shapes_icons/hexagon.png"}'></div
+    ><br class="noheight"
   {>}
-  <div class='menu_item sketch'>Sketch</div>
+  ><div class='menu_item default rect'>
+    <img title="Rectangle" src='{asset "skin/edit/shapes_icons/square.png"}'></div
   {<if flags.shapes}
-    <div class='menu_item free_form'>Free form</div>
-    {#<div class='menu_item line'>Line</div>#}
-    <div class='menu_item triangle'>Triangle</div>
+    ><div class='menu_item circle'>
+      <img title="Circle" src='{asset "skin/edit/shapes_icons/circle.png"}'></div
+    ><div class='menu_item triangle'>
+      <img title="Triangle" src='{asset "skin/edit/shapes_icons/triangle.png"}'></div
   {>}
-  <div class='menu_item default rect'>Rectangle</div>
-</div>
+  ><div class='menu_item sketch'>
+    <img title="Sketch" src='{asset "skin/edit/shapes_icons/sketch.png"}'></div
+></div>
 
 <div id='menu_file' class='menu drawer medbold'>
  <label for='link_input'><div class='menu_item menu_hover default'
    >Upload file to link</div></label>
 </div>
+</div>{# id="menu_group" #}
 
+<div id="controls_group" class='hide'>
 <div id='controls_common' class='controls_src'>
  <img class='control remove tip_NE' src='{asset "skin/edit/delete_app.png"}' title='Delete'>
  <div class='control stack'><img class='stack_up hoverable' src='{asset "skin/edit/stack_up.png"}' title='Move to front'><img class='stack_down hoverable' src='{asset "skin/edit/stack_down.png"}' title='Move to back'></div>
@@ -205,8 +241,6 @@
 
 <div id='controls_image' class='controls_src'>
  <div class='control buttons'
-  {# Link belongs in controls_misc #}
-  ><img class='button link tip_W' src='{asset "skin/edit/link.png"}' title='Link'
   ><img class='button set_bg' src='{asset "skin/edit/fullscreen.png"}' title='Make background'
  ></div
 ></div>
@@ -224,8 +258,13 @@
       src='{asset "skin/edit/tiling-padding.png"}'>
     <img class='button change_columns' title="Tile columns"
       src='{asset "skin/edit/tiling-columns.png"}'>
-    </div>
   {>}
+</div>
+
+<div id='control_drawers' class=''>
+  <div class='control drawer generic_edit'>
+    <input type="text">
+  </div>
 </div>
 
 <div id='controls_misc' class='controls_src'>
@@ -236,6 +275,7 @@
   <img class='control drag resize_v hoverable tip_S' 
     src='{asset "skin/edit/resize_v.png"}' title="Resize">
   
+  <img class='button link tip_W' src='{asset "skin/edit/link.png"}' title='Link'>
   <img class='button color' src='{asset "skin/edit/color.png"}' title="Color">
   <div class='control drawer color border'></div>
 
@@ -258,13 +298,22 @@
   </div>
 
   {# polygon #}
-  <img class='button blank stroke-width tip_N' src='{asset "skin/edit/border_width.png"}' title='Stroke width'
-  ><img class='button stroke tip_N' src='{asset "skin/edit/border_color.png"}' title='Stroke color'
-  ><img class='button blur tip_N' src='{asset "skin/edit/border_color.png"}' title='Gaussian blur'>
+  <img class='button blank stroke-width tip_N'
+    src='{asset "skin/edit/border_width.png"}'  title='Stroke width'
+  ><img class='button stroke tip_N' 
+    src='{asset "skin/edit/border_color.png"}'  title='Stroke color'
+  ><img class='button blur tip_N' 
+    src='{asset "skin/edit/blur.png"}'          title='Gaussian blur'>
 
-  <div class='button bg run' title='Run'>&rarr;</div>
-  <div class='button bg stop' title='Stop'>&Chi;</div>
-  <div class='button bg edit' title='Edit'>&Xi;</div>
+  {# Code editor #}
+  <img class='button run' src='{asset "skin/edit/run.png"}'  title='Run'>
+  <img class='button stop' src='{asset "skin/edit/stop.png"}'  title='Stop'>
+  <img class='button edit' src='{asset "skin/edit/edit.png"}'  title='Edit'>
+
+  <img class='button css_classes tip_N'
+    src='{asset "skin/edit/css_class.png"}'  title='Change css classes'>
+
+  <div class='button edit_src' title='edit code'></div>
 </div>
 
 <div id='controls_sketch' class='controls_src'>
@@ -291,20 +340,9 @@
   ></div
  ></div>
 </div>
+</div> {# id="controls_group" #}
 
-<div id='dia_edit_bg' class='dialog border selected'>
- <h2>Edit Background</h2>
- <div id='edit_bg_image'>
-  <div id='bg_preview' class='border'><img id='bg_preview_img'></div>
-  <div id='bg_opacity_label' class='small_text'>opacity: <input id='bg_opacity'
-    type='text' size='3' value='100%'></div>
-  <label for='bg_input'><div id='bg_upload_btn'
-    class='btn black small_text rounded'>Upload Image</div></label>
-  <div id='bg_remove' class='btn black small_text rounded'>Clear</div>
- </div>
- <div id='color_pick' style='float : right; position : relative;'></div>
-</div>
-
+<div id="overlays_group">
 <div class='editor_overlay hide'>
   <div class='inset'></div>
 </div>
@@ -317,22 +355,23 @@
     </label>
   </div>
 </div>
-<div id='grid_guide'></div>
+</div> {# id="overlays_group" #}
 
+{# globals #}
+{# <iframe id="overlay_frame" src="http://google.com"></iframe> #}
 <div id='controls'></div>
-<div id='bg' class='happfill'><img src='{expr.background.url}'
-  class='hide'></div>
-<div id='happs'></div>
+<div id='happs'><div id='bg' class='happfill'><img src='{expr.background.url}'
+  class='hide'><div id='grid_guide'></div></div></div>
 
-<form {form_attrs "file_create"} method='POST' id='media_upload'>
-  <input type='file' id='media_input' name='files'
+<form {form_attrs "file_create"} method='POST' id='media_upload' class='hide'>
+  <input readonly type='file' id='media_input' name='files'
     data-drop-area='#grid_guide,.prompts' multiple>
 </form>
 
 <form {form_attrs "file_create"} method='POST' class='hide' id='bg_upload'>
-  <input type='file' id='bg_input' name='files' accept='image/*'>
+  <input readonly type='file' id='bg_input' name='files' accept='image/*'>
 </form>
 
 <form {form_attrs "file_create"} method='POST' class='hide' id='link_upload'>
-  <input type='file' id='link_input' name='files'>
+  <input readonly type='file' id='link_input' name='files'>
 </form>

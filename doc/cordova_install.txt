@@ -1,0 +1,87 @@
+# install ant
+sudo apt-get install ant
+
+# download, install android SDK
+https://developer.android.com/sdk/installing/index.html
+# from the android sdk directory add tools and platform-tools to your path, or symlink platform-tools/adb, tools/android, and tools/emulate* to your bin
+# run `android` to update / install SDK
+
+# create 'hello world' app
+# Details here: http://cordova.apache.org/docs/en/3.0.0/guide_cli_index.md.html
+sudo npm install -g cordova
+cd ~/src # or whatever you want as the parent dir
+cordova create hello com.example.hello "Hello World"
+cd hello
+
+cordova platform add android
+cordova build
+cordova build android
+
+# To run on an android emulator
+cordova emulate android
+
+# To run on a device:
+cordova run android
+
+
+#
+# In linux, if the device appears like this
+# 016B756E0400E006  ????????????
+# Then you need to add permissions for it like this:
+
+############################################################################
+# Notifications
+############################################################################
+
+# install push plugin
+cordova plugin add com.phonegap.plugins.PushPlugin
+
+### Install google play services. 
+#? http://www.androidhive.info/2012/10/android-push-notifications-using-google-cloud-messaging-gcm-php-and-mysql/
+# http://developer.android.com/google/play-services/setup.html
+# http://developer.android.com/google/gcm/gs.html
+# GCM project# 735294912877
+# API key   AIzaSyDwFDcABJN8ldQKGCA2ohiO8kHoFst57X8
+
+
+# Test notifications.
+# Install node
+# sudo apt-get install python-software-properties python g++ make
+# sudo add-apt-repository ppa:chris-lea/node.js
+sudo apt-get update
+sudo apt-get install nodejs
+# Install node-gcm
+npm install node-gcm
+
+
+# # For testing notifications, install ruby on rails
+# curl -L https://get.rvm.io | bash -s stable --ruby --autolibs=enable --auto-dotfiles --rails
+# source ~/.rvm/scripts/rvm
+# # and install pushmeup
+# gem install pushmeup
+
+############################################################################
+# FAQ
+############################################################################
+
+Q: I got INSTALL_PARSE_FAILED_INCONSISTENT_CERTIFICATES when 
+    install app for the first time
+A: Try to first uninstalling the newhive app from your mobile.
+    see also: http://stackoverflow.com/questions/7157144/install-parse-failed-inconsistent-certificates-when-install-app-for-the-first-ti
+
+Q: How to I debug?
+A: Search for "newhive" in a chrome tab pointed at chrome://inspect/#devices
+
+Q: adb does not work
+A: first ensure USB debugging is enabled on the device. Then run `adb devices`. if no device is listed and your OS has mounted it as a mtp device, unmount it. Also try `adb kill-server`.
+
+If adb devices shows something like "016B756E0400E006  ????????????" and you're running linux, then you need to add permissions for it like this:
+run `lsusb` and you should see a line like:
+Bus 002 Device 069: ID 04e8:6860 Samsung Electronics Co., Ltd GT-I9100 Phone [Galaxy S II]
+get the vendor id from ^^^^ there (first hex word after "ID")
+create a file /etc/udev/rules.d/80-android.rules containing this line,
+replacing 04e8 with your devices vendor id:
+SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", MODE="0666", GROUP="plugdev"
+
+Q: running android shows error "android: can't find sdkmanager.jar"
+A: make sure your user has read and exec permissions to the SDK directory

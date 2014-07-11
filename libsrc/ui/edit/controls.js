@@ -42,7 +42,7 @@ o.Controls = function(app, multiselect, delegate) {
     o.multiselect = multiselect;
 
     o.remove = function() {
-        o.div.remove();
+        o.fixed_div.remove();
         app.controls = false;
     };
 
@@ -52,19 +52,26 @@ o.Controls = function(app, multiselect, delegate) {
         var cancel_btn = $("<img>").addClass('hoverable')
             .attr('src', asset('skin/edit/delete_app.png'))
             .attr('title', 'Clear link')
-            .css('margin', '12px 0 0 5px');
+            // .css('margin', '12px 0 0 5px');
         var input = $('<input type="text">');
 
         d.append(e);
+        // Protect the input in its own frame so it doesn't change the selection
+        // of the current frame
         input_frame(input, e);
         e.append(cancel_btn);
 
         // set_link is called when input is blurred
         var set_link = function(){
             var v = input.val();
-            // TODO: improve URL guessing
-            if(!v.match(/^https?\:\/\//i) && !v.match(/^\//) && 
-                v.match(/\w+\.\w{2,}/)) v = 'http://' + v;
+            if (v.match(/@\w+\.\w{2,}/)) {
+                // Auto-add mailto:
+                if (! v.match(/:/))
+                    v = 'mailto:' + v;
+            } else if (!v.match(/^\//) && !v.match(/\/\//) && v.match(/\w+\.\w{2,}/)) 
+                // TODO: improve URL guessing.  
+                // Auto-add http:// to urls
+                v = 'http://' + v;
             o.app.link_set(v);
             env.History.saver(sel_app.link, sel_app.link_set, 'link image').exec(v);
         };
@@ -142,14 +149,14 @@ o.Controls = function(app, multiselect, delegate) {
             o.appendButton(x) } )); };
     o.hover_menu = function(handle, drawer, opts) {
         return u.hover_menu(handle, drawer, $.extend({
-            auto_height: false, offset_y : o.padding - 7}, opts))
+            auto_height: false, offset_y: 5 }, opts))
     };
     o.single = function() {
         return (env.Selection.count() == 1) ? o.app.sel_app() : false }
 
-    o.padding = 4;
+    o.padding = 12;
     o.border_width = 5;
-    var pad_ul = [45, 45], pad_br = [45, 110], min_d = [135, 40];
+    var pad_ul = [45, 45], pad_br = [45, 120], min_d = [135, 40];
     if(multiselect){
         pad_ul = [3, 3];
         pad_br = [3, 3];
@@ -166,15 +173,13 @@ o.Controls = function(app, multiselect, delegate) {
         //    * Add scroll height when pushed from bottom to prevent
         //      overlap of controls with app content
         // TODO-polish-border-push:
-        //    * Make pushed border segments dashed
-        //    * Create pushed controls container so controls meant to
-        //      overlay app content can be separated
+        //    * Maybe make pushed border segments dashed
         // Maybe ditch border pushing entirely. Not convinced it's worth it
-        var ap = app.pos(),
+        var ap = u._add(app.pos(), env.offset), // add zoom offset
             // win = $(window), wdims = [win.width(), win.height()],
             wdims = env.win_size,
-            pos = [ Math.max(pad_ul[0] + env.scrollX,
-                ap[0]), Math.max(pad_ul[1] + env.scrollY, ap[1]) ],
+            pos = [ Math.max(pad_ul[0] + env.scrollX, ap[0]), 
+                Math.max(pad_ul[1] + env.scrollY, ap[1]) ],
             ad = app.dims(),
             dims = [ ap[0] - pos[0] + ad[0], ap[1] - pos[1] + ad[1] ];
         if(dims[0] + pos[0] > wdims[0] + env.scrollX - pad_br[0])
@@ -190,7 +195,8 @@ o.Controls = function(app, multiselect, delegate) {
             dims[1] = ap[1] - pos[1] + ad[1];
             minned_dims = dims.slice();
         }
-        pos = u._add(pos)(u._mul(delta_dir)(u._sub(minned_dims)(dims)));
+        pos = u._add(pos)(u._mul(delta_dir)(u._sub(minned_dims)(dims)))
+        pos = u._sub(pos, env.offset) // remove zoom offset
 
         return { pos: pos, dims: minned_dims };
     };
@@ -199,16 +205,14 @@ o.Controls = function(app, multiselect, delegate) {
 
     o.layout = function() {
         // Fix parent layout if needed
-        // if (o.app.focused())
-        //     env.Selection.update_relative_coords();
-        //if (delegate && o.app.controls)
-        //    o.app.controls.layout();
-        var pos = o.pos(), dims = o.dims(),
+        var posdims = pos_dims(), pos = posdims.pos, dims = posdims.dims,
+            ap = app.pos(),
             cx = dims[0] / 2, cy = dims[1] / 2, p = o.padding,
             bw = o.border_width, outer_l = -cx -bw - p,
             outer_width = dims[0] + bw*2 + p*2, outer_height = dims[1] + p * 2 + 1;
 
-        u.inline_style(o.div[0], { left: pos[0], top: pos[1] })
+        u.inline_style(o.fixed_div[0], { left: ap[0], top: ap[1] })
+        u.inline_style(o.div[0], { left: pos[0] - ap[0], top: pos[1] - ap[1] })
 
         u.inline_style(o.select_box[0], { left: cx, top: cy });
         u.inline_style(o.select_borders[0], { left: outer_l,
@@ -230,12 +234,12 @@ o.Controls = function(app, multiselect, delegate) {
         o.c.top_buttons.css({ left: -bw - p, top: -38 - p, width: dims[0] - 60 });
     };
 
-    o.div = $('<div>').addClass('controls');
-    $('#controls').append(o.div);
+    o.fixed_div = $('<div>').addClass('fixed_controls').appendTo("#controls");
+    o.div = $('<div>').addClass('controls').appendTo(o.fixed_div);
 
     // add borders
     o.select_box = $("<div style='position: absolute'>");
-    var border = $('<div>').addClass('select_border drag happ');
+    var border = $('<div>').addClass('select_border drag');
     o.select_borders = border.add(border.clone().addClass('right'))
         .add(border.clone().addClass('bottom'))
         .add(border.clone().addClass('left'));
@@ -331,6 +335,7 @@ o.Controls = function(app, multiselect, delegate) {
                             copy_list.push(copy);
                     }
                 }
+                env.Selection.select(copy_list);
                 env.History.group('copy grid');
             });
         }

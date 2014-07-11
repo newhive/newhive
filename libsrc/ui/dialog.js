@@ -24,6 +24,7 @@ define([
                 }
             }
         };
+        factory.generic_dialog_handler = generic_dialog_handler
 
         $.extend(opts, {
             dialog: $(element),
@@ -78,6 +79,12 @@ define([
             opts.layout()
         }
 
+        var key_handler = function(e) {
+            if (e.keyCode == 27) { // escape
+                // If a dialog is up, kill it.
+                factory.close_all();
+            }
+        }
         o.open = function(){
             if(opts.opened) return;
             // TODO: Allow multiple dialogs?
@@ -111,17 +118,21 @@ define([
             this_dia.removeClass('hide').showshow();
             // For old browsers which don't support autofocus.
             this_dia.find("*[autofocus]").focus();
-            $.each(this_dia.find(".defer"), function (i, el) {
-                $(el).replaceWith($($(el).attr("data-content")));
-            });
+            o.undefer()
             if (!this_dia.data("_width"))
                 this_dia.data("_width", util.val(this_dia.css("width")));
             o.layout();
-
+            $("body").off('keydown', key_handler).on("keydown", key_handler);
             opts.open();
 
             return o
         };
+
+        o.undefer = function(){
+            $.each(o.opts.dialog.find(".defer"), function (i, el) {
+                $(el).replaceWith($($(el).attr("data-content")))
+            })
+        }
 
         o.close = function() {
             if(!opts.opened) return;
@@ -136,6 +147,8 @@ define([
                 opts.shield.remove();
             $(window).off('resize', o.layout);
             opts.close();
+            if (factory.dialogs.filter(function(d){ d.opened}).length == 0)
+                $("body").off('keydown', key_handler)
         }
 
         return o;

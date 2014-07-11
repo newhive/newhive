@@ -1,4 +1,4 @@
-define([], function () {
+define(/*=='curl/plugin/_fetchText',==*/ [], function () {
 
 	var xhr, progIds;
 
@@ -36,10 +36,10 @@ define([], function () {
 		x.open('GET', url, true);
 		x.onreadystatechange = function (e) {
 			if (x.readyState === 4) {
-				if (x.status < 400 && x.responseText != "") {
+				if (x.status < 400) {
 					callback(x.responseText);
 				}
-				else if (errback && x.responseText != ""){
+				else {
 					errback(new Error('fetchText() failed. status: ' + x.statusText));
 				}
 			}

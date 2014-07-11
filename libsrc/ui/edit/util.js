@@ -23,7 +23,9 @@ define([
 ){
 
 var o = {}
+    ,u = o
     ,bound = js.bound;
+env.u = o
 
 // For performance-critical ops, do not use jquery style
 o.inline_style = function(el, styles) {
@@ -123,16 +125,15 @@ o._lerp = function(alpha, old_val, new_val) {
     }
 };
 
+// returns list of intervals in x- and y- dimensions which bound the input 
+// points exactly
 o.points_rect = function(ps){
-    var f = {
-        x: Infinity ,width: -Infinity
-        ,y: Infinity ,height: -Infinity
-    }
+    var f = [[Infinity, -Infinity], [Infinity, -Infinity]]
     ps.map(function(p){
-        f.x = Math.min(f.x, p[0])
-        f.width = Math.max(f.width, p[0])
-        f.y = Math.min(f.y, p[1])
-        f.height = Math.max(f.height, p[1])
+        f[0][0] = Math.min(f[0][0], p[0])
+        f[0][1] = Math.max(f[0][1], p[0])
+        f[1][0] = Math.min(f[1][0], p[1])
+        f[1][1] = Math.max(f[1][1], p[1])
     })
     return f
 }
@@ -145,6 +146,10 @@ o.interval_dist = function(a, b) {
     return Math.min(Math.abs(c[0]), Math.abs(c[1]));
 };
 
+o.dist = function(a, b) {
+    if (b) return o.interval_size([a,b])
+    return o.interval_size(a)
+}
 o.interval_size = function(i) { return Math.abs(i[1] - i[0]); };
 // Returns the least interval containing both inputs
 o.interval_bounds = function(a, b) {
@@ -176,6 +181,7 @@ o.has_shuffle = function(arr) {
 o.array_equals = function(a, b) {
   if (a === b) return true;
   if (a == null || b == null) return false;
+  if (a.length === undefined || b.length === undefined) return false;
   if (a.length != b.length) return false;
 
   for (var i = 0; i < a.length; ++i) {
@@ -183,6 +189,31 @@ o.array_equals = function(a, b) {
   }
   return true;
 }
+
+// deep object comparison
+o.deep_equals = function(o1, o2) {
+    if (o1 == null || o2 == null || typeof(o1) != "object" || typeof(o2) != "object")
+        return o1 == o2 || (isNaN(o1) && isNaN(o2))
+
+    var k1 = Object.keys(o1).sort();
+    var k2 = Object.keys(o2).sort();
+    if (k1.length != k2.length) 
+        return false;
+    for (var i in k1) {
+        var key1 = k1[i], key2 = k2[i]
+        if (key1 != key2) {
+            // console.log("Keys differ: " + key1 + " " + key2)
+            return false
+        }
+        var a = o1[key1], b = o2[key2]
+        if (!o.deep_equals(a, b)) {
+            // console.log("objects differ: " + key1 + " " + key2)
+            return false
+        }
+    }
+    return true
+}
+
 // returns the array of the nth element of every member array
 o.nth = function(array, n) {
     return array.map(function(x) { return x[n] })
@@ -193,6 +224,70 @@ o.max = function(array){
 o.min = function(array){
     return Math.min.apply(Math, array);
 };
+
+// Add stable merge sort to Array and jQuery prototypes
+// Note: We wrap it in a closure so it doesn't pollute the global
+//       namespace, but we don't put it in $(document).ready, since it's
+//       not dependent on the DOM
+// http://stackoverflow.com/questions/1427608/fast-stable-sorting-algorithm-implementation-in-javascript
+(function() {
+
+  // expose to Array and jQuery
+  Array.prototype.merge_sort = jQuery.fn.merge_sort = merge_sort;
+  Object.defineProperty(Array.prototype, "merge_sort", {enumerable: false})
+  function merge_sort(compare) {
+
+    var length = this.length,
+        middle = Math.floor(length / 2);
+
+    if (!compare) {
+      compare = function(left, right) {
+        if (left < right)
+          return -1;
+        if (left == right)
+          return 0;
+        else
+          return 1;
+      };
+    }
+
+    if (length < 2)
+      return this;
+
+    return merge(
+      this.slice(0, middle).merge_sort(compare),
+      this.slice(middle, length).merge_sort(compare),
+      compare
+    );
+  }
+
+  function merge(left, right, compare) {
+
+    var result = [];
+
+    while (left.length > 0 || right.length > 0) {
+      if (left.length > 0 && right.length > 0) {
+        if (compare(left[0], right[0]) <= 0) {
+          result.push(left[0]);
+          left = left.slice(1);
+        }
+        else {
+          result.push(right[0]);
+          right = right.slice(1);
+        }
+      }
+      else if (left.length > 0) {
+        result.push(left[0]);
+        left = left.slice(1);
+      }
+      else if (right.length > 0) {
+        result.push(right[0]);
+        right = right.slice(1);
+      }
+    }
+    return result;
+  }
+})();
 
 var checkIfAllArgumentsAreArrays = function (functionArguments) {
     for (var i = 0; i < functionArguments.length; i++) {
@@ -217,9 +312,9 @@ o.distinct = function (array) {
     }
 
     return result;
- }
+}
 
- o.union = function (/* minimum 2 arrays */) {
+o.union = function (/* minimum 2 arrays */) {
     if (arguments.length == 0 ) return []
     else if (arguments.length == 1) return arguments[0];
     checkIfAllArgumentsAreArrays(arguments);
@@ -239,65 +334,71 @@ o.distinct = function (array) {
     }
 
     return result;
- }
+}
 
- o.intersect = function (/* minimum 2 arrays */) {
-     if (arguments.length < 2) throw new Error('There must be minimum 2 array arguments!');
-     checkIfAllArgumentsAreArrays(arguments);
+o.intersect = function (/* minimum 2 arrays */) {
+    if (arguments.length == 0 ) return []
+    else if (arguments.length == 1) return arguments[0];
+    // if (arguments.length < 2) 
+    //    throw new Error('There must be minimum 2 array arguments!');
+    checkIfAllArgumentsAreArrays(arguments);
 
-     var result = [];
-     var distinctArray = o.distinct(arguments[0]);
-     if (distinctArray.length === 0) return [];
+    var result = [];
+    var distinctArray = o.distinct(arguments[0]);
+    if (distinctArray.length === 0) return [];
 
-     for (var i = 0; i < distinctArray.length; i++) {
-         var item = distinctArray[i];
+    for (var i = 0; i < distinctArray.length; i++) {
+        var item = distinctArray[i];
 
-         var shouldAddToResult = true;
+        var shouldAddToResult = true;
 
-         for (var j = 1; j < arguments.length; j++) {
-             var array2 = arguments[j];
-             if (array2.length == 0) return [];
+        for (var j = 1; j < arguments.length; j++) {
+            var array2 = arguments[j];
+            if (array2.length == 0) return [];
 
-             if ($.inArray(item, array2) === -1) {
-                 shouldAddToResult = false;
-                 break;
-             }
-         }
+            if ($.inArray(item, array2) === -1) {
+                shouldAddToResult = false;
+                break;
+            }
+        }
 
-         if (shouldAddToResult) {
-             result.push(item);
-         }
-     }
+        if (shouldAddToResult) {
+            result.push(item);
+        }
+    }
 
-     return result;
- }
+    return result;
+}
 
- o.except = function (/* minimum 2 arrays */) {
-     if (arguments.length < 2) throw new Error('There must be minimum 2 array arguments!');
-     checkIfAllArgumentsAreArrays(arguments);
+o.except = function (/* minimum 2 arrays */) {
+    if (arguments.length < 2) throw new Error('There must be minimum 2 array arguments!');
+    checkIfAllArgumentsAreArrays(arguments);
 
-     var result = [];
-     var distinctArray = o.distinct(arguments[0]);
-     var otherArraysConcatenated = [];
+    var result = [];
+    var distinctArray = o.distinct(arguments[0]);
+    var otherArraysConcatenated = [];
 
-     for (var i = 1; i < arguments.length; i++) {
-         var otherArray = arguments[i];
-         otherArraysConcatenated = otherArraysConcatenated.concat(otherArray);
-     }
+    for (var i = 1; i < arguments.length; i++) {
+        var otherArray = arguments[i];
+        otherArraysConcatenated = otherArraysConcatenated.concat(otherArray);
+    }
 
-     for (var i = 0; i < distinctArray.length; i++) {
-         var item = distinctArray[i];
+    for (var i = 0; i < distinctArray.length; i++) {
+        var item = distinctArray[i];
 
-         if ($.inArray(item, otherArraysConcatenated) === -1) {
-             result.push(item);
-         }
-     }
+        if ($.inArray(item, otherArraysConcatenated) === -1) {
+            result.push(item);
+        }
+    }
 
-     return result;
- }
+    return result;
+}
 
- // used for app id
-o.random_str = function(){ return Math.random().toString(16).slice(2); };
+// TODO: create consecutive, type-named id's (text_1 text_2 image_0...)
+// used for app id
+o.random_str = function(){ 
+    return ('a' + Math.random().toString(16).slice(2) + '0000000').slice(0, 8);
+};
 
 o.polygon = function(sides){
     js.range(sides - 1).map(function(i){
@@ -310,7 +411,7 @@ o.polygon = function(sides){
 // Sort two apps, first by top, then by left
 o.topo_cmp = function(app1, app2) {
     var a = app2.min_pos(), b = app1.min_pos();
-    if (a[1] != b[1])
+    if (Math.abs(a[1] - b[1]) > 0.5)
         return b[1] - a[1];
     return b[0] - a[0];
 }
@@ -326,17 +427,21 @@ o.retile = function(opts) {
     if (opts.natural) {
         opts.aspects = apps.map(function(a) { return a.aspect || a.get_aspect() })
     } else {
-        opts.aspects = apps.map(function(a) { return a.get_aspect() })
+        opts.aspects = apps.map(function(a) { 
+            return a.get_aspect() ? a.current_aspect() : a.get_aspect() })
     }
     var regions = o.tile_magic(apps.length, opts)
     for (var i = 0; i < apps.length; ++i) {
         var app = apps[i]
         if (opts.natural && app.aspect) {
+            if (app.init_state.scale_x)
+                app.init_state.scale_x = 1
             app.fit_to({pos:regions[i][0], dims:regions[i][1]
                 , scaled:[app.aspect,1]})
         } else {
-            app.pos_relative_set(regions[i][0])
-            app.dims_relative_set(regions[i][1])
+            app.aabb_set([ regions[i][0], u._add(regions[i][0], regions[i][1]) ])
+            // app.pos_relative_set(regions[i][0])
+            // app.dims_relative_set(regions[i][1])
         }
         if (app.recenter) app.recenter()
     }
@@ -599,15 +704,15 @@ o.new_file = function(files, opts, app_opts, filter) {
 
         loaded_count++;
         var loaded = function() {
-            if (!--loaded_count && context.flags.tile_multiple_images 
-                && files.length > 1) {
+            if (!--loaded_count) {
                 env.Selection.update(apps)
-                o.retile({natural:1})//, start_pos:start_pos})
+                if (context.flags.tile_multiple_images && files.length > 1)
+                    o.retile({natural:1})//, start_pos:start_pos})
                 env.Selection.scroll_to_view();
             }
         }
         if (!context.flags.tile_multiple_images)
-            return env.new_app(app, $.extend({ offset: [20*i, 20*i] }, app_opts) );
+            return env.new_app(app, $.extend({ offset: [20*i, 20*i], load:loaded }, app_opts) );
         else
             return env.new_app(app, $.extend({no_select:true, load:loaded}, app_opts) );
     });
@@ -621,6 +726,7 @@ o.new_file = function(files, opts, app_opts, filter) {
 env.layout_apps = o.layout_apps = function(){
     env.scale_set();
     $.map(env.Apps, function(a){ a.layout() });
+    env.Background.layout()
     // handled by App.layout
     // if(env.Selection.controls) env.Selection.controls.layout();
 
@@ -664,7 +770,7 @@ o.snap_helper = function(my_tuple, opts) {
     var s = env.scale(),
         exclude_ids = opts.exclude_ids,
         snap_strength = opts.snap_strength,
-        snap_radius = opts.snap_radius,
+        snap_radius = opts.snap_radius * env.padding()/10.,
         sensitivity = opts.sensitivity,
         padding = opts.padding,
         pos = [], show_guide = [];
@@ -685,6 +791,8 @@ o.snap_helper = function(my_tuple, opts) {
             break;
     }
     var tuple = [[],[]], new_pos = pos.slice();
+    if (snap_radius < 0.5)
+        return new_pos;
     // TODO-perf: save this array only after drag/drop
     // And keep it sorted
     var apps = env.Apps.all().filter(function(app) {
@@ -832,7 +940,7 @@ o.snap_helper = function(my_tuple, opts) {
             var rule = $(klass);
             if (0 == rule.length) {
                 rule = $('<div class="ruler ruler' + coord + '">');
-                rule.appendTo($("body"));
+                rule.appendTo(env.apps_e)
             }
             rule.showshow();
             rule.css({
@@ -846,6 +954,8 @@ o.snap_helper = function(my_tuple, opts) {
     return new_pos;
 }
 
+// TODO-color-picker: move into controls, add parameters for getter 
+// and menu open (show) callback
 o.append_color_picker = function(container, callback, init_color, opts){
     // opts = $.extend({iframe: false}, opts);
     var o = {}, init_color = init_color || '#000000',
@@ -863,7 +973,7 @@ o.append_color_picker = function(container, callback, init_color, opts){
     var to_rgb = function(c){
         if (c.length == 3) return c;
         var c = normalize(c)
-        if(!c) return
+        if(!c) return [0,0,0]
         // this handles color names like "blue"
         return $.map(getComputedStyle(color_probe.css('color', c)[0]).color
             .replace(/[^\d,]/g,'').split(','), function(v){ return parseInt(v) });
@@ -890,7 +1000,7 @@ o.append_color_picker = function(container, callback, init_color, opts){
         var c = normalize(v)
         if(!c){
             c = normalize('#'+v)
-            if(!c) return
+            if(!c && v) return
         }
         o.set_color(c, true)
         callback(c, to_rgb(c));
@@ -923,8 +1033,9 @@ o.append_color_picker = function(container, callback, init_color, opts){
     };
 
     var get_shade = function(e) {
-        hsv[2] = bound((e.pageX - shades.offset().left) / 120, 0, 1);
-        hsv[1] = bound((e.pageY - shades.offset().top) / 120, 0, 1);
+        var shades_size = shades.width()
+        hsv[2] = bound((e.pageX - shades.offset().left) / shades_size, 0, 1);
+        hsv[1] = bound((e.pageY - shades.offset().top) / shades_size, 0, 1);
         calc_color();
     };
 
@@ -984,13 +1095,22 @@ o.append_color_picker = function(container, callback, init_color, opts){
     o.set_color(init_color);
 
     manual_input.on('keyup input paste', function(e){
-        if(e.keyCode == 13) {
+        // TODO-color-picker: make esc reset to color when last shown
+        if (//e.keyCode == 27 ||                      // esc
+            e.keyCode == 13)                        // enter
+        {
+            // Cancel edit, returning to initial color
+            // Sadly, we don't actually have the initial color,
+            // only the color when the drawer was created
+            // if (e.keyCode == 27) {
+            //     o.set_color(init_color);
+            // }
             if (opts && opts.field_to_focus){
                 opts.field_to_focus.focus();
             } else {
                 manual_input.blur();
             }
-        }
+        } else 
         o.update_hex()
     });
 

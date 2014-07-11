@@ -353,22 +353,31 @@ class Community(Controller):
     def search(self, tdata, request, id=None, owner_name=None, expr_name=None,
         db_args={}, **args
     ):
-        if not request.args.has_key('q'): return None
+        q = request.args.get('q')
+        if not q: return None
         id = request.args.get('id', None)
         entropy = request.args.get('e', None)
         owner = self.db.User.named(owner_name)
-        if entropy and owner and owner.get('tag_entropy',{}).get(tags[0], None) == entropy:
-            args['override_unlisted'] = True
-
-        result, search = self.db.query_echo(request.args['q'], id=id, **db_args)
-        # print('executed search', search)
+        search = self.db.parse_query(q)
         tags = search.get('tags', [])
         text = search.get('text', [])
+        if entropy and search.get('user') and len(tags) == 1:
+            user = self.db.User.named(search.get('user'))
+            if user and user.get('tag_entropy',{}).get(tags[0], None) == entropy:
+                db_args['override_unlisted'] = True
+
+        result, search = self.db.query_echo(q, id=id, **db_args)
+        # print('executed search', search)
         # Treat single-word text search as a tag search (show tag page)
         if len(search) == 1 and len(text) == 1:
             tags = text
+            if len(text[0]) > 2 and self.flags.get('user_search'):
+                # Also search for users matching the given text
+                users = self.db.User.paginate({'name': {'$regex': text[0]}}, limit=20)
+                result = users + result
         data = {
             "cards": result,
+            'special': {'mini_expressions': 3},
             "card_type": "expr",
             'title': 'Search',
             'header': ("Search", request.args['q']),
@@ -379,13 +388,15 @@ class Community(Controller):
             data.update({'tags_search': tags, 'page': 'tag_search', 'viewer': profile})
         return data
 
-    def admin_query(self, tdata, request, db_args={}):
+    def admin_query(self, tdata, request, db_args={}, **kwargs):
         if not self.flags.get('admin'):
             return {}
 
         q = json.loads(request.args.get('q', '{}'))
-        res = self.db.Expr.search(q, limit=20, skip=args.get('at', 0),
-            sort=[(args.get('sort', 'updated'), args.get('order', -1))])
+        # TODO-cleanup: handle sort arguments more generally in pre_dispatch
+        db_args.update(sort=[(db_args.get('sort', 'updated'), db_args.get('order', -1))])
+        db_args.setdefault('limit', 20)
+        res = self.db.Expr.search(q, **db_args)
         return {
             'cards': list(res),
             'card_type': 'expr'
@@ -394,7 +405,7 @@ class Community(Controller):
     # TODO-cleanup: currently used for redirects. Remove this, make propper
     # redirect controller
     #redirect-cleanup
-    def empty(self, tdata, request, **args):
+    def empty(self, tdata, request, **kwargs):
         return {}
 
     @classmethod
@@ -421,6 +432,8 @@ class Community(Controller):
         if query is None:
             return self.serve_404(tdata, request, response, json=json)
         # Handle pagination
+        # TODO-cleanup: move to another module so routes with
+        # pagination aren't forced into community
         db_args = dfilter(request.args, ['at', 'by', 'limit', 'sort', 'order'])
         for k in ['at', 'order']:
             if k in db_args: db_args[k] = int(db_args[k])

@@ -28,11 +28,13 @@ cloudfront_domains = {
     'asset': None
 }
 
-admins          = ['abram', 'cara', 'zach', 'newduke', 'fatsycline','root','newhive']
+admins          = ['it1','abram', 'cara', 'zach', 'newduke', 'fatsycline','root','newhive']
 
 default_email_subscriptions = ['love', 'listen', 'share_expr', 'comment', 'broadcast', 'featured', 'milestone']
 milestones = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000,
               20000, 50000, 100000, 200000, 500000, 1000000, 10000000]
+
+devs = [ 'newduke', 'abram', 'spiffeh', 'nd4' ]
 
 beta_testers = admins + [
     'andrew'
@@ -52,7 +54,7 @@ beta_testers = admins + [
 ]
 
 user_groups = { 'logged_in':set([]), 'logged_out':set(['logged_out']), 'all':set([]), 
-    'admins':set(admins), 'beta_testers':set(beta_testers) }
+    'admins':set(admins), 'beta_testers':set(beta_testers), 'devs':set(devs) }
 site_flags = {
     # Features
     'show_hive_all': ['newduke','nd4']
@@ -60,6 +62,7 @@ site_flags = {
     ,'can_debug': ['admins','nd4']
     ,'open_signup': []
     ,'mobile_web': ['nd4']
+    ,'user_search': ['nd4', 'newduke','abram','it1']
     # Editor
     ,'snap_crop': ['admins','nd4']
     ,'shift_does_raise': ['newduke','nd4','abram']
@@ -71,6 +74,8 @@ site_flags = {
     ,'shapes': ['admins']
     ,'custom_domain': []
     ,'tile_multiple_images': ['admins', 'nd4']
+    ,'css_classes': ['admins', 'devs']
+    ,'shape_link': ['admins', 'devs']
     # Admin
     ,'admin': ['admins']
     # Old / unused
@@ -89,10 +94,10 @@ email_password  = False
 facebook_app_id = ''
 facebook_client_secret = ''
 
-streamified_client_id = 'pjzkv2y4twdsutl3n0mkv1yajv1y5y3e'
-streamified_client_secret = ''
-streamified_networks = ['twitter']
-streamified_url = 'https://streamified.me/api/'
+#streamified_client_id = 'pjzkv2y4twdsutl3n0mkv1yajv1y5y3e'
+#streamified_client_secret = ''
+#streamified_networks = ['twitter']
+#streamified_url = 'https://streamified.me/api/'
 
 signup_group    = 2
 

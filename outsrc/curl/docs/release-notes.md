@@ -1,6 +1,65 @@
 Release notes for curl.js
 ---
 
+* 0.8.10
+	* Add moduleType and main properties to bower.json and package.json.
+* 0.8.9
+	* Protect more API functions in plugins and loaders from closure compiler's
+	aggressive obfuscation.
+	* Switch to newer //# sourceURL syntax.
+	* Stop doubling the ".js" on the sourceURL.
+	* Ensure that `define` is undefined when wrapping cjs/node modules.
+* 0.8.8
+	* Stop double-appending .css extension in css! plugin.
+	(thanks @stanislawosinski!)
+* 0.8.7
+	* Fix botched release wherein some dummy forgot to `bin/make-all.sh`.
+* 0.8.6
+	* Cram plugins: hide legacy plugin's `define` from cram parser.
+* 0.8.5
+	* Cram plugins: plugins are now responsible for resolving url/filepath.
+	* Cram plugins: legacy loader no longer fails to add a .js extension
+	  when there are dots in the file name.
+* 0.8.4
+	* data-curl-run now only supports scripts, not modules, and is
+	  documented in the bootstrapping section of the wiki.
+	  There are now fewer conflicts when defining a
+	  main module in the curl config, as a result.
+* 0.8.3
+	* Export legacy-loaded modules with normal AMD/CommonJS module ids
+	  (thanks @mmacaula!)
+	* Build curl/debug into curl/dist/debug/curl.js correctly.
+* 0.8.2
+	* Run compile.sh from anywhere (thanks @webpro!)
+	* Restore quotes to cram text plugin output (thanks @gehan!)
+	* Correctly bake-in the locale module in the kitchen-sink dist build.
+* 0.8.1
+	* Adds a build-time (cram) plugin for the new legacy module loader.
+* 0.8.0
+	* Adds new curl/loader/legacy module loader that provides similar
+	  functionality to RequireJS's "shim config".
+	* Adds dontAddFileExt config option functionality to js! plugin and
+	  curl/loader/legacy module loader.
+	* Fixes configuration context mixups. Modules will get their package's
+	  config unless they are loaded explicitly via a plugin and that
+	  plugin has a custom configuration.
+	* Paths can now be objects like packages and can have all of the same
+	  properties, except `main`, i.e. `location` (or `path`), `config`, `name`.
+	* Fixes an issue in node on windows wherein C: was seen as a web protocol.
+	* Updates READMEs in the plugin and loader folders.
+	* Drops dojo 1.6 compatibility in the "kitchen sink" distribution.
+	* Adds new dojo 1.8 distribution.
+* 0.7.6
+	* Adds compatibility with dojo 1.8 and 1.9, including the ability to provide
+	  `has` configuration via `curl.config()`. (Requires use of the
+	  curl/shim/dojo18 shim.)
+	* Fixes many bugs in the i18n and cjsm11 cram (build) plugins.
+	* Stops encoding the output of the cram plugins that emit javascript code.
+	* Adds code documentation improvements in the plugins.
+	* Applies Seriously overdue README updates.
+	* Restores text! plugin functionality to the "kitchen sink" build.
+* 0.7.5
+	* Can now resolve relative plugin ids in local require (bug fix).
 * 0.7.4
 	* curl.js is now available on CDN: http://cdnjs.com/#curl and
 	  http://jsdelivr.com/#!curl.js

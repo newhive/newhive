@@ -20,6 +20,7 @@ define([
     ,'sj!templates/edit_sandbox.html'
 
     ,'./text'
+    ,'./history'
 
     ,'browser/jquery/jplayer/skin'
     ,'browser/jquery/rotate.js'
@@ -74,12 +75,14 @@ Hive.init_menus = function() {
     hive_app.App.has_slider_menu(null, ""
         ,env.padding_set, env.padding, null, null
         ,{ min: 0, max: 30, quant: 1
-        , handle:$(".icon.change_padding"), container:$("body")
+        , handle:$(".icon.change_padding"), container:$("#dynamic_group")
         , menu_opts: { 
-            group: $(".misc.handle").data("menu")
+            layout_x: "submenu"
+            ,layout: "left"
+            ,group: $(".misc.handle").data("menu")
             ,auto_height: false 
         }
-    }) ()
+    }).controls()
     $('#text_default').click(function(e) {
         hive_app.new_app({ type : 'hive.text', content : '' });
     });
@@ -120,40 +123,80 @@ Hive.init_menus = function() {
     $('#embed_done').click(function() { Hive.embed_code('#embed_code'); embed_menu.close(); });
 
     u.hover_menu('.insert_shape', '#menu_shape');
-    $('#menu_shape .rect').click(function(e) {
-        hive_app.new_app({ type : 'hive.rectangle', css_state :
-            { color : colors[24], 'border-color' : 'black', 'border-width' : 0,
-                'border-style' : 'solid' } });
+    var default_size = [150, 150]
+    Hive.template_shape_base = {
+        "type": "hive.polygon"
+        , "style": {"stroke-width": 0}
+    }
+    Hive.template_rect = { 
+        type : 'hive.rectangle'
+        , dimensions: default_size
+        , css_state : {
+            'background-color' : "#000"
+            // 'background-color' : colors[24]
+            , 'border-color' : 'black'
+            , 'border-width' : 0
+            , 'border-style' : 'solid' 
+        }
+    };
+    Hive.template_circle = {
+        type : 'hive.circle'
+        , dimensions: default_size
+        , css_state : { 
+            'background-color' : "#000"
+            ,'border-color' : 'black'
+            ,'border-width' : 0 // 1
+            ,'border-style' : 'solid' 
+        }
+    };
+    $('#menu_shape .rect').click(function(ev) {
+        poly.mode(Hive.template_rect)
+        poly.focus()
+    });
+    $('#menu_shape .circle').click(function(ev) {
+        poly.mode(Hive.template_circle)
+        poly.focus()
     });
     $('#menu_shape .sketch').click(function(e) {
         hive_app.new_app({ type: 'hive.sketch', dimensions: [700, 700 / 1.6]
             ,content: { brush: 'simple', brush_size: 10 } });
     });
+
     // polygon shapes
     var poly = hive_app.App.Polygon
-    Hive.template_triangle = { // triangle
-        "type":"hive.polygon",
-        "points":[[50,0],[100, 100*Math.sqrt(3)/2],[0, 100*Math.sqrt(3)/2]]
+    var phi = (Math.sqrt(5) + 1) / 2
+    var scale_default = function(points) {
+        return points.map(function(p) { return u._mul(default_size, p) })
     }
-    Hive.template_pentagram = $.extend({}, Hive.template_triangle, {
+    Hive.template_line = $.extend({}, Hive.template_shape_base, {
+        "points": scale_default([[0, 0], [1, 0]])
+        ,"style": {"stroke-width": 4}
+    })
+    Hive.template_triangle = $.extend({}, Hive.template_shape_base, {
+        "points": scale_default(
+            [[.5,0], [1, Math.sqrt(3)/2], [0, Math.sqrt(3)/2]])
+    })
+    Hive.template_pentagram = $.extend({}, Hive.template_shape_base, {
         points: js.range(10).map(function(i){
             var d = ((i == 0 ? 0 : Math.PI*2*i/10) + Math.PI/10)
-                ,o = [47.705200572253005, 45.72550799853835] // dims/2
-                ,r = (i % 2) ? 50 : 19.0983005625
+                ,r = (i % 2) ? 1 : (1 - 1 / phi)
                 ,p = [Math.cos(d), Math.sin(d)]
-            return u._add(o)( u._mul(p)(r) )
+            return u._mul(p, r, .5, default_size)
         })
     })
-    Hive.template_hexagon = $.extend({}, Hive.template_triangle, {
+    Hive.template_hexagon = $.extend({}, Hive.template_shape_base, {
         points: js.range(6).map(function(i){
             var d = (i == 0 ? 0 : Math.PI*2*i/6)
-                ,o = [50.5, 43.80127018922194] // dims/2
                 ,p = [Math.cos(d), Math.sin(d)]
-            return u._add(o)( u._mul(p)(50) )
+            return u._mul(p, .5, default_size)
         })
     })
     $('#menu_shape .triangle').click(function(){
         poly.mode(Hive.template_triangle)
+        poly.focus()
+    })
+    $('#menu_shape .line').click(function(){
+        poly.mode(Hive.template_line)
         poly.focus()
     })
     $('#menu_shape .pentagram').click(function(){
@@ -218,19 +261,14 @@ Hive.init_dialogs = function() {
 };
 
 Hive.layout = function(){
-    u.layout_apps();
+    env.canvas_size_update()
     layout.center('.app_btns', 'body', {v: false});        
 }
 
+Hive.save_safe = true
 Hive.init_global_handlers = function(){
     // Global event handlers
-    $(window).on('resize', function(ev) {
-        var old_scale = env.scale();
-        env.scale_set();
-        var new_scale = env.scale();
-        if(old_scale == new_scale) return;
-        Hive.layout()
-    });
+    $(window).on('resize', Hive.layout)
     Hive.layout()
 
     $(window).on('scroll', Hive.scroll);
@@ -240,7 +278,7 @@ Hive.init_global_handlers = function(){
     evs.on('body', 'mousedown');
     evs.on('body', 'mouseup');
     // evs.on('body', 'click');
-    var drag_base = $('#grid_guide, .prompts')
+    var drag_base = $('body')
     evs.on(drag_base, 'dragenter');
     evs.on(drag_base, 'dragleave');
     evs.on(drag_base, 'drop');
@@ -274,10 +312,13 @@ Hive.init_global_handlers = function(){
     var busy_e = $('.save .loading');
     $(document).ajaxStart(function(){
         busy_e.showshow();
-        Hive.send({save_safe: false})
+        Hive.save_safe = false
+        $("#btn_save span").text("Saving ")
+        Hive.send({save_safe: Hive.save_safe})
     }).ajaxStop(function(){
         busy_e.hidehide();
-        Hive.send({save_safe: true})
+        Hive.save_safe = true
+        Hive.send({save_safe: Hive.save_safe})
     }).ajaxError(function(ev, jqXHR, ajaxOptions){
         // TODO-polish-upload-error: show some warning, and somehow indicate
         // which app(s) failed to save
@@ -287,16 +328,48 @@ Hive.init_global_handlers = function(){
         var expr = Hive.state();
         Hive.send({save_dialog: 1})
     })
+    var has_revert = (revert.apps || revert.background)
+    $(".menu_item.revert").addremoveClass("hide", !has_revert)
+        .prop('disabled', !has_revert)
+    $(".menu_item.revert").bind_once_anon("click", function(ev) {
+        if (!has_revert) return
+        env.History.begin()
+        // Delete the current version of all apps
+        hive_app.Apps.all().map(function(a) {
+            a.remove()
+        })
+        // Add in all the apps in the revert save
+        if (revert.apps)
+            $.map(revert.apps, function(a){ env.new_app(a, { no_select: true }) } )
+        if (revert.background) {
+            // TODO-refactor: move this into a bg_set_history func
+            history_point = env.History.saver(
+                function(){ return $.extend(true, {}, env.Exp.background) },
+                hive_app.bg_set, 'change background')
+            hive_app.bg_set(revert.background);
+            history_point.save()
+        }
+
+        env.History.group("revert")
+    })
+    // Prevent hidden forms from stealing focus 
+    // (fixes ctrl-a going to client, and doing native select-all)
+    $("input[readonly]").on("focus",function(e){ $(this).blur() })
 };
 
 Hive.receive = function(ev){
     var msg = ev.data
-    if(msg.init)
-        Hive.init(msg.expr, msg.context)
-    if(msg.focus)
+    if (msg.init) {
+        Hive.init(msg.expr, msg.context, msg.revert)
+    } else if(msg.autosave) {
+        $("#btn_save span").text("Saved ")
+        Hive.autosave_time = msg.autosave
+        env.exit_safe_set(true)
+    } else if(msg.focus) {
         window.focus()
-    if(msg.save_request)
+    } else if(msg.save_request) {
         Hive.send({save: Hive.state()})
+    }
 }
 Hive.send = function(m){
     window.parent.postMessage(m, '*') }
@@ -306,16 +379,20 @@ Hive.pre_init = function(){
     Hive.send({ready: true})
 }
 
-Hive.init = function(exp, site_context){
+var revert = {}
+Hive.init = function(exp, site_context, _revert){
+    revert = _revert
     // this reference must be maintained, do not assign to Exp
-    env.Exp = Hive.Exp = exp;
+    env.Exp = Hive.Exp = exp
     // Hive.edit_page = page;
-    if(!exp.auth) exp.auth = 'public';
-    env.scale_set();
+    if(!exp.auth) exp.auth = 'public'
+    env.scale_set()
 
     $.extend(context, site_context)
+    Hive.context = context
+    env.show_css_class = false;
     env.copy_table = context.flags.copy_table || false;
-    env.gifwall = $.inArray('gifwall', exp.tags_index) > -1
+    env.gifwall = ($.inArray('gifwall', exp.tags_index) > -1)
     env.squish_full_bleed = env.gifwall;
     env.show_mini_selection_border = 
         env.gifwall || context.flags.show_mini_selection_border;
@@ -335,7 +412,18 @@ Hive.init = function(exp, site_context){
 
     Hive.init_dialogs();
     Hive.init_menus();
-    // Hive.init_autosave();
+    var last_autosave, last_autosave_time = 0
+    Hive.autosave_time = 0
+    setInterval(function() {
+        // Only autosave if something has changed
+        var expr = Hive.state()
+        if (Hive.save_safe && !u.deep_equals(last_autosave, expr)) {
+            $("#btn_save span").text("Saving ")
+            last_autosave = $.extend(true, {}, expr)
+            Hive.send({save: expr, autosave:1})
+            env.exit_safe_set(false)
+        }
+    } , 1000)
 
     env.apps_e = $('#happs'); // container element for all interactive apps
     env.History.init();
@@ -345,8 +433,12 @@ Hive.init = function(exp, site_context){
     // TODO-cleanup: remove Selection from registered apps, and factor out
     // shared functionality into has_coords
     env.Selection = hive_app.new_app({ type : 'hive.selection' });
+    hive_app.bg_set(env.Exp.background);
+    env.Background = hive_app.App.Background()
     hive_app.Apps.init(Hive.Exp.apps);
     hive_app.Apps.restack();
+    last_autosave = $.extend(true, {}, Hive.state())
+    env.zoom_set(1)
 
     $('.edit.overlay').showshow()
     Hive.init_global_handlers()
@@ -491,17 +583,27 @@ Hive.embed_code = function(element) {
 }; 
 
 // TODO-feature-autosave: implement 
-Hive.init_autosave = function (){
-    setInterval(Hive.set_draft, 5000);
-    try { Hive.set_draft(); }
-    catch(e) { return "If you leave this page any unsaved changes to your expression will be lost."; }
-    var draft = Hive.get_draft();
-    if(draft) Hive.Exp = draft;
-    Hive.get_draft = function() {
-        return localStorage.expr_draft ? JSON.parse(localStorage.expr_draft) : null }
-    Hive.set_draft = function() { localStorage.expr_draft = JSON.stringify(Hive.state()); }
-    Hive.del_draft = function() { delete localStorage.expr_draft; }
-}
+// See also https://developer.mozilla.org/en-US/docs/Web/Guide/API/DOM/Storage
+// Hive.init_autosave = function (){
+//     o = {}
+
+//     o.save_draft = function() {
+//         Hive.send({save: Hive.state(), autosave:1})
+//     }
+//     o.get_draft = function() {}
+    
+//     // setInterval(Hive.set_draft, 5000);
+//     // try { Hive.set_draft(); }
+//     // catch(e) { return "If you leave this page any unsaved changes to your expression will be lost."; }
+//     // var draft = Hive.get_draft();
+//     // if(draft) Hive.Exp = draft;
+//     // Hive.get_draft = function() {
+//     //     return localStorage.expr_draft ? JSON.parse(localStorage.expr_draft) : null }
+//     // Hive.set_draft = function() { localStorage.expr_draft = JSON.stringify(Hive.state()); }
+//     // Hive.del_draft = function() { delete localStorage.expr_draft; }
+
+//     return o
+// }
 
 
 // Get and set the JSON object Hive.Exp which represents the edited expression
@@ -510,13 +612,9 @@ Hive.state = function() {
     hive_app.Apps.restack(); // collapse layers of deleted apps
     Hive.Exp.apps = hive_app.Apps.state();
 
-    // get height
-    var h = 0;
-    for(var i in Hive.Exp.apps) {
-        var a = Hive.Exp.apps[i], y = a.dimensions[1] + a.position[1];
-        if(y > h) h = y;
-    }
-    Hive.Exp.dimensions = [1000, Math.ceil(h)];
+    // TODO: get height/maximum dimension
+    // var h = u.app_bounds(env.Apps.all()).bottom
+    // Hive.Exp.dimensions = [1000, Math.ceil(h)];
 
     return Hive.Exp;
 }
@@ -590,6 +688,7 @@ Hive.scroll = function(ev){
         env.Selection.controls.layout();
     env.Selection.elements().map(function(app){
         if(app.controls) app.controls.layout() });
+    env.Background.layout()
 };
 // END-Events /////////////////////////////////////////////////////////
 

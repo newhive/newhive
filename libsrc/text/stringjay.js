@@ -424,11 +424,6 @@ define(['browser/js', 'module'],
 		// else warn("No matching if");
 		return '';
 	};
-	context_base['contains'] = function(context, block, list, item){
-		var contains = list.lastIndexOf(item) >= 0
-		if (arguments.length > 4) contains = ! contains
-		return contains ? block(context) : '';
-	};
 	// necessary without () grouping, because NOTing an argument isn't possible
 	context_base['unless'] = function(context, block, condition, equals){
 		if(typeof equals != 'undefined') condition = (condition == equals);
@@ -496,15 +491,18 @@ define(['browser/js', 'module'],
 	context_base.json = function(context, data){
 		return JSON.stringify(data);
 	};
+	context_base.strip_slash = function(context, str){
+		return str.replace(/^\/\//, '')
+	};
 	// TODO: write as accumulate
 	// {set "k" (concat "you " "are " "awesome")}
 	context_base.concat = function(context){
-		var sum = "";
+		var res = "";
 		for(var i = 1; i < arguments.length; ++i){
 			if (typeof(arguments[i]) == "string")
-				sum += arguments[i];
+				res += arguments[i];
 		}
-		return sum;
+		return res;
 	};
 	// Set lhs to the value of rhs
 	// ex: {set "my_var" 3}
@@ -546,6 +544,10 @@ define(['browser/js', 'module'],
 	};
 	context_base.neq = function(context, lhs, rhs){
 		return lhs != rhs;
+	};
+	context_base.contains = function(context, list, item){
+		var contains = (list.lastIndexOf(item) >= 0);
+		return contains;
 	};
 	context_base.cond = function(context, cond, truthy, falsy){
 		return cond ? truthy : falsy;
@@ -602,6 +604,11 @@ define(['browser/js', 'module'],
 				n = Math.round(n/1000);
 		}
 		return n + suffix[i];
+	};
+	context_base.string_to_list = function (context, string){
+	  	var array = string.split("[^\w']+");
+	  	if ( array.length <= 1 ) return string;
+		else return array;
 	};
 
 	return o;

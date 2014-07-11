@@ -27,6 +27,17 @@ o.Text = function(o) {
     // for now, having internal and external alignment is too weird.
     o.has_align = false;  
 
+    // When this app is multiselected, have color act on all foreground text
+    o.color = function() { return o.div.find("font").css("color") }
+    o.color_set = function(v) { 
+        // o.div.find("font").css("color", v)
+        o.rte.makeEditable()
+        o.rte.focusAndPlaceCursorAtStart()
+        document.execCommand('selectAll');
+        o.rte.exec_command('+foreColor', v) 
+        o.rte.focusAndPlaceCursorAtStart()
+    }
+
     o.get_aspect = function() {
         var dims = o.dims();
         return dims[0] / dims[1];
@@ -112,6 +123,7 @@ o.Text = function(o) {
     }
     o.after_resize = function() {
         scale_ref = dims_ref = undefined;
+        o.refresh_size();
     }
     var _dims_relative_set = o.dims_relative_set;
     o.dims_relative_set = function(dims) {
@@ -221,8 +233,8 @@ o.Text = function(o) {
 
     o.div.addClass('text');
     if(!o.init_state.dimensions) o.dims_set([ 300, 20 ]);
-    o.content_element = $('<div></div>');
-    o.content_element.attr('id', u.random_str()).addClass('text_content_element');
+    o.content_element = $("<div class='content'>")
+    o.content_element.attr('id', u.random_str())
     o.div.append(o.content_element);
     o.rte = new Text.goog_rte(o.content_element, o);
     goog.events.listen(o.rte.undo_redo.undoManager_,

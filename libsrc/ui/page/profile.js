@@ -30,7 +30,7 @@ define([
     var ui_page, win = $(window), card_type, card_layout;
     o.more_cards = true;
     var on_scroll_add_page = function(){
-        if((win.scrollTop() > ($('.feed').height() - win.height()))
+        if((win.scrollTop() + win.height() + 100 > document.body.scrollHeight)
             && o.more_cards
         ){
             o.controller.next_cards(ui_page.render_new_cards);
@@ -40,12 +40,10 @@ define([
         // ugly hack to merge old context attributes to new data
         data.card_type = card_type;
         data.layout = card_layout;
-        if(data.cards.length < 20)
+        if(data.cards.length == 0)
             o.more_cards = false;
-        cards_template(data).insertBefore('.feed .footer');
-        ui_page.attach_handlers();
-        ui_page.layout_columns();
-        ui_page.add_grid_borders();
+        else
+            cards_template(data).insertBefore('.feed .footer');
     };
 
     var allow_reorder = function() {
@@ -118,10 +116,11 @@ define([
             ui_page.add_grid_borders();
             return ordered_ids;
         }
-        $("form.save_bar").on('before_submit', function(e) {
+        $("form.save_bar").off('before_submit').on('before_submit', function(e){
             var ordered_ids = reorder();
             $(this).find("input[name=new_order]").val(ordered_ids.join(","));
             $(this).find("input[name=deletes]").val(card_deletes);
+            card_deletes = 0
             $("form.save_bar").hidehide();
         });
 
@@ -183,6 +182,10 @@ define([
                 },
             });
         }
+
+        // hack to make admin_query work
+        if(context.route_name == 'admin_query')
+            $('form.search_bar').removeAttr('action')
     };
 
     show_tags = function (show){

@@ -1,9 +1,10 @@
+from numbers import Number
 from bs4 import BeautifulSoup
-import os, json, cgi, base64
+import os, json, cgi, base64, re, time
 from pymongo.errors import DuplicateKeyError
 from functools import partial
 
-from newhive.utils import dfilter, now, get_embedly_oembed, tag_string, set_trace
+from newhive.utils import dfilter, now, get_embedly_oembed, tag_string
 from newhive.controllers.controller import ModelController
 
 class Expr(ModelController):
@@ -13,7 +14,6 @@ class Expr(ModelController):
         resp = {}
         expr_id = request.form.get("expr_id")
 
-        print expr_id
         expr = self.db.Expr.fetch(expr_id)
         if not expr:
             resp = { 'error': 'Expression not found.' }
@@ -61,10 +61,14 @@ class Expr(ModelController):
         """ Parses JSON object from POST variable 'exp' and stores it in database.
             If the name (url) does not match record in database, create a new record."""
 
+        autosave = (request.form.get('autosave') == "1")
+
         try: expr = self.db.Expr.new(json.loads(request.form.get('expr', '0')))
         except: expr = False
         if not expr: raise ValueError('Missing or malformed expr')
 
+        # Name of the expression before rename
+        orig_name = expr.get('orig_name')
         res = self.db.Expr.fetch(expr.id)
         allowed_attributes = [
             'name', 'url', 'title', 'apps', 'dimensions', 'auth', 'password',
@@ -75,10 +79,13 @@ class Expr(ModelController):
         # if tdata.user.is_admin:
         #     allowed_attributes.extend(['fixed_width', 'script', 'style'])
         upd = dfilter(expr, allowed_attributes)
-        upd['name'] = upd['name'].lower().strip('/ ')
+        upd['name'] = upd.get('name','').lower().strip('/ ')
+        draft = res and (res.get('draft') == True)
+        if draft and orig_name:
+            res['name'] = upd['name']
 
         # deal with inline base64 encoded images from Sketch app
-        for app in upd['apps']:
+        for app in upd.get('apps',[]):
             if app['type'] != 'hive.sketch': continue
             data = base64.decodestring(app.get('content').get('src').split(',',1)[1])
             f = os.tmpfile()
@@ -96,42 +103,88 @@ class Expr(ModelController):
                 ,'file_id' : file_res.id
             })
 
+        duplicate = False
         if not res or upd['name'] != res['name']:
+            if autosave:
+                # TODO-autosave: create anonymous expression
+                if upd.get('name','') == '':
+                    upd['name'] = self._unused_name(time.strftime("%Y_%m_%d"), tdata.user)
+                upd['auth'] = "private"
+                upd['tags'] += " #draft"
+                upd['draft'] = True
+                res = tdata.user.expr_create(upd)
+                return self.serve_json(response, { "autosave": 1, "expr": res })
+
+            # TODO-cleanup: move try/catch around only user.expr_create
             try:
               new_expression = True
               res = tdata.user.expr_create(upd)
-              self.db.ActionLog.create(tdata.user, "new_expression_save", data={'expr_id': res.id})
+              self.db.ActionLog.create(tdata.user, "new_expression_save"
+                , data={'expr_id': res.id})
 
               tdata.user.flag('expr_new')
               #if tdata.user.get('flags').get('add_invites_on_save'):
               #    tdata.user.unflag('add_invites_on_save')
               #    tdata.user.give_invites(5)
             except DuplicateKeyError:
-                if expr.get('overwrite'):
-                    self.db.Expr.named(tdata.user['name'], upd['name']).delete()
-                    res = tdata.user.expr_create(upd)
-                    self.db.ActionLog.create(tdata.user, "new_expression_save", data={'expr_id': res.id, 'overwrite': True})
-                else:
-                     #'An expression already exists with the URL: ' + upd['name']
-                    return self.serve_json(response, { 'error' : 'overwrite' })
-                    self.db.ActionLog.create(tdata.user, "new_expression_save_fail", data={'expr_id': res.id, 'error': 'overwrite'})
+                duplicate = True
         else:
             if not res['owner'] == tdata.user.id:
                 raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
+
             # remix: ensure that the remix tag is not deletable
             if res.get('remix_parent_id'):
                 upd['tags'] += " #remixed" # + remix_name
             reserved_tags = ["remixed", "gifwall"];
-            # TODO: disallow removal of reserved tags
-            res.update(**upd)
-            if not self.config.live_server and (upd.get('apps') or upd.get('background')):
-                res.threaded_snapshot(retry=120)
-            new_expression = False
+            # force "#draft" on draft
+            if autosave and draft:
+                reserved_tags += ["draft"]
+            # disallow removal of reserved tags
+            if not self.flags.get('modify_special_tags'):
+                for tag in reserved_tags:
+                    if tag in res.get('tags_index', []):
+                        upd['tags'] += " #" + tag
+            if autosave:
+                if draft:
+                    upd['auth'] = 'password'
+                    res.update(**upd)
+                else:
+                    upd['updated'] = now()
+                    res.update(updated=False, draft=upd)
+                return self.serve_json(response, { 'autosave': 1 } )
 
-            self.db.UpdatedExpr.create(res.owner, res)
-            self.db.ActionLog.create(tdata.user, "update_expression", data={'expr_id': res.id})
+            try:
+                if draft:
+                    upd['draft'] = False
+                res.update(**upd)
+                    
+                new_expression = False
 
-        # Handle remixed expressions
+                self.db.UpdatedExpr.create(res.owner, res)
+                self.db.ActionLog.create(tdata.user, "update_expression", data={'expr_id': res.id})
+            except DuplicateKeyError:
+                duplicate = True
+
+        if duplicate:
+            if expr.get('overwrite'):
+                self.db.Expr.named(tdata.user['name'], upd['name']).delete()
+                if draft:
+                    res.update(**upd)
+                    self.db.UpdatedExpr.create(res.owner, res)
+                else:
+                    res = tdata.user.expr_create(upd)
+                self.db.ActionLog.create(tdata.user, "new_expression_save", data={'expr_id': res.id, 'overwrite': True})
+            else:
+                 #'An expression already exists with the URL: ' + upd['name']
+                return self.serve_json(response, { 'error' : 'overwrite' })
+                # self.db.ActionLog.create(tdata.user, "new_expression_save_fail", data={'expr_id': res.id, 'error': 'overwrite'})
+
+        # autosave: Remove "draft" on first save
+        if draft and not autosave:
+            new_tags = res['tags_index']
+            if "draft" in new_tags: new_tags.remove("draft")
+            res.update(tags=tag_string(new_tags))
+
         if (res and not autosave and
             upd.get('remix_parent_id') and not upd.get('remix_root')
         ):
@@ -165,6 +218,7 @@ class Expr(ModelController):
         # TODO-cleanup: create client_view for full expression record, instead
         # of just feed cards
         res['id'] = res.id
+
         return self.serve_json(response, res)
 
     # the whole editor except the save dialog and upload code goes in sandbox
@@ -201,7 +255,9 @@ class Expr(ModelController):
             and not expr_obj.cmp_password(request.form.get('password'))
             and not expr_obj.cmp_password(request.args.get('pw'))):
             expr_obj = { 'auth': 'password' }
-
+            expr_client = expr_obj
+        else:
+            expr_client = expr_obj.client_view(mode='page')
         # TODO: consider allowing analytics for content frame.
         viewport = [int(x) for x in
             request.args.get('viewport', '1000x750').split('x')]
@@ -212,29 +268,29 @@ class Expr(ModelController):
             expr = expr_obj,
             use_ga = False,
         )
-        if snapshot_mode:
-            tdata.context['css'] = "body { overflow-x: hidden; }"
-        client_data = {}
-        for app in expr_obj.get('apps',[]):
-            data = app.get('client_data', {})
-            data.update(media=app.get('media'))
-            if app['type'] == 'hive.code':
-                data.update(dfilter(app, ['content', 'url']))
-            if app['type'] == 'hive.image':
-                data.update(dfilter(app, ['url']))
-            if data:
-                data['type'] = app['type']
-                client_data[app['id']] = data
-        tdata.context.update(client_data=client_data)
+
+        body_style = ''
+        if snapshot_mode or expr_obj.get('clip_x'):
+            body_style = 'overflow-x: hidden;'
+        if expr_obj.get('clip_y'):
+            body_style += 'overflow-y: hidden;'
+        if body_style:
+            tdata.context['css'] = 'body {' + body_style + '}'
+
+        # TODO: figure out 
+        # if hasattr(expr_obj,'client_view') :
+        #     tdata.context.update(expr=expr_obj.client_view(mode='page'))
+        # else:
+        #     tdata.context.update(expr_obj)
+        
+        tdata.context.update(expr=expr_obj, expr_client=expr_client)
         return self.serve_page(tdata, response, 'pages/expr.html')
         
     def expr_to_html(self, exp, snapshot_mode=False, viewport=(1000, 750)):
         """Converts JSON object representing an expression to HTML"""
-
         if not exp: return ''
-        expr_dims = exp.get('dimensions', [1000, 750])
         # TODO-feature-expr-orientation (use y)
-        expr_scale = float(viewport[0]) / expr_dims[0]
+        expr_scale = float(viewport[0]) / 1000
 
         html_for_app = partial(self.html_for_app, scale=expr_scale,
             snapshot_mode=snapshot_mode)
@@ -247,7 +303,16 @@ class Expr(ModelController):
         content = app.get('content', '')
         more_css = ''
         dimensions = app.get('dimensions', [100,100])
+        if not all([ isinstance(v, Number) for v in
+            dimensions + app.get('position', [])
+        ]): return ''
+
         type = app.get('type')
+        klass = type.replace('.', '_')
+        app_id = app.get('id', 'app_' + str(app['z']))
+        if type == 'hive.circle':
+            type = 'hive.rectangle'
+
         if type != 'hive.rectangle':
             # rectangles have css as their content; all other apps have extra
             # css in 'css_state'
@@ -258,30 +323,29 @@ class Expr(ModelController):
             media = self.db.File.fetch(app.get('file_id'))
             if media: url = media.get_resample(dimensions[0] * scale)
 
-            html = "<img src='%s'>" % content
+            html = "<img src='%s'>" % url
             scale_x = app.get('scale_x')
             if scale_x:
+                klass += " crop_box"
                 scale_x *= dimensions[0]
                 css = 'width:%fpx' % (scale_x)
-                if app.get('offset'):
+                if isinstance(app.get('offset'), Number):
                     offset = [x * scale_x for x in app.get('offset')]
                     css = '%s;margin-left:%spx;margin-top:%spx' % (
                         css, offset[0], offset[1] )
-                html = "<img src='%s' style='%s'>" % (url, css)
-            link = app.get('href')
-            if link: html = "<a href='%s'>%s</a>" % (link, html)
+                html = "<img src='%s' style='%s' class='content'>" % (url, css)
         elif type == 'hive.sketch':
-            html = "<img src='%s'>" % content.get('src')
+            html = "<img src='%s' class='content'>" % content.get('src')
         elif type == 'hive.rectangle':
             c = app.get('content', {})
-            more_css = ';'.join([p + ':' + str(c[p]) for p in c])
-            html = ''
+            css = ';'.join([p + ':' + str(c[p]) for p in c])
+            html = "<div style='%s' class='content'></div>" % css
         elif type == 'hive.html':
             html_original = '%s' % (app.get('content',''))
             if snapshot_mode:
                 def get_embed_img_html(url):
                     ret_html = ''
-                    oembed = utils.get_embedly_oembed(url) if url else ''
+                    oembed = get_embedly_oembed(url) if url else ''
                     if oembed and oembed.get('thumbnail_url'):
                         ret_html += '<img src="%s"/>' % oembed['thumbnail_url']
                     return ret_html
@@ -308,17 +372,25 @@ class Expr(ModelController):
                 encoded_content = cgi.escape(app.get('content',''), quote=True)
                 html = '%s' % (app.get('content',''))
         elif type == 'hive.polygon':
+            link = app.get('href')
+            link_text = ('','')
+            if link: link_text = ("<a xlink:href='%s'>" % link,"</a>")
+
+            points = filter(lambda p:
+                 all([isinstance(v, Number) for v in p])
+                ,app.get('points', []))
             html = (
-                  "<svg xmlns='http://www.w3.org/2000/svg'"
+                  "<svg class='content' xmlns='http://www.w3.org/2000/svg'"
+                + " xmlns:xlink='http://www.w3.org/1999/xlink'"
                 + " viewbox='0 0 %f %f" % tuple(dimensions)
                 + "'>"
-                + "<filter id='%s_blur'" % app.get('id','')
+                + "<filter id='%s_blur'" % app_id 
                 + " filterUnits='userSpaceOnUse'><feGaussianBlur stdDeviation='"
                 + "%f'></filter>" % app.get('blur', 0)
-                + "<polygon points='"
-                + ' '.join( map( lambda p: "%f %f" % (p[0], p[1]),
-                    app.get('points', []) ) )
-                + "' style='filter:url(#%s_blur)'/></svg>" % app.get('id','')
+                + "%s<polygon points='" % link_text[0]
+                + ' '.join(map(lambda p: "%f %f" % (p[0], p[1]), points))
+                + "' style='filter:url(#%s_blur)'/>%s</svg>" % (
+                    app_id, link_text[1])
             )
             style = app.get('style', {})
             more_css = ';'.join([ k+':'+str(v) for k,v in style.items()])
@@ -336,18 +408,25 @@ class Expr(ModelController):
                 tag = 'style'
                 # TODO-code-editor: put style tag in head
                 html =  "<style id='%s'>%s</style>" % (
-                    app.get('id'), app.get('content') )
+                    app_id, app.get('content') )
             return html
+        elif type == 'hive.text':
+            html = "<div class='content'>%s</div>" % content
         else:
-            html = content
+            html = "<div class='content'>%s</div>" % content
 
         data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
         data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
-        app_id = app.get('id', 'app_' + str(app['z']))
-        return "<div class='happ %s %s' id='%s' style='%s'%s>%s</div>" % (
-            type.replace('.', '_'), app.get('css_class', ''), app_id,
+        html = "<div class='happ %s %s' id='%s' style='%s'%s>%s</div>" % (
+            klass, app.get('css_class', ''), app_id,
             css_for_app(app) + more_css, data, html
         )
+
+        if type != 'hive.polygon':
+            link = app.get('href')
+            if link: html = "<a href='%s'>%s</a>" % (link, html)
+
+        return html
 
 # TODO-bug fix resizing after loading by sending pre-scaled expr
 # Requires client layout_apps() to use scaled expr dimensions

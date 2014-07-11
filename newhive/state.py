@@ -1,5 +1,5 @@
 import newhive
-import re, pymongo, bson.objectid, random, urllib, os, time, json, math
+import re, pymongo, bson.objectid, random, urllib, urllib2, os, time, json, math
 import operator as op
 from tempfile import mkstemp
 from os.path import join as joinpath
@@ -9,7 +9,7 @@ from lxml import html
 from wsgiref.handlers import format_date_time
 from newhive import social_stats
 from itertools import ifilter, islice, izip_longest, chain
-import PIL.Image as Img
+import Image as Img
 from PIL import ImageOps
 from bson.code import Code
 from crypt import crypt
@@ -107,7 +107,7 @@ class Database:
                     # look for specific ordered list in user record
                     owner = self.User.named(user)
                 if owner and owner.get('tagged', {}).has_key(tags[0]):
-                    results = self.Expr.cards(owner['tagged'][tags[0]], **args)
+                    results = self.Expr.page(owner['tagged'][tags[0]], **args)
                 else:
                     if search.get('tags'):
                         spec['tags_index'] = {'$all': search['tags']}
@@ -235,11 +235,6 @@ class Collection(object):
             return res
         return Cursor(self, self._col.find(spec=spec, **opts))
 
-    # Should be overridden to omit fields not used in list views
-    # TODO: fix privacy for viewer
-    def cards(self, spec, viewer=None, **opts):
-        return self.search(spec, **opts)
-
     def last(self, spec={}, **opts):
         opts.update({'sort' : [('_id', -1)]})
         return self.find(spec, **opts)
@@ -257,7 +252,7 @@ class Collection(object):
 
             # if at and sort: spec[sort] = { '$lt' if order == -1 else '$gt': at }
 
-            res = self.cards(spec, sort=[(sort, order)], skip=at, **args)
+            res = self.search(spec, sort=[(sort, order)], skip=at, **args)
 
             # if there's a limit, collapse to list, get sort value of last item
             if limit:
@@ -292,7 +287,7 @@ class Collection(object):
                 else:
                     return []
 
-            res = self.cards(sub_spec)
+            res = self.search(sub_spec)
             return res
 
     # default implementation of pagination, intended to be overridden by
@@ -442,6 +437,9 @@ class Entity(dict):
         if self.Collection.trashable:
             self.db.Trash.create(self.cname, self)
         return res
+
+    def undelete(self, trash=None):
+        pass
 
     def purge(self):
         res = self._col.remove(spec_or_id=self.id, safe=True)
@@ -1112,6 +1110,7 @@ class User(HasSocial):
             'fullname', 'name', 'email', 'profile_about', 'profile_thumb',
             'profile_bg', 'thumb_file_id', 'tags', 'updated', 'created', 'feed'
         ] ) )
+        user['type'] = "user"
         ###########################################################
         # TODO: make sure this field is updated wherever views changes elsewhere
         # TODO: figure out best thing to do for empty user
@@ -1121,7 +1120,7 @@ class User(HasSocial):
             updates = {}
             if not self['analytics'].has_key('views_by'):
                 updates.update({'views_by': 
-                    sum([r['views'] for r in self.db.Expr.search({'owner':self['_id']})])})
+                    sum([r.get('views', 0) for r in self.db.Expr.search({'owner':self['_id']})])})
             if not self['analytics'].has_key('loves_by'):
                 updates.update({'loves_by':
                     self.db.Feed.search({'entity_owner':self['_id'],
@@ -1156,7 +1155,6 @@ class User(HasSocial):
             (update['tagged_ordered'], update['tagged']) = self.get_tags(True)
             dict.update(user, update)
         if special.has_key("mini_expressions") and g_flags['mini_expressions']:
-            # exprs = self.db.Expr.cards({'owner': self.id}, limit=3)
             exprs = self.get_top_expressions(g_flags['mini_expressions'])
             dict.update(user, dict(
                 mini_expressions = map(lambda e:e.mini_view(), exprs)))
@@ -1172,7 +1170,8 @@ class User(HasSocial):
         self.facebook_disconnect()
 
         # Feed Cleanup
-        for feed_item in self.db.Feed.search({'$or': [{'initiator': self.id}, {'entity': self.id}]}):
+        for feed_item in self.db.Feed.search(
+                {'$or': [{'initiator': self.id}, {'entity': self.id}]}):
             feed_item.delete()
 
         # Expressions Cleanup
@@ -1180,6 +1179,24 @@ class User(HasSocial):
             e.delete()
 
         return super(User, self).delete()
+
+    def undelete(self, trash):
+        # TODO-undelete: reconnect FB?
+        # TODO-undelete: Fix following / followers
+        # TODO-undelete: index record.owner
+        time = trash.get('updated', now()) - 3600
+        for expr in self.db.Trash.search({
+            'record.owner': self.id
+            ,"updated": {"$gt": time}
+            ,'collection': 'expr'
+        }):
+            expr.undelete() 
+        for feed in self.db.Trash.search({
+            '$or': [{'record.initiator': self.id}, {'record.entity': self.id}]
+            ,"updated": {"$gt": time}
+            ,'collection': 'feed'
+        }):
+            feed.undelete()
 
     def has_group(self, group, level=None):
         groups = self.get('groups')
@@ -1242,31 +1259,6 @@ class Expr(HasSocial):
 
         def named(self, username, name): return self.find({'owner_name': username, 'name': name})
 
-        def cards(self, spec, auth=None, viewer=None, override_unlisted=False, **opts):
-            filter = {}
-            spec2 = spec if type(spec) == dict else filter
-            # Hack for Zach. TODO-cleanup: verify with Zach that this link
-            # isn't needed anymore and remove
-            if (spec2.has_key('tags_index') 
-                and ['deck2014'] in spec2.get('tags_index').values()):
-                    override_unlisted = True
-            # Set up auth filtering
-            if auth:
-                spec2.update(auth=auth)
-            if override_unlisted:
-                pass
-            elif viewer and viewer.logged_in:
-                if auth == 'password':
-                    spec2.update({'owner': viewer.id})
-                elif not override_unlisted:
-                    spec2.setdefault('$and', [])
-                    spec2['$and'].append({'$or': [{'auth': 'public'},
-                        {'owner': viewer.id}]})
-            else:
-                spec2.update({'auth': 'public'})
-            opts.setdefault('fields', self.ignore_not_meta)
-            return self.search(spec, filter, **opts)
-
         def fetch(self, key, keyname='_id', meta=False):
             fields = { 'text_index': 0, 'title_index': 0 }
             if meta: fields.update(self.ignore_not_meta)
@@ -1291,14 +1283,39 @@ class Expr(HasSocial):
 
         def with_url(cls, url):
             """ Convenience utility function not used in production, retrieve Expr from path or full URL """
-            [user, name] = url.split('/', 1)
-            name = name.split('?')[0]
+            [user, name] = urllib2.urlparse.urlparse(url).path[1:].split('/', 1)
             return cls.named(user, name)
 
-        def page(self, spec, sort='updated', **args):
+        def page(self, spec, sort='updated', viewer=None, auth=None,
+            override_unlisted=False, **args
+        ):
             assert(sort in ['updated', 'random'])
             args.update(sort=sort)
-            rs = self.paginate(spec, **args)
+
+            filter = {}
+            spec2 = spec if type(spec) == dict else filter
+            # Hack for Zach. TODO-cleanup: verify with Zach that this link
+            # isn't needed anymore and remove
+            if (spec2.has_key('tags_index') 
+                and ['deck2014'] in spec2.get('tags_index').values()):
+                    override_unlisted = True
+            # Set up auth filtering
+            if auth:
+                spec2.update(auth=auth)
+            if override_unlisted:
+                pass
+            elif viewer and viewer.logged_in:
+                if auth == 'password':
+                    spec2.update({'owner': viewer.id})
+                elif not override_unlisted:
+                    spec2.setdefault('$and', [])
+                    spec2['$and'].append({'$or': [{'auth': 'public'},
+                        {'owner': viewer.id}]})
+            else:
+                spec2.update({'auth': 'public'})
+
+            args.setdefault('fields', self.ignore_not_meta)
+            rs = self.paginate(spec, filter=filter, **args)
 
             # remove random static patterns from random index
             # to make it _really_ random
@@ -1389,7 +1406,7 @@ class Expr(HasSocial):
 
     # size is 'big', 'small', or 'tiny'.
     def snapshot_name(self, size):
-        if not self.get('snapshot_time') or not self.get('snapshot_id'):
+        if not self.get('snapshot_id'):
             return False
 
         dimensions = {"big": (715, 430), "small": (390, 235), 'tiny': (70, 42)}
@@ -1398,7 +1415,7 @@ class Expr(HasSocial):
             return False
         dimension = dimensions.get(size, False)
         if size == "big" or not dimension:
-            filename = snapshot['url']
+            filename = snapshot.url
         else: filename = snapshot.get_thumb(dimension[0], dimension[1])
         return filename
 
@@ -1475,11 +1492,8 @@ class Expr(HasSocial):
         call(["rm", upload_list[0][0]])
 
         # Delete old snapshot
-        if old_time:
-            if self.get('snapshot_id'):
-                self.db.File.fetch(self.get('snapshot_id')).purge()
-            if self.get('snapshot'):
-                self.db.File.fetch(self.get('snapshot')).purge()
+        if old_time and self.get('snapshot_id'):
+            self.db.File.fetch(self.get('snapshot_id')).purge()
 
         self.update(snapshot_time=snapshot_time, entropy=self['entropy'],
             snapshot_id=file_record.id, updated=False)
@@ -1556,8 +1570,9 @@ class Expr(HasSocial):
     def build_search(self, d):
         tags = d.get('tags', self.get('tags'))
         tag_list = []
-        if tags: tag_list = d['tags_index'] = normalize_tags(tags)
-
+        if tags: tag_list = normalize_tags(tags)
+        d['tags_index'] = tag_list
+        
         d['title_index'] = normalize(d.get('title', self.get('title', '')))
 
         text_index = []
@@ -1571,12 +1586,19 @@ class Expr(HasSocial):
     def _collect_files(self, d, old=True, thumb=True, background=True, apps=True):
         ids = []
         if old: ids += self.get('file_id', [])
-        if thumb: ids += ( [ d['thumb_file_id'] ] if d.get('thumb_file_id') else [] )
-        if background: self._match_id((d.get('background') or {}).get('url'))
-        if apps:
-            for a in d.get('apps', []):
-                ids.extend( self._match_id( a.get('content') ) )
-        ids = list( set( ids ) )
+
+        apps = list(d.get('apps',[]))
+        bg = d.get('background')
+        if bg: apps.append(bg)
+        for a in apps:
+            f_id = a.get('file_id')
+            if(f_id): ids.append(f_id)
+            ids.extend( self._match_id(a.get('content')) )
+
+        ids = filter(
+            lambda f_id: self.db.File.fetch(f_id, fields={'fields':'_id'})
+            ,list( set(ids) )
+        )
         ids.sort()
         d['file_id'] = ids
         return ids
@@ -1730,13 +1752,18 @@ class Expr(HasSocial):
 
     public = property(lambda self: self.get('auth') == "public")
 
-    def client_view(self, viewer=None, special={}, activity=0):
+    def client_view(self, mode='card', viewer=None, special={}, activity=0):
+        """ data for expr card, seen in community pages """
+        if mode == 'page':
+            return self.client_view_page()
+
         counts = dict([ ( k, v.get('count', 0) ) for
             k, v in self.get('analytics', {}).iteritems() ])
         counts['Views'] = self.views
         counts['Comment'] = self.comment_count
         expr = dfilter(self, ['name', 'title', 'feed', 'created',
             'updated', 'password', 'container'])
+        expr['type'] = "expr"
         dict.update(expr, {
             'tags': self.get('tags_index'),
             'id': self.id,
@@ -1770,6 +1797,24 @@ class Expr(HasSocial):
             # dict.update( expr, activity =
             #     map(lambda r: r.client_view(),
             #         self.db.Feed.search({'entity':self.id})) [0:activity] )
+        return expr
+
+    def client_view_page(self):
+        """ data for expr page """
+        expr = dfilter(self, ['layout_coord', 'clip_x', 'clip_y'])
+        expr['type'] = "expr"
+        apps = expr['apps'] = {}
+        for app in self.get('apps',[]):
+            app_id = app.get('id', 'app_' + str(app['z']))
+            data = app.get('client_data', {})
+            data.update(media=app.get('media'))
+            if app['type'] == 'hive.code':
+                data.update(dfilter(app, ['content', 'url']))
+            if app['type'] == 'hive.image':
+                data.update(dfilter(app, ['url']))
+            if data:
+                data['type'] = app['type']
+                apps[app_id] = data
         return expr
 
     def loves_feed(self, count=-1, at=0):
@@ -1844,15 +1889,15 @@ class File(Entity):
         return self._file
 
     def download(self):
-        url = self['url']
+        url = self.url
         if url.startswith("//"):
             url = "http:" + url
         try: response = urllib.urlopen(url)
         except:
-            print 'urlopen fail for ' + self.id + ': ' + json.dumps(self.get('url'))
+            print 'urlopen fail for ' + self.id + ': ' + json.dumps(self.url)
             return False
         if response.getcode() != 200:
-            print 'http fail ' + str(response.getcode()) + ': ' + self['url']
+            print 'http fail ' + str(response.getcode()) + ': ' + self.url
             return False
         self._file = os.tmpfile()
         self._file.write(response.read())
@@ -1902,12 +1947,12 @@ class File(Entity):
         resamples = self.get('resamples', []) or []
         for size in resamples:
             if (w and size[0] > w) or (h and size[1] > h):
-                return self.get('url') + '_' + str(int(size[0]))
+                return self.url + '_' + str(int(size[0]))
                 # This was necessary when media assets were on 5 buckets
                 # but resamples were only on one.
                 # return ( self.db.s3.bucket_url('media') + self.id + '_' +
                 #     str(int(size[0])) )
-        return self.get('url')
+        return self.url
 
     def _resample_name(self, w):
         return self.id + '_' + str(int(w))
@@ -1938,7 +1983,7 @@ class File(Entity):
     def get_thumb(self, w, h):
         name = str(w) + 'x' + str(h)
         if not self.get('thumbs', {}).get(name): return False
-        url = self.get('url')
+        url = self.url
         if not url: return False
         return url + '_' + name
 
@@ -1963,6 +2008,11 @@ class File(Entity):
             self['fs_path'] = media_path(owner)
             with open(joinpath(self['fs_path'], id), 'w') as f: f.write(file.read())
             return abs_url() + 'file/' + owner['name'] + '/' + name
+
+    @property
+    def url(self):
+        return self.db.s3.url('media', self.id,
+            bucket_name=self.get('s3_bucket'))
 
     def create_existing(self):
         super(File, self).create()
@@ -2031,8 +2081,10 @@ class File(Entity):
                     print 'can not delete missing file: ' + self['fs_path']
 
     def client_view(self, viewer=None, activity=0):
-        r = dfilter(self, ['name', 'mime', 'owner', 'url', 'thumbs'])
-        dict.update(r, id=self.id, thumb_big=self.get_thumb(222,222),
+        r = dfilter(self, ['name', 'mime', 'owner', 'thumbs'])
+        r['type'] = "file"
+        dict.update(r, id=self.id, url=self.url,
+            thumb_big=self.get_thumb(222,222),
             thumb_small=self.get_thumb(70,70))
         return r
 
@@ -2154,6 +2206,7 @@ class Feed(Entity):
 
     def client_view(self):
         r = self.collection.new(self)
+        r['type'] = "feed"
         # TODO: no good way to assert on broken db
         if self.initiator == None:
             return r
@@ -2343,6 +2396,16 @@ class Broken(Entity):
             entity['record'] = record
             return super(Broken.Collection, self).create(entity)
 
+def collection_of(db, collection):
+    try:
+        return getattr(db, collection.title())
+    except AttributeError, e:
+        return None
+
+# def search_trash(db, spec, collection):
+#     spec = { 'record.' + k: v for k, v in spec }
+#     spec.update({'collection': collection})
+#     return db.Trash.search(spec)
 
 @register
 class Trash(Entity):
@@ -2351,6 +2414,14 @@ class Trash(Entity):
 
     cname = 'trash'
     indexes = ['record.id','record.created','record.updated']
+
+    def undelete(self):
+        collection = collection_of(self.db, self['collection'])
+
+        if collection:
+            entity = collection.create(self['record'])
+            entity.undelete(self)
+            self.purge()
 
     class Collection(Collection):
         trashable = False

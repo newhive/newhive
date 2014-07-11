@@ -5,6 +5,10 @@ class Query(dict):
     def __init__(self, d):
         dict.update(self, d)
 
+    def list_filter(self, key, *arg, **args):
+        self[key] = { '$elemMatch': arg[0] if len(arg) else args }
+        return self
+
     def is1(self, key, *l):
         self.setdefault(key, {})
         self[key].update({ '$in': l })

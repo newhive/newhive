@@ -167,6 +167,7 @@ class Mailer(object):
     unsubscribable = True
     inline_css = True
     bcc = False
+    template = None
 
     def __init__(self, jinja_env=None, db=None, smtp=None):
         self.db = db
@@ -457,12 +458,14 @@ class Welcome(Mailer):
 
     def send(self, user):
         self.recipient = user
-        user_profile_url = user.url
-        user_home_url = re.sub(r'/[^/]*$', '', user_profile_url)
         context = {
             'recipient': user
-            , 'create_link' : abs_url(secure=True) + "edit"
-            , 'create_icon': self.asset('skin/1/create.png')
+            , 'profile_link': user.url
+            , 'profile_icon': self.asset('skin/site/welcome_email_images/profile_button.png', http=True)
+            , 'create_link': abs_url(secure=True) + "home/edit"
+            , 'create_icon': self.asset('skin/site/welcome_email_images/create_button.png', http=True)
+            , 'follow_link': abs_url(secure=True) + "home/featured"
+            , 'follow_icon': self.asset('skin/site/welcome_email_images/hive_button.png', http=True)
             , 'featured_exprs': self.db.Expr.featured(6)
             }
         self.send_mail(context)
@@ -501,17 +504,20 @@ class ShareExpr(ExprAction):
     #         heads.update({'To': heads['To'] + "," + self.initiator.get('email')})
     #     return heads
 
-    def send(self, expr, initiator, recipient, message, bcc=False):
+    def send(self, expr, initiator, recipient, message, bcc=False, fullscreen=False):
         self.card = expr
         self.initiator = initiator
         self.recipient = recipient
         self.message = message
         self.bcc = bcc
         context = {}
+        if fullscreen: 
+            context['expr_url'] = (abs_url(domain=config.content_domain) 
+                + expr.get_url(relative=True))
         if not hasattr(self.recipient, 'id'):
             referral = initiator.new_referral(
-                    {'to': recipient.get('email'), 'type': 'email'}
-                    , decrement=False)
+                {'to': recipient.get('email'), 'type': 'email'}
+            )
             context['signup_url'] = referral.url
         super(ShareExpr, self).send(context)
 
