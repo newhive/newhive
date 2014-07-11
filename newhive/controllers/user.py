@@ -282,6 +282,8 @@ class User(ModelController):
         resp = {}
         user = tdata.user
         expr = self.db.Expr.fetch(request.form.get('expr_id'))
+        fullscreen = request.form.get('fullscreen')
+
         recipient_address = request.form.get('emails')
         if not request.form.get('message') or not recipient_address: 
             return self.serve_json(response, { 'error': 'Message and recipient are mandatory fields.'})
@@ -299,7 +301,7 @@ class User(ModelController):
 
         mailer = mail.ShareExpr(self.jinja_env, db=self.db)
         mailer.send(expr, user, recipient, request.form.get('message'), 
-            request.form.get('send_copy'))
+            request.form.get('send_copy'), fullscreen=fullscreen)
 
         return self.serve_json(response, resp)
 

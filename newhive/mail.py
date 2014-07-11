@@ -504,17 +504,20 @@ class ShareExpr(ExprAction):
     #         heads.update({'To': heads['To'] + "," + self.initiator.get('email')})
     #     return heads
 
-    def send(self, expr, initiator, recipient, message, bcc=False):
+    def send(self, expr, initiator, recipient, message, bcc=False, fullscreen=False):
         self.card = expr
         self.initiator = initiator
         self.recipient = recipient
         self.message = message
         self.bcc = bcc
         context = {}
+        if fullscreen: 
+            context['expr_url'] = (abs_url(domain=config.content_domain) 
+                + expr.get_url(relative=True))
         if not hasattr(self.recipient, 'id'):
             referral = initiator.new_referral(
-                    {'to': recipient.get('email'), 'type': 'email'}
-                   )
+                {'to': recipient.get('email'), 'type': 'email'}
+            )
             context['signup_url'] = referral.url
         super(ShareExpr, self).send(context)
 
