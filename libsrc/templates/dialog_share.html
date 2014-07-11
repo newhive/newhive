@@ -2,41 +2,38 @@
 <div id="dia_share" class="dialog" data-handle='#share_form_btn'>
   <div class="heading title expr">Share</div>
   <div class="subheading error_msg"></div>
-  {<vcenter "success_show heading cursor"}
+  {<vcenter "success_show heading pointer"}
     <div class="centered">Email sent.</div>
   {>}
 
-
-
   <div class="success_hide">
-    <div class= "_2column">
-      <div class="right fixed fullscreen">
-        <input id = "send_fullscreen" type="checkbox">
-        <label for ="send_fullscreen">Fullscreen</label>
-        </div>
-    <div class="left fill subheading">Expression:</div>
-  
- 
-
-    <textarea readonly class="dark">PLACEHOLDER</textarea>
-    <hr>
-    
     <form { form_attrs "expr_share" } id='form_expr_share' method='POST'>
-      <div class="subheading">Email(s) and/or Usernames:</div>
-      <input autofocus placeholder="Separate emails/usernames with commas." type="text" name="emails">
+      <div class="_2column">
+        <div class="right fixed fullscreen">
+          <label>
+            <input name="fullscreen" type="checkbox">
+            Fullscreen</label>
+        </div>
+        <div class="left fill subheading">Expression:</div>
 
-      <div class="subheading">Message:</div>
-      <textarea class="message" name="message"></textarea>
+        <textarea readonly class="dark">PLACEHOLDER</textarea>
+        <hr>
+        
+        <div class="subheading">Email(s) and/or Usernames:</div>
+        <input autofocus placeholder="Separate emails/usernames with commas." type="text" name="emails">
 
-      <div class="copy inline">
-        <input id="send_copy_input2" type="checkbox" checked name="send_copy">
-        <label for="send_copy_input2">Send me a copy.</label>
+        <div class="subheading">Message:</div>
+        <textarea class="message" name="message"></textarea>
+
+        <div class="copy inline">
+          <input id="send_copy_input2" type="checkbox" checked name="send_copy">
+          <label for="send_copy_input2">Send me a copy.</label>
+        </div>
+        <button type="submit" class="submit teal_btn">Send</button>
+
+        <input type="hidden" name="expr_user" value="{owner.name}">
+        <input type="hidden" name="expr_id" value="{expr.id}">
       </div>
-      <button type="submit" class="submit teal_btn">Send</button>
-
-      <input type="hidden" name="expr_user" value="{owner.name}">
-      <input type="hidden" name="expr_id" value="{expr.id}">
     </form>
   </div>
-</div>
  
