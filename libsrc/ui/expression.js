@@ -257,7 +257,7 @@ define([
     o.run_code = function(code_module){
         code_modules.push(code_module)
     
-        code_module.run && code_module.run()
+        code_module.run && code_module.run({view:true})
         if(!code_module.animate) return
         animate_go = 1
         var animate_frame = function(){

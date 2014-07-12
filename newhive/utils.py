@@ -131,14 +131,6 @@ def index_of(l, f):
     return -1
 
 
-def dfilter(d, keys):
-    """ Accepts dictionary and list of keys, returns a new dictionary
-        with only the keys given """
-    r = {}
-    for k in keys:
-        if k in d: r[k] = d[k]
-    return r
-
 def dupdate(d1, d2): return dict(d1.items() + d2.items())
 
 

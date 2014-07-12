@@ -1,6 +1,7 @@
 var pushNotification;
 
 function onDeviceReady() {
+    // config.base_url = 'http://10.0.0.21:3737' //!!
     $("#app-status-ul").append('<li>deviceready event received</li>');
 
     document.addEventListener("backbutton", function(e) {
@@ -66,6 +67,8 @@ function onNotification(e) {
             // Your GCM push server needs to know the regID before it can push to this device
             // here is where you might want to send it the regID for later use.
             console.log("regID = " + e.regid);
+            $.getJSON(config.base_url + '/api/notify/register?gcm_reg_id='
+                + e.regid + "&user=" + config.owner)
         }
         break;
         

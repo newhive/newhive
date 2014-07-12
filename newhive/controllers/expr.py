@@ -185,6 +185,7 @@ class Expr(ModelController):
             if "draft" in new_tags: new_tags.remove("draft")
             res.update(tags=tag_string(new_tags))
 
+        # Handle remixed expressions
         if (res and not autosave and
             upd.get('remix_parent_id') and not upd.get('remix_root')
         ):

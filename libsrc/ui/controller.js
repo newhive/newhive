@@ -23,6 +23,8 @@ define([
 ){
     var o = { back: false }, route;
 
+    // So code modules can use this variable safely
+    editor = undefined
     var ajax_pending = false
     o.ajax_pending = function() { return ajax_pending }
 

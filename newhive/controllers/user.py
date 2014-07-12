@@ -624,3 +624,25 @@ class User(ModelController):
         # Get either key of a Referral object in our db, or a facebook id
         key = request.form.get('key')
         return self.db.Referral.find({'key': key})
+
+    # Client registers session notification key to be used by notifications server
+    def notify_register(self, tdata, request, response, **args):
+        resp = {}
+        # TODO: implement other services
+        gcm_reg_id = request.args.get('gcm_reg_id')
+        iphone_reg_id = request.args.get('iphone_reg_id')
+        username = request.args.get('user')
+
+        user = self.db.User.named(username)
+        if user and (gcm_reg_id or iphone_reg_id):
+            spec = user.profile_spec()
+            search = self.db.Searches.get(spec)
+            if gcm_reg_id:
+                search.add_action(
+                    {'type': 'gcm_notify', 'reg_id': gcm_reg_id})
+            if iphone_reg_id:
+                search.add_action(
+                    {'type': 'iphone_notify', 'reg_id': iphone_reg_id})
+
+        return self.serve_json(response, resp)
+

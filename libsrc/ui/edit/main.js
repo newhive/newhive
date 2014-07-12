@@ -325,6 +325,14 @@ Hive.init_global_handlers = function(){
     });
 
     $('#btn_save').click(function(){
+        // TODO: need mechanism for code apps to auto-update (autosave)
+        // and indicate whether they have received their data before
+        // allowing save
+        env.Apps.filter(function(a) {
+            a.run_module_func && a.run_module_func("on_save")
+            return false
+        })
+
         var expr = Hive.state();
         Hive.send({save_dialog: 1})
     })

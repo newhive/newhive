@@ -404,6 +404,12 @@
         "content_domain": true
     },
 
+    "notify_register": {
+        "api_route": "/api/notify/register",
+        "controller": "user",
+        "method": "notify_register"
+    },
+
     "empty": "-----------------------------------------",
     "empty": "Admin.",
 

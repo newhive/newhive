@@ -15,7 +15,7 @@ Python library dependency dependencies (Ubuntu packages)
     sudo apt-get install build-essential python-dev ipython
 
 Python library dependencies
-    sudo pip install ez_setup
+    sudo pip install ez_setup python-gcm
     pip install PIL --allow-external PIL --allow-unverified PIL
     sudo pip install werkzeug pymongo boto oauth2 oauth2client paramiko cssutils hsaudiotag lxml webassets urllib3 apiclient httplib2 pytz jinja2 simplejson yuicompressor envoy scipy webkit2png pandas brownie google-api-python-client  statprof yappi beautifulsoup4
 
@@ -47,6 +47,10 @@ Get the db
     scp dev.newhive.com:/tmp/2014* .
     tar -xvf 2014*
     mongorestore --drop -d test --dir tmp/live-newhive
+deal with records that break indexing:
+    mongo
+    db.expr.remove({owner_name: "joebussiere"})
+    db.expr.remove({$where: 'for(i in this.text_index){ if(this.text_index[i].length > 1000) return true } return false'})
 
 Set up and run the server
     cd ~/newhive
