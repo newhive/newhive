@@ -85,6 +85,7 @@
   </div>
 {>}
 
+{# Password recovery #}
 <div id="dia_recover" class="standard dialog" data-handle='.password_recovery'>
   <div class="title expr">Reset your password:</div>
   <div class="subheading error_msg"></div>
@@ -93,7 +94,7 @@
   {>}
   <div class="success_hide">
     <form { form_attrs "password_recover" } id='form_password_recover' method='POST'>
-      <ditv class="form_text">Enter your email address.</div>
+      <div class="form_text">Enter your email address.</div>
       <input autofocus placeholder="Email" type="text" name="email">
       <button type="submit" class="submit teal_btn upper">Enter</button>
     </form>
