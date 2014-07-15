@@ -3,8 +3,8 @@
 {% block body_classes%}{{super()}} {{type}}{% endblock %}
 {% block body %}
 
-{% macro link(entity, class='', id='') -%}
-<a href="{{ entity.url }}" title="{{ entity.title or entity.fullname }}" class="{{ class }}" id="{{ id}}">
+{% macro link(entity, class='', id='', url='') -%}
+<a href="{{ url or entity.url }}" title="{{ entity.title or entity.fullname }}" class="{{ class }}" id="{{ id}}">
     {{ caller() }}
 </a>
 {%- endmacro %}

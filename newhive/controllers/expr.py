@@ -1,10 +1,10 @@
-from numbers import Number
 from bs4 import BeautifulSoup
 import os, json, cgi, base64, re, time
 from pymongo.errors import DuplicateKeyError
 from functools import partial
 
 from newhive.utils import dfilter, now, get_embedly_oembed, tag_string, set_trace
+from newhive.utils import is_number_list
 from newhive.controllers.controller import ModelController
 
 class Expr(ModelController):
@@ -186,8 +186,9 @@ class Expr(ModelController):
             res.update(tags=tag_string(new_tags))
 
         # Handle remixed expressions
-        if (res and not autosave and 
-          upd.get('remix_parent_id') and not upd.get('remix_root')):
+        if (res and not autosave and
+            upd.get('remix_parent_id') and not upd.get('remix_root')
+        ):
             # TODO-remix: handle moving ownership of remix list, especially if original is
             # made private or deleted.
             parent_id = upd.get('remix_parent_id')
@@ -197,20 +198,21 @@ class Expr(ModelController):
                 remix_expr = self.db.Expr.fetch(parent_id)
                 parent_id = remix_expr.get('remix_parent_id')
             remix_owner = remix_expr.owner
-            remix_upd['remix_root'] = remix_expr.id
-            remix_expr.setdefault('remix_name', remix_expr['name'])
-            remix_expr.setdefault('remix_root', remix_expr.id)
-            remix_expr.update(updated=False, remix_name=remix_expr['remix_name'],
-                remix_root=remix_expr['remix_root'])
-            remix_name = 're:' + remix_expr['remix_name']
-            # remix_upd['tags'] += " #remixed" # + remix_name
-            res.update(**remix_upd)
+            if (res.get('auth', '') == 'public' or remix_owner == tdata.user.id):
+                remix_upd['remix_root'] = remix_expr.id
+                remix_expr.setdefault('remix_name', remix_expr['name'])
+                remix_expr.setdefault('remix_root', remix_expr.id)
+                remix_expr.update(updated=False, remix_name=remix_expr['remix_name'],
+                    remix_root=remix_expr['remix_root'])
+                remix_name = 're:' + remix_expr['remix_name']
+                # remix_upd['tags'] += " #remixed" # + remix_name
+                res.update(**remix_upd)
 
-            # include self in remix list
-            remix_owner.setdefault('tagged', {})
-            remix_owner['tagged'].setdefault(remix_name, [remix_expr.id])
-            remix_owner['tagged'][remix_name].append(res.id)
-            remix_owner.update(updated=False, tagged=remix_owner['tagged'])
+                # include self in remix list
+                remix_owner.setdefault('tagged', {})
+                remix_owner['tagged'].setdefault(remix_name, [remix_expr.id])
+                remix_owner['tagged'][remix_name].append(res.id)
+                remix_owner.update(updated=False, tagged=remix_owner['tagged'])
 
         if not self.config.live_server and (upd.get('apps') or upd.get('background')):
             res.threaded_snapshot(retry=120)
@@ -302,9 +304,8 @@ class Expr(ModelController):
         content = app.get('content', '')
         more_css = ''
         dimensions = app.get('dimensions', [100,100])
-        if not all([ isinstance(v, Number) for v in
-            dimensions + app.get('position', [])
-        ]): return ''
+        if not is_number_list(dimensions, 2): return ''
+        if not is_number_list(app.get('position', []), 2): return ''
 
         type = app.get('type')
         klass = type.replace('.', '_')
@@ -328,8 +329,9 @@ class Expr(ModelController):
                 klass += " crop_box"
                 scale_x *= dimensions[0]
                 css = 'width:%fpx' % (scale_x)
-                if isinstance(app.get('offset'), Number):
-                    offset = [x * scale_x for x in app.get('offset')]
+                offset = app.get('offset')
+                if is_number_list(offset, 2):
+                    offset = [x * scale_x for x in offset]
                     css = '%s;margin-left:%spx;margin-top:%spx' % (
                         css, offset[0], offset[1] )
                 html = "<img src='%s' style='%s' class='content'>" % (url, css)
@@ -375,8 +377,7 @@ class Expr(ModelController):
             link_text = ('','')
             if link: link_text = ("<a xlink:href='%s'>" % link,"</a>")
 
-            points = filter(lambda p:
-                 all([isinstance(v, Number) for v in p])
+            points = filter(lambda point: is_number_list(point, 2)
                 ,app.get('points', []))
             html = (
                   "<svg class='content' xmlns='http://www.w3.org/2000/svg'"

@@ -23,12 +23,9 @@ $space4: 5px;
     }
 }
 
-td, table{
-    width: 586px;
-}
+body > table { width: 586px; }
 
 #body {
-    text-align: center;
     color: $color_email_black;
     padding: $space1 $space1 $space2 $space1;
     p, h1, h2, h3, h4, h5 {
