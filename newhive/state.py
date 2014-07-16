@@ -2466,8 +2466,8 @@ class Searches(Entity):
 
     def add_action(self, action):
         self.setdefault('action', [])
-        self.update(action=self['action'] + [action])
-        pass
+        if action not in self['action']:
+            self.update(action=self['action'] + [action])
 
     class Collection(Collection):
         def run_for(self, entity):

@@ -1,10 +1,10 @@
-from numbers import Number
 from bs4 import BeautifulSoup
 import os, json, cgi, base64, re, time
 from pymongo.errors import DuplicateKeyError
 from functools import partial
 
 from newhive.utils import dfilter, now, get_embedly_oembed, tag_string, set_trace
+from newhive.utils import is_number_list
 from newhive.controllers.controller import ModelController
 
 class Expr(ModelController):
@@ -322,9 +322,8 @@ class Expr(ModelController):
         content = app.get('content', '')
         more_css = ''
         dimensions = app.get('dimensions', [100,100])
-        if not all([ isinstance(v, Number) for v in
-            dimensions + app.get('position', [])
-        ]): return ''
+        if not is_number_list(dimensions, 2): return ''
+        if not is_number_list(app.get('position', []), 2): return ''
 
         type = app.get('type')
         klass = type.replace('.', '_')
@@ -348,8 +347,9 @@ class Expr(ModelController):
                 klass += " crop_box"
                 scale_x *= dimensions[0]
                 css = 'width:%fpx' % (scale_x)
-                if isinstance(app.get('offset'), Number):
-                    offset = [x * scale_x for x in app.get('offset')]
+                offset = app.get('offset')
+                if is_number_list(offset, 2):
+                    offset = [x * scale_x for x in offset]
                     css = '%s;margin-left:%spx;margin-top:%spx' % (
                         css, offset[0], offset[1] )
                 html = "<img src='%s' style='%s' class='content'>" % (url, css)
@@ -395,8 +395,7 @@ class Expr(ModelController):
             link_text = ('','')
             if link: link_text = ("<a xlink:href='%s'>" % link,"</a>")
 
-            points = filter(lambda p:
-                 all([isinstance(v, Number) for v in p])
+            points = filter(lambda point: is_number_list(point, 2)
                 ,app.get('points', []))
             html = (
                   "<svg class='content' xmlns='http://www.w3.org/2000/svg'"

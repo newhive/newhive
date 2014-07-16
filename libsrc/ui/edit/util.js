@@ -467,10 +467,12 @@ o.tile_magic = function(count, opts) {
     for (var y = 0; y < rows; ++y) {
         surplus += mod
         var columns = Math.round(surplus)
-            ,total_pad = (columns - 1)*padding
+            ,cur_padding = Math.min(padding, (row_width)/(columns - 1) - 2)
+            ,total_pad = (columns - 1)*cur_padding
             ,total_width = (row_width - total_pad)
             ,dims = [aspect, 1]
             ,first_n = n, row_aspect = 0
+
         for (var x = 0; x < columns; ++x) {
             var new_aspect = opts.aspects[n++] || aspect
             row_aspect += new_aspect
@@ -481,10 +483,10 @@ o.tile_magic = function(count, opts) {
             var new_aspect = opts.aspects[n++] || aspect
             dims[0] = dims[1] * new_aspect
             res.push([pos.slice(), dims.slice()])
-            pos[0] += dims[0] + padding
+            pos[0] += dims[0] + cur_padding
         }
         pos[0] = start_pos[0]
-        pos[1] += dims[1] + padding
+        pos[1] += dims[1] + cur_padding
         surplus -= columns
     }
     return res
