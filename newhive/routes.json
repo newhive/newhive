@@ -34,6 +34,12 @@
         "precedence": 1
     },
 
+    "expr_data": {
+        "api_route": "/api/expr/fetch/<expr_id>",
+        "controller": "expr",
+        "method": "fetch_data"
+    },
+
     "home": {
         "page_route": "/",
         "api_route": "/api/feed/trending/",
