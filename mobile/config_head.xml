@@ -11,6 +11,9 @@
         NewHive
     </author>
 
+    <preference name="iosPersistentFileLocation" value="Library" />
+    <preference name="AndroidPersistentFileLocation" value="Internal" />
+
     <preference name="BackgroundColor" value="0xffffffff"/>
     <preference name="Orientation" value="default" />
     <!-- version specific config goes here -->

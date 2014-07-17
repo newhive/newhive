@@ -237,6 +237,24 @@ class Expr(ModelController):
 
         return self.serve_404(tdata, request, response)
 
+    # def fetch_data(self, tdata, request, response, expr_id=None, **args):
+    #     expr = self.db.Expr.fetch(expr_id)
+    #     if not expr or (
+    #         (not tdata.user.can_view(expr)) and expr.get('password')
+    #     ): return None
+
+    #     # editor currently depends on URL attribute
+    #     apps = expr.get('apps', [])
+    #     for a in apps:
+    #         # print 'app ', a
+    #         file_id = a.get('file_id') 
+    #         if file_id and not a.get('url'):
+    #             # print (self.db.File.fetch(file_id) or {}).get('url')
+    #             a['url'] = (self.db.File.fetch(file_id) or {}).get('url')
+    #     expr['id'] = expr.id
+
+    #     return self.serve_json(response, expr)
+
     def fetch_naked(self, tdata, request, response, expr_id=None,
         owner_name=None, expr_name=None, **args
     ):
