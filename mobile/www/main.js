@@ -4,13 +4,24 @@ var view = 'index', page_index = 0, cards = [], cards_complete = false,
     cards_loading = false, current_page, next_page, win = $(window),
     page_index_scrollY = 0
 
-var init = function(){
+// This function requires the $("head meta") tag to be in state
+//  <meta name="viewport" content="user-scalable=1, width=device-width, initial-scale=1">
+var ideal_aspect = 0
+var fix_scale = function() {
     // zoom level is current-width / device-width
     var  ideal_width = document.documentElement.clientWidth
         ,initial_scale = ideal_width / 500
+    if (!ideal_aspect) {
+        ideal_aspect = document.documentElement.clientHeight / ideal_width
+        ideal_aspect = Math.max(ideal_aspect, 1 / ideal_aspect)
+    }
     $('meta[name=viewport]').attr('content', 'user-scalable=1, width=500, '
         + 'initial-scale=' + initial_scale)
         // +', minimum-scale=.2, maximum-scale=10')
+}
+
+var init = function(){
+    fix_scale()
     render_page_index()
     fetch_cards()
 
@@ -28,7 +39,8 @@ var init = function(){
 
     window.onorientationchange = function(){
         var landscape = win.width() > win.height()
-        $('#content').toggleClass('landscape', landscape)
+        // $('#content').toggleClass('landscape', landscape)
+        $('#content').css('width', 500 * (landscape ? ideal_aspect : 1) + 'px')
     }
 }
 
