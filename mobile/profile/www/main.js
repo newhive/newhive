@@ -1,6 +1,6 @@
 config.content_url = 'http://staging.tnh.me/'
 
-var view = 'index', page_index = 0, cards = [], cards_complete = false,
+var page_index = 0, cards = [], cards_complete = false,
     cards_loading = false, current_page, next_page, win = $(window),
     page_index_scrollY = 0
 
@@ -93,10 +93,16 @@ function page_exit(){
     $('#overlays').empty()
 }
 
+var view = 'index'
+var set_view = function(new_view) {
+    $('#content').removeClass(view).addClass(new_view).empty()
+    view = new_view
+}
+
+// Render the feed view
 function render_page_index(){
     page_exit()
-    $('#content').removeClass(view).addClass('index').empty()
-    view = 'index'
+    set_view('index')
     if(window.StatusBar) StatusBar.show()
     render_cards(cards)
     window.scrollTo(0, page_index_scrollY)
@@ -109,6 +115,7 @@ function render_page_index(){
         }
     }
 }
+
 function fetch_cards(){
     cards_loading = true
     $.getJSON(config.search_url, { at: cards.length }, function(data){
@@ -124,6 +131,7 @@ function fetch_cards(){
         cards_loading = false
     })
 }
+
 function render_cards(cards){
     if(!cards.length) return
 
@@ -150,9 +158,8 @@ function render_cards(cards){
 function render_page_expr(card){
     page_index_scrollY = window.scrollY
     page_exit()
-    view = 'expr'
+    set_view('expr')
     StatusBar.hide()
-    $('#content').removeClass(view).addClass('expr').empty()
     $('#overlays').append($('#templates .expr_overlays').clone().children())
     button('.icon.prev', back)
     button('.share', function(){ share_expr(card) })
