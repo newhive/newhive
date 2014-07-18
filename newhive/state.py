@@ -2472,14 +2472,14 @@ class Searches(Entity):
     class Collection(Collection):
         def run_for(self, entity):
             col = entity._col
-            # TODO-perf: Need to be able to sample the list by user or
-            # similar to cut down possible search space
             notify_data = { 
                 "message": entity.entity.get('name') or "[Untitled]"
                 ,"title": 'Push Notification Sample' 
                 ,"msgcnt": '3'
                 ,"soundname": 'beep.wav'
             }
+            # TODO-perf: Need to be able to sample the list by user or
+            # similar to cut down possible search space
             for search in self.db.Searches.search({'type': col.name}):
                 _search = search['search']
                 spec = literal_eval(_search)

@@ -2,10 +2,18 @@
 # python -m unittest newhive.test.mailers
 # python -m unittest newhive.test.mailers.ShareExpr
 
+# to see all emails together: 
+'''
+rm lib/email/*
+python -m unittest newhive.test.mailers
+cat lib/email/* > lib/email/all.html
+'''
+# then point your browser to /lib/email/all.html
 
 import unittest, random
 from newhive.server_session import db, server_env, jinja_env, hive_assets
 from newhive import mail, config, state, app
+from newhive.utils import now
 
 import os.path
 
@@ -81,7 +89,7 @@ class TemporaryPassword(MailerTest):
         self.mailer = mail.TemporaryPassword(db=db, jinja_env=jinja_env)
 
     def test_temporary_password(self):
-        self.mailer.send(self.test_user, abs_url() + 'fakerecoverylink')
+        self.mailer.send([self.test_user])
 
 class FeedMailerTest(MailerTest):
     def setUp(self):
@@ -110,7 +118,7 @@ class Broadcast(FeedMailerTest):
 
 class MultiFeedTest(FeedMailerTest):
     def test_multiple_feeds(self):
-        newhive.test.logger.debug('test_multiple_feeds\n')
+        # newhive.test.logger.debug('test_multiple_feeds\n')
         for feed in db.Star.search({'entity_class': 'Expr'}, sort=[('created', -1)], limit=2):
             self.mailer.send(feed)
         for feed in db.Star.search({'entity_class': 'User'}, sort=[('created', -1)], limit=2):
@@ -152,30 +160,30 @@ class SignupRequest(MailerTest):
     def test_signup_request(self):
         self.mailer.send(self.test_nonuser['email'], self.test_nonuser['name'], {})
 
-class UserReferral(MailerTest):
-    def setUp(self):
-        super(UserReferral, self).setUp()
-        self.mailer = mail.UserReferral(db=db, jinja_env=jinja_env)
+# class UserReferral(MailerTest):
+#     def setUp(self):
+#         super(UserReferral, self).setUp()
+#         self.mailer = mail.UserReferral(db=db, jinja_env=jinja_env)
 
-    def test_user_referral(self):
-        recipient = {'name': self.test_nonuser['name'], 'to': self.test_nonuser['email']}
-        referral = self.test_user.new_referral(recipient, decrement=False)
-        self.mailer.send(referral, self.test_user)
+#     def test_user_referral(self):
+#         recipient = {'name': self.test_nonuser['name'], 'to': self.test_nonuser['email']}
+#         referral = self.test_user.new_referral(recipient, decrement=False)
+#         self.mailer.send(referral, self.test_user)
 
-class SiteReferralReminder(MailerTest):
-    def setUp(self):
-        super(SiteReferralReminder, self).setUp()
-        self.mailer = mail.SiteReferralReminder(db=db, jinja_env=jinja_env)
+# class SiteReferralReminder(MailerTest):
+#     def setUp(self):
+#         super(SiteReferralReminder, self).setUp()
+#         self.mailer = mail.SiteReferralReminder(db=db, jinja_env=jinja_env)
 
-    def test_site_referral_reminder(self):
-        spec = {
-                'user_created': {'$exists': False}
-                , 'reuse': {'$exists': False}
-                , 'user': db.User.site_user.id
-                }
-        offset = random.randint(1,100)
-        ref = db.Referral.search(spec, sort=[('created', -1)], offset=offset, limit=1)[0]
-        self.mailer.send(ref)
+#     def test_site_referral_reminder(self):
+#         spec = {
+#                 'user_created': {'$exists': False}
+#                 , 'reuse': {'$exists': False}
+#                 , 'user': db.User.site_user.id
+#                 }
+#         offset = random.randint(1,100)
+#         ref = db.Referral.search(spec, sort=[('created', -1)], offset=offset, limit=1)[0]
+#         self.mailer.send(ref)
 
 class UserInvitesReminder(MailerTest):
     def setUp(self):
