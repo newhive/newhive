@@ -210,7 +210,7 @@ body > table { width: 586px; }
         padding-top: $space3;
         padding-bottom: $space3 + 3px;
         h2 {
-          line-height: 20px;
+          // line-height: 20px;
           font-size: 38px
         }
         h2 + p {
@@ -258,7 +258,7 @@ body > table { width: 586px; }
     }
 
     &.welcome {
-     padding: 30px 100px 30px 100px; 
+      padding: 30px 100px 30px 100px; 
       p {
         font-size: 20px;
         line-height: auto;
