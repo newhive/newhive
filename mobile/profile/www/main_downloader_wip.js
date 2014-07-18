@@ -12,7 +12,7 @@ var init = function(){
         + 'initial-scale=' + initial_scale)
         // +', minimum-scale=.2, maximum-scale=10')
     render_page_index()
-    fetch_cards()
+    get_cards()
 
     // window.addEventListener('message', page_receive, false)
     // TODO-feature: implement scrolling / swiping page-throughs
@@ -28,7 +28,7 @@ var init = function(){
 
     window.onorientationchange = function(){
         var landscape = win.width() > win.height()
-        $('body').toggleClass('landscape', landscape)
+        $('#content').toggleClass('landscape', landscape)
     }
 }
 
@@ -66,7 +66,7 @@ function page_next(){
 // }
 
 function get_page(card){
-    return $("<iframe>")
+    return $("<iframe class='full'>")
         .prop('src', content_url(card) + '?viewport=500x500')
         .appendTo('#content')
 }
@@ -93,23 +93,30 @@ function render_page_index(){
         if(!cards_loading && (win.scrollTop() + win.height() + 100
             > document.body.scrollHeight) && !cards_complete
         ){
-            fetch_cards()
+            render_cards()
         }
     }
 }
-function fetch_cards(){
-    cards_loading = true
-    $.getJSON(config.search_url, { at: cards.length }, function(data){
-        var new_cards = data.cards
-        if(!new_cards.length){
-            cards_complete = true
-            cards_loading = false
-            return
-        }
-        // TODO-perf: cache card data and snapshot imgs in local storage
-        cards = cards.concat(new_cards)
-        render_cards(new_cards)
-        cards_loading = false
+function get_cards(){
+    read_file('app_cards', function(f){
+        cards = JSON.parse(f)
+        render_cards(cards.slice(0,20))
+    }, function(){
+        var cards_fetched = false, card_loading = false
+        var fetch_card_page = function(){
+            cards_loading = true
+            $.getJSON(config.search_url, { at: cards.length }, function(data){
+                var new_cards = data.cards
+                if(!new_cards.length){
+                    save_file('app_cards', JSON.stringify(cards))
+                    cards_complete = true
+                    cards_loading = false
+                    return
+                }
+                // TODO-perf: cache card data and snapshot imgs in local storage
+                cards = cards.concat(new_cards)
+                render_cards(new_cards)
+                cards_loading = false
     })
 }
 function render_cards(cards){
@@ -138,18 +145,16 @@ function render_cards(cards){
 function render_page_expr(card){
     page_index_scrollY = window.scrollY
     page_exit()
+    view = 'expr'
     StatusBar.hide()
     $('#content').removeClass(view).addClass('expr').empty()
-    view = 'expr'
     $('#overlays').append($('#templates .expr_overlays').clone().children())
     button('.icon.prev', back)
     button('.share', function(){ share_expr(card) })
     // TODO: implement share_menu
     // bind_click('#overlays .share', share_menu.open)
 
-    var frame_el = get_page(card)
-    window.scrollTo(0)
-    setTimeout(function(){ frame_el.addClass('expr') }, 100)
+    get_page(card)
 }
 
 function back(){
@@ -204,11 +209,10 @@ function share_expr(card){
 }
 
 var download_feed = function(){
-    var download = function(url, on_finish){ download_url(
+    var download = function(url, on_finish){ download_url(url, on_finish,
         function(err){
             console.log('uh oh', err)
-        }, url, on_finish)
-    }
+    }) }
     download(config.content_url + expr_path, function(expr_file){
         console.log(expr_file)
     })
@@ -217,26 +221,14 @@ var download_feed = function(){
 var download_expr = function(expr_path){
 }
 
-var download_url = function(on_err, url, on_finish){
+var download_url = function(url, on_finish, on_err){
     var local_name = url.substring(url.lastIndexOf('/')+1)
         ,xhr = new XMLHttpRequest()
-    var save_file = function(){
-        window.requestFileSystem(LocalFileSystem.PERSISTENT, 0,
-            function(fileSystem){
-                fileSystem.root.getFile(local_name,
-                    {create: true, exclusive: false},
-                    function(fileEntry){
-                        fileEntry.createWriter(function(fileWriter){
-                            fileWriter.onwriteend = function(e){
-                                on_finish(fileEntry.toURL())
-                            }
-                            fileWriter.write(xhr.response)
-    }) } ) } ) }
 
     xhr.onreadystatechange = function(){
         if (this.readyState == 4){
             if(this.status == 200)
-                save_file()
+                save_file(local_name, xhr.response, on_finish, on_err)
             else
                 on_err('download failed')
         }
@@ -244,4 +236,35 @@ var download_url = function(on_err, url, on_finish){
     xhr.responseType = 'blob'
     xhr.open('GET', url)
     xhr.send()
+}
+
+var save_file = function(name, data, on_finish, on_err){
+    window.requestFileSystem(LocalFileSystem.PERSISTENT, 0,
+        function(fileSystem){ fileSystem.root.getFile(name,
+            {create: true, exclusive: false},
+            function(fileEntry){
+                fileEntry.createWriter(function(fileWriter){
+                    fileWriter.onwriteend = function(e){
+                        on_finish(fileEntry.toURL())
+                    }
+                    fileWriter.write(data)
+                })
+            }
+        )}
+    )
+}
+
+var read_file = function(name, on_finish, on_err){
+    window.requestFileSystem(LocalFileSystem.PERSISTENT, 0,
+        function(fileSystem){ fileSystem.root.getFile(name, {},
+            function(fileEntry){
+                fileEntry.file(function(file){
+                    var fr = new FileReader()
+                    fr.onloadend = function(){
+                        on_finish(fr.result) }
+                    fr.readAsBinaryString(file)
+                })
+            }
+        ,on_err ) } // function(){ on_err('not found') }
+    )
 }
