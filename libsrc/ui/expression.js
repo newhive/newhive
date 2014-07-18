@@ -42,7 +42,8 @@ define([
 
     var layout_coord = 0
     o.layout = function(){
-        layout.place_apps(layout_coord) }
+        layout.place_apps(layout_coord) 
+    }
 
     o.init = function(expr){
         layout_coord = expr.layout_coord || 0
@@ -86,9 +87,18 @@ define([
     }
 
     o.init_mobile = function(){
-        window.ondeviceorientation = function(){
-            o.layout()
-        }
+        $(document).ready(function () {
+            var on_orientation = function() {
+                var landscape = win.width() > win.height()
+                $("meta[name=viewport]").prop("content",
+                    "width=" + 500 * (landscape ? ideal_aspect : 1))
+                console.log("orient " + landscape)
+                o.layout()
+            }
+            // window.ondeviceorientation = on_orientation
+            // window.onorientationchange = on_orientation
+            $(window).bind('orientationchange', on_orientation)
+        })
 
         // TODO-cleanup: make into fake swipe event
         // TODO-polish: ignore events with multiple touches (conflicts with zoom)
@@ -120,40 +130,40 @@ define([
             else
                 o.page_prev()
         }
-        $(document).on('touchstart', function(ev){
-            var touches = ev.originalEvent.touches
-            if(touches && touches.length)
-                touch_start = [touches[0].clientX, touches[0].clientY]
-        }).on('touchmove', function(ev){
-            if(!touch_start) return
+        // $(document).on('touchstart', function(ev){
+        //     var touches = ev.originalEvent.touches
+        //     if(touches && touches.length)
+        //         touch_start = [touches[0].clientX, touches[0].clientY]
+        // }).on('touchmove', function(ev){
+        //     if(!touch_start) return
 
-            var touches = ev.originalEvent.touches, touch_now
-            if(touches && touches.length)
-                touch_now = [touches[0].clientX, touches[0].clientY]
+        //     var touches = ev.originalEvent.touches, touch_now
+        //     if(touches && touches.length)
+        //         touch_now = [touches[0].clientX, touches[0].clientY]
 
-            var delta = [touch_now[0] - touch_start[0], touch_now[1] - touch_start[1]]
-            if(swiping) swipe(delta[0])
+        //     var delta = [touch_now[0] - touch_start[0], touch_now[1] - touch_start[1]]
+        //     if(swiping) swipe(delta[0])
 
-            // differentiate between scrolling and horizontal swiping
-            // by assuming scroll if there's scrolling left in that direction
-            // and otherwise assuming scroll if delta-Y is greater than delta-X
+        //     // differentiate between scrolling and horizontal swiping
+        //     // by assuming scroll if there's scrolling left in that direction
+        //     // and otherwise assuming scroll if delta-Y is greater than delta-X
 
-            if( (delta[0] > 0 && document.body.scrollLeft > 0) // left scroll remains
-                || (delta[0] < 0 && (document.body.scrollLeft // right scroll remains
-                    + document.body.clientWidth < document.body.scrollWidth)
-                )
-            ){
-                return
-            }
-            var h_mag = Math.abs(delta[0])
-            if(h_mag >= 10 && h_mag > Math.abs(delta[1])){
-                ev.preventDefault()
-                if(!swiping) swipe_start(delta[0])
-            }
-        }).on('touchend touchcancel touchleave', function(ev){
-            if(!ev.originalEvent.touches.length && swiping)
-                swipe_end()
-        })
+        //     if( (delta[0] > 0 && document.body.scrollLeft > 0) // left scroll remains
+        //         || (delta[0] < 0 && (document.body.scrollLeft // right scroll remains
+        //             + document.body.clientWidth < document.body.scrollWidth)
+        //         )
+        //     ){
+        //         return
+        //     }
+        //     var h_mag = Math.abs(delta[0])
+        //     if(h_mag >= 10 && h_mag > Math.abs(delta[1])){
+        //         ev.preventDefault()
+        //         if(!swiping) swipe_start(delta[0])
+        //     }
+        // }).on('touchend touchcancel touchleave', function(ev){
+        //     if(!ev.originalEvent.touches.length && swiping)
+        //         swipe_end()
+        // })
     }
 
     o.expr_receive = function(ev){
@@ -222,7 +232,7 @@ define([
 
         jplayer.init_jplayer();
 
-        // o.layout()
+        o.layout()
     };
 
     o.link_target = function(a){
@@ -288,7 +298,8 @@ define([
             $div.html($div.attr('data-content'));
         });
         
-        o.layout()
+        if (!util.mobile())
+            o.layout()
 
         o.update_targets();
 

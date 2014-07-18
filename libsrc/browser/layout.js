@@ -11,9 +11,12 @@ define(['browser/jquery', 'ui/util'], function($, util) {
 
     o.place_apps = function(layout_coord) {
         // if(util.mobile()) return
-        var scale_from = [$(window).width(), $(window).height()][layout_coord]
+        var win_dims = [$(window).width(), $(window).height()]
+            ,scale_from = win_dims[layout_coord]
             ,s = scale_from / 1000
-        //if(util.mobile()) s = .5
+        if (util.mobile()) s = .5
+        // if (win_dims[1] > win_dims[0] && win_dims[0])
+        //     s *= win_dims[1] / win_dims[0]
 
         // TODO: bg code should respect win_width
         $('.happfill').each(function(i, div) {
@@ -78,7 +81,7 @@ define(['browser/jquery', 'ui/util'], function($, util) {
             
             if (e.hasClass('hive_image')) {
                 var img = e.find('img'), ic = $.extend({}, img.data('css'))
-                    ,border_width = parseFloat(app_div.style['border-width'])
+                    ,border_width = util.val(app_div.style['border-width'])
 
                 for(var p in ic) {
                     var new_val = ic[p] * s
