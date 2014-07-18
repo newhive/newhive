@@ -32,7 +32,6 @@ define([
         context.native_mobile = true;
         // TODO: redirect code goes here
         o.init({route_name: 'home', client_method: 'home'})
-        
     }
     
     o.init = function(route_args){
@@ -56,7 +55,6 @@ define([
         routing.register_state(route_args);
         if (util.mobile()) {
             $("body").addClass('mobile');
-            // var init_scale = 575 / ($(window).width() || 720)
             $('<meta name="viewport" content="width=500">')
                 .appendTo('head')
                  //, initial-scale=' + init_scale +

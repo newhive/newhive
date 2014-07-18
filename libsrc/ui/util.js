@@ -37,7 +37,7 @@ define([
         if (typeof(x) == "number")
             return x;
         else if (typeof(x) == "string")
-            return parseFloat(x);
+            return parseFloat(x) || 0;
         else
             return 0;
     }
