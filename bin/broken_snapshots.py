@@ -6,8 +6,8 @@ sys.path.append(parent_path)
 
 from newhive.db_tools import *
 
-snapshot_reset(recent_snapshot_fails(7), redo=True)
+snapshot_reset(recent_snapshot_fails(7), run_local=True)
 
 if False:
-    snapshot_redo_collection(username='zach')
-    snapshot_redo_collection(username='cara')
+    snapshot_redo_collection(username='zach', redo=True)
+    snapshot_redo_collection(username='cara', redo=True)

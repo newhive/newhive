@@ -121,7 +121,7 @@ define([
         $('#save_title').val(expr.title).keydown()
         save_tags_changed()
         // TODO-autosave: remember user's auth choice when draft
-        var auth = expr.draft ? "public" : expr.auth
+        var auth = (expr.draft === true) ? "public" : expr.auth
         // var auth = expr.auth
         if (auth) $('#menu_privacy [val=' + auth +']').click()
         $('#use_custom_domain').prop('checked', expr.url ? 1 : 0).

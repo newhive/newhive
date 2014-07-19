@@ -365,12 +365,13 @@ class ExprAction(Mailer):
         if not context: context = {}
 
         featured, featured_type = self.featured_exprs
+        # import ipdb; ipdb.set_trace()//!!
         context.update({
             'message': self.message
             ,'initiator': self.initiator
             ,'recipient': self.recipient
             , 'header': self.header_message
-            , 'expr': self.card
+            , 'expr': self.card if self.card._col.name == 'expr' else None
             , 'server_url': abs_url()
             , 'featured_exprs': featured
             , 'featured_type': featured_type
