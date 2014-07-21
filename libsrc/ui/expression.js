@@ -231,6 +231,11 @@ define([
         $('a, form').each(function(i, e){ o.link_target(e) });
 
         jplayer.init_jplayer();
+        
+        // HACK to fix audio player layout
+        $(".hive_audio").map(function(i,el) { $(el).attr("data-scale", $(el).height()/36.1) })
+        $(".hive_audio .jp-controls").add(".hive_audio .jp-controls *")
+            .css({width:"",height:""})
 
         o.layout()
     };
