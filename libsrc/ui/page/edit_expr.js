@@ -291,7 +291,8 @@ define([
         });
         
         // Automatically update url unless it's an already saved
-        // expression or the user has modified the url manually $('#dia_save #save_title')
+        // expression or the user has modified the url manually 
+        $('#dia_save #save_title')
             .text(expr.title)
             .on('keydown keyup', function(){
                 if ((expr.draft || !(expr.home || expr.created))
