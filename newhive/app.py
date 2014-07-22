@@ -1,4 +1,5 @@
 import sys, copy
+import re
 from werkzeug.routing import Map, Rule, RequestRedirect
 from werkzeug import Request, Response, exceptions, url_unquote
 import jinja2
@@ -85,6 +86,10 @@ def handle(request):
     print(request)
     environ = copy.copy(request.environ)
     prefix, site = split_domain(environ['HTTP_HOST'])
+    # Convert any ip v4 address into a specific dns
+    # site = re.sub('([0-9]+\.){3}[0-9]+','site',site) #//!!
+    # Convert the specified DNS into the shorthand DNS (without search dns)
+    # site = re.sub('(.*)\.(office|cos)\.newhive\.com','\g<1>',site) #//!!
     environ['HTTP_HOST'] = site
     if prefix not in config.live_prefixes:
         request.environ['HTTP_HOST'] = site
