@@ -86,19 +86,44 @@ define([
         if(util.mobile()) o.init_mobile()
     }
 
+    var ideal_aspect = 16./9
+    var landscape = false
+    function do_orient() {
+        $("meta[name=viewport]").prop("content",
+            "width=" + 500 * (landscape ? ideal_aspect : 1))
+        // console.log("orient " + landscape)
+        o.layout()
+    }
+
     o.init_mobile = function(){
-        $(document).ready(function () {
-            var on_orientation = function() {
-                var landscape = win.width() > win.height()
-                $("meta[name=viewport]").prop("content",
-                    "width=" + 500 * (landscape ? ideal_aspect : 1))
-                console.log("orient " + landscape)
-                o.layout()
-            }
+        // From: http://fettblog.eu/blog/2012/04/16/robust-but-hacky-way-of-portraitlandscape-detection/
+        var mql = window.matchMedia("(orientation: portrait)");
+
+        // Add a media query change listener
+        mql.addListener(function(m) {
+            var new_landscape = !(m.matches)
+            if (new_landscape == landscape)
+                return
+            landscape = new_landscape
+            setTimeout(do_orient, 1)
+        });
+
+        // $(document).ready(function () {
+            // var on_orientation = function(ev) {
+            //     console.log("orient " + orientation + " " + ev)
+            //     var new_landscape = (orientation % 180) != 0
+            //     if (new_landscape == landscape)
+            //         return
+            //     // var landscape = win.width() > win.height()
+            //     $("meta[name=viewport]").prop("content",
+            //         "width=" + 500 * (landscape ? ideal_aspect : 1))
+            //     console.log("orient " + landscape)
+            //     o.layout()
+            // }
             // window.ondeviceorientation = on_orientation
             // window.onorientationchange = on_orientation
-            $(window).bind('orientationchange', on_orientation)
-        })
+            // $(window).bind('orientationchange', on_orientation)
+        // })
 
         // TODO-cleanup: make into fake swipe event
         // TODO-polish: ignore events with multiple touches (conflicts with zoom)

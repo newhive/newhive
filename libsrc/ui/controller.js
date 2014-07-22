@@ -55,7 +55,7 @@ define([
         routing.register_state(route_args);
         if (util.mobile()) {
             $("body").addClass('mobile');
-            $('<meta name="viewport" content="width=500">')
+            $('<meta id="viewport" name="viewport" content="width=500">')
                 .appendTo('head')
                  //, initial-scale=' + init_scale +
                 // + ', user-scalable=1"/>').appendTo($("head"));
