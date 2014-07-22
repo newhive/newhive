@@ -1827,7 +1827,9 @@ class Expr(HasSocial):
         for app in self.get('apps',[]):
             app_id = app.get('id', 'app_' + str(app['z']))
             data = app.get('client_data', {})
-            data.update(media=app.get('media'))
+            media = app.get('media')
+            if media:
+                data.update(media=media)
             if app['type'] == 'hive.code':
                 data.update(dfilter(app, ['content', 'url']))
             if app['type'] == 'hive.image':
