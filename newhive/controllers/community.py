@@ -21,7 +21,7 @@ class Community(Controller):
     def recent(self, tdata, request, db_args={}, **args):
         return {
             "cards": self.db.query('#Recent', **db_args),
-            'header': ("ALL Expressions",), 'card_type': 'expr',
+            'header': ("ALL Newhives",), 'card_type': 'expr',
             'title': "NewHive - ALL",
         }
 
@@ -71,7 +71,7 @@ class Community(Controller):
         profile = owner.client_view(viewer=tdata.user)
         return {
             'cards': cards, 'owner': profile, 'card_type':'expr',
-            'title': 'Expressions by ' + owner['name'],
+            'title': 'Newhives by ' + owner['name'],
         }
 
     def expressions_public_tags(self, tdata, request, owner_name=None, db_args={}, **args):
@@ -108,7 +108,7 @@ class Community(Controller):
             "tag_selected": tag_name,
             'owner': profile,
             'entropy': entropy,
-            'title': 'Expressions by ' + owner['name'],
+            'title': 'Newhives by ' + owner['name'],
         }
         if owner.id == tdata.user.id:
             data.update({"tag_entropy": owner.get('tag_entropy', {}).get(tag_name)})
@@ -121,7 +121,7 @@ class Community(Controller):
         cards = self.db.Expr.page(spec, auth='password', **db_args)
         return {
             'cards': cards, 'owner': owner.client_view(), 'card_type':'expr',
-            'title': 'Your Private Expressions',
+            'title': 'Your Private Newhives',
         }
 
     def settings_update(self, tdata, request, owner_name=None, **args):

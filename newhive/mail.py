@@ -391,7 +391,7 @@ class Comment(ExprAction):
     @property
     def message(self): return self.feed.get('text')
 
-    header_message = ['commented', 'on your expression']
+    header_message = ['commented', 'on your newhive']
 
     @property
     def card(self): return self.feed.entity
@@ -406,8 +406,8 @@ class UserStar(ExprAction):
 
 class ExprStar(ExprAction):
     name = 'love'
-    message = "Now they can keep track of your expression and be notified of updates and discussions."
-    header_message = ['loves', 'your expression']
+    message = "Now they can keep track of your newhive and be notified of updates and discussions."
+    header_message = ['loves', 'your newhive']
     @property
     def subject(self):
         return self.feed.initiator.get('name') + ' loves "' + self.feed.entity.get('title') + '"'
@@ -417,8 +417,8 @@ class ExprStar(ExprAction):
 
 class Broadcast(ExprAction):
     name = 'broadcast'
-    message = "Your expression has been republished to their network of listeners."
-    header_message = ['republished', 'your expression']
+    message = "Your newhive has been republished to their network of listeners."
+    header_message = ['republished', 'your newhive']
 
     @property
     def subject(self):
@@ -494,7 +494,7 @@ class SendMail(Mailer):
 class ShareExpr(ExprAction):
 
     name = 'share_expr'
-    header_message = ['has sent', 'you an expression']
+    header_message = ['has sent', 'you a newhive']
     recipient = None
     initiator = None
     sent_to = ['user', 'nonuser']
@@ -526,12 +526,12 @@ class Featured(ExprAction):
     name = 'featured'
     sent_to = ['user']
     unsubscribable = True
-    header_message = ['Congratulations.', 'We featured your expression!']
-    message = 'We added your expression to the featured collection.'
+    header_message = ['Congratulations.', 'We featured your newhive!']
+    message = 'We added your newhive to the featured collection.'
     initiator = None
     recipient = None
     featured_exprs = (None, None)
-    subject = "Congratulations, we featured your expression!"
+    subject = "Congratulations, we featured your newhive!"
     template = "emails/featured"
 
     def send(self, expr):
@@ -554,7 +554,7 @@ class Milestone(Mailer):
             , 'server_url': abs_url()
             }
 
-        self.subject = u'Your expression "{}" has {} views'.format(expr['title'], milestone)
+        self.subject = u'Your newhive "{}" has {} views'.format(expr['title'], milestone)
         sendgrid_args = {'expr_id': expr.id, 'milestone': milestone}
 
         self.send_mail(context, unique_args=sendgrid_args)
@@ -568,7 +568,7 @@ class SignupRequest(Mailer):
     header_message = ['<span class="active">Thank you</span> for signing', 'up for a beta account. :)']
     message = "We are getting NewHive ready for you.<br/>" + \
               "Expect to get a beta invitation in your inbox ASAP.<br/>" + \
-              "We look forward to seeing your expressions!<br/><br/>" + \
+              "We look forward to seeing your newhives!<br/><br/>" + \
               "Talk to you soon,<br/><b>The NewHive team</b>"
 
     def send(self, email, name, unique_args):

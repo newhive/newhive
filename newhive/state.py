@@ -589,7 +589,7 @@ class User(HasSocial):
     @property
     @cached
     def my_stars(self):
-        """ Feed records indicating what expressions a user likes and who they're listening to """
+        """ Feed records indicating what newhives a user likes and who they're listening to """
         return list(self.db.Star.search({ 'initiator': self.id }, sort=[('created', -1)]))
 
     @property
@@ -2314,8 +2314,8 @@ class Broadcast(Feed):
 
     def create(self):
         if self.entity['owner'] == self['initiator']:
-            raise "You mustn't broadcast your own expression"
-        if type(self.entity) != Expr: raise "You may only broadcast expressions"
+            raise "You mustn't broadcast your own newhive"
+        if type(self.entity) != Expr: raise "You may only broadcast newhives"
         if self.db.Broadcast.find({ 'initiator': self['initiator'], 'entity': self['entity'] }): return True
         return super(Broadcast, self).create()
 
@@ -2326,7 +2326,7 @@ class Remix(Feed):
     def create(self):
         # if self.entity['owner'] == self['initiator']:
         #     raise "You mustn't remix your own expression"
-        if type(self.entity) != Expr: raise "You may only remix expressions"
+        if type(self.entity) != Expr: raise "You may only remix newhives"
         # if self.db.Remix.find({ 'initiator': self['initiator'], 'entity': self['entity'] }): return True
         new_expr = self.get('new_expr')
         if new_expr:

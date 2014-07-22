@@ -602,7 +602,7 @@ Hive.embed_code = function(element) {
     
 //     // setInterval(Hive.set_draft, 5000);
 //     // try { Hive.set_draft(); }
-//     // catch(e) { return "If you leave this page any unsaved changes to your expression will be lost."; }
+//     // catch(e) { return "If you leave this page any unsaved changes to your newhive will be lost."; }
 //     // var draft = Hive.get_draft();
 //     // if(draft) Hive.Exp = draft;
 //     // Hive.get_draft = function() {

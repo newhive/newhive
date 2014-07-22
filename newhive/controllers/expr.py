@@ -16,7 +16,7 @@ class Expr(ModelController):
 
         expr = self.db.Expr.fetch(expr_id)
         if not expr:
-            resp = { 'error': 'Expression not found.' }
+            resp = { 'error': 'Newhive not found.' }
             return self.serve_json(response, resp)
         
         expr.delete()
@@ -47,7 +47,7 @@ class Expr(ModelController):
             num += 1
 
     def unused_name(self, tdata, request, response, **args):
-        """ Returns an unused expression name matching the base name provided """
+        """ Returns an unused newhive name matching the base name provided """
 
         resp = {}
         name = request.form.get("name") or request.args.get("name","")
@@ -175,7 +175,7 @@ class Expr(ModelController):
                     res = tdata.user.expr_create(upd)
                 self.db.ActionLog.create(tdata.user, "new_expression_save", data={'expr_id': res.id, 'overwrite': True})
             else:
-                 #'An expression already exists with the URL: ' + upd['name']
+                 #'A newhive already exists with the URL: ' + upd['name']
                 return self.serve_json(response, { 'error' : 'overwrite' })
                 # self.db.ActionLog.create(tdata.user, "new_expression_save_fail", data={'expr_id': res.id, 'error': 'overwrite'})
 

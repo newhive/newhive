@@ -30,11 +30,11 @@ facebook_flow_exhange_error = 'Either something went wrong with facebook login o
 milestone_message = "You can always keep track of the number of views by checking the eyeball icon on your expressions."
 
 email_subscription_ui = {
-    'comment': 'People comment on my expression'
+    'comment': 'People comment on my newhive'
     , 'listen': 'People are listening to me'
-    , 'love': 'People love my expression'
-    , 'broadcast': 'People republish my expression'
-    , 'share_expr': 'People share an expression with me'
-    , 'milestone': "Updates about my expression's views"
-    , 'featured': "NewHive features my expression"
+    , 'love': 'People love my newhive'
+    , 'broadcast': 'People republish my newhive'
+    , 'share_expr': 'People share a newhive with me'
+    , 'milestone': "Updates about my newhive's views"
+    , 'featured': "NewHive features my newhive"
     }

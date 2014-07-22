@@ -41,7 +41,7 @@ class DatabaseCopier(object):
         print "copy {expr[title]} - {expr.url} by {expr[owner_name]} updated at {expr[updated]}".format(expr=expr_from)
         print "from {} to {}".format(self.db_from.mdb.name, self.db_to.mdb.name)
         if expr_to:
-            print "Expression already exists at destination with updated time {expr[updated]}".format(expr=expr_to)
+            print "Newhive already exists at destination with updated time {expr[updated]}".format(expr=expr_to)
 
         if raw_input("y/n: ") == "y":
             self.db_to.Expr.create(expr_from)

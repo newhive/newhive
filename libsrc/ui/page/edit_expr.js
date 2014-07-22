@@ -172,7 +172,7 @@ define([
 
         o.controller.set_exit_warning(
             "If you leave this page any unsaved "
-                + "changes to your expression will be lost."
+                + "changes to your newhive will be lost."
             , function(){ return o.exit_safe } )
         o.exit_safe = true
         // o.save_safe = true
@@ -291,8 +291,7 @@ define([
         });
         
         // Automatically update url unless it's an already saved
-        // expression or the user has modified the url manually
-        $('#dia_save #save_title')
+        // expression or the user has modified the url manually $('#dia_save #save_title')
             .text(expr.title)
             .on('keydown keyup', function(){
                 if ((expr.draft || !(expr.home || expr.created))

@@ -1,11 +1,11 @@
 {% macro share_button(count=0) %}
   <div id="btn_share" class="hoverable nav_icon has_count" data-count="{{count}}" >
-    <img src='{{ 'skin/1/share.png'|asset_url }}' class='hoverable ' title="Share This Expression">
+    <img src='{{ 'skin/1/share.png'|asset_url }}' class='hoverable ' title="Share This Newhive">
   </div>
 {%- endmacro %}
 
 {% macro star_button(entity, count=0, active=False, logged_in=True,
-    title={"active": "Stop liking this expression", "inactive": "Like this expression"}, user_is_owner=False) %}
+    title={"active": "Stop liking this newhive", "inactive": "Like this newhive"}, user_is_owner=False) %}
   <div id="btn_star" data-count="{{count}}" data-title-active="{{title.active}}" data-title-inactive="{{title.inactive}}"
       class="hoverable nav_icon has_count {{'starred ' if active}}"
       title={% if not user_is_owner %}"{{ title.active if active else title.inactive}}"{% else %}"Likes"{% endif %}

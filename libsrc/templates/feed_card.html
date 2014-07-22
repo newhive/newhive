@@ -123,7 +123,7 @@
             love{{ 's' if feed['initiator'] != user.id }}
           {% endif %}
         {% endif %}
-        {{ "created a new expression" if feed.class_name == "NewExpr" }} 
+        {{ "created a new newhive" if feed.class_name == "NewExpr" }} 
         {{ "updated" if feed.class_name == "UpdatedExpr" }} 
         {{ "broadcast" if feed.class_name == 'Broadcast' }}
       </p>
