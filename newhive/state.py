@@ -264,7 +264,7 @@ class Collection(object):
 
             # if at and sort: spec[sort] = { '$lt' if order == -1 else '$gt': at }
 
-            res = self.search(spec, sort=[(sort, order)], skip=at, **args)
+            res = self.search(spec, sort=[(sort, order)], filter=filter, skip=at, **args)
 
             # if there's a limit, collapse to list, get sort value of last item
             if limit:
@@ -299,7 +299,7 @@ class Collection(object):
                 else:
                     return []
 
-            res = self.search(sub_spec)
+            res = self.search(sub_spec, filter=filter)
 
             return res
 
