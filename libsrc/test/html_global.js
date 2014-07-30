@@ -1,7 +1,12 @@
+// http://duke:3737/home/admin/test_dialogs
+
 // to run this:
-// curl(["test/html_global"],function(){})
+// curl(["test/html_global"],function(m){m.render()})
+
 define([
-    'sj!templates/activity.html'
+    'sj!templates/stringjay_test.html'
+
+    ,'sj!templates/activity.html'
     ,'sj!templates/card_master.html'
     ,'sj!templates/cards.html'
     ,'sj!templates/collections.html'

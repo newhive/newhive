@@ -275,11 +275,24 @@ define(['browser/js', 'module'],
 	function get_template(context) {
 		return context[2].template;
 	}
+	function current_node(context) {
+		return get_template(context).current_node
+	}
+	function prev_if_node(node) {
+		var if_node = null
+		while (node = node.prev_node) {
+			if (is_if_node(node)) {
+				if_node = node;
+				break;
+			}
+		}
+		return if_node;
+	}
 	function is_if_node(node) {
 		if (node.type != "function" || node.value.length != 1)
 			return false;
 		return (node.value[0] == "if" || node.value[0] == "unless"
-			 || node.value[0] == "contains");
+			 || node.value[0] == "contains" || node.value[0] == "elif");
 	}
 
 	function render_function(context, node) {
@@ -293,6 +306,7 @@ define(['browser/js', 'module'],
 				return render_node(context, node.block) });
 		args = args.concat( node.arguments.map(function(n){
 			return render_node(context, n) }) );
+		get_template(context).current_node = node;
 		var result = fn.apply(null, args);
 		// Save the result of the function call. Actually just save whether there 
 		// WAS a result ('true') or not ('')
@@ -301,7 +315,7 @@ define(['browser/js', 'module'],
 	}
 
 	function render_node(context, node){
-		get_template(context).render_node = node;
+		get_template(context).current_node = node;
 		if(node.constructor == Array)
 			return node.map(function(n){ return render_node(context, n) })
 				.reduce(util.op['+'], '');
@@ -408,26 +422,34 @@ define(['browser/js', 'module'],
 	context_base['false'] = false;
 	context_base['null'] = null;
 	context_base['if'] = function(context, block, condition, equals){
+		var node = current_node(context)
 		if(typeof equals != 'undefined') condition = (condition == equals);
-		return condition ? block(context) : '';
+		var result = (condition ? block(context) : '');
+		node.if_result = condition ? true : false;
+		return result;
 	};
+
 	context_base['else'] = function(context, block){
-		var if_node = null
-		var node = get_template(context).render_node;
-		while (node = node.prev_node) {
-			if (is_if_node(node)) {
-				if_node = node;
-				break;
-			}
+		return context_base['elif'](context, block, true)
+	};
+	context_base['elif'] = function(context, block, condition){
+		var node = current_node(context)
+			,if_node = prev_if_node(node)
+		 	,if_result = !if_node || if_node.if_result
+			,result = ''
+		node.if_result = if_result
+		if (!if_result && condition) {
+			result = block(context);
+			node.if_result = true;
 		}
-		if (if_node && if_node.result == '') return block(context);
-		// else warn("No matching if");
-		return '';
+		// if (!if_node) warn("No matching if");
+		return result;
 	};
 	// necessary without () grouping, because NOTing an argument isn't possible
 	context_base['unless'] = function(context, block, condition, equals){
 		if(typeof equals != 'undefined') condition = (condition == equals);
-		return condition ? '' : block(context);
+		// return condition ? '' : block(context);
+		return context_base['if'](context, block, !condition)
 	};
 	context_base['for'] = function(context, block, iteratee, var_name){
 		if(!iteratee || (iteratee.constructor != Array &&
@@ -481,7 +503,7 @@ define(['browser/js', 'module'],
 		if(typeof do_debugger == "undefined") do_debugger = true;
 		//if(do_debugger) debugger;
         //     throw o.render_error('debug break', context,
-		  	   // get_template(context).render_node);
+		  	   // current_node(context));
 		// possibly add rendering context in invisible div
 		return '<div>DEBUG inserted</div><div style="display:none">' + '' + '</div>';
 	};

@@ -1,0 +1,84 @@
+{# test lives at: http://duke:3737/home/admin/test_dialogs #}
+<div class="standard dialog test">
+    <h1> IF / ELSE test </h1>
+
+    <p>0: {<if 0}
+        Fail0
+    {>}{<elif 0}
+        Fail1
+    {>}{<elif 0}
+        Fail2
+    {>}{<else}
+        Pass
+    {>}</p>
+
+    <p>1: {<if 0}
+        Fail0
+    {>}{<elif 0}
+        Fail1
+    {>}{<elif 1}
+        Pass
+    {>}{<else}
+        Fail3
+    {>}</p>
+
+    <p>2: {<if 0}
+        Fail0
+    {>}{<elif 1}
+        Pass
+    {>}{<elif 0}
+        Fail2
+    {>}{<else}
+        Fail3
+    {>}</p>
+
+    <p>3: {<if 0}
+        Fail0
+    {>}{<elif 1}
+        Pass
+    {>}{<elif 1}
+        Fail2
+    {>}{<else}
+        Fail3
+    {>}</p>
+
+    <p>4: {<if 1}
+        Pass
+    {>}{<elif 0}
+        Fail1
+    {>}{<elif 0}
+        Fail2
+    {>}{<else}
+        Fail3
+    {>}</p>
+
+    <p>5: {<if 1}
+        Pass
+    {>}{<elif 0}
+        Fail1
+    {>}{<elif 1}
+        Fail2
+    {>}{<else}
+        Fail3
+    {>}</p>
+
+    <p>6: {<if 1}
+        Pass
+    {>}{<elif 1}
+        Fail1
+    {>}{<elif 0}
+        Fail2
+    {>}{<else}
+        Fail3
+    {>}</p>
+
+    <p>7: {<if 1}
+        Pass
+    {>}{<elif 1}
+        Fail1
+    {>}{<elif 1}
+        Fail2
+    {>}{<else}
+        Fail3
+    {>}</p>
+</div>
