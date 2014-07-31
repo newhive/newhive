@@ -278,6 +278,11 @@ define(['browser/js', 'module'],
 	function current_node(context) {
 		return get_template(context).current_node
 	}
+	function set_current_node(context, node) {
+		var prev = current_node(context)
+		get_template(context).current_node = node
+		return prev
+	}
 	function prev_if_node(node) {
 		var if_node = null
 		while (node = node.prev_node) {
@@ -306,7 +311,6 @@ define(['browser/js', 'module'],
 				return render_node(context, node.block) });
 		args = args.concat( node.arguments.map(function(n){
 			return render_node(context, n) }) );
-		get_template(context).current_node = node;
 		var result = fn.apply(null, args);
 		// Save the result of the function call. Actually just save whether there 
 		// WAS a result ('true') or not ('')
@@ -315,25 +319,31 @@ define(['browser/js', 'module'],
 	}
 
 	function render_node(context, node){
-		get_template(context).current_node = node;
-		if(node.constructor == Array)
-			return node.map(function(n){ return render_node(context, n) })
+		var prev_node = set_current_node(context, node)
+			,result = ''
+		
+		if(node.constructor == Array) {
+			result = node.map(function(n){ return render_node(context, n) })
 				.reduce(util.op['+'], '');
-		else if(node.type == 'literal') {
+		} else if(node.type == 'literal') {
 			if (typeof(node.value) == "string") {
 				var str = node.value.replace(/^\s*\n\s*/, "");
 				str = str.replace(/\s*\n\s*$/, "");
-				return str;
-			}
-			return node.value;
+				result = str;
+			} else
+				result = node.value;
+		} else if(node.type == 'path') {
+			result = resolve(context, node.value, node.absolute, node.up_levels);
+		} else if(node.type == 'function') {
+			result = render_function(context, node, false);
+		} else if(node.type == 'comment') { 
+			result = '';
+		} else {
+			throw o.render_error('unrecognized node: ' + JSON.stringify(node),
+				context, node);
 		}
-		else if(node.type == 'path')
-			return resolve(context, node.value, node.absolute, node.up_levels);
-		else if(node.type == 'function')
-			return render_function(context, node, false);
-		else if(node.type == 'comment') return '';
-		else throw o.render_error('unrecognized node: ' + JSON.stringify(node),
-			context, node);
+		set_current_node(context, prev_node);
+		return result;
 	}
 
 	o.render_error = function(msg, context, node){
@@ -421,11 +431,15 @@ define(['browser/js', 'module'],
 	context_base['true'] = true;
 	context_base['false'] = false;
 	context_base['null'] = null;
+	// necessary without () grouping, because NOTing an argument isn't possible
+	context_base['unless'] = function(context, block, condition, equals){
+		if(typeof equals != 'undefined') condition = (condition == equals);
+		return context_base['if'](context, block, !condition)
+	};
 	context_base['if'] = function(context, block, condition, equals){
-		var node = current_node(context)
 		if(typeof equals != 'undefined') condition = (condition == equals);
 		var result = (condition ? block(context) : '');
-		node.if_result = condition ? true : false;
+		current_node(context).if_result = condition ? true : false;
 		return result;
 	};
 
@@ -437,19 +451,14 @@ define(['browser/js', 'module'],
 			,if_node = prev_if_node(node)
 		 	,if_result = !if_node || if_node.if_result
 			,result = ''
+		// if (!if_node) warn("No matching if");
+		// node.if_result is true iff ANY previous if in the block evaluated true.
 		node.if_result = if_result
 		if (!if_result && condition) {
 			result = block(context);
 			node.if_result = true;
 		}
-		// if (!if_node) warn("No matching if");
 		return result;
-	};
-	// necessary without () grouping, because NOTing an argument isn't possible
-	context_base['unless'] = function(context, block, condition, equals){
-		if(typeof equals != 'undefined') condition = (condition == equals);
-		// return condition ? '' : block(context);
-		return context_base['if'](context, block, !condition)
 	};
 	context_base['for'] = function(context, block, iteratee, var_name){
 		if(!iteratee || (iteratee.constructor != Array &&
