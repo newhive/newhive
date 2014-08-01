@@ -574,33 +574,27 @@ define([
 
         // updates embed links based on selection
         $("#dia_embed input[type=checkbox]").on("change", function(ev) {
-            var host = '' 
-                , params = ''
+            var host = context.config.server_url
+                , params = ["template=embed"]
                 , link = ''
                 , embed_url = ''
                 , clean = ''
-                , any_checked = false
-            host = context.config.server_url
-            params = "&clean="
-            if ($("#include_social").is(":checked")){
-                any_checked = true
-                clean += "+social"
-            }
-            if ($("#include_collection").is(":checked")){
-                any_checked = true
-                clean += "+collection"
-            }
             if ($("#include_logo").is(":checked")){
-                any_checked = true
                 clean += "+logo"
             }
-            if (!any_checked)
-                params= ""
+            if ($("#include_collection").is(":checked")){
+                params.push(location.search.slice(1))
+                clean += "+collection"
+            }
+            if ($("#include_social").is(":checked")){
+                clean += "+social"
+            }
+            if (clean)
+                params.push("clean=" + clean.slice(1))
 
-            params = params.concat(clean.slice(1))
-
+            params = (params.length) ? "?" + params.join("&amp;") : ''
             link = util.urlize(host).replace(/\/$/,"") + 
-                window.location.pathname + '?template=embed';      
+                window.location.pathname;
             embed_url ="<iframe src='" + link + params + "' " +
                 "style='width: 100%; height: 100%' marginwidth='0' " +
                 "marginheight='0' frameborder='0' vspace='0' hspace='0'></iframe>"

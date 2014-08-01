@@ -4,10 +4,10 @@ from os.path import join
 parent_path = os.path.abspath(join(os.path.dirname(__file__), '..'))
 sys.path.append(parent_path)
 
-from newhive.db_tools import *
+from newhive.db_tools import snapshot_reset, snapshot_redo_collection
 
-snapshot_reset(recent_snapshot_fails(7), redo=True)
+snapshot_reset(recent_snapshot_fails(7), run_local=True)
 
 if False:
-    snapshot_redo_collection(username='zach')
-    snapshot_redo_collection(username='cara')
+    snapshot_redo_collection(username='zach', redo=True)
+    snapshot_redo_collection(username='cara', redo=True)

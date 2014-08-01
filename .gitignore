@@ -15,3 +15,4 @@ compiled.*
 *.DS_Store
 /log/*.txt
 newhive.log
+.pivrc
