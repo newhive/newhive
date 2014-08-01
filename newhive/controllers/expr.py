@@ -3,7 +3,7 @@ import os, json, cgi, base64, re, time
 from pymongo.errors import DuplicateKeyError
 from functools import partial
 
-from newhive.utils import dfilter, now, get_embedly_oembed, tag_string, set_trace
+from newhive.utils import dfilter, now, get_embedly_oembed, tag_string
 from newhive.utils import is_number_list
 from newhive.controllers.controller import ModelController
 
