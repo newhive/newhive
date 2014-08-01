@@ -23,8 +23,8 @@ def dbs(name):
 
 # returns cursor with expressions at most %days% old which have > 1 fail count
 def recent_snapshot_fails(days=1):
-    return db.Expr.search({ 'snapshot_fails':{'$gt':1}
-        ,'updated':{'$gt': now() - days*86400} })
+    return db.Expr.search( mq().bt('snapshot_fails', 5, 12)
+        .gt('updated', now() - days*86400) )
 
 # resets the fail count of given list or cursor of expressions
 # param{run_local}: if True, take the snapshot in the current thread
