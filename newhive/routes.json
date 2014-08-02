@@ -188,6 +188,27 @@
         "private": true
     },
 
+    "collections_grid_cat": {
+        "page_route": "/<owner_name>/profile/cat/<tag_name>",
+        "api_route": "/api/feed/expressions/cat/<owner_name>/<tag_name>",
+        "controller": "community",
+        "method": "expressions_public_tags",
+        "search_query": "@<owner_name> #<tag_name>",
+        "client_method": "grid",
+        "include_tags": true,
+        "include_categories": true
+    },
+    "collections_grid": {
+        "page_route": "/<owner_name>/profile/cat",
+        "api_route": "/api/feed/expressions/cat/<owner_name>",
+        "controller": "community",
+        "method": "expressions_public_tags",
+        "search_query": "@<owner_name> #<tag_name>",
+        "client_method": "grid",
+        "include_tags": true,
+        "include_categories": true
+    },
+
     "expressions_comments": {
         "page_route": "deprecated",
         "page_route": "/<owner_name>/profile/comments",
@@ -242,6 +263,7 @@
         "method": "tag_order",
         "require_login": true
     },
+
     "user_update": {
         "page_route": "/<owner_name>/profile/edit",
         "api_route": "/api/user/update/<owner_name>",
@@ -448,8 +470,7 @@
     },
     "test_dialogs": {
         "page_route": "/home/admin/test_dialogs",
-        "client_method": "test_dialogs",
-        "require_login": true
+        "client_method": "test_dialogs"
     },
     "empty": "-----------------------------------------",
     "empty": "Dev tools.",

@@ -28,6 +28,7 @@
           {<if editable}
             <form class="tag_order" {form_attrs "tag_order"} method="POST">
               <input name="tag_order" type="hidden" value="" />
+              <input name="categories" type="hidden" value="{route.include_categories}" />
               {<unless (len tag_list)}
                 <div class="centered layered">
                   {<if (len extra_tags)}

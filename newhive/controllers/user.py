@@ -1,4 +1,4 @@
-import httplib2, urllib, re
+import httplib2, urllib, re, json
 from newhive import auth, config, mail
 from newhive.controllers.controller import ModelController
 from newhive.utils import log_error, dfilter, lget, abs_url, junkstr
@@ -42,16 +42,21 @@ class User(ModelController):
         if not user or not user.logged_in:
             return self.serve_json(response, { 'error': 'error'})
 
-        user.update(ordered_tags=tag_order)
-
         update = {}
-        (update['tagged_ordered'], update['tagged']) = user.get_tags(True)
+        if (request.form.get('categories')):
+            user.update(ordered_cats=tag_order)
+            (update['tagged_ordered'], update['tagged']) = user.get_cats()
+        else:
+            user.update(ordered_tags=tag_order)
+            (update['tagged_ordered'], update['tagged']) = user.get_tags(True)
 
         return self.serve_json(response, update)
 
     def collection_order(self, tdata, request, response, **args):
-        new_order = request.form.get('new_order').split(",")
-        new_order = [t for t in new_order if t != '']
+        is_category = (request.form.get('type') == 'categories')
+        new_order = json.loads(request.form.get('new_order'))
+        # new_order = [t for t in new_order if t != '']
+
         tag_name = request.form.get('tag_name')
         deletes = int(request.form.get('deletes'))
         user = tdata.user
@@ -59,36 +64,58 @@ class User(ModelController):
         if not user or not user.logged_in or not tag_name:
             return self.serve_json(response, { 'error': 'error'})
 
-        tagged = user.get('tagged', {})
-        old_order = user.get_tag(tag_name, force_update=True)
+        if is_category:
+            old_order = user.get_category_collections(tag_name)
+        else:
+            tagged = user.get('tagged', {})
+            old_order = user.get_tag(tag_name, force_update=True)
+
         new_order += old_order[len(new_order) + deletes:]
 
-        # remove the tag on owned expression
-        if tag_name not in ['remixed', 'Gifwall']:
-            removed = set(old_order) - set(new_order)
-            for expr_id in removed:
-                expr = self.db.Expr.fetch(expr_id)
-                if expr and expr.owner.id == user.id:
-                    expr.update(updated=False, tags=re.sub(
-                        ' ?#?' + tag_name + ' ?',' ',expr.get('tags','')).strip())
-        if len(new_order):
-            tagged[tag_name] = new_order
+        if is_category:
+            if len(new_order):
+                user.set_category_collections(tag_name, new_order)
+            else:
+                user.remove_category(tag_name)
         else:
-            del tagged[tag_name]
-        user.update(tagged=tagged)
+            # remove the tag on owned expression
+            if tag_name not in ['remixed', 'Gifwall']:
+                removed = set(old_order) - set(new_order)
+                for expr_id in removed:
+                    expr = self.db.Expr.fetch(expr_id)
+                    if expr and expr.owner.id == user.id:
+                        expr.update(updated=False, tags=re.sub(
+                            ' ?#?' + tag_name + ' ?',' ',expr.get('tags','')).strip())
+            if len(new_order):
+                tagged[tag_name] = new_order
+            else:
+                del tagged[tag_name]
+            user.update(tagged=tagged)
 
         return self.serve_json(response, True)
 
     def add_to_collection(self, tdata, request, response, **args):
-        expr_id = request.form.get('expr_id')
-        expr = self.db.Expr.fetch(expr_id)
         tag_name = request.form.get('tag_name')
-        user = tdata.user
+        if request.form.get('type') == "categories":
+            user_id = request.form.get('user_id')
+            user = self.db.User.fetch(user_id)
+            col_name = request.form.get('col_name')
+            if not user or not tdata.user.logged_in or not tag_name or not col_name:
+                return self.serve_json(response, { 'error': 'error'})
 
-        if not user or not user.logged_in or not tag_name or not expr:
-            return self.serve_json(response, { 'error': 'error'})
+            col = user.make_collection(col_name)
 
-        user.add_to_collection(expr_id, tag_name)
+            tdata.user.add_to_category(tag_name, col)
+        else:
+            user = tdata.user
+            expr_id = request.form.get('expr_id')
+            expr = self.db.Expr.fetch(expr_id)
+
+            if not user or not user.logged_in or not tag_name or not expr:
+                return self.serve_json(response, { 'error': 'error'})
+
+            user.add_to_collection(expr_id, tag_name)
+
         return self.serve_json(response, True)
 
     def do_password_reset(self, tdata, request, response, owner_name=None, **args):

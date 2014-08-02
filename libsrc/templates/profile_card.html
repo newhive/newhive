@@ -37,8 +37,21 @@
             <img class="exprs" src='{asset "skin/nav/expressions.png"}'/> 
             {<if expressions}{thousands expressions}{>}</a
           ><div class='spacer inline'></div>
-          {# tags #}
           {<if (not flags.mobile)}
+            {# categories #}
+            {# we may flag this somehow, but for now, only display for root #}
+            {<if (and (eq user.name "root") (eq owner.name "root"))}
+              <a class='nav_button inline cats' title="Categories"
+                  {<if (eq route_name "collections_grid_cat")}
+                    { anchor_attrs "collections_grid_cat" "owner_name" owner.name 
+                      "tag_name" tag_selected}>
+                  {>}{<else}
+                    { anchor_attrs "collections_grid" "owner_name" owner.name }>
+                  {>}
+                <div class="cats icon{<if (route.include_categories)} on{>}"></div></a
+              ><div class='spacer inline'></div>
+            {>}
+            {# tags #}
             <a class='nav_button inline tags' title="Tags"
                 {<if (or (eq route_name "expressions_tag_private")
                          (eq route_name "expressions_public_grid_tags"))}
@@ -72,7 +85,7 @@
               {<if (or (eq route_name "expressions_tag")
                        (eq route_name "expressions_public_grid_tags"))}
                 { anchor_attrs "expressions_tag_private" "owner_name" user.name 
-                "tag_name" tag_selected "entropy" tag_entropy}>
+                "tag_name" tag_selected "entropy" tag_entropy }>
               {>}{<else}
                 { anchor_attrs "expressions_private" "owner_name" user.name }>
               {>}
@@ -80,6 +93,13 @@
                 {<if (or (eq route_name "expressions_private")
                     (eq route_name "expressions_tag_private"))} on{>}'></div></a
           {>}
+          {# + to category #}
+          {# we may flag this somehow, but for now, only display for root #}
+          {<if (and (eq user.name "root") (tag_selected) (not route.include_categories))}
+            ><div class='spacer inline'></div>
+            <div class="plus_cats icon" title="Add to Category..."></div
+          {>}
+
         ></div>
       </div>
     </div>

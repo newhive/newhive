@@ -1,4 +1,7 @@
-{<for cards}
+{<if (not cards_at)}
+  {set cards_at 0}
+{>}
+{<for cards "card_num"}
   {<if type "user"}
     <div class='user card' id='card_{id}' draggable='false'>
       {|templates/user_card.html}
@@ -6,7 +9,8 @@
   {>}
   {<if type "expr"}
     <div class='expr activity card hoverable
-    {<if auth} unlisted{>}' id='card_{id}' draggable='false'>
+    {<if auth} unlisted{>}' id='card_{id}' draggable='false' 
+      data-num={plus card_num cards_at}>
       {<if layout "grid"}
         {|templates/expr_card_feed.html}
       {>}

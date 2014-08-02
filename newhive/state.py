@@ -502,6 +502,21 @@ class HasSocial(Entity):
         return self.db.Broadcast.search({ 'entity': self.id }).count()
 
 
+######## Categories
+def make_collection(username, tag):
+    if not isinstance(username, basestring):
+        username = username.get('name')
+    if not isinstance(username, basestring):
+        raise Error("invalid username")
+    return { 'username': username, 'tag': tag }
+
+def make_category(name):
+    return { 'name': name, 'collections': [] }
+
+def add_to_category(category, collection):
+    category['collections'] += [collection]
+################
+
 @register
 class User(HasSocial):
     cname = 'user'
@@ -609,6 +624,61 @@ class User(HasSocial):
 
     @property
     def broadcast_ids(self): return [i['entity'] for i in self.broadcast]
+
+    ##################### Categories
+    def get_cats(self):
+        # sort reordered tags to front of list
+        ordered_tags = self.get('ordered_cats', [])
+        # concat the lists and possibly the empty tag_name
+        all_tags = (ordered_tags + 
+            [x for x in self.category_names() if x not in ordered_tags])
+        return (len(ordered_tags), all_tags)
+
+    def categories(self, at=0, limit=0):
+        return self.get('categories', [])[at:limit + at if limit else None]
+
+    def category_names(self, at=0, limit=0):
+        return [x.get('name') for x in self.categories(at=at, limit=limit)]
+
+    # def categories_ordered(self):
+    #     cats = self.category_names()
+    #     return cats
+
+    def get_category(self, name, force=False):
+        categories = filter(lambda c: c.get('name') == name, self.categories())
+        if categories: return categories[0]
+        if force:
+            category = make_category(name)
+            self.add_category(category)
+            return category
+        return None
+
+    def add_category(self, cat):
+        cats = self.categories() + [cat]
+        self.update(updated=False, categories=cats)
+
+    def remove_category(self, cat):
+        cats = filter(lambda c: c.get('name') != cat, self.categories())
+        self.update(updated=False, categories=cats)
+
+    def add_to_category(self, cat_name, collection):
+        category = self.get_category(cat_name, force=True)
+        add_to_category(category, collection)
+        self.update(updated=False, categories=self.categories())
+
+    def get_category_collections(self, name):
+        res = self.get_category(name, force=True)
+        return res.get('collections')
+
+    def set_category_collections(self, name, collections):
+        res = self.get_category(name, force=True)
+        res['collections'] = collections
+        self.update(updated=False, categories=self.categories())
+
+    # convenience
+    def make_collection(self, col_name):
+        return make_collection(self, col_name)
+    #####################
 
     @property
     def tagged(self):
@@ -1170,9 +1240,12 @@ class User(HasSocial):
         if special.has_key("tagged"):
             # dict.update(user, { "tagged": self.get('tagged', {}).keys() })
             #!! TODO-perf: remove after we migrate to run on all users
-            self.calculate_tags()
+            # self.calculate_tags()
             update = {}
             (update['tagged_ordered'], update['tagged']) = self.get_tags(True)
+            (cats_ordered, categories) = self.get_cats()
+            if len(categories):
+                (update['cats_ordered'], update['categories']) = (cats_ordered, categories)
             dict.update(user, update)
         if special.has_key("mini_expressions") and g_flags['mini_expressions']:
             exprs = self.get_top_expressions(g_flags['mini_expressions'])

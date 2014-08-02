@@ -358,8 +358,10 @@ define(['browser/js', 'module'],
 		var ast = parse(template_src);
 		function template(data){
 			if(!data) data = {};
-			data.template = template;
-			var stack = [ context_base, user_context, data ];
+			if(!(data instanceof Array))
+				data = [data]
+			data.map( function(d) { d.template = template; } )
+			var stack = [ context_base, user_context ].concat(data);
 			return resolve(stack, ['after_render'], false, 0)(
 				render_node(stack, ast) );
 		}

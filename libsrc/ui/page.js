@@ -203,6 +203,13 @@ define([
             user.tagged.slice(user.tagged_ordered);
         user.tag_list = 
             user.tagged.slice(0, user.tagged_ordered);
+            
+        user.categories = user.categories || []
+        user.cats_ordered = user.cats_ordered || 0
+        user.extra_cats = 
+            user.categories.slice(user.cats_ordered);
+        user.cat_list = 
+            user.categories.slice(0, user.cats_ordered);
     };
 
     o.render_new_cards = function(data){
@@ -336,56 +343,76 @@ define([
 
     var local_attach_handlers = function(){
         // Add expression to collection
-        $(".plus_menu").unbind('click').on('click', function(e) {
-            if (0 == $(".dialog.add_to_collection").length) {
-                $('#site').append(collections_template(context.page_data));
-                o.dia_collections = dialog.create(".dialog.add_to_collection", {});
-                var new_tags_autocomplete = false;
-                if (new_tags_autocomplete) {
-                    var all_tags = context.user.tagged.slice(0); // clone
-                    all_tags.sort();
-                    $(".dialog.add_to_collection .tag_name").autocomplete({
-                        source: all_tags,
-                    });
-                }
+        var add_to_collection = function(category) { return function(e) {
+            var dialog_selector = ".dialog.add_to_collection." + category
+                , dialogs = $(dialog_selector)
+                , dia = dialogs.data("dialog")
+            if (! dia) {
+                $('#site').append(collections_template([
+                    context.page_data
+                    , {categories: category == "categories"}
+                ]));
+                dia = dialog.create(dialog_selector, {});
+                // var new_tags_autocomplete = false;
+                // if (new_tags_autocomplete) {
+                //     var all_tags = context.user.tagged.slice(0); // clone
+                //     all_tags.sort();
+                //     $(".dialog.add_to_collection .tag_name").autocomplete({
+                //         source: all_tags,
+                //     });
+                // }
             }
-            var form = $('.dialog.add_to_collection form')
+
+            var form = $(dialog_selector + " form")
                 ,el_tag_name = form.find('input[name=tag_name]')
-            form.off('after_submit').on('after_submit', o.dia_collections.close)
-            o.dia_collections.open();
-            var submit_add_to_collection = function(tag_name) {
-                el_tag_name.val(tag_name)
-                form.submit()
-            };
+
+            form.find('input[name=type]').val(category)
+            form.off('after_submit').on('after_submit', dia.close)
             var update_text = function (){
-                var text = $(".dialog.add_to_collection .tag_name")
+                var text = $(dialog_selector + " .tag_name")
                     ,val = $(text).val()
                     ,val_filtered = val.replace(/[^a-z0-9\_]+/i, '').toLowerCase()
                 ;
                 if(val != val_filtered) $(text).val( val_filtered );
-                $(".dialog.add_to_collection .tag_new")
+                $(dialog_selector + " .tag_new")
                     .text($(text).val()).showshow().addClass("tag_15");
                 if ('' == $(text).val())
-                    $(".dialog.add_to_collection .tag_new").hidehide();
+                    $(dialog_selector + " .tag_new").hidehide();
                 el_tag_name.val(val_filtered)
             }
-            $(".dialog.add_to_collection .tag_name")
+            $(dialog_selector + " .tag_name")
                 .bind_once('keyup', update_text)
-            $(".dialog.add_to_collection .tag_list .tag_label").
+            var submit_add_to_collection = function(tag_name) {
+                el_tag_name.val(tag_name)
+                form.submit()
+            };
+            $(dialog_selector + " .tag_list .tag_label").
                 unbind('click').on('click', function (e) {
                 submit_add_to_collection($(this).text());
-            });
-            var card = $(this).parents().filter(".expr.card");
-            var expr_id = ""
-            // If the plus button is on a card, use its ID info
-            if (card.length) 
-                expr_id = card.prop("id").slice(5);
-            else // otherwise use the data in context
-                expr_id = context.page_data.expr_id;
-            $(".dialog.add_to_collection input[name=expr_id]").val(expr_id);
-            // $(".dialog.add_to_collection .tag_new").text("").hidehide();
+            }).addClass("pointer");
+
+            if (category == "collections") {
+                var card = $(this).parents().filter(".expr.card");
+                var expr_id = ""
+                // If the plus button is on a card, use its ID info
+                if (card.length) 
+                    expr_id = card.prop("id").slice(5);
+                else // otherwise use the data in context
+                    expr_id = context.page_data.expr_id;
+                $(dialog_selector + " input[name=expr_id]").val(expr_id);
+                // $(".dialog.add_to_collection .tag_new").text("").hidehide();
+            } else { // categories
+                $(dialog_selector + " input[name=col_name]").val(
+                    context.page_data.tag_selected);
+                $(dialog_selector + " input[name=user_id]").val(
+                    context.page_data.owner.id);
+            }
             update_text();
-        });
+            dia.open();
+        }}
+        $(".plus_menu").unbind('click').on('click', add_to_collection("collections"))
+        $(".plus_cats").unbind('click').on('click', add_to_collection("categories"))
+            .addClass("pointer")
         if (!context.user.logged_in) {
             $(".needs_login").unbind("click").click(function(e) {
                 o.login_dialog.open();

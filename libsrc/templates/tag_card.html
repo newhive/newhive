@@ -13,7 +13,10 @@
         (or expr.remix_root_owner remix_root_owner)
         "tag_name" (or remix_root_tag expr.remix_root_tag)}
     {>}{<else}
-      {<if route.include_tags}
+      {<if route.include_categories}
+        { anchor_attrs "collections_grid_cat" "owner_name" owner.name 
+          "tag_name" tag_name}
+      {>}{<elif route.include_tags}
         {# { search_attrs "@" page_data.owner.name " " "" "#" tag_name } #}
         {<if (and route.private (eq user.name page_data.owner.name))}
           {anchor_attrs "expressions_tag_private" 

@@ -6,6 +6,7 @@ from newhive import mail
 from newhive.ui_strings import en as ui_str
 from newhive.utils import dfilter, now, abs_url, AbsUrl
 from newhive.controllers.controller import Controller
+from newhive.state import Entity
 
 class Community(Controller):
     def featured(self, tdata, request, db_args={}, **args):
@@ -74,11 +75,43 @@ class Community(Controller):
             'title': 'Newhives by ' + owner['name'],
         }
 
+    def category_client_view(self, card):
+        username = card.get('username')
+        tag = card.get('tag')
+        if not username or not tag: return None
+        owner = self.db.User.named(username)
+        if not owner: return None
+        exprs = owner.get_tag(tag)
+        if not exprs: return None
+        expr = self.db.Expr.fetch(exprs[0])
+        if not expr: return None
+        expr = expr.client_view()
+        expr["title"] = tag
+        expr["collection"] = card
+        return expr
+
     def expressions_public_tags(self, tdata, request, owner_name=None, db_args={}, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
-        if args.get('tag_name'): return self.expressions_tag(
-            tdata, request, owner_name=owner_name, db_args=db_args, **args)
+        tag_name = args.get('tag_name')
+        if args.get('include_categories'):
+            if tag_name:
+                cards = owner.get_category(tag_name)
+                if cards: cards = cards.get('collections')
+                # insert client view of collections into cards
+                cards = [self.category_client_view(x) for x in cards]
+                # remove empties
+                cards = [x for x in cards if x]
+                res = self.expressions_for(tdata, cards, owner)
+                res.update({
+                    "tag_selected":tag_name
+                })
+                return res
+            return self.expressions_for(tdata, [], owner)
+        if tag_name: 
+            return self.expressions_tag(
+                tdata, request, owner_name=owner_name, db_args=db_args, **args)
+        
         spec = {'owner_name': owner_name}
         cards = self.db.Expr.page(spec, auth='public', **db_args)
         return self.expressions_for(tdata, cards, owner)
@@ -455,13 +488,19 @@ class Community(Controller):
             special = page_data.get('special', {})
             if page_data.get('special'):
                 del page_data['special']
-            page_data['cards'] = [o.client_view(special=special) for o in page_data['cards']]
+            if (len(page_data['cards']) > 0 and 
+                isinstance(page_data['cards'][0], Entity)):
+                page_data['cards'] = [o.client_view(special=special) for o in page_data['cards']]
 
-            if owner and kwargs.get('include_tags'):
-                # TODO-perf: don't update list on query, update it when it changes!
-                owner.calculate_tags()
-                (ordered_count, all_tags) = owner.get_tags(
-                    tdata.user.id == owner.id and kwargs.get('private'))
+            if owner and (kwargs.get('include_categories') or kwargs.get('include_tags')):
+                if kwargs.get('include_categories'):
+                    (ordered_count, all_tags) = owner.get_cats()
+                else:
+                    # TODO-perf: don't update list on query, update it when it changes!
+                    owner.calculate_tags()
+                    (ordered_count, all_tags) = owner.get_tags(
+                        tdata.user.id == owner.id and kwargs.get('private'))
+
                 tag_name = kwargs.get('tag_name')
                 if tag_name and tag_name not in all_tags:
                     all_tags = all_tags[:ordered_count] + [tag_name] + all_tags[ordered_count:]

@@ -221,6 +221,24 @@
                         //background-image: asset_url('skin/nav/collections-on.png'); 
                     // }
                 }
+                .icon.cats {
+                    background-image: asset_url('skin/nav/collections.png');
+                    //!! Need asset
+                    background-color: aqua;
+
+                    // &.on { 
+                        //background-image: asset_url('skin/nav/collections-on.png'); 
+                    // }
+                }
+                .icon.plus_cats {
+                    background-image: asset_url('skin/nav/plus.png');
+                    //!! Need asset
+                    background-color: aqua;
+
+                    // &.on { 
+                        //background-image: asset_url('skin/nav/collections-on.png'); 
+                    // }
+                }
                 .icon.private {
                     background-image: asset_url('skin/nav/private.png');
                     // &.on { background-image: asset_url('skin/nav/private-on.png'); }

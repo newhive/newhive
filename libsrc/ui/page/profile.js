@@ -114,13 +114,23 @@ define([
             if (columns > 0)
                 ui_page.layout_columns(ordered_ids);
             ui_page.add_grid_borders();
-            return ordered_ids;
+            return ordered_cards;
         }
         $("form.save_bar").off('before_submit').on('before_submit', function(e){
-            var ordered_ids = reorder();
-            $(this).find("input[name=new_order]").val(ordered_ids.join(","));
+            var ordered_cards = reorder();
             $(this).find("input[name=deletes]").val(card_deletes);
             card_deletes = 0
+            if (context.route.include_categories) {
+                $(this).find("input[name=type]").val("categories");
+                var ordered = $.map(ordered_cards, function(l, i) {
+                    return c.page_data.cards[$(l).data("num")].collection
+                })
+            } else {
+                $(this).find("input[name=type]").val("collections");
+                var ordered = $.map(ordered_cards, function(l, i) {
+                    return $(l).prop("id").slice(5); });
+            }
+            $(this).find("input[name=new_order]").val(JSON.stringify(ordered));
             $("form.save_bar").hidehide();
         });
 
@@ -200,9 +210,13 @@ define([
     o.preprocess_page_data = function (page_data){
         page_data.ordered_tags = 
             page_data.tag_list.slice(0, page_data.ordered_count);
-        if (0 <= $.inArray(context.route_name,
-            ["expressions_public_tags","expressions_private",
-            "expressions_tag", "expressions_tag_private"])) {
+        if (context.route.include_categories)
+            page_data.extra_tags = 
+                page_data.tag_list.slice(page_data.ordered_count);
+        else if (0 <= $.inArray(context.route_name,
+                ["expressions_public_tags","expressions_private",
+                "expressions_tag", "expressions_tag_private"])
+        ) {
             page_data.extra_tags = 
                 page_data.tag_list.slice(page_data.ordered_count);
         }
