@@ -961,7 +961,7 @@ o.snap_helper = function(my_tuple, opts) {
 o.append_color_picker = function(container, callback, init_color, opts){
     // opts = $.extend({iframe: false}, opts);
     var o = {}, init_color = init_color || '#000000',
-        div = color_picker_template(colors),
+        div = color_picker_template([colors]),
         bar = div.find('.hue_bar'),
         shades = div.find('.shades'),
         manual_input = div.find('.color_input'),
