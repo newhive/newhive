@@ -75,9 +75,9 @@ class Community(Controller):
             'title': 'Newhives by ' + owner['name'],
         }
 
-    def category_client_view(self, card):
-        username = card.get('username')
-        tag = card.get('tag')
+    def collection_client_view(self, collection):
+        username = collection.get('username')
+        tag = collection.get('tag')
         if not username or not tag: return None
         owner = self.db.User.named(username)
         if not owner: return None
@@ -87,7 +87,7 @@ class Community(Controller):
         if not expr: return None
         expr = expr.client_view()
         expr["title"] = tag
-        expr["collection"] = card
+        expr["collection"] = collection
         return expr
 
     def expressions_public_tags(self, tdata, request, owner_name=None, db_args={}, **args):
@@ -99,7 +99,7 @@ class Community(Controller):
                 cards = owner.get_category(tag_name)
                 if cards: cards = cards.get('collections')
                 # insert client view of collections into cards
-                cards = [self.category_client_view(x) for x in cards]
+                cards = [self.collection_client_view(x) for x in cards]
                 # remove empties
                 cards = [x for x in cards if x]
                 res = self.expressions_for(tdata, cards, owner)

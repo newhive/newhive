@@ -296,8 +296,8 @@ define(['browser/js', 'module'],
 	function is_if_node(node) {
 		if (node.type != "function" || node.value.length != 1)
 			return false;
-		return (node.value[0] == "if" || node.value[0] == "unless"
-			 || node.value[0] == "contains" || node.value[0] == "elif");
+		return (node.value[0] == "if" || node.value[0] == "unless" ||
+			 node.value[0] == "elif");
 	}
 
 	function render_function(context, node) {
