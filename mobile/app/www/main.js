@@ -1,3 +1,14 @@
+define(['jquery'], function($){
+var self = {}
+
+config = {
+     owner: 'zach' // skips byline on cards with this username
+    ,search_url: 'http://staging.newhive.com/api/feed/expressions/zach'
+    ,base_url: 'http://staging.newhive.com'
+    ,search_query: ''
+    // ,search_url: 'http://staging.newhive.com/api/search?' +
+    //     $.param({q: '@zach'})
+}
 config.content_url = 'http://wirbu.office.tnh.me/'
 
 var page_index = 0, cards = [], cards_complete = false,
@@ -20,7 +31,7 @@ var fix_scale = function() {
         // +', minimum-scale=.2, maximum-scale=10')
 }
 
-var init = function(){
+self.init = function(){
     fix_scale()
     render_page_index()
     fetch_cards()
@@ -183,84 +194,17 @@ function bind_click(el, func){
 }
 
 function button(sel, click){
-    $(sel).on('tapstart', function(){
+    bind_click($(sel).on('tapstart', function(){
         $(this).addClass('hover')
     }).on('tapend', function(){
         $(this).removeClass('hover')
-    }).on('tap', click)
+    }), click)
 }
-
-// TODO: implement multitouch?
-// function button(sel, click){
-//     var jq = $(sel), hover_el, hovering = false
-//     $(jq).on('touchstart', function(){
-//         var hover_el = this, hover_jq = $(hover_el)
-//         hovering = true
-//         hover_jq.addClass('hover').on('touchmove', function(ev){
-//             var tch = ev.originalEvent.touches[0],
-//                 x = tch.clientX, y = tch.clientY,
-//                 over = document.elementFromPoint(x, y)
-//             if(over == hover_el || $.contains(hover_el, over)){
-//                 if(!hovering){
-//                     hover_jq.addClass('hover')
-//                     hovering = true
-//                 }
-//             }else{
-//                 hover_jq.removeClass('hover')
-//                 hovering = false
-//             }
-//             // android needs this, otherwise next touchmove isn't fired
-//             ev.preventDefault()
-//         })
-//     }).on('touchend', function(){
-//         if(hovering) click()
-//     })
-// }
 
 function share_expr(card){
     window.plugins.socialsharing.share('', // message
         'Check out this NewHive page', card.snapshot_big, card.url)
 }
 
-var download_feed = function(){
-    var download = function(url, on_finish){ download_url(
-        function(err){
-            console.log('uh oh', err)
-        }, url, on_finish)
-    }
-    download(config.content_url + expr_path, function(expr_file){
-        console.log(expr_file)
-    })
-}
-
-var download_expr = function(expr_path){
-}
-
-var download_url = function(on_err, url, on_finish){
-    var local_name = url.substring(url.lastIndexOf('/')+1)
-        ,xhr = new XMLHttpRequest()
-    var save_file = function(){
-        window.requestFileSystem(LocalFileSystem.PERSISTENT, 0,
-            function(fileSystem){
-                fileSystem.root.getFile(local_name,
-                    {create: true, exclusive: false},
-                    function(fileEntry){
-                        fileEntry.createWriter(function(fileWriter){
-                            fileWriter.onwriteend = function(e){
-                                on_finish(fileEntry.toURL())
-                            }
-                            fileWriter.write(xhr.response)
-    }) } ) } ) }
-
-    xhr.onreadystatechange = function(){
-        if (this.readyState == 4){
-            if(this.status == 200)
-                save_file()
-            else
-                on_err('download failed')
-        }
-    }
-    xhr.responseType = 'blob'
-    xhr.open('GET', url)
-    xhr.send()
-}
+return self
+})
