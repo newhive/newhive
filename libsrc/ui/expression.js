@@ -226,13 +226,46 @@ define([
         }
     }
 
+    // Handle autoplay
+    var current_playing = -1, current_pos = 0, looping = false
+
+    // return list of autoplaying apps, sorted top-to-bottom
+    var autoplayers = function() {
+        return $(".happ.autoplay").sort(function(a,b) { 
+            return a.getBoundingClientRect().top - b.getBoundingClientRect().top 
+        } )
+    }
+    var play_pause = function() {
+        var $player = $players.slice(current_playing, 0)
+            ,pause_func = $player.data("pause_func")
+        if ( typeof(pause_func) == "function" )
+            pause_func()
+    }
+    var play_next = function (player) {
+        if (player && !player.hasClass("autoplay"))
+            return
+        var $players = autoplayers()
+        if ($players.length == 0)
+            return
+        current_playing++
+        if (looping)
+            current_playing %= $players.length
+        else if (current_playing >= $players.length)
+            return -1
+
+        var $player = $players.slice(current_playing, current_playing + 1)
+            ,play_func = $player.data("play_func")
+        if ( typeof(play_func) == "function" )
+            play_func()
+    }
     o.init_content = function(){
-        // bonus paging and scrolling features
-        // TODO: prevent scroll sticking after mouse-up outside of expr frame
-        // TODO: figure out how to attach to all elements that don't have default drag behavior
-        // TODO: make work in FF
-        var scroll_ref, mouse_ref;
         if (0) {
+            // Scroll the page on drags
+
+            // TODO: prevent scroll sticking after mouse-up outside of expr frame
+            // TODO: figure out how to attach to all elements that don't have default drag behavior
+            // TODO: make work in FF
+            var scroll_ref, mouse_ref;
             $('#bg').on('dragstart', function(e, dd){
                 scroll_ref = [document.body.scrollLeft, document.body.scrollTop];
                 mouse_ref = [e.clientX, e.clientY];
@@ -242,6 +275,7 @@ define([
             });
         }
 
+        // bonus paging and scrolling features
         $(document.body).on('keydown', function(e){
            if(e.keyCode == 32) // space
                if(document.body.scrollTop + $(window).height()
@@ -257,10 +291,26 @@ define([
 
         jplayer.init_jplayer();
         
-        // HACK to fix audio player layout
-        $(".hive_audio").map(function(i,el) { $(el).attr("data-scale", $(el).height()/36.1) })
+        $(".hive_audio")
+            .each(function (i, el) {
+                $(el).data("play_func", function(t) {
+                    $(el).find(".jp-jplayer")
+                        .bind_once_anon($.jPlayer.event.ended + ".hive", 
+                            function() { play_next($(el)) })
+                        .jPlayer("play", t)
+                })
+                $(el).data("pause_func", function() {
+                    var $jp = $(el).find(".jp-jplayer")
+                    var status = $jp.data("jPlayer").status
+                    current_pos = status.currentTime
+                    $jp.jPlayer("pause")
+                })
+            })
+            // HACK to fix audio player layout
+            .each(function(i,el) { $(el).attr("data-scale", $(el).height()/36.1) })
         $(".hive_audio .jp-controls").add(".hive_audio .jp-controls *")
             .css({width:"",height:""})
+        setTimeout(play_next, 1000);
 
         o.layout()
     };
