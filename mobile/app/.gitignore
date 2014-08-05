@@ -1,0 +1,12 @@
+/npm-debug.log
+/config.xml
+
+www/lib/*
+www/libsrc/*
+
+platforms/*
+!platforms/android/
+platforms/android/*
+!platforms/android/src/
+platforms/android/src/*
+!platforms/android/src/io

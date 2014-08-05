@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <link rel='shortcut icon' type='image/png' href='lib/skin/1/logo.png'>
+  <link rel='stylesheet' type='text/css' href='main.css'>
+
+  <!-- todo: replace with output of build system -->
+  <script src="cordova.js"></script>
+  <script src='curl.js'></script>
+  <script src='jquery.js'></script>
+  <script src='jquery.mobile-events.js'></script>
+  <script src='main.js'></script>
+  <script type="text/javascript" src="HiveNotifications.js"></script>
+  <script>
+curl({
+    baseUrl: "",
+    pluginPath: 'curl/plugin'
+});
+  </script>
+  <title>Network</title>
+  <meta name="viewport" content="user-scalable=1, width=device-width, initial-scale=1">
+</head>
+<body class='mobile'>
+  <div id='overlays'></div>
+  <div id='content'></div>
+  <div id='templates'>
+
+    <div class='profile_view'>
+      <div class='expr_card'>
+        <img class='snapshot'>
+        <div class='title'></div>
+        <div class='byline'></div>
+      </div>
+    </div>
+
+    <div class='expr_view'>
+      <div class='expr_overlays'>
+        <div class='prev icon'><div class='fg'></div></div>
+        <div class='share icon'><div class='fg'></div></div>
+      </div>
+    </div>
+
+  </div>
+  <script>curl(['main'], function(main){ main.init() })</script>
+</body>
+</html>
