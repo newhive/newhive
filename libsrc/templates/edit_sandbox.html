@@ -90,6 +90,10 @@
 </div>
 
 <div id='menu_audio' class='menu drawer medbold'>
+  {<if flags.autoplay}
+    <label for='media_input'><div
+      class='menu_item autoplay'>Upload Audio (Autoplay)</div>
+  {>}
   <label for='media_input'><div id='audio_upload'
     class='menu_item default'>Upload Audio</div>
 </div>

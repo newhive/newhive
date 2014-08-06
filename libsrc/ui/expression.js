@@ -243,11 +243,31 @@ define([
             return a.getBoundingClientRect().top - b.getBoundingClientRect().top 
         } )
     }
+    var current_player = function() {
+        return autoplayers().slice(current_playing, current_playing + 1)
+    }
     var play_pause = function() {
-        var $player = $players.slice(current_playing, 0)
+        var $player = current_player()
             ,pause_func = $player.data("pause_func")
         if ( typeof(pause_func) == "function" )
             pause_func()
+    }
+    var play_first = function() {
+        current_playing = 0
+        var $player = current_player()
+            ,ready_func = $player.data("ready_func")
+            ,play_func = $player.data("play_func")
+        // Play the app
+        if ( typeof(play_func) == "function" ) {
+            play_func()
+        }
+        // But be ready to play it when it loads if it hasn't yet
+        if (typeof(ready_func) == "function" ) {
+            ready_func(function() {
+                current_playing = -1
+                play_next()
+            })
+        }
     }
     var play_next = function (player) {
         if (player && !player.hasClass("autoplay"))
@@ -261,7 +281,7 @@ define([
         else if (current_playing >= $players.length)
             return -1
 
-        var $player = $players.slice(current_playing, current_playing + 1)
+        var $player = current_player()
             ,play_func = $player.data("play_func")
         if ( typeof(play_func) == "function" ) {
             fail_count = 0
@@ -304,28 +324,32 @@ define([
 
         $('a, form').each(function(i, e){ o.link_target(e) });
 
+        // Init jplayer, and autoplay as needed
         jplayer.init_jplayer();
         
-        $(".hive_audio")
-            .each(function (i, el) {
-                $(el).data("play_func", function(t) {
-                    $(el).find(".jp-jplayer")
-                        .bind_once_anon($.jPlayer.event.ended + ".hive", 
-                            function() { play_next($(el)) })
-                        .jPlayer("play", t)
-                })
-                $(el).data("pause_func", function() {
-                    var $jp = $(el).find(".jp-jplayer")
-                    var status = $jp.data("jPlayer").status
-                    current_pos = status.currentTime
-                    $jp.jPlayer("pause")
-                })
+        $(".hive_audio").each(function (i, el) {
+            var $jp = $(el).find(".jp-jplayer")
+            $(el).data("play_func", function(t) {
+                $jp.bind_once_anon($.jPlayer.event.ended + ".hive", 
+                    function() { play_next($(el)) })
+                return $jp.jPlayer("play", t)
+            })
+            $(el).data("pause_func", function() {
+                var status = $jp.data("jPlayer").status
+                current_pos = status.currentTime
+                return $jp.jPlayer("pause")
+            })
+            $(el).data("ready_func", function(on_ready) {
+                $jp.bind_once_anon($.jPlayer.event.ready + ".hive",
+                    function() { on_ready($(el)) })
             })
             // HACK to fix audio player layout
-            .each(function(i,el) { $(el).attr("data-scale", $(el).height()/36.1) })
+            $(el).attr("data-scale", $(el).height() / 36.1)
+        })
+        // HACK to fix audio player layout
         $(".hive_audio .jp-controls").add(".hive_audio .jp-controls *")
             .css({width:"",height:""})
-        setTimeout(play_next, 1000);
+        play_first()
 
         o.layout()
     };

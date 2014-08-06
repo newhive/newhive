@@ -273,6 +273,11 @@ var menu = function(handle, drawer, options) {
             .mouseleave(function(){ o.delayed_close(true) })
             .mousemove(o.cancel_close)
     }
+    menu_items.each(function(i, el) {
+        $(el).bind_once_anon("click.menu", function(ev) {
+            menu.last_item = $(el)
+        })
+    })
     // TODO: The correct behavior is to close_all iff item is not handle.
     // If item is handle, it should toggle open/closed state.
     $(drawer).find("a")
