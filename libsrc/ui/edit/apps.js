@@ -631,6 +631,9 @@ Hive.App = function(init_state, opts) {
         o.div.removeClass(o.css_class()).addClass(s)
         o.init_state.css_class = s
     }
+    o.css_class_get_all = function() {
+        return o.css_class().split(" ")
+    }
     o.css_class_add = function(s){
         s = h.u.union(o.css_class().split(" "), s.split(" ")).join(" ")
         o.css_class_set(s);
@@ -2077,7 +2080,13 @@ Hive.App.Sketch = function(o) {
 Hive.registerApp(Hive.App.Sketch, 'hive.sketch');
 
 Hive.App.Audio = function(o) {
-    Hive.App.has_resize(o);
+    Hive.App.has_resize(o)
+    Hive.has_scale(o);
+    if (context.flags.autoplay) {
+        Hive.App.has_autoplay(o)
+        Hive.App.has_autohide(o)
+    }
+    
     o.content = function() {
         return o.content_element[0].outerHTML;
     };
@@ -2107,7 +2116,6 @@ Hive.App.Audio = function(o) {
         o.div.find('.jp-play-bar, .jp-interface').css('background-color', v);
     };
 
-    Hive.has_scale(o);
     var _layout = o.layout;
     o.layout = function() {
         if (_layout()) return true;
@@ -2675,7 +2683,56 @@ Hive.has_scale = function(o){
         if(s.scale) o.scale_set(s.scale);
     };
 };
+Hive.App.has_toggle = function(o, toggle_name){
+    o[toggle_name] = function() {
+        return o.client_data(toggle_name) || false
+    }
+    o[toggle_name + "_set"] = function(v) {
+        o.client_data_set(toggle_name, v)
+        // fixup_controls(env.Selection.controls)
+    }
+    o["toggle_" + toggle_name] = function() {
+        o[toggle_name + "_set"](!o[toggle_name]())
+    }
+    if (!env.Selection[toggle_name])
+        env.Selection.set_standard_delegate(toggle_name)
+    
+    var controls = function (o) {
+        find_or_create_button(o, '.' + toggle_name).click(
+            function() {
+                // fixup_mutex = true
 
+                env.Selection.toggle_func(toggle_name) 
+                // fixup_mutex = false
+                // if (need_fixup)
+                    fixup_controls(o)
+            })
+
+        return o;
+    };
+    // var fixup_mutex = false, need_fixup = false
+    var fixup_controls = function(o) {
+        // if (fixup_mutex) {
+        //     need_fixup = true
+        //     return
+        // }
+        // need_fixup = false
+        var png = $("#controls ." + toggle_name).prop("src").slice(0, -4)
+        if (png.slice(-3) == "-on")
+            png = png.slice(0,-3)
+        var toggle = env.Selection[toggle_name]() ? "-on" : ""
+        $("#controls ." + toggle_name).prop("src", png + toggle + ".png")
+    }
+    fixup_controls.display_order = 9
+    o.make_controls.push(memoize('has_' + toggle_name + '_fixup', fixup_controls))
+    o.make_controls.push(memoize('has_' + toggle_name, controls));
+}
+Hive.App.has_autoplay = function(o){
+    return Hive.App.has_toggle(o, "autoplay")
+}
+Hive.App.has_autohide = function(o){
+    return Hive.App.has_toggle(o, "autohide")
+}
 Hive.App.has_rotate = function(o) {
     var app = o
 

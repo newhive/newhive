@@ -77,6 +77,7 @@ site_flags = {
     ,'tile_multiple_images': ['admins', 'nd4']
     ,'css_classes': ['admins', 'devs']
     ,'shape_link': ['admins', 'devs']
+    ,'autoplay': ['admins', 'devs']
     # Admin
     ,'admin': ['admins']
     # Old / unused

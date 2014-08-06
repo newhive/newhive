@@ -49,7 +49,15 @@ define([
         layout_coord = expr.layout_coord || 0
         client_data = expr['apps']
         $.each(client_data, function(app_id, data){
-            $('#'+app_id).data(data) })
+            var $app = $('#' + app_id)
+            $app.data(data) 
+            if (data.autoplay)
+                $app.addClass("autoplay")
+            if (data.autohide)
+                $app.css({opacity: "0", "pointer-events":"none"})
+                // can't merely hide the app, or it won't autoplay
+                // $app.css({display:"none"})
+        })
 
         context.parse_query();
         var no_embed = ("no-embed" in context.query);
@@ -227,7 +235,7 @@ define([
     }
 
     // Handle autoplay
-    var current_playing = -1, current_pos = 0, looping = false
+    var current_playing = -1, current_pos = 0, looping = false, fail_count = 0
 
     // return list of autoplaying apps, sorted top-to-bottom
     var autoplayers = function() {
@@ -255,8 +263,15 @@ define([
 
         var $player = $players.slice(current_playing, current_playing + 1)
             ,play_func = $player.data("play_func")
-        if ( typeof(play_func) == "function" )
+        if ( typeof(play_func) == "function" ) {
+            fail_count = 0
             play_func()
+        } else {
+            fail_count++
+            // skip apps which don't "play", but also don't skip on loop forever
+            if (fail_count < $players.length)
+                play_next()
+        }
     }
     o.init_content = function(){
         if (0) {
