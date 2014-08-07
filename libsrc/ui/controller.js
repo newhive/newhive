@@ -229,8 +229,12 @@ define([
             callback({});
 
         function success(data){
-            if (push_state == undefined || push_state)
+            if ((push_state == undefined || push_state) && 
+                (!history.state || history.state.route_name != "view_expr" ||
+                    page_state.route_name != "view_expr")
+            ) {
                 history.pushState(page_state, null, page_state.page);
+            }
             context.parse_query(data.cards_route && data.cards_route.route_args);
             o.dispatch(page_state.route_name, data);
             if (page_state.route_name != "view_expr")
@@ -257,7 +261,12 @@ define([
         if (! (window.history && window.history.pushState))
             return o.open(route_name, route_args);
         var page_state = context.page_state(route_name, route_args, query);
-        history.pushState(page_state, null, page_state.page);
+        if ((push_state == undefined || push_state) && 
+            (!history.state || history.state.route_name != "view_expr" ||
+                page_state.route_name != "view_expr")
+        ) {
+            history.pushState(page_state, null, page_state.page);
+        }
         context.parse_query(route_args);
     };
 
