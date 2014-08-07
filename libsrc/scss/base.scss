@@ -41,11 +41,8 @@
 .floatleft {
     float: left;
 }
-.show_hover {
+.hoverable:not(:hover) .show_hover {
     display:none;
-}
-.hoverable:hover .show_hover {
-    display:block;
 }
 .hoverable:hover .hide_hover {
     display:none;
@@ -146,6 +143,11 @@ button {
         }
     }
 }
+
+// Note that the fixed column needs to be before the fill column in the dom.
+// This is only strange if the fixed column is to the right e.g.,
+// <div class="right fixed"></div>
+// <div class="left fill"</div>
 ._2column {
     &>.left.fixed {
         float: left;

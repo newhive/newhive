@@ -220,8 +220,14 @@ define([
             o.layout_columns();
         o.add_grid_borders();
     }
+    var custom_classes = ""
     o.render = function(method, data){
         var page_data = context.page_data, expr = page_data.expr
+        // set any classes specified by the route
+        var new_classes = context.route.custom_classes
+        $("body").removeClass(custom_classes).addClass(new_classes)
+        custom_classes = new_classes
+
         if (page_data.title) $("head title").text(page_data.title);
         o.column_layout = false;
         o.columns = 0;
@@ -341,7 +347,19 @@ define([
         }
     }
 
+    var height_nav_large = 110
     var local_attach_handlers = function(){
+        if (context.flags.new_nav) {
+            $("#site").css({"margin-top": height_nav_large})
+            // Animate header
+            $(window).bind_once_anon("scroll.page", function(ev) {
+                var scrolled_to = $(this).scrollTop()
+                if (scrolled_to > height_nav_large)
+                    $(".main-header").addClass("condensed")
+                else
+                    $(".main-header").removeClass("condensed")
+            })
+        }
         // Add expression to collection
         var add_to_collection = function(category) { return function(e) {
             var dialog_selector = ".dialog.add_to_collection." + category

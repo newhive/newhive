@@ -1,6 +1,22 @@
 {set "clean_options" (string_to_list query.clean)}
 {# TODO: create default for clean_options here. right now it is set it in dialog_embed.html #}
 
+{# TODO: un-flag this after ship #}
+{<if flags.new_nav}
+<div class="main-header">
+  <div class= "_2column">
+    <div class="left fixed inline">
+      <img class="logo" src='{asset "skin/site/logo_text.png"}' title="Newhive Logo">
+    </div>
+    <div class="right fixed inline">
+      Lorem epsom salt.
+    </div>
+    <div class="header">
+    </div>
+  </div>
+</div>
+{>}
+
 <div class='overlay bottom panel nav {<if (and query.clean (not (contains clean_options "social")))} stay_hidden{>}'>
   {# create or signup/login #}
   {<unless user.logged_in}

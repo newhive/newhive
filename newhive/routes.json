@@ -46,6 +46,7 @@
         "controller": "community",
         "method": "trending",
         "client_method": "home",
+        "custom_classes": "nav",
         "require_login": true
     },
     "trending": {
@@ -54,6 +55,7 @@
         "controller": "community",
         "method": "trending",
         "client_method": "profile",
+        "custom_classes": "nav",
         "require_login": true
     },
     "network": {
@@ -62,6 +64,7 @@
         "controller": "community",
         "method": "network_recent",
         "client_method": "grid",
+        "custom_classes": "nav",
         "require_login": true
     },
 
@@ -71,6 +74,7 @@
         "controller": "community",
         "method": "featured",
         "client_method": "profile",
+        "custom_classes": "nav",
         "require_login": true
     },
     "recent": {
@@ -79,6 +83,7 @@
         "controller": "community",
         "method": "recent",
         "client_method": "grid",
+        "custom_classes": "nav",
         "require_login": true
     },
     "search": {
@@ -86,6 +91,7 @@
         "api_route": "/api/search",
         "controller": "community",
         "method": "search",
+        "custom_classes": "nav",
         "client_method": "grid"
     },
     "user_home": {
@@ -93,6 +99,7 @@
         "api_route": "/api/expr/view/<owner_name>",
         "controller": "community",
         "method": "expr",
+        "custom_classes": "nav",
         "client_method": "expr"
     },
 
