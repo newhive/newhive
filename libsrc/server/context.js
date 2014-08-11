@@ -179,20 +179,24 @@ define([
         return attrs(route_name, args, "", true);
     };
 
-    // o.user_thumb = 
+    var debug_log = function(text) {
+        console.log(ui_util.stack_readable(2) + text)
+    }
+    // comment to enable debugging
+    debug_log = function(text) {}
 
     // takes rendered string from template, parses into DOM,
     // and adds appropriate handlers for us
     // stringjay filters the output of all top-level templates through this
     o._after_render_handlers = {};
     o.after_render = function(text){
+        debug_log("enter")
         var dom = $('<div>');
         dom[0].innerHTML = text;
-        var elements = dom.contents();
-        // var all_elements = elements.add(document.body);
+        // var elements = dom;
 
         // Common site-wide handlers
-        find_all(dom, '*[data-class-toggle]').each(function(i, el) {
+        dom.find('*[data-class-toggle]').each(function(i, el) {
             var click_func = function(klass) {
                 return function() {
                     $(el).toggleClass(klass);
@@ -206,25 +210,25 @@ define([
             // arbitrary events: mouseenter mouseleave, etc
             for (var toggle in class_toggles) {
                 var klass = class_toggles[toggle];
-                find_all(dom, toggle).on('click', click_func(klass));
+                dom.find(toggle).on('click', click_func(klass));
             }
         });
         // TODO-cleanup: this is a subcase of class-toggle.
-        find_all(elements, '*[data-link-show]').each(function(i, el) {
-            var handle = find_all(elements, $(el).attr('data-link-show'));
+        dom.find('*[data-link-show]').each(function(i, el) {
+            var handle = dom.find($(el).attr('data-link-show'));
             if(!handle) throw 'missing handle';
             handle.on('click', function(ev) { 
                 $(el).toggleshow();
             });
         });
 
-        find_all(elements, 'form[data-route-name]').each(
-            function(i, el){ form_handler(el, elements) });
+        dom.find('form[data-route-name]').each(
+            function(i, el){ form_handler(el, dom) });
 
-        find_all(elements, '.menu.drawer[data-handle]').each(function(i, el){
-            var handle = find_all(elements, $(el).attr('data-handle'));
+        dom.find('.menu.drawer[data-handle]').each(function(i, el){
+            var handle = dom.find($(el).attr('data-handle'));
             if(!handle) throw 'missing handle';
-            var parent = find_all(elements, $(el).attr('data-parent'));
+            var parent = dom.find($(el).attr('data-parent'));
             var opts = {};
             if (parent.length && parent.data('menu')) {
                 opts['group'] = parent.data('menu');
@@ -234,21 +238,60 @@ define([
             menu(handle, el, opts);
         });
 
-        find_all(elements, '.dialog[data-handle]').each(function(i, el){
-            var handle = find_all(elements, $(el).attr('data-handle'));
-            if(!handle) throw 'missing handle';
+        dom.find('.dialog[data-handle]').each(function(i, el){
+            var selector = $(el).attr('data-handle')
+                , handle = dom.find(selector)
+            //!! TODO: investigate render order, and why sometimes this fails.
+            // if(!handle.length) 
+                // debug_log(selector + " missing")
             var d = dialog.create(el);
             handle.click(d.open);
         });
 
-        find_all(elements, '.hoverable').each(function(i, el){
+        dom.find('.hoverable').each(function(i, el){
             ui_util.hoverable($(el)) });
 
         js.each(o._after_render_handlers, function(handler, selector){
-            find_all(elements, selector).each(function(i,el){ handler($(el)) });
+            dom.find(selector).each(function(i,el){ handler($(el)) });
         });
 
-        return elements;
+        // replace the contents (children) of {parent} with {this}
+        var replace_contents = function(parent) {
+            $(parent).append().after(this)
+        }
+        // for each element in the dom (inserted or existing) with property 
+        // data-{binding_name}, run {fn} with the argument of the insertion point
+        // indicated by the binding value.  If fn is a string, run the jQuery
+        // function {fn}
+        // Ex: <div data-insert-after="#footer">Some footer text></div>
+        var do_to_all = function(binding_name, fn, throw_name) {
+            binding_name = "data-" + binding_name
+            dom.find('*[' + binding_name + ']').each(function(i, el){
+                // Look inside the about-to-be-added DOM before adding to real DOM
+                var $el= $(el), selector = $el.attr(binding_name)
+                    , $insert_point = dom.find(selector);
+                if (! $insert_point.length)
+                    $insert_point = $(selector);
+                if ($insert_point.length) {
+                    if (typeof fn == "string")
+                        fn = $el[fn]
+                    if (typeof fn == "function")
+                        fn.apply($el, $insert_point)
+                } else if (throw_name) {
+                    throw throw_name
+                }
+            })
+        }
+        var do_to_all_dict = {
+            "insert-after": "insertAfter"
+            ,"replace-with": "replaceWith"
+            ,"replace-contents": replace_contents
+        }
+        $.each(do_to_all_dict, function(i, v) {
+            do_to_all(i, v)
+        })
+
+        return dom.contents();
     };
     o.after_render.add = function(selector, handler){
         o._after_render_handlers[selector] = handler;
@@ -306,8 +349,8 @@ define([
 
             var input_id = input.attr('id'),
                 drop_selector = input.attr('data-drop-area');
-                drop_areas = find_all(all, 'label[for=' + input_id + ']')
-                    .add(drop_selector).add(find_all(all, drop_selector));
+                drop_areas = all.find('label[for=' + input_id + ']')
+                    .add(drop_selector);
                 upload.drop_target(drop_areas,
                     function(files, file_list){
                         form.trigger('with_files', [files, file_list]); },
@@ -361,12 +404,6 @@ define([
         // window.location.hash = window.location.hash.replace(/#error[^#]*/,"")
     };
     o.query = {}; // set by ui.controller
-
-    function find_all(elements, selector){
-        // TODO: BUGBUG: This fails to find selectors which match top-level items.
-        // e.g., ".toplevel .foo" will not match anything.
-        return elements.filter(selector).add(elements.find(selector));
-    }
 
     return o;
 });
