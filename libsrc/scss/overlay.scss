@@ -12,7 +12,6 @@
     top: 0px;
     left: 0px;
     right: 0px;
-    height: 110px;
 
     z-index: $nav_layer;
     background-color: white;
@@ -29,7 +28,6 @@
     }
 
     &.condensed {
-        height: 60px;
         .logo {
             height: 40px;
         }

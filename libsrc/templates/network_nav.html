@@ -1,6 +1,6 @@
 {# Network navigation menus #}
 {<if user.logged_in}
-  <div class='center network_nav'>
+  <div class='center network_nav' data-replace-contents=".main-header .header">
     {<if (not flags.merge_recent)}
       <a { anchor_attrs "home" }>
         <div class='text_btn item teal_hover menu_item
@@ -18,7 +18,6 @@
         {<if route_name "recent"} black_btn{>}'>Hive_Recent</div></a> 
     {>}
   </div>
-
 
 {#}
     ><div id='network_btn' class='text_btn item black_active

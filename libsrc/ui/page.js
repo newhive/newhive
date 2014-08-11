@@ -347,7 +347,7 @@ define([
         }
     }
 
-    var height_nav_large = 110
+    var height_nav_large = 155
     var local_attach_handlers = function(){
         if (context.flags.new_nav) {
             $("#site").css({"margin-top": height_nav_large})
