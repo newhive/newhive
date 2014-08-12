@@ -257,7 +257,7 @@ define([
 
         // replace the contents (children) of {parent} with {this}
         var replace_contents = function(parent) {
-            $(parent).append().after(this)
+            $(parent).empty().append(this)
         }
         // for each element in the dom (inserted or existing) with property 
         // data-{binding_name}, run {fn} with the argument of the insertion point
