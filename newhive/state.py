@@ -1846,7 +1846,7 @@ class Expr(HasSocial):
 
     @property
     def auth(self):
-        return self.get('auth', 'private')
+        return self.get('auth', 'password')
 
     public = property(lambda self: self.get('auth') == "public")
 

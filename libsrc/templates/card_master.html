@@ -8,7 +8,7 @@
 {>}
 {# display header #}
 {<if (and header (or user.logged_in (neq route_name "home")))}
-  <div class='header title'>
+  <div class='header_title'>
     <span class='heading'>{ header.0 }
       {<if header.1}: { header.1 }{>}</span>
   </div>

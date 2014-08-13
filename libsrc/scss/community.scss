@@ -376,6 +376,7 @@ body.mobile {
     .tag_list.main .drop_box { display:none; }
 }
 #home_video { width: 640px; height: 360px; }
+
 // TODO: should also have body.default
 body {
     ///
@@ -428,7 +429,7 @@ body {
         // @include border-radius(0px);
         // @include box-shadow(rgba(black, 0.4) 0px 0px 0px);
     }
-    .title.header {
+    .header_title {
         margin-bottom: 31px;
         margin-top: 39px;
         text-align: center;
