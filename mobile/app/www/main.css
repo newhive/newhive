@@ -30,6 +30,9 @@ iframe.expr {
   background-position: 50% 50%;
   background-repeat: no-repeat;
 }
+.hide {
+  display: none;
+}
 
 #overlays > * {
   z-index: 2;
@@ -102,7 +105,7 @@ iframe.expr {
   left: 10px; bottom: 10px;
   width: 50px; height: 50px;
 }
-.share.icon {
+.social.icon {
   right: 10px; bottom: 10px;
   width: 50px; height:50px;
 }
@@ -114,8 +117,8 @@ iframe.expr {
 .icon.hover { background-color: black; }
 .prev .fg { background-image: url('skin/prev.png'); }
 .prev.hover .fg { background-image: url('skin/prev-hover.png'); }
-.share .fg { background-image: url('skin/share.png'); }
-.share.hover .fg { background-image: url('skin/share-hover.png'); }
+.social .fg { background-image: url('skin/share.png'); }
+.social.hover .fg { background-image: url('skin/share-hover.png'); }
 
 @font-face {
   font-family: 'gibson';
