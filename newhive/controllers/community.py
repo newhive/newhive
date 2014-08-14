@@ -85,20 +85,18 @@ class Community(Controller):
         if not exprs: return None
         expr = self.db.Expr.fetch(exprs[0])
         if not expr: return None
-        # expr_cv = expr.client_view()
         # TODO-perf: this method belongs as standalone in state.
-        expr_cv = {} #dfilter(expr, ['snapshot_small', ''])
-        dict.update(expr_cv, {
+        expr_cv = {
             # TODO-perf: trim this to essentials
             "owner": owner.client_view(viewer=viewer)
             ,"snapshot_small": expr.snapshot_name("small")
             ,"title": tag
             ,"collection": collection
             ,"type": "cat" #!!
-        })
+        }
         # determine if this is an owned or curated collection
-        owned_exprs = (self.db.Expr.fetch(
-            {'owner': owner.id, 'id': {'$in': exprs}}))
+        owned_exprs = (self.db.Expr.search(
+            {'owner': owner.id, '_id': {'$in': exprs}}))
         expr_cv['curated'] = not (
             owned_exprs and (owned_exprs.count() == len(exprs)))
 

@@ -321,10 +321,8 @@ define([
         render_site(page_data);
     };
     o.cat = function(page_data){
-        o.grid(page_data)
-        // page_data.layout = 'grid';
-        // grid_width = 222 + 2*10; // padding = 10 + 10
-        // render_site(page_data);
+        grid_width = 350;
+        render_site(page_data);
     };
     // END-layout-methods
     
@@ -669,9 +667,13 @@ define([
         if(context.page_data.layout == 'grid' ||
             context.page_data.layout == 'cat' ||
             context.page_data.layout == 'mini') {
-            var columns = Math.max(1, Math.min(3, 
-                Math.floor($(window).width() / grid_width)));
-            $('.feed').css('width', columns * (grid_width + border_width));
+            var win_width = $(window).width(),
+            columns = Math.max(1, Math.min(3, Math.floor( win_width / grid_width)))
+                ,feed_width = columns * (grid_width + border_width)
+            if (context.page_data.layout == 'cat')// && columns > 1)
+                feed_width = Math.min(3 * (grid_width + border_width),
+                    Math.max(win_width, feed_width))
+            $('.feed').css('width', feed_width);
             if (o.columns != columns || !done_layout) {
                 o.columns = columns;
                 if (o.column_layout)
@@ -719,6 +721,9 @@ define([
     // Set up the grid borders
     o.add_grid_borders = function(columns){
         var columns = o.columns;
+        $(".feed").addremoveClass("wide", columns > 1)
+        $(".feed").addremoveClass("_3col", columns > 2)
+        $(".feed").addremoveClass("narrow", columns == 1)
         if(context.page_data.layout != 'grid') return;
         var expr_cards = $('.feed .card');
         // Count of cards which fit to even multiple of columns
