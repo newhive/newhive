@@ -630,7 +630,36 @@ body {
         width: 222px; 
         height: auto;
     }
-    .feed.grid {
+    .feed.cat {
+        text-align: center;
+        > * {
+            text-align: left;
+        }
+        .card img.snapshot {
+            width: 100%;
+            height: auto;
+        }
+        .card[datanum] {
+            width: 33.3%;
+            min-width: 410px;
+            box-sizing: border-box;
+            padding: 7px 7px 0px 7px;
+        }
+        .card[datanum="0"] {
+            width: 100%;
+            .info .owner {
+                position: absolute;
+                bottom: 100px;
+                left: 20px;
+                background: white;
+                padding: 5px;
+            }
+        }
+        .card[datanum="1"], .card[datanum="2"] {
+            width: 50%;
+        }
+    }
+    .feed.grid, .feed.cat {
         /* max-width: 1256px; */
         // margin: auto;
         width: 1230px;

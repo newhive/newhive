@@ -75,7 +75,7 @@ class Community(Controller):
             'title': 'Newhives by ' + owner['name'],
         }
 
-    def collection_client_view(self, collection):
+    def collection_client_view(self, collection, viewer=None):
         username = collection.get('username')
         tag = collection.get('tag')
         if not username or not tag: return None
@@ -85,12 +85,28 @@ class Community(Controller):
         if not exprs: return None
         expr = self.db.Expr.fetch(exprs[0])
         if not expr: return None
-        expr = expr.client_view()
-        expr["title"] = tag
-        expr["collection"] = collection
-        return expr
+        # expr_cv = expr.client_view()
+        # TODO-perf: this method belongs as standalone in state.
+        expr_cv = {} #dfilter(expr, ['snapshot_small', ''])
+        dict.update(expr_cv, {
+            # TODO-perf: trim this to essentials
+            "owner": owner.client_view(viewer=viewer)
+            ,"snapshot_small": expr.snapshot_name("small")
+            ,"title": tag
+            ,"collection": collection
+            ,"type": "cat" #!!
+        })
+        # determine if this is an owned or curated collection
+        owned_exprs = (self.db.Expr.fetch(
+            {'owner': owner.id, 'id': {'$in': exprs}}))
+        expr_cv['curated'] = not (
+            owned_exprs and (owned_exprs.count() == len(exprs)))
+
+        return expr_cv
 
     def expressions_public_tags(self, tdata, request, owner_name=None, db_args={}, **args):
+        if not owner_name: 
+            owner_name = args.get('owner_name')
         owner = self.db.User.named(owner_name)
         if not owner: return None
         tag_name = args.get('tag_name')
@@ -98,6 +114,7 @@ class Community(Controller):
             if tag_name:
                 cards = owner.get_category(tag_name)
                 if cards: cards = cards.get('collections')
+                if not cards: return None 
                 # insert client view of collections into cards
                 cards = [self.collection_client_view(x) for x in cards]
                 # remove empties

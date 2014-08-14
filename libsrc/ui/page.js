@@ -198,6 +198,10 @@ define([
     ///////////////////////////////
 
     o.preprocess_context = function(){
+        // For routes that specify the owner, do not show the profile card.
+        if (context.route.owner_name)
+            delete context.page_data.owner
+
         var user = context.user;
         user.extra_tags = 
             user.tagged.slice(user.tagged_ordered);
@@ -315,6 +319,12 @@ define([
         page_data.layout = 'grid';
         grid_width = 222 + 2*10; // padding = 10 + 10
         render_site(page_data);
+    };
+    o.cat = function(page_data){
+        o.grid(page_data)
+        // page_data.layout = 'grid';
+        // grid_width = 222 + 2*10; // padding = 10 + 10
+        // render_site(page_data);
     };
     // END-layout-methods
     
@@ -656,7 +666,9 @@ define([
 
     var done_layout = false;
     o.resize = function(){
-        if(context.page_data.layout == 'grid' || context.page_data.layout == 'mini') {
+        if(context.page_data.layout == 'grid' ||
+            context.page_data.layout == 'cat' ||
+            context.page_data.layout == 'mini') {
             var columns = Math.max(1, Math.min(3, 
                 Math.floor($(window).width() / grid_width)));
             $('.feed').css('width', columns * (grid_width + border_width));

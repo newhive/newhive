@@ -1,10 +1,12 @@
 {
+    "empty": "TODO-cleanup: preprocess this file to allow grouping and comments",
+    
     "empty": "TODO-cleanup: move the functions around to make more sense",
     "empty": "TODO-cleanup: move client_method inside page_data",
     "empty": "TODO: allow tags in routes with is_form, supports_flags",
 
     "empty": "-----------------------------------------",
-    "empty": "These routes are community pages.",
+    "empty": "These routes are content domain",
     "empty": "-----------------------------------------",
 
     "naked_expr_id": {
@@ -34,11 +36,9 @@
         "precedence": 1
     },
 
-    "expr_data": {
-        "api_route": "/api/expr/fetch/<expr_id>",
-        "controller": "expr",
-        "method": "fetch_data"
-    },
+    "empty": "-----------------------------------------",
+    "empty": "These routes are community pages.",
+    "empty": "-----------------------------------------",
 
     "home": {
         "page_route": "/",
@@ -48,6 +48,28 @@
         "client_method": "home",
         "custom_classes": "nav",
         "require_login": true
+    },
+    "home_cat": {
+        "page_route": "/home/cat/<tag_name>",
+        "api_route": "/api/feed/cat/<tag_name>",
+        "controller": "community",
+        "method": "expressions_public_tags",
+        "client_method": "cat",
+        "owner_name": "root",
+        "custom_classes": "nav",
+        "suppress_borders": "true",
+        "include_categories": true
+    },
+    "home_": {
+        "page_route": "/home/cat",
+        "api_route": "/api/feed/cat",
+        "controller": "community",
+        "method": "expressions_public_tags",
+        "client_method": "cat",
+        "owner_name": "root",
+        "custom_classes": "nav",
+        "suppress_borders": "true",
+        "include_categories": true
     },
     "trending": {
         "page_route": "/<username>/profile/trending",
@@ -298,6 +320,13 @@
         "controller": "user",
         "method": "deactivate"
     },
+
+    "expr_data": {
+        "api_route": "/api/expr/fetch/<expr_id>",
+        "controller": "expr",
+        "method": "fetch_data"
+    },
+
     "view_expr": {
         "page_route": "/<owner_name>/<path:expr_name>",
         "api_route": "/api/expr/view/<owner_name>/<path:expr_name>",
@@ -447,6 +476,7 @@
 
     "empty": "-----------------------------------------",
     "empty": "Admin.",
+    "empty": "-----------------------------------------",
 
     "site_flags": {
         "page_route": "/home/admin/site_flags",
@@ -475,6 +505,7 @@
         "client_method": "profile",
         "require_login": true
     },
+    "empty": "Note: this is clientside; there is no server handler",
     "test_dialogs": {
         "page_route": "/home/admin/test_dialogs",
         "client_method": "test_dialogs"
