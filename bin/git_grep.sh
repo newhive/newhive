@@ -88,5 +88,5 @@ function grep_results {(
 function grep_python_def {(
     grepvar=$1
     shift
-    a -o -p "*.py" $* "def[^(]*$grepvar"
+    git_grep -o -p "*.py" $* "def[^(]*$grepvar"
 )}

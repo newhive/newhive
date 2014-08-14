@@ -5,12 +5,10 @@
 
 {<if user.logged_in}
   <a href='/'><p class='heading error'>Error: already logged in.</p></a>
-{>}
-{<else}{<if error "referral"}
+{>}{<elif error "referral"}
   <a href='/'><p class='heading error'>Oops!
     There was a problem with your invitation.</p></a>
-{>}
-{<else}
+{>}{<else}
   <img id="logo" src='{asset "skin/site/logo_text.png"}'>
   <form id='create_form' class="form_text"
     action='{config.secure_server}api/user/create' method='POST'
@@ -52,12 +50,12 @@
     <input type='hidden' name='key' value='{query.key}'>
     <input class='hide' name='phone' value=''>
   </form>
-{>}{>}
+</div>
 
 <div class="dialog" id="dia_TOS" data-handle="#read_tos"
-><div class="content"
-  ><div class="title">Terms of Service
-</div>Welcome to NewHive!
+  ><div class="content"
+    ><div class="title">Terms of Service</div
+    >Welcome to NewHive!
 
 These Terms of Service form a contract between you and us applicable when you use the Site and the NewHive Services.  Here are the basics:  You own your content.  You agree that all information/data/pictures you post are your own creation or you are allowed to use them.  You refrain from using the site in any way that could be interpreted as hateful/derogatory.  Most of all, we want you to have fun. Please read these Terms carefully for all the details before you use the Site.
 
@@ -228,6 +226,6 @@ As such, the following provisions apply specifically to Subscribers located outs
 NewHive deals with copyright infringement on NewHive Services in accordance with the Digital Millennium Copyright Act. 
 Thanks! We appreciate that you choose to use NewHive, and we hope you enjoy using it! If You have any comments for us, we'd love to hear them. Please send them to: info@thenewhive.com.
 
+  </div>
 </div>
-</div>
-</div>
+{>}

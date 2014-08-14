@@ -640,7 +640,7 @@ define(['browser/js', 'module'],
 	};
 	context_base.string_to_list = function (context, string){
 	  	var array = string.split("[^\w']+");
-	  	if ( array.length <= 1 ) return string;
+	  	if ( array.length <= 1 ) return [string];
 		else return array;
 	};
 

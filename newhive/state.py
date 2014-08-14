@@ -254,7 +254,7 @@ class Collection(object):
         return self.find(spec, **opts)
 
     def paginate(self, spec, limit=20, at=0, sort='updated', 
-        order=-1, filter=None, **args):
+        order=-1, filter={}, **args):
         # page_is_id = is_mongo_key(at)
         # if at and not page_is_id:
 
@@ -1846,7 +1846,7 @@ class Expr(HasSocial):
 
     @property
     def auth(self):
-        return self.get('auth', 'private')
+        return self.get('auth', 'password')
 
     public = property(lambda self: self.get('auth') == "public")
 

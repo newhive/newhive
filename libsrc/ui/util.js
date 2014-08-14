@@ -12,6 +12,21 @@ define([
             return assets[name];
         return false;
     };
+    o.stack_readable = function(depth) {
+        if (depth === undefined) depth = 1
+        try {
+            floopdeboopschnitzelburgenheimerror
+        } catch (e) {
+            var line = e.stack.split("\n")[depth + 1].match(/(?:at )([^ ]+) \((.*)\)/)
+                , fn_name = line[1], fn_url = line[2]
+            // The following line abbreviates the URL but makes it unclickable
+            // in dev tools
+            // fn_url = fn_url.replace(/(https?:)?(\/\/[^/]*\/)?/,"/")
+            // console.log(fn_url + " (" + fn_name + "): " + text)
+            return fn_url + " (" + fn_name + "): "
+        }
+        return "<stack unavailable> "
+    }
     o.asset_name_from_url = function(url){
         // if (url.search(".png"))
         //     return false;

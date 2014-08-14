@@ -376,6 +376,7 @@ body.mobile {
     .tag_list.main .drop_box { display:none; }
 }
 #home_video { width: 640px; height: 360px; }
+
 // TODO: should also have body.default
 body {
     ///
@@ -387,10 +388,39 @@ body {
     left: 0px; 
     top: 0px;
     width: 100%; height: 100%;
-    
+
+    .main-header .header {
+        // height: 39px; // Ew.  Should be computed.
+        line-height: 0px; // To remove extra whitespace
+        ul {
+            -webkit-margin-before: 0em;
+            -webkit-margin-after: 0em;
+            -webkit-margin-start: 0px;
+            -webkit-margin-end: 0px;
+            -webkit-padding-start: 0px;
+
+            display: inline-block;
+            text-align: justify;
+            width: 100%;
+
+            overflow: hidden;
+
+            li { display: inline-block; }
+            .text_btn { margin: 0px; }
+
+            &:after {
+                content: '';
+                display: inline-block;
+                width: 100%;
+                // height: 0px;
+            }
+        }
+    }
     .network_nav {
         display: block;
         text-align: center;
+        height: 39px;  // 1em + 20px
+        min-width: 400px;  //!! needs to reflect content changes
         .text_btn {
             display: inline-block;
             // margin: 5px;
@@ -399,7 +429,7 @@ body {
         // @include border-radius(0px);
         // @include box-shadow(rgba(black, 0.4) 0px 0px 0px);
     }
-    #header {
+    .header_title {
         margin-bottom: 31px;
         margin-top: 39px;
         text-align: center;
@@ -600,7 +630,36 @@ body {
         width: 222px; 
         height: auto;
     }
-    .feed.grid {
+    .feed.cat {
+        text-align: center;
+        > * {
+            text-align: left;
+        }
+        .card img.snapshot {
+            width: 100%;
+            height: auto;
+        }
+        .card[datanum] {
+            width: 33.3%;
+            min-width: 410px;
+            box-sizing: border-box;
+            padding: 7px 7px 0px 7px;
+        }
+        .card[datanum="0"] {
+            width: 100%;
+            .info .owner {
+                position: absolute;
+                bottom: 100px;
+                left: 20px;
+                background: white;
+                padding: 5px;
+            }
+        }
+        .card[datanum="1"], .card[datanum="2"] {
+            width: 50%;
+        }
+    }
+    .feed.grid, .feed.cat {
         /* max-width: 1256px; */
         // margin: auto;
         width: 1230px;
