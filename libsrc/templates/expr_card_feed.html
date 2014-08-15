@@ -2,14 +2,20 @@
   Tiling-sized expression view, with activity feed
   param{suppress_feed}: disable activity
 #}
+{set "clean_args" (cond (and collection (eq type "expr")) "&no_paging" "")}
+
 {# tags #}
-{<if type "expr"}
+{<if (and (eq type "expr") (not collection))}
   {<with null "plus_menu" user.logged_in}
     {|templates/tag_list.html}
   {>}
+{>}{<elif (not no_delete)}
+    <div class="delete icon pointer"></div>
 {>}
-<a {<if type "expr"}{ query_attrs "view_expr" 
-    (concat search_query (cond entropy (concat "&e=" entropy) ""))
+
+<a {<if type "expr"}
+  { query_attrs "view_expr" 
+    (concat search_query (cond entropy (concat "&e=" entropy) "") clean_args)
     "id" id  "expr_name" name "owner_name" owner.name }
   {>}{<elif type "cat"}
     {<with expr}

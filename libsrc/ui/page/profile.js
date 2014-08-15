@@ -121,7 +121,17 @@ define([
             if (context.route.include_categories) {
                 $(this).find("input[name=type]").val("categories");
                 var ordered = $.map(ordered_cards, function(l, i) {
-                    return c.page_data.cards[$(l).data("num")].collection
+                    var data_num = $(l).data("num"), card, found = false
+                        , cards = context.page_data.cards
+                    // Find the card page_data with the matching position data
+                    for (var j = 0; j < cards.length; ++j) {
+                        card = cards[j]
+                        if (card.card_num == data_num) {
+                            found = true
+                            break
+                        }
+                    }
+                    return found ? card.collection : false
                 })
             } else {
                 $(this).find("input[name=type]").val("collections");

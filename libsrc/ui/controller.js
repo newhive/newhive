@@ -124,6 +124,8 @@ define([
         context.route = routes[route_name];
         var cards = context.page_data.cards
             , cards_route = context.page_data.cards_route
+        context.page_data.next_cards_at = cards ? cards.length : 0
+        context.page_data.cards_at = 0
         if (cards && cards.length && cards[0].collection) {
             cards = null
             cards_route = null
@@ -174,6 +176,8 @@ define([
         loading = true;
         var add_cards = function(data){
             context.page_data.cards = context.page_data.cards.concat(data.cards);
+            context.page_data.cards_at = context.page_data.next_cards_at
+            context.page_data.next_cards_at += data.cards.length
             if(with_cards) with_cards(data);
         };
         var route = context.page_data.cards_route;

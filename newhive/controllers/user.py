@@ -55,7 +55,7 @@ class User(ModelController):
     def collection_order(self, tdata, request, response, **args):
         is_category = (request.form.get('type') == 'categories')
         new_order = json.loads(request.form.get('new_order'))
-        # new_order = [t for t in new_order if t != '']
+        new_order = [t for t in new_order if t]
 
         tag_name = request.form.get('tag_name')
         deletes = int(request.form.get('deletes'))
@@ -95,20 +95,29 @@ class User(ModelController):
         return self.serve_json(response, True)
 
     def add_to_collection(self, tdata, request, response, **args):
+        if not tdata.user.logged_in:
+            return self.serve_json(response, { 'error': 'needs_login'})
         tag_name = request.form.get('tag_name')
+        expr_id = request.form.get('expr_id')
+
         if request.form.get('type') == "categories":
-            user_id = request.form.get('user_id')
-            user = self.db.User.fetch(user_id)
-            col_name = request.form.get('col_name')
-            if not user or not tdata.user.logged_in or not tag_name or not col_name:
-                return self.serve_json(response, { 'error': 'error'})
+            if expr_id:
+                expr = self.db.Expr.fetch(expr_id)
+                if not expr or not tag_name:
+                    return self.serve_json(response, { 'error': 'error'})
 
-            col = user.make_collection(col_name)
+                tdata.user.add_to_category(tag_name, expr_id)
+            else:
+                user_id = request.form.get('user_id')
+                user = self.db.User.fetch(user_id)
+                col_name = request.form.get('col_name')
+                if not user or not tag_name or not col_name:
+                    return self.serve_json(response, { 'error': 'error'})
 
-            tdata.user.add_to_category(tag_name, col)
+                col = user.make_collection(col_name)
+                tdata.user.add_to_category(tag_name, col)
         else:
             user = tdata.user
-            expr_id = request.form.get('expr_id')
             expr = self.db.Expr.fetch(expr_id)
 
             if not user or not user.logged_in or not tag_name or not expr:

@@ -9,7 +9,7 @@
   {>}{<elif (or (eq type "expr") (eq type "cat"))}
     <div class='expr activity card hoverable
     {<if auth} unlisted{>}' id='card_{id}' draggable='false' 
-      datanum={plus card_num cards_at}>
+      data-num={plus card_num cards_at}>
       {<if (or (eq layout "grid") (eq layout "cat"))}
         {|templates/expr_card_feed.html}
       {>}

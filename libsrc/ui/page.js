@@ -37,6 +37,7 @@ define([
     'sj!templates/dialog_share.html',
     'sj!templates/network_nav.html',
     'sj!templates/login_form.html', 
+    'sj!templates/tag_buttons.html', 
     'sj!templates/request_invite_form.html',
     'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js',
     'sj!templates/cards.html'
@@ -418,8 +419,9 @@ define([
                 submit_add_to_collection($(this).text());
             }).addClass("pointer");
 
-            if (category == "collections") {
-                var card = $(this).parents().filter(".expr.card");
+            var card = $(this).parents().filter(".expr.card");
+            if (category == "collections" || 
+                context.page_data.expr || card.length) {
                 var expr_id = ""
                 // If the plus button is on a card, use its ID info
                 if (card.length) 
@@ -437,8 +439,8 @@ define([
             update_text();
             dia.open();
         }}
-        $(".plus_menu").unbind('click').on('click', add_to_collection("collections"))
-        $(".plus_cats").unbind('click').on('click', add_to_collection("categories"))
+        $(".plus_menu").bind_once_anon('click.page', add_to_collection("collections"))
+        $(".plus_cats").bind_once_anon('click.page', add_to_collection("categories"))
             .addClass("pointer")
         if (!context.user.logged_in) {
             $(".needs_login").unbind("click").click(function(e) {

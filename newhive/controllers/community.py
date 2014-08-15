@@ -76,6 +76,12 @@ class Community(Controller):
         }
 
     def collection_client_view(self, collection, viewer=None):
+        if isinstance(collection, basestring):
+            expr = self.db.Expr.fetch(collection)
+            if not expr: return None
+            expr_cv = expr.client_view(viewer=viewer)
+            expr_cv['collection'] = collection
+            return expr_cv
         username = collection.get('username')
         tag = collection.get('tag')
         if not username or not tag: return None
