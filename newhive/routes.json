@@ -55,9 +55,8 @@
         "controller": "community",
         "method": "expressions_public_tags",
         "client_method": "cat",
-        "owner_name": "root",
+        "_owner_name": "root",
         "custom_classes": "nav",
-        "suppress_borders": "true",
         "include_categories": true
     },
     "home_": {
@@ -66,9 +65,8 @@
         "controller": "community",
         "method": "expressions_public_tags",
         "client_method": "cat",
-        "owner_name": "root",
+        "_owner_name": "root",
         "custom_classes": "nav",
-        "suppress_borders": "true",
         "include_categories": true
     },
     "trending": {

@@ -122,8 +122,12 @@ define([
         if (route_name == "expr")
             route_name = "view_expr";
         context.route = routes[route_name];
-        var cards = context.page_data.cards;
-        var cards_route = context.page_data.cards_route;
+        var cards = context.page_data.cards
+            , cards_route = context.page_data.cards_route
+        if (cards && cards.length && cards[0].collection) {
+            cards = null
+            cards_route = null
+        }
         context.page_data = page_data;
         if(!page_data.cards) context.page_data.cards = cards;
         if(!page_data.cards_route) context.page_data.cards_route = cards_route;

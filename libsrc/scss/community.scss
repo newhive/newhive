@@ -630,34 +630,61 @@ body {
         width: 222px; 
         height: auto;
     }
-    .feed.cat {
+    .feed.cat.narrow .card {
+        width: 100%;
+    }
+    .feed.cat.wide._3col .card {
+        width: 33.3%;
+    }
+    .feed.cat .card {
+        img.snapshot {
+            width: 100%;
+            height: auto;
+        }
+    }
+    .feed.cat.wide {
         text-align: center;
         > * {
             text-align: left;
         }
-        .card img.snapshot {
-            width: 100%;
-            height: auto;
-        }
-        .card[datanum] {
-            width: 33.3%;
-            min-width: 410px;
+        .card {
+            width: 50%;
+            // min-width: 410px;
             box-sizing: border-box;
             padding: 7px 7px 0px 7px;
-        }
-        .card[datanum="0"] {
-            width: 100%;
-            .info .owner {
-                position: absolute;
-                bottom: 100px;
-                left: 20px;
-                background: white;
-                padding: 5px;
+
+            &[datanum="0"] {
+                width: 100%;
+                .card_title, .info {
+                    position: absolute;
+                }
+                .card_title {
+                    left: 20px;
+                    top: 20px;
+                    background: black;
+                    color: white;
+                    width: auto;
+                    padding: 0px 7px;
+                }
+                .info {
+                    position: absolute;
+                    bottom: 20px;
+                    left: 20px;
+                    background: white;
+                    padding: 5px;
+                }
+                &:after {
+                    content: '';
+                    width: 100%;
+                }
             }
-        }
-        .card[datanum="1"], .card[datanum="2"] {
-            width: 50%;
-        }
+            &[datanum="1"], &[datanum="2"] {
+                width: 50%;
+            }
+        }            
+    }
+    .feed.grid.narrow, .feed.cat.narrow {
+        .card .vcenter_outer { height: auto; }
     }
     .feed.grid, .feed.cat {
         /* max-width: 1256px; */
