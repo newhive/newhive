@@ -510,13 +510,18 @@ define(['browser/js', 'module'],
 		}
 		return block(context.concat(new_context));
 	};
+	// wrap the following block with open and close tags
+	context_base.wrap = function(context, block, open, close){
+		return open + block(context) + close;
+	};
 	context_base['debug'] = function(context, do_debugger){
 		if(typeof do_debugger == "undefined") do_debugger = true;
-		//if(do_debugger) debugger;
+		if(do_debugger) debugger;
         //     throw o.render_error('debug break', context,
 		  	   // current_node(context));
 		// possibly add rendering context in invisible div
-		return '<div>DEBUG inserted</div><div style="display:none">' + '' + '</div>';
+		return do_debugger ? '' : 
+			'<div>DEBUG inserted</div><div style="display:none">' + '' + '</div>';
 	};
 	context_base.e = encode_to_html;
 	// TODO-cleanup-object: add object builder, that takes key value
@@ -585,6 +590,7 @@ define(['browser/js', 'module'],
 	context_base.cond = function(context, cond, truthy, falsy){
 		return cond ? truthy : falsy;
 	};
+
 	context_base.lower = function(context, s){ return s.toLowerCase(); };
 	// TODO-cleanup: add example cases to all these functions.
 	// {<for (unique user.activity)}<item>{>}

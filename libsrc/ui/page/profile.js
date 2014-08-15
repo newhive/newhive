@@ -27,7 +27,7 @@ define([
     }
 
     // pagination functions here
-    var ui_page, win = $(window), card_type, card_layout;
+    var ui_page, win = $(window), card_layout;
     o.more_cards = true;
     var on_scroll_add_page = function(){
         if((win.scrollTop() + win.height() + 100 > document.body.scrollHeight)
@@ -38,7 +38,6 @@ define([
     };
     o.render_new_cards = function(data){
         // ugly hack to merge old context attributes to new data
-        data.card_type = card_type;
         data.layout = card_layout;
         if(data.cards.length == 0)
             o.more_cards = false;
@@ -68,7 +67,6 @@ define([
     o.attach_handlers = function(){
         // TODO-cleanup: These values need to be saved last in render order
         // but have nothing to do with handlers.
-        card_type = context.page_data.card_type;
         card_layout = context.page_data.layout;
 
         $('.feed .expr.card').on('mouseenter', function(event){

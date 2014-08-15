@@ -199,8 +199,9 @@ define([
 
     o.preprocess_context = function(){
         // For routes that specify the owner, do not show the profile card.
-        if (context.route.owner_name)
+        if (context.route._owner_name) {
             delete context.page_data.owner
+        }
 
         var user = context.user;
         user.extra_tags = 

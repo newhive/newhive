@@ -18,6 +18,7 @@
     {|templates/profile_card.html}
   {>}
 {>}
+{<if (not flags.new_nav)}
 <form class="search_bar{<if owner} hide{>}"
   method='GET' action='/search' name='search_form'>
     {#
@@ -30,6 +31,7 @@
     ><input type="submit" value class='hoverable icon go_arrow inline'
   ></form
 >
+{>}
 {<unless page "tag_search"}
   {<with null "extra_classes" "hide"} {# "expander" route.include_tags #}
     {|templates/tags_main.html}
