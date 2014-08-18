@@ -6,12 +6,11 @@
     <div class='user card' id='card_{id}' draggable='false'>
       {|templates/user_card.html}
     </div>
-  {>}
-  {<if type "expr"}
+  {>}{<elif (or (eq type "expr") (eq type "cat"))}
     <div class='expr activity card hoverable
     {<if auth} unlisted{>}' id='card_{id}' draggable='false' 
       data-num={plus card_num cards_at}>
-      {<if layout "grid"}
+      {<if (or (eq layout "grid") (eq layout "cat"))}
         {|templates/expr_card_feed.html}
       {>}
       {<if layout "profile"}

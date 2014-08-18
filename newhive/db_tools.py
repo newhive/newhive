@@ -106,7 +106,7 @@ def exprs_with_jplayer():
 def create_user(name):
     db.User.create({"name": name,
         "email":"me@somewhere.com",
-        "sites":[name + ".thenewhive.com"],
+        "sites":[name + ".newhive.com"],
         "password":"password",
         "referrer":db.User.site_user.id
         })

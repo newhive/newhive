@@ -575,7 +575,7 @@ define([
         // updates embed links based on selection
         $("#dia_embed input[type=checkbox]").on("change", function(ev) {
             var host = context.config.server_url
-                , params = ["template=embed"]
+                , params = {template: "embed"}
                 , link = ''
                 , embed_url = ''
                 , clean = ''
@@ -583,16 +583,16 @@ define([
                 clean += "+logo"
             }
             if ($("#include_collection").is(":checked")){
-                params.push(location.search.slice(1))
+                params.q = context.query.q
                 clean += "+collection"
             }
             if ($("#include_social").is(":checked")){
                 clean += "+social"
             }
             if (clean)
-                params.push("clean=" + clean.slice(1))
+                params.clean = clean.slice(1)
 
-            params = (params.length) ? "?" + params.join("&amp;") : ''
+            params = "?" + $.param(params)
             link = util.urlize(host).replace(/\/$/,"") + 
                 window.location.pathname;
             embed_url ="<iframe src='" + link + params + "' " +

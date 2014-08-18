@@ -12,7 +12,7 @@ class Community(Controller):
     def featured(self, tdata, request, db_args={}, **args):
         return {
             "cards": self.db.query('#Featured', **db_args),
-            'header': ("The Hive",), 'card_type': 'expr',
+            'header': ("The Hive",),
             'title': "The Hive",
         }
 
@@ -22,7 +22,7 @@ class Community(Controller):
     def recent(self, tdata, request, db_args={}, **args):
         return {
             "cards": self.db.query('#Recent', **db_args),
-            'header': ("ALL Newhives",), 'card_type': 'expr',
+            'header': ("ALL Newhives",), 
             'title': "NewHive - ALL",
         }
 
@@ -37,7 +37,7 @@ class Community(Controller):
             "network_help": (len(user.starred_user_ids) <= 1),
             # "cards": self.db.query('#Network', **db_args),
             "cards": user.feed_trending(**db_args),
-            'header': ("Network",), 'card_type': 'expr',
+            'header': ("Network",), 
             'title': "Network",
         }
 
@@ -47,7 +47,7 @@ class Community(Controller):
             user = tdata.user
         return {
             "cards": user.feed_recent(**db_args),
-            "header": ("Recent",), 'card_type': 'expr',
+            "header": ("Recent",), 
             "title": 'Recent',
         }
 
@@ -71,13 +71,19 @@ class Community(Controller):
                 cards.append(instructional);
         profile = owner.client_view(viewer=tdata.user)
         return {
-            'cards': cards, 'owner': profile, 'card_type':'expr',
+            'cards': cards, 'owner': profile, 
             'title': 'Newhives by ' + owner['name'],
         }
 
-    def category_client_view(self, card):
-        username = card.get('username')
-        tag = card.get('tag')
+    def collection_client_view(self, collection, viewer=None):
+        if isinstance(collection, basestring):
+            expr = self.db.Expr.fetch(collection)
+            if not expr: return None
+            expr_cv = expr.client_view(viewer=viewer)
+            expr_cv['collection'] = collection
+            return expr_cv
+        username = collection.get('username')
+        tag = collection.get('tag')
         if not username or not tag: return None
         owner = self.db.User.named(username)
         if not owner: return None
@@ -85,12 +91,33 @@ class Community(Controller):
         if not exprs: return None
         expr = self.db.Expr.fetch(exprs[0])
         if not expr: return None
-        expr = expr.client_view()
-        expr["title"] = tag
-        expr["collection"] = card
-        return expr
+        # TODO-perf: this method belongs as standalone in state.
+        expr_cv = {
+            # TODO-perf: trim this to essentials
+            "owner": owner.client_view(viewer=viewer)
+            ,"snapshot_small": expr.snapshot_name("small")
+            ,"title": tag
+            ,"collection": collection
+            ,"type": "cat"
+            # These are for the expression route
+            ,"expr": {
+                "owner_name": expr['owner_name']
+                ,"name": expr['name']
+                ,"id": expr.id
+                ,"search_query": "q=@%s #%s" % (username, tag)
+            }
+        }
+        # determine if this is an owned or curated collection
+        owned_exprs = (self.db.Expr.search(
+            {'owner': owner.id, '_id': {'$in': exprs}}))
+        expr_cv['curated'] = not (
+            owned_exprs and (owned_exprs.count() == len(exprs)))
+
+        return expr_cv
 
     def expressions_public_tags(self, tdata, request, owner_name=None, db_args={}, **args):
+        if not owner_name: 
+            owner_name = args.get('_owner_name')
         owner = self.db.User.named(owner_name)
         if not owner: return None
         tag_name = args.get('tag_name')
@@ -98,14 +125,18 @@ class Community(Controller):
             if tag_name:
                 cards = owner.get_category(tag_name)
                 if cards: cards = cards.get('collections')
+                if not cards: return None 
                 # insert client view of collections into cards
-                cards = [self.category_client_view(x) for x in cards]
+                cards = [self.collection_client_view(x) for x in cards]
                 # remove empties
                 cards = [x for x in cards if x]
                 res = self.expressions_for(tdata, cards, owner)
                 res.update({
                     "tag_selected":tag_name
                 })
+                # TODO: should we have data in route specifically for title?
+                if args.get('_owner_name'):
+                    res['title'] = 'Featured collections'
                 return res
             return self.expressions_for(tdata, [], owner)
         if tag_name: 
@@ -137,7 +168,6 @@ class Community(Controller):
 
         data = {
             "cards": result,
-            "card_type": "expr",
             "tag_selected": tag_name,
             'owner': profile,
             'entropy': entropy,
@@ -153,7 +183,7 @@ class Community(Controller):
         spec = {'owner_name': owner_name}
         cards = self.db.Expr.page(spec, auth='password', **db_args)
         return {
-            'cards': cards, 'owner': owner.client_view(), 'card_type':'expr',
+            'cards': cards, 'owner': owner.client_view(),
             'title': 'Your Private Newhives',
         }
 
@@ -260,7 +290,7 @@ class Community(Controller):
 
         profile = owner.client_view(viewer=tdata.user)
         return {
-            'cards': cards, 'owner': profile, 'card_type':'expr',
+            'cards': cards, 'owner': profile,
             'title': 'Loves by ' + owner['name'],
             'about_text': 'Loves',
         }
@@ -276,7 +306,7 @@ class Community(Controller):
     #         self.db.Comment.page(spec, tdata.user, **args)))
     #     profile = owner.client_view()
     #     return {
-    #         'page_data': { 'cards': cards, 'profile': profile, 'card_type':'expr',
+    #         'page_data': { 'cards': cards, 'profile': profile, 
     #             'feed_layout':'mini' },
     #         'title': 'Comments by ' + owner['name'],
     #         'about_text': 'Comments',
@@ -294,7 +324,7 @@ class Community(Controller):
         tags = owner.get('tags_following', [])
         return {
             'special': {'mini_expressions': 3},
-            'tag_list': tags, 'cards': users, 'owner': profile, 'card_type':'user',
+            'tag_list': tags, 'cards': users, 'owner': profile, 
             'title': owner['name'] + ' Following', 'about_text': 'Following',
         }
 
@@ -306,7 +336,7 @@ class Community(Controller):
         profile = owner.client_view(viewer=tdata.user)
         return {
             'special': {'mini_expressions': 3},
-            'cards': users, 'owner': profile, 'card_type':'user',
+            'cards': users, 'owner': profile, 
             'title': owner['name'] + ': Followers', 'about_text': 'Followers',
         }
 
@@ -411,7 +441,6 @@ class Community(Controller):
         data = {
             "cards": result,
             'special': {'mini_expressions': 3},
-            "card_type": "expr",
             'title': 'Search',
             'header': ("Search", request.args['q']),
         }
@@ -432,7 +461,6 @@ class Community(Controller):
         res = self.db.Expr.search(q, **db_args)
         return {
             'cards': list(res),
-            'card_type': 'expr'
         }
 
     # TODO-cleanup: currently used for redirects. Remove this, make propper

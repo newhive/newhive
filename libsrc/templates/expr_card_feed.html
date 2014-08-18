@@ -2,30 +2,53 @@
   Tiling-sized expression view, with activity feed
   param{suppress_feed}: disable activity
 #}
+{set "clean_args" (cond (and collection (eq type "expr")) "&no_paging" "")}
+
 {# tags #}
-{<with null "plus_menu" user.logged_in}
-  {|templates/tag_list.html}
+{<if (and (eq type "expr") (not collection))}
+  {<with null "plus_menu" user.logged_in}
+    {|templates/tag_list.html}
+  {>}
+{>}{<elif (not no_delete)}
+    <div class="delete icon pointer"></div>
 {>}
-<a { query_attrs "view_expr" 
-    (concat search_query (cond entropy (concat "&e=" entropy) ""))
+
+<a {<if type "expr"}
+  { query_attrs "view_expr" 
+    (concat search_query (cond entropy (concat "&e=" entropy) "") clean_args)
     "id" id  "expr_name" name "owner_name" owner.name }
+  {>}{<elif type "cat"}
+    {<with expr}
+      {query_attrs "view_expr" 
+        search_query "id" id "expr_name" name "owner_name" owner_name}
+      }
+    {>}
+  {>}
   ><img class="snapshot" src=
     {<if snapshot_small}
       "{snapshot_small}"
     {>}{<else}
       {asset "skin/site/expr_placeholder_small.jpg"}  
     {>}>
-  {<vcenter}<div class='title expr'>{title|untitled|e}</div>{>}
+  {<vcenter "card_title"}
+    {<if type "cat"}<a { anchor_attrs "expressions_tag" 
+        "owner_name" collection.username "tag_name" collection.tag}>
+    {>}
+      <div class='title expr'>{title|untitled|e}</div>
+    {cond cat "</a>" ""}
+  {>}
 </a>
 <div class='info'>
   <div class='owner'>
     {# Should template profile_card, but... #}
     <a {anchor_attrs "expressions_public" "owner_name" owner.name}>
       <img class="thumb" src='{owner.thumb_small}'/>
-      <span>by <span class='username'>{owner.name}</span></span>
+      <span>{<if curated}curated {>}by <span class='username'>{owner.name}</span></span>
     </a>
   </div>
 </div>
-{<unless suppress_feed}{<for feed}
-  {|templates/feed_card.html}
+{<unless suppress_feed}
+  {<for feed}
+    {|templates/feed_card.html}
+  {>}
 {>}

@@ -32,8 +32,46 @@ define([
         context.native_mobile = true;
         // TODO: redirect code goes here
         o.init({route_name: 'home', client_method: 'home'})
-    }
-    
+    };  
+
+    // Make the visibility of the tab known
+    (function() {
+        var hidden = "hidden";
+
+        // Standards:
+        if (hidden in document)
+            document.addEventListener("visibilitychange", onchange);
+        else if ((hidden = "mozHidden") in document)
+            document.addEventListener("mozvisibilitychange", onchange);
+        else if ((hidden = "webkitHidden") in document)
+            document.addEventListener("webkitvisibilitychange", onchange);
+        else if ((hidden = "msHidden") in document)
+            document.addEventListener("msvisibilitychange", onchange);
+        // IE 9 and lower:
+        else if ('onfocusin' in document)
+            document.onfocusin = document.onfocusout = onchange;
+        // All others:
+        else
+            window.onpageshow = window.onpagehide 
+                = window.onfocus = window.onblur = onchange;
+
+        function onchange (evt) {
+            var v = 'visible', h = 'hidden', visibility = ''
+                evtMap = { 
+                    focus:v, focusin:v, pageshow:v, blur:h, focusout:h, pagehide:h 
+                };
+
+            evt = evt || window.event;
+            if (evt.type in evtMap)
+                visibility = evtMap[evt.type];
+            else        
+                visibility = this[hidden] ? "hidden" : "visible";
+            $("body").removeClass("hidden visible").addClass(visibility)
+        }
+        // set the initial state
+        onchange({type:(document.visibilityState == "visible") ? "focus" : "blur"})
+    })();
+
     o.init = function(route_args){
         window.c = context; // useful for debugging
         setup_google_analytics();
@@ -84,8 +122,14 @@ define([
         if (route_name == "expr")
             route_name = "view_expr";
         context.route = routes[route_name];
-        var cards = context.page_data.cards;
-        var cards_route = context.page_data.cards_route;
+        var cards = context.page_data.cards
+            , cards_route = context.page_data.cards_route
+        context.page_data.next_cards_at = cards ? cards.length : 0
+        context.page_data.cards_at = 0
+        if (cards && cards.length && cards[0].collection) {
+            cards = null
+            cards_route = null
+        }
         context.page_data = page_data;
         if(!page_data.cards) context.page_data.cards = cards;
         if(!page_data.cards_route) context.page_data.cards_route = cards_route;
@@ -132,6 +176,8 @@ define([
         loading = true;
         var add_cards = function(data){
             context.page_data.cards = context.page_data.cards.concat(data.cards);
+            context.page_data.cards_at = context.page_data.next_cards_at
+            context.page_data.next_cards_at += data.cards.length
             if(with_cards) with_cards(data);
         };
         var route = context.page_data.cards_route;
@@ -191,8 +237,12 @@ define([
             callback({});
 
         function success(data){
-            if (push_state == undefined || push_state)
+            if ((push_state == undefined || push_state) && 
+                (!history.state || history.state.route_name != "view_expr" ||
+                    page_state.route_name != "view_expr")
+            ) {
                 history.pushState(page_state, null, page_state.page);
+            }
             context.parse_query(data.cards_route && data.cards_route.route_args);
             o.dispatch(page_state.route_name, data);
             if (page_state.route_name != "view_expr")
@@ -219,7 +269,12 @@ define([
         if (! (window.history && window.history.pushState))
             return o.open(route_name, route_args);
         var page_state = context.page_state(route_name, route_args, query);
-        history.pushState(page_state, null, page_state.page);
+        if ((push_state == undefined || push_state) && 
+            (!history.state || history.state.route_name != "view_expr" ||
+                page_state.route_name != "view_expr")
+        ) {
+            history.pushState(page_state, null, page_state.page);
+        }
         context.parse_query(route_args);
     };
 

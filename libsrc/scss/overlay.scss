@@ -3,12 +3,35 @@
 
 @media print { #nav { display: none; } }
 
-.red_spacer {
-    border-left: 2px solid red;
-    display: inline-block;
-    height: 14px;
-    width: 0;
-    margin-right: -4px;
+body.nav .main-header {
+    display: block;
+}
+.main-header {
+    display: none;
+    position:fixed;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+
+    z-index: $nav_layer;
+    background-color: white;
+    // background-repeat: no-repeat;
+    @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
+    @include transition(all, 0.15s, linear);
+
+    .left, .right {
+        margin: 15px;
+    }
+    .logo {
+        @include transition(all, 0.15s, linear);
+        height: 80px;
+    }
+
+    &.condensed {
+        .logo {
+            height: 40px;
+        }
+    }
 }
 
 .page_btn {
@@ -31,6 +54,13 @@
     }
 }
 
+.red_spacer {
+    border-left: 2px solid red;
+    display: inline-block;
+    height: 14px;
+    width: 0;
+    margin-right: -4px;
+}
 .overlay.panel.nav {
     //display: block;
     position: fixed;
@@ -152,7 +182,7 @@
     // height: 180px;
     &:hover { background-color: white; }
 
-    .icon.plus_menu, .icon.add_queue {
+    .icon.plus_menu, .icon.add_queue, .icon.plus_cats {
         // position: absolute;
         // background-color: black;
         // top: 18px;

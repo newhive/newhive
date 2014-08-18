@@ -1,0 +1,7 @@
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+    Header set Expires "Jan, 1 Apr 2020 20:00:00 GMT"
+    Header set Cache-Control max-age=315360000
+</IfModule>
+
+Options -Indexes
