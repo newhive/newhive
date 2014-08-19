@@ -226,8 +226,9 @@ define([
             function(i, el){ form_handler(el, dom) });
 
         dom.find('.menu.drawer[data-handle]').each(function(i, el){
-            var handle = dom.find($(el).attr('data-handle'));
-            if(!handle) throw 'missing handle';
+            var selector = $(el).attr('data-handle')
+                , handle = dom.find(selector)
+            // if(!handle.length) throw 'missing handle';
             var parent = dom.find($(el).attr('data-parent'));
             var opts = {};
             if (parent.length && parent.data('menu')) {

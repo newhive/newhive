@@ -38,6 +38,7 @@ define([
     'sj!templates/network_nav.html',
     'sj!templates/login_form.html', 
     'sj!templates/tag_buttons.html', 
+    'sj!templates/hive_menu.html', 
     'sj!templates/request_invite_form.html',
     'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js',
     'sj!templates/cards.html'
@@ -67,18 +68,19 @@ define([
     var o = {}, expr_page = false, grid_width, controller,
         border_width = 1,
         render_new_cards_func,
+        done_overlays = false,
         anim_direction; // 0 = up, +/-1 = right/left
     const anim_duration = 700;
 
     o.init = function(controller){
         o.anim_direction = 0;
         o.controller = controller;
-        init_overlays();
         $(window).resize(o.resize);
     };
 
     var init_overlays = function(){
-        $('#overlays').empty().html(overlay_template());
+        done_overlays = true;
+        $('#overlays').empty().html(overlay_template(context));
         // render_overlays();
         // $('#login_form').submit(o.login);
         $('#login_form [name=from]').val(window.location);
@@ -158,6 +160,7 @@ define([
     o.on_logout = function(){
         context.user.logged_in = false;
         // overlays are rendered once on init, so not done on .refresh()
+        done_overlays = false;
         init_overlays();
         if (routes[context.route_name].require_login 
             || context.route_name == "view_expr") {
@@ -168,6 +171,7 @@ define([
     o.on_login = function(e) {
         context.user.logged_in = true;
         // overlays are rendered once on init, so not done on .refresh()
+        done_overlays = false;
         init_overlays();
         o.controller.refresh();
     };
@@ -229,10 +233,23 @@ define([
     var custom_classes = ""
     o.render = function(method, data){
         var page_data = context.page_data, expr = page_data.expr
+        if (!done_overlays)
+            init_overlays();
         // set any classes specified by the route
-        var new_classes = context.route.custom_classes
+        var new_classes = context.route.custom_classes // + " " + context.route_name
         $("body").removeClass(custom_classes).addClass(new_classes)
         custom_classes = new_classes
+        // Fix styling for this route
+        $(".main-header .network_nav .item").removeClass("black_btn")
+        $(".main-header .network_nav .item." + context.route_name)
+            .addClass("black_btn")
+        var has_nav = ($("body").hasClass("nav") && $(".main-header").length)
+        $("#overlays .hive_logo")
+            .addremoveClass("overlay", ! has_nav)
+            // .addremoveClass("item", has_nav)
+            .prependTo(has_nav ? ".main-header .left" : "#overlays")
+            .addremoveClass("stay_hidden", has_nav && !context.user.logged_in)
+        $(".overlay.panel .create.item").showhide(!has_nav)
 
         if (page_data.title) $("head title").text(page_data.title);
         o.column_layout = false;
@@ -360,6 +377,8 @@ define([
     var height_nav_large = 155
     var local_attach_handlers = function(){
         if (context.flags.new_nav) {
+            if (context.user && context.user.logged_in)
+                height_nav_large = 70
             $(".nav #site").css({"margin-top": height_nav_large})
             // Animate header
             $(window).bind_once_anon("scroll.page", function(ev) {
@@ -482,21 +501,20 @@ define([
         //     $(".search_bar").submit();
         // });
         
-        $(document).off('keydown', keydown).on("keydown", keydown);
-        var scroll_handler = function(e) {
-            if (c.route_name == "edit_expr")
-                return;
-            return;
-            $(".overlay.nav").fadeOut("fast");
-            if (o.scroll_timeout != undefined)
-                clearTimeout(o.scroll_timeout);
-            o.scroll_timeout = setTimeout(function() {
-                o.scroll_timeout = undefined;
-                if (c.route_name != "edit_expr")
-                    $(".overlay.nav").stop().fadeIn("fast");
-            }, 100);
-        }
-        $(window).off("scroll", scroll_handler).on("scroll", scroll_handler);
+        $(document).bind_once("keydown", keydown);
+        // var scroll_handler = function(e) {
+        //     if (c.route_name == "edit_expr")
+        //         return;
+        //     $(".overlay.nav").fadeOut("fast");
+        //     if (o.scroll_timeout != undefined)
+        //         clearTimeout(o.scroll_timeout);
+        //     o.scroll_timeout = setTimeout(function() {
+        //         o.scroll_timeout = undefined;
+        //         if (c.route_name != "edit_expr")
+        //             $(".overlay.nav").stop().fadeIn("fast");
+        //     }, 100);
+        // }
+        // $(window).off("scroll", scroll_handler).on("scroll", scroll_handler);
     };
     o.attach_handlers = function(){
         if(context.page && context.page.attach_handlers)

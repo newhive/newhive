@@ -6,10 +6,48 @@
 <div class="main-header">
   <div class= "_2column">
     <div class="right fixed inline">
-      Lorem epsom salt.
-    </div>
-    <div class="left fill inline">
-      <img class="logo" src='{asset "skin/site/logo_text.png"}' title="Newhive Logo">
+      {# Search bar #}
+      <form class="search_bar"
+        method='GET' action='/search' name='search_form'>
+          <input type="text" id="search_box" class="inline" placeholder="Search"
+            name='q' value='{query.q}'
+          ><input type="submit" value class='hoverable icon go_arrow inline'
+        ></form
+      >
+      {# Create new page #}
+      <a {anchor_attrs "create_expr"} title='Create newhive'
+        class='needs_login create item btn hoverable'></a>
+      {<if (not user.logged_in)}
+        <br><span class="hide_condensed blurb">Newhive is your blank canvas. We need to nail down our company blurb here. </span>
+      {>}
+
+    {# LEFT content. #}
+    </div><div class="left fill inline">
+      {<if (not user.logged_in)}
+        {# Logo menu #}
+        {<with null "standalone" false}{|templates/hive_menu.html}{>}
+        {# LOGGED OUT: #}
+        <img class="logo splash" src='{asset "skin/site/logo_text.png"}' 
+          title="Newhive Logo">
+      {>}{<else}
+        {# Logo menu #}
+        {<with null "standalone" false}{|templates/hive_menu.html}{>}
+        {# Main navigation #}
+        <div class='network_nav inline'>
+          <a { anchor_attrs "expressions_public" "owner_name" user.name }>
+            <div class='text_btn item teal_hover username
+            {<if route.profile} black_btn{>}'>{user.name}</div></a>
+          <a { anchor_attrs "featured"}>
+            <div class='text_btn item teal_hover featured'>The Hive</div></a>
+          <a { anchor_attrs "network"}>
+            <div class='text_btn item teal_hover network home'>Network</div></a>
+          {<if flags.show_hive_all}
+            <a { anchor_attrs "recent"}>
+              <div class='text_btn item teal_hover recent'>Hive_Recent</div></a>
+          {>}
+        </div>
+
+      {>}
     </div>
   </div>
   <div class="header">
@@ -17,7 +55,8 @@
 </div>
 {>}
 
-<div class='overlay bottom panel nav {<if (and query.clean (not (contains clean_options "social")))} stay_hidden{>}'>
+<div class='overlay bottom panel nav
+  {<if (and query.clean (not (contains clean_options "social")))} stay_hidden{>}'>
   {# create or signup/login #}
   {<unless user.logged_in}
     <span class='signup'>
@@ -47,18 +86,12 @@
 {>}
 
 {# hive logo button #}
-{<if (eq query.template "embed")}
-  <a {anchor_attrs "view_expr" "owner_name" page_data.expr.owner.name "expr_name" page_data.expr.name} 
-    id='logo' class='overlay bottom nav logo icon 
-      {<if (and query.clean (not (contains clean_options "logo")))} stay_hidden{>}'></a>
+{<if (not flags.new_nav)}
+  {<with null "standalone" true}{|templates/hive_menu.html}{>}
 {>}
-{<else}
-  <div id='logo' class='overlay bottom nav logo icon 
-      {<if (and query.clean (not (contains clean_options "logo")))} stay_hidden{>}'></div>
-{>}
-    
+
 {# menu: logo #}
-<div id='logo_menu' class='menu drawer {<if (eq query.template "embed")} stay_hidden{>}' data-handle='#logo'>
+<div id='logo_menu' class='menu drawer {<if (eq query.template "embed")} stay_hidden{>}' data-handle='.hive_logo'>
   {<if user.logged_in}
     <form {form_attrs "logout"} method='POST' id='logout_form'></form>
     <div id='logout_btn' class='menu_item'>Logout</div>
@@ -86,7 +119,7 @@
 
 {# User community actions #}
 {<if user.logged_in}
-  <div id='activity_menu' class='menu drawer user_menu activity'
+  <div id='activity_menu' class='menu drawer user_menu activity items'
     data-handle='#activity_btn' data-parent='#logo'
   >{|templates/user_activity.html}</div>
   <form id='notification_reset' {form_attrs "notification_reset"}></form>

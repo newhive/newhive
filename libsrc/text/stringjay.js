@@ -480,6 +480,9 @@ define(['browser/js', 'module'],
 		});
 		return res;
 	};
+	// {<range "col_num" 3 }
+	//   <div class="column column_{col_num}"></div>
+	// {>}
 	context_base['range'] = function(context, block, var_name, start, stop, step){
 		if(typeof stop == 'undefined'){
 			stop = start;
