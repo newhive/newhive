@@ -6,6 +6,7 @@ rm lib/libsrc
 if [ "$1" = "clean" ]; then
     echo "cleaning..."
     sudo rm -rf libsrc/.cram libsrc/.webassets-cache
+    find|grep *.pyc|sudo xargs rm
 fi
 bin/build_assets.py
 sudo apache2ctl graceful
