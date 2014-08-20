@@ -239,17 +239,25 @@ define([
         var new_classes = context.route.custom_classes // + " " + context.route_name
         $("body").removeClass(custom_classes).addClass(new_classes)
         custom_classes = new_classes
+
         // Fix styling for this route
         $(".main-header .network_nav .item").removeClass("black_btn")
         $(".main-header .network_nav .item." + context.route_name)
             .addClass("black_btn")
         var has_nav = ($("body").hasClass("nav") && $(".main-header").length)
+            ,has_nav_embedded_logo = has_nav && context.user.logged_in
+
         $("#overlays .hive_logo")
-            .addremoveClass("overlay", ! has_nav)
+            .addremoveClass("overlay", ! has_nav_embedded_logo)
             // .addremoveClass("item", has_nav)
-            .prependTo(has_nav ? ".main-header .left" : "#overlays")
-            .addremoveClass("stay_hidden", has_nav && !context.user.logged_in)
+            .prependTo(has_nav_embedded_logo ? ".main-header .left" : "#overlays")
+            // .addremoveClass("stay_hidden", has_nav_embedded_logo)
         $(".overlay.panel .create.item").showhide(!has_nav)
+        if (context.user.logged_in)
+            height_nav_large = 70
+        else
+            height_nav_large = 105
+        $("#site").css({"margin-top": has_nav ? height_nav_large : 0})
 
         if (page_data.title) $("head title").text(page_data.title);
         o.column_layout = false;
@@ -377,9 +385,6 @@ define([
     var height_nav_large = 155
     var local_attach_handlers = function(){
         if (context.flags.new_nav) {
-            if (context.user && context.user.logged_in)
-                height_nav_large = 70
-            $(".nav #site").css({"margin-top": height_nav_large})
             // Animate header
             $(window).bind_once_anon("scroll.page", function(ev) {
                 var scrolled_to = $(this).scrollTop()
