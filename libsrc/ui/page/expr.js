@@ -54,9 +54,6 @@ define([
         // context.is_secure not set until after module instantiation
         o.content_url_base = (context.is_secure ?
                 context.config.secure_content_url : context.config.content_url);
-        $(".page_btn.page_prev").click(o.page_prev);
-        $(".page_btn.page_next").click(o.page_next);
-        $("#social_plus").click(o.social_toggle);
         window.addEventListener('message', o.handle_message, false);
     };
 
@@ -540,6 +537,9 @@ define([
     };
 
     o.attach_handlers = function(){
+        $(".page_btn.page_prev").bind_once('click', o.page_prev);
+        $(".page_btn.page_next").bind_once('click', o.page_next);
+        $("#social_plus").bind_once('click', o.social_toggle);
         $("#social_close").bind_once_anon("click", o.social_toggle);
         $(".social_btn").bind_once_anon("click", o.social_toggle);
         if (context.flags.fade_controls) {

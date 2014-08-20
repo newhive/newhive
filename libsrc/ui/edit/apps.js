@@ -2166,6 +2166,7 @@ Hive.App.Audio = function(o) {
 
     if(!o.init_state.color) o.init_state.color = colors[23];
     if (menu.last_item && menu.last_item.hasClass("autoplay")) {
+        menu.last_item = undefined
         o.autoplay_set(true)
         o.autohide_set(true)
     }
