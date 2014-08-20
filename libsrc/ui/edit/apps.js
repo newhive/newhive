@@ -2719,11 +2719,11 @@ Hive.App.has_toggle = function(o, toggle_name){
     // apps are on)
     var fixup_controls = function(o) {
         var $control = $("#controls ." + toggle_name)
-            ,png = $control.prop("src").slice(0, -4)
-        if (png.slice(-3) == "-on")
-            png = png.slice(0, -3)
-        var toggle = sel[toggle_name]() ? "-on" : ""
-        $control.prop("src", png + toggle + ".png")
+            ,png = $control.prop("src")
+            ,png_off = png.replace("-on.png", ".png")
+            ,asset = ui_util.asset_name_from_url(png_off).slice(0, -4)
+            ,toggle = sel[toggle_name]() ? "-on" : ""
+        $control.prop("src", ui_util.asset(asset + toggle + ".png"))
     }
     fixup_controls.display_order = 9
     o.make_controls.push(memoize('has_' + toggle_name + '_fixup', fixup_controls))
