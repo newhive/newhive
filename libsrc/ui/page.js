@@ -230,16 +230,7 @@ define([
             o.layout_columns();
         o.add_grid_borders();
     }
-    var custom_classes = ""
-    o.render = function(method, data){
-        var page_data = context.page_data, expr = page_data.expr
-        if (!done_overlays)
-            init_overlays();
-        // set any classes specified by the route
-        var new_classes = context.route.custom_classes // + " " + context.route_name
-        $("body").removeClass(custom_classes).addClass(new_classes)
-        custom_classes = new_classes
-
+    var fixup_overlay = function() {
         // Fix styling for this route
         $(".main-header .network_nav .item").removeClass("black_btn")
         $(".main-header .network_nav .item." + context.route_name)
@@ -252,12 +243,28 @@ define([
             // .addremoveClass("item", has_nav)
             .prependTo(has_nav_embedded_logo ? ".main-header .left" : "#overlays")
             // .addremoveClass("stay_hidden", has_nav_embedded_logo)
+        // reverse the logo menu if it's up top
+        if (!! $("#logo_menu").data("inverted") != has_nav_embedded_logo) {
+            $("#logo_menu").data("inverted", has_nav_embedded_logo)
+                .append($("#logo_menu").children().get().reverse())
+        }
         $(".overlay.panel .create.item").showhide(!has_nav)
         if (context.user.logged_in)
             height_nav_large = 70
         else
             height_nav_large = 105
         $("#site").css({"margin-top": has_nav ? height_nav_large : 0})
+    }
+    var custom_classes = ""
+    o.render = function(method, data){
+        var page_data = context.page_data, expr = page_data.expr
+        if (!done_overlays)
+            init_overlays();
+        // set any classes specified by the route
+        var new_classes = context.route.custom_classes // + " " + context.route_name
+        $("body").removeClass(custom_classes).addClass(new_classes)
+        custom_classes = new_classes
+        fixup_overlay()
 
         if (page_data.title) $("head title").text(page_data.title);
         o.column_layout = false;
