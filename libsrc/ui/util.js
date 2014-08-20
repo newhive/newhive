@@ -4,14 +4,6 @@ define([
 ], function($, assets){
     var o = {};
 
-    o.asset = function(name){
-        return _asset(name) || "Not-found:" + name;
-    };
-    var _asset = function(name){
-        if (assets[name])
-            return assets[name];
-        return false;
-    };
     o.stack_readable = function(depth) {
         if (depth === undefined) depth = 1
         try {
@@ -27,10 +19,15 @@ define([
         }
         return "<stack unavailable> "
     }
+    o.asset = function(name){
+        return _asset(name) || "Not-found:" + name;
+    };
+    var _asset = function(name){
+        if (assets[name])
+            return assets[name];
+        return false;
+    };
     o.asset_name_from_url = function(url){
-        // if (url.search(".png"))
-        //     return false;
-        url = url.replace("-hover", "")
         var asset_name = 
             url.replace(/^(https?:)?(\/\/)?[^\/]+\/(lib\/)?/,"");
         // Remove the cache-busting 8-char hex
@@ -190,7 +187,7 @@ define([
         });
 
         function hover_url(url) {
-            var orig_asset = o.asset_name_from_url(url)
+            var orig_asset = o.asset_name_from_url(url.replace("-hover", ""))
             var missing_asset = !orig_asset
             orig_asset = orig_asset || url;
             var h = orig_asset.replace(/(.png)|(-\w*)$/, '-hover.png');
