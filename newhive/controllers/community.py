@@ -96,6 +96,7 @@ class Community(Controller):
             # TODO-perf: trim this to essentials
             "owner": owner.client_view(viewer=viewer)
             ,"snapshot_small": expr.snapshot_name("small")
+            ,"snapshot_big": expr.snapshot_name("big")
             ,"title": tag
             ,"collection": collection
             ,"type": "cat"

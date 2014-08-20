@@ -25,7 +25,9 @@
     {>}
   {>}
   ><img class="snapshot" src=
-    {<if snapshot_small}
+    {<if (and snapshot_big (eq type "cat") (eq card_num 0))}
+      "{snapshot_big}"
+    {>}{<elif snapshot_small}
       "{snapshot_small}"
     {>}{<else}
       {asset "skin/site/expr_placeholder_small.jpg"}  
