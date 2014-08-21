@@ -20,7 +20,7 @@ body.nav .main-header {
     @include transition(all, 0.15s, linear);
 
     .left, .right {
-        margin: 5px;
+        padding: 5px;
     }
     .logo, .item, .icon {
         @include transition(all, 0.15s, linear);

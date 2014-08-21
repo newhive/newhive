@@ -230,6 +230,7 @@ define([
             o.layout_columns();
         o.add_grid_borders();
     }
+    var max_col_width = 500
     var fixup_overlay = function() {
         // Fix styling for this route
         $(".main-header .network_nav .item").removeClass("black_btn")
@@ -254,6 +255,10 @@ define([
         else
             height_nav_large = 105
         $("#site").css({"margin-top": has_nav ? height_nav_large : 0})
+        // keep the left column to a maximum size
+        var $username = $(".main-header .left .username")
+        $username.css("max-width", $username.width() + 
+            max_col_width - $(".main-header .left").width())
     }
     var custom_classes = ""
     o.render = function(method, data){

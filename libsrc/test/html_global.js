@@ -7,6 +7,8 @@ define([
     'server/context'
 
     ,'sj!templates/stringjay_test.html'
+    ,'sj!templates/test_layout.html'
+    
     ,'sj!templates/activity.html'
     ,'sj!templates/card_master.html'
     ,'sj!templates/cards.html'
