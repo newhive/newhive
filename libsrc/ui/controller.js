@@ -268,7 +268,8 @@ define([
         // Fallback to plane old open.
         if (! (window.history && window.history.pushState))
             return o.open(route_name, route_args);
-        var page_state = context.page_state(route_name, route_args, query);
+        var page_state = context.page_state(route_name, route_args, query)
+            , push_state = window.history.pushState
         if ((push_state == undefined || push_state) && 
             (!history.state || history.state.route_name != "view_expr" ||
                 page_state.route_name != "view_expr")
