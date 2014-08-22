@@ -30,8 +30,12 @@ class Community(Controller):
         user = self.db.User.named(username)
         if not user:
             user = tdata.user
+        # New category view 
+        if self.flags.get('new_nav'):
+            return self.expressions_public_tags(tdata, request, _owner_name="root", 
+                tag_name="featured", db_args=db_args, include_categories=True)
         # Logged out users see featured.
-        if not user or not user.id:
+        elif not user or not user.id:
             return self.featured(tdata, request, db_args=db_args, **args)
         return {
             "network_help": (len(user.starred_user_ids) <= 1),

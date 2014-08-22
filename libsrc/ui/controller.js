@@ -118,6 +118,8 @@ define([
     };
     o.dispatch = function(route_name, page_data){
         track_pageview(route_name);
+        if (route_name == "home" && context.flags.new_nav)
+            route_name = "home_cat"
         context.route_name = route_name;
         if (route_name == "expr")
             route_name = "view_expr";

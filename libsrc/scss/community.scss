@@ -399,7 +399,7 @@ body {
             // margin: 5px;
         }
         a + a .text_btn {
-            margin-left: -5px;
+            margin-left: -3px;
         }
 
         // @include border-radius(0px);
@@ -510,6 +510,9 @@ body {
         opacity: .4;
     }
     .feed {
+        // WTF?
+        overflow-x: hidden;
+        
         .icon.private {
             background-image: asset_url('skin/nav/private.png');
             width: 44px;
@@ -649,10 +652,10 @@ body {
                     background: white;
                     padding: 5px;
                 }
-                &:after {
-                    content: '';
-                    width: 100%;
-                }
+                // &:after {
+                //     content: '';
+                //     width: 100%;
+                // }
             }
             &[data-num="1"], &[data-num="2"] {
                 width: 50%;
@@ -665,7 +668,7 @@ body {
     .feed.grid, .feed.cat {
         /* max-width: 1256px; */
         // margin: auto;
-        width: 1230px;
+        // width: 1230px;
         .user.card {
             height: 369px;
             vertical-align: top;
