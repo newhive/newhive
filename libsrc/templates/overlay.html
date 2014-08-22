@@ -7,16 +7,12 @@
   <div class= "_2column">
     {# LEFT content. #}
     <div class="left fixed inline centered">
+      {# LOGGED OUT: #}
       {<if (not user.logged_in)}
-        {# Logo menu #}
-        {<with null "standalone" false}{|templates/hive_menu.html}{>}
-        {# LOGGED OUT: #}
         <a {anchor_attrs "home"}
           ><img class="logo splash" src='{asset "skin/site/logo_text.png"}' 
           title="Newhive Logo"></a>
       {>}{<else}
-        {# Logo menu #}
-        {#{<with null "standalone" false}{|templates/hive_menu.html}{>}#}
         {# Main navigation #}
         <div class='network_nav inline'>
           <a { anchor_attrs "expressions_public" "owner_name" user.name }>

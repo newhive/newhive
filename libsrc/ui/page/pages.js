@@ -4,18 +4,20 @@ define([
     ,'./edit_expr'
     ,'./profile'
     ,'./admin'
-    ,'./manage_tags'
     ,'./new_account'
-    ,'./test_dialogs'
+
+    ,'../../test/html_global'
+    ,'../../test/test_assets'
 ], function(
      expr
     ,home
     ,edit_expr
     ,profile
     ,admin
-    ,manage_tags
     ,new_account
-    ,test_dialogs
+
+    ,html_global
+    ,test_assets
 ){ 
 	return {
     	 expr: expr
@@ -28,8 +30,11 @@ define([
         ,edit_expr: edit_expr
         ,create_expr: edit_expr
         ,admin: admin
-        ,test_dialogs: test_dialogs
-        ,manage_tags: manage_tags
         ,new_account: new_account
+
+        ,test_dialogs: html_global
+        ,test_assets: test_assets
 	}
+
+
 });

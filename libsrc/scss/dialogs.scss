@@ -519,3 +519,14 @@ form.login {
         }
     }
 }
+
+// Actually belongs in separate file
+.test_icons {
+    line-height: 44px;
+    img {
+        border: black solid 1px;
+        display: inline-block;
+        display: inline;
+        vertical-align: middle;
+    }
+}

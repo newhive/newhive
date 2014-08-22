@@ -28,7 +28,6 @@ define([
     ,'sj!templates/home.html'
     ,'sj!templates/icon_count.html'
     ,'sj!templates/login_form.html'
-    ,'sj!templates/manage_tags.html'
     ,'sj!templates/mini_expr.html'
     ,'sj!templates/network_nav.html'
     ,'sj!templates/overlay.html'

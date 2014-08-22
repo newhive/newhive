@@ -247,12 +247,13 @@ $panel_hover:  false false      false      false         false           false  
     &.active { background-image: none }
 }
 
-.hover.arrow {
-    position: absolute;
-    width: 59px;
-    height: 31px;
-    background-image: asset_url('skin/nav/arrow.png');
-}
+// Not used?
+// .hover.arrow {
+//     position: absolute;
+//     width: 59px;
+//     height: 31px;
+//     background-image: asset_url('skin/nav/arrow.png');
+// }
 
 .count {
     position: absolute;
