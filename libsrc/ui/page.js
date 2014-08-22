@@ -243,17 +243,17 @@ define([
             .addremoveClass("overlay", ! has_nav_embedded_logo)
             // .addremoveClass("item", has_nav)
             .prependTo(has_nav_embedded_logo ? ".main-header .left" : "#overlays")
-            // .addremoveClass("stay_hidden", has_nav_embedded_logo)
+            .addremoveClass("stay_hidden", has_nav && !has_nav_embedded_logo)
         // reverse the logo menu if it's up top
-        if (!! $("#logo_menu").data("inverted") != has_nav_embedded_logo) {
-            $("#logo_menu").data("inverted", has_nav_embedded_logo)
+        if (!! $("#logo_menu").is(".inverted") != has_nav_embedded_logo) {
+            $("#logo_menu").addremoveClass("inverted", has_nav_embedded_logo)
                 .append($("#logo_menu").children().get().reverse())
         }
-        $(".overlay.panel .create.item").showhide(!has_nav)
+        $(".overlay.panel").addremoveClass("stay_hidden", has_nav)
         if (context.user.logged_in)
-            height_nav_large = 70
+            height_nav_large = 90
         else
-            height_nav_large = 105
+            height_nav_large = 125
         $("#site").css({"margin-top": has_nav ? height_nav_large : 0})
         // keep the left column to a maximum size
         var $username = $(".main-header .left .username")
@@ -397,6 +397,9 @@ define([
     var height_nav_large = 155
     var local_attach_handlers = function(){
         if (context.flags.new_nav) {
+            $(".icon.go_search").bind_once_anon("mouseenter.page", function(ev){
+                $(".main-header #search_box").focus()
+            })
             // Animate header
             $(window).bind_once_anon("scroll.page", function(ev) {
                 var scrolled_to = $(this).scrollTop()

@@ -6,6 +6,34 @@
 body.nav .main-header {
     display: block;
 }
+@media all and (max-width:800px) {
+.main-header ._2column {
+    .left, .right {
+        float: none;
+        margin: auto;
+        display: block;
+    }
+    .blurb {
+        position: static;
+        padding: 10px;
+    }
+}    
+}
+@media all and (min-width:800px) and (max-width:900px) {
+.main-header:not(.condensed) ._2column {
+    .search_bar input[type=text].focus_expanded {
+        max-width: 90px;
+    }
+}
+}
+@media all and (min-width:900px) and (max-width:1000px) {
+.main-header:not(.condensed) ._2column {
+    .search_bar input[type=text].focus_expanded {
+        max-width: 190px;
+    }
+}
+}
+
 .main-header {
     display: none;
     position:fixed;
@@ -16,17 +44,23 @@ body.nav .main-header {
     z-index: $nav_layer;
     background-color: white;
     // background-repeat: no-repeat;
-    @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
     @include transition(all, 0.15s, linear);
 
     .left, .right {
         padding: 5px;
+        line-height: 0px;
     }
+    .right .icon {
+        margin-right: 5px;
+    }
+    .text_btn { margin: 2px 0px 0px 0px; }
     .logo, .item, .icon {
         @include transition(all, 0.15s, linear);
         display: inline-block;
         // height: 44px;
         &.splash {
+            display: block;
+            margin: auto;
             height: 80px;
         }
     }
@@ -37,6 +71,8 @@ body.nav .main-header {
         // So as to not affect the layout
         position: absolute;
         padding-right: 10px;
+        margin-top: -10px;
+        bottom: -10px;
     }
     .item.btn {
         display: inline-block;
@@ -49,10 +85,37 @@ body.nav .main-header {
         &.active { background-image: asset_url('skin/nav/create-hover.png'); }
     }
     .search_bar {
+        line-height: 0px;
         display: inline;
+        .icon.go_search {
+            padding: 0px;
+            background-color: transparent;
+            background-image: asset_url('skin/nav/search.png');
+            // &:hover { 
+            //     background-image: asset_url('skin/nav/search-hover.png');
+            //     // background-color: $color_bright_red;
+            // }
+        }
         input[type=text] {
-            margin: 6px 0px 0px 0px;
-            width: 350px;
+            @include transition(all, 0.15s, linear);
+            margin: 4px 0px 0px -2px;
+
+            width: 250px;
+            // &:hover, &:focus {
+            //     background: asset_url("skin/nav/search-arrow.png") no-repeat;
+            //     background-position: right;
+            // }
+
+            &.focus_expanded {
+                width: 0px;
+                padding: 0px;
+                opacity: 0;
+                &:hover, &:focus {
+                    width: 250px;
+                    padding: 6px;
+                    opacity: 1;
+                }
+            }
         }
     }
     .header {
@@ -86,6 +149,7 @@ body.nav .main-header {
     }
 
     &.condensed {
+        @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
         .hide_condensed { display: none; }
         .logo.splash {
             height: 40px;
