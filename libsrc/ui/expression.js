@@ -63,13 +63,14 @@ define([
             $app.data(data) 
             if (data.autoplay)
                 $app.addClass("autoplay")
-            if (data.autohide) {
-                // $app.css({opacity: "0", "pointer-events":"none"})
-                // or try this:
-                $app.css({visibility: "hidden"})
-                // can't merely hide the app, or it won't autoplay
-                // $app.css({display:"none"})
-            }
+            // Doing this server-side
+            // if (data.autohide) {
+            //     // $app.css({opacity: "0", "pointer-events":"none"})
+            //     // or try this:
+            //     $app.css({visibility: "hidden"})
+            //     // can't merely hide the app, or it won't autoplay
+            //     // $app.css({display:"none"})
+            // }
         })
 
         context.parse_query();
