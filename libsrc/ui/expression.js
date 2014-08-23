@@ -10,11 +10,20 @@ define([
     ,'browser/layout'
     ,'ui/jplayer'
     ,'ui/util'
+    ,'analytics'
 
     ,'browser/jquery/jplayer/skin'
     ,'browser/jquery/rotate.js'
     ,'browser/jquery.mobile.custom'
-], function($, js, context, layout, jplayer, util){
+], function(
+    $
+    ,js
+    ,context
+    ,layout
+    ,jplayer
+    ,util
+    ,analytics
+){
     var o = {};
     o.initialized = false;
 
@@ -84,6 +93,12 @@ define([
         //}
 
         if(util.mobile()) o.init_mobile()
+
+        // if on custom domain, there's no parent frame to track analytics
+        if(window.location.host != context.config.content_domain){
+            analytics.setup()
+            analytics.track_pageview()
+        }
     }
 
     var ideal_aspect = 16./9
