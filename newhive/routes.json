@@ -85,6 +85,7 @@
         "method": "network_recent",
         "client_method": "grid",
         "custom_classes": "nav",
+        "max_columns": 2,
         "require_login": true
     },
 
@@ -104,6 +105,7 @@
         "method": "recent",
         "client_method": "grid",
         "custom_classes": "nav",
+        "max_columns": 2,
         "require_login": true
     },
     "search": {

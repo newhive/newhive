@@ -708,8 +708,10 @@ define([
         if(context.page_data.layout == 'grid' ||
             context.page_data.layout == 'cat' ||
             context.page_data.layout == 'mini') {
-            var win_width = $(window).width(),
-            columns = Math.max(1, Math.min(3, Math.floor( win_width / grid_width)))
+            var win_width = $(window).width()
+                ,max_columns = context.route.max_columns || 3
+                ,columns = Math.max(1, Math.min(max_columns, 
+                    Math.floor( win_width / grid_width)))
                 ,feed_width = columns * (grid_width + border_width)
             if (context.page_data.layout == 'cat')// && columns > 1)
                 feed_width = Math.min(3 * (grid_width + border_width),
