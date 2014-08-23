@@ -10,14 +10,22 @@ define([
     ,'browser/layout'
     ,'ui/jplayer'
     ,'ui/util'
+    ,'analytics'
 
     ,'browser/jquery/jplayer/skin'
     ,'browser/jquery/rotate.js'
     ,'browser/jquery.mobile.custom'
-], function($, js, context, layout, jplayer, util){
+], function(
+    $
+    ,js
+    ,context
+    ,layout
+    ,jplayer
+    ,util
+    ,analytics
+){
     var o = {}
         ,no_embed = false
-
     o.initialized = false;
 
     var last_message = '';
@@ -97,6 +105,12 @@ define([
         //}
 
         if(util.mobile()) o.init_mobile()
+
+        // if on custom domain, there's no parent frame to track analytics
+        if(window.location.host != context.config.content_domain){
+            analytics.setup()
+            analytics.track_pageview()
+        }
     }
 
     var ideal_aspect = 16./9
@@ -414,15 +428,6 @@ define([
         if( ! o.initialized ){
             o.initialized = true;
             o.init_content();
-
-            // Set up GA, send a pageview
-            (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-            })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-            
-            ga('create', 'UA-54066810-1', 'auto');
-            ga('send', 'pageview');
         }
 
         $('.hive_html').each(function(i, div) {

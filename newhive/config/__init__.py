@@ -48,7 +48,8 @@ def client_view():
             dev_prefix else server_name),
         server_url=abs_url(relative=True),
         secure_server=abs_url(secure=True),
-        content_domain=content_domain,
+        content_domain=(dev_prefix + '.' + content_domain if 
+            dev_prefix else content_domain),
         content_url=abs_url(domain=content_domain, relative=True),
         secure_content_url=abs_url(domain=content_domain,secure=True)
 	)
