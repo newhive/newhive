@@ -503,10 +503,17 @@
         "client_method": "profile",
         "require_login": true
     },
+
+
+    "empty": "----------------------------------------------------",
     "empty": "Note: this is clientside; there is no server handler",
     "test_dialogs": {
         "page_route": "/home/admin/test_dialogs",
         "client_method": "test_dialogs"
+    },
+    "test_assets": {
+        "page_route": "/home/admin/test_assets",
+        "client_method": "test_assets"
     },
     "empty": "-----------------------------------------",
     "empty": "Dev tools.",

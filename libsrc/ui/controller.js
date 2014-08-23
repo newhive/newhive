@@ -118,12 +118,16 @@ define([
     };
     o.dispatch = function(route_name, page_data){
         track_pageview(route_name);
+        if (route_name == "home" && context.flags.new_nav)
+            route_name = "home_cat"
         context.route_name = route_name;
         if (route_name == "expr")
             route_name = "view_expr";
         context.route = routes[route_name];
         var cards = context.page_data.cards
             , cards_route = context.page_data.cards_route
+        context.page_data.next_cards_at = cards ? cards.length : 0
+        context.page_data.cards_at = 0
         if (cards && cards.length && cards[0].collection) {
             cards = null
             cards_route = null
@@ -174,6 +178,8 @@ define([
         loading = true;
         var add_cards = function(data){
             context.page_data.cards = context.page_data.cards.concat(data.cards);
+            context.page_data.cards_at = context.page_data.next_cards_at
+            context.page_data.next_cards_at += data.cards.length
             if(with_cards) with_cards(data);
         };
         var route = context.page_data.cards_route;
@@ -264,7 +270,8 @@ define([
         // Fallback to plane old open.
         if (! (window.history && window.history.pushState))
             return o.open(route_name, route_args);
-        var page_state = context.page_state(route_name, route_args, query);
+        var page_state = context.page_state(route_name, route_args, query)
+            , push_state = window.history.pushState
         if ((push_state == undefined || push_state) && 
             (!history.state || history.state.route_name != "view_expr" ||
                 page_state.route_name != "view_expr")

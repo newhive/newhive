@@ -5,7 +5,7 @@
 
 {<if user.logged_in}
   <a href='/'><p class='heading error'>Error: already logged in.</p></a>
-{>}{<elif error "referral"}
+{>}{<elif (eq error "referral")}
   <a href='/'><p class='heading error'>Oops!
     There was a problem with your invitation.</p></a>
 {>}{<else}

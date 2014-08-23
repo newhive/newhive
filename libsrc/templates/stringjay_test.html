@@ -1,6 +1,9 @@
-{# test lives at: http://duke:3737/home/admin/test_dialogs #}
-<div class="standard dialog test">
-    <h1> IF / ELSE test </h1>
+{# test lives at: http://duke:3737/home/admin/test_dialogs?t=.stringjay #}
+<div class="standard dialog stringjay test" style="width:95%">
+    <h1> CONTAINS</h1>
+    Empty: {cond (contains poop "barf") "Fail" "Pass"}
+
+    <br><br><h1> IF / ELSE test </h1>
 
     <p>0: {<if 0}
         Fail0

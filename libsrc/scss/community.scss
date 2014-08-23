@@ -7,7 +7,7 @@
 }
 
 // Search bar
-.mobile .search_bar input[type=text] { width: 380px; }
+body.mobile .search_bar input[type=text] { width: 380px; }
 .search_bar {
     margin: 25px auto;
     // margin-bottom: 50px;
@@ -223,7 +223,7 @@
                 }
                 .icon.cats {
                     background-image: asset_url('skin/nav/collections.png');
-                    //!! Need asset
+                    // Need asset!!
                     background-color: aqua;
 
                     // &.on { 
@@ -232,7 +232,7 @@
                 }
                 .icon.plus_cats {
                     background-image: asset_url('skin/nav/plus.png');
-                    //!! Need asset
+                    // Need asset!!
                     background-color: aqua;
 
                     // &.on { 
@@ -344,7 +344,7 @@
     }
 }
 
-.icon.plus_menu, .icon.delete, .icon.add_queue {
+.icon.plus_menu, .icon.delete, .icon.add_queue, .icon.plus_cats {
     // display:inline-block;
     width: 44px;
     height: 44px;
@@ -353,14 +353,15 @@
     vertical-align: middle;
     margin: -12px 5px 0px -16px;
 }
-.icon.plus_menu {
+.icon.plus_menu, .icon.plus_cats, .icon.add_queue {
     background-image: asset_url('skin/nav/plus.png');
     float: left;
 }
+.icon.plus_cats {
+    background-color: aqua;
+}
 .icon.add_queue {
-    background-image: asset_url('skin/nav/plus.png');
     background-color: purple;
-    float: left;
 }
 .icon.delete {
     background-image: asset_url('skin/nav/delete.png');
@@ -389,43 +390,18 @@ body {
     top: 0px;
     width: 100%; height: 100%;
 
-    .main-header .header {
-        // height: 39px; // Ew.  Should be computed.
-        line-height: 0px; // To remove extra whitespace
-        ul {
-            -webkit-margin-before: 0em;
-            -webkit-margin-after: 0em;
-            -webkit-margin-start: 0px;
-            -webkit-margin-end: 0px;
-            -webkit-padding-start: 0px;
-
-            display: inline-block;
-            text-align: justify;
-            width: 100%;
-
-            overflow: hidden;
-
-            li { display: inline-block; }
-            .text_btn { margin: 0px; }
-
-            &:after {
-                content: '';
-                display: inline-block;
-                width: 100%;
-                // height: 0px;
-            }
-        }
-    }
     .network_nav {
-        display: block;
-        text-align: center;
+        // display: block;
+        // text-align: center;
         height: 39px;  // 1em + 20px
-        min-width: 400px;  //!! needs to reflect content changes
         .text_btn {
             display: inline-block;
             // margin: 5px;
-            margin-left: -5px;
         }
+        a + a .text_btn {
+            margin-left: -3px;
+        }
+
         // @include border-radius(0px);
         // @include box-shadow(rgba(black, 0.4) 0px 0px 0px);
     }
@@ -534,6 +510,9 @@ body {
         opacity: .4;
     }
     .feed {
+        // WTF?
+        overflow-x: hidden;
+        
         .icon.private {
             background-image: asset_url('skin/nav/private.png');
             width: 44px;
@@ -653,7 +632,7 @@ body {
             box-sizing: border-box;
             padding: 7px 7px 0px 7px;
 
-            &[datanum="0"] {
+            &[data-num="0"] {
                 width: 100%;
                 .card_title, .info {
                     position: absolute;
@@ -673,12 +652,12 @@ body {
                     background: white;
                     padding: 5px;
                 }
-                &:after {
-                    content: '';
-                    width: 100%;
-                }
+                // &:after {
+                //     content: '';
+                //     width: 100%;
+                // }
             }
-            &[datanum="1"], &[datanum="2"] {
+            &[data-num="1"], &[data-num="2"] {
                 width: 50%;
             }
         }            
@@ -689,7 +668,7 @@ body {
     .feed.grid, .feed.cat {
         /* max-width: 1256px; */
         // margin: auto;
-        width: 1230px;
+        // width: 1230px;
         .user.card {
             height: 369px;
             vertical-align: top;

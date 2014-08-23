@@ -30,8 +30,12 @@ class Community(Controller):
         user = self.db.User.named(username)
         if not user:
             user = tdata.user
+        # New category view 
+        if self.flags.get('new_nav'):
+            return self.expressions_public_tags(tdata, request, _owner_name="root", 
+                tag_name="featured", db_args=db_args, include_categories=True)
         # Logged out users see featured.
-        if not user or not user.id:
+        elif not user or not user.id:
             return self.featured(tdata, request, db_args=db_args, **args)
         return {
             "network_help": (len(user.starred_user_ids) <= 1),
@@ -76,6 +80,12 @@ class Community(Controller):
         }
 
     def collection_client_view(self, collection, viewer=None):
+        if isinstance(collection, basestring):
+            expr = self.db.Expr.fetch(collection)
+            if not expr: return None
+            expr_cv = expr.client_view(viewer=viewer)
+            expr_cv['collection'] = collection
+            return expr_cv
         username = collection.get('username')
         tag = collection.get('tag')
         if not username or not tag: return None
@@ -90,6 +100,7 @@ class Community(Controller):
             # TODO-perf: trim this to essentials
             "owner": owner.client_view(viewer=viewer)
             ,"snapshot_small": expr.snapshot_name("small")
+            ,"snapshot_big": expr.snapshot_name("big")
             ,"title": tag
             ,"collection": collection
             ,"type": "cat"

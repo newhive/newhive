@@ -4,13 +4,7 @@
 #}
 <div class="tag_list {extra_classes}">
   {<if plus_menu}
-    <div class="icon plus_menu needs_login pointer" title="Add to collection"></div>
-    {<if flags.admin}
-      <form {form_attrs "add_featured_queue"} method="POST">
-        <input type="hidden" name="expr_id" value="{id}">
-        <button type="submit" class="icon add_queue pointer"></button>
-      </form>
-    {>}
+    {|templates/tag_buttons.html}
   {>}
   {<unless no_delete}
     <div class="delete icon pointer"></div>

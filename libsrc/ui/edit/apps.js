@@ -905,6 +905,10 @@ Hive.App.Code = function(o){
         curl_func()
     }
 
+    o.is_module = function(){
+        return o.init_state.code_type == 'js' && o.init_state.content
+    }
+
     // TODO: fix auto-loading by running first within try-catch, and if it 
     // has errors, defer it to run after editor load (setTimeout sufficient?)
 
@@ -915,7 +919,7 @@ Hive.App.Code = function(o){
     var _load = o.load
     o.load = function() {
         if (_load) _load()
-        if(o.init_state.code_type == 'js') {
+        if(o.is_module()) {
             setTimeout(function() {
                 insert_code()
                 o.run_module_func("editor")
@@ -927,6 +931,7 @@ Hive.App.Code = function(o){
     o.module_name = function() { return "module_" + o.id + "_" + iter; }
     var module_code = function() {
         // return o.content();
+        if( o.init_state.url ) return '' // can't have src and script body
         return ( "define('" + o.module_name() + "', "
             + "['browser/jquery'], function($) {\n"
             + "var self = {}\n\n"
@@ -942,30 +947,19 @@ Hive.App.Code = function(o){
         }
         else code = o.content()
 
+        // either a module with code content, or a script with url
+        if(o.is_module()) o.code_element.removeAttr('src')
+        else o.code_element.attr('src', o.init_state.url)
         // jquery script insert messes up debugging, so we use straight js
-        if (1) {
-            o.code_element.html(code).appendTo('body')
-        } else {
-            var script   = document.createElement("script")
-            // use data url so syntax errors are reported properly
-            script.setAttribute( 'src',
-                'data:application/javascript;base64,' + btoa(module_code()) )
-            try{
-                document.body.appendChild(script)
-            }
-            catch(e){
-                console.log('oops')
-            }
-            o.code_element = $(script)
-        }
+        o.code_element.html(code).appendTo('body')
     }
 
     var animate_go
     o.run = function() {
         o.stop();
         insert_code()
-        if(o.init_state.code_type != 'js') return
-        
+
+        if(!o.is_module()) return
         o.run_module_func("run", function(module) {
             if(!module.animate) return
             var animate_frame = function(){
@@ -981,7 +975,7 @@ Hive.App.Code = function(o){
         })
     }
     o.stop = function() {
-        if(o.init_state.code_type == 'js'){
+        if(o.is_module()){
             if (!iter) return;
             o.run_module_func("stop", function() {
                 animate_go = 0
@@ -2172,6 +2166,7 @@ Hive.App.Audio = function(o) {
 
     if(!o.init_state.color) o.init_state.color = colors[23];
     if (menu.last_item && menu.last_item.hasClass("autoplay")) {
+        menu.last_item = undefined
         o.autoplay_set(true)
         o.autohide_set(true)
     }
@@ -2724,11 +2719,11 @@ Hive.App.has_toggle = function(o, toggle_name){
     // apps are on)
     var fixup_controls = function(o) {
         var $control = $("#controls ." + toggle_name)
-            ,png = $control.prop("src").slice(0, -4)
-        if (png.slice(-3) == "-on")
-            png = png.slice(0, -3)
-        var toggle = sel[toggle_name]() ? "-on" : ""
-        $control.prop("src", png + toggle + ".png")
+            ,png = $control.prop("src")
+            ,png_off = png.replace("-on.png", ".png")
+            ,asset = ui_util.asset_name_from_url(png_off).slice(0, -4)
+            ,toggle = sel[toggle_name]() ? "-on" : ""
+        $control.prop("src", ui_util.asset(asset + toggle + ".png"))
     }
     fixup_controls.display_order = 9
     o.make_controls.push(memoize('has_' + toggle_name + '_fixup', fixup_controls))

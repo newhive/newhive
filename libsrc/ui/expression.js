@@ -53,10 +53,13 @@ define([
             $app.data(data) 
             if (data.autoplay)
                 $app.addClass("autoplay")
-            if (data.autohide)
-                $app.css({opacity: "0", "pointer-events":"none"})
+            if (data.autohide) {
+                // $app.css({opacity: "0", "pointer-events":"none"})
+                // or try this:
+                $app.css({visibility: "hidden"})
                 // can't merely hide the app, or it won't autoplay
                 // $app.css({display:"none"})
+            }
         })
 
         context.parse_query();
@@ -409,6 +412,15 @@ define([
         if( ! o.initialized ){
             o.initialized = true;
             o.init_content();
+
+            // Set up GA, send a pageview
+            (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+            })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+            
+            ga('create', 'UA-54066810-1', 'auto');
+            ga('send', 'pageview');
         }
 
         $('.hive_html').each(function(i, div) {

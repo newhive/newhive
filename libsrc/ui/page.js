@@ -37,6 +37,8 @@ define([
     'sj!templates/dialog_share.html',
     'sj!templates/network_nav.html',
     'sj!templates/login_form.html', 
+    'sj!templates/tag_buttons.html', 
+    'sj!templates/hive_menu.html', 
     'sj!templates/request_invite_form.html',
     'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js',
     'sj!templates/cards.html'
@@ -66,18 +68,19 @@ define([
     var o = {}, expr_page = false, grid_width, controller,
         border_width = 1,
         render_new_cards_func,
+        done_overlays = false,
         anim_direction; // 0 = up, +/-1 = right/left
     const anim_duration = 700;
 
     o.init = function(controller){
         o.anim_direction = 0;
         o.controller = controller;
-        init_overlays();
         $(window).resize(o.resize);
     };
 
     var init_overlays = function(){
-        $('#overlays').empty().html(overlay_template());
+        done_overlays = true;
+        $('#overlays').empty().html(overlay_template(context));
         // render_overlays();
         // $('#login_form').submit(o.login);
         $('#login_form [name=from]').val(window.location);
@@ -157,6 +160,7 @@ define([
     o.on_logout = function(){
         context.user.logged_in = false;
         // overlays are rendered once on init, so not done on .refresh()
+        done_overlays = false;
         init_overlays();
         if (routes[context.route_name].require_login 
             || context.route_name == "view_expr") {
@@ -167,6 +171,7 @@ define([
     o.on_login = function(e) {
         context.user.logged_in = true;
         // overlays are rendered once on init, so not done on .refresh()
+        done_overlays = false;
         init_overlays();
         o.controller.refresh();
     };
@@ -225,13 +230,46 @@ define([
             o.layout_columns();
         o.add_grid_borders();
     }
+    var max_col_width = 500
+    var fixup_overlay = function() {
+        // Fix styling for this route
+        $(".main-header .network_nav .item").removeClass("black_btn")
+        $(".main-header .network_nav .item." + context.route_name)
+            .addClass("black_btn")
+        var has_nav = ($("body").hasClass("nav") && $(".main-header").length)
+            ,has_nav_embedded_logo = has_nav && context.user.logged_in
+
+        $("#overlays .hive_logo")
+            .addremoveClass("overlay", ! has_nav_embedded_logo)
+            // .addremoveClass("item", has_nav)
+            .prependTo(has_nav_embedded_logo ? ".main-header .left" : "#overlays")
+            .addremoveClass("stay_hidden", has_nav && !has_nav_embedded_logo)
+        // reverse the logo menu if it's up top
+        if (!! $("#logo_menu").is(".inverted") != has_nav_embedded_logo) {
+            $("#logo_menu").addremoveClass("inverted", has_nav_embedded_logo)
+                .append($("#logo_menu").children().get().reverse())
+        }
+        $(".overlay.panel").addremoveClass("stay_hidden", has_nav)
+        if (context.user.logged_in)
+            height_nav_large = 90
+        else
+            height_nav_large = 125
+        $("#site").css({"margin-top": has_nav ? height_nav_large : 0})
+        // keep the left column to a maximum size
+        var $username = $(".main-header .left .username")
+        $username.css("max-width", $username.width() + 
+            max_col_width - $(".main-header .left").width())
+    }
     var custom_classes = ""
     o.render = function(method, data){
         var page_data = context.page_data, expr = page_data.expr
+        if (!done_overlays)
+            init_overlays();
         // set any classes specified by the route
-        var new_classes = context.route.custom_classes
+        var new_classes = context.route.custom_classes // + " " + context.route_name
         $("body").removeClass(custom_classes).addClass(new_classes)
         custom_classes = new_classes
+        fixup_overlay()
 
         if (page_data.title) $("head title").text(page_data.title);
         o.column_layout = false;
@@ -359,7 +397,9 @@ define([
     var height_nav_large = 155
     var local_attach_handlers = function(){
         if (context.flags.new_nav) {
-            $(".nav #site").css({"margin-top": height_nav_large})
+            $(".icon.go_search").bind_once_anon("mouseenter.page", function(ev){
+                $(".main-header #search_box").focus()
+            })
             // Animate header
             $(window).bind_once_anon("scroll.page", function(ev) {
                 var scrolled_to = $(this).scrollTop()
@@ -418,8 +458,9 @@ define([
                 submit_add_to_collection($(this).text());
             }).addClass("pointer");
 
-            if (category == "collections") {
-                var card = $(this).parents().filter(".expr.card");
+            var card = $(this).parents().filter(".expr.card");
+            if (category == "collections" || 
+                context.page_data.expr || card.length) {
                 var expr_id = ""
                 // If the plus button is on a card, use its ID info
                 if (card.length) 
@@ -437,8 +478,8 @@ define([
             update_text();
             dia.open();
         }}
-        $(".plus_menu").unbind('click').on('click', add_to_collection("collections"))
-        $(".plus_cats").unbind('click').on('click', add_to_collection("categories"))
+        $(".plus_menu").bind_once_anon('click.page', add_to_collection("collections"))
+        $(".plus_cats").bind_once_anon('click.page', add_to_collection("categories"))
             .addClass("pointer")
         if (!context.user.logged_in) {
             $(".needs_login").unbind("click").click(function(e) {
@@ -480,21 +521,20 @@ define([
         //     $(".search_bar").submit();
         // });
         
-        $(document).off('keydown', keydown).on("keydown", keydown);
-        var scroll_handler = function(e) {
-            if (c.route_name == "edit_expr")
-                return;
-            return;
-            $(".overlay.nav").fadeOut("fast");
-            if (o.scroll_timeout != undefined)
-                clearTimeout(o.scroll_timeout);
-            o.scroll_timeout = setTimeout(function() {
-                o.scroll_timeout = undefined;
-                if (c.route_name != "edit_expr")
-                    $(".overlay.nav").stop().fadeIn("fast");
-            }, 100);
-        }
-        $(window).off("scroll", scroll_handler).on("scroll", scroll_handler);
+        $(document).bind_once("keydown", keydown);
+        // var scroll_handler = function(e) {
+        //     if (c.route_name == "edit_expr")
+        //         return;
+        //     $(".overlay.nav").fadeOut("fast");
+        //     if (o.scroll_timeout != undefined)
+        //         clearTimeout(o.scroll_timeout);
+        //     o.scroll_timeout = setTimeout(function() {
+        //         o.scroll_timeout = undefined;
+        //         if (c.route_name != "edit_expr")
+        //             $(".overlay.nav").stop().fadeIn("fast");
+        //     }, 100);
+        // }
+        // $(window).off("scroll", scroll_handler).on("scroll", scroll_handler);
     };
     o.attach_handlers = function(){
         if(context.page && context.page.attach_handlers)

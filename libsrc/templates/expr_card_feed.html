@@ -2,14 +2,21 @@
   Tiling-sized expression view, with activity feed
   param{suppress_feed}: disable activity
 #}
+{set "clean_args" (cond (and collection (eq type "expr")) "&no_paging" "")}
+{set "from_cat" (or (eq type "cat") collection)}
+
 {# tags #}
-{<if type "expr"}
+{<if (not from_cat)}
   {<with null "plus_menu" user.logged_in}
     {|templates/tag_list.html}
   {>}
+{>}{<elif (not no_delete)}
+    <div class="delete icon pointer"></div>
 {>}
-<a {<if type "expr"}{ query_attrs "view_expr" 
-    (concat search_query (cond entropy (concat "&e=" entropy) ""))
+
+<a {<if type "expr"}
+  { query_attrs "view_expr" 
+    (concat search_query (cond entropy (concat "&e=" entropy) "") clean_args)
     "id" id  "expr_name" name "owner_name" owner.name }
   {>}{<elif type "cat"}
     {<with expr}
@@ -19,7 +26,9 @@
     {>}
   {>}
   ><img class="snapshot" src=
-    {<if snapshot_small}
+    {<if (and snapshot_big from_cat (eq card_num 0))}
+      "{snapshot_big}"
+    {>}{<elif snapshot_small}
       "{snapshot_small}"
     {>}{<else}
       {asset "skin/site/expr_placeholder_small.jpg"}  

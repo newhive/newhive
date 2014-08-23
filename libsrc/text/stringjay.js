@@ -480,6 +480,9 @@ define(['browser/js', 'module'],
 		});
 		return res;
 	};
+	// {<range "col_num" 3 }
+	//   <div class="column column_{col_num}"></div>
+	// {>}
 	context_base['range'] = function(context, block, var_name, start, stop, step){
 		if(typeof stop == 'undefined'){
 			stop = start;
@@ -516,7 +519,9 @@ define(['browser/js', 'module'],
 	};
 	context_base['debug'] = function(context, do_debugger){
 		if(typeof do_debugger == "undefined") do_debugger = true;
-		if(do_debugger) debugger;
+		// NOTE: LEAVE COMMENTED IN COMMIT!
+		// debugger is a 'reserved keyword' according to cram
+		// if(do_debugger) debugger; //!!
         //     throw o.render_error('debug break', context,
 		  	   // current_node(context));
 		// possibly add rendering context in invisible div

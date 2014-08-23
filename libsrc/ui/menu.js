@@ -211,7 +211,11 @@ var menu = function(handle, drawer, options) {
 
             css_opts.top = hp.top - d_size.height + opts.offset_y
                 + handle.outerHeight();
-            // hp.top + opts.offset_y;
+            //!! HACK for activity when in header
+            var open_menus = menu.menus.filter(function(m) { return m.opened; })
+            if (open_menus.length && open_menus[0].handle.parents(".main-header")
+                && ! open_menus[0].handle.is(".overlay"))
+                css_opts.top = hp.top + opts.offset_y;
         }
         else if(opts.layout == 'bottom' || opts.layout == 'top'){
             var oy = handle.outerHeight() + opts.offset_y
@@ -252,6 +256,8 @@ var menu = function(handle, drawer, options) {
         var margin_y = 50;
         if(opts.auto_height) {
             var scroller = drawer.find('.items');
+            if (! scroller.length)
+                scroller = drawer
             if(css_opts.top + d_size.height > $(window).height()) {
                 scroller.css('max-height', $(window).height() - margin_y - css_opts.top -
                     (d_size.height - scroller.outerHeight()));

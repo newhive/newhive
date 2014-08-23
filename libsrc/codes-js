@@ -14,7 +14,6 @@
 ./ui/page/profile.js
 ./ui/page/admin.js
 ./ui/page/home.js
-./ui/page/manage_tags.js
 ./ui/page/edit_expr.js
 ./ui/page/expr.js
 ./ui/expression.js

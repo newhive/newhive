@@ -6,6 +6,34 @@
 body.nav .main-header {
     display: block;
 }
+@media all and (max-width:800px) {
+.main-header ._2column {
+    .left, .right {
+        float: none;
+        margin: auto;
+        display: block;
+    }
+    .blurb {
+        position: static;
+        padding: 10px;
+    }
+}    
+}
+@media all and (min-width:800px) and (max-width:900px) {
+.main-header:not(.condensed) ._2column {
+    .search_bar input[type=text].focus_expanded {
+        max-width: 90px;
+    }
+}
+}
+@media all and (min-width:900px) and (max-width:1000px) {
+.main-header:not(.condensed) ._2column {
+    .search_bar input[type=text].focus_expanded {
+        max-width: 190px;
+    }
+}
+}
+
 .main-header {
     display: none;
     position:fixed;
@@ -16,19 +44,114 @@ body.nav .main-header {
     z-index: $nav_layer;
     background-color: white;
     // background-repeat: no-repeat;
-    @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
     @include transition(all, 0.15s, linear);
 
     .left, .right {
-        margin: 15px;
+        padding: 5px;
+        line-height: 0px;
     }
-    .logo {
+    .right .icon {
+        margin-right: 5px;
+    }
+    .text_btn { margin: 2px 0px 0px 0px; }
+    .logo, .item, .icon {
         @include transition(all, 0.15s, linear);
-        height: 80px;
+        display: inline-block;
+        // height: 44px;
+        &.splash {
+            display: block;
+            margin: auto;
+            height: 80px;
+        }
+    }
+    .item {
+        @include border-radius(6px);
+    }
+    .blurb {
+        // So as to not affect the layout
+        position: absolute;
+        padding-right: 10px;
+        margin-top: -10px;
+        bottom: -10px;
+    }
+    .item.btn {
+        display: inline-block;
+        &:hover, &.active { background-color: black; }
+        height: 44px; width: 44px;
+        background-size: 44px 44px;
+    }
+    .create.item {
+        background-image: asset_url('skin/nav/create.png');
+        &.active { background-image: asset_url('skin/nav/create-hover.png'); }
+    }
+    .search_bar {
+        line-height: 0px;
+        display: inline;
+        .icon.go_search {
+            padding: 0px;
+            background-color: transparent;
+            background-image: asset_url('skin/nav/search.png');
+            // &:hover { 
+            //     background-image: asset_url('skin/nav/search-hover.png');
+            //     // background-color: $color_bright_red;
+            // }
+        }
+        input[type=text] {
+            @include transition(all, 0.15s, linear);
+            margin: 4px 0px 0px -2px;
+
+            width: 250px;
+            // &:hover, &:focus {
+            //     background: asset_url("skin/nav/search-arrow.png") no-repeat;
+            //     background-position: right;
+            // }
+
+            &.focus_expanded {
+                width: 0px;
+                padding: 0px;
+                opacity: 0;
+                &:hover, &:focus {
+                    width: 250px;
+                    padding: 6px;
+                    opacity: 1;
+                }
+            }
+        }
+    }
+    .header {
+        display: none; // until we implement categories
+        // height: 39px; // Ew.  Should be computed.
+        line-height: 0px; // To remove extra whitespace
+        ul {
+            // min-width: 200px;  //!! needs to reflect content changes
+            -webkit-margin-before: 0em;
+            -webkit-margin-after: 0em;
+            -webkit-margin-start: 0px;
+            -webkit-margin-end: 0px;
+            -webkit-padding-start: 0px;
+
+            display: inline-block;
+            text-align: justify;
+            width: 100%;
+
+            overflow: hidden;
+
+            li { display: inline-block; }
+            .text_btn { margin: 0px; }
+
+            &:after {
+                content: '';
+                display: inline-block;
+                width: 100%;
+                // height: 0px;
+            }
+        }
     }
 
     &.condensed {
-        .logo {
+        @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
+        .hide_condensed { display: none; }
+        .logo.splash {
             height: 40px;
         }
     }
@@ -93,6 +216,7 @@ body.nav .main-header {
     }
 }
 
+// #overlays div, body:not(.nav) .overlay {
 .overlay {
     display: none;
     // opacity: .95;
@@ -141,14 +265,6 @@ body.nav .main-header {
         }
     }
 
-    &.logo {
-        width: 44px; height: 44px;
-        background-image: asset_url('skin/nav/logo.png');
-        &.active {
-            background-image: asset_url('skin/nav/logo-hover.png');
-            background-color: black;
-        }
-    }
     &.form {
         display: block;
         left: 20px;
@@ -182,7 +298,7 @@ body.nav .main-header {
     // height: 180px;
     &:hover { background-color: white; }
 
-    .icon.plus_menu, .icon.add_queue {
+    .icon.plus_menu, .icon.add_queue, .icon.plus_cats {
         // position: absolute;
         // background-color: black;
         // top: 18px;
@@ -443,10 +559,15 @@ $action: love comment republish;
     }
 }
 
-.overlay.logo {
+.hive_logo {
     display: block;
     margin-left: 0px;
     height: 44px;
     width: 44px;
     left: 20px;
+    background-image: asset_url('skin/nav/logo.png');
+    &.active {
+        background-image: asset_url('skin/nav/logo-hover.png');
+        background-color: black;
+    }
 }

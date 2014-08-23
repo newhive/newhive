@@ -4,8 +4,11 @@
 // curl(["test/html_global"],function(m){m.render()})
 
 define([
-    'sj!templates/stringjay_test.html'
+    'server/context'
 
+    ,'sj!templates/stringjay_test.html'
+    ,'sj!templates/test_layout.html'
+    
     ,'sj!templates/activity.html'
     ,'sj!templates/card_master.html'
     ,'sj!templates/cards.html'
@@ -25,7 +28,6 @@ define([
     ,'sj!templates/home.html'
     ,'sj!templates/icon_count.html'
     ,'sj!templates/login_form.html'
-    ,'sj!templates/manage_tags.html'
     ,'sj!templates/mini_expr.html'
     ,'sj!templates/network_nav.html'
     ,'sj!templates/overlay.html'
@@ -45,17 +47,18 @@ define([
     ,'sj!templates/user_card.html'
     ,'sj!templates/edit_sandbox.html'
     ,'sj!templates/edit_container.html'
-], function(){
+], function(context){
     o = {}
     
     var all_divs = $("<div>")
-    for (var i = 0; i < arguments.length; ++i) {
+    for (var i = 1; i < arguments.length; ++i) {
         var template = arguments[i]
         all_divs.append(template())
     }
     
     o.render = function(){
-        $("body").empty().append(all_divs.find(".dialog").css({
+        var filter = context.query.t || ".dialog"
+        $("body").empty().append(all_divs.find(filter).css({
             margin: '15px'
             , display: 'inline-block'
             , position: 'static'

@@ -6,6 +6,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    vertical-align: bottom;
 }
 .block {
     display: block;
@@ -68,7 +69,9 @@
     margin-top: 7px;
     margin-right: 7px;
 }
-
+@media all and (min-width: 501px) {
+    .show_narrow { display:none; }
+}
 button {
     border: none;
     cursor: pointer;
@@ -244,12 +247,13 @@ $panel_hover:  false false      false      false         false           false  
     &.active { background-image: none }
 }
 
-.hover.arrow {
-    position: absolute;
-    width: 59px;
-    height: 31px;
-    background-image: asset_url('skin/nav/arrow.png');
-}
+// Not used?
+// .hover.arrow {
+//     position: absolute;
+//     width: 59px;
+//     height: 31px;
+//     background-image: asset_url('skin/nav/arrow.png');
+// }
 
 .count {
     position: absolute;
