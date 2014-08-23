@@ -15,7 +15,9 @@ define([
     ,'browser/jquery/rotate.js'
     ,'browser/jquery.mobile.custom'
 ], function($, js, context, layout, jplayer, util){
-    var o = {};
+    var o = {}
+        ,no_embed = false
+
     o.initialized = false;
 
     var last_message = '';
@@ -63,7 +65,7 @@ define([
         })
 
         context.parse_query();
-        var no_embed = ("no-embed" in context.query);
+        no_embed = ("no-embed" in context.query);
         if (no_embed) 
             o.hide();
         else
