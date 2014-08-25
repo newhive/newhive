@@ -2,6 +2,7 @@
 !/lib/harmony_sketch.js
 /lib/*.css
 /lib/tmp/*
+/lib/libsrc
 /libsrc/scss/*.css
 compiled.*
 /libsrc/.webassets-cache

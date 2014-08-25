@@ -6,7 +6,7 @@ source $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/git_grep.sh
 
 filter_broken="${filter_broken}|/titanium/|history/history|/jquery-1|/old|/broken|/curl|google_closure.js|/d3/|codemirror.js|jquery-ui|/jquery/|/codemirror/"
 
-alias a="git_grep"
+alias a="git_grep -o"
 alias n='a -o -n'
 alias nh='a -o -p "*.html" -n'
 alias ns='a -o -p "*.scss" -n'
