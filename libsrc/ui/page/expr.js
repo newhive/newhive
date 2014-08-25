@@ -25,10 +25,10 @@ define([
     expr_actions_template,
     comment_template
 ) {
-    var o = {}, 
-        loading_frame_list = [], loaded_frame_list = [],
-        overlay_columns = 0, no_paging = false
-        animation_timeout = undefined, last_found = -1;
+    var o = {}
+        ,loading_frame_list = [], loaded_frame_list = []
+        ,overlay_columns = 0, no_paging = false
+        ,animation_timeout = undefined, last_found = -1
     o.cache_offsets = [1, -1, 2];
     o.anim_duration = (util.mobile()) ? 400 : 400;
 
