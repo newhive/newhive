@@ -3,9 +3,6 @@
 define([
     'server/context'
     ,'ui/util'
-    // ,'json!server/compiled.assets.json'
-    ,
-
 ], function(context, util){
     o = {}
     
