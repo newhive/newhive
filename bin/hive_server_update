@@ -9,6 +9,10 @@ sudo chown www-data:dev -R .
 sudo chmod g+rwX -R .
 
 # check for changes.  If no changes, exit
+if (ps augx|grep deploy|grep -v grep); then
+    echo 'build already in process'
+    exit 1
+fi
 git pull|grep Already && exit 0
 sudo chown www-data:dev -R .
 sudo chmod g+rwX -R .
