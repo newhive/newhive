@@ -616,6 +616,12 @@ body {
         width: 33.3%;
     }
     .feed.cat .card {
+        &> a { font-size: 1px; }
+        .delete.icon {
+            position: absolute;
+            top: 0px;
+            right: 0px;
+        }
         img.snapshot {
             width: 100%;
             height: auto;
@@ -630,7 +636,7 @@ body {
             width: 50%;
             // min-width: 410px;
             box-sizing: border-box;
-            padding: 7px 7px 0px 7px;
+            padding: 7px;
 
             &[data-num="0"] {
                 width: 100%;
@@ -638,19 +644,20 @@ body {
                     position: absolute;
                 }
                 .card_title {
-                    left: 20px;
-                    top: 20px;
-                    background: black;
-                    color: white;
+                    left: 27px;
+                    top: 27px;
+                    background: white;
+                    color: black;
                     width: auto;
-                    padding: 0px 7px;
+                    padding: 0px 14px;
                 }
                 .info {
                     position: absolute;
-                    bottom: 20px;
-                    left: 20px;
+                    bottom: 27px;
+                    left: 27px;
                     background: white;
                     padding: 5px;
+                    padding-right: 10px;
                 }
                 // &:after {
                 //     content: '';
