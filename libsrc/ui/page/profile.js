@@ -241,7 +241,7 @@ define([
         if (o.show_more_tags) toggle_more_tags();
         $(".overlay.panel").showshow();
 
-        o.more_cards = (context.page_data.cards
+        o.more_cards = context.page_data.cards
     };
     var toggle_more_tags = function() {
         $(".tag_list.main").toggleClass("expanded");
