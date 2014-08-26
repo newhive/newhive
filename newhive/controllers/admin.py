@@ -18,7 +18,7 @@ class Admin(Controller):
         """
 
         resp = {}
-        live_server = config.live_server and config.dev_prefix != 'staging'
+        live_server = config.live_server and (config.dev_prefix != 'staging')
         flags_name = 'live_flags' if live_server else 'site_flags'
 
         if len(request.form.keys()): 
@@ -35,7 +35,7 @@ class Admin(Controller):
 
         flags = { k:','.join(v) for k,v in config.site_flags.items()}
         tdata.context.update(page_data={'site_flags': flags,
-            'live_server': config.live_server}, route_args=args)
+            'live_server': live_server}, route_args=args)
         return self.serve_loader_page('pages/main.html', tdata, request, response)
 
     def add_featured_queue(self, tdata, request, response, **args):
