@@ -448,9 +448,8 @@ define([
                 ;
                 if(val != val_filtered) $(text).val( val_filtered );
                 $(dialog_selector + " .tag_new")
-                    .text($(text).val()).showshow().addClass("tag_15");
-                if ('' == $(text).val())
-                    $(dialog_selector + " .tag_new").hidehide();
+                    .text($(text).val()).addClass("tag_15")
+                    .showhide('' != $(text).val());
                 el_tag_name.val(val_filtered)
             }
             $(dialog_selector + " .tag_name")
