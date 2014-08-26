@@ -84,7 +84,10 @@ class Community(Controller):
             expr = self.db.Expr.fetch(collection)
             if not expr: return None
             expr_cv = expr.client_view(viewer=viewer)
-            expr_cv['collection'] = collection
+            expr_cv.update({
+                'collection': collection
+                ,"snapshot_big": expr.snapshot_name("big")
+            })
             return expr_cv
         username = collection.get('username')
         tag = collection.get('tag')
