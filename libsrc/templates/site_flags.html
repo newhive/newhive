@@ -4,6 +4,9 @@
 <h1>Manage site flags</h1>
 
 <div class="settings" style="padding-left:50px"><form {form_attrs "site_flags"}>
+    {<if page_data.live_server}
+        <h1 class="error">LIVE LIVE LIVE</h1>
+    {>}
     {<for page_data.site_flags}
       <label>{key}: <input style="width:500px" name={key} value={item}></label><br>
     {>}
