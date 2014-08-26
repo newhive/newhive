@@ -42,7 +42,8 @@ define([
         if(data.cards.length == 0)
             o.more_cards = false;
         else
-            cards_template(data).insertBefore('.feed .footer');
+            cards_template([context.page_data, data])
+                .insertBefore('.feed .footer');
     };
 
     var allow_reorder = function() {
@@ -240,8 +241,7 @@ define([
         if (o.show_more_tags) toggle_more_tags();
         $(".overlay.panel").showshow();
 
-        o.more_cards = (context.page_data.cards &&
-            (context.page_data.cards.length == 20));
+        o.more_cards = (context.page_data.cards
     };
     var toggle_more_tags = function() {
         $(".tag_list.main").toggleClass("expanded");

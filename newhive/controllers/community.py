@@ -120,6 +120,12 @@ class Community(Controller):
 
         return expr_cv
 
+    def missing_expression(self):
+        return {
+            'title': 'Missing'
+            ,"type": 'expr'
+        }
+
     def expressions_public_tags(self, tdata, request, owner_name=None, db_args={}, **args):
         if not owner_name: 
             owner_name = args.get('_owner_name')
@@ -128,13 +134,20 @@ class Community(Controller):
         tag_name = args.get('tag_name')
         if args.get('include_categories'):
             if tag_name:
+                # TODO: this search should also go through query_echo
                 cards = owner.get_category(tag_name)
                 if cards: cards = cards.get('collections')
                 if not cards: return None 
-                # insert client view of collections into cards
-                cards = [self.collection_client_view(x) for x in cards]
                 # remove empties
                 cards = [x for x in cards if x]
+                # paginate
+                at = int(db_args.get('at', 0))
+                limit = int(db_args.get('limit', 20))
+                cards = cards[at:at + limit if limit else None]
+                # insert client view of collections into cards
+                cards = [self.collection_client_view(x) if x 
+                    else self.missing_expression() for x in cards]
+                
                 res = self.expressions_for(tdata, cards, owner)
                 res.update({
                     "tag_selected":tag_name
