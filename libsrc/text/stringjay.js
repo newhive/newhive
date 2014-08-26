@@ -296,8 +296,8 @@ define(['browser/js', 'module'],
 	function is_if_node(node) {
 		if (node.type != "function" || node.value.length != 1)
 			return false;
-		return (node.value[0] == "if" || node.value[0] == "unless"
-			 || node.value[0] == "contains" || node.value[0] == "elif");
+		return (node.value[0] == "if" || node.value[0] == "unless" ||
+			 node.value[0] == "elif");
 	}
 
 	function render_function(context, node) {
@@ -480,6 +480,9 @@ define(['browser/js', 'module'],
 		});
 		return res;
 	};
+	// {<range "col_num" 3 }
+	//   <div class="column column_{col_num}"></div>
+	// {>}
 	context_base['range'] = function(context, block, var_name, start, stop, step){
 		if(typeof stop == 'undefined'){
 			stop = start;
@@ -510,13 +513,20 @@ define(['browser/js', 'module'],
 		}
 		return block(context.concat(new_context));
 	};
+	// wrap the following block with open and close tags
+	context_base.wrap = function(context, block, open, close){
+		return open + block(context) + close;
+	};
 	context_base['debug'] = function(context, do_debugger){
 		if(typeof do_debugger == "undefined") do_debugger = true;
-		//if(do_debugger) debugger;
+		// NOTE: LEAVE COMMENTED IN COMMIT!
+		// debugger is a 'reserved keyword' according to cram
+		// if(do_debugger) debugger; //!!
         //     throw o.render_error('debug break', context,
 		  	   // current_node(context));
 		// possibly add rendering context in invisible div
-		return '<div>DEBUG inserted</div><div style="display:none">' + '' + '</div>';
+		return do_debugger ? '' : 
+			'<div>DEBUG inserted</div><div style="display:none">' + '' + '</div>';
 	};
 	context_base.e = encode_to_html;
 	// TODO-cleanup-object: add object builder, that takes key value
@@ -585,6 +595,7 @@ define(['browser/js', 'module'],
 	context_base.cond = function(context, cond, truthy, falsy){
 		return cond ? truthy : falsy;
 	};
+
 	context_base.lower = function(context, s){ return s.toLowerCase(); };
 	// TODO-cleanup: add example cases to all these functions.
 	// {<for (unique user.activity)}<item>{>}
@@ -640,7 +651,7 @@ define(['browser/js', 'module'],
 	};
 	context_base.string_to_list = function (context, string){
 	  	var array = string.split("[^\w']+");
-	  	if ( array.length <= 1 ) return string;
+	  	if ( array.length <= 1 ) return [string];
 		else return array;
 	};
 

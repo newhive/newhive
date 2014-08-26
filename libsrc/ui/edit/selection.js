@@ -844,15 +844,16 @@ o.Selection = function(o) {
             return res;
         }
     }
+    o.set_standard_delegate = function(fn_name) {
+        o[fn_name] = delegate_fn(fn_name);
+    }
     var delegates = ["color", "color_set", "opacity", "opacity_set"
         ,"border_radius", "border_radius_set", "link", "link_set"
         ,"stroke_width", "stroke_width_set", "stroke_update", "reframe"
         ,"blur", "blur_set", "stroke", "stroke_set", 'run', 'edit', 'stop'
         ,'css_class', 'css_class_set', "border_width", "border_width_set"
         ,"client_data", "client_data_set"];
-    delegates.map(function(fn_name) {
-        o[fn_name] = delegate_fn(fn_name);
-    });
+    delegates.map(o.set_standard_delegate)
     
     var common_classes
     o.css_class_sel = function() {
@@ -870,6 +871,12 @@ o.Selection = function(o) {
         res = delegate_fn("css_class_remove")(removed.join(" "))
         common_classes = klasses
         return res
+    }
+    // Run the delegate {func_set} on the opposite of its current value
+    o.toggle_func = function(func, func_set) {
+        func_set = func_set || func + "_set"
+        var val = delegate_fn(func)()
+        delegate_fn(func_set)(!val)
     }
 
     // prevent selection keyhandler from eating events when nothing is selected

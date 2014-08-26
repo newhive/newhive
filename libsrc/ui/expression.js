@@ -58,7 +58,18 @@ define([
         layout_coord = expr.layout_coord || 0
         client_data = expr['apps']
         $.each(client_data, function(app_id, data){
-            $('#'+app_id).data(data) })
+            var $app = $('#' + app_id)
+            $app.data(data) 
+            if (data.autoplay)
+                $app.addClass("autoplay")
+            if (data.autohide) {
+                // $app.css({opacity: "0", "pointer-events":"none"})
+                // or try this:
+                $app.css({visibility: "hidden"})
+                // can't merely hide the app, or it won't autoplay
+                // $app.css({display:"none"})
+            }
+        })
 
         context.parse_query();
         var no_embed = ("no-embed" in context.query);
@@ -241,13 +252,73 @@ define([
         }
     }
 
+    // Handle autoplay
+    var current_playing = -1, current_pos = 0, looping = false, fail_count = 0
+
+    // return list of autoplaying apps, sorted top-to-bottom
+    var autoplayers = function() {
+        return $(".happ.autoplay").sort(function(a,b) { 
+            return a.getBoundingClientRect().top - b.getBoundingClientRect().top 
+        } )
+    }
+    var current_player = function() {
+        return autoplayers().slice(current_playing, current_playing + 1)
+    }
+    var play_pause = function() {
+        var $player = current_player()
+            ,pause_func = $player.data("pause_func")
+        if ( typeof(pause_func) == "function" )
+            pause_func()
+    }
+    var play_first = function() {
+        current_playing = 0
+        var $player = current_player()
+            ,ready_func = $player.data("ready_func")
+            ,play_func = $player.data("play_func")
+        // Play the app
+        if ( typeof(play_func) == "function" ) {
+            play_func()
+        }
+        // But be ready to play it when it loads if it hasn't yet
+        if (typeof(ready_func) == "function" ) {
+            ready_func(function() {
+                current_playing = -1
+                play_next()
+            })
+        }
+    }
+    var play_next = function (player) {
+        if (player && !player.hasClass("autoplay"))
+            return
+        var $players = autoplayers()
+        if ($players.length == 0)
+            return
+        current_playing++
+        if (looping)
+            current_playing %= $players.length
+        else if (current_playing >= $players.length)
+            return -1
+
+        var $player = current_player()
+            ,play_func = $player.data("play_func")
+        if ( typeof(play_func) == "function" ) {
+            fail_count = 0
+            play_func()
+        } else {
+            fail_count++
+            // skip apps which don't "play", but also don't skip on loop forever
+            if (fail_count < $players.length)
+                play_next()
+        }
+    }
     o.init_content = function(){
-        // bonus paging and scrolling features
-        // TODO: prevent scroll sticking after mouse-up outside of expr frame
-        // TODO: figure out how to attach to all elements that don't have default drag behavior
-        // TODO: make work in FF
-        var scroll_ref, mouse_ref;
         if (0) {
+            // Scroll the page on drags
+
+            // TODO: prevent scroll sticking after mouse-up outside of expr frame
+            // TODO: figure out how to attach to all elements that don't have default drag behavior
+            // TODO: make work in FF
+            var scroll_ref, mouse_ref;
             $('#bg').on('dragstart', function(e, dd){
                 scroll_ref = [document.body.scrollLeft, document.body.scrollTop];
                 mouse_ref = [e.clientX, e.clientY];
@@ -257,6 +328,7 @@ define([
             });
         }
 
+        // bonus paging and scrolling features
         $(document.body).on('keydown', function(e){
            if(e.keyCode == 32) // space
                if(document.body.scrollTop + $(window).height()
@@ -270,12 +342,32 @@ define([
 
         $('a, form').each(function(i, e){ o.link_target(e) });
 
+        // Init jplayer, and autoplay as needed
         jplayer.init_jplayer();
         
+        $(".hive_audio").each(function (i, el) {
+            var $jp = $(el).find(".jp-jplayer")
+            $(el).data("play_func", function(t) {
+                $jp.bind_once_anon($.jPlayer.event.ended + ".hive", 
+                    function() { play_next($(el)) })
+                return $jp.jPlayer("play", t)
+            })
+            $(el).data("pause_func", function() {
+                var status = $jp.data("jPlayer").status
+                current_pos = status.currentTime
+                return $jp.jPlayer("pause")
+            })
+            $(el).data("ready_func", function(on_ready) {
+                $jp.bind_once_anon($.jPlayer.event.ready + ".hive",
+                    function() { on_ready($(el)) })
+            })
+            // HACK to fix audio player layout
+            $(el).attr("data-scale", $(el).height() / 36.1)
+        })
         // HACK to fix audio player layout
-        $(".hive_audio").map(function(i,el) { $(el).attr("data-scale", $(el).height()/36.1) })
         $(".hive_audio .jp-controls").add(".hive_audio .jp-controls *")
             .css({width:"",height:""})
+        play_first()
 
         o.layout()
     };

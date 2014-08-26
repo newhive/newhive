@@ -22,30 +22,16 @@ package io.newhive.newhive;
 import android.os.Bundle;
 import org.apache.cordova.*;
 
-import android.webkit.WebSettings;
-
 public class ZachWorld extends CordovaActivity 
 {
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
-        // if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-        //     WebView.setWebContentsDebuggingEnabled(true);
-        // }
         super.onCreate(savedInstanceState);
         super.init();
         // Set by <content src="index.html" /> in config.xml
         super.loadUrl(Config.getStartUrl());
         //super.loadUrl("file:///android_asset/www/index.html");
-
-        WebSettings ws = super.appView.getSettings();
-        // get pinch zoom to work
-        ws.setSupportZoom(true);
-        ws.setBuiltInZoomControls(true);
-        // hide plus/minus buttons when zooming
-        ws.setDisplayZoomControls(false);
-        // 
-        ws.setUseWideViewPort(true);
     }
 }
 

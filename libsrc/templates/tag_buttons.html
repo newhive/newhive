@@ -1,0 +1,18 @@
+{# Add buttons for adding expressions to collections #}
+
+{# plus menu (Add to collection) #}
+<div class="icon plus_menu needs_login pointer" 
+  title="Add to collection">
+</div>
+{# plus menu (Add to featured/category) #}
+{<if (eq user.name "root")}
+  {# plus menu (Add to category) #}
+  <div class="icon plus_cats pointer" title="Add to category">
+  </div>
+{>}{<elif flags.admin}
+  <form {form_attrs "add_featured_queue"} method="POST">
+    <input type="hidden" name="expr_id" value="{id}">
+    <button type="submit" class="icon add_queue pointer"
+        title="Add to featured"></button>
+  </form>
+{>}

@@ -64,6 +64,7 @@ site_flags = {
     ,'open_signup': []
     ,'mobile_web': ['nd4']
     ,'user_search': ['nd4', 'newduke','abram','it1']
+    ,'new_nav': ['admins', 'devs']
     # Editor
     ,'snap_crop': ['admins','nd4']
     ,'shift_does_raise': ['newduke','nd4','abram']
@@ -77,6 +78,7 @@ site_flags = {
     ,'tile_multiple_images': ['admins', 'nd4']
     ,'css_classes': ['admins', 'devs']
     ,'shape_link': ['admins', 'devs']
+    ,'autoplay': ['admins', 'devs']
     # Admin
     ,'admin': ['admins']
     # Old / unused

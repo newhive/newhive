@@ -72,7 +72,7 @@ class Database:
     # def _query(self, q, viewer=None, expr_only=None, fuzzy=False,
     #           es_order='_score,updated:desc', **args):
     # arg{id}: if not None, ensure this result appears in the feed
-    def query_echo(self, q, expr_only=None, viewer=None, id=None, **args):
+    def query_echo(self, q, expr_only=None, viewer=None, search_id=None, **args):
         args['viewer'] = viewer
         search = self.parse_query(q)
         results = []
@@ -80,6 +80,8 @@ class Database:
             args['auth'] = ('public' if
                 search['auth'] == 'public' else 'password')
 
+        # Loop, expanding limit, until either the expression "search_id" is 
+        # found or 500 limit is exceeded
         while True:
             spec = {}
 
@@ -112,6 +114,7 @@ class Database:
                 if owner and tags[0] == "Profile":
                     results = owner.profile(**dfilter(['at', 'limit'], args))
                 elif owner and owner.get('tagged', {}).has_key(tags[0]):
+                    # TODO-perf: look for search_id directly and modify limit as needed
                     results = self.Expr.page(owner['tagged'][tags[0]], **args)
                 else:
                     if search.get('tags'):
@@ -136,9 +139,9 @@ class Database:
                     results = results + self.User.page(spec, **args)
                     results.sort(cmp=lambda x, y: cmp(x[sort], y[sort]), reverse=True)
 
-            if not id or len(results) > 500 or args.get('limit', 27) > 1000:
+            if not search_id or len(results) > 500 or args.get('limit', 27) > 1000:
                 break;
-            if len(filter(lambda x: x.id==id,results)):
+            if len(filter(lambda x: x.id == search_id, results)):
                 break;
             args['limit'] = (args.get('limit', 27) * 3/2)
 
@@ -1493,6 +1496,8 @@ class Expr(HasSocial):
 
     def snapshot_name_http(self, size):
         res = self.snapshot_name(size)
+        if not res:
+            return None
         if not res.startswith("http"):
             res = "http:" + res
         return res
@@ -1841,7 +1846,7 @@ class Expr(HasSocial):
 
     @property
     def auth(self):
-        return self.get('auth', 'private')
+        return self.get('auth', 'password')
 
     public = property(lambda self: self.get('auth') == "public")
 

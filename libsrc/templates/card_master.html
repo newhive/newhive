@@ -8,7 +8,7 @@
 {>}
 {# display header #}
 {<if (and header (or user.logged_in (neq route_name "home")))}
-  <div id='header' class='header'>
+  <div class='header_title'>
     <span class='heading'>{ header.0 }
       {<if header.1}: { header.1 }{>}</span>
   </div>
@@ -18,6 +18,7 @@
     {|templates/profile_card.html}
   {>}
 {>}
+{<if (not flags.new_nav)}
 <form class="search_bar{<if owner} hide{>}"
   method='GET' action='/search' name='search_form'>
     {#
@@ -30,6 +31,7 @@
     ><input type="submit" value class='hoverable icon go_arrow inline'
   ></form
 >
+{>}
 {<unless page "tag_search"}
   {<with null "extra_classes" "hide"} {# "expander" route.include_tags #}
     {|templates/tags_main.html}

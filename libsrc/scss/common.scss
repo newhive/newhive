@@ -20,8 +20,38 @@ $right_column_x: $left_padding + $left_column_width + $right_padding;
     width: calc(#{$w});
 }
 
-@mixin box-sizing($style) {
-	-moz-box-sizing: $style;
-	-webkit-box-sizing: $style;
-	box-sizing: $style;
+// Handle prefixes
+$default-prefixes: webkit moz;
+
+@mixin build-prefix-values($property, $value, $prefixes: $default-prefixes) {
+    @each $prefix in $prefixes {
+        -#{$prefix}-#{$property}: #{$value};
+    }
+    #{$property}: #{$value};
+} 
+
+@mixin transition($property: all, $delay: 1s, $timing: linear) {
+    $value: $property $delay $timing;
+    // use default prefixes
+    @include build-prefix-values('transition', $value);
 }
+
+// // example overriding prefixes
+// @mixin border-radius($radius) {
+//     $prefixes: webkit;
+//     @include build-prefix-values('border-radius', $radius, $prefixes);
+// }
+// // using defaults of 'all' '1s' and 'linear'
+// p {
+//     @include transition();
+// }
+
+// // using custom values
+// .fast {
+//     @include transition('height', '.1s', 'ease', '0');
+// }
+
+@mixin box-sizing($style) {
+    @include build-prefix-values('box-sizing', $style);
+}
+

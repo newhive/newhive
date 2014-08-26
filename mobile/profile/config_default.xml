@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.newhive.profile.zach" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    
+    <content src="index.html" />
+    <access origin="*" />
+    <preference name="EnableViewportScale" value="true"/>
+
+    <icon src="compiled.icon.png"/>
+
+    <author email="info+app+android@newhive.com" href="http://newhive.com">
+        NewHive
+    </author>
+
+    <preference name="iosPersistentFileLocation" value="Library" />
+    <preference name="AndroidPersistentFileLocation" value="Internal" />
+
+    <preference name="BackgroundColor" value="0xffffffff"/>
+    <preference name="Orientation" value="landscape" />
+    <!-- version specific config goes here --><name>Zach World</name>
+<description>
+    Weird stuff that Zach likes, and media that zach creates
+</description>
+</widget>

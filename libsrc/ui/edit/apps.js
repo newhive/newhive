@@ -8,6 +8,7 @@ define([
     ,'ui/util'
     ,'ui/colors'
     ,'ui/codemirror/main'
+    ,'ui/menu'
 
     ,'./env'
     ,'./util'
@@ -25,6 +26,7 @@ define([
     ,ui_util
     ,colors
     ,codemirror
+    ,menu
 
     ,env
     ,u
@@ -630,6 +632,9 @@ Hive.App = function(init_state, opts) {
     o.css_class_set = function(s){
         o.div.removeClass(o.css_class()).addClass(s)
         o.init_state.css_class = s
+    }
+    o.css_class_get_all = function() {
+        return o.css_class().split(" ")
     }
     o.css_class_add = function(s){
         s = h.u.union(o.css_class().split(" "), s.split(" ")).join(" ")
@@ -2071,7 +2076,13 @@ Hive.App.Sketch = function(o) {
 Hive.registerApp(Hive.App.Sketch, 'hive.sketch');
 
 Hive.App.Audio = function(o) {
-    Hive.App.has_resize(o);
+    Hive.App.has_resize(o)
+    Hive.has_scale(o);
+    if (context.flags.autoplay) {
+        Hive.App.has_autoplay(o)
+        Hive.App.has_autohide(o)
+    }
+    
     o.content = function() {
         return o.content_element[0].outerHTML;
     };
@@ -2101,7 +2112,6 @@ Hive.App.Audio = function(o) {
         o.div.find('.jp-play-bar, .jp-interface').css('background-color', v);
     };
 
-    Hive.has_scale(o);
     var _layout = o.layout;
     o.layout = function() {
         if (_layout()) return true;
@@ -2155,6 +2165,11 @@ Hive.App.Audio = function(o) {
     o.content_element = o.skin();
 
     if(!o.init_state.color) o.init_state.color = colors[23];
+    if (menu.last_item && menu.last_item.hasClass("autoplay")) {
+        menu.last_item = undefined
+        o.autoplay_set(true)
+        o.autohide_set(true)
+    }
 
     o.update_shield();
     setTimeout(function(){ o.load(); }, 100);
@@ -2670,6 +2685,56 @@ Hive.has_scale = function(o){
     };
 };
 
+Hive.App.has_toggle = function(o, toggle_name){
+    var history_point, sel = env.Selection, toggle_set = toggle_name + "_set"
+    o[toggle_name] = function() {
+        return o.client_data(toggle_name) || false
+    }
+    o[toggle_set] = function(v) {
+        o.client_data_set(toggle_name, v)
+        // fixup_controls(sel.controls)
+    }
+    o["toggle_" + toggle_name] = function() {
+        o[toggle_set](!o[toggle_name]())
+    }
+    // set the selection delegates
+    if (!sel[toggle_name]) {
+        sel.set_standard_delegate(toggle_name)
+        sel.set_standard_delegate(toggle_set)
+    }
+    
+    var controls = function (o) {
+        find_or_create_button(o, '.' + toggle_name)
+        .click(function(ev) {
+            history_point = env.History.saver(
+                sel[toggle_name], sel[toggle_set], toggle_name)
+            sel.toggle_func(toggle_name) 
+            history_point.save()
+            fixup_controls(o)
+        })
+
+        return o;
+    };
+    // Set the correct "on" state for the control icon (off unless all selected
+    // apps are on)
+    var fixup_controls = function(o) {
+        var $control = $("#controls ." + toggle_name)
+            ,png = $control.prop("src")
+            ,png_off = png.replace("-on.png", ".png")
+            ,asset = ui_util.asset_name_from_url(png_off).slice(0, -4)
+            ,toggle = sel[toggle_name]() ? "-on" : ""
+        $control.prop("src", ui_util.asset(asset + toggle + ".png"))
+    }
+    fixup_controls.display_order = 9
+    o.make_controls.push(memoize('has_' + toggle_name + '_fixup', fixup_controls))
+    o.make_controls.push(memoize('has_' + toggle_name, controls));
+}
+Hive.App.has_autoplay = function(o){
+    return Hive.App.has_toggle(o, "autoplay")
+}
+Hive.App.has_autohide = function(o){
+    return Hive.App.has_toggle(o, "autohide")
+}
 Hive.App.has_rotate = function(o) {
     var app = o
 

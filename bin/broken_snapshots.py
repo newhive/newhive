@@ -4,7 +4,7 @@ from os.path import join
 parent_path = os.path.abspath(join(os.path.dirname(__file__), '..'))
 sys.path.append(parent_path)
 
-from newhive.db_tools import snapshot_reset, snapshot_redo_collection
+from newhive.db_tools import snapshot_reset, snapshot_redo_collection, recent_snapshot_fails
 
 snapshot_reset(recent_snapshot_fails(7), run_local=True)
 

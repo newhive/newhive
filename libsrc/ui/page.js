@@ -37,6 +37,8 @@ define([
     'sj!templates/dialog_share.html',
     'sj!templates/network_nav.html',
     'sj!templates/login_form.html', 
+    'sj!templates/tag_buttons.html', 
+    'sj!templates/hive_menu.html', 
     'sj!templates/request_invite_form.html',
     'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js',
     'sj!templates/cards.html'
@@ -66,18 +68,19 @@ define([
     var o = {}, expr_page = false, grid_width, controller,
         border_width = 1,
         render_new_cards_func,
+        done_overlays = false,
         anim_direction; // 0 = up, +/-1 = right/left
     const anim_duration = 700;
 
     o.init = function(controller){
         o.anim_direction = 0;
         o.controller = controller;
-        init_overlays();
         $(window).resize(o.resize);
     };
 
     var init_overlays = function(){
-        $('#overlays').empty().html(overlay_template());
+        done_overlays = true;
+        $('#overlays').empty().html(overlay_template(context));
         // render_overlays();
         // $('#login_form').submit(o.login);
         $('#login_form [name=from]').val(window.location);
@@ -157,6 +160,7 @@ define([
     o.on_logout = function(){
         context.user.logged_in = false;
         // overlays are rendered once on init, so not done on .refresh()
+        done_overlays = false;
         init_overlays();
         if (routes[context.route_name].require_login 
             || context.route_name == "view_expr") {
@@ -167,6 +171,7 @@ define([
     o.on_login = function(e) {
         context.user.logged_in = true;
         // overlays are rendered once on init, so not done on .refresh()
+        done_overlays = false;
         init_overlays();
         o.controller.refresh();
     };
@@ -198,6 +203,11 @@ define([
     ///////////////////////////////
 
     o.preprocess_context = function(){
+        // For routes that specify the owner, do not show the profile card.
+        if (context.route._owner_name) {
+            delete context.page_data.owner
+        }
+
         var user = context.user;
         user.extra_tags = 
             user.tagged.slice(user.tagged_ordered);
@@ -220,8 +230,27 @@ define([
             o.layout_columns();
         o.add_grid_borders();
     }
+    var custom_classes = ""
     o.render = function(method, data){
         var page_data = context.page_data, expr = page_data.expr
+        if (!done_overlays)
+            init_overlays();
+        // set any classes specified by the route
+        var new_classes = context.route.custom_classes // + " " + context.route_name
+        $("body").removeClass(custom_classes).addClass(new_classes)
+        custom_classes = new_classes
+        // Fix styling for this route
+        $(".main-header .network_nav .item").removeClass("black_btn")
+        $(".main-header .network_nav .item." + context.route_name)
+            .addClass("black_btn")
+        var has_nav = ($("body").hasClass("nav") && $(".main-header").length)
+        $("#overlays .hive_logo")
+            .addremoveClass("overlay", ! has_nav)
+            // .addremoveClass("item", has_nav)
+            .prependTo(has_nav ? ".main-header .left" : "#overlays")
+            .addremoveClass("stay_hidden", has_nav && !context.user.logged_in)
+        $(".overlay.panel .create.item").showhide(!has_nav)
+
         if (page_data.title) $("head title").text(page_data.title);
         o.column_layout = false;
         o.columns = 0;
@@ -310,6 +339,10 @@ define([
         grid_width = 222 + 2*10; // padding = 10 + 10
         render_site(page_data);
     };
+    o.cat = function(page_data){
+        grid_width = 350;
+        render_site(page_data);
+    };
     // END-layout-methods
     
     // global keypress handler
@@ -341,7 +374,21 @@ define([
         }
     }
 
+    var height_nav_large = 155
     var local_attach_handlers = function(){
+        if (context.flags.new_nav) {
+            if (context.user && context.user.logged_in)
+                height_nav_large = 70
+            $(".nav #site").css({"margin-top": height_nav_large})
+            // Animate header
+            $(window).bind_once_anon("scroll.page", function(ev) {
+                var scrolled_to = $(this).scrollTop()
+                if (scrolled_to > height_nav_large)
+                    $(".main-header").addClass("condensed")
+                else
+                    $(".main-header").removeClass("condensed")
+            })
+        }
         // Add expression to collection
         var add_to_collection = function(category) { return function(e) {
             var dialog_selector = ".dialog.add_to_collection." + category
@@ -391,8 +438,9 @@ define([
                 submit_add_to_collection($(this).text());
             }).addClass("pointer");
 
-            if (category == "collections") {
-                var card = $(this).parents().filter(".expr.card");
+            var card = $(this).parents().filter(".expr.card");
+            if (category == "collections" || 
+                context.page_data.expr || card.length) {
                 var expr_id = ""
                 // If the plus button is on a card, use its ID info
                 if (card.length) 
@@ -410,8 +458,8 @@ define([
             update_text();
             dia.open();
         }}
-        $(".plus_menu").unbind('click').on('click', add_to_collection("collections"))
-        $(".plus_cats").unbind('click').on('click', add_to_collection("categories"))
+        $(".plus_menu").bind_once_anon('click.page', add_to_collection("collections"))
+        $(".plus_cats").bind_once_anon('click.page', add_to_collection("categories"))
             .addClass("pointer")
         if (!context.user.logged_in) {
             $(".needs_login").unbind("click").click(function(e) {
@@ -453,21 +501,20 @@ define([
         //     $(".search_bar").submit();
         // });
         
-        $(document).off('keydown', keydown).on("keydown", keydown);
-        var scroll_handler = function(e) {
-            if (c.route_name == "edit_expr")
-                return;
-            return;
-            $(".overlay.nav").fadeOut("fast");
-            if (o.scroll_timeout != undefined)
-                clearTimeout(o.scroll_timeout);
-            o.scroll_timeout = setTimeout(function() {
-                o.scroll_timeout = undefined;
-                if (c.route_name != "edit_expr")
-                    $(".overlay.nav").stop().fadeIn("fast");
-            }, 100);
-        }
-        $(window).off("scroll", scroll_handler).on("scroll", scroll_handler);
+        $(document).bind_once("keydown", keydown);
+        // var scroll_handler = function(e) {
+        //     if (c.route_name == "edit_expr")
+        //         return;
+        //     $(".overlay.nav").fadeOut("fast");
+        //     if (o.scroll_timeout != undefined)
+        //         clearTimeout(o.scroll_timeout);
+        //     o.scroll_timeout = setTimeout(function() {
+        //         o.scroll_timeout = undefined;
+        //         if (c.route_name != "edit_expr")
+        //             $(".overlay.nav").stop().fadeIn("fast");
+        //     }, 100);
+        // }
+        // $(window).off("scroll", scroll_handler).on("scroll", scroll_handler);
     };
     o.attach_handlers = function(){
         if(context.page && context.page.attach_handlers)
@@ -638,10 +685,16 @@ define([
 
     var done_layout = false;
     o.resize = function(){
-        if(context.page_data.layout == 'grid' || context.page_data.layout == 'mini') {
-            var columns = Math.max(1, Math.min(3, 
-                Math.floor($(window).width() / grid_width)));
-            $('.feed').css('width', columns * (grid_width + border_width));
+        if(context.page_data.layout == 'grid' ||
+            context.page_data.layout == 'cat' ||
+            context.page_data.layout == 'mini') {
+            var win_width = $(window).width(),
+            columns = Math.max(1, Math.min(3, Math.floor( win_width / grid_width)))
+                ,feed_width = columns * (grid_width + border_width)
+            if (context.page_data.layout == 'cat')// && columns > 1)
+                feed_width = Math.min(3 * (grid_width + border_width),
+                    Math.max(win_width, feed_width))
+            $('.feed').css('width', feed_width);
             if (o.columns != columns || !done_layout) {
                 o.columns = columns;
                 if (o.column_layout)
@@ -689,6 +742,9 @@ define([
     // Set up the grid borders
     o.add_grid_borders = function(columns){
         var columns = o.columns;
+        $(".feed").addremoveClass("wide", columns > 1)
+        $(".feed").addremoveClass("_3col", columns > 2)
+        $(".feed").addremoveClass("narrow", columns == 1)
         if(context.page_data.layout != 'grid') return;
         var expr_cards = $('.feed .card');
         // Count of cards which fit to even multiple of columns

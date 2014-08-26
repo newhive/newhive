@@ -1,4 +1,4 @@
-config.content_url = 'http://staging.tnh.me/'
+config.content_url = 'http://wirbu.office.tnh.me/'
 
 var page_index = 0, cards = [], cards_complete = false,
     cards_loading = false, current_page, next_page, win = $(window),
@@ -158,14 +158,8 @@ function render_cards(cards){
 function render_page_expr(card){
     page_index_scrollY = window.scrollY
     page_exit()
-<<<<<<< HEAD:mobile/www/main.js
-    StatusBar.hide()
-    $('#content').removeClass(view).addClass('expr').empty()
-    view = 'expr'
-=======
     set_view('expr')
     StatusBar.hide()
->>>>>>> bb1bab6a870e687a8ae22e852cadf64bc4a14c09:mobile/profile/www/main.js
     $('#overlays').append($('#templates .expr_overlays').clone().children())
     button('.icon.prev', back)
     button('.share', function(){ share_expr(card) })

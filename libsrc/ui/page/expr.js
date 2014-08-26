@@ -54,9 +54,6 @@ define([
         // context.is_secure not set until after module instantiation
         o.content_url_base = (context.is_secure ?
                 context.config.secure_content_url : context.config.content_url);
-        $(".page_btn.page_prev").click(o.page_prev);
-        $(".page_btn.page_next").click(o.page_next);
-        $("#social_plus").click(o.social_toggle);
         window.addEventListener('message', o.handle_message, false);
     };
 
@@ -540,6 +537,9 @@ define([
     };
 
     o.attach_handlers = function(){
+        $(".page_btn.page_prev").bind_once('click', o.page_prev);
+        $(".page_btn.page_next").bind_once('click', o.page_next);
+        $("#social_plus").bind_once('click', o.social_toggle);
         $("#social_close").bind_once_anon("click", o.social_toggle);
         $(".social_btn").bind_once_anon("click", o.social_toggle);
         if (context.flags.fade_controls) {
@@ -575,7 +575,7 @@ define([
         // updates embed links based on selection
         $("#dia_embed input[type=checkbox]").on("change", function(ev) {
             var host = context.config.server_url
-                , params = ["template=embed"]
+                , params = {template: "embed"}
                 , link = ''
                 , embed_url = ''
                 , clean = ''
@@ -583,16 +583,16 @@ define([
                 clean += "+logo"
             }
             if ($("#include_collection").is(":checked")){
-                params.push(location.search.slice(1))
+                params.q = context.query.q
                 clean += "+collection"
             }
             if ($("#include_social").is(":checked")){
                 clean += "+social"
             }
             if (clean)
-                params.push("clean=" + clean.slice(1))
+                params.clean = clean.slice(1)
 
-            params = (params.length) ? "?" + params.join("&amp;") : ''
+            params = "?" + $.param(params)
             link = util.urlize(host).replace(/\/$/,"") + 
                 window.location.pathname;
             embed_url ="<iframe src='" + link + params + "' " +

@@ -3,12 +3,94 @@
 
 @media print { #nav { display: none; } }
 
-.red_spacer {
-    border-left: 2px solid red;
-    display: inline-block;
-    height: 14px;
-    width: 0;
-    margin-right: -4px;
+body.nav .main-header {
+    display: block;
+}
+.main-header {
+    display: none;
+    position:fixed;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+
+    z-index: $nav_layer;
+    background-color: white;
+    // background-repeat: no-repeat;
+    @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
+    @include transition(all, 0.15s, linear);
+
+    .left, .right {
+        margin: 5px;
+    }
+    .logo, .item, .icon {
+        @include transition(all, 0.15s, linear);
+        display: inline-block;
+        // height: 44px;
+        &.splash {
+            height: 80px;
+        }
+    }
+    .item {
+        @include border-radius(6px);
+    }
+    .blurb {
+        // So as to not affect the layout
+        position: absolute;
+        padding-right: 10px;
+    }
+    .item.btn {
+        display: inline-block;
+        &:hover, &.active { background-color: black; }
+        height: 44px; width: 44px;
+        background-size: 44px 44px;
+    }
+    .create.item {
+        background-image: asset_url('skin/nav/create.png');
+        &.active { background-image: asset_url('skin/nav/create-hover.png'); }
+    }
+    .search_bar {
+        display: inline;
+        input[type=text] {
+            margin: 6px 0px 0px 0px;
+            width: 350px;
+        }
+    }
+    .header {
+        display: none; // until we implement categories
+        // height: 39px; // Ew.  Should be computed.
+        line-height: 0px; // To remove extra whitespace
+        ul {
+            // min-width: 200px;  //!! needs to reflect content changes
+            -webkit-margin-before: 0em;
+            -webkit-margin-after: 0em;
+            -webkit-margin-start: 0px;
+            -webkit-margin-end: 0px;
+            -webkit-padding-start: 0px;
+
+            display: inline-block;
+            text-align: justify;
+            width: 100%;
+
+            overflow: hidden;
+
+            li { display: inline-block; }
+            .text_btn { margin: 0px; }
+
+            &:after {
+                content: '';
+                display: inline-block;
+                width: 100%;
+                // height: 0px;
+            }
+        }
+    }
+
+    &.condensed {
+        .hide_condensed { display: none; }
+        .logo.splash {
+            height: 40px;
+        }
+    }
 }
 
 .page_btn {
@@ -31,6 +113,13 @@
     }
 }
 
+.red_spacer {
+    border-left: 2px solid red;
+    display: inline-block;
+    height: 14px;
+    width: 0;
+    margin-right: -4px;
+}
 .overlay.panel.nav {
     //display: block;
     position: fixed;
@@ -63,6 +152,7 @@
     }
 }
 
+// #overlays div, body:not(.nav) .overlay {
 .overlay {
     display: none;
     // opacity: .95;
@@ -111,14 +201,6 @@
         }
     }
 
-    &.logo {
-        width: 44px; height: 44px;
-        background-image: asset_url('skin/nav/logo.png');
-        &.active {
-            background-image: asset_url('skin/nav/logo-hover.png');
-            background-color: black;
-        }
-    }
     &.form {
         display: block;
         left: 20px;
@@ -152,7 +234,7 @@
     // height: 180px;
     &:hover { background-color: white; }
 
-    .icon.plus_menu, .icon.add_queue {
+    .icon.plus_menu, .icon.add_queue, .icon.plus_cats {
         // position: absolute;
         // background-color: black;
         // top: 18px;
@@ -413,10 +495,15 @@ $action: love comment republish;
     }
 }
 
-.overlay.logo {
+.hive_logo {
     display: block;
     margin-left: 0px;
     height: 44px;
     width: 44px;
     left: 20px;
+    background-image: asset_url('skin/nav/logo.png');
+    &.active {
+        background-image: asset_url('skin/nav/logo-hover.png');
+        background-color: black;
+    }
 }
