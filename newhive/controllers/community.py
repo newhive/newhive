@@ -437,8 +437,8 @@ class Community(Controller):
     def search(self, tdata, request, id=None, owner_name=None, expr_name=None,
         db_args={}, **args
     ):
-        q = request.args.get('q')
-        if not q: return None
+        q = request.form.get('q') or request.args.get('q')
+        # if not q: return {cards: [], 'title':'Search'}
         id = request.args.get('id', None)
         entropy = request.args.get('e', None)
         owner = self.db.User.named(owner_name)
@@ -463,7 +463,7 @@ class Community(Controller):
             "cards": result,
             'special': {'mini_expressions': 3},
             'title': 'Search',
-            'header': ("Search", request.args['q']),
+            'header': ("Search", q),
         }
         if len(search) == 1 and len(tags) == 1:
             profile = tdata.user

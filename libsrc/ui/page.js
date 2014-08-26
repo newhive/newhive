@@ -396,6 +396,12 @@ define([
 
     var height_nav_large = 155
     var local_attach_handlers = function(){
+        $("#search_box").bind_once_anon("keyup", function(ev) {
+            // disallow empty searches
+            var $this = $(this)
+                , $submit = $this.siblings("input[type=submit]")
+            $submit.prop("disabled", $(this).val() == "")
+        })
         if (context.flags.new_nav) {
             $(".icon.go_search").bind_once_anon("mouseenter.page", function(ev){
                 $(".main-header #search_box").focus()
