@@ -65,8 +65,8 @@ class Community(Controller):
                 resp['fullname'] = referral.get('name')
         return resp
 
-    def expressions_for(self, tdata, cards, owner, **args):
-        if 0 == len(cards) and tdata.user == owner:
+    def expressions_for(self, tdata, cards, owner, no_empty=False, **args):
+        if not no_empty and 0 == len(cards) and tdata.user == owner:
             # New user has no cards; give him the "edit" card
             # TODO: replace thenewhive with a config string
             cards = []
@@ -148,7 +148,7 @@ class Community(Controller):
                 cards = [self.collection_client_view(x) if x 
                     else self.missing_expression() for x in cards]
                 
-                res = self.expressions_for(tdata, cards, owner)
+                res = self.expressions_for(tdata, cards, owner, no_empty=True)
                 res.update({
                     "tag_selected":tag_name
                 })
