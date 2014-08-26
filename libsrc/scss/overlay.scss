@@ -15,6 +15,7 @@ body.nav .main-header {
     }
     .blurb {
         position: static;
+        margin-top: -10px;
         padding: 10px;
     }
 }    
@@ -70,9 +71,8 @@ body.nav .main-header {
     .blurb {
         // So as to not affect the layout
         position: absolute;
-        padding-right: 10px;
-        margin-top: -10px;
-        bottom: -10px;
+        padding: 10px;
+        bottom: -5px;
     }
     .item.btn {
         display: inline-block;
