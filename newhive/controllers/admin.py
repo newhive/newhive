@@ -18,7 +18,8 @@ class Admin(Controller):
         """
 
         resp = {}
-        flags_name = 'live_flags' if config.live_server else 'site_flags'
+        live_server = config.live_server and config.dev_prefix != 'staging'
+        flags_name = 'live_flags' if live_server else 'site_flags'
 
         if len(request.form.keys()): 
             print "Site_flags changed."
