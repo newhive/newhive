@@ -67,7 +67,8 @@ class Controller(object):
         # Find flags appropriate to current user
         flags = config.site_flags
         su = self.db.User.site_user
-        flags_name = 'live_flags' if config.live_server else 'site_flags'
+        live_server = config.live_server and config.dev_prefix != 'staging'
+        flags_name = 'live_flags' if live_server else 'site_flags'
         flags.update(su.get(flags_name, {}))
         user_flags = {}
         user = tdata.user
