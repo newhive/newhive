@@ -53,9 +53,10 @@
         <form class="search_bar"
           method='GET' action='/search' name='search_form'>
             <input type="text" id="search_box" placeholder="Search"
-            class="inline{<if (not user.logged_in)} focus_expanded{>}"
+            class="inline focus_expanded{<if (not user.logged_in)} media_shrink{>}"
               name='q' value='{query.q}'
-            ><input type="submit" value disabled class='hoverable icon go_search inline'
+            ><input type="submit" value title="Search"
+              class='hoverable icon go_search inline'
           ></form
         >
         {# Create new page #}

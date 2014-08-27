@@ -438,7 +438,7 @@ class Community(Controller):
         db_args={}, **args
     ):
         q = request.form.get('q') or request.args.get('q')
-        # if not q: return {cards: [], 'title':'Search'}
+        if not q: return { 'cards': [], 'title':'Search' }
         id = request.args.get('id', None)
         entropy = request.args.get('e', None)
         owner = self.db.User.named(owner_name)

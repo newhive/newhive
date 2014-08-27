@@ -25,6 +25,7 @@ define([
     'sj!templates/tags_page.html',
     'sj!templates/tag_card.html',
     'sj!templates/user_activity.html',
+
     'sj!templates/expr_card_large.html',
     'sj!templates/expr_card_feed.html',
     'sj!templates/expr_card_mini.html',
@@ -40,7 +41,8 @@ define([
     'sj!templates/tag_buttons.html', 
     'sj!templates/hive_menu.html', 
     'sj!templates/request_invite_form.html',
-    'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js',
+    // 'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js',
+    'js!browser/jquery/jquery.mobile-events.js', //!!
     'sj!templates/cards.html'
 ], function(
     $,
@@ -396,15 +398,14 @@ define([
 
     var height_nav_large = 155
     var local_attach_handlers = function(){
-        $("#search_box").bind_once_anon("keyup", function(ev) {
-            // disallow empty searches
-            var $this = $(this)
-                , $submit = $this.siblings("input[type=submit]")
-            $submit.prop("disabled", $(this).val() == "")
+        $("form.search_bar").bind_once_anon("submit", function(ev) {
+            if ($(this).find("#search_box").val() == "")
+                return false
         })
         if (context.flags.new_nav) {
-            $(".icon.go_search").bind_once_anon("mouseenter.page", function(ev){
-                $(".main-header #search_box").focus()
+            $(".icon.go_search").bind_once_anon("tap.page mouseenter.page", 
+                function(ev) {
+                    $(".main-header #search_box").focus()
             })
             // Animate header
             $(window).bind_once_anon("scroll.page", function(ev) {
