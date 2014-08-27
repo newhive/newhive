@@ -116,14 +116,6 @@
         "custom_classes": "nav",
         "client_method": "grid"
     },
-    "user_home": {
-        "page_route": "/<owner_name>",
-        "api_route": "/api/expr/view/<owner_name>",
-        "controller": "community",
-        "method": "expr",
-        "custom_classes": "nav",
-        "client_method": "expr"
-    },
 
     "empty": "-----------------------------------------",
     "empty": "These routes are (profile) community pages.",
@@ -334,6 +326,14 @@
         "method": "expr",
         "client_method": "expr",
         "precedence": -1
+    },
+    "user_home": {
+        "empty": "redirects to expressions_public (profile) if no home expr",
+        "page_route": "/<owner_name>",
+        "api_route": "/api/expr/view/<owner_name>",
+        "controller": "community",
+        "method": "expr",
+        "client_method": "expr"
     },
     "view_expr_custom_domain_home": {
         "page_route": "/",
