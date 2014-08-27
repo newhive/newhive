@@ -26,6 +26,11 @@ body.nav .main-header {
         max-width: 90px;
     }
 }
+.main-header ._2column {
+    .search_bar input[type=text]:not(.media_shrink) {
+        max-width: 180px;
+    }
+}
 }
 @media all and (min-width:920px) and (max-width:1000px) {
 .main-header:not(.condensed) ._2column {
@@ -36,6 +41,9 @@ body.nav .main-header {
 }
 
 body:not(.mobile) {
+    #site {
+        @include transition(margin-top, 0.15s, linear);
+    }
     .main-header {
         @include transition(all, 0.15s, linear);
         .logo, .item, .icon {

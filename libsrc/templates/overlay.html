@@ -106,19 +106,34 @@
 <div id='logo_menu' class='menu drawer {<if (eq query.template "embed")} stay_hidden{>}' data-handle='.hive_logo'>
   {<if user.logged_in}
     <form {form_attrs "logout"} method='POST' id='logout_form'></form>
-    <div id='logout_btn' class='menu_item'>Logout</div>
-    <a {anchor_attrs "view_expr"
-      "owner_name" config.site_user "expr_name" "about"}
-      class='menu_item'>About</a>
-    {# <div id='invite_btn' class='menu_item'>Invites</div> #}
+    {# Home #}
+    <a {anchor_attrs "home"} class='menu_item default hoverable'>The Hive</a>
+
+    {# Network #}
+    <a {anchor_attrs "recent"} class='menu_item hoverable'>Network</a>
+
+    {# Username #}
+    <a id='user_btn' { anchor_attrs "expressions_public" "owner_name" user.name }
+      class='menu_item hoverable'>{user.name|e}</a>
+
+    {# Activity #}
     <div id='activity_btn' class='menu_item hoverable'>
         <div class='icon'></div>
         <div class='count'>0</div>
         Activity
     </div>
-    <a id='user_btn' { anchor_attrs "expressions_public" "owner_name" user.name }
-      class='menu_item hoverable'>{user.name|e}</a>
-    <a {anchor_attrs "home"} class='menu_item default hoverable'>Network</a>
+
+    {# About #}
+    <a {anchor_attrs "view_expr"
+      "owner_name" config.site_user "expr_name" "about"}
+      class='menu_item'>About</a>
+
+    {# Logout #}
+    <div id='logout_btn' class='menu_item'>Logout</div>
+
+    {# FAQ #}
+    {# <a {anchor_attrs "faq"} class='menu_item hoverable'>FAQ</a> #}
+    {# <div id='invite_btn' class='menu_item'>Invites</div> #}
   {>}{<else}
     <a {anchor_attrs "signup"} class='menu_item'>Sign Up</a>
     <div class='login_btn menu_item'>Log in</div>
