@@ -671,7 +671,10 @@ body {
         }            
     }
     .feed.grid.narrow, .feed.cat.narrow {
-        .card .vcenter_outer { height: auto; }
+        .card .card_title {
+            height: auto; 
+            margin: 10px 0px;
+        }
     }
     .feed.grid, .feed.cat {
         /* max-width: 1256px; */
@@ -692,11 +695,11 @@ body {
         }
         .card {
             width: 390px;
+            line-height: 0px;
             position: relative;
-            // float: left;
             display: inline-block;
             // No bottom padding because last item has margin
-            padding: 10px 10px 0px 10px;
+            padding: 10px;
             // &:hover { background-color: #EEFFF8; }
             .vcenter_outer { height: 75px; }
             .feed_item {
@@ -707,7 +710,6 @@ body {
                 max-width: 390px;
             }
             .info {
-                margin-bottom: 10px;
                 img.thumb { 
                     width: 44px;
                     margin-right: 6px;
