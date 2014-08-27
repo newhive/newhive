@@ -567,8 +567,9 @@ class User(HasSocial):
         self.owner = self
 
     def expr_create(self, d):
-        doc = dict(owner = self.id, name = '')
-        doc.update(d)
+        doc = dict(d)
+        doc.update(owner=self.id)
+        doc.setdefault('name', '')
         return self.db.Expr.create(doc)
 
     def create(self):
@@ -1692,6 +1693,7 @@ class Expr(HasSocial):
             f_id = a.get('file_id')
             if(f_id): ids.append(f_id)
             ids.extend( self._match_id(a.get('content')) )
+            ids.extend( self._match_id(a.get('url')) )
 
         ids = filter(
             lambda f_id: self.db.File.fetch(f_id, fields={'fields':'_id'})

@@ -86,7 +86,8 @@ def handle(request):
     print(request)
     environ = copy.copy(request.environ)
     if (re.match('/robots.txt$', environ['PATH_INFO'])
-        and re.match('thenewhive.com', environ['HTTP_HOST'])):
+        and re.match('thenewhive.com', environ['HTTP_HOST'])
+    ):
         return base_controller.serve_html(
             Response(), 'User-agent: *\nDisallow: /\n')
 
