@@ -794,6 +794,7 @@ class User(HasSocial):
             return self.activity_bug(**args) 
         except Exception as e:
             print e
+            return []
 
     def activity_bug(self, **args):
         if not self.id: return []
