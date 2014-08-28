@@ -730,7 +730,7 @@ define([
         if (context.page && context.page.resize)
             context.page.resize();
         done_layout = true;
-        var new_nav_height = $(".main-header").height()
+        var new_nav_height = $(".main-header").outerHeight()
         if (height_nav_large != new_nav_height) {
             height_nav_large = new_nav_height
             $("#site").css({"margin-top": has_nav_bar() ? height_nav_large : 0})
