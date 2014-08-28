@@ -389,7 +389,6 @@ define([
         }
     }
 
-    var height_nav_large = 1
     var local_attach_handlers = function(){
         $("form.search_bar").bind_once_anon("submit", function(ev) {
             if ($(this).find("#search_box").val() == "")
@@ -407,6 +406,8 @@ define([
                     $(".main-header").addClass("condensed")
                 else
                     $(".main-header").removeClass("condensed")
+                search_flow = ''
+                reflow_nav()
             })
         }
         // Add expression to collection
@@ -702,62 +703,91 @@ define([
             $('#site').empty().append(master_template(page_data));
     }
 
-    var done_layout = false;
-    var nav_size = 'full'
+    var done_layout = false, win_width;
     o.resize = function(){
-        var win_width = $(window).width()
+        if (context.page && context.page.resize)
+            context.page.resize();
+        done_layout = true;
+        win_width = $(window).width()
 
         if(context.page_data.layout == 'grid' ||
             context.page_data.layout == 'cat' ||
             context.page_data.layout == 'mini'
-        ){
-            var max_columns = context.route.max_columns || 3
-                ,columns = Math.max(1, Math.min(max_columns, 
-                    Math.floor( win_width / grid_width)))
-                ,feed_width = columns * (grid_width + border_width)
-            if (context.page_data.layout == 'cat')// && columns > 1)
-                feed_width = Math.min(3 * (grid_width + border_width),
-                    Math.max(win_width, feed_width))
-            $('.feed').css('width', feed_width);
-            if (o.columns != columns || !done_layout) {
-                o.columns = columns;
-                if (o.column_layout)
-                    o.layout_columns();
-                o.add_grid_borders(columns);
-            }
-        }
+        ) reflow_grid()
 
-        if (context.page && context.page.resize)
-            context.page.resize();
-        done_layout = true;
+        reflow_nav()
+    }
+
+    var reflow_grid = function(){
+        var max_columns = context.route.max_columns || 3
+            ,columns = Math.max(1, Math.min(max_columns, 
+                Math.floor( win_width / grid_width)))
+            ,feed_width = columns * (grid_width + border_width)
+        if (context.page_data.layout == 'cat')// && columns > 1)
+            feed_width = Math.min(3 * (grid_width + border_width),
+                Math.max(win_width, feed_width))
+        $('.feed').css('width', feed_width);
+        if (o.columns != columns || !done_layout) {
+            o.columns = columns;
+            if (o.column_layout)
+                o.layout_columns();
+            o.add_grid_borders(columns);
+        }
+    }
+
+    var unsettled_nav_height, height_nav_uncondensed = 1
+    var reflow_site_margin = function() {
         var new_nav_height = $(".main-header").outerHeight()
-        if (height_nav_large != new_nav_height) {
-            height_nav_large = new_nav_height
-            $("#site").css({"margin-top": has_nav_bar() ? height_nav_large : 0})
+        if (unsettled_nav_height != new_nav_height) {
+            unsettled_nav_height = new_nav_height
+            setTimeout(reflow_site_margin, 200)
+            return;
+        }
+        if (!condensed) {
+            height_nav_uncondensed = new_nav_height
+            $("#site").css({"margin-top": height_nav_uncondensed })
+            return;
+        }
+    }
+    var nav_size, search_flow, condensed
+    var reflow_nav = function(){
+        // handle layout juggling of fat nav bar for narrow widths
+        if(!has_nav_bar()) {
+            $("#site").css({"margin-top": 0})
+            return
         }
 
-        // handle layout juggling of fat nav bar for narrow widths
-        if(has_nav_bar()){
-            var new_nav_size = win_width < 830 ? 'narrow' : 'full'
-            if(nav_size != new_nav_size){
-                nav_size = new_nav_size
-                if(nav_size == 'narrow'){
-                    $('.main-header .nav_top_row').removeClass('table')
-                    $('.main-header .blurb').insertAfter('.main-header .left')
-                    if(!context.user.logged_in)
-                        $('#search_box').insertAfter('.main-header .create')
-                            .addClass('block')
-                }
-                if(nav_size == 'full'){
-                    $('.main-header .nav_top_row').addClass('table')
-                    $('.main-header .blurb').insertAfter(
-                        '.main-header .nav_top_row')
-                    if(!context.user.logged_in)
-                        $('#search_box').insertBefore('.main-header .go_search')
-                            .removeClass('block')
-                }
-                $('.main-header').removeClass('full narrow').addClass(nav_size)
-            }
+        var logged_in = context.user.logged_in
+        // TODO: fix margin for uncondensed
+        var new_condensed = $('.main-header').hasClass('condensed')
+        if (condensed != new_condensed) {
+            condensed = new_condensed
+            $('.main-header .blurb').insertAfter('.main-header ' + 
+                (!condensed ? '.left' : '.nav_top_row'))
+            $('.main-header').addremoveClass('split', !logged_in && !condensed)
+        }
+
+        reflow_site_margin()
+
+        var new_nav_size = ( win_width < 830 &&
+                (!condensed && !logged_in) ) ? 'narrow' : 'full'
+        if(nav_size != new_nav_size){
+            nav_size = new_nav_size
+            $('.main-header').removeClass('full narrow').addClass(nav_size)
+        }
+
+        var new_search_flow = win_width < 730 ? 'block' : 'inline-block'
+        $('.main-header .splash.container, .main-header .left')
+            .addremoveClass('narrow', win_width < 830)
+        if(search_flow != new_search_flow){
+            search_flow = new_search_flow
+            if(search_flow == 'block')
+                $('#search_box').insertAfter('.main-header .nav_top_row')
+                    .addClass('block')
+            else
+                $('#search_box').insertBefore('.main-header .go_search')
+                    .removeClass('block')
+            $('#search_box').removeClass('full narrow').addClass(nav_size)
         }
     }
 

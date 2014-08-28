@@ -26,26 +26,39 @@ body.nav .main-header {
         }
     }
 }
+@media all and (max-width:610px) {
+    .main-header .username.username { max-width: 120px; }
+}
 
+$debug: true;
+$debug: false;
+
+$anim_time: 0.15s;
+@if $debug { $anim_time: 1.15s; }
 body:not(.mobile) {
     #site {
-        @include transition(margin-top, 0.15s, linear);
+        @include transition(margin-top, $anim_time, linear);
     }
-    .main-header {
-        @include transition(all, 0.15s, linear);
-        .logo, .item, .icon {
-            @include transition(all, 0.15s, linear);
+    .main-header, .cell, .cell > a {
+        @include transition(all, $anim_time, linear);
+        .logo, .item, .icon, a.splash.container {
+            @include transition(all, $anim_time, linear);
         }
     }
     .main-header:not(.narrow){
         .search_bar {
             input[type=text] {
-                @include transition(all, 0.15s, linear);
+                @include transition(all, $anim_time, linear);
             }
         }
     }
 }
 
+.main-header.split .nav_top_row {
+    &>.cell {
+        width: 100%;
+    }
+}
 .main-header {
     display: none;
     position:fixed;
@@ -56,11 +69,21 @@ body:not(.mobile) {
 
     z-index: $nav_layer;
     background-color: white;
-    // background-repeat: no-repeat;
 
-    .left, .right {
-        padding: 5px;
-        line-height: 0px;
+    // Debug
+    @if $debug {
+        .left { background-color: antiquewhite; }
+        .right { background-color: aquamarine; }
+    }
+    .nav_top_row {
+        &>.left, &>.right {
+            display: inline-block;
+            padding: 5px;
+            line-height: 0px;
+        }
+        &>.right {
+            float: right;
+        }
     }
     .right .icon {
         margin-right: 5px;
@@ -68,11 +91,12 @@ body:not(.mobile) {
     .text_btn { margin: 2px 0px 0px 0px; }
     .logo, .item, .icon {
         display: inline-block;
-        // height: 44px;
-        &.splash {
-            height: 80px;
-            margin: 10px;
-        }
+    }
+    .splash.container { width: 100%; overflow: hidden; }
+    img.splash {
+        display: block;
+        margin: auto;
+        height: 80px;
     }
     .item {
         @include border-radius(6px);
@@ -104,30 +128,27 @@ body:not(.mobile) {
             //     // background-color: $color_bright_red;
             // }
         }
-        input[type=text] {
-            margin: 4px 0px 0px -2px;
+    }
+    // #search_box is not always inside .search_bar
+    #search_box {
+        margin: 4px 0px 0px -2px;
+        width: 250px;
 
+        width: 0px;
+        padding: 0px;
+        opacity: 0;
+        display: inline;
+        &.block { position:absolute; clear: both; }
+        &:hover, &:focus {
             width: 250px;
-            // &:hover, &:focus {
-            //     background: asset_url("skin/nav/search-arrow.png") no-repeat;
-            //     background-position: right;
-            // }
-
-            &.focus_expanded {
-                width: 0px;
-                padding: 0px;
-                opacity: 0;
-                display: inline;
-                &:hover, &:focus {
-                    width: 250px;
-                    padding: 6px;
-                    opacity: 1;
-                    // show on next line when in narrow mode
-                    &.block {
-                        display: block;
-                        margin: auto;
-                    }
-                }
+            padding: 6px;
+            opacity: 1;
+            // show on next line when in narrow mode
+            &.block {
+                position: static;
+                display: block;
+                &.narrow { margin: auto; }
+                &.full { margin: 0px 10px 10px auto; }
             }
         }
     }
@@ -165,13 +186,22 @@ body:not(.mobile) {
         .blurb { margin: 4px 4px 8px 4px; }
     }
     &.condensed {
-        @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
+        @include box-shadow(rgba(black, 0.4) 0px 3px 10px);
         .hide_condensed { display: none; }
         .logo.splash {
             height: 40px;
-            margin: 0;
+            // margin: 0;
+        }
+        .splash.container.narrow {
+            width: 44px;
         }
         padding-bottom: 0px;
+        .nav_top_row {
+            &>.left.for_logo {
+                width: 180px;
+                &.narrow { width: 44px; }
+            }
+        }
     }
 }
 
