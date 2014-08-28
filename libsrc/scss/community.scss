@@ -122,7 +122,7 @@ body.mobile .search_bar input[type=text] { width: 380px; }
 }
 
 // User Profile header
-.mobile .user_header {
+body.mobile .user_header {
     width: 450px;
     .profile {
         .thumb {
@@ -372,8 +372,14 @@ body.mobile .search_bar input[type=text] { width: 380px; }
 
 
 body.mobile {
-    .feed.profile, .feed.profile .card .snapshot { width: 500px; height: 300px }
+    .feed.profile, .feed.profile .card .snapshot { width: 500px; }
     #site #home_video { width: 500px; height: 281px; }
+    .feed .card { 
+        padding: 5px 0px !important; 
+        .info, .card_title {
+            margin-left: 10px !important;
+        }
+    }
     .tag_list.main .drop_box { display:none; }
 }
 #home_video { width: 640px; height: 360px; }

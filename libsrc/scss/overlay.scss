@@ -78,7 +78,7 @@ body:not(.mobile) {
         @include border-radius(6px);
     }
     .blurb {
-        font-size: 20px;
+        font-size: 19px;
         margin: 5px 0 15px;
     }
     .item.btn {
@@ -162,7 +162,7 @@ body:not(.mobile) {
     }
 
     &.narrow {
-        .blurb { margin: 4px 0 8px; }
+        .blurb { margin: 4px 4px 8px 4px; }
     }
     &.condensed {
         @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
