@@ -9,8 +9,6 @@
     "empty": "These routes are content domain",
     "empty": "-----------------------------------------",
 
-    "empty": "TODO-cleanup: make all api_route paths comply with doc/api_guidelines.txt",
-
     "naked_expr_id": {
         "page_route": "/<expr_id>",
         "controller": "expr",
@@ -55,7 +53,7 @@
         "page_route": "/home/cat/<tag_name>",
         "api_route": "/api/feed/cat/<tag_name>",
         "controller": "community",
-        "method": "expressions_public_tags",
+        "method": "expressions_tag",
         "client_method": "cat",
         "_owner_name": "root",
         "custom_classes": "nav",
@@ -65,7 +63,7 @@
         "page_route": "/home/cat",
         "api_route": "/api/feed/cat",
         "controller": "community",
-        "method": "expressions_public_tags",
+        "method": "expressions_tag",
         "client_method": "cat",
         "_owner_name": "root",
         "custom_classes": "nav",
@@ -151,7 +149,7 @@
     },
     "expressions_public": {
         "page_route": "/<owner_name>/profile",
-        "api_route": "/api/feed/expressions/<owner_name>",
+        "api_route": "/api/profile/all/<owner_name>",
         "controller": "community",
         "method": "expressions_public",
         "client_method": "profile",
@@ -159,32 +157,33 @@
     },
     "expressions_public_grid": {
         "page_route": "/<owner_name>/profile/grid",
-        "api_route": "/api/feed/expressions/grid/<owner_name>",
+        "api_route": "/api/profile/tag/<owner_name>",
         "controller": "community",
-        "method": "expressions_public_tags",
+        "method": "expressions_tag",
         "client_method": "grid",
         "include_tags": true
     },
     "expressions_public_grid_tags": {
         "page_route": "/<owner_name>/profile/grid/<tag_name>",
-        "api_route": "/api/feed/expressions/grid/<owner_name>/<tag_name>",
+        "api_route": "/api/profile/tag/<owner_name>/<tag_name>",
         "controller": "community",
-        "method": "expressions_public_tags",
+        "method": "expressions_tag",
         "search_query": "@<owner_name> #<tag_name>",
         "client_method": "grid",
         "include_tags": true
     },
     "expressions_public_tags": {
         "page_route": "/<owner_name>/tag",
-        "api_route": "/api/feed/expressions/tags/<owner_name>",
+        "api_route": "/api/profile/tag/<owner_name>",
         "controller": "community",
-        "method": "expressions_public_tags",
+        "method": "expressions_tag",
         "client_method": "grid",
         "include_tags": true
     },
+
     "expressions_tag": {
         "page_route": "/<owner_name>/tag/<tag_name>",
-        "api_route": "/api/feed/<owner_name>/tag/<tag_name>",
+        "api_route": "/api/profile/tag/<owner_name>/<tag_name>",
         "controller": "community",
         "method": "expressions_tag",
         "search_query": "@<owner_name> #<tag_name>",
@@ -193,7 +192,7 @@
     },
     "expressions_tag_private": {
         "page_route": "/<owner_name>/tag/<tag_name>/<entropy>",
-        "api_route": "/api/feed/<owner_name>/tag/<tag_name>/<entropy>",
+        "api_route": "/api/profile/tag/<owner_name>/<tag_name>/<entropy>",
         "controller": "community",
         "method": "expressions_tag",
         "search_query": "@<owner_name> #<tag_name>",
@@ -203,7 +202,7 @@
     },
     "expressions_private": {
         "page_route": "/<owner_name>/profile/private",
-        "api_route": "/api/feed/private/<owner_name>",
+        "api_route": "/api/profile/private/<owner_name>",
         "controller": "community",
         "method": "expressions_private",
         "client_method": "profile_private",
@@ -213,9 +212,9 @@
 
     "collections_grid_cat": {
         "page_route": "/<owner_name>/profile/cat/<tag_name>",
-        "api_route": "/api/feed/expressions/cat/<owner_name>/<tag_name>",
+        "api_route": "/api/profile/cat/<owner_name>/<tag_name>",
         "controller": "community",
-        "method": "expressions_public_tags",
+        "method": "expressions_tag",
         "search_query": "@<owner_name> #<tag_name>",
         "client_method": "grid",
         "include_tags": true,
@@ -223,9 +222,9 @@
     },
     "collections_grid": {
         "page_route": "/<owner_name>/profile/cat",
-        "api_route": "/api/feed/expressions/cat/<owner_name>",
+        "api_route": "/api/profile/cat/<owner_name>",
         "controller": "community",
-        "method": "expressions_public_tags",
+        "method": "expressions_tag",
         "search_query": "@<owner_name> #<tag_name>",
         "client_method": "grid",
         "include_tags": true,
@@ -296,7 +295,7 @@
         "require_login": true
     },
     "add_to_collection": {
-        "api_route": "/<owner_name>/profile/add_to_collection",
+        "api_route": "/api/user/add_to_collection/<owner_name>",
         "controller": "user",
         "method": "add_to_collection"
     },
