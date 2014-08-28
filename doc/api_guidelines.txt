@@ -1,0 +1,13 @@
+API routes are in form of
+
+/api/COLLECTION/NAME[/ARGUMENT][/ARGUMENT][...]
+
+COLLECTION is the name of the most relevant DB collection
+
+NAME is to distinguish between different queries and joins of the same COLLECTION
+
+ARGUMENTs are variables of the query that are guranteed to be a valid URL path,
+e.g. username, expr path, or an enumeration.
+
+It is especially important that ARGUMENTS are not mistakenly placed in the NAME
+position, because this creates ambiguous URLs.

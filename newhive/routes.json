@@ -9,6 +9,8 @@
     "empty": "These routes are content domain",
     "empty": "-----------------------------------------",
 
+    "empty": "TODO-cleanup: make all api_route paths comply with doc/api_guidelines.txt",
+
     "naked_expr_id": {
         "page_route": "/<expr_id>",
         "controller": "expr",
