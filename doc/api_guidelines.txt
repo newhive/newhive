@@ -2,7 +2,12 @@ API routes are in form of
 
 /api/COLLECTION/NAME[/ARGUMENT][/ARGUMENT][...]
 
-COLLECTION is the name of the most relevant DB collection
+COLLECTION is the name of the most relevant DB collection. In queries that
+involve multiple collections, the convention established by /api/feed/trending
+(etc) is to make COLLECTION the first query in the chain of map / reduce. So
+even though /api/feed/trending returns a list of expressions, it's in the feed
+namespace because first feed items are queried, then they're grouped by expr
+items.
 
 NAME is to distinguish between different queries and joins of the same COLLECTION
 
