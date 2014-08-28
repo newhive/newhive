@@ -320,8 +320,15 @@ define([
             form.find("*[type=submit]").
                 removeClass('disabled').prop('disabled','')
         }
-        form.trigger('before_submit');
+        opts.type = form.attr("method")
+        var ev = $.Event("before_submit")
+        form.trigger(ev)
+        if (ev.isDefaultPrevented())
+            return
         opts.data = new FormData($(form)[0]);
+        if (opts.type && opts.type.toUpperCase() == "GET")
+            opts.data = $(form).serialize();
+        // do the actual form submit.  Shares code with file upload
         upload.submit(false, opts);
         form.trigger('after_submit');
         form.find("*[type=submit]")

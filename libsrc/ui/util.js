@@ -19,6 +19,8 @@ define([
         }
         return "<stack unavailable> "
     }
+
+    o.all_assets = function() { return assets; }
     o.asset = function(name){
         return _asset(name) || "Not-found:" + name;
     };

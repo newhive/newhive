@@ -118,7 +118,9 @@ define([
 
     };
     o.dispatch = function(route_name, page_data){
-        analytics.track_pageview(route_name);
+        if (route_name == "home" && context.flags.new_nav)
+            route_name = "home_cat"
+        analytics.track_pageview(route_name)
         context.route_name = route_name;
         if (route_name == "expr")
             route_name = "view_expr";
@@ -238,11 +240,14 @@ define([
             callback({});
 
         function success(data){
-            if ((push_state == undefined || push_state) && 
-                (!history.state || history.state.route_name != "view_expr" ||
-                    page_state.route_name != "view_expr")
-            ) {
-                history.pushState(page_state, null, page_state.page);
+            if (push_state == undefined || push_state) {
+                if (history.state && history.state.route_name == "view_expr" &&
+                    page_state.route_name == "view_expr"
+                ) {
+                    history.replaceState(page_state, null, page_state.page);
+                } else {
+                    history.pushState(page_state, null, page_state.page);
+                }
             }
             context.parse_query(data.cards_route && data.cards_route.route_args);
             o.dispatch(page_state.route_name, data);
@@ -269,12 +274,16 @@ define([
         // Fallback to plane old open.
         if (! (window.history && window.history.pushState))
             return o.open(route_name, route_args);
-        var page_state = context.page_state(route_name, route_args, query);
-        if ((push_state == undefined || push_state) && 
-            (!history.state || history.state.route_name != "view_expr" ||
-                page_state.route_name != "view_expr")
-        ) {
-            history.pushState(page_state, null, page_state.page);
+        var page_state = context.page_state(route_name, route_args, query)
+            , push_state = window.history.pushState
+        if (push_state == undefined || push_state) {
+            if (history.state && history.state.route_name == "view_expr" &&
+                page_state.route_name == "view_expr"
+            ) {
+                history.replaceState(page_state, null, page_state.page);
+            } else {
+                history.pushState(page_state, null, page_state.page);
+            }
         }
         context.parse_query(route_args);
     };

@@ -2733,7 +2733,16 @@ Hive.App.has_autoplay = function(o){
     return Hive.App.has_toggle(o, "autoplay")
 }
 Hive.App.has_autohide = function(o){
-    return Hive.App.has_toggle(o, "autohide")
+    var res = Hive.App.has_toggle(o, "autohide")
+    var _autohide_set = o.autohide_set
+    o.autohide_set = function(v) {
+        _autohide_set(v)
+        if (v)
+            o.css_state['visibility'] = 'hidden'
+        else
+            delete o.css_state['visibility']
+    }
+    return res
 }
 Hive.App.has_rotate = function(o) {
     var app = o

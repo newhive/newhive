@@ -25,10 +25,11 @@ define([
     expr_actions_template,
     comment_template
 ) {
-    var o = {}, 
-        loading_frame_list = [], loaded_frame_list = [],
-        overlay_columns = 0, wide_overlay = false,
-        animation_timeout = undefined, last_found = -1;
+    var o = {}
+        ,loading_frame_list = [], loaded_frame_list = []
+        ,overlay_columns = 0, no_paging = false
+        ,animation_timeout = undefined
+    o.last_found = -1
     o.cache_offsets = [1, -1, 2];
     o.anim_duration = (util.mobile()) ? 400 : 400;
 
@@ -109,6 +110,7 @@ define([
         o.expr = page_data.expr;
         o.page_data = page_data;
         ui_page.form_page_exit()
+        no_paging = ("no_paging" in context.query);
 
         $('body').addClass('expr')
         $('title').text(o.expr.title);
@@ -218,12 +220,17 @@ define([
 
     var fetch_cards = function () {
         var page_data = o.page_data;
-        if (page_data.cards == undefined) {
+        if (page_data.cards == undefined && !no_paging) {
             // In case of direct link with no context,
             // fetch cards from q param, or the default context, @owner
 
             var set_cards = function(data){
-                page_data.cards = data.cards };
+                page_data.cards = data.cards 
+                if (o.last_found == -1) {
+                    o.last_found = find_card(o.expr.id)
+                    o.page_btn_handle()
+                }
+            };
 
             if(context.query.q){
                 var query = {q: context.query.q, id: o.expr.id };
@@ -449,7 +456,7 @@ define([
         // postMessage only works after the page loads.
         // So page buttons are always visible during expr loading,
         // and once expr loads, they behave normally .page_btn.page_btn_load_hack
-        if(!contentFrame.data('loaded')){
+        if(!contentFrame.data('loaded') && !no_paging){
             // bugbug: sometimes this is never followed by a contentFrame.load
             // console.log('showing');
             $('.page_btn').showshow();
@@ -843,6 +850,11 @@ define([
             // TODO: do we need error handling?
             if (found >= 0) {
                 var orig_found = found;
+                // don't loop, just go back to previous page.
+                if (found + offset >= len) {
+                    window.history.go(-1)
+                    return
+                }
                 found = (found + len + offset) % len;
                 debug("navigate (" + offset + ") to " + found);
                 if ((offset < 0 && found > orig_found) 
@@ -905,9 +917,10 @@ define([
         // don't render the page buttons if there is nothing to page through!
         if (context.page_data.cards == undefined
             || context.page_data.cards.length == 1
-            || !context.page_data.expr) {
-            $(".page_btn").hidehide();
-            return;
+            || !context.page_data.expr
+            || no_paging
+        ) {
+            msg = 'hide';
         }
 
         if(msg == 'show_prev') {
@@ -918,6 +931,10 @@ define([
             $('.page_btn.page_prev').hidehide();
         } else if(msg == 'hide') {
             $('.page_btn').hidehide();
+        }
+
+        if (o.last_found == 0) {
+            $('.page_btn.page_prev').hidehide();
         }
 
         // should reflect whether left or right page_btn should be visible if

@@ -85,6 +85,7 @@
         "method": "network_recent",
         "client_method": "grid",
         "custom_classes": "nav",
+        "max_columns": 2,
         "require_login": true
     },
 
@@ -104,6 +105,7 @@
         "method": "recent",
         "client_method": "grid",
         "custom_classes": "nav",
+        "max_columns": 2,
         "require_login": true
     },
     "search": {
@@ -113,14 +115,6 @@
         "method": "search",
         "custom_classes": "nav",
         "client_method": "grid"
-    },
-    "user_home": {
-        "page_route": "/<owner_name>",
-        "api_route": "/api/expr/view/<owner_name>",
-        "controller": "community",
-        "method": "expr",
-        "custom_classes": "nav",
-        "client_method": "expr"
     },
 
     "empty": "-----------------------------------------",
@@ -333,6 +327,14 @@
         "client_method": "expr",
         "precedence": -1
     },
+    "user_home": {
+        "empty": "redirects to expressions_public (profile) if no home expr",
+        "page_route": "/<owner_name>",
+        "api_route": "/api/expr/view/<owner_name>",
+        "controller": "community",
+        "method": "expr",
+        "client_method": "expr"
+    },
     "view_expr_custom_domain_home": {
         "page_route": "/",
         "api_route": "/api/expr/url",
@@ -503,10 +505,17 @@
         "client_method": "profile",
         "require_login": true
     },
+
+
+    "empty": "----------------------------------------------------",
     "empty": "Note: this is clientside; there is no server handler",
     "test_dialogs": {
         "page_route": "/home/admin/test_dialogs",
         "client_method": "test_dialogs"
+    },
+    "test_assets": {
+        "page_route": "/home/admin/test_assets",
+        "client_method": "test_assets"
     },
     "empty": "-----------------------------------------",
     "empty": "Dev tools.",

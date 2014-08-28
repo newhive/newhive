@@ -25,6 +25,7 @@ define([
     'sj!templates/tags_page.html',
     'sj!templates/tag_card.html',
     'sj!templates/user_activity.html',
+
     'sj!templates/expr_card_large.html',
     'sj!templates/expr_card_feed.html',
     'sj!templates/expr_card_mini.html',
@@ -40,7 +41,8 @@ define([
     'sj!templates/tag_buttons.html', 
     'sj!templates/hive_menu.html', 
     'sj!templates/request_invite_form.html',
-    'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js',
+    // 'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js',
+    'js!browser/jquery/jquery.mobile-events.js', //!!
     'sj!templates/cards.html'
 ], function(
     $,
@@ -230,6 +232,29 @@ define([
             o.layout_columns();
         o.add_grid_borders();
     }
+    var has_nav_bar = function() {
+        return ($("body").hasClass("nav") && $(".main-header").length)
+    }
+    var fixup_overlay = function() {
+        // Fix styling for this route
+        $(".main-header .network_nav .item").removeClass("black_btn")
+        $(".main-header .network_nav .item." + context.route_name)
+            .addClass("black_btn")
+        var has_nav = has_nav_bar()
+            ,has_nav_embedded_logo = has_nav && context.user.logged_in
+
+        $("#overlays .hive_logo")
+            .addremoveClass("overlay", ! has_nav_embedded_logo)
+            // .addremoveClass("item", has_nav)
+            .prependTo(has_nav_embedded_logo ? ".main-header .left" : "#overlays")
+            .addremoveClass("stay_hidden", has_nav && !has_nav_embedded_logo)
+        // reverse the logo menu if it's up top
+        if (! $("#logo_menu").is(".inverted") != has_nav_embedded_logo) {
+            $("#logo_menu").addremoveClass("inverted", has_nav_embedded_logo)
+                .append($("#logo_menu").children().get().reverse())
+        }
+        $(".overlay.panel").addremoveClass("stay_hidden", has_nav)
+    }
     var custom_classes = ""
     o.render = function(method, data){
         var page_data = context.page_data, expr = page_data.expr
@@ -239,17 +264,7 @@ define([
         var new_classes = context.route.custom_classes // + " " + context.route_name
         $("body").removeClass(custom_classes).addClass(new_classes)
         custom_classes = new_classes
-        // Fix styling for this route
-        $(".main-header .network_nav .item").removeClass("black_btn")
-        $(".main-header .network_nav .item." + context.route_name)
-            .addClass("black_btn")
-        var has_nav = ($("body").hasClass("nav") && $(".main-header").length)
-        $("#overlays .hive_logo")
-            .addremoveClass("overlay", ! has_nav)
-            // .addremoveClass("item", has_nav)
-            .prependTo(has_nav ? ".main-header .left" : "#overlays")
-            .addremoveClass("stay_hidden", has_nav && !context.user.logged_in)
-        $(".overlay.panel .create.item").showhide(!has_nav)
+        fixup_overlay()
 
         if (page_data.title) $("head title").text(page_data.title);
         o.column_layout = false;
@@ -374,16 +389,21 @@ define([
         }
     }
 
-    var height_nav_large = 155
+    var height_nav_large = 1
     var local_attach_handlers = function(){
+        $("form.search_bar").bind_once_anon("submit", function(ev) {
+            if ($(this).find("#search_box").val() == "")
+                return false
+        })
         if (context.flags.new_nav) {
-            if (context.user && context.user.logged_in)
-                height_nav_large = 70
-            $(".nav #site").css({"margin-top": height_nav_large})
+            $(".icon.go_search").bind_once_anon("tap.page mouseenter.page", 
+                function(ev) {
+                    $(".main-header #search_box").focus()
+            })
             // Animate header
             $(window).bind_once_anon("scroll.page", function(ev) {
                 var scrolled_to = $(this).scrollTop()
-                if (scrolled_to > height_nav_large)
+                if (scrolled_to > 1)
                     $(".main-header").addClass("condensed")
                 else
                     $(".main-header").removeClass("condensed")
@@ -422,9 +442,8 @@ define([
                 ;
                 if(val != val_filtered) $(text).val( val_filtered );
                 $(dialog_selector + " .tag_new")
-                    .text($(text).val()).showshow().addClass("tag_15");
-                if ('' == $(text).val())
-                    $(dialog_selector + " .tag_new").hidehide();
+                    .text($(text).val()).addClass("tag_15")
+                    .showhide('' != $(text).val());
                 el_tag_name.val(val_filtered)
             }
             $(dialog_selector + " .tag_name")
@@ -684,12 +703,17 @@ define([
     }
 
     var done_layout = false;
+    var nav_size = 'full'
     o.resize = function(){
+        var win_width = $(window).width()
+
         if(context.page_data.layout == 'grid' ||
             context.page_data.layout == 'cat' ||
-            context.page_data.layout == 'mini') {
-            var win_width = $(window).width(),
-            columns = Math.max(1, Math.min(3, Math.floor( win_width / grid_width)))
+            context.page_data.layout == 'mini'
+        ){
+            var max_columns = context.route.max_columns || 3
+                ,columns = Math.max(1, Math.min(max_columns, 
+                    Math.floor( win_width / grid_width)))
                 ,feed_width = columns * (grid_width + border_width)
             if (context.page_data.layout == 'cat')// && columns > 1)
                 feed_width = Math.min(3 * (grid_width + border_width),
@@ -702,10 +726,40 @@ define([
                 o.add_grid_borders(columns);
             }
         }
+
         if (context.page && context.page.resize)
             context.page.resize();
         done_layout = true;
-    };
+        var new_nav_height = $(".main-header").outerHeight()
+        if (height_nav_large != new_nav_height) {
+            height_nav_large = new_nav_height
+            $("#site").css({"margin-top": has_nav_bar() ? height_nav_large : 0})
+        }
+
+        // handle layout juggling of fat nav bar for narrow widths
+        if(has_nav_bar()){
+            var new_nav_size = win_width < 830 ? 'narrow' : 'full'
+            if(nav_size != new_nav_size){
+                nav_size = new_nav_size
+                if(nav_size == 'narrow'){
+                    $('.main-header .nav_top_row').removeClass('table')
+                    $('.main-header .blurb').insertAfter('.main-header .left')
+                    if(!context.user.logged_in)
+                        $('#search_box').insertAfter('.main-header .create')
+                            .addClass('block')
+                }
+                if(nav_size == 'full'){
+                    $('.main-header .nav_top_row').addClass('table')
+                    $('.main-header .blurb').insertAfter(
+                        '.main-header .nav_top_row')
+                    if(!context.user.logged_in)
+                        $('#search_box').insertBefore('.main-header .go_search')
+                            .removeClass('block')
+                }
+                $('.main-header').removeClass('full narrow').addClass(nav_size)
+            }
+        }
+    }
 
     // Move the expr.card's into the feed layout, shuffling them
     // into the shortest column.  

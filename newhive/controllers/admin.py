@@ -18,8 +18,10 @@ class Admin(Controller):
         """
 
         resp = {}
+        live_server = config.live_server and (config.dev_prefix != 'staging')
+        flags_name = 'live_flags' if live_server else 'site_flags'
+
         if len(request.form.keys()): 
-            
             print "Site_flags changed."
             print request.form
 
@@ -28,10 +30,12 @@ class Admin(Controller):
             for k, v in request.form.items():
                 l = v.split(",")
                 new_flags[k] = l
-            su.update(updated=False, site_flags=new_flags)
+            update = {flags_name: new_flags}
+            su.update(updated=False, **update)
 
         flags = { k:','.join(v) for k,v in config.site_flags.items()}
-        tdata.context.update(page_data={'site_flags': flags}, route_args=args)
+        tdata.context.update(page_data={'site_flags': flags,
+            'live_server': live_server}, route_args=args)
         return self.serve_loader_page('pages/main.html', tdata, request, response)
 
     def add_featured_queue(self, tdata, request, response, **args):

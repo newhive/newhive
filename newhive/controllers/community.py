@@ -30,8 +30,12 @@ class Community(Controller):
         user = self.db.User.named(username)
         if not user:
             user = tdata.user
+        # New category view 
+        if self.flags.get('new_nav'):
+            return self.expressions_public_tags(tdata, request, _owner_name="root", 
+                tag_name="featured", db_args=db_args, include_categories=True)
         # Logged out users see featured.
-        if not user or not user.id:
+        elif not user or not user.id:
             return self.featured(tdata, request, db_args=db_args, **args)
         return {
             "network_help": (len(user.starred_user_ids) <= 1),
@@ -61,8 +65,8 @@ class Community(Controller):
                 resp['fullname'] = referral.get('name')
         return resp
 
-    def expressions_for(self, tdata, cards, owner, **args):
-        if 0 == len(cards) and tdata.user == owner:
+    def expressions_for(self, tdata, cards, owner, no_empty=False, **args):
+        if not no_empty and 0 == len(cards) and tdata.user == owner:
             # New user has no cards; give him the "edit" card
             # TODO: replace thenewhive with a config string
             cards = []
@@ -80,7 +84,10 @@ class Community(Controller):
             expr = self.db.Expr.fetch(collection)
             if not expr: return None
             expr_cv = expr.client_view(viewer=viewer)
-            expr_cv['collection'] = collection
+            expr_cv.update({
+                'collection': collection
+                ,"snapshot_big": expr.snapshot_name("big")
+            })
             return expr_cv
         username = collection.get('username')
         tag = collection.get('tag')
@@ -96,6 +103,7 @@ class Community(Controller):
             # TODO-perf: trim this to essentials
             "owner": owner.client_view(viewer=viewer)
             ,"snapshot_small": expr.snapshot_name("small")
+            ,"snapshot_big": expr.snapshot_name("big")
             ,"title": tag
             ,"collection": collection
             ,"type": "cat"
@@ -115,6 +123,12 @@ class Community(Controller):
 
         return expr_cv
 
+    def missing_expression(self):
+        return {
+            'title': 'Missing'
+            ,"type": 'expr'
+        }
+
     def expressions_public_tags(self, tdata, request, owner_name=None, db_args={}, **args):
         if not owner_name: 
             owner_name = args.get('_owner_name')
@@ -123,14 +137,21 @@ class Community(Controller):
         tag_name = args.get('tag_name')
         if args.get('include_categories'):
             if tag_name:
+                # TODO: this search should also go through query_echo
                 cards = owner.get_category(tag_name)
                 if cards: cards = cards.get('collections')
                 if not cards: return None 
-                # insert client view of collections into cards
-                cards = [self.collection_client_view(x) for x in cards]
                 # remove empties
                 cards = [x for x in cards if x]
-                res = self.expressions_for(tdata, cards, owner)
+                # paginate
+                at = int(db_args.get('at', 0))
+                limit = int(db_args.get('limit', 20))
+                cards = cards[at:at + limit if limit else None]
+                # insert client view of collections into cards
+                cards = [self.collection_client_view(x) if x 
+                    else self.missing_expression() for x in cards]
+                
+                res = self.expressions_for(tdata, cards, owner, no_empty=True)
                 res.update({
                     "tag_selected":tag_name
                 })
@@ -416,8 +437,8 @@ class Community(Controller):
     def search(self, tdata, request, id=None, owner_name=None, expr_name=None,
         db_args={}, **args
     ):
-        q = request.args.get('q')
-        if not q: return None
+        q = request.form.get('q') or request.args.get('q')
+        if not q: return { 'cards': [], 'title':'Search' }
         id = request.args.get('id', None)
         entropy = request.args.get('e', None)
         owner = self.db.User.named(owner_name)
@@ -442,7 +463,7 @@ class Community(Controller):
             "cards": result,
             'special': {'mini_expressions': 3},
             'title': 'Search',
-            'header': ("Search", request.args['q']),
+            'header': ("Search", q),
         }
         if len(search) == 1 and len(tags) == 1:
             profile = tdata.user

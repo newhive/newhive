@@ -10,7 +10,7 @@ define([
         opts = $.extend({
             url: '/api/file/create',
             data: new FormData(),
-            type: 'POST',
+            type: opts.type || 'POST',
 
             // beforeSend: beforeSendHandler,
             // xhr: function() {  // custom xhr
@@ -31,8 +31,7 @@ define([
                 opts.data.append('files', f.slice(0, f.size), f.name);
             }
         }
-        // if (files.length)
-            $.ajax(opts);
+        $.ajax(opts);
     };
 
     o.unwrap_file_list = function(file_list){
