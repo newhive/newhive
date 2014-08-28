@@ -389,7 +389,6 @@ define([
         }
     }
 
-    var height_nav_large = 1
     var local_attach_handlers = function(){
         $("form.search_bar").bind_once_anon("submit", function(ev) {
             if ($(this).find("#search_box").val() == "")
@@ -407,6 +406,7 @@ define([
                     $(".main-header").addClass("condensed")
                 else
                     $(".main-header").removeClass("condensed")
+                search_flow = ''
                 reflow_nav()
             })
         }
@@ -735,7 +735,21 @@ define([
         }
     }
 
-    var nav_size, search_flow
+    var unsettled_nav_height, height_nav_uncondensed = 1
+    var reflow_site_margin = function() {
+        var new_nav_height = $(".main-header").outerHeight()
+        if (unsettled_nav_height != new_nav_height) {
+            unsettled_nav_height = new_nav_height
+            setTimeout(reflow_site_margin, 200)
+            return;
+        }
+        if (!condensed) {
+            height_nav_uncondensed = new_nav_height
+            $("#site").css({"margin-top": height_nav_uncondensed })
+            return;
+        }
+    }
+    var nav_size, search_flow, condensed
     var reflow_nav = function(){
         // handle layout juggling of fat nav bar for narrow widths
         if(!has_nav_bar()) {
@@ -743,31 +757,28 @@ define([
             return
         }
 
-        var new_nav_height = $(".main-header").height()
-        if (height_nav_large != new_nav_height) {
-            height_nav_large = new_nav_height
-            $("#site").css({"margin-top": height_nav_large })
+        var logged_in = context.user.logged_in
+        // TODO: fix margin for uncondensed
+        var new_condensed = $('.main-header').hasClass('condensed')
+        if (condensed != new_condensed) {
+            condensed = new_condensed
+            $('.main-header .blurb').insertAfter('.main-header ' + 
+                (!condensed ? '.left' : '.nav_top_row'))
+            $('.main-header').addremoveClass('split', !logged_in && !condensed)
         }
 
+        reflow_site_margin()
 
-        var condensed = $('.main-header').hasClass('condensed'),
-            new_nav_size = ( win_width < 830 &&
-                (!condensed && !context.user.logged_in) ) ? 'narrow' : 'full'
+        var new_nav_size = ( win_width < 830 &&
+                (!condensed && !logged_in) ) ? 'narrow' : 'full'
         if(nav_size != new_nav_size){
             nav_size = new_nav_size
-            if(nav_size == 'narrow'){
-                $('.main-header .nav_top_row').removeClass('table')
-                $('.main-header .blurb').insertAfter('.main-header .left')
-            }
-            if(nav_size == 'full'){
-                $('.main-header .nav_top_row').addClass('table')
-                $('.main-header .blurb').insertAfter(
-                    '.main-header .nav_top_row')
-            }
             $('.main-header').removeClass('full narrow').addClass(nav_size)
         }
 
-        var new_search_flow = win_width < 830 ? 'block' : 'inline-block'
+        var new_search_flow = win_width < 730 ? 'block' : 'inline-block'
+        $('.main-header .splash.container, .main-header .left')
+            .addremoveClass('narrow', win_width < 830)
         if(search_flow != new_search_flow){
             search_flow = new_search_flow
             if(search_flow == 'block')
@@ -776,9 +787,7 @@ define([
             else
                 $('#search_box').insertBefore('.main-header .go_search')
                     .removeClass('block')
-            $('.main-header .splash.container').addremoveClass(
-                'narrow', search_flow == 'block')
-                .removeClass('full narrow').addClass(nav_size)
+            $('#search_box').removeClass('full narrow').addClass(nav_size)
         }
     }
 

@@ -5,12 +5,12 @@
 {<if flags.new_nav}
 <div class="main-header">
   <form class="search_bar" method='GET' action='/search' name='search_form'>
-  <div class="table nav_top_row">
+  <div class="nav_top_row">
     {# LEFT content. #}
-    <div class="cell left centered">
+    <div class="cell left{<if (not user.logged_in)} for_logo{>}">
       {# LOGGED OUT: #}
       {<if (not user.logged_in)}
-        <a {anchor_attrs "home"} class='splash container'
+        <a {anchor_attrs "home"} class='splash container inline'
           ><img class="logo splash" src='{asset "skin/site/logo_text.png"}' 
           title="Newhive Logo"></a>
       {>}{<else}
@@ -45,21 +45,23 @@
             <div class='login_btn text_btn item teal_hover'>About</div></a>
         </div>
       {>}
-      {# Search bar #}
-      <input type="text" id="search_box" placeholder="Search"
-        class="inline focus_expanded{<if (not user.logged_in)} media_shrink{>}"
-        name='q' value='{query.q}'
-       ><input type="submit" value title="Search"
-        class='hoverable icon go_search inline'>
-      {# Create new page #}
-      <a {anchor_attrs "create_expr"} title='Create newhive'
-        class='needs_login create item btn hoverable'></a>
+      <div class="inline">
+        {# Search bar #}
+        <input type="text" id="search_box" placeholder="Search"
+          class="inline focus_expanded{<if (not user.logged_in)} media_shrink{>}"
+          name='q' value='{query.q}'
+         ><input type="submit" value title="Search"
+          class='hoverable icon go_search inline'>
+        {# Create new page #}
+        <a {anchor_attrs "create_expr"} title='Create newhive'
+          class='needs_login create item btn hoverable'></a>
+      </div>
     </div>
   </div>
   </form>
   
   {<if (not user.logged_in)}
-    <div class="hide_condensed blurb upper centered">NewHive is your multimedia publishing platform.</div>
+    {#<div class="hide_condensed blurb upper centered">NewHive is your multimedia publishing platform.</div>#}
   {>}
 
   <div class="header">
