@@ -60,6 +60,18 @@
         overflow: hidden;
     }
 }
+
+.table {
+    display: table;
+    width: 100%;
+    &>.cell {
+        display: table-cell;
+        &.left { text-align: left; }
+        &.right { text-align: right; }
+        &.vcenter { vertical-align: middle; }
+    }
+}
+
 .place_holder {
     display: inline-block;
     background-color: #CCC;

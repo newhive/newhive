@@ -4,9 +4,9 @@
 {# TODO: un-flag this after ship #}
 {<if flags.new_nav}
 <div class="main-header">
-  <div class= "_2column">
+  <div class="table nav_top_row">
     {# LEFT content. #}
-    <div class="left fixed inline centered">
+    <div class="cell left centered">
       {# LOGGED OUT: #}
       {<if (not user.logged_in)}
         <a {anchor_attrs "home"}
@@ -27,43 +27,42 @@
               <div class='text_btn item teal_hover recent'>All</div></a>
           {>}
         </div>
-
       {>}
     </div>
 
     {# RIGHT content. #}
-    <div class="right fixed inline centered">
-        {<if (not user.logged_in)}
-          <div class="hide_condensed blurb upper">Art is a drug<br></div>
-        {>}
-
-        {<if (not user.logged_in)}
-          {# Main navigation #}
-          <div class='network_nav inline'>
-            {# empty <a> for css #}
-            <a><div class='login_btn text_btn item teal_hover'>Log in</div></a>
-            <a {anchor_attrs "signup"}>
-              <div class='text_btn item teal_hover'>Sign Up</div></a>
-            <a {anchor_attrs "view_expr"
-              "owner_name" config.site_user "expr_name" "about"}>
-              <div class='login_btn text_btn item teal_hover'>About</div></a>
-          </div>
-        {>}
-        {# Search bar #}
-        <form class="search_bar"
-          method='GET' action='/search' name='search_form'>
-            <input type="text" id="search_box" placeholder="Search"
-            class="inline focus_expanded{<if (not user.logged_in)} media_shrink{>}"
-              name='q' value='{query.q}'
-            ><input type="submit" value title="Search"
-              class='hoverable icon go_search inline'
-          ></form
-        >
-        {# Create new page #}
-        <a {anchor_attrs "create_expr"} title='Create newhive'
-          class='needs_login create item btn hoverable'></a>
+    <div class='cell right vcenter centered'>
+      {<if (not user.logged_in)}
+        {# Main navigation #}
+        <div class='network_nav inline'>
+          {# empty <a> for css #}
+          <a><div class='login_btn text_btn item teal_hover'>Log in</div></a>
+          <a {anchor_attrs "signup"}>
+            <div class='text_btn item teal_hover'>Sign Up</div></a>
+          <a {anchor_attrs "view_expr"
+            "owner_name" config.site_user "expr_name" "about"}>
+            <div class='login_btn text_btn item teal_hover'>About</div></a>
+        </div>
+      {>}
+      {# Search bar #}
+      <form class="search_bar"
+        method='GET' action='/search' name='search_form'>
+          <input type="text" id="search_box" placeholder="Search"
+          class="inline focus_expanded{<if (not user.logged_in)} media_shrink{>}"
+            name='q' value='{query.q}'
+          ><input type="submit" value title="Search"
+            class='hoverable icon go_search inline'>
+      {# Create new page #}
+      <a {anchor_attrs "create_expr"} title='Create newhive'
+        class='needs_login create item btn hoverable'></a>
+      </form>
     </div>
   </div>
+  
+  {<if (not user.logged_in)}
+    <div class="hide_condensed blurb upper centered">NewHive is your multimedia publishing platform.</div>
+  {>}
+
   <div class="header">
   </div>
 </div>

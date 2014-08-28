@@ -525,6 +525,7 @@ body {
 
         margin: 50px auto 0px auto;
         .card {
+            line-height: 0;
             // box-shadow: 0px 0px 5px #CCC;
             .tag_list {
                 text-align: left;
@@ -612,6 +613,7 @@ body {
     }
     .feed.cat.narrow .card {
         width: 100%;
+        padding: 10px 10px 5px 10px;
     }
     .feed.cat.wide._3col .card {
         width: 33.3%;
@@ -659,6 +661,7 @@ body {
                     background: white;
                     padding: 5px;
                     padding-right: 10px;
+                    margin: 0;
                 }
                 // &:after {
                 //     content: '';

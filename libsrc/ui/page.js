@@ -232,7 +232,6 @@ define([
             o.layout_columns();
         o.add_grid_borders();
     }
-    var max_col_width = 500
     var has_nav_bar = function() {
         return ($("body").hasClass("nav") && $(".main-header").length)
     }
@@ -255,15 +254,6 @@ define([
                 .append($("#logo_menu").children().get().reverse())
         }
         $(".overlay.panel").addremoveClass("stay_hidden", has_nav)
-        if (context.user.logged_in)
-            height_nav_large = 90
-        else
-            height_nav_large = 125
-        $("#site").css({"margin-top": has_nav ? height_nav_large : 0})
-        // keep the left column to a maximum size
-        var $username = $(".main-header .left .username")
-        $username.css("max-width", $username.width() + 
-            max_col_width - $(".main-header .left").width())
     }
     var custom_classes = ""
     o.render = function(method, data){
@@ -399,7 +389,7 @@ define([
         }
     }
 
-    var height_nav_large = 155
+    var height_nav_large = 1
     var local_attach_handlers = function(){
         $("form.search_bar").bind_once_anon("submit", function(ev) {
             if ($(this).find("#search_box").val() == "")
@@ -413,7 +403,7 @@ define([
             // Animate header
             $(window).bind_once_anon("scroll.page", function(ev) {
                 var scrolled_to = $(this).scrollTop()
-                if (scrolled_to > height_nav_large)
+                if (scrolled_to > 1)
                     $(".main-header").addClass("condensed")
                 else
                     $(".main-header").removeClass("condensed")
@@ -713,12 +703,15 @@ define([
     }
 
     var done_layout = false;
+    var nav_size = 'full'
     o.resize = function(){
+        var win_width = $(window).width()
+
         if(context.page_data.layout == 'grid' ||
             context.page_data.layout == 'cat' ||
-            context.page_data.layout == 'mini') {
-            var win_width = $(window).width()
-                ,max_columns = context.route.max_columns || 3
+            context.page_data.layout == 'mini'
+        ){
+            var max_columns = context.route.max_columns || 3
                 ,columns = Math.max(1, Math.min(max_columns, 
                     Math.floor( win_width / grid_width)))
                 ,feed_width = columns * (grid_width + border_width)
@@ -733,13 +726,38 @@ define([
                 o.add_grid_borders(columns);
             }
         }
+
         if (context.page && context.page.resize)
             context.page.resize();
         done_layout = true;
         var new_nav_height = $(".main-header").height()
-        if (height_nav_large != new_nav_height && has_nav_bar()) {
+        if (height_nav_large != new_nav_height) {
             height_nav_large = new_nav_height
-            $("#site").css({"margin-top": height_nav_large})
+            $("#site").css({"margin-top": has_nav_bar() ? height_nav_large : 0})
+        }
+
+        // handle layout juggling of fat nav bar for narrow widths
+        if(has_nav_bar()){
+            var new_nav_size = win_width < 830 ? 'narrow' : 'full'
+            if(nav_size != new_nav_size){
+                nav_size = new_nav_size
+                if(nav_size == 'narrow'){
+                    $('.main-header .nav_top_row').removeClass('table')
+                    $('.main-header .blurb').insertAfter('.main-header .left')
+                    if(!context.user.logged_in)
+                        $('#search_box').insertAfter('.main-header .create')
+                            .addClass('block')
+                }
+                if(nav_size == 'full'){
+                    $('.main-header .nav_top_row').addClass('table')
+                    $('.main-header .blurb').insertAfter(
+                        '.main-header .nav_top_row')
+                    if(!context.user.logged_in)
+                        $('#search_box').insertBefore('.main-header .go_search')
+                            .removeClass('block')
+                }
+                $('.main-header').removeClass('full narrow').addClass(nav_size)
+            }
         }
     }
 

@@ -6,38 +6,25 @@
 body.nav .main-header {
     display: block;
 }
-@media all and (max-width:799px) {
-.main-header ._2column {
-    .left, .right {
-        float: none;
-        margin: auto;
-        display: block;
+
+@media all and (min-width:830px) and (max-width:919px) {
+    .main-header:not(.condensed) .table {
+        .search_bar input[type=text].media_shrink {
+            max-width: 90px;
+        }
     }
-    .blurb {
-        position: static;
-        margin-top: -10px;
-        padding: 10px;
+    .main-header .table {
+        .search_bar input[type=text]:not(.media_shrink) {
+            max-width: 180px;
+        }
     }
-}    
-}
-@media all and (min-width:800px) and (max-width:919px) {
-.main-header:not(.condensed) ._2column {
-    .search_bar input[type=text].media_shrink {
-        max-width: 90px;
-    }
-}
-.main-header ._2column {
-    .search_bar input[type=text]:not(.media_shrink) {
-        max-width: 180px;
-    }
-}
 }
 @media all and (min-width:920px) and (max-width:1000px) {
-.main-header:not(.condensed) ._2column {
-    .search_bar input[type=text].media_shrink {
-        max-width: 190px;
+    .main-header:not(.condensed) .table {
+        .search_bar input[type=text].media_shrink {
+            max-width: 190px;
+        }
     }
-}
 }
 
 body:not(.mobile) {
@@ -49,6 +36,8 @@ body:not(.mobile) {
         .logo, .item, .icon {
             @include transition(all, 0.15s, linear);
         }
+    }
+    .main-header:not(.narrow){
         .search_bar {
             input[type=text] {
                 @include transition(all, 0.15s, linear);
@@ -63,6 +52,7 @@ body:not(.mobile) {
     top: 0px;
     left: 0px;
     right: 0px;
+    padding-bottom: 17px;
 
     z-index: $nav_layer;
     background-color: white;
@@ -80,19 +70,16 @@ body:not(.mobile) {
         display: inline-block;
         // height: 44px;
         &.splash {
-            display: block;
-            margin: auto;
             height: 80px;
+            margin: 10px;
         }
     }
     .item {
         @include border-radius(6px);
     }
     .blurb {
-        // So as to not affect the layout
-        position: absolute;
-        padding: 10px;
-        bottom: -5px;
+        font-size: 20px;
+        margin: 5px 0 15px;
     }
     .item.btn {
         display: inline-block;
@@ -100,6 +87,7 @@ body:not(.mobile) {
         height: 44px; width: 44px;
         background-size: 44px 44px;
     }
+    .username { max-width: 222px; }
     .create.item {
         background-image: asset_url('skin/nav/create.png');
         &.active { background-image: asset_url('skin/nav/create-hover.png'); }
@@ -129,10 +117,16 @@ body:not(.mobile) {
                 width: 0px;
                 padding: 0px;
                 opacity: 0;
+                display: inline;
                 &:hover, &:focus {
                     width: 250px;
                     padding: 6px;
                     opacity: 1;
+                    // show on next line when in narrow mode
+                    &.block {
+                        display: block;
+                        margin: auto;
+                    }
                 }
             }
         }
@@ -167,12 +161,17 @@ body:not(.mobile) {
         }
     }
 
+    &.narrow {
+        .blurb { margin: 4px 0 8px; }
+    }
     &.condensed {
         @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
         .hide_condensed { display: none; }
         .logo.splash {
             height: 40px;
+            margin: 0;
         }
+        padding-bottom: 0px;
     }
 }
 
