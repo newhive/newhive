@@ -32,30 +32,32 @@
     </div>
 
     {# RIGHT content. #}
-    <div class='cell right vcenter centered'>
-      {<if (not user.logged_in)}
-        {# Main navigation #}
-        <div class='network_nav inline'>
-          {# empty <a> for css #}
-          <a><div class='login_btn text_btn item teal_hover'>Log in</div></a>
-          <a {anchor_attrs "signup"}>
-            <div class='text_btn item teal_hover'>Sign Up</div></a>
-          <a {anchor_attrs "view_expr"
-            "owner_name" config.site_user "expr_name" "about"}>
-            <div class='login_btn text_btn item teal_hover'>About</div></a>
+    <div class='cell right centered'>
+      {<vcenter (cond user.logged_in "" "full_height")}
+        {<if (not user.logged_in)}
+          {# Main navigation #}
+          <div class='network_nav inline'>
+            {# empty <a> for css #}
+            <a><div class='login_btn text_btn item teal_hover'>Log in</div></a>
+            <a {anchor_attrs "signup"}>
+              <div class='text_btn item teal_hover'>Sign Up</div></a>
+            <a {anchor_attrs "view_expr"
+              "owner_name" config.site_user "expr_name" "about"}>
+              <div class='login_btn text_btn item teal_hover'>About</div></a>
+          </div>
+        {>}
+        <div class="inline">
+          {# Search bar #}
+          <input type="text" id="search_box" placeholder="Search"
+            class="inline focus_expanded{<if (not user.logged_in)} media_shrink{>}"
+            name='q' value='{query.q}'
+           ><input type="submit" value title="Search"
+            class='hoverable icon go_search inline'>
+          {# Create new page #}
+          <a {anchor_attrs "create_expr"} title='Create newhive'
+            class='needs_login create item btn hoverable'></a>
         </div>
       {>}
-      <div class="inline">
-        {# Search bar #}
-        <input type="text" id="search_box" placeholder="Search"
-          class="inline focus_expanded{<if (not user.logged_in)} media_shrink{>}"
-          name='q' value='{query.q}'
-         ><input type="submit" value title="Search"
-          class='hoverable icon go_search inline'>
-        {# Create new page #}
-        <a {anchor_attrs "create_expr"} title='Create newhive'
-          class='needs_login create item btn hoverable'></a>
-      </div>
     </div>
   </div>
   </form>

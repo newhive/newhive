@@ -708,7 +708,6 @@ define([
         if (context.page && context.page.resize)
             context.page.resize();
         done_layout = true;
-        win_width = $(window).width()
 
         if(context.page_data.layout == 'grid' ||
             context.page_data.layout == 'cat' ||
@@ -720,6 +719,7 @@ define([
 
     var reflow_grid = function(){
         var max_columns = context.route.max_columns || 3
+            ,win_width = $(window).width()
             ,columns = Math.max(1, Math.min(max_columns, 
                 Math.floor( win_width / grid_width)))
             ,feed_width = columns * (grid_width + border_width)
@@ -749,7 +749,7 @@ define([
             return;
         }
     }
-    var nav_size, search_flow, condensed
+    var nav_size, search_flow, condensed, split
     var reflow_nav = function(){
         // handle layout juggling of fat nav bar for narrow widths
         if(!has_nav_bar()) {
@@ -757,20 +757,24 @@ define([
             return
         }
 
-        var logged_in = context.user.logged_in
+        var logged_in = context.user.logged_in, win_width = $(window).width()
         // TODO: fix margin for uncondensed
         var new_condensed = $('.main-header').hasClass('condensed')
         if (condensed != new_condensed) {
             condensed = new_condensed
             $('.main-header .blurb').insertAfter('.main-header ' + 
                 (!condensed ? '.left' : '.nav_top_row'))
-            $('.main-header').addremoveClass('split', !logged_in && !condensed)
+        }
+        var new_split = !logged_in && !condensed && win_width < 800
+        if (split != new_split) {
+            split = new_split
+            $('.main-header').addremoveClass('split', split)
         }
 
-        reflow_site_margin()
+        setTimeout(reflow_site_margin, 200)
 
         var new_nav_size = ( win_width < 830 &&
-                (!condensed && !logged_in) ) ? 'narrow' : 'full'
+            (!condensed && !logged_in) ) ? 'narrow' : 'full'
         if(nav_size != new_nav_size){
             nav_size = new_nav_size
             $('.main-header').removeClass('full narrow').addClass(nav_size)
