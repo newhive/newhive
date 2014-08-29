@@ -1,6 +1,9 @@
 // overlay css
 @import "common";
 
+// $debug: true;
+$debug: false;
+
 @media print { #nav { display: none; } }
 
 body.nav .main-header {
@@ -29,9 +32,6 @@ body.nav .main-header {
 @media all and (max-width:610px) {
     .main-header .username.username { max-width: 120px; }
 }
-
-$debug: true;
-$debug: false;
 
 $anim_time: 0.15s;
 @if $debug { $anim_time: 1.15s; }

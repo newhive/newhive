@@ -1,5 +1,6 @@
 @import "common";
 
+// Text
 .upper { text-transform: uppercase; }
 .ellipsis {
     display: block;
@@ -8,6 +9,8 @@
     white-space: nowrap;
     vertical-align: bottom;
 }
+
+// Layout
 .block {
     display: block;
     vertical-align: bottom;
@@ -22,6 +25,11 @@
     }
     */
 }
+.middle_block > *, .middle_block > a > * {
+    display: inline-block;
+    vertical-align: middle;
+}
+// TODO: deprecated by middle_block
 .inline_middle {
     display: inline-block;
     vertical-align: middle;
@@ -64,7 +72,7 @@
 .table {
     display: table;
     width: 100%;
-    &>.cell {
+    &>.cell, &> a > .cell{
         display: table-cell;
         &.left { text-align: left; }
         &.right { text-align: right; }
