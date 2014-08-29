@@ -139,7 +139,7 @@ define([
         page.render(context.route.client_method, context);
     };
     o.refresh = function(){
-        o.dispatch(context.route.method, context.page_data);
+        o.dispatch(context.route_name, context.page_data);
     };
 
     function pop_route_success() {
