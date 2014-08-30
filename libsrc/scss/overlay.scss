@@ -272,6 +272,14 @@ body:not(.mobile) {
         &.active, &:hover { background-image: asset_url('skin/nav/open-hover.png'); }
     }
 
+    .user_card {
+        img {
+            background-color: transparent;
+            width: 36px;
+            padding: 4px;
+        }
+    }
+
     .signup {
         display: inline-block;
         vertical-align: top;
