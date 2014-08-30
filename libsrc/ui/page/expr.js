@@ -10,6 +10,7 @@ define([
     'sj!templates/social_overlay.html',
     'sj!templates/edit_btn.html',
     'sj!templates/expr_actions.html',
+    'sj!templates/user_byline.html',
     'sj!templates/comment.html'
 ], function(
     $,
@@ -23,6 +24,7 @@ define([
     social_overlay_template,
     edit_btn_template,
     expr_actions_template,
+    user_byline_template,
     comment_template
 ) {
     var o = {}
@@ -114,6 +116,9 @@ define([
 
         $('body').addClass('expr')
         $('title').text(o.expr.title);
+        $(".item.btn.user_card").empty().append(
+            user_byline_template([page_data, 
+                {'owner':o.expr.owner, 'no_byline': true}]))
         $('#site').hidehide();
         $("#popup_content").remove();
         $("#dia_comments").remove();

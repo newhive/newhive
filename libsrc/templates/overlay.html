@@ -93,10 +93,9 @@
     class='needs_login create item btn hoverable'></a>
   {# + button to open overlay #}
   <div class='item btn user_card hoverable'>
-    {<with page_data.expr}{<with owner}{|debug}
-      <a {anchor_attrs "expressions_public" "owner_name" name}>
-      <img src='{thumb_small}' class='thumb' title={name}></a>
-    {>}{>}
+    {<with page_data.expr "no_byline" true}
+      {|templates/user_byline.html}
+    {>}
   </div>
   <div class='social_btn item btn hide hoverable' 
     title="Open social overlay"></div>

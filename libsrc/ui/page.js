@@ -32,6 +32,7 @@ define([
     'sj!templates/tag_list.html',
     'sj!templates/feed_card.html',
     'sj!templates/user_card.html',
+    'sj!templates/user_byline.html',
     'sj!templates/profile_card.html',
     'sj!templates/icon_count.html',
     'sj!templates/dialog_embed.html',
