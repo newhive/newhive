@@ -125,17 +125,19 @@ define([
         if (route_name == "expr")
             route_name = "view_expr";
         context.route = routes[route_name];
-        var cards = context.page_data.cards
-            , cards_route = context.page_data.cards_route
-        context.page_data.next_cards_at = cards ? cards.length : 0
-        context.page_data.cards_at = 0
-        if (cards && cards.length && cards[0].collection) {
-            cards = null
-            cards_route = null
-        }
+        var old_cards = context.page_data.cards
+            , old_cards_route = context.page_data.cards_route
         context.page_data = page_data;
-        if(!page_data.cards) context.page_data.cards = cards;
-        if(!page_data.cards_route) context.page_data.cards_route = cards_route;
+        // Don't use category card data for expression page-throughs
+        if (old_cards && old_cards.length && old_cards[0].collection) {
+            old_cards = null
+            old_cards_route = null
+        }
+        if(!page_data.cards) context.page_data.cards = old_cards;
+        if(!page_data.cards_route) context.page_data.cards_route = old_cards_route;
+        context.page_data.next_cards_at =
+            context.page_data.cards ? context.page_data.cards.length : 0
+        context.page_data.cards_at = 0
         page.render(context.route.client_method, context);
     };
     o.refresh = function(){
