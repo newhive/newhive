@@ -70,15 +70,12 @@ body:not(.mobile) {
         .left { background-color: antiquewhite; }
         .right { background-color: aquamarine; }
     }
-    .nav_top_row {
-        &>.left, &>.right {
-            display: inline-block;
-            padding: 5px;
-            line-height: 0px;
-        }
-        &>.right {
-            float: right;
-        }
+    .nav_top_row .cell {
+        display: inline-block;
+        padding: 5px;
+    }
+    .nav_top_row .right {
+        float: right;
     }
     .right .icon {
         margin-right: 5px;
