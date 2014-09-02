@@ -383,8 +383,9 @@ define([
         {
             // Wow that was complicated. keychar will be the *unmodified* state,
             // so to check for @, #, it's 2,3 with shift held.
-            $("#site .search_bar").showshow();
-            $("#site #search_box").focus();
+            var $search_bar = 
+                $((has_nav_bar() ? ".main-header" : "#site") + " .search_bar")
+            $search_bar.showshow().find("#search_box").focus();
         } else {
             // alert('keyCode: ' + e.keyCode);
         }
