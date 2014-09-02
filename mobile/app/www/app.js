@@ -1,15 +1,13 @@
-define(['jquery'], function($){
+define([
+    'jquery',
+    'config',
+    'sj!templates/cards.html'
+], function(
+    $,
+    config,
+    cards_template
+){
 var self = {}
-
-config = {
-     owner: 'zach' // skips byline on cards with this username
-    ,search_url: 'http://staging.newhive.com/api/feed/expressions/zach'
-    ,base_url: 'http://staging.newhive.com'
-    ,search_query: ''
-    // ,search_url: 'http://staging.newhive.com/api/search?' +
-    //     $.param({q: '@zach'})
-}
-config.content_url = 'http://wirbu.office.tnh.me/'
 
 var page_index = 0, cards = [], cards_complete = false,
     cards_loading = false, current_page, next_page, win = $(window),
@@ -146,23 +144,25 @@ function fetch_cards(){
 function render_cards(cards){
     if(!cards.length) return
 
-    var  tmpl = $('#templates .expr_card').clone()
-        ,new_cards = document.createDocumentFragment()
-    cards.map(function(card){
-        card_el = tmpl.clone()
-        card_el.find('.title').html(card.title)
-        if(card.snapshot_small)
-        card_el.find('img').attr('src', 'http://' + card.snapshot_small)
-        if(config.owner != card.owner.name){
-            card_el.find('.byline').html('by ' + card.owner.name)
-        }
-        bind_click(card_el, function(){ render_page_expr(card) })
-        new_cards.appendChild(card_el[0])
-    })
+    // var tmpl = $('#templates .expr_card').clone()
+    //     ,new_cards = document.createDocumentFragment()
+    // cards.map(function(card){
+    //     card_el = tmpl.clone()
+    //     card_el.find('.title').html(card.title)
+    //     if(card.snapshot_small)
+    //     card_el.find('img').attr('src', 'http://' + card.snapshot_small)
+    //     if(config.owner != card.owner.name){
+    //         card_el.find('.byline').html('by ' + card.owner.name)
+    //     }
+    //     bind_click(card_el, function(){ render_page_expr(card) })
+    //     new_cards.appendChild(card_el[0])
+    // })
+
+    var new_cards = cards_template({ cards: cards, layout: 'grid' })
     $('.spinner').remove()
     if(!cards_complete)
-        new_cards.appendChild(
-            $("<div class='spinner expr_card'><div class='fg'></div>")[0])
+        new_cards.append(
+            $("<div class='spinner expr_card'><div class='fg'></div>"))
     $('#content').append(new_cards)
 }
 
