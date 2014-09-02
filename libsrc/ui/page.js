@@ -251,7 +251,7 @@ define([
             .addremoveClass("stay_hidden", has_nav && !has_nav_embedded_logo)
         // reverse the logo menu if it's up top
         if (! $("#logo_menu").is(".inverted") != has_nav_embedded_logo) {
-            $("#logo_menu").addremoveClass("inverted", has_nav_embedded_logo)
+            $("#logo_menu").addremoveClass("inverted", ! has_nav_embedded_logo)
                 .append($("#logo_menu").children().get().reverse())
         }
         $(".overlay.panel").addremoveClass("stay_hidden", has_nav)
