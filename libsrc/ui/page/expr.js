@@ -229,13 +229,14 @@ define([
             // In case of direct link with no context,
             // fetch cards from q param, or the default context, @owner
 
+            // find position of current page within cards
             var set_cards = function(data){
                 page_data.cards = data.cards 
                 if (o.last_found == -1) {
                     o.last_found = find_card(o.expr.id)
                     o.page_btn_handle()
                 }
-            };
+            }
 
             if(context.query.q){
                 var query = {q: context.query.q, id: o.expr.id };
