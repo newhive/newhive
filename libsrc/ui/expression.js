@@ -346,7 +346,8 @@ define([
 
         // Init jplayer, and autoplay as needed
         jplayer.init_jplayer();
-        
+       
+        // http://jplayer.org/latest/developer-guide/ 
         $(".hive_audio").each(function (i, el) {
             var $jp = $(el).find(".jp-jplayer")
             $(el).data("play_func", function(t) {
@@ -448,6 +449,12 @@ define([
                 + "var self={};" + src + ";expr.run_code(self) })"
             ).addClass('code_module').appendTo('body')
         })
+
+        var $player = current_player()
+            ,play_func = $player.data("play_func")
+        if ( typeof(play_func) == "function" ) {
+            play_func()
+        }
     }
     o.hide = function(){
         visible = false
@@ -464,6 +471,8 @@ define([
         animate_go = 0
         code_modules.map(function(module){ module.stop && module.stop() })
         $('script.code_module').remove()
+
+        play_pause()
     };
 
 
