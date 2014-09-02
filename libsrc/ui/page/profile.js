@@ -48,6 +48,7 @@ define([
 
     var allow_reorder = function() {
         return context.route.include_tags && context.page_data.cards.length > 1
+                && context.page_data.owner
                 && context.page_data.owner.id == context.user.id
                 && context.page_data.tag_selected != undefined
     };
@@ -55,6 +56,7 @@ define([
     var allow_tag_reorder = function() {
         return context.route.include_tags
                 && $(".drop_box").length
+                && context.page_data.owner
                 && context.page_data.owner.id == context.user.id
     };
 
@@ -62,6 +64,7 @@ define([
         return context.route.include_tags
                 && context.page_data.tag_selected != "remixed"
                 && context.page_data.tag_selected != undefined
+                && context.page_data.owner
                 && context.page_data.owner.id == context.user.id
     };
 

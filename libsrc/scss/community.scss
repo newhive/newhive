@@ -1,5 +1,8 @@
 @import "common";
 
+// $debug: true;
+$debug: false;
+
 .network_help {
     display: inline-block;
     width: 715px;
@@ -206,8 +209,8 @@ body.mobile .user_header {
                 .nav_button.txt_button {
                     padding: 10px;
                 }
-                .nav_button.exprs { margin-right: 10px; }
-                img.exprs { margin-right: 5px; }
+                // .nav_button.exprs { margin-right: 10px; }
+                // img.exprs { margin-right: 5px; }
                 .love {
                     background-image: asset_url('skin/nav/love-profile.png');
                     &.on { 
@@ -704,19 +707,26 @@ body {
         }
         .card {
             width: 390px;
-            line-height: 0px;
             position: relative;
             display: inline-block;
             // No bottom padding because last item has margin
             padding: 10px;
             // &:hover { background-color: #EEFFF8; }
-            .vcenter_outer { height: 75px; }
+            .card_title {
+                height: 75px;
+                @if $debug {
+                    .title {
+                        background-color: beige;
+                    }
+                }
+                .cell.left { width:44px; }
+                .title {
+                    max-width: 390px;
+                }
+            }
             .feed_item {
                 padding-left: 0px;
                 &:hover { background-color: inherit; }
-            }
-            .title {
-                max-width: 390px;
             }
             .info {
                 img.thumb { 

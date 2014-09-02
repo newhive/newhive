@@ -4,12 +4,13 @@
 {# TODO: un-flag this after ship #}
 {<if flags.new_nav}
 <div class="main-header">
-  <div class="table nav_top_row">
+  <form class="search_bar" method='GET' action='/search' name='search_form'>
+  <div class="nav_top_row">
     {# LEFT content. #}
-    <div class="cell left centered">
+    <div class="cell left{<if (not user.logged_in)} for_logo{>}">
       {# LOGGED OUT: #}
       {<if (not user.logged_in)}
-        <a {anchor_attrs "home"}
+        <a {anchor_attrs "home"} class='splash container inline'
           ><img class="logo splash" src='{asset "skin/site/logo_text.png"}' 
           title="Newhive Logo"></a>
       {>}{<else}
@@ -31,36 +32,38 @@
     </div>
 
     {# RIGHT content. #}
-    <div class='cell right vcenter centered'>
-      {<if (not user.logged_in)}
-        {# Main navigation #}
-        <div class='network_nav inline'>
-          {# empty <a> for css #}
-          <a><div class='login_btn text_btn item teal_hover'>Log in</div></a>
-          <a {anchor_attrs "signup"}>
-            <div class='text_btn item teal_hover'>Sign Up</div></a>
-          <a {anchor_attrs "view_expr"
-            "owner_name" config.site_user "expr_name" "about"}>
-            <div class='login_btn text_btn item teal_hover'>About</div></a>
+    <div class='cell right centered'>
+      {<vcenter (cond user.logged_in "" "full_height")}
+        {<if (not user.logged_in)}
+          {# Main navigation #}
+          <div class='network_nav inline'>
+            {# empty <a> for css #}
+            <a><div class='login_btn text_btn item teal_hover'>Log in</div></a>
+            <a {anchor_attrs "signup"}>
+              <div class='text_btn item teal_hover'>Sign Up</div></a>
+            <a {anchor_attrs "view_expr"
+              "owner_name" config.site_user "expr_name" "about"}>
+              <div class='text_btn item teal_hover'>About</div></a>
+          </div>
+        {>}
+        <div class="inline">
+          {# Search bar #}
+          <input type="text" id="search_box" placeholder="Search"
+            class="inline focus_expanded{<if (not user.logged_in)} media_shrink{>}"
+            name='q' value='{query.q}'
+           ><input type="submit" value title="Search"
+            class='hoverable icon go_search inline'>
+          {# Create new page #}
+          <a {anchor_attrs "create_expr"} title='Create newhive'
+            class='needs_login create item btn hoverable'></a>
         </div>
       {>}
-      {# Search bar #}
-      <form class="search_bar"
-        method='GET' action='/search' name='search_form'>
-          <input type="text" id="search_box" placeholder="Search"
-          class="inline focus_expanded{<if (not user.logged_in)} media_shrink{>}"
-            name='q' value='{query.q}'
-          ><input type="submit" value title="Search"
-            class='hoverable icon go_search inline'>
-      {# Create new page #}
-      <a {anchor_attrs "create_expr"} title='Create newhive'
-        class='needs_login create item btn hoverable'></a>
-      </form>
     </div>
   </div>
+  </form>
   
   {<if (not user.logged_in)}
-    <div class="hide_condensed blurb upper centered">NewHive is your multimedia publishing platform.</div>
+    {#<div class="hide_condensed blurb upper centered">NewHive is your multimedia publishing platform.</div>#}
   {>}
 
   <div class="header">
@@ -84,12 +87,20 @@
     </span>
   {>}
   {# expression specific #}
-  <span class='expr_actions'></span>{# no \n #}
-  <span class='hide edit_ui'></span>{# no \n #}
+  <span class='expr expr_actions'></span>{# no \n #}
+  <span class='expr hide edit_ui'></span>{# no \n #}
+  {# Create button #}
   <a {anchor_attrs "create_expr"} title='Create newhive'
     class='needs_login create item btn hoverable'></a>
+  {# User thumb #}
+  <div class='item hide btn expr user_card hoverable'>
+    {<with page_data.expr "no_byline" true}
+      {|templates/user_byline.html}
+    {>}
+  </div>
   {# + button to open overlay #}
-  <div class='social_btn item btn hide hoverable'></div>
+  <div class='social_btn expr item btn hide hoverable' 
+    title="Open social overlay"></div>
 </div>
 {<if (not flags.mobile)}
   <div class='social overlay left page_btn page_prev

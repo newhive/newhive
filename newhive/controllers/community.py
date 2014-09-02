@@ -65,8 +65,9 @@ class Community(Controller):
                 resp['fullname'] = referral.get('name')
         return resp
 
-    def expressions_for(self, tdata, cards, owner, no_empty=False, **args):
-        if not no_empty and 0 == len(cards) and tdata.user == owner:
+    def expressions_for(self, tdata, cards, owner, no_empty=False, **db_args):
+        if (not no_empty and 0 == len(cards) and tdata.user == owner
+          and db_args.get('at', 0) == 0):
             # New user has no cards; give him the "edit" card
             # TODO: replace thenewhive with a config string
             cards = []
@@ -153,7 +154,8 @@ class Community(Controller):
                 cards = [self.collection_client_view(x) if x 
                     else self.missing_expression() for x in cards]
                 
-                res = self.expressions_for(tdata, cards, owner, no_empty=True)
+                res = self.expressions_for(tdata, cards, owner, 
+                    no_empty=True, **db_args)
                 res.update({
                     "tag_selected":tag_name
                 })
@@ -168,9 +170,9 @@ class Community(Controller):
         
         spec = {'owner_name': owner_name}
         cards = self.db.Expr.page(spec, auth='public', **db_args)
-        return self.expressions_for(tdata, cards, owner)
+        return self.expressions_for(tdata, cards, owner, **db_args)
 
-    # TODO: merge with above? helper to deal with just collections (not categories)
+    # TODO: merge with above? helper to deal with entropy for private collections
     def _expressions_tag(self, tdata, owner=None, tag_name=None, entropy=None,
         db_args={}
     ):

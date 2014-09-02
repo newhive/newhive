@@ -10,6 +10,7 @@ define([
     'sj!templates/social_overlay.html',
     'sj!templates/edit_btn.html',
     'sj!templates/expr_actions.html',
+    'sj!templates/user_byline.html',
     'sj!templates/comment.html'
 ], function(
     $,
@@ -23,6 +24,7 @@ define([
     social_overlay_template,
     edit_btn_template,
     expr_actions_template,
+    user_byline_template,
     comment_template
 ) {
     var o = {}
@@ -60,8 +62,7 @@ define([
 
     o.hide_panel = function(){
         $(".overlay.panel").hidehide();
-        $(".panel .social_btn").addClass("hide");
-        $(".panel .edit_ui").hidehide();
+        $(".overlay.panel .expr").hidehide();
     }
 
     o.resize = function(){
@@ -114,6 +115,9 @@ define([
 
         $('body').addClass('expr')
         $('title').text(o.expr.title);
+        $(".item.btn.user_card").empty().append(
+            user_byline_template([page_data, 
+                {'owner':o.expr.owner, 'no_byline': true}]))
         $('#site').hidehide();
         $("#popup_content").remove();
         $("#dia_comments").remove();
@@ -149,7 +153,7 @@ define([
         o.hide_panel();
         $(".overlay.panel").showshow();
         $(".overlay.panel .signup").hidehide()
-        $(".social_btn").removeClass("hide");
+        $(".panel .expr").showshow();
 
         var show_edit = false
         if(page_data.expr.tags
@@ -165,14 +169,15 @@ define([
                 edit_btn_template(page_data) )
             $('.overlay.panel .remix')
                 .showhide(ui_page.tags && ui_page.tags.indexOf('remix') >= 0)
+        } else {
+            $('.overlay.panel .remix').hidehide()
+            $('.overlay.panel .edit_ui').hidehide()
         }
         ui_page.form_page_enter()
 
         o.overlay_columns = 0;
         o.wide_overlay = 0;
         o.resize();
-
-            
     }
 
     o.exit = function(){
