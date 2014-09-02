@@ -383,8 +383,8 @@ define([
         {
             // Wow that was complicated. keychar will be the *unmodified* state,
             // so to check for @, #, it's 2,3 with shift held.
-            $(".search_bar").showshow();
-            $("#search_box").focus();
+            $("#site .search_bar").showshow();
+            $("#site #search_box").focus();
         } else {
             // alert('keyCode: ' + e.keyCode);
         }
