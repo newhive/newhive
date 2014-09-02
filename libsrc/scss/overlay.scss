@@ -215,8 +215,10 @@ body:not(.mobile) {
         }
     }   
 }
-.main-header:not(.condensed) .vcenter_outer {
-    max-width: 400px;
+.main-header:not(.condensed) .right .vcenter_outer {
+    @media all and (max-width:975px) {
+        max-width: 400px;
+    }
 }
 
 .page_btn {
