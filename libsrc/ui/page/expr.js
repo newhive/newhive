@@ -62,8 +62,7 @@ define([
 
     o.hide_panel = function(){
         $(".overlay.panel").hidehide();
-        $(".panel .social_btn").addClass("hide");
-        $(".panel .edit_ui").hidehide();
+        $(".overlay.panel .expr").hidehide();
     }
 
     o.resize = function(){
@@ -154,7 +153,7 @@ define([
         o.hide_panel();
         $(".overlay.panel").showshow();
         $(".overlay.panel .signup").hidehide()
-        $(".social_btn").removeClass("hide");
+        $(".panel .expr").showshow();
 
         var show_edit = false
         if(page_data.expr.tags
@@ -170,14 +169,15 @@ define([
                 edit_btn_template(page_data) )
             $('.overlay.panel .remix')
                 .showhide(ui_page.tags && ui_page.tags.indexOf('remix') >= 0)
+        } else {
+            $('.overlay.panel .remix').hidehide()
+            $('.overlay.panel .edit_ui').hidehide()
         }
         ui_page.form_page_enter()
 
         o.overlay_columns = 0;
         o.wide_overlay = 0;
         o.resize();
-
-            
     }
 
     o.exit = function(){

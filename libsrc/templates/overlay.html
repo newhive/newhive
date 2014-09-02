@@ -43,7 +43,7 @@
               <div class='text_btn item teal_hover'>Sign Up</div></a>
             <a {anchor_attrs "view_expr"
               "owner_name" config.site_user "expr_name" "about"}>
-              <div class='login_btn text_btn item teal_hover'>About</div></a>
+              <div class='text_btn item teal_hover'>About</div></a>
           </div>
         {>}
         <div class="inline">
@@ -87,17 +87,19 @@
     </span>
   {>}
   {# expression specific #}
-  <span class='expr_actions'></span>{# no \n #}
-  <span class='hide edit_ui'></span>{# no \n #}
+  <span class='expr expr_actions'></span>{# no \n #}
+  <span class='expr hide edit_ui'></span>{# no \n #}
+  {# Create button #}
   <a {anchor_attrs "create_expr"} title='Create newhive'
     class='needs_login create item btn hoverable'></a>
-  {# + button to open overlay #}
-  <div class='item btn user_card hoverable'>
+  {# User thumb #}
+  <div class='item hide btn expr user_card hoverable'>
     {<with page_data.expr "no_byline" true}
       {|templates/user_byline.html}
     {>}
   </div>
-  <div class='social_btn item btn hide hoverable' 
+  {# + button to open overlay #}
+  <div class='social_btn expr item btn hide hoverable' 
     title="Open social overlay"></div>
 </div>
 {<if (not flags.mobile)}
