@@ -248,13 +248,13 @@ define([
             .addremoveClass("overlay", ! has_nav_embedded_logo)
             // .addremoveClass("item", has_nav)
             .prependTo(has_nav_embedded_logo ? ".main-header .left" : "#overlays")
-            .addremoveClass("stay_hidden", has_nav && !has_nav_embedded_logo)
+            .addremoveClass("hide", has_nav && !has_nav_embedded_logo)
         // reverse the logo menu if it's up top
         if (! $("#logo_menu").is(".inverted") != has_nav_embedded_logo) {
             $("#logo_menu").addremoveClass("inverted", ! has_nav_embedded_logo)
                 .append($("#logo_menu").children().get().reverse())
         }
-        $(".overlay.panel").addremoveClass("stay_hidden", has_nav)
+        $(".overlay.panel").addremoveClass("hide", has_nav)
     }
     var custom_classes = ""
     o.render = function(method, data){
@@ -265,7 +265,6 @@ define([
         var new_classes = context.route.custom_classes // + " " + context.route_name
         $("body").removeClass(custom_classes).addClass(new_classes)
         custom_classes = new_classes
-        fixup_overlay()
 
         if (page_data.title) $("head title").text(page_data.title);
         o.column_layout = false;
@@ -333,6 +332,7 @@ define([
             }
         }
 
+        fixup_overlay()
         o.attach_handlers();
     };
 
