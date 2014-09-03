@@ -602,8 +602,7 @@ define([
             if ($("#include_social").is(":checked")){
                 clean += "+social"
             }
-            if (clean)
-                params.clean = clean.slice(1)
+            params.clean = clean ? clean.slice(1) : 't'
 
             params = "?" + $.param(params)
             link = util.urlize(host).replace(/\/$/,"") + 
