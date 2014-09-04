@@ -254,7 +254,7 @@ define([
             $("#logo_menu").addremoveClass("inverted", ! has_nav_embedded_logo)
                 .append($("#logo_menu").children().get().reverse())
         }
-        $(".overlay.panel").addremoveClass("hide", has_nav)
+        $(".overlay.panel").addremoveClass("hide", has_nav && !$("body").is("edit"))
     }
     var custom_classes = ""
     o.render = function(method, data){
