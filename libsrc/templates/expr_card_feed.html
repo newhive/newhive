@@ -33,21 +33,24 @@
     {>}{<else}
       {asset "skin/site/expr_placeholder_small.jpg"}  
     {>}>
-  {<vcenter "card_title"}
-    {<if type "cat"}<a { anchor_attrs "expressions_tag" 
-        "owner_name" collection.username "tag_name" collection.tag}>
-    {>}
-      <div class='title expr'>{title|untitled|e}</div>
-    {cond cat "</a>" ""}
+  {# Title of card (expression/category) #}
+  {<if type "cat"}<a { anchor_attrs "expressions_tag"
+      "owner_name" collection.username "tag_name" collection.tag}>
   {>}
+    <div class="card_title table">
+      {<if type "cat"}<div class="cell left vcenter">
+        <img src={asset "skin/nav/collections.png"}>
+      </div>{>}
+      <div class='cell vcenter'>
+        <div class="title expr" title="{title|untitled|e}">{title|untitled|e}
+        </div>
+      </div>
+    </div>
+  {cond (eq type "cat") "</a>" ""}
 </a>
 <div class='info'>
   <div class='owner'>
-    {# Should template profile_card, but... #}
-    <a {anchor_attrs "expressions_public" "owner_name" owner.name}>
-      <img class="thumb" src='{owner.thumb_small}'/>
-      <span>{<if curated}curated {>}by <span class='username'>{owner.name}</span></span>
-    </a>
+    {|templates/user_byline.html}
   </div>
 </div>
 {<unless suppress_feed}

@@ -34,7 +34,7 @@
             title="Newhive grid"
             { anchor_attrs "expressions_public_grid" "owner_name" owner.name 
               "tag_name" ""}>
-            <img class="exprs" src='{asset "skin/nav/expressions.png"}'/> 
+            <img class="exprs" src='{asset "skin/nav/newhives.png"}'/> 
             {<if expressions}{thousands expressions}{>}</a
           ><div class='spacer inline'></div>
           {<if (not flags.mobile)}
@@ -52,7 +52,7 @@
               ><div class='spacer inline'></div>
             {>}
             {# tags #}
-            <a class='nav_button inline tags' title="Tags"
+            <a class='nav_button inline tags' title="Collections"
                 {<if (or (eq route_name "expressions_tag_private")
                          (eq route_name "expressions_public_grid_tags"))}
                   { anchor_attrs "expressions_tag" "owner_name" owner.name 

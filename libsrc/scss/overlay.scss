@@ -1,38 +1,57 @@
 // overlay css
 @import "common";
 
+// $debug: true;
+$debug: false;
+
 @media print { #nav { display: none; } }
 
 body.nav .main-header {
     display: block;
 }
-@media all and (max-width:800px) {
-.main-header ._2column {
-    .left, .right {
-        float: none;
-        margin: auto;
-        display: block;
+
+@media all and (min-width:830px) and (max-width:919px) {
+    .main-header:not(.condensed) .table {
+        .search_bar input[type=text].media_shrink {
+            max-width: 90px;
+        }
     }
-    .blurb {
-        position: static;
-        margin-top: -10px;
-        padding: 10px;
-    }
-}    
-}
-@media all and (min-width:800px) and (max-width:900px) {
-.main-header:not(.condensed) ._2column {
-    .search_bar input[type=text].focus_expanded {
-        max-width: 90px;
+    .main-header .table {
+        .search_bar input[type=text]:not(.media_shrink) {
+            max-width: 180px;
+        }
     }
 }
-}
-@media all and (min-width:900px) and (max-width:1000px) {
-.main-header:not(.condensed) ._2column {
-    .search_bar input[type=text].focus_expanded {
-        max-width: 190px;
+@media all and (min-width:920px) and (max-width:1000px) {
+    .main-header:not(.condensed) .table {
+        .search_bar input[type=text].media_shrink {
+            max-width: 190px;
+        }
     }
 }
+@media all and (max-width:610px) {
+    .main-header .username.username { max-width: 120px; }
+}
+
+$anim_time: 0.15s;
+@if $debug { $anim_time: 1.15s; }
+body:not(.mobile) {
+    #site {
+        @include transition(margin-top, $anim_time, linear);
+    }
+    .main-header {
+        @include transition(all, $anim_time, linear);
+        .logo, .item, .icon, a.splash.container, .cell, .cell>a, .vcenter_outer {
+            @include transition(all, $anim_time, linear);
+        }
+    }
+    .main-header:not(.narrow){
+        .search_bar {
+            input[type=text] {
+                @include transition(all, $anim_time, linear);
+            }
+        }
+    }
 }
 
 .main-header {
@@ -41,38 +60,45 @@ body.nav .main-header {
     top: 0px;
     left: 0px;
     right: 0px;
+    padding-bottom: 17px;
 
     z-index: $nav_layer;
     background-color: white;
-    // background-repeat: no-repeat;
-    @include transition(all, 0.15s, linear);
 
-    .left, .right {
+    // Debug
+    @if $debug {
+        .left { background-color: antiquewhite; }
+        .right { background-color: aquamarine; }
+    }
+    .nav_top_row .cell {
+        display: inline-block;
         padding: 5px;
-        line-height: 0px;
+    }
+    .nav_top_row .right {
+        float: right;
     }
     .right .icon {
         margin-right: 5px;
     }
     .text_btn { margin: 2px 0px 0px 0px; }
     .logo, .item, .icon {
-        @include transition(all, 0.15s, linear);
         display: inline-block;
-        // height: 44px;
-        &.splash {
-            display: block;
-            margin: auto;
-            height: 80px;
-        }
+    }
+    .splash.container { width: 100%; overflow: hidden; }
+    img.splash {
+        display: block;
+        margin: auto;
+        height: 80px;
+    }
+    .logo.splash, .right .vcenter_outer.full_height {
+        height: 80px;
     }
     .item {
         @include border-radius(6px);
     }
     .blurb {
-        // So as to not affect the layout
-        position: absolute;
-        padding: 10px;
-        bottom: -5px;
+        font-size: 19px;
+        margin: 5px 0 15px;
     }
     .item.btn {
         display: inline-block;
@@ -80,6 +106,7 @@ body.nav .main-header {
         height: 44px; width: 44px;
         background-size: 44px 44px;
     }
+    .username { max-width: 222px; }
     .create.item {
         background-image: asset_url('skin/nav/create.png');
         &.active { background-image: asset_url('skin/nav/create-hover.png'); }
@@ -96,25 +123,27 @@ body.nav .main-header {
             //     // background-color: $color_bright_red;
             // }
         }
-        input[type=text] {
-            @include transition(all, 0.15s, linear);
-            margin: 4px 0px 0px -2px;
+    }
+    // #search_box is not always inside .search_bar
+    #search_box {
+        margin: 0px 0px 0px 4px;
+        width: 250px;
 
+        width: 0px;
+        padding: 0px;
+        opacity: 0;
+        display: inline;
+        &.block { position:absolute; clear: both; }
+        &:hover, &:focus {
             width: 250px;
-            // &:hover, &:focus {
-            //     background: asset_url("skin/nav/search-arrow.png") no-repeat;
-            //     background-position: right;
-            // }
-
-            &.focus_expanded {
-                width: 0px;
-                padding: 0px;
-                opacity: 0;
-                &:hover, &:focus {
-                    width: 250px;
-                    padding: 6px;
-                    opacity: 1;
-                }
+            padding: 6px;
+            opacity: 1;
+            // show on next line when in narrow mode
+            &.block {
+                position: static;
+                display: block;
+                &.narrow { margin: auto; }
+                &.full { margin: 0px 10px 10px auto; }
             }
         }
     }
@@ -148,12 +177,44 @@ body.nav .main-header {
         }
     }
 
+    &.narrow {
+        .blurb { margin: 4px 4px 8px 4px; }
+    }
     &.condensed {
-        @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
+        @include box-shadow(rgba(black, 0.4) 0px 3px 10px);
         .hide_condensed { display: none; }
-        .logo.splash {
+        .logo.splash, .right .vcenter_outer.full_height {
             height: 40px;
+            // margin: 0;
         }
+        .splash.container.narrow {
+            width: 44px;
+        }
+        padding-bottom: 0px;
+        .nav_top_row {
+            &>.left.for_logo {
+                width: 180px;
+                &.narrow { width: 44px; }
+            }
+        }
+    }
+}
+
+.main-header.split .nav_top_row {
+    &>.cell {
+        width: 100%;
+    }
+    .vcenter_outer.full_height {
+        height: auto;
+        display: inline-block;
+        .vcenter_middle {
+            display: block
+        }
+    }   
+}
+.main-header:not(.condensed) .right .vcenter_outer {
+    @media all and (max-width:975px) {
+        max-width: 400px;
     }
 }
 
@@ -208,6 +269,15 @@ body.nav .main-header {
     .social_btn {
         background-image: asset_url('skin/nav/open.png');
         &.active, &:hover { background-image: asset_url('skin/nav/open-hover.png'); }
+    }
+
+    .user_card {
+        img {
+            background-color: transparent;
+            width: 44px;
+            // width: 36px;
+            // padding: 4px;
+        }
     }
 
     .signup {

@@ -32,7 +32,7 @@ class Community(Controller):
             user = tdata.user
         # New category view 
         if self.flags.get('new_nav'):
-            return self.expressions_public_tags(tdata, request, _owner_name="root", 
+            return self.expressions_tag(tdata, request, _owner_name="root", 
                 tag_name="featured", db_args=db_args, include_categories=True)
         # Logged out users see featured.
         elif not user or not user.id:
@@ -85,7 +85,10 @@ class Community(Controller):
             expr = self.db.Expr.fetch(collection)
             if not expr: return None
             expr_cv = expr.client_view(viewer=viewer)
-            expr_cv['collection'] = collection
+            expr_cv.update({
+                'collection': collection
+                ,"snapshot_big": expr.snapshot_name("big")
+            })
             return expr_cv
         username = collection.get('username')
         tag = collection.get('tag')
@@ -127,7 +130,9 @@ class Community(Controller):
             ,"type": 'expr'
         }
 
-    def expressions_public_tags(self, tdata, request, owner_name=None, db_args={}, **args):
+    def expressions_tag(self, tdata, request, owner_name=None,
+        db_args={}, **args
+    ):
         if not owner_name: 
             owner_name = args.get('_owner_name')
         owner = self.db.User.named(owner_name)
@@ -159,32 +164,26 @@ class Community(Controller):
                     res['title'] = 'Featured collections'
                 return res
             return self.expressions_for(tdata, [], owner, **db_args)
-        if tag_name: 
-            return self.expressions_tag(
-                tdata, request, owner_name=owner_name, db_args=db_args, **args)
+        if tag_name:
+            return self._expressions_tag(tdata,
+                owner, tag_name, args.get('entropy'), db_args=db_args)
         
         spec = {'owner_name': owner_name}
         cards = self.db.Expr.page(spec, auth='public', **db_args)
         return self.expressions_for(tdata, cards, owner, **db_args)
 
-    def expressions_public(self, tdata, request, owner_name=None, db_args={}, **args):
-        owner = self.db.User.named(owner_name)
-        if not owner: return None
-        cards = owner.profile(at=db_args.get('at', 0))
-        return self.expressions_for(tdata, cards, owner, **db_args)
-
-    def expressions_tag(self, tdata, request, owner_name=None, 
-            entropy=None, tag_name=None, db_args={}, **args):
-        owner = self.db.User.named(owner_name)
-        if not owner: return None
+    # TODO: merge with above? helper to deal with entropy for private collections
+    def _expressions_tag(self, tdata, owner=None, tag_name=None, entropy=None,
+        db_args={}
+    ):
         if entropy and entropy != owner.get('tag_entropy', {}).get(tag_name, ''):
             return None
         if entropy or owner.id == tdata.user.id:
             db_args['override_unlisted'] = True
         profile = owner.client_view(viewer=tdata.user)
 
-        result, search = self.db.query_echo("@" + owner_name + " #" + tag_name,
-            **db_args)
+        result, search = self.db.query_echo("@" + owner['name'] + " #"
+            + tag_name, **db_args)
 
         data = {
             "cards": result,
@@ -196,6 +195,14 @@ class Community(Controller):
         if owner.id == tdata.user.id:
             data.update({"tag_entropy": owner.get('tag_entropy', {}).get(tag_name)})
         return data
+
+    def expressions_public(self, tdata, request, owner_name=None,
+        db_args={}, **args
+    ):
+        owner = self.db.User.named(owner_name)
+        if not owner: return None
+        cards = owner.profile(at=db_args.get('at', 0))
+        return self.expressions_for(tdata, cards, owner)
 
     def expressions_private(self, tdata, request, owner_name=None, db_args={}, **args):
         owner = self.db.User.named(owner_name)
@@ -436,8 +443,8 @@ class Community(Controller):
     def search(self, tdata, request, id=None, owner_name=None, expr_name=None,
         db_args={}, **args
     ):
-        q = request.args.get('q')
-        if not q: return None
+        q = request.form.get('q') or request.args.get('q')
+        if not q: return { 'cards': [], 'title':'Search' }
         id = request.args.get('id', None)
         entropy = request.args.get('e', None)
         owner = self.db.User.named(owner_name)
@@ -462,7 +469,7 @@ class Community(Controller):
             "cards": result,
             'special': {'mini_expressions': 3},
             'title': 'Search',
-            'header': ("Search", request.args['q']),
+            'header': ("Search", q),
         }
         if len(search) == 1 and len(tags) == 1:
             profile = tdata.user
@@ -565,7 +572,7 @@ class Community(Controller):
                 # TODO: we'll have to have another solution with pagination.
                 if type(page_data.get('tag_list')) != list:
                     page_data['tag_list'] = map(lambda x: x[0], cnt.most_common(16))
-                if owner and kwargs['route_name'] == 'expressions_public_tags':
+                if owner and kwargs['route_name'] == 'expressions_tag':
                     tagged = owner.get('tagged', {}).keys()
                     num_tags = max(len(tagged), 16)
                     tagged.extend(page_data['tag_list'])

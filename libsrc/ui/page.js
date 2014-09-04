@@ -25,12 +25,14 @@ define([
     'sj!templates/tags_page.html',
     'sj!templates/tag_card.html',
     'sj!templates/user_activity.html',
+
     'sj!templates/expr_card_large.html',
     'sj!templates/expr_card_feed.html',
     'sj!templates/expr_card_mini.html',
     'sj!templates/tag_list.html',
     'sj!templates/feed_card.html',
     'sj!templates/user_card.html',
+    'sj!templates/user_byline.html',
     'sj!templates/profile_card.html',
     'sj!templates/icon_count.html',
     'sj!templates/dialog_embed.html',
@@ -40,7 +42,8 @@ define([
     'sj!templates/tag_buttons.html', 
     'sj!templates/hive_menu.html', 
     'sj!templates/request_invite_form.html',
-    'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js',
+    // 'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js',
+    'js!browser/jquery/jquery.mobile-events.js', //!!
     'sj!templates/cards.html'
 ], function(
     $,
@@ -230,35 +233,28 @@ define([
             o.layout_columns();
         o.add_grid_borders();
     }
-    var max_col_width = 500
+    var has_nav_bar = function() {
+        return ($("body").hasClass("nav") && $(".main-header").length)
+    }
     var fixup_overlay = function() {
         // Fix styling for this route
         $(".main-header .network_nav .item").removeClass("black_btn")
         $(".main-header .network_nav .item." + context.route_name)
             .addClass("black_btn")
-        var has_nav = ($("body").hasClass("nav") && $(".main-header").length)
+        var has_nav = has_nav_bar()
             ,has_nav_embedded_logo = has_nav && context.user.logged_in
 
         $("#overlays .hive_logo")
             .addremoveClass("overlay", ! has_nav_embedded_logo)
             // .addremoveClass("item", has_nav)
             .prependTo(has_nav_embedded_logo ? ".main-header .left" : "#overlays")
-            .addremoveClass("stay_hidden", has_nav && !has_nav_embedded_logo)
+            .addremoveClass("hide", has_nav && !has_nav_embedded_logo)
         // reverse the logo menu if it's up top
-        if (!! $("#logo_menu").is(".inverted") != has_nav_embedded_logo) {
-            $("#logo_menu").addremoveClass("inverted", has_nav_embedded_logo)
+        if (! $("#logo_menu").is(".inverted") != has_nav_embedded_logo) {
+            $("#logo_menu").addremoveClass("inverted", ! has_nav_embedded_logo)
                 .append($("#logo_menu").children().get().reverse())
         }
-        $(".overlay.panel").addremoveClass("stay_hidden", has_nav)
-        if (context.user.logged_in)
-            height_nav_large = 90
-        else
-            height_nav_large = 125
-        $("#site").css({"margin-top": has_nav ? height_nav_large : 0})
-        // keep the left column to a maximum size
-        var $username = $(".main-header .left .username")
-        $username.css("max-width", $username.width() + 
-            max_col_width - $(".main-header .left").width())
+        $(".overlay.panel").addremoveClass("hide", has_nav)
     }
     var custom_classes = ""
     o.render = function(method, data){
@@ -269,7 +265,6 @@ define([
         var new_classes = context.route.custom_classes // + " " + context.route_name
         $("body").removeClass(custom_classes).addClass(new_classes)
         custom_classes = new_classes
-        fixup_overlay()
 
         if (page_data.title) $("head title").text(page_data.title);
         o.column_layout = false;
@@ -337,6 +332,7 @@ define([
             }
         }
 
+        fixup_overlay()
         o.attach_handlers();
     };
 
@@ -387,26 +383,33 @@ define([
         {
             // Wow that was complicated. keychar will be the *unmodified* state,
             // so to check for @, #, it's 2,3 with shift held.
-            $(".search_bar").showshow();
-            $("#search_box").focus();
+            var $search_bar = 
+                $((has_nav_bar() ? ".main-header" : "#site") + " .search_bar")
+            $search_bar.showshow().find("#search_box").focus();
         } else {
             // alert('keyCode: ' + e.keyCode);
         }
     }
 
-    var height_nav_large = 155
     var local_attach_handlers = function(){
+        $("form.search_bar").bind_once_anon("submit", function(ev) {
+            if ($(this).find("#search_box").val() == "")
+                return false
+        })
         if (context.flags.new_nav) {
-            $(".icon.go_search").bind_once_anon("mouseenter.page", function(ev){
-                $(".main-header #search_box").focus()
+            $(".icon.go_search").bind_once_anon("tap.page mouseenter.page", 
+                function(ev) {
+                    $(".main-header #search_box").focus()
             })
             // Animate header
             $(window).bind_once_anon("scroll.page", function(ev) {
                 var scrolled_to = $(this).scrollTop()
-                if (scrolled_to > height_nav_large)
+                if (scrolled_to > 1)
                     $(".main-header").addClass("condensed")
                 else
                     $(".main-header").removeClass("condensed")
+                search_flow = ''
+                reflow_nav()
             })
         }
         // Add expression to collection
@@ -442,9 +445,8 @@ define([
                 ;
                 if(val != val_filtered) $(text).val( val_filtered );
                 $(dialog_selector + " .tag_new")
-                    .text($(text).val()).showshow().addClass("tag_15");
-                if ('' == $(text).val())
-                    $(dialog_selector + " .tag_new").hidehide();
+                    .text($(text).val()).addClass("tag_15")
+                    .showhide('' != $(text).val());
                 el_tag_name.val(val_filtered)
             }
             $(dialog_selector + " .tag_name")
@@ -703,31 +705,97 @@ define([
             $('#site').empty().append(master_template(page_data));
     }
 
-    var done_layout = false;
+    var done_layout = false, win_width;
     o.resize = function(){
-        if(context.page_data.layout == 'grid' ||
-            context.page_data.layout == 'cat' ||
-            context.page_data.layout == 'mini') {
-            var win_width = $(window).width()
-                ,max_columns = context.route.max_columns || 3
-                ,columns = Math.max(1, Math.min(max_columns, 
-                    Math.floor( win_width / grid_width)))
-                ,feed_width = columns * (grid_width + border_width)
-            if (context.page_data.layout == 'cat')// && columns > 1)
-                feed_width = Math.min(3 * (grid_width + border_width),
-                    Math.max(win_width, feed_width))
-            $('.feed').css('width', feed_width);
-            if (o.columns != columns || !done_layout) {
-                o.columns = columns;
-                if (o.column_layout)
-                    o.layout_columns();
-                o.add_grid_borders(columns);
-            }
-        }
         if (context.page && context.page.resize)
             context.page.resize();
         done_layout = true;
-    };
+
+        if(context.page_data.layout == 'grid' ||
+            context.page_data.layout == 'cat' ||
+            context.page_data.layout == 'mini'
+        ) reflow_grid()
+
+        reflow_nav()
+    }
+
+    var reflow_grid = function(){
+        var max_columns = context.route.max_columns || 3
+            ,win_width = $(window).width()
+            ,columns = Math.max(1, Math.min(max_columns, 
+                Math.floor( win_width / grid_width)))
+            ,feed_width = columns * (grid_width + border_width)
+        if (context.page_data.layout == 'cat')// && columns > 1)
+            feed_width = Math.min(3 * (grid_width + border_width),
+                Math.max(win_width, feed_width))
+        $('.feed').css('width', feed_width);
+        if (o.columns != columns || !done_layout) {
+            o.columns = columns;
+            if (o.column_layout)
+                o.layout_columns();
+            o.add_grid_borders(columns);
+        }
+    }
+
+    var unsettled_nav_height, height_nav_uncondensed = 1
+    var reflow_site_margin = function() {
+        var new_nav_height = $(".main-header").outerHeight()
+        if (unsettled_nav_height != new_nav_height) {
+            unsettled_nav_height = new_nav_height
+            setTimeout(reflow_site_margin, 200)
+            return;
+        }
+        if (!condensed) {
+            height_nav_uncondensed = new_nav_height
+            $("#site").css({"margin-top": height_nav_uncondensed })
+            return;
+        }
+    }
+    var nav_size, search_flow, condensed, split
+    var reflow_nav = function(){
+        // handle layout juggling of fat nav bar for narrow widths
+        if(!has_nav_bar()) {
+            $("#site").css({"margin-top": 0})
+            return
+        }
+
+        var logged_in = context.user.logged_in, win_width = $(window).width()
+        // TODO: fix margin for uncondensed
+        var new_condensed = $('.main-header').hasClass('condensed')
+        if (condensed != new_condensed) {
+            condensed = new_condensed
+            $('.main-header .blurb').insertAfter('.main-header ' + 
+                (!condensed ? '.left' : '.nav_top_row'))
+        }
+        var new_split = !logged_in && !condensed && win_width < 800
+        if (split != new_split) {
+            split = new_split
+            $('.main-header').addremoveClass('split', split)
+        }
+
+        setTimeout(reflow_site_margin, 200)
+
+        var new_nav_size = ( win_width < 830 &&
+            (!condensed && !logged_in) ) ? 'narrow' : 'full'
+        if(nav_size != new_nav_size){
+            nav_size = new_nav_size
+            $('.main-header').removeClass('full narrow').addClass(nav_size)
+        }
+
+        var new_search_flow = win_width < 730 ? 'block' : 'inline-block'
+        $('.main-header .splash.container, .main-header .left')
+            .addremoveClass('narrow', win_width < 830)
+        if(search_flow != new_search_flow){
+            search_flow = new_search_flow
+            if(search_flow == 'block')
+                $('#search_box').insertAfter('.main-header .nav_top_row')
+                    .addClass('block')
+            else
+                $('#search_box').insertBefore('.main-header .go_search')
+                    .removeClass('block')
+            $('#search_box').removeClass('full narrow').addClass(nav_size)
+        }
+    }
 
     // Move the expr.card's into the feed layout, shuffling them
     // into the shortest column.  

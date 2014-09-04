@@ -10,6 +10,7 @@ define([
     'sj!templates/social_overlay.html',
     'sj!templates/edit_btn.html',
     'sj!templates/expr_actions.html',
+    'sj!templates/user_byline.html',
     'sj!templates/comment.html'
 ], function(
     $,
@@ -23,12 +24,14 @@ define([
     social_overlay_template,
     edit_btn_template,
     expr_actions_template,
+    user_byline_template,
     comment_template
 ) {
     var o = {}
         ,loading_frame_list = [], loaded_frame_list = []
         ,overlay_columns = 0, no_paging = false
-        ,animation_timeout = undefined, last_found = -1
+        ,animation_timeout = undefined
+    o.last_found = -1
     o.cache_offsets = [1, -1, 2];
     o.anim_duration = (util.mobile()) ? 400 : 400;
 
@@ -59,8 +62,7 @@ define([
 
     o.hide_panel = function(){
         $(".overlay.panel").hidehide();
-        $(".panel .social_btn").addClass("hide");
-        $(".panel .edit_ui").hidehide();
+        $(".overlay.panel .expr").hidehide();
     }
 
     o.resize = function(){
@@ -113,6 +115,9 @@ define([
 
         $('body').addClass('expr')
         $('title').text(o.expr.title);
+        $(".item.btn.user_card").empty().append(
+            user_byline_template([page_data, 
+                {'owner':o.expr.owner, 'no_byline': true}]))
         $('#site').hidehide();
         $("#popup_content").remove();
         $("#dia_comments").remove();
@@ -148,7 +153,7 @@ define([
         o.hide_panel();
         $(".overlay.panel").showshow();
         $(".overlay.panel .signup").hidehide()
-        $(".social_btn").removeClass("hide");
+        $(".panel .expr").showshow();
 
         var show_edit = false
         if(page_data.expr.tags
@@ -164,14 +169,15 @@ define([
                 edit_btn_template(page_data) )
             $('.overlay.panel .remix')
                 .showhide(ui_page.tags && ui_page.tags.indexOf('remix') >= 0)
+        } else {
+            $('.overlay.panel .remix').hidehide()
+            $('.overlay.panel .edit_ui').hidehide()
         }
         ui_page.form_page_enter()
 
         o.overlay_columns = 0;
         o.wide_overlay = 0;
         o.resize();
-
-            
     }
 
     o.exit = function(){
@@ -223,8 +229,14 @@ define([
             // In case of direct link with no context,
             // fetch cards from q param, or the default context, @owner
 
+            // find position of current page within cards
             var set_cards = function(data){
-                page_data.cards = data.cards };
+                page_data.cards = data.cards 
+                if (o.last_found == -1) {
+                    o.last_found = find_card(o.expr.id)
+                    o.page_btn_handle()
+                }
+            }
 
             if(context.query.q){
                 var query = {q: context.query.q, id: o.expr.id };
@@ -590,8 +602,7 @@ define([
             if ($("#include_social").is(":checked")){
                 clean += "+social"
             }
-            if (clean)
-                params.clean = clean.slice(1)
+            params.clean = clean ? clean.slice(1) : 't'
 
             params = "?" + $.param(params)
             link = util.urlize(host).replace(/\/$/,"") + 
@@ -844,6 +855,11 @@ define([
             // TODO: do we need error handling?
             if (found >= 0) {
                 var orig_found = found;
+                // don't loop, just go back to previous page.
+                if (found + offset >= len) {
+                    window.history.go(-1)
+                    return
+                }
                 found = (found + len + offset) % len;
                 debug("navigate (" + offset + ") to " + found);
                 if ((offset < 0 && found > orig_found) 
@@ -920,6 +936,10 @@ define([
             $('.page_btn.page_prev').hidehide();
         } else if(msg == 'hide') {
             $('.page_btn').hidehide();
+        }
+
+        if (o.last_found == 0) {
+            $('.page_btn.page_prev').hidehide();
         }
 
         // should reflect whether left or right page_btn should be visible if

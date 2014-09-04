@@ -567,8 +567,9 @@ class User(HasSocial):
         self.owner = self
 
     def expr_create(self, d):
-        doc = dict(owner = self.id, name = '')
-        doc.update(d)
+        doc = dict(d)
+        doc.update(owner=self.id)
+        doc.setdefault('name', '')
         return self.db.Expr.create(doc)
 
     def create(self):
@@ -993,7 +994,7 @@ class User(HasSocial):
     def feed_recent(self, spec={}, limit=20, at=0, **args):
         at=int(at)
         limit=int(limit)
-        feed_items = self.network_feed_items()#limit=limit*4, at=at)
+        feed_items = list(self.network_feed_items(limit=1000, at=0))
         tagged_exprs = list(self.exprs_tagged_following())
         # group feed items into expressions, alternate
         # these with tagged_exprs and de-duplicate
@@ -1004,31 +1005,23 @@ class User(HasSocial):
             exprs[r.id] = r
             return r
         
-        # TODO result is limited to size 500 to ensure that paginate works 
-        # properly on the list, however this is not optimally performant as the
-        # loop is forced to run much longer than necessary
-        while len(result) < (500):
-            item = False
-            # grab one from feed_items
-            for r in feed_items:
-                existing = item = exprs.get(r['entity'])
-                if not item:
-                    expr = self.db.Expr.fetch(r['entity'], meta=True)
-                    if not expr: continue
-                    item = add_expr(expr)
-                if (r['class_name'] != 'NewExpr') and len(item['feed']) < 3:
-                    item['feed'].append(r)
-                if (item['auth'] != 'public') or existing: continue
+        # get expressions that are tagged
+        for r in tagged_exprs:
+            if not exprs.get(r.id):
+                item = add_expr(r)
                 result.append(item)
-                break
-            for r in tagged_exprs:
-                if exprs.get(r.id): continue
-                else:
-                    item = add_expr(r)
-                    result.append(item)
-                    break
-            if not item: break
-        
+        # get expressions that are mentioned in feeds
+        records = self.db.Expr.fetch([f['entity'] for f in feed_items])
+        for r in records:
+            if r and not exprs.get(r.id):
+                add_expr(r)
+                result.append(r)
+        item = False
+        for r in feed_items:
+            item = exprs.get(r['entity'])
+            if item and (r['class_name'] != 'NewExpr') and len(item['feed']) < 3:
+                item['feed'].append(r)
+
         sorted_result = sorted(result, key = lambda r: r['updated'], reverse = True)
         return sorted_result[at:at+limit]
 
@@ -1692,6 +1685,7 @@ class Expr(HasSocial):
             f_id = a.get('file_id')
             if(f_id): ids.append(f_id)
             ids.extend( self._match_id(a.get('content')) )
+            ids.extend( self._match_id(a.get('url')) )
 
         ids = filter(
             lambda f_id: self.db.File.fetch(f_id, fields={'fields':'_id'})
