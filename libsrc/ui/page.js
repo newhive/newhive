@@ -805,6 +805,9 @@ define([
             ordered_ids = $.map(context.page_data.cards, function(el) {
                 return el.id;
             });
+            var ordered_nums = $.map(context.page_data.cards, function(el) {
+                return el.card_num;
+            });
         }
         // Resize the columns
         for (var i = 0; i < 3; ++i){
@@ -819,13 +822,16 @@ define([
         for (var i = 0; i < o.columns; ++i){
             row_heights = row_heights.concat(0);
         }
-        for (var i = 0, card_id; card_id = ordered_ids[i++];) {
-            el_card = $("#card_" + card_id);
-            var min = Math.min.apply(null, row_heights);
-            var min_i = row_heights.indexOf(min);
-            var el_col = $(".feed .column_" + min_i);
-            el_col.append(el_card);
-            row_heights[min_i] += el_card.height();
+        for (var i = 0, card_id; card_id = ordered_ids[i]; ++i) {
+            var $card = $("#card_" + card_id)
+                ,min = Math.min.apply(null, row_heights)
+                ,min_i = row_heights.indexOf(min)
+                ,$col = $(".feed .column_" + min_i)
+            if (ordered_nums) {
+                $card = $(".feed .card[data-num=" + ordered_nums[i] + "]")
+            }
+            $col.append($card);
+            row_heights[min_i] += $card.height();
         };
     };
 

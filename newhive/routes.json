@@ -529,5 +529,8 @@
 
     "empty": {
         "page_route": "/home/empty"
+    },
+    "favicon.ico": {
+        "page_route": "/favicon.ico"
     }
 }

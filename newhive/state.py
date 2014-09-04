@@ -954,10 +954,10 @@ class User(HasSocial):
         return self.db.Feed.search({ '$or': or_clause }, limit=limit,
             sort=[('created', -1)])
 
-    def exprs_tagged_following(self, limit=0):
+    def exprs_tagged_following(self, per_tag_limit=20, limit=0):
         # return iterable of matching expressions for each tag you're following
         tags = self.get('tags_following', [])
-        queries = [self.db.query('#' + tag) for tag in tags]
+        queries = [self.db.query('#' + tag, limit=per_tag_limit) for tag in tags]
         flat = list(filter(lambda x:x != None, chain(*izip_longest(*queries))))
         if limit:
             return flat[0:limit]
@@ -994,36 +994,55 @@ class User(HasSocial):
     def feed_recent(self, spec={}, limit=20, at=0, **args):
         at=int(at)
         limit=int(limit)
-        feed_items = list(self.network_feed_items(limit=1000, at=0))
+        feed_items = list(self.network_feed_items(
+            limit=g_flags['feed_max'], at=0))
         tagged_exprs = list(self.exprs_tagged_following())
-        # group feed items into expressions, alternate
-        # these with tagged_exprs and de-duplicate
+
         exprs = {}
         result = []
         def add_expr(r):
+            if exprs.get(r['_id']):
+                return r
             r['feed'] = []
-            exprs[r.id] = r
+            exprs[r['_id']] = r
+            result.append(r)
             return r
         
         # get expressions that are tagged
         for r in tagged_exprs:
             if not exprs.get(r.id):
                 item = add_expr(r)
-                result.append(item)
         # get expressions that are mentioned in feeds
-        records = self.db.Expr.fetch([f['entity'] for f in feed_items])
-        for r in records:
-            if r and not exprs.get(r.id):
-                add_expr(r)
-                result.append(r)
-        item = False
         for r in feed_items:
-            item = exprs.get(r['entity'])
+            _id = r['entity']
+            item = exprs.get(_id)
+            if not item:
+                item = add_expr({'_id':_id, 'updated':0})
             if item and (r['class_name'] != 'NewExpr') and len(item['feed']) < 3:
                 item['feed'].append(r)
+                # item update is the most recent of all its feed items
+                item['updated'] = max(item['updated'], r['updated'])
 
+        # sort by inverse time
         sorted_result = sorted(result, key = lambda r: r['updated'], reverse = True)
-        return sorted_result[at:at+limit]
+        needed = at + limit
+        start = 0
+        end = at + limit + 5
+        records = []
+        while len(records) < needed:
+            # only fetch the expressions not yet fetched
+            new_records = self.db.Expr.fetch(
+                [e['_id'] for e in sorted_result[start:end] 
+                if not e.get('name')])
+            if len(new_records) == 0 or end > 3*needed:
+                break
+            for r in new_records:
+                exprs[r['_id']].update(r)
+            # filter to public only
+            records = [e for e in sorted_result[:end] if e.get('auth') == 'public']
+            start = end
+            end = int(end*1.5)
+        return map(lambda e: Expr(self.db.Expr, e), records[at:at + limit])
 
     def profile_spec(self):
         return {'initiator': self.id,

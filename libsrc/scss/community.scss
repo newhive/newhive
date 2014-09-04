@@ -728,6 +728,10 @@ body {
                 padding-left: 0px;
                 &:hover { background-color: inherit; }
             }
+            // Margin for the first feed item
+            .info + a > .feed_item {
+                margin-top: 10px;
+            }
             .info {
                 img.thumb { 
                     width: 44px;
