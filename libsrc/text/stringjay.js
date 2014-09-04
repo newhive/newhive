@@ -582,6 +582,12 @@ define(['browser/js', 'module'],
 	context_base.not = function(context, arg){
 		return ! arg;
 	};
+	context_base.lt = function(context, lhs, rhs){
+		return lhs < rhs;
+	};
+	context_base.gt = function(context, lhs, rhs){
+		return lhs > rhs;
+	};
 	context_base.eq = function(context, lhs, rhs){
 		return lhs == rhs;
 	};

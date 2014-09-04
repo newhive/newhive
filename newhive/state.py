@@ -518,6 +518,54 @@ def make_category(name):
 
 def add_to_category(category, collection):
     category['collections'] += [collection]
+
+# client view of a collection
+def collection_client_view(db, collection, ultra=False, viewer=None):
+    if isinstance(collection, basestring):
+        expr = db.Expr.fetch(collection)
+        if not expr: return None
+        expr_cv = expr.client_view(viewer=viewer)
+        expr_cv.update({
+            'collection': collection
+            ,"snapshot_big": expr.snapshot_name("big")
+            ,"snapshot_ultra": expr.snapshot_name("ultra") if ultra else False
+        })
+        return expr_cv
+    username = collection.get('username')
+    tag = collection.get('tag')
+    if not username or not tag: return None
+    owner = db.User.named(username)
+    if not owner: return None
+    exprs = owner.get_tag(tag)
+    if not exprs: return None
+    expr = db.Expr.fetch(exprs[0])
+    if not expr: return None
+    # TODO-perf: this method belongs as standalone in state.
+    expr_cv = {
+        # TODO-perf: trim this to essentials
+        "owner": owner.client_view(viewer=viewer)
+        ,"snapshot_small": expr.snapshot_name("small")
+        ,"snapshot_big": expr.snapshot_name("big")
+        ,"snapshot_ultra": expr.snapshot_name("ultra") if ultra else False
+        ,"title": tag
+        ,"collection": collection
+        ,"type": "cat"
+        # These are for the expression route
+        ,"expr": {
+            "owner_name": expr['owner_name']
+            ,"name": expr['name']
+            ,"id": expr.id
+            ,"search_query": "q=@%s #%s" % (username, tag)
+        }
+    }
+    # determine if this is an owned or curated collection
+    owned_exprs = (db.Expr.search(
+        {'owner': owner.id, '_id': {'$in': exprs}}))
+    expr_cv['curated'] = not (
+        owned_exprs and (owned_exprs.count() == len(exprs)))
+
+    return expr_cv
+
 ################
 
 @register
@@ -1515,18 +1563,27 @@ class Expr(HasSocial):
         return res
 
     # size is 'big', 'small', or 'tiny'.
-    def snapshot_name(self, size):
+    def snapshot_name(self, size="big"):
         if not self.get('snapshot_id'):
             return False
 
-        dimensions = {"big": (715, 430), "small": (390, 235), 'tiny': (70, 42)}
+        dimensions = {"big": (715, 430), "small": (390, 235), 
+            'tiny': (70, 42), 'ultra': (1600, 960)}
         snapshot = self.db.File.fetch(self.get('snapshot') or self['snapshot_id'])
         if not snapshot:
             return False
         dimension = dimensions.get(size, False)
-        if size == "big" or not dimension:
+        if not dimension:
             filename = snapshot.url
         else: filename = snapshot.get_thumb(dimension[0], dimension[1])
+        if not filename and list(dimension) <= snapshot.get('dimensions'):
+            filename = snapshot.url
+        # Tell the snapshotter to create a snapshot if missing
+        if not filename and size == "ultra":
+            update = {'updated': False, 'snapshot_time': 0}
+            if size == "ultra":
+                update['snapshot_ultra'] = True
+            self.update(**update)
         return filename
 
     def stripped_snapshot_name(self, size):
@@ -1559,6 +1616,10 @@ class Expr(HasSocial):
         snapshotter = Snapshots()
         snapshot_time = now()
         dimension_list = [(715, 430, "big"), (390, 235, "small"), (70, 42, 'tiny')]
+        if self.get('snapshot_ultra'):
+            new = [(1600, 960, "ultra")]
+            new.extend(dimension_list)
+            dimension_list = new
         upload_list = []
         pw = self.get('password', '')
         self.inc('snapshot_fails')

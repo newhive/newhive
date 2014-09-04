@@ -2,6 +2,7 @@ import httplib2, urllib, re, json
 from newhive import auth, config, mail
 from newhive.controllers.controller import ModelController
 from newhive.utils import log_error, dfilter, lget, abs_url, junkstr
+from newhive.state import Entity, collection_client_view
 
 class User(ModelController):
     model_name = 'User'
@@ -75,6 +76,9 @@ class User(ModelController):
         if is_category:
             if len(new_order):
                 user.set_category_collections(tag_name, new_order)
+                # Request the first item get an ultra snapshot if user == root_user
+                if user.id == self.db.User.root_user.id:
+                    collection_client_view(self.db, new_order[0], True)
             else:
                 user.remove_category(tag_name)
         else:
