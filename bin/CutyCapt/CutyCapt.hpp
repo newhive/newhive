@@ -1,5 +1,8 @@
 #include <QtWebKit>
 
+#include <QNetworkReply>
+#include <QSslError>
+
 #if QT_VERSION >= 0x050000
 #include <QtWebKitWidgets>
 #endif
