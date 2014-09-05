@@ -1082,12 +1082,14 @@ class User(HasSocial):
             new_records = self.db.Expr.fetch(
                 [e['_id'] for e in sorted_result[start:end] 
                 if not e.get('name')])
-            if len(new_records) == 0 or end > 3*needed:
+            if len(new_records) == 0:
                 break
             for r in new_records:
                 exprs[r['_id']].update(r)
             # filter to public only
             records = [e for e in sorted_result[:end] if e.get('auth') == 'public']
+            if end > len(sorted_result):
+                break
             start = end
             end = int(end*1.5)
         return map(lambda e: Expr(self.db.Expr, e), records[at:at + limit])
