@@ -392,12 +392,17 @@ define([
     }
 
     var local_attach_handlers = function(){
+        $(".main-header form.search_bar input[type=submit]")
+            .bind_once_anon("focus.page", function(ev) {
+                var $form = $(this).parents("form")
+                $form.find("#search_box").focus()
+            })
         $("form.search_bar").bind_once_anon("submit", function(ev) {
             if ($(this).find("#search_box").val() == "")
                 return false
         })
         if (context.flags.new_nav) {
-            $(".icon.go_search").bind_once_anon("tap.page mouseenter.page", 
+            $(".main-header .icon.go_search").bind_once_anon("tap.page mouseenter.page", 
                 function(ev) {
                     var search_box = $(".main-header #search_box")
                     if(search_box.is(':focus')) return
