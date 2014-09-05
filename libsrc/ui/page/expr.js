@@ -601,14 +601,14 @@ define([
                 , embed_url = ''
                 , clean = ''
             if ($("#include_logo").is(":checked")){
-                clean += "+logo"
+                clean += " logo"
             }
             if ($("#include_collection").is(":checked")){
                 params.q = context.query.q
-                clean += "+collection"
+                clean += " collection"
             }
             if ($("#include_social").is(":checked")){
-                clean += "+social"
+                clean += " social"
             }
             params.clean = clean ? clean.slice(1) : 't'
 
