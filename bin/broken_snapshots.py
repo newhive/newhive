@@ -8,6 +8,5 @@ from newhive.db_tools import snapshot_reset, snapshot_redo_collection, recent_sn
 
 snapshot_reset(recent_snapshot_fails(7), run_local=True)
 
-if False:
-    snapshot_redo_collection(username='zach', redo=True)
-    snapshot_redo_collection(username='cara', redo=True)
+snapshot_redo_collection(username='zach', redo=True)
+#snapshot_redo_collection(username='cara', redo=True)
