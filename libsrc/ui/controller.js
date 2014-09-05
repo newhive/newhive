@@ -94,10 +94,6 @@ define([
         routing.register_state(route_args);
         if (util.mobile()) {
             $("body").addClass('mobile');
-            $('<meta id="viewport" name="viewport" content="width=500">')
-                .appendTo('head')
-                 //, initial-scale=' + init_scale +
-                // + ', user-scalable=1"/>').appendTo($("head"));
             context.flags.mobile = util.mobile();
         }
         page.init(o);
@@ -138,11 +134,23 @@ define([
         context.page_data.next_cards_at =
             context.page_data.cards ? context.page_data.cards.length : 0
         context.page_data.cards_at = 0
+
+        $('#viewport').attr('content',
+            o.viewport_opts(route_name == 'view_expr'))
         page.render(context.route.client_method, context);
     };
     o.refresh = function(){
         o.dispatch(context.route_name, context.page_data);
     };
+
+    o.viewport_opts = function(expr_page){
+        var opts = ''
+        if(util.mobile()){
+            opts = 'width=500'
+            if(!expr_page) opts += ',user-scalable=0'
+        }
+        return opts
+    }
 
     function pop_route_success() {
         o.dispatch(page_state.route_name, data);

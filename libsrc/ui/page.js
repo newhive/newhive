@@ -399,7 +399,10 @@ define([
         if (context.flags.new_nav) {
             $(".icon.go_search").bind_once_anon("tap.page mouseenter.page", 
                 function(ev) {
-                    $(".main-header #search_box").focus()
+                    var search_box = $(".main-header #search_box")
+                    if(search_box.is(':focus')) return
+                    ev.preventDefault()
+                    search_box.focus()
             })
             // Animate header
             $(window).bind_once_anon("scroll.page", function(ev) {
