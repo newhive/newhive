@@ -406,7 +406,7 @@ class Entity(dict):
         return self.update_cmd(self)
 
     def reload(self):
-        dict.update(self, self.db.User.fetch(self.id))
+        dict.update(self, self.collection.fetch(self.id))
 
     def update(self, **d):
         if not d.has_key('updated'): d['updated'] = now()
@@ -1572,12 +1572,11 @@ class Expr(HasSocial):
         dimensions = {"big": (715, 430), "small": (390, 235), 
             'tiny': (70, 42), 'ultra': (1600, 960)}
         snapshot = self.db.File.fetch(self.get('snapshot') or self['snapshot_id'])
-        if not snapshot:
-            return False
         dimension = dimensions.get(size, False)
-        if not dimension:
-            filename = snapshot.url
-        else: filename = snapshot.get_thumb(dimension[0], dimension[1])
+        if not snapshot or not dimension:
+            return False
+        
+        filename = snapshot.get_thumb(dimension[0], dimension[1])
         if not filename and list(dimension) <= snapshot.get('dimensions'):
             filename = snapshot.url
         # Tell the snapshotter to create a snapshot if missing
