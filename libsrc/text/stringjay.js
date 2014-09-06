@@ -656,11 +656,10 @@ define(['browser/js', 'module'],
 		return n + suffix[i];
 	};
 	context_base.string_to_list = function (context, string){
-	  	// var array = string.split(/[^\w']+|\+/);
-	  	var array = string.split("+");
-	  	if ( array.length <= 1 ) return [string];
-		else return array;
-	};
+	  	var array = string.split(/\W+/)
+	  	if ( array.length <= 1 ) return [string]
+		else return array
+	}
 
 	return o;
 });
