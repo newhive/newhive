@@ -10,6 +10,7 @@ define([
     'sj!templates/social_overlay.html',
     'sj!templates/edit_btn.html',
     'sj!templates/expr_actions.html',
+    'sj!templates/user_byline.html',
     'sj!templates/comment.html'
 ], function(
     $,
@@ -23,6 +24,7 @@ define([
     social_overlay_template,
     edit_btn_template,
     expr_actions_template,
+    user_byline_template,
     comment_template
 ) {
     var o = {}
@@ -30,6 +32,8 @@ define([
         ,overlay_columns = 0, no_paging = false
         ,animation_timeout = undefined
     o.last_found = -1
+    o.offset = 0
+    o.next_found = -1
     o.cache_offsets = [1, -1, 2];
     o.anim_duration = (util.mobile()) ? 400 : 400;
 
@@ -60,8 +64,7 @@ define([
 
     o.hide_panel = function(){
         $(".overlay.panel").hidehide();
-        $(".panel .social_btn").addClass("hide");
-        $(".panel .edit_ui").hidehide();
+        $(".overlay.panel .expr").hidehide();
     }
 
     o.resize = function(){
@@ -114,6 +117,9 @@ define([
 
         $('body').addClass('expr')
         $('title').text(o.expr.title);
+        $(".item.btn.user_card").empty().append(
+            user_byline_template([page_data, 
+                {'owner':o.expr.owner, 'no_byline': true}]))
         $('#site').hidehide();
         $("#popup_content").remove();
         $("#dia_comments").remove();
@@ -137,8 +143,8 @@ define([
 
         fetch_cards();
 
-        var found = find_card(o.expr.id);
-        if (found >= 0) {
+        var found = get_found();
+        if (o.last_found == -1 && found >= 0) {
             var card = page_data.cards[found];
             if (! card.json)
                 o.navigate_page(0); // To cache nearby expressions
@@ -149,7 +155,7 @@ define([
         o.hide_panel();
         $(".overlay.panel").showshow();
         $(".overlay.panel .signup").hidehide()
-        $(".social_btn").removeClass("hide");
+        $(".panel .expr").showshow();
 
         var show_edit = false
         if(page_data.expr.tags
@@ -165,18 +171,20 @@ define([
                 edit_btn_template(page_data) )
             $('.overlay.panel .remix')
                 .showhide(ui_page.tags && ui_page.tags.indexOf('remix') >= 0)
+        } else {
+            $('.overlay.panel .remix').hidehide()
+            $('.overlay.panel .edit_ui').hidehide()
         }
         ui_page.form_page_enter()
 
         o.overlay_columns = 0;
         o.wide_overlay = 0;
         o.resize();
-
-            
     }
 
     o.exit = function(){
         o.last_found = -1;
+        o.next_found = -1;
         $('body').removeClass('expr')
         hide_exprs();
         o.hide_panel();
@@ -224,13 +232,14 @@ define([
             // In case of direct link with no context,
             // fetch cards from q param, or the default context, @owner
 
+            // find position of current page within cards
             var set_cards = function(data){
                 page_data.cards = data.cards 
                 if (o.last_found == -1) {
                     o.last_found = find_card(o.expr.id)
                     o.page_btn_handle()
                 }
-            };
+            }
 
             if(context.query.q){
                 var query = {q: context.query.q, id: o.expr.id };
@@ -261,6 +270,10 @@ define([
         }
         return page_data.cards[n].id;
     };
+    var get_found = function() {
+        return (o.last_found == -1) ? find_card(context.page_data.expr_id)
+            : o.last_found
+    }
     var find_card = function(expr_id){
         var found = -1;
         var page_data = context.page_data;
@@ -287,7 +300,7 @@ define([
         var contentFrame = o.get_expr(expr_id);
         if (contentFrame.length > 0) {
             o.cache_frames(expr_ids.slice(1));
-            debug("caching frame, already loaded: " + find_card(expr_id));
+            debug("caching frame, already loaded: " + get_found());
             return contentFrame;
         }
 
@@ -372,7 +385,7 @@ define([
         contentFrame.addClass('expr_visible').removeClass('expr_hidden').showshow();
         contentFrame.showshow();
         $('#exprs .expr').not('.expr_visible').css({'z-index': 0 });
-        var found = find_card(expr_id);
+        var found = (o.next_found != -1) ? o.next_found : get_found();
         var anim_direction = 0;
         if (o.last_found >= 0 && found >= 0) {
             var dir = found - o.last_found;
@@ -417,6 +430,7 @@ define([
         } else if (anim_direction == 0
             || expr_curr.length != 1
             || o.animation_timeout != undefined
+            || expr_curr.prop("id") == contentFrame.prop("id")
         ) {
             contentFrame.css({
                 'left': 0,
@@ -587,17 +601,16 @@ define([
                 , embed_url = ''
                 , clean = ''
             if ($("#include_logo").is(":checked")){
-                clean += "+logo"
+                clean += " logo"
             }
             if ($("#include_collection").is(":checked")){
                 params.q = context.query.q
-                clean += "+collection"
+                clean += " collection"
             }
             if ($("#include_social").is(":checked")){
-                clean += "+social"
+                clean += " social"
             }
-            if (clean)
-                params.clean = clean.slice(1)
+            params.clean = clean ? clean.slice(1) : 't'
 
             params = "?" + $.param(params)
             link = util.urlize(host).replace(/\/$/,"") + 
@@ -846,7 +859,7 @@ define([
         var page_data = context.page_data;
         if (page_data.cards != undefined) {
             var len = page_data.cards.length
-            var found = find_card(page_data.expr_id);
+            var found = get_found();
             // TODO: do we need error handling?
             if (found >= 0) {
                 var orig_found = found;
@@ -874,6 +887,7 @@ define([
                 }
                 o.cache_frames(expr_ids);
                 if (offset) {
+                    o.next_found = found
                     var card = page_data.cards[found]
                     page_data.expr_id = card.id;
                     var data = {

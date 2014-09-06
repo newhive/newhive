@@ -582,12 +582,6 @@ define(['browser/js', 'module'],
 	context_base.not = function(context, arg){
 		return ! arg;
 	};
-	context_base.lt = function(context, lhs, rhs){
-		return lhs < rhs;
-	};
-	context_base.gt = function(context, lhs, rhs){
-		return lhs > rhs;
-	};
 	context_base.eq = function(context, lhs, rhs){
 		return lhs == rhs;
 	};
@@ -656,10 +650,10 @@ define(['browser/js', 'module'],
 		return n + suffix[i];
 	};
 	context_base.string_to_list = function (context, string){
-	  	var array = string.split(/\W+/)
-	  	if ( array.length <= 1 ) return [string]
-		else return array
-	}
+	  	var array = string.split("[^\w']+");
+	  	if ( array.length <= 1 ) return [string];
+		else return array;
+	};
 
 	return o;
 });

@@ -94,10 +94,6 @@ define([
         routing.register_state(route_args);
         if (util.mobile()) {
             $("body").addClass('mobile');
-            $('<meta id="viewport" name="viewport" content="width=500">')
-                .appendTo('head')
-                 //, initial-scale=' + init_scale +
-                // + ', user-scalable=1"/>').appendTo($("head"));
             context.flags.mobile = util.mobile();
         }
         page.init(o);
@@ -125,22 +121,36 @@ define([
         if (route_name == "expr")
             route_name = "view_expr";
         context.route = routes[route_name];
-        var cards = context.page_data.cards
-            , cards_route = context.page_data.cards_route
-        context.page_data.next_cards_at = cards ? cards.length : 0
-        context.page_data.cards_at = 0
-        if (cards && cards.length && cards[0].collection) {
-            cards = null
-            cards_route = null
-        }
+        var old_cards = context.page_data.cards
+            , old_cards_route = context.page_data.cards_route
         context.page_data = page_data;
-        if(!page_data.cards) context.page_data.cards = cards;
-        if(!page_data.cards_route) context.page_data.cards_route = cards_route;
+        // Don't use category card data for expression page-throughs
+        if (old_cards && old_cards.length && old_cards[0].collection) {
+            old_cards = null
+            old_cards_route = null
+        }
+        if(!page_data.cards) context.page_data.cards = old_cards;
+        if(!page_data.cards_route) context.page_data.cards_route = old_cards_route;
+        context.page_data.next_cards_at =
+            context.page_data.cards ? context.page_data.cards.length : 0
+        context.page_data.cards_at = 0
+
+        $('#viewport').attr('content',
+            o.viewport_opts(route_name == 'view_expr'))
         page.render(context.route.client_method, context);
     };
     o.refresh = function(){
-        o.dispatch(context.route.method, context.page_data);
+        o.dispatch(context.route_name, context.page_data);
     };
+
+    o.viewport_opts = function(expr_page){
+        var opts = ''
+        if(util.mobile()){
+            opts = 'width=500'
+            if(!expr_page) opts += ',user-scalable=0'
+        }
+        return opts
+    }
 
     function pop_route_success() {
         o.dispatch(page_state.route_name, data);

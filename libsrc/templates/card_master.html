@@ -20,7 +20,7 @@
     {|templates/profile_card.html}
   {>}
 {>}
-{<if (not flags.new_nav)}
+{<if (or owner (not flags.new_nav))}
 <form class="search_bar{<if owner} hide{>}"
   method='GET' action='/search' name='search_form'>
     {#

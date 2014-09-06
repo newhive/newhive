@@ -406,7 +406,7 @@ class Entity(dict):
         return self.update_cmd(self)
 
     def reload(self):
-        dict.update(self, self.db.User.fetch(self.id))
+        dict.update(self, self.collection.fetch(self.id))
 
     def update(self, **d):
         if not d.has_key('updated'): d['updated'] = now()
@@ -518,6 +518,54 @@ def make_category(name):
 
 def add_to_category(category, collection):
     category['collections'] += [collection]
+
+# client view of a collection
+def collection_client_view(db, collection, ultra=False, viewer=None):
+    if isinstance(collection, basestring):
+        expr = db.Expr.fetch(collection)
+        if not expr: return None
+        expr_cv = expr.client_view(viewer=viewer)
+        expr_cv.update({
+            'collection': collection
+            ,"snapshot_big": expr.snapshot_name("big")
+            ,"snapshot_ultra": expr.snapshot_name("ultra") if ultra else False
+        })
+        return expr_cv
+    username = collection.get('username')
+    tag = collection.get('tag')
+    if not username or not tag: return None
+    owner = db.User.named(username)
+    if not owner: return None
+    exprs = owner.get_tag(tag)
+    if not exprs: return None
+    expr = db.Expr.fetch(exprs[0])
+    if not expr: return None
+    # TODO-perf: this method belongs as standalone in state.
+    expr_cv = {
+        # TODO-perf: trim this to essentials
+        "owner": owner.client_view(viewer=viewer)
+        ,"snapshot_small": expr.snapshot_name("small")
+        ,"snapshot_big": expr.snapshot_name("big")
+        ,"snapshot_ultra": expr.snapshot_name("ultra") if ultra else False
+        ,"title": tag
+        ,"collection": collection
+        ,"type": "cat"
+        # These are for the expression route
+        ,"expr": {
+            "owner_name": expr['owner_name']
+            ,"name": expr['name']
+            ,"id": expr.id
+            ,"search_query": "q=@%s #%s" % (username, tag)
+        }
+    }
+    # determine if this is an owned or curated collection
+    owned_exprs = (db.Expr.search(
+        {'owner': owner.id, '_id': {'$in': exprs}}))
+    expr_cv['curated'] = not (
+        owned_exprs and (owned_exprs.count() == len(exprs)))
+
+    return expr_cv
+
 ################
 
 @register
@@ -961,10 +1009,10 @@ class User(HasSocial):
         return self.db.Feed.search({ '$or': or_clause }, limit=limit,
             sort=[('created', -1)])
 
-    def exprs_tagged_following(self, limit=0):
+    def exprs_tagged_following(self, per_tag_limit=20, limit=0):
         # return iterable of matching expressions for each tag you're following
         tags = self.get('tags_following', [])
-        queries = [self.db.query('#' + tag) for tag in tags]
+        queries = [self.db.query('#' + tag, limit=per_tag_limit) for tag in tags]
         flat = list(filter(lambda x:x != None, chain(*izip_longest(*queries))))
         if limit:
             return flat[0:limit]
@@ -1001,44 +1049,57 @@ class User(HasSocial):
     def feed_recent(self, spec={}, limit=20, at=0, **args):
         at=int(at)
         limit=int(limit)
-        feed_items = self.network_feed_items()#limit=limit*4, at=at)
+        feed_items = list(self.network_feed_items(
+            limit=g_flags['feed_max'], at=0))
         tagged_exprs = list(self.exprs_tagged_following())
-        # group feed items into expressions, alternate
-        # these with tagged_exprs and de-duplicate
+
         exprs = {}
         result = []
         def add_expr(r):
+            if exprs.get(r['_id']):
+                return r
             r['feed'] = []
-            exprs[r.id] = r
+            exprs[r['_id']] = r
+            result.append(r)
             return r
         
-        # TODO result is limited to size 500 to ensure that paginate works 
-        # properly on the list, however this is not optimally performant as the
-        # loop is forced to run much longer than necessary
-        while len(result) < (500):
-            item = False
-            # grab one from feed_items
-            for r in feed_items:
-                existing = item = exprs.get(r['entity'])
-                if not item:
-                    expr = self.db.Expr.fetch(r['entity'], meta=True)
-                    if not expr: continue
-                    item = add_expr(expr)
-                if (r['class_name'] != 'NewExpr') and len(item['feed']) < 3:
-                    item['feed'].append(r)
-                if (item['auth'] != 'public') or existing: continue
-                result.append(item)
-                break
-            for r in tagged_exprs:
-                if exprs.get(r.id): continue
-                else:
-                    item = add_expr(r)
-                    result.append(item)
-                    break
-            if not item: break
-        
+        # get expressions that are tagged
+        for r in tagged_exprs:
+            if not exprs.get(r.id):
+                item = add_expr(r)
+        # get expressions that are mentioned in feeds
+        for r in feed_items:
+            _id = r['entity']
+            item = exprs.get(_id)
+            if not item:
+                item = add_expr({'_id':_id, 'updated':0})
+            if item and (r['class_name'] != 'NewExpr') and len(item['feed']) < 3:
+                item['feed'].append(r)
+                # item update is the most recent of all its feed items
+                item['updated'] = max(item['updated'], r['updated'])
+
+        # sort by inverse time
         sorted_result = sorted(result, key = lambda r: r['updated'], reverse = True)
-        return sorted_result[at:at+limit]
+        needed = at + limit
+        start = 0
+        end = at + limit + 5
+        records = []
+        while len(records) < needed:
+            # only fetch the expressions not yet fetched
+            new_records = self.db.Expr.fetch(
+                [e['_id'] for e in sorted_result[start:end] 
+                if not e.get('name')])
+            if len(new_records) == 0:
+                break
+            for r in new_records:
+                exprs[r['_id']].update(r)
+            # filter to public only
+            records = [e for e in sorted_result[:end] if e.get('auth') == 'public']
+            if end > len(sorted_result):
+                break
+            start = end
+            end = int(end*1.5)
+        return map(lambda e: Expr(self.db.Expr, e), records[at:at + limit])
 
     def profile_spec(self):
         return {'initiator': self.id,
@@ -1511,18 +1572,26 @@ class Expr(HasSocial):
         return res
 
     # size is 'big', 'small', or 'tiny'.
-    def snapshot_name(self, size):
+    def snapshot_name(self, size="big"):
         if not self.get('snapshot_id'):
             return False
 
-        dimensions = {"big": (715, 430), "small": (390, 235), 'tiny': (70, 42)}
+        dimensions = {"big": (715, 430), "small": (390, 235), 
+            'tiny': (70, 42), 'ultra': (1600, 960)}
         snapshot = self.db.File.fetch(self.get('snapshot') or self['snapshot_id'])
-        if not snapshot:
-            return False
         dimension = dimensions.get(size, False)
-        if size == "big" or not dimension:
+        if not snapshot or not dimension:
+            return False
+        
+        filename = snapshot.get_thumb(dimension[0], dimension[1])
+        if not filename and list(dimension) <= snapshot.get('dimensions'):
             filename = snapshot.url
-        else: filename = snapshot.get_thumb(dimension[0], dimension[1])
+        # Tell the snapshotter to create a snapshot if missing
+        if not filename and size == "ultra":
+            update = {'updated': False, 'snapshot_time': 0}
+            if size == "ultra":
+                update['snapshot_ultra'] = True
+            self.update(**update)
         return filename
 
     def stripped_snapshot_name(self, size):
@@ -1555,6 +1624,10 @@ class Expr(HasSocial):
         snapshotter = Snapshots()
         snapshot_time = now()
         dimension_list = [(715, 430, "big"), (390, 235, "small"), (70, 42, 'tiny')]
+        if self.get('snapshot_ultra'):
+            new = [(1600, 960, "ultra")]
+            new.extend(dimension_list)
+            dimension_list = new
         upload_list = []
         pw = self.get('password', '')
         self.inc('snapshot_fails')

@@ -32,6 +32,7 @@ define([
     'sj!templates/tag_list.html',
     'sj!templates/feed_card.html',
     'sj!templates/user_card.html',
+    'sj!templates/user_byline.html',
     'sj!templates/profile_card.html',
     'sj!templates/icon_count.html',
     'sj!templates/dialog_embed.html',
@@ -247,13 +248,13 @@ define([
             .addremoveClass("overlay", ! has_nav_embedded_logo)
             // .addremoveClass("item", has_nav)
             .prependTo(has_nav_embedded_logo ? ".main-header .left" : "#overlays")
-            .addremoveClass("stay_hidden", has_nav && !has_nav_embedded_logo)
+            .addremoveClass("hide", has_nav && !has_nav_embedded_logo)
         // reverse the logo menu if it's up top
         if (! $("#logo_menu").is(".inverted") != has_nav_embedded_logo) {
-            $("#logo_menu").addremoveClass("inverted", has_nav_embedded_logo)
+            $("#logo_menu").addremoveClass("inverted", ! has_nav_embedded_logo)
                 .append($("#logo_menu").children().get().reverse())
         }
-        $(".overlay.panel").addremoveClass("stay_hidden", has_nav)
+        $(".overlay.panel").addremoveClass("hide", has_nav || $("body").is(".edit"))
     }
     var custom_classes = ""
     o.render = function(method, data){
@@ -264,7 +265,6 @@ define([
         var new_classes = context.route.custom_classes // + " " + context.route_name
         $("body").removeClass(custom_classes).addClass(new_classes)
         custom_classes = new_classes
-        fixup_overlay()
 
         if (page_data.title) $("head title").text(page_data.title);
         o.column_layout = false;
@@ -332,6 +332,7 @@ define([
             }
         }
 
+        fixup_overlay()
         o.attach_handlers();
     };
 
@@ -382,23 +383,31 @@ define([
         {
             // Wow that was complicated. keychar will be the *unmodified* state,
             // so to check for @, #, it's 2,3 with shift held.
-            $(".search_bar").showshow();
-            $("#search_box").focus();
+            var $search_bar = 
+                $((has_nav_bar() ? ".main-header" : "#site") + " .search_bar")
+            $search_bar.showshow().find("#search_box").focus();
         } else {
             // alert('keyCode: ' + e.keyCode);
         }
     }
 
-    var height_nav_large = 1
     var local_attach_handlers = function(){
+        $(".main-header form.search_bar input[type=submit]")
+            .bind_once_anon("focus.page", function(ev) {
+                var $form = $(this).parents("form")
+                $form.find("#search_box").focus()
+            })
         $("form.search_bar").bind_once_anon("submit", function(ev) {
             if ($(this).find("#search_box").val() == "")
                 return false
         })
         if (context.flags.new_nav) {
-            $(".icon.go_search").bind_once_anon("tap.page mouseenter.page", 
+            $(".main-header .icon.go_search").bind_once_anon("tap.page mouseenter.page", 
                 function(ev) {
-                    $(".main-header #search_box").focus()
+                    var search_box = $(".main-header #search_box")
+                    if(search_box.is(':focus')) return
+                    ev.preventDefault()
+                    search_box.focus()
             })
             // Animate header
             $(window).bind_once_anon("scroll.page", function(ev) {
@@ -407,6 +416,8 @@ define([
                     $(".main-header").addClass("condensed")
                 else
                     $(".main-header").removeClass("condensed")
+                search_flow = ''
+                reflow_nav()
             })
         }
         // Add expression to collection
@@ -702,62 +713,95 @@ define([
             $('#site').empty().append(master_template(page_data));
     }
 
-    var done_layout = false;
-    var nav_size = 'full'
+    var done_layout = false, win_width;
     o.resize = function(){
-        var win_width = $(window).width()
+        if (context.page && context.page.resize)
+            context.page.resize();
+        done_layout = true;
 
         if(context.page_data.layout == 'grid' ||
             context.page_data.layout == 'cat' ||
             context.page_data.layout == 'mini'
-        ){
-            var max_columns = context.route.max_columns || 3
-                ,columns = Math.max(1, Math.min(max_columns, 
-                    Math.floor( win_width / grid_width)))
-                ,feed_width = columns * (grid_width + border_width)
-            if (context.page_data.layout == 'cat')// && columns > 1)
-                feed_width = Math.min(3 * (grid_width + border_width),
-                    Math.max(win_width, feed_width))
-            $('.feed').css('width', feed_width);
-            if (o.columns != columns || !done_layout) {
-                o.columns = columns;
-                if (o.column_layout)
-                    o.layout_columns();
-                o.add_grid_borders(columns);
-            }
-        }
+        ) reflow_grid()
 
-        if (context.page && context.page.resize)
-            context.page.resize();
-        done_layout = true;
+        reflow_nav()
+    }
+
+    var reflow_grid = function(){
+        var max_columns = context.route.max_columns || 3
+            ,win_width = $(window).width()
+            ,columns = Math.max(1, Math.min(max_columns, 
+                Math.floor( win_width / grid_width)))
+            ,feed_width = columns * (grid_width + border_width)
+        if (context.page_data.layout == 'cat')// && columns > 1)
+            feed_width = Math.min(3 * (grid_width + border_width),
+                Math.max(win_width, feed_width))
+        $('.feed').css('width', feed_width);
+        if (o.columns != columns || !done_layout) {
+            o.columns = columns;
+            if (o.column_layout)
+                o.layout_columns();
+            o.add_grid_borders(columns);
+        }
+    }
+
+    var unsettled_nav_height, height_nav_uncondensed = 1
+    var reflow_site_margin = function() {
         var new_nav_height = $(".main-header").outerHeight()
-        if (height_nav_large != new_nav_height) {
-            height_nav_large = new_nav_height
-            $("#site").css({"margin-top": has_nav_bar() ? height_nav_large : 0})
+        if (unsettled_nav_height != new_nav_height) {
+            unsettled_nav_height = new_nav_height
+            setTimeout(reflow_site_margin, 200)
+            return;
+        }
+        if (!condensed) {
+            height_nav_uncondensed = new_nav_height
+            $("#site").css({"margin-top": height_nav_uncondensed })
+            return;
+        }
+    }
+    var nav_size, search_flow, condensed, split
+    var reflow_nav = function(){
+        // handle layout juggling of fat nav bar for narrow widths
+        if(!has_nav_bar()) {
+            $("#site").css({"margin-top": 0})
+            return
         }
 
-        // handle layout juggling of fat nav bar for narrow widths
-        if(has_nav_bar()){
-            var new_nav_size = win_width < 830 ? 'narrow' : 'full'
-            if(nav_size != new_nav_size){
-                nav_size = new_nav_size
-                if(nav_size == 'narrow'){
-                    $('.main-header .nav_top_row').removeClass('table')
-                    $('.main-header .blurb').insertAfter('.main-header .left')
-                    if(!context.user.logged_in)
-                        $('#search_box').insertAfter('.main-header .create')
-                            .addClass('block')
-                }
-                if(nav_size == 'full'){
-                    $('.main-header .nav_top_row').addClass('table')
-                    $('.main-header .blurb').insertAfter(
-                        '.main-header .nav_top_row')
-                    if(!context.user.logged_in)
-                        $('#search_box').insertBefore('.main-header .go_search')
-                            .removeClass('block')
-                }
-                $('.main-header').removeClass('full narrow').addClass(nav_size)
-            }
+        var logged_in = context.user.logged_in, win_width = $(window).width()
+        // TODO: fix margin for uncondensed
+        var new_condensed = $('.main-header').hasClass('condensed')
+        if (condensed != new_condensed) {
+            condensed = new_condensed
+            $('.main-header .blurb').insertAfter('.main-header ' + 
+                (!condensed ? '.left' : '.nav_top_row'))
+        }
+        var new_split = !logged_in && !condensed && win_width < 800
+        if (split != new_split) {
+            split = new_split
+            $('.main-header').addremoveClass('split', split)
+        }
+
+        setTimeout(reflow_site_margin, 200)
+
+        var new_nav_size = ( win_width < 830 &&
+            (!condensed && !logged_in) ) ? 'narrow' : 'full'
+        if(nav_size != new_nav_size){
+            nav_size = new_nav_size
+            $('.main-header').removeClass('full narrow').addClass(nav_size)
+        }
+
+        var new_search_flow = win_width < 730 ? 'block' : 'inline-block'
+        $('.main-header .splash.container, .main-header .left')
+            .addremoveClass('narrow', win_width < 830)
+        if(search_flow != new_search_flow){
+            search_flow = new_search_flow
+            if(search_flow == 'block')
+                $('#search_box').insertAfter('.main-header .nav_top_row')
+                    .addClass('block')
+            else
+                $('#search_box').insertBefore('.main-header .go_search')
+                    .removeClass('block')
+            $('#search_box').removeClass('full narrow').addClass(nav_size)
         }
     }
 
@@ -768,6 +812,9 @@ define([
         if (undefined == ordered_ids) {
             ordered_ids = $.map(context.page_data.cards, function(el) {
                 return el.id;
+            });
+            var ordered_nums = $.map(context.page_data.cards, function(el) {
+                return el.card_num;
             });
         }
         // Resize the columns
@@ -783,13 +830,16 @@ define([
         for (var i = 0; i < o.columns; ++i){
             row_heights = row_heights.concat(0);
         }
-        for (var i = 0, card_id; card_id = ordered_ids[i++];) {
-            el_card = $("#card_" + card_id);
-            var min = Math.min.apply(null, row_heights);
-            var min_i = row_heights.indexOf(min);
-            var el_col = $(".feed .column_" + min_i);
-            el_col.append(el_card);
-            row_heights[min_i] += el_card.height();
+        for (var i = 0, card_id; card_id = ordered_ids[i]; ++i) {
+            var $card = $("#card_" + card_id)
+                ,min = Math.min.apply(null, row_heights)
+                ,min_i = row_heights.indexOf(min)
+                ,$col = $(".feed .column_" + min_i)
+            if (ordered_nums) {
+                $card = $(".feed .card[data-num=" + ordered_nums[i] + "]")
+            }
+            $col.append($card);
+            row_heights[min_i] += $card.height();
         };
     };
 

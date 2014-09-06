@@ -6,7 +6,7 @@ from newhive import mail
 from newhive.ui_strings import en as ui_str
 from newhive.utils import dfilter, now, abs_url, AbsUrl
 from newhive.controllers.controller import Controller
-from newhive.state import Entity
+from newhive.state import Entity, collection_client_view
 
 class Community(Controller):
     def featured(self, tdata, request, db_args={}, **args):
@@ -32,7 +32,7 @@ class Community(Controller):
             user = tdata.user
         # New category view 
         if self.flags.get('new_nav'):
-            return self.expressions_public_tags(tdata, request, _owner_name="root", 
+            return self.expressions_tag(tdata, request, _owner_name="root", 
                 tag_name="featured", db_args=db_args, include_categories=True)
         # Logged out users see featured.
         elif not user or not user.id:
@@ -80,57 +80,15 @@ class Community(Controller):
             'title': 'Newhives by ' + owner['name'],
         }
 
-    def collection_client_view(self, collection, viewer=None):
-        if isinstance(collection, basestring):
-            expr = self.db.Expr.fetch(collection)
-            if not expr: return None
-            expr_cv = expr.client_view(viewer=viewer)
-            expr_cv.update({
-                'collection': collection
-                ,"snapshot_big": expr.snapshot_name("big")
-            })
-            return expr_cv
-        username = collection.get('username')
-        tag = collection.get('tag')
-        if not username or not tag: return None
-        owner = self.db.User.named(username)
-        if not owner: return None
-        exprs = owner.get_tag(tag)
-        if not exprs: return None
-        expr = self.db.Expr.fetch(exprs[0])
-        if not expr: return None
-        # TODO-perf: this method belongs as standalone in state.
-        expr_cv = {
-            # TODO-perf: trim this to essentials
-            "owner": owner.client_view(viewer=viewer)
-            ,"snapshot_small": expr.snapshot_name("small")
-            ,"snapshot_big": expr.snapshot_name("big")
-            ,"title": tag
-            ,"collection": collection
-            ,"type": "cat"
-            # These are for the expression route
-            ,"expr": {
-                "owner_name": expr['owner_name']
-                ,"name": expr['name']
-                ,"id": expr.id
-                ,"search_query": "q=@%s #%s" % (username, tag)
-            }
-        }
-        # determine if this is an owned or curated collection
-        owned_exprs = (self.db.Expr.search(
-            {'owner': owner.id, '_id': {'$in': exprs}}))
-        expr_cv['curated'] = not (
-            owned_exprs and (owned_exprs.count() == len(exprs)))
-
-        return expr_cv
-
     def missing_expression(self):
         return {
             'title': 'Missing'
             ,"type": 'expr'
         }
 
-    def expressions_public_tags(self, tdata, request, owner_name=None, db_args={}, **args):
+    def expressions_tag(self, tdata, request, owner_name=None,
+        db_args={}, **args
+    ):
         if not owner_name: 
             owner_name = args.get('_owner_name')
         owner = self.db.User.named(owner_name)
@@ -149,10 +107,11 @@ class Community(Controller):
                 limit = int(db_args.get('limit', 20))
                 cards = cards[at:at + limit if limit else None]
                 # insert client view of collections into cards
-                cards = [self.collection_client_view(x) if x 
+                client_cards = [collection_client_view(self.db, x) if x 
                     else self.missing_expression() for x in cards]
-                
-                res = self.expressions_for(tdata, cards, owner, 
+                if at == 0:
+                    client_cards[0] = collection_client_view(self.db, cards[0], True)
+                res = self.expressions_for(tdata, client_cards, owner, 
                     no_empty=True, **db_args)
                 res.update({
                     "tag_selected":tag_name
@@ -162,32 +121,26 @@ class Community(Controller):
                     res['title'] = 'Featured collections'
                 return res
             return self.expressions_for(tdata, [], owner, **db_args)
-        if tag_name: 
-            return self.expressions_tag(
-                tdata, request, owner_name=owner_name, db_args=db_args, **args)
+        if tag_name:
+            return self._expressions_tag(tdata,
+                owner, tag_name, args.get('entropy'), db_args=db_args)
         
         spec = {'owner_name': owner_name}
         cards = self.db.Expr.page(spec, auth='public', **db_args)
         return self.expressions_for(tdata, cards, owner, **db_args)
 
-    def expressions_public(self, tdata, request, owner_name=None, db_args={}, **args):
-        owner = self.db.User.named(owner_name)
-        if not owner: return None
-        cards = owner.profile(at=db_args.get('at', 0))
-        return self.expressions_for(tdata, cards, owner, **db_args)
-
-    def expressions_tag(self, tdata, request, owner_name=None, 
-            entropy=None, tag_name=None, db_args={}, **args):
-        owner = self.db.User.named(owner_name)
-        if not owner: return None
+    # TODO: merge with above? helper to deal with entropy for private collections
+    def _expressions_tag(self, tdata, owner=None, tag_name=None, entropy=None,
+        db_args={}
+    ):
         if entropy and entropy != owner.get('tag_entropy', {}).get(tag_name, ''):
             return None
         if entropy or owner.id == tdata.user.id:
             db_args['override_unlisted'] = True
         profile = owner.client_view(viewer=tdata.user)
 
-        result, search = self.db.query_echo("@" + owner_name + " #" + tag_name,
-            **db_args)
+        result, search = self.db.query_echo("@" + owner['name'] + " #"
+            + tag_name, **db_args)
 
         data = {
             "cards": result,
@@ -199,6 +152,14 @@ class Community(Controller):
         if owner.id == tdata.user.id:
             data.update({"tag_entropy": owner.get('tag_entropy', {}).get(tag_name)})
         return data
+
+    def expressions_public(self, tdata, request, owner_name=None,
+        db_args={}, **args
+    ):
+        owner = self.db.User.named(owner_name)
+        if not owner: return None
+        cards = owner.profile(at=db_args.get('at', 0))
+        return self.expressions_for(tdata, cards, owner)
 
     def expressions_private(self, tdata, request, owner_name=None, db_args={}, **args):
         owner = self.db.User.named(owner_name)
@@ -568,7 +529,7 @@ class Community(Controller):
                 # TODO: we'll have to have another solution with pagination.
                 if type(page_data.get('tag_list')) != list:
                     page_data['tag_list'] = map(lambda x: x[0], cnt.most_common(16))
-                if owner and kwargs['route_name'] == 'expressions_public_tags':
+                if owner and kwargs['route_name'] == 'expressions_tag':
                     tagged = owner.get('tagged', {}).keys()
                     num_tags = max(len(tagged), 16)
                     tagged.extend(page_data['tag_list'])

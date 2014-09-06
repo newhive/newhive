@@ -22,6 +22,7 @@
 // $Id: CutyCapt.cpp 10 2013-07-14 21:57:37Z hoehrmann $
 //
 ////////////////////////////////////////////////////////////////////
+// Github repo at: https://github.com/hoehrmann/CutyCapt/issues
 
 #include <QApplication>
 #include <QtWebKit>
