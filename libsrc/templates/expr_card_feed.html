@@ -26,9 +26,9 @@
     {>}
   {>}
   ><img class="snapshot" src=
-    {<if (and snapshot_ultra from_cat (eq card_num 0))}
+    {<if (and (not flags.mobile) snapshot_ultra from_cat (eq card_num 0))}
       "{snapshot_ultra}"
-    {>}{<elif (and snapshot_big from_cat (lt card_num 3))}
+    {>}{<elif (and (not flags.mobile) snapshot_big from_cat (lt card_num 3))}
       "{snapshot_big}"
     {>}{<elif snapshot_small}
       "{snapshot_small}"
