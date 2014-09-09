@@ -159,7 +159,7 @@ class Community(Controller):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         cards = owner.profile(at=db_args.get('at', 0))
-        return self.expressions_for(tdata, cards, owner)
+        return self.expressions_for(tdata, cards, owner, **db_args)
 
     def expressions_private(self, tdata, request, owner_name=None, db_args={}, **args):
         owner = self.db.User.named(owner_name)
