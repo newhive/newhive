@@ -358,7 +358,7 @@ define([
             var input_id = input.attr('id'),
                 drop_selector = input.attr('data-drop-area');
                 drop_areas = all.find('label[for=' + input_id + ']')
-                    .add(drop_selector);
+                    .add(drop_selector).add(all.find(drop_selector));
                 upload.drop_target(drop_areas,
                     function(files, file_list){
                         form.trigger('with_files', [files, file_list]); },
