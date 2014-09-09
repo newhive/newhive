@@ -11,6 +11,22 @@ define([
 ], function(api_routes, config, routing, js, upload, menu, dialog, ui_util){
     var o = { config: config };
 
+    window.asset_loaded = function(el) {
+        var $el = $(el), $loader = $el.parents(".lazy-load")
+        $el.addClass('loaded')
+        // $el.css({'opacity':1})
+    }
+    o.lazy_load = function(context, block, extra_classes) {
+        var out = '<div class="lazy_load ' + extra_classes + '">'
+        for(var i = 3; i < arguments.length; ++i) {
+            if (arguments[i]) {
+                var loop_context = {};
+                loop_context["item"] = arguments[i];
+                out += block(context.concat(loop_context));
+            }
+        }
+        return out + "</div>"
+    }
     o.asset = function(context, name){
         // if supplied with single argument (old code), use that as name.
         return ui_util.asset(name ? name : context);

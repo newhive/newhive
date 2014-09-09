@@ -25,7 +25,18 @@
       }
     {>}
   {>}
-  ><img class="snapshot" src=
+    {# (cond snapshot_tiny snapshot_tiny (asset "skin/site/expr_placeholder_small.jpg")) #}
+  >{<lazy_load "_5_3" 
+    (cond snapshot_small snapshot_small (asset "skin/site/expr_placeholder_small.jpg"))
+    (cond (and (not flags.mobile) snapshot_big from_cat (lt card_num 3))
+      snapshot_big "")
+    (cond (and (not flags.mobile) snapshot_ultra from_cat (eq card_num 0))
+      snapshot_ultra "")
+      }
+    <img class="snapshot" src={item} onload='asset_loaded(this)'>
+  {>}
+  {#
+  <div class="lazy_load _5_3"><img class="snapshot" src=
     {<if (and (not flags.mobile) snapshot_ultra from_cat (eq card_num 0))}
       "{snapshot_ultra}"
     {>}{<elif (and (not flags.mobile) snapshot_big from_cat (lt card_num 3))}
@@ -34,7 +45,8 @@
       "{snapshot_small}"
     {>}{<else}
       {asset "skin/site/expr_placeholder_small.jpg"}  
-    {>}>
+    {>} onload='asset_loaded(this)'></div>
+    #}
   {# Title of card (expression/category) #}
   {<if type "cat"}<a { anchor_attrs "expressions_tag"
       "owner_name" collection.username "tag_name" collection.tag}>

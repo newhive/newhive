@@ -527,6 +527,8 @@ def collection_client_view(db, collection, ultra=False, viewer=None):
         expr_cv = expr.client_view(viewer=viewer)
         expr_cv.update({
             'collection': collection
+            ,"snapshot_tiny": expr.snapshot_name("tiny")
+            ,"snapshot_small": expr.snapshot_name("small")
             ,"snapshot_big": expr.snapshot_name("big")
             ,"snapshot_ultra": expr.snapshot_name("ultra") if ultra else False
         })
@@ -544,6 +546,7 @@ def collection_client_view(db, collection, ultra=False, viewer=None):
     expr_cv = {
         # TODO-perf: trim this to essentials
         "owner": owner.client_view(viewer=viewer)
+        ,"snapshot_tiny": expr.snapshot_name("tiny")
         ,"snapshot_small": expr.snapshot_name("small")
         ,"snapshot_big": expr.snapshot_name("big")
         ,"snapshot_ultra": expr.snapshot_name("ultra") if ultra else False
