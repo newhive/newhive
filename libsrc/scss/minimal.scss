@@ -37,10 +37,13 @@ form { display : inline; }
 .lazy_load {
     position: relative;
     padding-top: 75%;
+    overflow: hidden;
     &._5_3 { padding-top: 60%; }
     &>* {
         position: absolute;
         top: 0;
+        left: 0;
+        right: 0;
         opacity: 0;
         @include transition(opacity, .5s, linear);
         &.loaded {

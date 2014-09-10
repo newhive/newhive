@@ -387,13 +387,12 @@ body.mobile {
 }
 #home_video { width: 640px; height: 360px; }
 
+.lazy_load.mini_views>* {
+    @include transition(opacity, 1.0s, linear);
+}
+
 // TODO: should also have body.default
 body {
-    ///
-    // background-color:blue;
-    //
-    // TODO: WTF? static makes sense.
-    // position: absolute;
     z-index: 0;
     left: 0px; 
     top: 0px;

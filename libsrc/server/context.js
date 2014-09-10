@@ -12,16 +12,25 @@ define([
     var o = { config: config };
 
     window.asset_loaded = function(el) {
-        var $el = $(el), $loader = $el.parents(".lazy-load")
-        $el.addClass('loaded')
-        // $el.css({'opacity':1})
+        var $el = $(el)
+        while (true) {
+            $el.removeClass("loading").addClass("loaded").trigger("lazy_load")
+            if ($el.is(".lazy_load"))
+                break
+            $el = $el.parent()
+            if ($el.find(".loading").length)
+                break
+        }
     }
     o.lazy_load = function(context, block, extra_classes) {
         var out = '<div class="lazy_load ' + extra_classes + '">'
-        for(var i = 3; i < arguments.length; ++i) {
-            if (arguments[i]) {
+            ,args = Array.prototype.slice.call(arguments, 3)
+        if (args.length == 1 && args[0].reverse) // it's a list
+            args = args[0]
+        for(var i = 0; i < args.length; ++i) {
+            if (args[i]) {
                 var loop_context = {};
-                loop_context["item"] = arguments[i];
+                loop_context["item"] = args[i];
                 out += block(context.concat(loop_context));
             }
         }
@@ -58,9 +67,15 @@ define([
     o.param = function(context, v){
         return window.encodeURIComponent(v) }
     
-    o.defer = function(context, block){
-        return '<div class="defer" data-content="' + escapeHtml(block(context)) + '"></div>';
+    o.defer = function(context, block, extra_classes){
+        extra_classes = extra_classes ? " " + extra_classes : ""
+        return '<div class="defer' + extra_classes + '" data-content="' + escapeHtml(block(context)) + '"></div>';
     };
+    o.undefer = function(el) {
+        var $new_el = $($(el).data("content"))
+        $(el).replaceWith($new_el)
+        return $new_el
+    }
 
     o.recency_time = function(context, time) {
         var now = Date.now();

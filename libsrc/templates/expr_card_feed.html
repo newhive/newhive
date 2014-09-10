@@ -5,15 +5,6 @@
 {set "clean_args" (cond (and collection (eq type "expr")) "&no_paging" "")}
 {set "from_cat" (or (eq type "cat") collection)}
 
-{# tags #}
-{<if (not from_cat)}
-  {<with null "plus_menu" user.logged_in}
-    {|templates/tag_list.html}
-  {>}
-{>}{<elif (not no_delete)}
-    <div class="delete icon pointer"></div>
-{>}
-
 <a {<if type "expr"}
   { query_attrs "view_expr" 
     (concat search_query (cond entropy (concat "&e=" entropy) "") clean_args)
@@ -35,6 +26,17 @@
       }
     <img class="snapshot" src={item} onload='asset_loaded(this)'>
   {>}
+  {<if thumbs}{<defer "mini_views"}{<lazy_load "_5_3 mini_views hide" thumbs}
+    <a {<with item}
+      {query_attrs "view_expr" 
+        search_query "id" id "expr_name" name "owner_name" owner_name}
+      }
+      ><img class="snapshot loading" onload='asset_loaded(this)'
+        src={cond (and (not flags.mobile) from_cat (eq card_num 0)) 
+        (cond snapshot_ultra snapshot_ultra snapshot_big) snapshot_small} >
+      </a>
+    {>}
+  {>}{>}{>}
   {#
   <div class="lazy_load _5_3"><img class="snapshot" src=
     {<if (and (not flags.mobile) snapshot_ultra from_cat (eq card_num 0))}
@@ -62,6 +64,16 @@
     </div>
   {cond (eq type "cat") "</a>" ""}
 </a>
+
+{# tags #}
+{<if (not from_cat)}
+  {<with null "plus_menu" user.logged_in}
+    {|templates/tag_list.html}
+  {>}
+{>}{<elif (not no_delete)}
+    <div class="delete icon pointer"></div>
+{>}
+
 <div class='info'>
   <div class='owner'>
     {|templates/user_byline.html}

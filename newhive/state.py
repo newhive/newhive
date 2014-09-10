@@ -540,8 +540,10 @@ def collection_client_view(db, collection, ultra=False, viewer=None):
     if not owner: return None
     exprs = owner.get_tag(tag)
     if not exprs: return None
-    expr = db.Expr.fetch(exprs[0])
+    el = db.Expr.fetch(exprs[0:3])
+    expr = el[0]
     if not expr: return None
+
     # TODO-perf: this method belongs as standalone in state.
     expr_cv = {
         # TODO-perf: trim this to essentials
@@ -561,6 +563,20 @@ def collection_client_view(db, collection, ultra=False, viewer=None):
             ,"search_query": "q=@%s #%s" % (username, tag)
         }
     }
+    expr_cv["thumbs"] = []
+    for i in xrange(len(el)):
+        expr = el[i]
+        expr_cv["thumbs"].append({
+            "owner_name": expr['owner_name']
+            ,"name": expr['name']
+            ,"id": expr.id
+            ,"search_query": "q=@%s #%s" % (username, tag)
+            ,"snapshot_tiny": expr.snapshot_name("tiny")
+            ,"snapshot_small": expr.snapshot_name("small")
+            ,"snapshot_big": expr.snapshot_name("big")
+            ,"snapshot_ultra": expr.snapshot_name("ultra") if ultra else False
+        })
+
     # determine if this is an owned or curated collection
     owned_exprs = (db.Expr.search(
         {'owner': owner.id, '_id': {'$in': exprs}}))
