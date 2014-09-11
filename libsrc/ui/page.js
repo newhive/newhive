@@ -392,27 +392,6 @@ define([
     }
 
     var local_attach_handlers = function(){
-        // auto-loop expressions from main category
-        var cur_mini = 0
-        var next_slide = function() {
-            if ($slides.is(":visible")) {
-                $slides.find("a").css({opacity: 0, "pointer-events":"none"})
-                var $slide = $slides.find("a:nth(" + cur_mini + ")")
-                $slide.css({opacity: 1, "pointer-events":"auto"})
-                ++cur_mini
-                $slide = $slides.find("a:nth(" + cur_mini + ")")
-                if (! $slide.length)
-                    cur_mini = 0
-            }
-        }
-        var $slides = context.undefer($(".card[data-num=0] .defer.mini_views"))
-        $slides.bind_once_anon("lazy_load.page", function() {
-            if (! $slides.is(".loaded")) return
-            $slides.showshow()
-                .siblings("",".lazy_load").hidehide()
-            $slides.find("a:nth(0)").appendTo($slides)
-            setInterval(next_slide, 3000)
-        })
         $(".main-header form.search_bar input[type=submit]")
             .bind_once_anon("focus.page", function(ev) {
                 var $form = $(this).parents("form")

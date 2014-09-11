@@ -17,7 +17,7 @@
     {>}
   {>}
     {# (cond snapshot_tiny snapshot_tiny (asset "skin/site/expr_placeholder_small.jpg")) #}
-  >{<lazy_load "_5_3" 
+  >{<lazy_load "_5_3 snapshot" 
     (cond snapshot_small snapshot_small (asset "skin/site/expr_placeholder_small.jpg"))
     (cond (and (not flags.mobile) snapshot_big from_cat (lt card_num 3))
       snapshot_big "")
@@ -66,7 +66,7 @@
 </a>
 
 {# tags #}
-{<if (not from_cat)}
+{<if type "expr"}
   {<with null "plus_menu" user.logged_in}
     {|templates/tag_list.html}
   {>}

@@ -18,7 +18,7 @@ define([
             if ($el.is(".lazy_load"))
                 break
             $el = $el.parent()
-            if ($el.find(".loading").length)
+            if (! $el.length || $el.find(".loading").length)
                 break
         }
     }
@@ -69,11 +69,14 @@ define([
     
     o.defer = function(context, block, extra_classes){
         extra_classes = extra_classes ? " " + extra_classes : ""
-        return '<div class="defer' + extra_classes + '" data-content="' + escapeHtml(block(context)) + '"></div>';
+        return '<div class="defer hide' + extra_classes + '" data-content="'
+            + escapeHtml(block(context)) + '"></div>';
     };
     o.undefer = function(el) {
-        var $new_el = $($(el).data("content"))
-        $(el).replaceWith($new_el)
+        var $el = $(el)
+        if (! $el.length) return $()
+        var $new_el = $($el.data("content"))
+        $el.replaceWith($new_el)
         return $new_el
     }
 
