@@ -406,7 +406,7 @@ class Entity(dict):
         return self.update_cmd(self)
 
     def reload(self):
-        dict.update(self, self.db.User.fetch(self.id))
+        dict.update(self, self.collection.fetch(self.id))
 
     def update(self, **d):
         if not d.has_key('updated'): d['updated'] = now()
@@ -527,6 +527,8 @@ def collection_client_view(db, collection, ultra=False, viewer=None):
         expr_cv = expr.client_view(viewer=viewer)
         expr_cv.update({
             'collection': collection
+            ,"snapshot_tiny": expr.snapshot_name("tiny")
+            ,"snapshot_small": expr.snapshot_name("small")
             ,"snapshot_big": expr.snapshot_name("big")
             ,"snapshot_ultra": expr.snapshot_name("ultra") if ultra else False
         })
@@ -538,12 +540,15 @@ def collection_client_view(db, collection, ultra=False, viewer=None):
     if not owner: return None
     exprs = owner.get_tag(tag)
     if not exprs: return None
-    expr = db.Expr.fetch(exprs[0])
+    el = db.Expr.fetch(exprs[0:3])
+    expr = el[0]
     if not expr: return None
+
     # TODO-perf: this method belongs as standalone in state.
     expr_cv = {
         # TODO-perf: trim this to essentials
         "owner": owner.client_view(viewer=viewer)
+        ,"snapshot_tiny": expr.snapshot_name("tiny")
         ,"snapshot_small": expr.snapshot_name("small")
         ,"snapshot_big": expr.snapshot_name("big")
         ,"snapshot_ultra": expr.snapshot_name("ultra") if ultra else False
@@ -558,6 +563,20 @@ def collection_client_view(db, collection, ultra=False, viewer=None):
             ,"search_query": "q=@%s #%s" % (username, tag)
         }
     }
+    expr_cv["thumbs"] = []
+    for i in xrange(len(el)):
+        expr = el[i]
+        expr_cv["thumbs"].append({
+            "owner_name": expr['owner_name']
+            ,"name": expr['name']
+            ,"id": expr.id
+            ,"search_query": "q=@%s #%s" % (username, tag)
+            ,"snapshot_tiny": expr.snapshot_name("tiny")
+            ,"snapshot_small": expr.snapshot_name("small")
+            ,"snapshot_big": expr.snapshot_name("big")
+            ,"snapshot_ultra": expr.snapshot_name("ultra") if ultra else False
+        })
+
     # determine if this is an owned or curated collection
     owned_exprs = (db.Expr.search(
         {'owner': owner.id, '_id': {'$in': exprs}}))
@@ -815,7 +834,7 @@ class User(HasSocial):
         if not expression_id_list: 
             # List missing. calculate it.
             expression_list = self.db.Expr.search({
-                'owner': self.id, 'tags_index': tag })
+                'owner': self.id, 'tags_index': tag }, sort=[('updated',-1)] )
             if expression_list:
                 expression_id_list = map(lambda e: e.id, expression_list)
             if force_update:
@@ -1572,12 +1591,11 @@ class Expr(HasSocial):
         dimensions = {"big": (715, 430), "small": (390, 235), 
             'tiny': (70, 42), 'ultra': (1600, 960)}
         snapshot = self.db.File.fetch(self.get('snapshot') or self['snapshot_id'])
-        if not snapshot:
-            return False
         dimension = dimensions.get(size, False)
-        if not dimension:
-            filename = snapshot.url
-        else: filename = snapshot.get_thumb(dimension[0], dimension[1])
+        if not snapshot or not dimension:
+            return False
+        
+        filename = snapshot.get_thumb(dimension[0], dimension[1])
         if not filename and list(dimension) <= snapshot.get('dimensions'):
             filename = snapshot.url
         # Tell the snapshotter to create a snapshot if missing

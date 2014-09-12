@@ -68,7 +68,35 @@ define([
                 && context.page_data.owner.id == context.user.id
     };
 
+    var attach_handlers_cat = function() {
+        // auto-loop expressions from main category
+        var cur_mini = 0
+        var next_slide = function() {
+            if ($slides.is(":visible")) {
+                $slides.find("a").css({opacity: 0, "pointer-events":"none"})
+                var $slide = $slides.find("a:nth(" + cur_mini + ")")
+                $slide.css({opacity: 1, "pointer-events":"auto"})
+                ++cur_mini
+                $slide = $slides.find("a:nth(" + cur_mini + ")")
+                if (! $slide.length)
+                    cur_mini = 0
+            }
+        }
+        var $slides = context.undefer($(".card[data-num=0] .defer.mini_views"))
+        $slides.removeClass("mini_views").bind_once_anon("lazy_load.page", function() {
+            if (! $slides.is(".loaded")) return
+            $slides.showshow()
+                .siblings("",".lazy_load").hidehide()
+            // put the 0th slide last so there is no apparent transition between
+            // static content and slider
+            $slides.find("a:nth(0)").appendTo($slides)
+            setInterval(next_slide, 3000)
+        })
+    }
     o.attach_handlers = function(){
+        if (context.route.include_categories)
+            attach_handlers_cat()
+
         // TODO-cleanup: These values need to be saved last in render order
         // but have nothing to do with handlers.
         card_layout = context.page_data.layout;
@@ -256,9 +284,23 @@ define([
     };
 
     var card_animate = function(card, dir){
-        var prop = "opacity";
-        var goal = 1.0;
-        var duration = 350;
+        var prop = "opacity"
+            ,goal = 1.0
+            ,duration = 350
+            ,$mini_views = card.find(".mini_views")
+        $mini_views.css({opacity: (dir == "in") ? 1 : 0})
+        
+        $mini_views = context.undefer(card.find(".mini_views.defer"))
+        if ($mini_views.length)
+            $mini_views.on("lazy_load", function() {
+                if (! $mini_views.is(".loaded")) return
+                $mini_views.removeClass("lazy_load hide")
+                    .appendTo(card.find(".lazy_load.snapshot"))
+                if ($mini_views.children().length == 2)
+                    $mini_views.addClass("_2col")
+                if (card.is(":hover"))
+                    setTimeout(function() { $mini_views.css({opacity: 1}) }, 1)
+            }).css({opacity: 0})
         var el = card.find(".tag_list");
         do_animate(el, dir, prop, goal, duration);
         var delete_pending = function (ev) {

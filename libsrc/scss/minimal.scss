@@ -34,6 +34,27 @@ h1 { font-size : 40px; }
 // TODO: reexamine this, and everything else in this file.
 form { display : inline; }
 
+.lazy_load {
+    position: relative;
+    padding-top: 75%;
+    overflow: hidden;
+    &._5_3 { padding-top: 60%; }
+    &>* {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        opacity: 0;
+        @include transition(opacity, .5s, linear);
+        &.loaded {
+            opacity: 1;
+        }
+    }
+}
+// body:not(.mobile) {
+// .lazy_load {
+        // @include transition(opacity, .5s, linear);
+
 .swipe_feedback {
     position: fixed;
     * { position: absolute; }
