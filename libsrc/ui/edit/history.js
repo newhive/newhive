@@ -46,24 +46,30 @@ o.History.init = function(){
         env.exit_safe_set(false)
     };
 
-    o.undo = function(){
+    o.undo = function(count){
+        if (count < 1) return false
+        count = count || 1
+
         if(! o[o.current]) return false;
         o[o.current].undo();
         o.current -= 1;
         o.update_btn_titles();
         env.layout_apps();
         env.exit_safe_set(o.current == -1)
-        return false;
+        return o.undo(count - 1);
     };
 
-    o.redo = function(){
+    o.redo = function(count){
+        if (count < 1) return false
+        count = count || 1
+
         var next = o[ o.current + 1 ];
         if( ! next ) return false;
         next.redo();
         o.current += 1;
         o.update_btn_titles();
         env.layout_apps();
-        return false;
+        return o.redo(count - 1);
     };
         
     o.update_btn_titles = function(){
@@ -149,8 +155,12 @@ o.History.init = function(){
     ///////////////
 
     o.update_btn_titles();
-    $('#btn_undo').click(env.History.undo);
-    $('#btn_redo').click(env.History.redo);
+    $('#btn_undo').click(function(ev) {
+        env.History.undo(ev.shiftKey ? 10 : 1)
+    });
+    $('#btn_redo').click(function(ev) {
+        env.History.redo(ev.shiftKey ? 10 : 1)
+    });
 };
 
 
