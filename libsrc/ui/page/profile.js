@@ -298,7 +298,7 @@ define([
                     .appendTo(card.find(".lazy_load.snapshot"))
                 if ($mini_views.children().length == 2)
                     $mini_views.addClass("_2col")
-                if (card.is(":hover"))
+                if ($(".card:hover").data("num") == card.data("num"))
                     setTimeout(function() { $mini_views.css({opacity: 1}) }, 1)
             }).css({opacity: 0})
         var el = card.find(".tag_list");
