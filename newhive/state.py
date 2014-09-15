@@ -838,6 +838,13 @@ class User(HasSocial):
         return pyes.filters.BoolFilter(should=f)
 
     def activity(self, **args):
+        try:
+            return self.activity_bug(**args) 
+        except Exception as e:
+            print e
+            return []
+
+    def activity_bug(self, **args):
         if not self.id: return []
         # TODO-feature: create list of exprs user is following comments on in
         # user record, so you can leave a comment thread
