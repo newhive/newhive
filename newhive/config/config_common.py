@@ -29,6 +29,9 @@ cloudfront_domains = {
     'asset': None
 }
 
+# strings
+str_expression  = 'newhive'
+
 admins          = ['it1','abram', 'cara', 'zach', 'newduke', 'fatsycline','root','newhive']
 
 default_email_subscriptions = ['love', 'listen', 'share_expr', 'comment', 'broadcast', 'featured', 'milestone']
