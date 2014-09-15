@@ -241,6 +241,10 @@ define([
         $(".main-header .network_nav .item").removeClass("black_btn")
         $(".main-header .network_nav .item." + context.route_name)
             .addClass("black_btn")
+        $(".main-header .header .item").removeClass("black_btn")
+        $(".main-header .header .item[data-name=" 
+            + context.page_data.tag_selected + "]").addClass("black_btn")
+
         var has_nav = has_nav_bar()
             ,has_nav_embedded_logo = has_nav && context.user.logged_in
 

@@ -82,7 +82,8 @@ class Community(Controller):
 
     def missing_expression(self):
         return {
-            'title': 'Missing'
+            'title': 'Missing collection / ' + self.config.str_expression
+            ,"missing": True
             ,"type": 'expr'
         }
 
@@ -111,6 +112,7 @@ class Community(Controller):
                     else self.missing_expression() for x in cards]
                 if at == 0:
                     client_cards[0] = collection_client_view(self.db, cards[0], True)
+                client_cards = [x if x else self.missing_expression() for x in client_cards]
                 res = self.expressions_for(tdata, client_cards, owner, 
                     no_empty=True, **db_args)
                 res.update({

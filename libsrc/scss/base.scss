@@ -90,6 +90,11 @@
 @media all and (min-width: 501px) {
     .show_narrow { display:none; }
 }
+// @media all and (max-width:500px) {
+//     .hide_narrow {
+//         display: none;
+//     }
+// }
 button {
     border: none;
     cursor: pointer;

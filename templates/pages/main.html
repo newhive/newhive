@@ -2,7 +2,7 @@
 
 {% if 'home' %}
   {% block meta %}
-    {% set description = ("ART IS A DRUG" if page_data.expr else "We believe that your life is a blank canvas + you decide what goes on it. NewHive is your radically simple, DIY self publishing tool.") %}
+    {% set description = ("Newhive by " + page_data.expr.owner.get('fullname') if page_data.expr else "We believe that your life is a blank canvas + you decide what goes on it. NewHive is your radically simple, DIY self publishing tool.") %}
     {# Descripton for SEO #}
     <meta name="description" content="{{description}}">
 

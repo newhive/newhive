@@ -857,6 +857,13 @@ class User(HasSocial):
         return pyes.filters.BoolFilter(should=f)
 
     def activity(self, **args):
+        try:
+            return self.activity_bug(**args) 
+        except Exception as e:
+            print e
+            return []
+
+    def activity_bug(self, **args):
         if not self.id: return []
         # TODO-feature: create list of exprs user is following comments on in
         # user record, so you can leave a comment thread
@@ -1165,6 +1172,7 @@ class User(HasSocial):
         return False
 
     def get_url(self, path='profile/', relative=False, secure=False):
+        if not self.id: return ''
         base = '/' if relative else abs_url(secure=secure)
         return base + self.get('name', '') + '/' + path
     url = property(get_url)
@@ -1341,6 +1349,11 @@ class User(HasSocial):
                 map(lambda r: r.client_view(),
                     list(self.activity(limit=activity))) )
         return user
+
+    def get_root_categories(self):
+        ru = self.db.User.root_user
+        cats = ru.get_cats()
+        return cats[1][0:cats[0]]
 
     def delete(self):
         # Facebook Disconnect

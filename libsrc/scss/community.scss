@@ -634,12 +634,13 @@ body {
             right: 0px;
         }
         $mini_view_color: white;
+        $mini_view_height: 20%;
         .mini_views {
             top: auto;
             left: auto;
             bottom: 20px;
-            width: 75%;
-            height: 25%;
+            width: 3*$mini_view_height;
+            height: $mini_view_height;
             border: 7px solid $mini_view_color;
             background: $mini_view_color;
             img.snapshot {
@@ -649,7 +650,7 @@ body {
                 box-sizing: border-box;
             }
             &._2col {
-                width: 50%;
+                width: 2*$mini_view_height;
                 img.snapshot { width: 49.5%; }
             }
         }

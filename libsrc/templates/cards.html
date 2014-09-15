@@ -7,7 +7,8 @@
     <div class='user card' id='card_{id}' draggable='false'>
       {|templates/user_card.html}
     </div>
-  {>}{<elif (or (eq type "expr") (eq type "cat"))}
+  {>}{<elif (and (not (and (eq route.client_method "cat") missing))
+    (or (eq type "expr") (eq type "cat")))}
     <div class='expr activity card hoverable
     {<if auth} unlisted{>}' id='card_{id}' draggable='false' 
       data-num={card_num}>

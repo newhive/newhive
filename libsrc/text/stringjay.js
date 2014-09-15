@@ -601,6 +601,9 @@ define(['browser/js', 'module'],
 	context_base.cond = function(context, cond, truthy, falsy){
 		return cond ? truthy : falsy;
 	};
+	context_base.floor = function(context, val){
+		return Math.floor(val);
+	};
 
 	context_base.lower = function(context, s){ return s.toLowerCase(); };
 	// TODO-cleanup: add example cases to all these functions.
@@ -639,6 +642,16 @@ define(['browser/js', 'module'],
 				sum += arguments[i];
 		}
 		return sum;
+	};
+	// TODO: write as accumulate
+	// {set "k" (mul 2 2 2)}
+	context_base.mul = function(context){
+		var prod = 1;
+		for(var i = 1; i < arguments.length; ++i){
+			if (typeof(arguments[i]) == "number")
+				prod *= arguments[i];
+		}
+		return prod;
 	};
 	// {mod 6 3}  {mod "verbatim"}
 	context_base.mod = function(context, x, y){ 
