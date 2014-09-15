@@ -657,7 +657,7 @@ Hive.dragend = function(){
     // hovers_active(true)
 
     // In case scrollbar has been toggled:
-    u.layout_apps(); 
+    u.layout_apps();
 };
 Hive.drop = Hive.dragleave = function(){
     if (dragging_count > 0) 
