@@ -152,9 +152,9 @@ body:not(.mobile) {
         // height: 39px; // Ew.  Should be computed.
         // line-height: 0px; // To remove extra whitespace
         @if $debug { background-color: aqua; }
+        line-height: 0px;
 
         ul {
-            // min-width: 200px;  //!! needs to reflect content changes
             -webkit-margin-before: 0em;
             -webkit-margin-after: 0em;
             -webkit-margin-start: 0px;
