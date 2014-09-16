@@ -688,6 +688,9 @@ body {
                     padding-right: 10px;
                     margin: 0;
                 }
+                .user_list {
+                    width: 378px;
+                }
                 // &:after {
                 //     content: '';
                 //     width: 100%;
@@ -749,9 +752,27 @@ body {
                 margin-top: 10px;
             }
             .info {
+                position: relative;
                 img.thumb { 
                     width: 44px;
                     margin-right: 6px;
+                }
+                .user_list {
+                    position: absolute;
+                    height: 100%;
+                    width: 308px;
+                    left: -5px;
+                    top: 0px;
+
+                    overflow: hidden;
+                    // background: white;
+                    opacity: 0;
+                    @include transition(opacity, 0.5s, linear);
+                    img { 
+                        height: 100%; 
+                        width: auto; 
+                        margin: 0px 0px 0px -3px;
+                    }
                 }
             }
             img.snapshot { width: 100%; }

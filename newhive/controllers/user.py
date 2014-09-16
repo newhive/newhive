@@ -53,6 +53,27 @@ class User(ModelController):
 
         return self.serve_json(response, update)
 
+    def collection_users(self, tdata, request, response, **args):
+        owner_name = args.get("owner_name")
+        tag_name = args.get("tag_name")
+        user = self.db.User.named(owner_name)
+        if not user: return self.serve_json(response, False)
+
+        old_order = user.get_tag(tag_name)
+        exprs = self.db.Expr.fetch(old_order[:20])
+        seen = set([user.id])
+        users = [user.client_view()]
+        for expr in exprs:
+            user = expr.owner
+            if user.id in seen:
+                continue
+            seen.add(user.id)
+            users.append(user.client_view())
+            if len(seen) > 6:
+                break
+
+        return self.serve_json(response, users)
+
     def collection_order(self, tdata, request, response, **args):
         is_category = (request.form.get('type') == 'categories')
         new_order = json.loads(request.form.get('new_order'))
