@@ -4,7 +4,7 @@
 {# TODO: un-flag this after ship #}
 {<if flags.new_nav}
 <div class="main-header">
-  <form class="search_bar" method='GET' action='/search' name='search_form'>
+  <form class="search_bar_form" method='GET' action='/search' name='search_form'>
   <div class="nav_top_row">
     {# LEFT content. #}
     <div class="cell left{<if (not user.logged_in)} for_logo{>}">
@@ -46,7 +46,7 @@
               <div class='text_btn item teal_hover'>About</div></a>
           </div>
         {>}
-        <div class="middle_block inline">
+        <div class="middle_block inline search_bar">
           {# Search bar #}
           <input type="text" id="search_box" placeholder="Search"
             class="inline focus_expanded{<if (not user.logged_in)} media_shrink{>}"
@@ -67,7 +67,19 @@
   {>}
 
   <div class="header">
+    {<if flags.categories}
+    <ul>
+      {<for home.cats "count"}
+        <li><a { anchor_attrs "home_cat" "tag_name" item}>
+          <div class='text_btn item teal_hover' data-name={item}>
+            {item}</div></a></li>&nbsp;
+        {<if (eq (plus count 1) (floor (mul (len home.cats) 0.5)))}
+          <div class="show_narrow"></div>
+        {>}
+      {>}
+    </ul>
   </div>
+  {>}
 </div>
 {>}
 
@@ -102,7 +114,7 @@
   <div class='social_btn expr item btn hide hoverable' 
     title="Open social overlay"></div>
 </div>
-{<if (not flags.mobile)}
+{<if (or true (not flags.mobile))}
   <div class='social overlay left page_btn page_prev
     {<if (and query.clean (not (contains clean_options "collection")))} stay_hidden{>}'></div>
   <div class='social overlay right page_btn page_next
@@ -120,7 +132,7 @@
     <a {anchor_attrs "home"} class='menu_item default hoverable'>The Hive</a>
 
     {# Network #}
-    <a {anchor_attrs "recent"} class='menu_item hoverable'>Network</a>
+    <a {anchor_attrs "network" "username" user.name} class='menu_item hoverable'>Network</a>
 
     {# Username #}
     <a id='user_btn' { anchor_attrs "expressions_public" "owner_name" user.name }

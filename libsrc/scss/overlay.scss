@@ -1,7 +1,7 @@
 // overlay css
 @import "common";
 
-// $debug: true;
+$debug: true;
 $debug: false;
 
 @media print { #nav { display: none; } }
@@ -126,7 +126,7 @@ body:not(.mobile) {
     }
     // #search_box is not always inside .search_bar
     #search_box {
-        margin: 4px 0px 0px -2px;
+        margin: 0px 0px 0px 4px;
         width: 250px;
 
         width: 0px;
@@ -148,17 +148,20 @@ body:not(.mobile) {
         }
     }
     .header {
-        display: none; // until we implement categories
+        // display: none; // until we implement categories
         // height: 39px; // Ew.  Should be computed.
-        line-height: 0px; // To remove extra whitespace
+        // line-height: 0px; // To remove extra whitespace
+        @if $debug { background-color: aqua; }
+        line-height: 0px;
+
         ul {
-            // min-width: 200px;  //!! needs to reflect content changes
             -webkit-margin-before: 0em;
             -webkit-margin-after: 0em;
             -webkit-margin-start: 0px;
             -webkit-margin-end: 0px;
             -webkit-padding-start: 0px;
 
+            line-height: 0;
             display: inline-block;
             text-align: justify;
             width: 100%;
@@ -167,6 +170,13 @@ body:not(.mobile) {
 
             li { display: inline-block; }
             .text_btn { margin: 0px; }
+            .show_narrow { 
+                display: inline-block;
+                width: 100%; 
+                @media all and (min-width:700px) {
+                    display: none;
+                }
+            }
 
             &:after {
                 content: '';
@@ -632,6 +642,7 @@ $action: love comment republish;
 .hive_logo {
     display: block;
     margin-left: 0px;
+    margin-right: 3px;
     height: 44px;
     width: 44px;
     left: 20px;

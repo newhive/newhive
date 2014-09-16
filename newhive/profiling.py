@@ -6,6 +6,7 @@ import itertools
 g_flags = {
     "mini_expressions": 3
     ,"iterations": 5
+    ,"feed_max": 500
 }
 
 class Timer:    

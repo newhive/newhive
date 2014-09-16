@@ -657,7 +657,7 @@ Hive.dragend = function(){
     // hovers_active(true)
 
     // In case scrollbar has been toggled:
-    u.layout_apps(); 
+    u.layout_apps();
 };
 Hive.drop = Hive.dragleave = function(){
     if (dragging_count > 0) 
@@ -678,11 +678,11 @@ Hive.keydown = function(ev){
     // create hive.text app with content of the character pressed
 
     if(u.is_ctrl(ev) && ev.keyCode == 90){ // ctrl+z
-        env.History.undo();
+        env.History.undo(ev.shiftKey ? 10 : 1)
         return false;
     }
     else if(u.is_ctrl(ev) && ev.keyCode == 89){ // ctrl+y
-        env.History.redo();
+        env.History.redo(ev.shiftKey ? 10 : 1)
         return false;
     }
     else if(ev.keyCode == 27) // esc

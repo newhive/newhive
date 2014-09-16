@@ -38,7 +38,8 @@ class Snapshots(object):
         if platform == 'linux' or platform == 'linux2':
             ratio = 1.0 * dimensions[0] / dimensions[1];
             snap_dimensions = list(dimensions)
-            snap_dimensions = [ 1000, 1000./dimensions[0]*dimensions[1] ]
+            if (snap_dimensions[0] < 1000):
+                snap_dimensions = [ 1000, 1000./dimensions[0]*dimensions[1] ]
             cmd = ( ( join(config.src_home, 'bin/CutyCapt/CutyCapt') + 
                 ' --delay=10000 --max-wait=90000 --min-width=%s --min-height=%s' +
                 ' --plugins=on --url="%s" --out=%s' )

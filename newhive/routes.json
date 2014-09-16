@@ -285,6 +285,11 @@
         "method": "tag_order",
         "require_login": true
     },
+    "collection_users": {
+        "api_route": "/api/feed/collection_users/<owner_name>/<tag_name>",
+        "controller": "user",
+        "method": "collection_users"
+    },
 
     "user_update": {
         "page_route": "/<owner_name>/profile/edit",
@@ -529,5 +534,8 @@
 
     "empty": {
         "page_route": "/home/empty"
+    },
+    "favicon.ico": {
+        "page_route": "/favicon.ico"
     }
 }

@@ -2,6 +2,7 @@ import httplib2, urllib, re, json
 from newhive import auth, config, mail
 from newhive.controllers.controller import ModelController
 from newhive.utils import log_error, dfilter, lget, abs_url, junkstr
+from newhive.state import Entity, collection_client_view
 
 class User(ModelController):
     model_name = 'User'
@@ -52,6 +53,27 @@ class User(ModelController):
 
         return self.serve_json(response, update)
 
+    def collection_users(self, tdata, request, response, **args):
+        owner_name = args.get("owner_name")
+        tag_name = args.get("tag_name")
+        user = self.db.User.named(owner_name)
+        if not user: return self.serve_json(response, False)
+
+        old_order = user.get_tag(tag_name)
+        exprs = self.db.Expr.fetch(old_order[:20])
+        seen = set([user.id])
+        users = [user.client_view()]
+        for expr in exprs:
+            user = expr.owner
+            if user.id in seen:
+                continue
+            seen.add(user.id)
+            users.append(user.client_view())
+            if len(seen) > 6:
+                break
+
+        return self.serve_json(response, users)
+
     def collection_order(self, tdata, request, response, **args):
         is_category = (request.form.get('type') == 'categories')
         new_order = json.loads(request.form.get('new_order'))
@@ -75,6 +97,9 @@ class User(ModelController):
         if is_category:
             if len(new_order):
                 user.set_category_collections(tag_name, new_order)
+                # Request the first item get an ultra snapshot if user == root_user
+                if user.id == self.db.User.root_user.id:
+                    collection_client_view(self.db, new_order[0], True)
             else:
                 user.remove_category(tag_name)
         else:

@@ -6,7 +6,7 @@ from newhive import mail
 from newhive.ui_strings import en as ui_str
 from newhive.utils import dfilter, now, abs_url, AbsUrl
 from newhive.controllers.controller import Controller
-from newhive.state import Entity
+from newhive.state import Entity, collection_client_view
 
 class Community(Controller):
     def featured(self, tdata, request, db_args={}, **args):
@@ -80,53 +80,10 @@ class Community(Controller):
             'title': 'Newhives by ' + owner['name'],
         }
 
-    def collection_client_view(self, collection, viewer=None):
-        if isinstance(collection, basestring):
-            expr = self.db.Expr.fetch(collection)
-            if not expr: return None
-            expr_cv = expr.client_view(viewer=viewer)
-            expr_cv.update({
-                'collection': collection
-                ,"snapshot_big": expr.snapshot_name("big")
-            })
-            return expr_cv
-        username = collection.get('username')
-        tag = collection.get('tag')
-        if not username or not tag: return None
-        owner = self.db.User.named(username)
-        if not owner: return None
-        exprs = owner.get_tag(tag)
-        if not exprs: return None
-        expr = self.db.Expr.fetch(exprs[0])
-        if not expr: return None
-        # TODO-perf: this method belongs as standalone in state.
-        expr_cv = {
-            # TODO-perf: trim this to essentials
-            "owner": owner.client_view(viewer=viewer)
-            ,"snapshot_small": expr.snapshot_name("small")
-            ,"snapshot_big": expr.snapshot_name("big")
-            ,"title": tag
-            ,"collection": collection
-            ,"type": "cat"
-            # These are for the expression route
-            ,"expr": {
-                "owner_name": expr['owner_name']
-                ,"name": expr['name']
-                ,"id": expr.id
-                ,"search_query": "q=@%s #%s" % (username, tag)
-            }
-        }
-        # determine if this is an owned or curated collection
-        owned_exprs = (self.db.Expr.search(
-            {'owner': owner.id, '_id': {'$in': exprs}}))
-        expr_cv['curated'] = not (
-            owned_exprs and (owned_exprs.count() == len(exprs)))
-
-        return expr_cv
-
     def missing_expression(self):
         return {
-            'title': 'Missing'
+            'title': 'Missing collection / ' + self.config.str_expression
+            ,"missing": True
             ,"type": 'expr'
         }
 
@@ -151,10 +108,12 @@ class Community(Controller):
                 limit = int(db_args.get('limit', 20))
                 cards = cards[at:at + limit if limit else None]
                 # insert client view of collections into cards
-                cards = [self.collection_client_view(x) if x 
+                client_cards = [collection_client_view(self.db, x) if x 
                     else self.missing_expression() for x in cards]
-                
-                res = self.expressions_for(tdata, cards, owner, 
+                if at == 0:
+                    client_cards[0] = collection_client_view(self.db, cards[0], True)
+                client_cards = [x if x else self.missing_expression() for x in client_cards]
+                res = self.expressions_for(tdata, client_cards, owner, 
                     no_empty=True, **db_args)
                 res.update({
                     "tag_selected":tag_name
@@ -163,7 +122,7 @@ class Community(Controller):
                 if args.get('_owner_name'):
                     res['title'] = 'Featured collections'
                 return res
-            return self.expressions_for(tdata, [], owner)
+            return self.expressions_for(tdata, [], owner, **db_args)
         if tag_name:
             return self._expressions_tag(tdata,
                 owner, tag_name, args.get('entropy'), db_args=db_args)
@@ -202,7 +161,7 @@ class Community(Controller):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         cards = owner.profile(at=db_args.get('at', 0))
-        return self.expressions_for(tdata, cards, owner)
+        return self.expressions_for(tdata, cards, owner, **db_args)
 
     def expressions_private(self, tdata, request, owner_name=None, db_args={}, **args):
         owner = self.db.User.named(owner_name)

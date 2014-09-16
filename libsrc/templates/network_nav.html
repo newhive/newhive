@@ -1,6 +1,7 @@
 {# Network navigation menus #}
 {<if user.logged_in}
   {<if flags.new_nav}
+{#
     <ul class='network_nav ' data-replace-contents=".main-header .header"
       {<if (not flags.merge_recent)}
         ><li><a { anchor_attrs "home" }>
@@ -23,9 +24,10 @@
       >&nbsp;<li>categories</li
       >&nbsp;<li>here  </li
     ></ul>
+#}
   {>}{<else}
     {# TODO: remove this when switching to new nav #}
-    <div class='network_nav centered'>
+    <div class='oldnetwork_nav centered'>
       {<if (not flags.merge_recent)}
         <a { anchor_attrs "home" }>
           <div class='text_btn item teal_hover

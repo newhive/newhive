@@ -17,6 +17,7 @@
 curl(['context', 'browser/js'], function(context, util){
     util.copy({
         user: {{ user.client_view(activity=20, special={"tagged":1})|json }},
+        home: {{ "{cats: " + (user.get_root_categories()|json)+"}" }},
         error: {{ error|json }},
         is_secure: {{ is_secure|json }},
         page_data: {{ page_data|json }},

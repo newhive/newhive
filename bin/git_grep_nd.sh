@@ -4,7 +4,7 @@
 
 source $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/git_grep.sh
 
-filter_broken="${filter_broken}|/titanium/|history/history|/jquery-1|/old|/broken|/curl|google_closure.js|/d3/|codemirror.js|jquery-ui|/jquery/|/codemirror/"
+filter_broken="${filter_broken}|/titanium/|history/history|/jquery-1|/old|/broken|/curl|google_closure.js|/d3/|codemirror.js|jquery-ui|/jquery/|/codemirror/|mobile/|zepto-"
 
 alias a="git_grep -o"
 alias n='a -o -n'

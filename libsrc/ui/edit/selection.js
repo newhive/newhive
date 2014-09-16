@@ -793,7 +793,7 @@ o.Selection = function(o) {
                 },
             46: function(){ o.remove() }, // del
             66: function(){ o.stack_bottom(ev) }, // b
-            84: function(){ o.stack_top(ev) }, // t
+            70: function(){ o.stack_top(ev) }, // f
         }
         if(handlers[ev.keyCode]){
             if(handlers[ev.keyCode]()) return;

@@ -90,6 +90,11 @@
 @media all and (min-width: 501px) {
     .show_narrow { display:none; }
 }
+// @media all and (max-width:500px) {
+//     .hide_narrow {
+//         display: none;
+//     }
+// }
 button {
     border: none;
     cursor: pointer;
@@ -104,7 +109,6 @@ button {
     padding: 10px;
     font-family: Gibson;
     font-size: 17px;
-    margin: 2px;
     &:hover {
         color: white;
         background-color: black;

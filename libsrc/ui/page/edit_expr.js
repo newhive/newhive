@@ -40,7 +40,7 @@ define([
 
     o.enter = function(){
         $("body").addClass("edit");
-   };
+    };
     
     o.exit = function(){
         $('link.edit').remove();

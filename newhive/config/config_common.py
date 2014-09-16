@@ -29,6 +29,9 @@ cloudfront_domains = {
     'asset': None
 }
 
+# strings
+str_expression  = 'newhive'
+
 admins          = ['it1','abram', 'cara', 'zach', 'newduke', 'fatsycline','root','newhive']
 
 default_email_subscriptions = ['love', 'listen', 'share_expr', 'comment', 'broadcast', 'featured', 'milestone']
@@ -65,6 +68,7 @@ site_flags = {
     ,'mobile_web': ['nd4']
     ,'user_search': ['nd4', 'newduke','abram','it1']
     ,'new_nav': ['admins', 'devs']
+    ,'categories': ['admins', 'devs']
     # Editor
     ,'snap_crop': ['admins','nd4']
     ,'shift_does_raise': ['newduke','nd4','abram']

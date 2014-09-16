@@ -3,12 +3,15 @@ define([
     'ui/dialog',
     'context',
     'sj!templates/cards.html',
+    'sj!templates/user_byline.html',
+
     'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js'
 ], function(
     $,
     dialog,
     context,
-    cards_template
+    cards_template,
+    template_user_byline
 ) {
 
     var o = { name: 'profile' },
@@ -16,8 +19,7 @@ define([
         anim_duration = 400,
         show_tags = true,
         show_more_tags = false,
-        card_deletes = 0,
-        controller;
+        card_deletes = 0
 
     o.init = function(controller){
         o.controller = controller;
@@ -68,7 +70,35 @@ define([
                 && context.page_data.owner.id == context.user.id
     };
 
+    var attach_handlers_cat = function() {
+        // auto-loop expressions from main category
+        var cur_mini = 0
+        var next_slide = function() {
+            if ($slides.is(":visible")) {
+                $slides.find("a").css({opacity: 0, "pointer-events":"none"})
+                var $slide = $slides.find("a:nth(" + cur_mini + ")")
+                $slide.css({opacity: 1, "pointer-events":"auto"})
+                ++cur_mini
+                $slide = $slides.find("a:nth(" + cur_mini + ")")
+                if (! $slide.length)
+                    cur_mini = 0
+            }
+        }
+        var $slides = context.undefer($(".card[data-num=0] .defer.mini_views"))
+        $slides.removeClass("mini_views").bind_once_anon("lazy_load.page", function() {
+            if (! $slides.is(".loaded")) return
+            $slides.showshow()
+                .siblings("",".lazy_load").hidehide()
+            // put the 0th slide last so there is no apparent transition between
+            // static content and slider
+            $slides.find("a:nth(0)").appendTo($slides)
+            setInterval(next_slide, 3000)
+        })
+    }
     o.attach_handlers = function(){
+        if (context.route.include_categories)
+            attach_handlers_cat()
+
         // TODO-cleanup: These values need to be saved last in render order
         // but have nothing to do with handlers.
         card_layout = context.page_data.layout;
@@ -256,9 +286,48 @@ define([
     };
 
     var card_animate = function(card, dir){
-        var prop = "opacity";
-        var goal = 1.0;
-        var duration = 350;
+        var prop = "opacity"
+            ,goal = 1.0
+            ,duration = 350
+            ,$mini_views = card.find(".mini_views")
+            ,card_num = card.data("num")
+        $mini_views.css({opacity: (dir == "in") ? 1 : 0})
+        
+        $mini_views = context.undefer(card.find(".mini_views.defer"))
+        if ($mini_views.length) {
+            $mini_views.on("lazy_load", function() {
+                if (! $mini_views.is(".loaded")) return
+                $mini_views.removeClass("lazy_load hide")
+                    .appendTo(card.find(".lazy_load.snapshot"))
+                if ($mini_views.children().length == 2)
+                    $mini_views.addClass("_2col")
+                if ($(".card:hover").data("num") == card_num)
+                    setTimeout(function() { $mini_views.css({opacity: 1}) }, 1)
+            }).css({opacity: 0})
+        }
+        if (dir == "in") {
+            var card_data = context.page_data.cards[card_num]
+                ,collection_users = function(data) {
+                    card_data.user_list = data
+                    var $attachment = $("<div class='user_list'>")
+                        .appendTo(card.find(".info"))
+                    data.map(function(u){
+                        template_user_byline([context, {owner:u, no_byline: true}])
+                            .appendTo($attachment)
+                    })
+                    $attachment.bind_once_anon("mouseenter mouseleave", function(ev) {
+                        var entering = (ev.type == "mouseenter")
+                        $attachment.css({opacity: entering ? 1 : 0})
+                    })
+                }
+            if (card_data && !card_data.user_list) {
+                o.controller.get("collection_users", {
+                    "owner_name": card_data.owner.name,
+                    "tag_name": card_data.title
+                }, collection_users)
+                card_data.user_list = "pending"
+            }
+        }
         var el = card.find(".tag_list");
         do_animate(el, dir, prop, goal, duration);
         var delete_pending = function (ev) {

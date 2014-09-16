@@ -1,15 +1,17 @@
 {<if (not cards_at)}
   {set cards_at 0}
 {>}
-{<for cards "card_num"}
+{<for cards "i"}
+  {set "card_num" (plus i cards_at)}
   {<if type "user"}
     <div class='user card' id='card_{id}' draggable='false'>
       {|templates/user_card.html}
     </div>
-  {>}{<elif (or (eq type "expr") (eq type "cat"))}
+  {>}{<elif (and (not (and (eq route.client_method "cat") missing))
+    (or (eq type "expr") (eq type "cat")))}
     <div class='expr activity card hoverable
     {<if auth} unlisted{>}' id='card_{id}' draggable='false' 
-      data-num={plus card_num cards_at}>
+      data-num={card_num}>
       {<if (or (eq layout "grid") (eq layout "cat"))}
         {|templates/expr_card_feed.html}
       {>}

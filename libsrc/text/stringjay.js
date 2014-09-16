@@ -582,6 +582,12 @@ define(['browser/js', 'module'],
 	context_base.not = function(context, arg){
 		return ! arg;
 	};
+	context_base.lt = function(context, lhs, rhs){
+		return lhs < rhs;
+	};
+	context_base.gt = function(context, lhs, rhs){
+		return lhs > rhs;
+	};
 	context_base.eq = function(context, lhs, rhs){
 		return lhs == rhs;
 	};
@@ -594,6 +600,9 @@ define(['browser/js', 'module'],
 	};
 	context_base.cond = function(context, cond, truthy, falsy){
 		return cond ? truthy : falsy;
+	};
+	context_base.floor = function(context, val){
+		return Math.floor(val);
 	};
 
 	context_base.lower = function(context, s){ return s.toLowerCase(); };
@@ -634,6 +643,16 @@ define(['browser/js', 'module'],
 		}
 		return sum;
 	};
+	// TODO: write as accumulate
+	// {set "k" (mul 2 2 2)}
+	context_base.mul = function(context){
+		var prod = 1;
+		for(var i = 1; i < arguments.length; ++i){
+			if (typeof(arguments[i]) == "number")
+				prod *= arguments[i];
+		}
+		return prod;
+	};
 	// {mod 6 3}  {mod "verbatim"}
 	context_base.mod = function(context, x, y){ 
 		if (typeof(x) == "number" && typeof(y) == "number")
@@ -650,10 +669,10 @@ define(['browser/js', 'module'],
 		return n + suffix[i];
 	};
 	context_base.string_to_list = function (context, string){
-	  	var array = string.split("[^\w']+");
-	  	if ( array.length <= 1 ) return [string];
-		else return array;
-	};
+	  	var array = string.split(/\W+/)
+	  	if ( array.length <= 1 ) return [string]
+		else return array
+	}
 
 	return o;
 });

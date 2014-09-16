@@ -241,6 +241,11 @@ define([
         $(".main-header .network_nav .item").removeClass("black_btn")
         $(".main-header .network_nav .item." + context.route_name)
             .addClass("black_btn")
+        $(".main-header .header").showhide(context.route.client_method == "cat")
+        $(".main-header .header .item").removeClass("black_btn")
+        $(".main-header .header .item[data-name=" 
+            + context.page_data.tag_selected + "]").addClass("black_btn")
+
         var has_nav = has_nav_bar()
             ,has_nav_embedded_logo = has_nav && context.user.logged_in
 
@@ -248,13 +253,13 @@ define([
             .addremoveClass("overlay", ! has_nav_embedded_logo)
             // .addremoveClass("item", has_nav)
             .prependTo(has_nav_embedded_logo ? ".main-header .left" : "#overlays")
-            .addremoveClass("stay_hidden", has_nav && !has_nav_embedded_logo)
+            .addremoveClass("hide", has_nav && !has_nav_embedded_logo)
         // reverse the logo menu if it's up top
         if (! $("#logo_menu").is(".inverted") != has_nav_embedded_logo) {
             $("#logo_menu").addremoveClass("inverted", ! has_nav_embedded_logo)
                 .append($("#logo_menu").children().get().reverse())
         }
-        $(".overlay.panel").addremoveClass("stay_hidden", has_nav)
+        $(".overlay.panel").addremoveClass("hide", has_nav || $("body").is(".edit"))
     }
     var custom_classes = ""
     o.render = function(method, data){
@@ -265,7 +270,6 @@ define([
         var new_classes = context.route.custom_classes // + " " + context.route_name
         $("body").removeClass(custom_classes).addClass(new_classes)
         custom_classes = new_classes
-        fixup_overlay()
 
         if (page_data.title) $("head title").text(page_data.title);
         o.column_layout = false;
@@ -333,6 +337,7 @@ define([
             }
         }
 
+        fixup_overlay()
         o.attach_handlers();
     };
 
@@ -392,14 +397,22 @@ define([
     }
 
     var local_attach_handlers = function(){
+        $(".main-header form.search_bar input[type=submit]")
+            .bind_once_anon("focus.page", function(ev) {
+                var $form = $(this).parents("form")
+                $form.find("#search_box").focus()
+            })
         $("form.search_bar").bind_once_anon("submit", function(ev) {
             if ($(this).find("#search_box").val() == "")
                 return false
         })
         if (context.flags.new_nav) {
-            $(".icon.go_search").bind_once_anon("tap.page mouseenter.page", 
+            $(".main-header .icon.go_search").bind_once_anon("tap.page mouseenter.page", 
                 function(ev) {
-                    $(".main-header #search_box").focus()
+                    var search_box = $(".main-header #search_box")
+                    if(search_box.is(':focus')) return
+                    ev.preventDefault()
+                    search_box.focus()
             })
             // Animate header
             $(window).bind_once_anon("scroll.page", function(ev) {
@@ -805,6 +818,9 @@ define([
             ordered_ids = $.map(context.page_data.cards, function(el) {
                 return el.id;
             });
+            var ordered_nums = $.map(context.page_data.cards, function(el) {
+                return el.card_num;
+            });
         }
         // Resize the columns
         for (var i = 0; i < 3; ++i){
@@ -819,13 +835,16 @@ define([
         for (var i = 0; i < o.columns; ++i){
             row_heights = row_heights.concat(0);
         }
-        for (var i = 0, card_id; card_id = ordered_ids[i++];) {
-            el_card = $("#card_" + card_id);
-            var min = Math.min.apply(null, row_heights);
-            var min_i = row_heights.indexOf(min);
-            var el_col = $(".feed .column_" + min_i);
-            el_col.append(el_card);
-            row_heights[min_i] += el_card.height();
+        for (var i = 0, card_id; card_id = ordered_ids[i]; ++i) {
+            var $card = $("#card_" + card_id)
+                ,min = Math.min.apply(null, row_heights)
+                ,min_i = row_heights.indexOf(min)
+                ,$col = $(".feed .column_" + min_i)
+            if (ordered_nums) {
+                $card = $(".feed .card[data-num=" + ordered_nums[i] + "]")
+            }
+            $col.append($card);
+            row_heights[min_i] += $card.height();
         };
     };
 

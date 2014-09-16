@@ -81,7 +81,7 @@
           {<if (and user.logged_in (eq user.name owner.name))}
             ><div class='spacer inline'></div>
             {# private (logged in only) #}
-            <a class='nav_button inline private' title="Private expressions"
+            <a class='nav_button inline private' title="Private newhives"
               {<if (or (eq route_name "expressions_tag")
                        (eq route_name "expressions_public_grid_tags"))}
                 { anchor_attrs "expressions_tag_private" "owner_name" user.name 

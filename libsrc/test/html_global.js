@@ -1,4 +1,5 @@
 // http://duke:3737/home/admin/test_dialogs
+// http://duke:3737/home/admin/test_dialogs?t=.dialog
 
 // to run this:
 // curl(["test/html_global"],function(m){m.render()})
@@ -50,13 +51,13 @@ define([
 ], function(context){
     o = {}
     
-    var all_divs = $("<div>")
-    for (var i = 1; i < arguments.length; ++i) {
-        var template = arguments[i]
-        all_divs.append(template())
-    }
-    
     o.render = function(){
+        var all_divs = $("<div>")
+        for (var i = 1; i < arguments.length; ++i) {
+            var template = arguments[i]
+            all_divs.append(template())
+        }
+        
         var filter = context.query.t || ".dialog"
         $("body").empty().append(all_divs.find(filter).css({
             margin: '15px'

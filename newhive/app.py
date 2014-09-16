@@ -102,7 +102,7 @@ def handle(request):
         if len(environ['PATH_INFO']) <= 1:
             environ['PATH_INFO'] = prefix
     stats = False
-    #stats = True
+    # stats = True
     if stats:
         pass
         # statprof.start()
@@ -137,9 +137,9 @@ def handle(request):
             pr = cProfile.Profile()
             pr.enable()
             doflags(functools.partial(controller.dispatch, handler, request, **args),
-                ("iterations", "mini_expressions"),
-                [6],
-                [3])
+                ("iterations", "feed_max"),
+                [5],
+                [2000,1000,500,100])
 
         response = controller.dispatch(handler, request, **args)
         if stats:
@@ -150,6 +150,9 @@ def handle(request):
             ps.print_stats(25)
 
             ps.dump_stats(join(config.src_home, 'stats'))
+            # To view stats graphically, use:
+            # alias gprof='gprof2dot.py -f pstats stats | dot -Tpng -o output.png;open output.png'
+
     except:
         import traceback
         (blah, exception, traceback) = sys.exc_info()
