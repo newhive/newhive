@@ -270,6 +270,15 @@ class Expr(ModelController):
         if not expr_obj:
             return self.serve_404(tdata, request, response)
 
+        bg = expr_obj.get('background')
+        if bg and bg.get('file_id') and not bg.get('dimensions'):
+            f = self.db.File.fetch(bg.get('file_id'))
+            dimensions = f.get('dimensions')
+            if dimensions:
+                bg['dimensions'] = dimensions
+                expr_obj.update(updated=False, background=bg)
+            else:
+                f.update(resample_time=0)
         if (expr_obj.get('auth') == 'password'
             and not expr_obj.cmp_password(request.form.get('password'))
             and not expr_obj.cmp_password(request.args.get('pw'))):
@@ -339,10 +348,10 @@ class Expr(ModelController):
         if type == 'hive.image':
             url = app.get('url') or content
             media = self.db.File.fetch(app.get('file_id'))
-            if media: url = media.get_resample(dimensions[0] * scale)
+            scale_x = app.get('scale_x', 1)
+            if media: url = media.get_resample(dimensions[0] * scale * scale_x)
 
             html = "<img src='%s'>" % url
-            scale_x = app.get('scale_x')
             if scale_x:
                 klass += " crop_box"
                 scale_x *= dimensions[0]

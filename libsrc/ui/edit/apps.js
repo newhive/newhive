@@ -3240,6 +3240,8 @@ Hive.init_background_dialog = function(){
         Hive.bg_set(files[0]);
     }).on('success', function(ev, files){
         env.Exp.background.url = files[0].url;
+        env.Exp.background.file_id = files[0]["id"];
+        env.Exp.background.file_name = files[0]["name"];
     });
 };
 Hive.bg_color_set = function(c) {

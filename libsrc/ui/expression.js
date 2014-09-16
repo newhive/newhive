@@ -51,10 +51,11 @@ define([
 
     var layout_coord = 0
     o.layout = function(){
-        layout.place_apps(layout_coord) 
+        layout.place_apps(layout_coord, o.expr) 
     }
 
     o.init = function(expr){
+        o.expr = expr
         layout_coord = expr.layout_coord || 0
         client_data = expr['apps']
         $.each(client_data, function(app_id, data){
@@ -371,7 +372,7 @@ define([
             .css({width:"",height:""})
         play_first()
 
-        o.layout()
+        if (util.mobile()) o.layout()
     };
 
     o.link_target = function(a){

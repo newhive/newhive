@@ -2009,6 +2009,7 @@ class Expr(HasSocial):
         expr = dfilter(self, ['layout_coord', 'clip_x', 'clip_y'])
         expr['type'] = "expr"
         apps = expr['apps'] = {}
+        expr['bg'] = self.get('background')
         for app in self.get('apps',[]):
             app_id = app.get('id', 'app_' + str(app['z']))
             data = app.get('client_data', {})
@@ -2120,6 +2121,7 @@ class File(Entity):
         imo = Img.open(self.file)
         # format = imo.format
         size = imo.size
+        self.update(dimensions=size)
         factor = 2 ** .5
         ext = '.' + self.get('mime').split('/')[1]
         resample_fd, resample_filename = mkstemp(suffix=ext)
@@ -2132,6 +2134,7 @@ class File(Entity):
         call (['identify', resample_filename], stdout=ident)
         ident.seek(0)
         ident_frames = ident.read().strip().split("\n")
+        # IIRC, this prevents animated gifs with any offsets from being resampled
         if len([x for x in ident_frames if not re.search(r'\+0\+0',x)]) > 0:
             self.update(resamples=[])
             return False
@@ -2139,12 +2142,14 @@ class File(Entity):
         resamples = []
         while (size[0] >= 100) or (size[0] >= 100):
             size = (size[0] / factor, size[1] / factor)
-            size_str = str(int(size[0])) + 'x' + str(int(size[1]))
+            size_rounded = (int(size[0] + .5), int(size[1] + .5))
+            size_str = str(size_rounded[0]) + 'x' + str(size_rounded[1])
             cmd = ['mogrify', '-resize', size_str, resample_filename]
             call(cmd)
-            resamples.append(size)
+            resamples.append(size_rounded)
             self.db.s3.upload_file(resample_filename, 'media',
-                self._resample_name(size[0]), self._resample_name(size[0]),
+                self._resample_name(size_rounded[0]), 
+                self._resample_name(size_rounded[0]),
                 self['mime'])
         os.remove(resample_filename)
         resamples.reverse()

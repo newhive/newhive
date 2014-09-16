@@ -9,7 +9,7 @@ define(['browser/jquery', 'ui/util'], function($, util) {
         return window.devicePixelRatio
     }
 
-    o.place_apps = function(layout_coord) {
+    o.place_apps = function(layout_coord, expr) {
         // if(util.mobile()) return
         var win_dims = [$(window).width(), $(window).height()]
             ,scale_from = win_dims[layout_coord]
@@ -22,7 +22,10 @@ define(['browser/jquery', 'ui/util'], function($, util) {
         $('.happfill').each(function(i, div) {
             var e = $(div);
             //e.width(e.parent().width()).height(e.parent().height());
-            o.img_fill(e.find('img'))
+            curr_dims = null
+            if (e.prop("id") == "bg" && expr.bg) 
+                curr_dims = expr.bg.dimensions
+            o.img_fill(e.find('img'), curr_dims)
         });
 
         $('.happ').each(function(i, app_div) {
@@ -98,7 +101,10 @@ define(['browser/jquery', 'ui/util'], function($, util) {
     // as well as center to any side or corner
     o.center = function(e, inside, opts){
         e = $(e)
-        if(!e.width() || !e.height()) return; // As image is loading, sometimes height can be falsely reported as 0
+        opts = opts || {}
+        var curr_dims = opts.curr_dims || [e.outerWidth(), e.outerHeight()]
+        // As image is loading, sometimes height can be falsely reported as 0
+        if(!curr_dims[0] || !curr_dims[1]) return;
 
         var w = (inside ? $(inside) : $(window))
             opts = $.extend({
@@ -110,8 +116,8 @@ define(['browser/jquery', 'ui/util'], function($, util) {
             pos = {}
         ;
 
-        if(opts.h) pos.left = (w.width() - e.outerWidth()) / 2;
-        if(opts.v) pos.top = (w.height() - e.outerHeight()) / 2;
+        if(opts.h) pos.left = (w.width() - curr_dims[0]) / 2;
+        if(opts.v) pos.top = (w.height() - curr_dims[1]) / 2;
 
         if(opts.minimum) {
             if(opts.h) pos.left = Math.max(0, pos.left);
@@ -126,19 +132,27 @@ define(['browser/jquery', 'ui/util'], function($, util) {
     };
 
     // fill <img> to parent
-    o.img_fill = function(img){
-        var e = $(img);
-        if(!e.length) return;
-        var w = e.parent().width(), h = e.parent().height(), load = function(){
-            e.css('position', 'absolute');
-            if(e.width() / e.height() > w / h) e.width('').height(h);
-            else e.width(w).height('');
-            o.center(e, e.parent(), { minimum : false });
-        };
-        if(!e.width()) e.load(load);
+    o.img_fill = function(img, curr_dims){
+        var $img = $(img);
+        if(!$img.length) return;
+        var curr_dims = curr_dims || [$img.width(), $img.height()]
+            ,$parent = $img.parent()
+            ,w = $parent.width(), h = $parent.height()
+            ,aspect = curr_dims[1] / curr_dims[0]
+            ,load = function(){
+                $img.css('position', 'absolute');
+                if(curr_dims[0] / curr_dims[1] > w / h) 
+                    w = h / aspect //$img.width('').height(h);
+                else 
+                    h = w * aspect //$img.width(w).height('');
+                $img.width(w).height(h);
+                o.center($img, $parent, { 
+                    minimum : false, curr_dims : [w, h] });
+            };
+        if(!curr_dims[0]) $img.load(load);
         // else 
         load();
-        return e;
+        return $img;
     }
 
     // TODO: fix this
