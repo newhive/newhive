@@ -1,24 +1,41 @@
+// empty object module for server to put stuff in
 define([
     'json!ui/routes.json',
-    'config',
+    'json!server/compiled.config.json',
     'ui/routing',
     'browser/js',
     'browser/upload',
     'ui/menu',
     'ui/dialog',
     'ui/util'
-], function(
-    api_routes,
-    config,
-    routing,
-    js,
-    upload,
-    menu,
-    dialog,
-    ui_util
-){
+], function(api_routes, config, routing, js, upload, menu, dialog, ui_util){
     var o = { config: config };
 
+    window.asset_loaded = function(el) {
+        var $el = $(el)
+        while (true) {
+            $el.removeClass("loading").addClass("loaded").trigger("lazy_load")
+            if ($el.is(".lazy_load"))
+                break
+            $el = $el.parent()
+            if (! $el.length || $el.find(".loading").length)
+                break
+        }
+    }
+    o.lazy_load = function(context, block, extra_classes) {
+        var out = '<div class="lazy_load ' + extra_classes + '">'
+            ,args = Array.prototype.slice.call(arguments, 3)
+        if (args.length == 1 && args[0].reverse) // it's a list
+            args = args[0]
+        for(var i = 0; i < args.length; ++i) {
+            if (args[i]) {
+                var loop_context = {};
+                loop_context["item"] = args[i];
+                out += block(context.concat(loop_context));
+            }
+        }
+        return out + "</div>"
+    }
     o.asset = function(context, name){
         // if supplied with single argument (old code), use that as name.
         return ui_util.asset(name ? name : context);
@@ -50,9 +67,18 @@ define([
     o.param = function(context, v){
         return window.encodeURIComponent(v) }
     
-    o.defer = function(context, block){
-        return '<div class="defer" data-content="' + escapeHtml(block(context)) + '"></div>';
+    o.defer = function(context, block, extra_classes){
+        extra_classes = extra_classes ? " " + extra_classes : ""
+        return '<div class="defer hide' + extra_classes + '" data-content="'
+            + escapeHtml(block(context)) + '"></div>';
     };
+    o.undefer = function(el) {
+        var $el = $(el)
+        if (! $el.length) return $()
+        var $new_el = $($el.data("content"))
+        $el.replaceWith($new_el)
+        return $new_el
+    }
 
     o.recency_time = function(context, time) {
         var now = Date.now();
@@ -158,35 +184,21 @@ define([
     // Returns attribute string.
     // TODO-cleanup: make query argument an object, using stringjay
     //   object constructor, see TODO-cleanup-object in text/stringjay
-    if(config.app){
-        o.query_attrs = function(scope, route_name, query){
-            return "data-mobile-route='" + route_name + "'"
-        }
-    }
-    else {
-        o.query_attrs = function(scope, route_name, query){
-            var args = get_route_args(Array.prototype.slice.call(arguments, 1));
-            query = $.map(query.split("&"),function(e) {
-                return $.map(e.split("="),function(k) {
-                    return encodeURIComponent(k)}).join("=")
-            }).join("&");
-            return attrs(route_name, args, query, false);
-        }
-    }
+    o.query_attrs = function(scope, route_name, query){
+        var args = get_route_args(Array.prototype.slice.call(arguments, 1));
+        query = $.map(query.split("&"),function(e) {
+            return $.map(e.split("="),function(k) {
+                return encodeURIComponent(k)}).join("=")
+        }).join("&");
+        return attrs(route_name, args, query, false);
+    };
 
     // takes route_name, and association argument list.
     // Returns attribute string.
-    if(config.app){
-        o.anchor_attrs = function(scope, route_name){
-            return "data-mobile-route='" + route_name + "'"
-        }
-    }
-    else {
-        o.anchor_attrs = function(scope, route_name){
-            var args = get_route_args(arguments);
-            return attrs(route_name, args, "", false);
-        }
-    }
+    o.anchor_attrs = function(scope, route_name){
+        var args = get_route_args(arguments);
+        return attrs(route_name, args, "", false);
+    };
 
     // takes route_name, and association argument list.
     // Returns attribute string.
@@ -380,7 +392,7 @@ define([
             var input_id = input.attr('id'),
                 drop_selector = input.attr('data-drop-area');
                 drop_areas = all.find('label[for=' + input_id + ']')
-                    .add(drop_selector);
+                    .add(drop_selector).add(all.find(drop_selector));
                 upload.drop_target(drop_areas,
                     function(files, file_list){
                         form.trigger('with_files', [files, file_list]); },
