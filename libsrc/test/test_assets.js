@@ -1,7 +1,7 @@
 // http://duke:3737/home/admin/test_assets
 
 define([
-    'server/context'
+    'context'
     ,'ui/util'
 ], function(context, util){
     o = {}

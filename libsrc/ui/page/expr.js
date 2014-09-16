@@ -1,6 +1,6 @@
 define([
     'browser/jquery',
-    'server/context',
+    'context',
     'browser/layout',
     'ui/util',
     'ui/menu',

@@ -1,6 +1,6 @@
 define([
     'browser/jquery',
-    'server/context',
+    'context',
     'ui/util',
     //// TODO-cleanup: move this shit into templates
     // 'sj!./basic.html',

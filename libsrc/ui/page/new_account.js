@@ -4,7 +4,7 @@
  */
 define([
      'browser/jquery'
-    ,'server/context'
+    ,'context'
     ,'ui/routing'
     ,'browser/js'
     ,'sj!templates/create_account.html'

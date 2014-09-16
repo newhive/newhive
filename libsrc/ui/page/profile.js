@@ -1,7 +1,7 @@
 define([
     'browser/jquery',
     'ui/dialog',
-    'server/context',
+    'context',
     'sj!templates/cards.html',
     'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js'
 ], function(

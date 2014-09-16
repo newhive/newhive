@@ -8,7 +8,7 @@ define([
     'json!ui/routes.json',
     'browser/js',
     'ui/dialog',
-    'server/context',
+    'context',
     'browser/layout',
     'ui/page/pages',
 

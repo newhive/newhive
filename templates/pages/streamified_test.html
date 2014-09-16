@@ -3,7 +3,7 @@
 {% block head %}
   {{ super() }}
   <script>
-curl(['server/context', 'browser/jquery'], function(context, $){
+curl(['context', 'browser/jquery'], function(context, $){
 	$('#share_btn').click(function(){
 		window.open(context.config.streamified_url + 'streams/networks/twitter/login?client_id=' +
 			context.config.streamified_client_id + '&redirect_uri=' +

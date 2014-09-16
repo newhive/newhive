@@ -1,6 +1,6 @@
 define([
     'browser/jquery',
-    'server/context'
+    'context'
 ], function(
     $,
     context

@@ -1,5 +1,5 @@
 define([
-    'server/context'
+    'context'
 ], function(
     context
 ){

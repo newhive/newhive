@@ -6,7 +6,7 @@
 define([
     'browser/jquery'
     ,'browser/js'
-    ,'server/context'
+    ,'context'
     ,'browser/layout'
     ,'ui/jplayer'
     ,'ui/util'
@@ -14,7 +14,6 @@ define([
 
     ,'browser/jquery/jplayer/skin'
     ,'browser/jquery/rotate.js'
-    ,'browser/jquery.mobile.custom'
 ], function(
     $
     ,js

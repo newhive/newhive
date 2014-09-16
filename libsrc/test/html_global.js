@@ -4,7 +4,7 @@
 // curl(["test/html_global"],function(m){m.render()})
 
 define([
-    'server/context'
+    'context'
 
     ,'sj!templates/stringjay_test.html'
     ,'sj!templates/test_layout.html'

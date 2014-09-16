@@ -7,7 +7,7 @@ define([
     ,'ui/menu'
     ,'ui/dialog'
     ,'ui/util'
-    ,'server/context'
+    ,'context'
     ,'ui/colors'
     ,'browser/upload'
     ,'browser/layout'

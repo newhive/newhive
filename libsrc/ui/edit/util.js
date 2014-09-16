@@ -2,7 +2,7 @@ define([
     'browser/jquery'
     ,'browser/js'
     
-    ,'server/context'
+    ,'context'
     ,'ui/colors'
     ,'sj!templates/color_picker.html'
     ,'ui/menu'

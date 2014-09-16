@@ -1,13 +1,16 @@
-// empty object module for server to put stuff in
 define([
+    'json!ui/routes.json',
     'config',
+    'ui/routing',
     'browser/js',
     'browser/upload',
     'ui/menu',
     'ui/dialog',
     'ui/util'
 ], function(
+    api_routes,
     config,
+    routing,
     js,
     upload,
     menu,
@@ -155,21 +158,35 @@ define([
     // Returns attribute string.
     // TODO-cleanup: make query argument an object, using stringjay
     //   object constructor, see TODO-cleanup-object in text/stringjay
-    o.query_attrs = function(scope, route_name, query){
-        var args = get_route_args(Array.prototype.slice.call(arguments, 1));
-        query = $.map(query.split("&"),function(e) {
-            return $.map(e.split("="),function(k) {
-                return encodeURIComponent(k)}).join("=")
-        }).join("&");
-        return attrs(route_name, args, query, false);
-    };
+    if(config.app){
+        o.query_attrs = function(scope, route_name, query){
+            return "data-mobile-route='" + route_name + "'"
+        }
+    }
+    else {
+        o.query_attrs = function(scope, route_name, query){
+            var args = get_route_args(Array.prototype.slice.call(arguments, 1));
+            query = $.map(query.split("&"),function(e) {
+                return $.map(e.split("="),function(k) {
+                    return encodeURIComponent(k)}).join("=")
+            }).join("&");
+            return attrs(route_name, args, query, false);
+        }
+    }
 
     // takes route_name, and association argument list.
     // Returns attribute string.
-    o.anchor_attrs = function(scope, route_name){
-        var args = get_route_args(arguments);
-        return attrs(route_name, args, "", false);
-    };
+    if(config.app){
+        o.anchor_attrs = function(scope, route_name){
+            return "data-mobile-route='" + route_name + "'"
+        }
+    }
+    else {
+        o.anchor_attrs = function(scope, route_name){
+            var args = get_route_args(arguments);
+            return attrs(route_name, args, "", false);
+        }
+    }
 
     // takes route_name, and association argument list.
     // Returns attribute string.

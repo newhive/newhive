@@ -4,10 +4,10 @@ define(
 {
 	return {
 		'load': function (resourceId, require, callback, config) {
-			// server/context can't be an explicit dependency because
+			// context can't be an explicit dependency because
 			// currently curl can not handle a module loader loading another
-			// module loader (server/context depends on the json loader)
-			var context = require(['server/context'], function(context){
+			// module loader (context depends on the json loader)
+			var context = require(['context'], function(context){
 	            fetchText(config.baseUrl + '/' + resourceId, function(text){
 					var t = sj.template(text, resourceId, context);
 					callback(t);
@@ -21,7 +21,7 @@ define(
 				resId,
 				function(source) {
 					var out = "define('" + absId	+ "',"
-						+ "['text/stringjay', 'server/context'],"
+						+ "['text/stringjay', 'context'],"
 						+ "function(sj, context){"
 							+ "return sj.template("
 								+ JSON.stringify(source) + ","

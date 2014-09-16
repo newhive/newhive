@@ -1,7 +1,8 @@
 define([
     'jquery',
     'config',
-    'sj!templates/cards.html'
+    'sj!templates/cards.html',
+    'sj!templates/expr_card_feed.html',
 ], function(
     $,
     config,

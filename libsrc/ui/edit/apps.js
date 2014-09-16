@@ -1,7 +1,7 @@
 define([
     'browser/jquery'
     ,'browser/js'
-    ,'server/context'
+    ,'context'
     ,'browser/upload'
     ,'browser/layout'
     ,'browser/js'

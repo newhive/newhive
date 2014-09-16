@@ -4,7 +4,7 @@ define([
     ,'ui/page'
     ,'ui/page/pages'
     ,'ui/util'
-    ,'server/context'
+    ,'context'
     ,'json!ui/routes.json'
     // ,'history/history'
     ,'ui/routing'

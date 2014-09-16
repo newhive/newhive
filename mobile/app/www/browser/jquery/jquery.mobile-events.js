@@ -24,7 +24,7 @@
  * THE SOFTWARE.
  * 
  */
-define(['./jquery'], function($){
+(function ($) {
     $.attrFn = $.attrFn || {};
 
     // navigator.userAgent.toLowerCase() isn't reliable for Chrome installs
@@ -825,4 +825,4 @@ define(['./jquery'], function($){
         };
     });
 
-})
+})(jQuery);

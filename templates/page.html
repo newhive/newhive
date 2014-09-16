@@ -14,7 +14,7 @@
   {% endif %}
 
   <script>
-curl(['server/context', 'browser/js'], function(context, util){
+curl(['context', 'browser/js'], function(context, util){
     util.copy({
         user: {{ user.client_view(activity=20, special={"tagged":1})|json }},
         error: {{ error|json }},
