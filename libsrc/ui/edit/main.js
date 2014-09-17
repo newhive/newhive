@@ -690,12 +690,20 @@ Hive.keydown = function(ev){
 };
 
 Hive.scroll = function(ev){
-    env.scrollX = window.scrollX
-    env.scrollY = window.scrollY
-    if(env.Selection.controls)
-        env.Selection.controls.layout();
+    var scrolledX = window.scrollX - env.scrollX
+        ,scrolledY = window.scrollY - env.scrollY
+    env.scrollX += scrolledX
+    env.scrollY += scrolledY
+    env.Apps.all().map(function(app){
+        if (app.fixed()) {
+            app.pos_set(u._add(app.pos(), [scrolledX, scrolledY]))
+        }
+    })
+    if (env.Selection.controls)
+        env.Selection.controls.layout()
     env.Selection.elements().map(function(app){
-        if(app.controls) app.controls.layout() });
+        if (app.controls) app.controls.layout() 
+    })
     env.Background.layout()
 };
 // END-Events /////////////////////////////////////////////////////////

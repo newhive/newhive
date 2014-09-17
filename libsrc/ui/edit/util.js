@@ -190,10 +190,15 @@ o.array_equals = function(a, b) {
   return true;
 }
 
+o.epsilon_eq = function(a, b, epsilon) {
+    return (Math.abs(a - b) < epsilon)
+}
 // deep object comparison
-o.deep_equals = function(o1, o2) {
+o.deep_equals = function(o1, o2, epsilon) {
     if (o1 == null || o2 == null || typeof(o1) != "object" || typeof(o2) != "object")
         return o1 == o2 || (isNaN(o1) && isNaN(o2))
+             || (epsilon && typeof(o1) == "number" && typeof(o2) == "number" 
+                && o.epsilon_eq(o1, o2, epsilon))
 
     var k1 = Object.keys(o1).sort();
     var k2 = Object.keys(o2).sort();
@@ -206,7 +211,14 @@ o.deep_equals = function(o1, o2) {
             return false
         }
         var a = o1[key1], b = o2[key2]
-        if (!o.deep_equals(a, b)) {
+        if (key1 == "position") {
+            if (!o.deep_equals(a, b, 1e-6)) {
+                // console.log("objects differ: " + key1 + ": " + a + 
+                //     "\n" + key2 + ": " + b)
+                return false
+            }
+        }
+        else if (!o.deep_equals(a, b, epsilon)) {
             // console.log("objects differ: " + key1 + " " + key2)
             return false
         }

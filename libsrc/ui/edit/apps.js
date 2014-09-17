@@ -585,13 +585,30 @@ Hive.App = function(init_state, opts) {
         $highlight.showhide(opts.on);
     }
     // TODO-cleanup-history: use state instead
-    o.state_relative = function(){ return {
-        position: _pos.slice(),
-        dimensions: _dims.slice()
-    }};
+    o.state_relative = function(){ 
+        var pos_dims = {
+            position: _pos.slice(),
+            dimensions: _dims.slice()
+        }
+        if (o.fixed())
+            pos_dims.position = 
+                u._sub(pos_dims.position, 
+                    u._div([env.scrollX, env.scrollY], env.scale()))
+        return pos_dims
+    };
+    o.fixed = function() { return o.div.is(".fixed") }
+    // o.fixed_offset_set = function(new_offset) {
+    //     var diff = u._sub(new_offset, o.fixed_offset)
+    //     o.fixed_offset = new_offset
+    //     o.
+    // }
     o.state_relative_set = function(s){
-        if(s.position)
+        if(s.position) {
             _pos = s.position.slice();
+            if (o.fixed())
+                _pos = u._add(_pos,
+                    u._div([env.scrollX, env.scrollY], env.scale()))
+        }
         if(s.dimensions)
             _dims = s.dimensions.slice();
         o.layout();

@@ -7,6 +7,8 @@ o.no_snap = false;
 o.show_mini_selection_border = false
 o.copy_table = false;
 
+o.scrollX = o.scrollY = 0;
+
 // 1 editor unit := scale client pixels
 // The editor is 1000 units wide inside a 1000*scale pixel window
 var scale = 1, zoom = 1, padding = 10
