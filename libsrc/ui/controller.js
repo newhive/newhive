@@ -76,7 +76,7 @@ define([
     o.init = function(route_args){
         window.c = context; // useful for debugging
         analytics.setup();
-        if (!util.mobile() && context.flags.mobile_web)
+        if (!util.mobile() && context.flags && context.flags.mobile_web)
             util.mobile = function() { return "true" };
         // init_history();
 
