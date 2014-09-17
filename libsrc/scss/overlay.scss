@@ -168,8 +168,23 @@ body:not(.mobile) {
 
             overflow: hidden;
 
-            li { display: inline-block; }
-            .text_btn { margin: 0px; }
+            li { 
+                display: inline-block;
+                @for $i from 1 through 7 {
+                    &:nth-of-type( #{$i} ) {
+                        .black_btn { background-color: nth($category_colors, $i); }
+                    }
+                }
+            }
+
+            // .text_btn { margin: 0px; }
+            .category_btn {
+                text-transform: uppercase;
+                padding: 10px;
+                font-family: Gibson Semibold;
+                font-size: 16px;
+            }
+
             .show_narrow { 
                 display: inline-block;
                 width: 100%; 

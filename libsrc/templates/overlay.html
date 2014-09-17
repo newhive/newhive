@@ -66,12 +66,13 @@
     {#<div class="hide_condensed blurb upper centered">NewHive is your multimedia publishing platform.</div>#}
   {>}
 
+  {# Category Buttons #}
   <div class="header">
     {<if flags.categories}
     <ul>
       {<for home.cats "count"}
         <li><a { anchor_attrs "home_cat" "tag_name" item}>
-          <div class='text_btn item teal_hover' data-name={item}>
+          <div class='category_btn teal_hover' data-name={item}>
             {item}</div></a></li>&nbsp;
         {<if (eq (plus count 1) (floor (mul (len home.cats) 0.5)))}
           <div class="show_narrow"></div>
