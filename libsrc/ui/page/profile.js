@@ -309,6 +309,7 @@ define([
             var card_data = context.page_data.cards[card_num]
                 ,collection_users = function(data) {
                     card_data.user_list = data
+                    if (data.length <= 1) return
                     var $attachment = $("<div class='user_list'>")
                         .appendTo(card.find(".info"))
                     data.map(function(u){
@@ -320,7 +321,7 @@ define([
                         $attachment.css({opacity: entering ? 1 : 0})
                     })
                 }
-            if (card_data && !card_data.user_list) {
+            if (card_data && card_data.curated && !card_data.user_list) {
                 o.controller.get("collection_users", {
                     "owner_name": card_data.owner.name,
                     "tag_name": card_data.title
