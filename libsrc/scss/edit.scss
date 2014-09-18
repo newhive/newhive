@@ -179,6 +179,14 @@ background-color: lightgrey;
     font-weight: 700;
 }
 // .happ { @include box-sizing( border-box ); }
+.help_highlight {
+    position: fixed;
+    z-index: 1336;
+    pointer-events:none;
+
+    background-color: $color_selected;
+    opacity: .5;
+}
 .happ .highlight {
     width: 100%;
     height: 100%;

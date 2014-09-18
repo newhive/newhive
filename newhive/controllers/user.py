@@ -60,11 +60,13 @@ class User(ModelController):
         if not user: return self.serve_json(response, False)
 
         old_order = user.get_tag(tag_name)
-        exprs = self.db.Expr.fetch(old_order[:20])
+        exprs = self.db.Expr.fetch(old_order[:40])
+        # First user is the owner
         seen = set([user.id])
         users = [user.client_view()]
         for expr in exprs:
             user = expr.owner
+            # Include users in the order they are in the collection, no dupes.
             if user.id in seen:
                 continue
             seen.add(user.id)

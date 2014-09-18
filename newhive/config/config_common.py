@@ -83,6 +83,7 @@ site_flags = {
     ,'css_classes': ['admins', 'devs']
     ,'shape_link': ['admins', 'devs']
     ,'autoplay': ['admins', 'devs']
+    ,'context_help': ['admins', 'devs']
     # Admin
     ,'admin': ['admins']
     # Old / unused

@@ -141,10 +141,19 @@
 
 <div id="controls_group" class='hide'>
 <div id='controls_common' class='controls_src'>
- <img class='control remove tip_NE' src='{asset "skin/edit/delete_app.png"}' title='Delete'>
- <div class='control stack'><img class='stack_up hoverable' src='{asset "skin/edit/stack_up.png"}' title='Move to front'><img class='stack_down hoverable' src='{asset "skin/edit/stack_down.png"}' title='Move to back'></div>
- <img class='control copy tip_N' src='{asset "skin/edit/copy.png"}'
-   title='Duplicate element'>
+  {<if flags.context_help}
+    <img class='control help tip_N' 
+      src='{asset "skin/edit/help_btn.png"}' title='Help'>
+  {>}
+  <img class='control remove tip_NE' 
+    src='{asset "skin/edit/delete_app.png"}' title='Delete'>
+  <div class='control stack'>
+    <img class='stack_up hoverable' 
+      src='{asset "skin/edit/stack_up.png"}' title='Move to front'
+    ><img class='stack_down hoverable' 
+      src='{asset "skin/edit/stack_down.png"}' title='Move to back'></div>
+  <img class='control copy tip_N' src='{asset "skin/edit/copy.png"}'
+    title='Duplicate element'>
 </div>
 
 <div id='controls_text' class='controls_src'>

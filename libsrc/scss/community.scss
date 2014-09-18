@@ -387,10 +387,11 @@ body.mobile {
 }
 #home_video { width: 640px; height: 360px; }
 
-.lazy_load.mini_views>* {
-    @include transition(opacity, 1.0s, linear);
+.card {
+    .lazy_load.mini_views>* {
+        @include transition(opacity, 1.0s, linear);
+    }
 }
-
 // TODO: should also have body.default
 body {
     z-index: 0;
