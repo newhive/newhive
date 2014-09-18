@@ -598,6 +598,9 @@ define(['browser/js', 'module'],
 		var contains = (list.lastIndexOf(item) >= 0);
 		return contains;
 	};
+	context_base['slice'] = function(context, list, start, end){
+		return end ? list.slice(start, end) : list.slice(start)
+	};
 	context_base.cond = function(context, cond, truthy, falsy){
 		return cond ? truthy : falsy;
 	};

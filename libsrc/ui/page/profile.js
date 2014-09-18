@@ -4,6 +4,7 @@ define([
     'context',
     'sj!templates/cards.html',
     'sj!templates/user_byline.html',
+    'sj!templates/lazy_mini_expression.html',
 
     'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js'
 ], function(
@@ -11,7 +12,8 @@ define([
     dialog,
     context,
     cards_template,
-    template_user_byline
+    template_user_byline,
+    template_mini_expr
 ) {
 
     var o = { name: 'profile' },
@@ -72,27 +74,46 @@ define([
 
     var attach_handlers_cat = function() {
         // auto-loop expressions from main category
-        var cur_mini = 0
+        var cur_mini = 1, $slides
         var next_slide = function() {
             if ($slides.is(":visible")) {
-                $slides.find("a").css({opacity: 0, "pointer-events":"none"})
-                var $slide = $slides.find("a:nth(" + cur_mini + ")")
-                $slide.css({opacity: 1, "pointer-events":"auto"})
+                var pos = $slides.children().length
+                    ,card = context.page_data.cards[0]
+                    ,mini_views = card.thumbs
+                if (pos < mini_views.length) {
+                    template_mini_expr([context, card, {item: mini_views[pos]}])
+                        .appendTo($slides)
+                }
+                $slides.find("a").removeClass("notransition")
+                    .css({opacity: 0, "pointer-events":"none"})
+                    
+                for (;;) {
+                    var $slide = $slides.find("a:nth(" + cur_mini + ")")
+                    if ($slide.is(".error,.loading")) {
+                        ++cur_mini
+                        continue
+                    } else if (! $slide.length) {
+                        cur_mini = 0
+                        continue
+                    }
+
+                    $slide.css({opacity: 1, "pointer-events":"auto"})
+                    break
+                }
                 ++cur_mini
-                $slide = $slides.find("a:nth(" + cur_mini + ")")
-                if (! $slide.length)
-                    cur_mini = 0
             }
         }
-        var $slides = context.undefer($(".card[data-num=0] .defer.mini_views"))
-        $slides.removeClass("mini_views").bind_once_anon("lazy_load.page", function() {
-            if (! $slides.is(".loaded")) return
-            $slides.showshow()
-                .siblings("",".lazy_load").hidehide()
-            // put the 0th slide last so there is no apparent transition between
-            // static content and slider
-            $slides.find("a:nth(0)").appendTo($slides)
-            setInterval(next_slide, 3000)
+        $(document).ready(function(ev) {
+            $slides = context.undefer($(".card[data-num=0] .defer.mini_views"))
+            $slides.removeClass("mini_views").bind_once_anon("lazy_load.page", function() {
+                if (! $slides.is(".loaded")) return
+                $slides.showshow().addClass("slides").off("lazy_load.page")
+                    .siblings("",".lazy_load").hidehide()
+                // immediately hide the non-zeroth children 
+                // and begin animation at 1st card
+                $slides.children().slice(1).addClass("notransition").css({opacity: 0})
+                setInterval(next_slide, 3000)
+            })
         })
     }
     o.attach_handlers = function(){
@@ -293,7 +314,8 @@ define([
             ,card_num = card.data("num")
         $mini_views.css({opacity: (dir == "in") ? 1 : 0})
         
-        $mini_views = context.undefer(card.find(".mini_views.defer"))
+        if (card_num > 0)
+            $mini_views = context.undefer(card.find(".mini_views.defer"))
         if ($mini_views.length) {
             $mini_views.on("lazy_load", function() {
                 if (! $mini_views.is(".loaded")) return

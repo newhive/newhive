@@ -540,7 +540,7 @@ def collection_client_view(db, collection, ultra=False, viewer=None):
     if not owner: return None
     exprs = owner.get_tag(tag)
     if not exprs: return None
-    el = db.Expr.fetch(exprs[0:4])
+    el = db.Expr.fetch(exprs[0:40 if ultra else 4])
     expr = el[0]
     if not expr: return None
 
@@ -565,8 +565,7 @@ def collection_client_view(db, collection, ultra=False, viewer=None):
     }
     expr_cv["thumbs"] = []
     if len(el) > 1: 
-      for i in xrange(1 if len(el) > 2 else 0, len(el)):
-        if len(el) > 2 and i == 0: continue
+      for i in xrange(1 if len(el) > 2 and not ultra else 0, len(el)):
         expr = el[i]
         expr_cv["thumbs"].append({
             "owner_name": expr['owner_name']

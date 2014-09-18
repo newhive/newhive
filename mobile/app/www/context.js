@@ -11,10 +11,11 @@ define([
 ], function(api_routes, config, routing, js, upload, menu, dialog, ui_util){
     var o = { config: config };
 
-    window.asset_loaded = function(el) {
+    window.asset_loaded = function(el, error) {
         var $el = $(el)
         while (true) {
-            $el.removeClass("loading").addClass("loaded").trigger("lazy_load")
+            $el.removeClass("loading").addClass("loaded")
+                .trigger("lazy_load", $el).addClass(error ? "error" : "")
             if ($el.is(".lazy_load"))
                 break
             $el = $el.parent()
@@ -22,6 +23,10 @@ define([
                 break
         }
     }
+    o.onload = function(context) {
+        return "onload='asset_loaded(this)' onerror='asset_loaded(this, true)'"
+    }
+
     o.lazy_load = function(context, block, extra_classes) {
         var out = '<div class="lazy_load ' + extra_classes + '">'
             ,args = Array.prototype.slice.call(arguments, 3)
