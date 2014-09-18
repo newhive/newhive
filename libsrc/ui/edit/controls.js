@@ -226,8 +226,10 @@ o.Controls = function(app, multiselect, delegate) {
         if(o.multiselect) return;
 
         //o.c.undo   .css({ top   : -38 - p, right  :  61 - p });
+        o.c.help   .css({ left: dims[0] - 76 + p, top: -38 - p });
         o.c.copy   .css({ left: dims[0] - 45 + p, top: -38 - p });
         o.c.remove .css({ left: dims[0] - 14 + p, top: -38 - p });
+
         o.c.stack  .css({ left: dims[0] - 78 + p, top: dims[1] + 8 + p });
         o.c.buttons.css({ left: -bw - p, top: dims[1] + p + 10,
             width: dims[0] - 60 });
@@ -263,6 +265,7 @@ o.Controls = function(app, multiselect, delegate) {
         var d = o.div;
         o.c = {};
         //o.c.undo    = d.find('.undo'   );
+        o.c.help  = d.find('.help' );
         o.c.remove  = d.find('.remove' );
         o.c.resize  = d.find('.resize' );
         o.c.stack   = d.find('.stack'  );
@@ -270,6 +273,9 @@ o.Controls = function(app, multiselect, delegate) {
             o.app.remove();
             env.layout_apps() // in case scrollbar visibility changed
         });
+        o.c.help.click(function(){
+            env.main.help_selection()
+        })
         o.c.copy    = d.find('.copy'   );
         o.c.copy.click(function(){
             var copy = o.app.copy({ load: function(a){

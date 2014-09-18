@@ -58,6 +58,7 @@ window.h = Hive
 Hive.u = u;
 Hive.env = env;
 Hive.app = hive_app;
+env.main = Hive
 
 Hive.grid = false;
 Hive.toggle_grid = function() {
@@ -71,6 +72,32 @@ Hive.toggle_grid = function() {
     );
 };
 
+Hive.help_selection = function (start) {
+    start = ui_util.defalt(start, true)
+    var $elems = $("body #happs .happ, #controls .control.buttons > *")
+        ,$highlight = $("#overlays_group .help_highlight")
+        ,$target
+    if (!$highlight.length) 
+        $highlight = $("<div class='help_highlight'>").appendTo("#overlays_group")
+    if (start) {
+        $elems.bind_once_anon("mouseenter.help mouseleave.help",function(ev) {
+            $target = $(ev.currentTarget)
+            var enter = (ev.type == "mouseenter")
+                ,css = $target.get(0).getBoundingClientRect()
+            $highlight.showhide(enter).css(css)
+        })
+        .bind_once_anon("mousedown.help", function(ev) {
+            ev.preventDefault()
+            console.log($target)
+            Hive.help_selection(false)
+            return false
+        })
+    } else {
+        $elems.off("mouseenter.help mouseleave.help mousedown.help")
+        $highlight.hidehide()
+    }
+
+}
 Hive.init_menus = function() {
     hive_app.App.has_slider_menu(null, ""
         ,env.padding_set, env.padding, null, null

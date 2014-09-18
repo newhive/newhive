@@ -91,10 +91,10 @@ define([
                 }
                 ++cur_mini
                 // Load new mini views, staying 3 ahead of what is shown to user
-                var pos = $slides.children().length
-                    ,card = context.page_data.cards[0]
+                var pos, card = context.page_data.cards[0]
                     ,mini_views = card.thumbs
                 for (; pos < cur_mini + 3; ++pos) {
+                    pos = $slides.children().length
                     if (pos < mini_views.length) {
                         template_mini_expr([context, card, {item: mini_views[pos]}])
                             .appendTo($slides)
