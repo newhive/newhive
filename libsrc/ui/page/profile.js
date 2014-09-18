@@ -74,33 +74,38 @@ define([
 
     var attach_handlers_cat = function() {
         // auto-loop expressions from main category
-        var cur_mini = 1, $slides
+        var cur_mini = 1, $slides, errors = 0
         var next_slide = function() {
             if ($slides.is(":visible")) {
-                var pos = $slides.children().length
-                    ,card = context.page_data.cards[0]
-                    ,mini_views = card.thumbs
-                if (pos < mini_views.length) {
-                    template_mini_expr([context, card, {item: mini_views[pos]}])
-                        .appendTo($slides)
-                }
-                $slides.find("a").removeClass("notransition")
-                    .css({opacity: 0, "pointer-events":"none"})
-                    
+                // Find the next available view
                 for (;;) {
                     var $slide = $slides.find("a:nth(" + cur_mini + ")")
-                    if ($slide.is(".error,.loading")) {
-                        ++cur_mini
-                        continue
-                    } else if (! $slide.length) {
+                    if (! $slide.length) {
                         cur_mini = 0
                         continue
+                    } else if (!$slide.is(".loaded") || $slide.is(".error")) {
+                        ++cur_mini
+                        ++errors
+                        continue
                     }
-
-                    $slide.css({opacity: 1, "pointer-events":"auto"})
                     break
                 }
                 ++cur_mini
+                // Load new mini views, staying 3 ahead of what is shown to user
+                for (var i = 0; i < errors + 1; ++i) {
+                    var pos = $slides.children().length
+                        ,card = context.page_data.cards[0]
+                        ,mini_views = card.thumbs
+                    if (pos < mini_views.length) {
+                        template_mini_expr([context, card, {item: mini_views[pos]}])
+                            .appendTo($slides)
+                    }
+                }
+                errors = 0
+                // Transition to the new mini view
+                $slides.find("a").removeClass("notransition")
+                    .css({opacity: 0, "pointer-events":"none"})
+                $slide.css({opacity: 1, "pointer-events":"auto"})
             }
         }
         $(document).ready(function(ev) {
