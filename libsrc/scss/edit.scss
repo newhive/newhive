@@ -182,7 +182,7 @@ background-color: lightgrey;
 .help_highlight {
     position: fixed;
     z-index: 1336;
-    pointer-events:none;
+    // pointer-events:none;
 
     background-color: $color_selected;
     opacity: .5;

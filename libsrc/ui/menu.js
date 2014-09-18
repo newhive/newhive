@@ -11,7 +11,7 @@ var menu = function(handle, drawer, options) {
     var handle = $(handle), drawer = $(drawer), o = { handle : handle, drawer : drawer },
         menu_items = drawer.find('.menu_item'), close_timer = false,
         opts = $.extend({
-             open: noop
+             open: noop // should be called 'opened'
             ,close: noop
             ,open_menu: function(){ drawer.showshow() }
             ,close_menu: function(){ drawer.hidehide() }
@@ -118,7 +118,8 @@ var menu = function(handle, drawer, options) {
     };
 
     o.open = function() {
-        if(menu.disabled || ! opts.open_condition()) return;
+        if(menu.disabled || ! opts.open_condition() ||
+            (menu.from_hover && menu.no_hover)) return;
         handle.addClass('active');
         opts.default_item.addClass('active');
         o.cancel_close();
@@ -273,7 +274,8 @@ var menu = function(handle, drawer, options) {
     opts.group.menus.push(o);
 
     if(opts.hover) {
-        handle.on('mouseover', null, { delay: opts.open_delay }, o.open)
+        handle.on('mouseover', null, { delay: opts.open_delay }, function(ev) {
+            menu.from_hover = true; o.open(ev); menu.from_hover = true; })
             .on('mouseleave', function(){ o.delayed_close(false) });
         drawer.mouseenter(o.cancel_close)
             .mouseleave(function(){ o.delayed_close(true) })

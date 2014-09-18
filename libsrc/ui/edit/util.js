@@ -562,7 +562,7 @@ o.show_dialog = function(jq, opts){
     return d;
 };
 
-o.set_debug_info = function(info) {
+o.set_debug_info = function(info, delay) {
     if (typeof(info) == "object")
         info = JSON.stringify(info).replace(/,/g,"\n")
     var $debug = $("#edit_debug");
@@ -570,10 +570,12 @@ o.set_debug_info = function(info) {
         $debug = $("<div id='edit_debug' class='debug'</div>");
         $("body").append($debug);
     }
-    if (info == "") {
+    if (!info) {
         $debug.hidehide();
         return;
     }
+    if (delay) 
+        setTimeout(o.set_debug_info, delay)
     // TODO: option to put info over mouse
     $debug.showshow().css({ top: "0px", left: "0px" })
         .text(info);
