@@ -109,8 +109,8 @@ Hive.help_selection = function (start) {
                     break
                 }
             }
-            u.set_debug_info(help_file ? help_file : "File not found. " + klasses)
-            setTimeout(u.set_debug_info, 5000)
+            u.set_debug_info(help_file ? help_file : "File not found. " 
+                + klasses, 5000)
             return false
         })
     } else {
