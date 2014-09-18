@@ -74,7 +74,7 @@ define([
 
     var attach_handlers_cat = function() {
         // auto-loop expressions from main category
-        var cur_mini = 1, $slides, errors = 0
+        var cur_mini = 1, $slides
         var next_slide = function() {
             if ($slides.is(":visible")) {
                 // Find the next available view
@@ -85,23 +85,21 @@ define([
                         continue
                     } else if (!$slide.is(".loaded") || $slide.is(".error")) {
                         ++cur_mini
-                        ++errors
                         continue
                     }
                     break
                 }
                 ++cur_mini
                 // Load new mini views, staying 3 ahead of what is shown to user
-                for (var i = 0; i < errors + 1; ++i) {
-                    var pos = $slides.children().length
-                        ,card = context.page_data.cards[0]
-                        ,mini_views = card.thumbs
+                var pos = $slides.children().length
+                    ,card = context.page_data.cards[0]
+                    ,mini_views = card.thumbs
+                for (; pos < cur_mini + 3; ++pos) {
                     if (pos < mini_views.length) {
                         template_mini_expr([context, card, {item: mini_views[pos]}])
                             .appendTo($slides)
                     }
                 }
-                errors = 0
                 // Transition to the new mini view
                 $slides.find("a").removeClass("notransition")
                     .css({opacity: 0, "pointer-events":"none"})
