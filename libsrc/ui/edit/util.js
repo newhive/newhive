@@ -570,7 +570,7 @@ o.set_debug_info = function(info) {
         $debug = $("<div id='edit_debug' class='debug'</div>");
         $("body").append($debug);
     }
-    if (info == "") {
+    if (!info) {
         $debug.hidehide();
         return;
     }

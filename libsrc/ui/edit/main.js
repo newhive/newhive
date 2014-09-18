@@ -76,20 +76,41 @@ Hive.help_selection = function (start) {
     start = ui_util.defalt(start, true)
     var $elems = $("body #happs .happ, #controls .control.buttons > *")
         ,$highlight = $("#overlays_group .help_highlight")
-        ,$target
+        ,$help_target, depth = 0
     if (!$highlight.length) 
         $highlight = $("<div class='help_highlight'>").appendTo("#overlays_group")
+    $elems = $elems.add($highlight) 
+    Menu.no_hover = start
     if (start) {
         $elems.bind_once_anon("mouseenter.help mouseleave.help",function(ev) {
-            $target = $(ev.currentTarget)
-            var enter = (ev.type == "mouseenter")
+            var $target = $(ev.currentTarget), enter = (ev.type == "mouseenter")
                 ,css = $target.get(0).getBoundingClientRect()
-            $highlight.showhide(enter).css(css)
+            depth += enter ? 1 : -1
+            console.log("class: " + $target.attr("class") + ", depth: " + depth)
+            if ($(ev.currentTarget).is(".help_highlight"))
+                return
+            $help_target = $target
+            $highlight.showshow().css(css)
+            if (!depth) setTimeout(function() {
+                $highlight.showhide(depth)
+            },1)
         })
         .bind_once_anon("mousedown.help", function(ev) {
-            ev.preventDefault()
-            console.log($target)
             Hive.help_selection(false)
+            var help_file, klasses = $help_target.attr("class")
+                , help_files = {
+                ".hive_image": "Image App"
+                ,".happ": "Generic App"
+                ,".button.opacity": "Set opacity"
+            }
+            for (var selector in help_files) {
+                if ($help_target.is(selector)) {
+                    help_file = help_files[selector]
+                    break
+                }
+            }
+            u.set_debug_info(help_file ? help_file : "File not found. " + klasses)
+            setTimeout(u.set_debug_info, 5000)
             return false
         })
     } else {

@@ -56,9 +56,7 @@ define([
             return 0;
     }
     o.defalt = function (x, def) {
-        if (x === 0 || x === false || x)
-            return x;
-        return def;
+        return (typeof(x) == "undefined") ? def : x
     }
     o.starts_with = function(haystack, needle) {
         return haystack.substr(0, needle.length) == needle;
