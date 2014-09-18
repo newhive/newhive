@@ -156,7 +156,7 @@ o.Controls = function(app, multiselect, delegate) {
 
     o.padding = 12;
     o.border_width = 5;
-    var pad_ul = [45, 45], pad_br = [45, 120], min_d = [135, 40];
+    var pad_ul = [45, 55], pad_br = [45, 120], min_d = [135, 40];
     if(multiselect){
         pad_ul = [3, 3];
         pad_br = [3, 3];
@@ -196,6 +196,8 @@ o.Controls = function(app, multiselect, delegate) {
             minned_dims = dims.slice();
         }
         pos = u._add(pos)(u._mul(delta_dir)(u._sub(minned_dims)(dims)))
+        pos = [ Math.max(pad_ul[0] + env.scrollX, pos[0]), 
+            Math.max(pad_ul[1] + env.scrollY, pos[1]) ],
         pos = u._sub(pos, env.offset) // remove zoom offset
 
         return { pos: pos, dims: minned_dims };
