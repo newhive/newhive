@@ -3214,7 +3214,7 @@ Hive.App.has_color = function(o, name){
 Hive.App.Background = function(o) {
     var o = {}
     o.layout = function(){
-        layout.img_fill(o.img)
+        layout.img_fill(o.img, null, $(window))
     }
 
     o.div = $('#bg')
