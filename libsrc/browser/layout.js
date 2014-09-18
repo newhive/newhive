@@ -132,11 +132,11 @@ define(['browser/jquery', 'ui/util'], function($, util) {
     };
 
     // fill <img> to parent
-    o.img_fill = function(img, curr_dims){
+    o.img_fill = function(img, curr_dims, $parent){
         var $img = $(img);
         if(!$img.length) return;
         var curr_dims = curr_dims || [$img.width(), $img.height()]
-            ,$parent = $img.parent()
+            ,$parent = $parent || $img.parent()
             ,w = $parent.width(), h = $parent.height()
             ,aspect = curr_dims[1] / curr_dims[0]
             ,load = function(){
