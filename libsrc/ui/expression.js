@@ -256,6 +256,7 @@ define([
 
     // Handle autoplay
     var current_playing = -1, current_pos = 0, looping = false, fail_count = 0
+        ,paused = false
 
     // return list of autoplaying apps, sorted top-to-bottom
     var autoplayers = function() {
@@ -266,11 +267,18 @@ define([
     var current_player = function() {
         return autoplayers().slice(current_playing, current_playing + 1)
     }
+    var set_pause = function(pause) {
+        if (pause == paused)
+            return
+        paused = pause
+        o.send_top(paused ? "play_pause" : "play")
+    }
     var play_pause = function() {
         var $player = current_player()
             ,pause_func = $player.data("pause_func")
         if ( typeof(pause_func) == "function" )
             pause_func()
+        set_pause(true)
     }
     var play_first = function() {
         current_playing = 0
@@ -280,6 +288,7 @@ define([
         // Play the app
         if ( typeof(play_func) == "function" ) {
             play_func()
+            set_pause(false)
         }
         // But be ready to play it when it loads if it hasn't yet
         if (typeof(ready_func) == "function" ) {
@@ -306,6 +315,7 @@ define([
         if ( typeof(play_func) == "function" ) {
             fail_count = 0
             play_func()
+            set_pause(false)
         } else {
             fail_count++
             // skip apps which don't "play", but also don't skip on loop forever
