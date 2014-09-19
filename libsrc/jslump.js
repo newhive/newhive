@@ -39,7 +39,7 @@ define(function (require) {
 			},
 			packages: {
 				cram: {
-					location: cramFolder,
+					location: joinPaths(cramFolder, 'jslump'),
 					main: './jslump'
 				},
 				when: {
@@ -48,7 +48,7 @@ define(function (require) {
 				}
 			},
 			preloads: [
-				'jslump/has'
+				joinPaths(cramFolder, 'jslump/has')
 			]
 		};
 
@@ -67,8 +67,8 @@ define(function (require) {
 		// run!
 		curl(
 			[
-				'jslump/amd_modules/when',
-				'jslump/amd_modules/when/sequence',
+				'jslump/when/when',
+				'jslump/when/sequence',
 				'jslump/compile',
 				'jslump/ctx',
 				'jslump/io/text',
