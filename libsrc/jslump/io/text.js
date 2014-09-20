@@ -5,7 +5,7 @@ define(function (require) {
 
 	var has, concrete;
 
-	has = require('../has');
+	has = require('has');
 
 	if (has('fs')) {
 		concrete = require('./text/fsModule');

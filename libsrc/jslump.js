@@ -14,11 +14,41 @@ define(function (require) {
 /*global environment:true*/
 'use strict';
 
-	var config, cramFolder, curl,
-		defaultExcludes,
-		undef;
+	var here = currDir(), undef
 
-	defaultExcludes = { 'curl': true, 'curl/_privileged': true };
+	var config = {
+		baseUrl: here,
+		paths: { curl: joinPaths(here, 'curl') },
+		packages: {
+			jslump: {
+				location: joinPaths(here, 'jslump'),
+				main: './jslump'
+			}
+		}
+	}
+	globalLoader(joinPaths(config.paths.curl, 'curl-for-ssjs/curl.js'))
+	global.curl(config)
+
+	global.curl([
+		'jslump/ctx',
+		'jslump/io/text',
+		'jslump/io/json',
+		'jslump/log'
+	], function start(
+		getCtx,
+		ioText,
+		ioJson,
+		log
+	){
+		console.log(getCtx, ioText, ioJson, log)
+	}, fail)
+
+	return
+
+	// compile: function (pluginId, resId, req, io, config){
+
+
+	// defaultExcludes = { 'curl': true, 'curl/_privileged': true };
 
 	try {
 
@@ -38,12 +68,12 @@ define(function (require) {
 				curl: joinPaths(cramFolder, 'curl')
 			},
 			packages: {
-				cram: {
+				jslump: {
 					location: joinPaths(cramFolder, 'jslump'),
 					main: './jslump'
 				},
 				when: {
-					location: joinPaths(cramFolder, 'when'),
+					location: joinPaths(cramFolder, 'jslump/when'),
 					main: 'when'
 				}
 			},
@@ -67,8 +97,8 @@ define(function (require) {
 		// run!
 		curl(
 			[
-				'jslump/when/when',
-				'jslump/when/sequence',
+				'when',
+				'when/sequence',
 				'jslump/compile',
 				'jslump/ctx',
 				'jslump/io/text',
@@ -87,9 +117,9 @@ define(function (require) {
 	// TODO: return API
 	// return api(io);
 
-	function start(when, sequence, compile, getCtx, ioText, ioJson, log){
-		console.log(when, sequence, compile, getCtx, ioText, ioJson, log)
-	}
+	// function start(when, sequence, compile, getCtx, ioText, ioJson, log){
+	// 	console.log(when, sequence, compile, getCtx, ioText, ioJson, log)
+	// }
 
 	// function start(when, sequence, compile, link, getCtx, grok, ioText, ioJson, merge, log){
 	// 	var cramSequence, grokked, configs;

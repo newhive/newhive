@@ -1,6 +1,6 @@
 /** MIT License (c) copyright 2010-2013 B Cavalier & J Hann */
 
-define(['when', 'when/sequence', 'cram/lib/ctx', 'cram/lib/compile/scan'],
+define(['when', 'when/sequence', 'jslump/ctx'],
 function (when, sequence, getCtx, scan) {
 
 	var removeQuotesRx, pseudoModules;
