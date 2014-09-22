@@ -1,6 +1,7 @@
 define([
     'browser/jquery'
     ,'browser/js'
+    ,'ui/menu'
     ,'context'
 
     ,'./apps'
@@ -13,6 +14,7 @@ define([
 ], function(
     $
     ,js
+    ,menu    
     ,context
 
     ,hive_app
@@ -128,6 +130,7 @@ o.Selection = function(o) {
         if(dragging) return
         u.reset_sensitivity();
         dragging = true;
+        menu.no_hover = true;
         var app = ev.data;
         if(app && !u.is_ctrl(ev)) {
             // If target is in selection, drag whole selection
@@ -166,7 +169,7 @@ o.Selection = function(o) {
             o.unfocus();
         }
     };
-    o.cancel_drag = function() { dragging = false }
+    o.cancel_drag = function() { dragging = false; menu.no_hover = false; }
     o.drag = function(ev, dd){
         if (!dragging) return;
         ev.stopPropagation()
@@ -189,6 +192,7 @@ o.Selection = function(o) {
     };
     o.dragend = function (ev, dd) {
         if(!dragging) return;
+        menu.no_hover = false;
         dragging = false;
 
         var app = ev.data;
