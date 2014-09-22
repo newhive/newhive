@@ -258,6 +258,12 @@ $panel_hover:  false false      false      false         false           false  
         }
     }
 }
+.overlay.panel .stumble {
+    margin: 7px;
+    & > iframe {
+        height: 37px;
+    }
+}
 .love_btn.on {
     background-color: $color_bright_red;
     color: $color_white;
