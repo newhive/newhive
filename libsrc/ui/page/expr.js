@@ -513,7 +513,7 @@ define([
 
         // slideshow functionality
         var play_time = parseFloat(context.query.play_time);
-    lll    if(play_time){
+        if(play_time){
             clearTimeout(o.play_timer);
             o.play_timer = setTimeout(o.page_next, play_time * 1000);
         }
