@@ -513,7 +513,7 @@ define([
 
         // slideshow functionality
         var play_time = parseFloat(context.query.play_time);
-        if(play_time){
+    lll    if(play_time){
             clearTimeout(o.play_timer);
             o.play_timer = setTimeout(o.page_next, play_time * 1000);
         }
@@ -917,6 +917,9 @@ define([
             return
         } else if(msg == 'prev' || msg == 'next') {
             o.navigate_page((msg == "prev") ? -1 : 1);
+        } else if(msg == 'play' || msg == 'play_pause') {
+            $(".overlay.panel.playpause").hidehide()
+            $(".overlay.panel." + msg).showshow()
         } else {
             o.page_btn_handle(msg);
         }
