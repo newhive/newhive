@@ -530,17 +530,26 @@ def collection_client_view(db, collection, ultra=False, viewer=None):
             ,"snapshot_tiny": expr.snapshot_name("tiny")
             ,"snapshot_small": expr.snapshot_name("small")
             ,"snapshot_big": expr.snapshot_name("big")
-            ,"snapshot_ultra": expr.snapshot_name("ultra") if ultra else False
         })
+        if ultra: expr_cv["snapshot_ultra"] = expr.snapshot_name("ultra")
         return expr_cv
     username = collection.get('username')
-    tag = collection.get('tag')
-    if not username or not tag: return None
+    if not username: return None
     owner = db.User.named(username)
     if not owner: return None
-    exprs = owner.get_tag(tag)
-    if not exprs: return None
-    el = db.Expr.fetch(exprs[0:40 if ultra else 4])
+    tag = collection.get('tag')
+    limit = 40 if ultra else 4
+    if tag: 
+        exprs = owner.get_tag(tag)
+        if not exprs: return None
+        el = db.Expr.fetch(exprs[0:limit])
+        search_query = "@%s #%s" % (username, tag)
+    else:
+        search_query = "@%s" % (username,)
+        exprs = db.query(search_query, limit=limit)
+        el = exprs
+    
+    search_query= "q=" + search_query
     expr = el[0]
     if not expr: return None
 
@@ -551,8 +560,7 @@ def collection_client_view(db, collection, ultra=False, viewer=None):
         ,"snapshot_tiny": expr.snapshot_name("tiny")
         ,"snapshot_small": expr.snapshot_name("small")
         ,"snapshot_big": expr.snapshot_name("big")
-        ,"snapshot_ultra": expr.snapshot_name("ultra") if ultra else False
-        ,"title": tag
+        ,"title": tag or "Newhives by " + username
         ,"collection": collection
         ,"type": "cat"
         # These are for the expression route
@@ -560,9 +568,10 @@ def collection_client_view(db, collection, ultra=False, viewer=None):
             "owner_name": expr['owner_name']
             ,"name": expr['name']
             ,"id": expr.id
-            ,"search_query": "q=@%s #%s" % (username, tag)
+            ,"search_query": search_query
         }
     }
+    if ultra: expr_cv["snapshot_ultra"] = expr.snapshot_name("ultra")
     expr_cv["thumbs"] = []
     if len(el) > 1: 
       for i in xrange(1 if len(el) > 2 and not ultra else 0, len(el)):
@@ -571,12 +580,12 @@ def collection_client_view(db, collection, ultra=False, viewer=None):
             "owner_name": expr['owner_name']
             ,"name": expr['name']
             ,"id": expr.id
-            ,"search_query": "q=@%s #%s" % (username, tag)
+            ,"search_query": search_query
             ,"snapshot_tiny": expr.snapshot_name("tiny")
             ,"snapshot_small": expr.snapshot_name("small")
             ,"snapshot_big": expr.snapshot_name("big")
-            ,"snapshot_ultra": expr.snapshot_name("ultra") if ultra else False
         })
+        if ultra: expr_cv["thumbs"][-1]["snapshot_ultra"] = expr.snapshot_name("ultra")
 
     # determine if this is an owned or curated collection
     owned_exprs = (db.Expr.search(

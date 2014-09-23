@@ -1,8 +1,10 @@
 <span class='expr_actions expr{<if (not expr)} hide{>}'>{##}
   {<if (or flags.force_stumble expr.container.stumble_btn)}
-    <a href='https://www.facebook.com/sharer/sharer.php?u={|location|param}'
+    <a 
       target='_new' title='Share on stumbleupon'
-      class='share hoverable btn item'><div class='stumble'><su:badge layout="6"></su:badge></div></a>
+      class='share hoverable btn item'><div class='stumble'>
+      <su:badge layout="6"></su:badge>
+      </div></a>
   {>}
   {<if expr.container.facebook_btn}
     <a href='https://www.facebook.com/sharer/sharer.php?u={|location|param}'

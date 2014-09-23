@@ -111,7 +111,7 @@ define([
     };
 
     o.untitled = function(context, str) {
-        if (str.length)
+        if (str)
             return str;
         return "[Untitled]";
     }
