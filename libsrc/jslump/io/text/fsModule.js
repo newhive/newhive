@@ -11,7 +11,7 @@ define(function (require) {
 		protocol, hasHttpProtocolRx, needsProtocolRx, defaultChannel, files;
 
 	nodeback = require('../nodeback');
-	when = require('when');
+	when = require('jslump/when');
 
 	// TODO: split this into a fsModule and a httpModule (remote)
 

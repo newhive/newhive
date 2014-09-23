@@ -10,7 +10,7 @@
  */
 
 (function(define) {
-define(['./when'], function(when) {
+define(['jslump/when'], function(when) {
 
 	/**
 	 * Run array of tasks in sequence with no overlap

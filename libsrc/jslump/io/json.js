@@ -5,7 +5,7 @@ define(function (require) {
 
 	var has, requireReader, concrete;
 
-	has = require('cram/lib/has');
+	has = require('jslump/has');
 	requireReader = require('./json/require');
 
 	if (has('require-json')) {

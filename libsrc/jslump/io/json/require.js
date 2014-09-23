@@ -3,7 +3,7 @@
 (function (define, freeRequire) {
 define(function (require) {
 
-	var when = require('when');
+	var when = require('jslump/when');
 
 	return {
 		getReader: function (absIdOrUrl) {

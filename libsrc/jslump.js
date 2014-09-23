@@ -14,7 +14,18 @@ define(function (require) {
 /*global environment:true*/
 'use strict';
 
-	var here = currDir(), undef
+	function currDir(){
+		var curdir
+		curdir = typeof environment != 'undefined' && 'user.dir' in environment
+			? environment['user.dir']
+			: typeof process != 'undefined' && process.cwd && process.cwd()
+		if (curdir == undef) {
+			throw new Error('Could not determine current working directory.')
+		}
+		return curdir
+	}
+
+	var here = currDir(), undef, output = 'compiled.out.js'
 
 	var config = {
 		baseUrl: here,
@@ -31,16 +42,36 @@ define(function (require) {
 
 	global.curl([
 		'jslump/ctx',
+		'jslump/lump',
 		'jslump/io/text',
-		'jslump/io/json',
 		'jslump/log'
 	], function start(
 		getCtx,
+		lump,
 		ioText,
-		ioJson,
 		log
 	){
-		console.log(getCtx, ioText, ioJson, log)
+		var ctx = getCtx('', config)
+		var io = {
+			readFile: function (filename) {
+				return ioText.getReader(filename)()
+			},
+			readModule: function (ctx) {
+				return ioText.getReader(ctx.withExt(ctx.toUrl(ctx.absId)))()
+			},
+			writeModule: function (ctx, contents) {
+				return ioText.getWriter(output)(guardSource(contents))
+			},
+			info: log.info,
+			warn: log.warn,
+			error: fail
+		}
+
+		lump([
+			'ui/controller',
+			'curl/plugin/json!server/compiled.config.json',
+			'curl/plugin/sj!templates/form_overlay.html'
+		], io, ctx)
 	}, fail)
 
 	return
@@ -117,286 +148,286 @@ define(function (require) {
 	// TODO: return API
 	// return api(io);
 
-	// function start(when, sequence, compile, getCtx, ioText, ioJson, log){
-	// 	console.log(when, sequence, compile, getCtx, ioText, ioJson, log)
-	// }
+	function start(when, sequence, compile, getCtx, ioText, ioJson, log){
+		console.log(when, sequence, compile, getCtx, ioText, ioJson, log)
+	}
 
-	// function start(when, sequence, compile, link, getCtx, grok, ioText, ioJson, merge, log){
-	// 	var cramSequence, grokked, configs;
+	function start(when, sequence, compile, link, getCtx, grok, ioText, ioJson, merge, log){
+		var cramSequence, grokked, configs;
 
-	// 	grokked = {};
-	// 	configs = [];
+		grokked = {};
+		configs = [];
 
-	// 	if (args.grok) {
-	// 		grokked = grok(
-	// 			{
-	// 				readFile: function (filename) {
-	// 					return ioText.getReader(filename)();
-	// 				},
-	// 				warn: log.warn,
-	// 				info: log.info,
-	// 				error: fail
-	// 			},
-	// 			args.grok
-	// 		);
-	// 	}
+		if (args.grok) {
+			grokked = grok(
+				{
+					readFile: function (filename) {
+						return ioText.getReader(filename)();
+					},
+					warn: log.warn,
+					info: log.info,
+					error: fail
+				},
+				args.grok
+			);
+		}
 
-	// 	if (args.configFiles) {
-	// 		configs = when.map(args.configFiles, function (file) {
-	// 			return ioJson.getReader(joinPaths(currDir(), file))();
-	// 		});
-	// 	}
+		if (args.configFiles) {
+			configs = when.map(args.configFiles, function (file) {
+				return ioJson.getReader(joinPaths(currDir(), file))();
+			});
+		}
 
-	// 	cramSequence = sequence.bind(undef, [
-	// 		function (buildContext) {
-	// 			buildContext.ctx = getCtx('', buildContext.config);
-	// 			return buildContext;
-	// 		},
-	// 		function (buildContext) {
-	// 			if (buildContext.preloads  && buildContext.preloads.length > 0) {
-	// 				log.info('Compiling preloads');
-	// 				return compile(buildContext.preloads || [], buildContext.io, buildContext.ctx);
-	// 			}
-	// 		},
-	// 		function (buildContext) {
-	// 			log.info('Compiling modules');
-	// 			return compile(buildContext.modules, buildContext.io, buildContext.ctx);
-	// 		},
-	// 		function (buildContext) {
-	// 			if (buildContext.prepend.length > 0) {
-	// 				log.info('Writing prefix');
-	// 				return writeFiles(buildContext.prepend, buildContext.io, buildContext.ctx);
-	// 			}
-	// 		},
-	// 		function (buildContext) {
-	// 			log.info('Linking');
-	// 			return link(buildContext.discovered, buildContext.io, buildContext.ctx);
-	// 		},
-	// 		function (buildContext) {
-	// 			if (buildContext.append.length > 0) {
-	// 				log.info('Writing suffix');
-	// 				return writeFiles(buildContext.append, buildContext.io, buildContext.ctx);
-	// 			}
-	// 		},
-	// 		function (buildContext) {
-	// 			log.info('Bundle written to ' + buildContext.config.output);
-	// 		}
-	// 	]);
+		cramSequence = sequence.bind(undef, [
+			function (buildContext) {
+				buildContext.ctx = getCtx('', buildContext.config);
+				return buildContext;
+			},
+			function (buildContext) {
+				if (buildContext.preloads  && buildContext.preloads.length > 0) {
+					log.info('Compiling preloads');
+					return compile(buildContext.preloads || [], buildContext.io, buildContext.ctx);
+				}
+			},
+			function (buildContext) {
+				log.info('Compiling modules');
+				return compile(buildContext.modules, buildContext.io, buildContext.ctx);
+			},
+			function (buildContext) {
+				if (buildContext.prepend.length > 0) {
+					log.info('Writing prefix');
+					return writeFiles(buildContext.prepend, buildContext.io, buildContext.ctx);
+				}
+			},
+			function (buildContext) {
+				log.info('Linking');
+				return link(buildContext.discovered, buildContext.io, buildContext.ctx);
+			},
+			function (buildContext) {
+				if (buildContext.append.length > 0) {
+					log.info('Writing suffix');
+					return writeFiles(buildContext.append, buildContext.io, buildContext.ctx);
+				}
+			},
+			function (buildContext) {
+				log.info('Bundle written to ' + buildContext.config.output);
+			}
+		]);
 
-	// 	when.join(grokked, configs)
-	// 		.spread(mergeConfigsOntoGrokResults)
-	// 		.then(processGrokResults)
-	// 		.then(createBuildContext)
-	// 		.then(cramSequence)
-	// 		.then(cleanup, fail);
+		when.join(grokked, configs)
+			.spread(mergeConfigsOntoGrokResults)
+			.then(processGrokResults)
+			.then(createBuildContext)
+			.then(cramSequence)
+			.then(cleanup, fail);
 
-	// 	function mergeConfigsOntoGrokResults (grokResults, configs) {
-	// 		var mergedProps, grokCfg;
+		function mergeConfigsOntoGrokResults (grokResults, configs) {
+			var mergedProps, grokCfg;
 
-	// 		// these are merged. all others are overwritten
-	// 		mergedProps = { paths: 1, packages: 1, plugins: 1, excludes: 1, excludeRx: 1 };
+			// these are merged. all others are overwritten
+			mergedProps = { paths: 1, packages: 1, plugins: 1, excludes: 1, excludeRx: 1 };
 
-	// 		grokCfg = grokResults.config = Array.prototype.reduce.call(configs,
-	// 			function (base, ext) {
-	// 				for (var p in ext) {
-	// 					if (p in mergedProps) {
-	// 						// merge by type
-	// 						if (merge.isType(ext[p], 'Array')) {
-	// 							// sniff the first item to determine which comparator to use
-	// 							if (merge.isType(ext[p][0], 'Object')) {
-	// 								base[p] = merge.arrays(configThingToArray(base[p]), ext[p], merge.comparators.byName);
-	// 							}
-	// 							else {
-	// 								base[p] = merge.arrays(configThingToArray(base[p]), ext[p], merge.comparators.byIdentity);
-	// 							}
-	// 						}
-	// 						else if (merge.isType(ext[p], 'Object')) {
-	// 							base[p] = merge.objects(configThingToObject(base[p]), ext[p], 1);
-	// 						}
-	// 						else if (ext[p] == null) {
-	// 							// remove/undefine
-	// 							delete base[p];
-	// 						}
-	// 						else {
-	// 							// overwrite (i.e. "main" when not an array)
-	// 							base[p] = ext[p];
-	// 						}
-	// 					}
-	// 					else {
-	// 						// everything else is overritten
-	// 						base[p] = ext[p];
-	// 					}
-	// 				}
-	// 				return base;
-	// 			},
-	// 			grokResults.config
-	// 		);
+			grokCfg = grokResults.config = Array.prototype.reduce.call(configs,
+				function (base, ext) {
+					for (var p in ext) {
+						if (p in mergedProps) {
+							// merge by type
+							if (merge.isType(ext[p], 'Array')) {
+								// sniff the first item to determine which comparator to use
+								if (merge.isType(ext[p][0], 'Object')) {
+									base[p] = merge.arrays(configThingToArray(base[p]), ext[p], merge.comparators.byName);
+								}
+								else {
+									base[p] = merge.arrays(configThingToArray(base[p]), ext[p], merge.comparators.byIdentity);
+								}
+							}
+							else if (merge.isType(ext[p], 'Object')) {
+								base[p] = merge.objects(configThingToObject(base[p]), ext[p], 1);
+							}
+							else if (ext[p] == null) {
+								// remove/undefine
+								delete base[p];
+							}
+							else {
+								// overwrite (i.e. "main" when not an array)
+								base[p] = ext[p];
+							}
+						}
+						else {
+							// everything else is overritten
+							base[p] = ext[p];
+						}
+					}
+					return base;
+				},
+				grokResults.config
+			);
 
-	// 		return grokResults;
-	// 	}
+			return grokResults;
+		}
 
-	// 	function configThingToArray (thing) {
-	// 		if (merge.isType(thing, 'Array')) {
-	// 			return thing;
-	// 		}
-	// 		else if (merge.isType(thing, 'Object')) {
-	// 			// return an array of named objects
-	// 			return Object.keys(thing).map(function (key) {
-	// 				if (!thing.name) thing.name = key;
-	// 				return thing[key];
-	// 			});
-	// 		}
-	// 		else {
-	// 			return [thing];
-	// 		}
-	// 	}
+		function configThingToArray (thing) {
+			if (merge.isType(thing, 'Array')) {
+				return thing;
+			}
+			else if (merge.isType(thing, 'Object')) {
+				// return an array of named objects
+				return Object.keys(thing).map(function (key) {
+					if (!thing.name) thing.name = key;
+					return thing[key];
+				});
+			}
+			else {
+				return [thing];
+			}
+		}
 
-	// 	function configThingToObject (thing) {
-	// 		var isNamedObjectArray, obj;
+		function configThingToObject (thing) {
+			var isNamedObjectArray, obj;
 
-	// 		isNamedObjectArray = merge.isType(thing, 'Array')
-	// 			&& merge.isType(thing[0], 'Object')
-	// 			&& (thing[0].name || thing[0].id);
+			isNamedObjectArray = merge.isType(thing, 'Array')
+				&& merge.isType(thing[0], 'Object')
+				&& (thing[0].name || thing[0].id);
 
-	// 		if (isNamedObjectArray) {
-	// 			// convert to hash of objects
-	// 			return thing.reduce(function (obj, item) {
-	// 				obj[item.id || item.name] = item;
-	// 				return obj;
-	// 			}, {});
-	// 		}
-	// 		else {
-	// 			return thing;
-	// 		}
-	// 	}
+			if (isNamedObjectArray) {
+				// convert to hash of objects
+				return thing.reduce(function (obj, item) {
+					obj[item.id || item.name] = item;
+					return obj;
+				}, {});
+			}
+			else {
+				return thing;
+			}
+		}
 
-	// 	function processGrokResults (results) {
-	// 		var config, appRoot, loader;
+		function processGrokResults (results) {
+			var config, appRoot, loader;
 
-	// 		config = results.config;
+			config = results.config;
 
-	// 		if (!config.baseUrl) config.baseUrl = '';
-	// 		if (!results.modules) results.modules = [];
-	// 		if (config.includes) results.modules = results.modules.concat(config.includes);
-	// 		if (args.includes) results.modules = results.modules.concat(args.includes);
-	// 		if (!results.excludes) results.excludes = [];
-	// 		if (config.excludes) results.excludes = results.excludes.concat(config.excludes);
-	// 		if (args.excludes) results.excludes = results.excludes.concat(args.excludes);
-	// 		if (!results.excludeIds) results.excludeIds = defaultExcludes;
-	// 		if (!results.excludeRx) results.excludeRx = [];
-	// 		if (config.excludeRx) results.excludeRx = results.excludeRx.concat(config.excludeRx);
+			if (!config.baseUrl) config.baseUrl = '';
+			if (!results.modules) results.modules = [];
+			if (config.includes) results.modules = results.modules.concat(config.includes);
+			if (args.includes) results.modules = results.modules.concat(args.includes);
+			if (!results.excludes) results.excludes = [];
+			if (config.excludes) results.excludes = results.excludes.concat(config.excludes);
+			if (args.excludes) results.excludes = results.excludes.concat(args.excludes);
+			if (!results.excludeIds) results.excludeIds = defaultExcludes;
+			if (!results.excludeRx) results.excludeRx = [];
+			if (config.excludeRx) results.excludeRx = results.excludeRx.concat(config.excludeRx);
 
-	// 		// figure out where modules are located
-	// 		appRoot = args.appRoot || results.appRoot;
-	// 		if (appRoot) {
-	// 			log.info('`appRoot` resolved to', appRoot);
-	// 			config.baseUrl = joinPaths(appRoot, config.baseUrl);
-	// 		}
-	// 		if (config.baseUrl == '') config.baseUrl = './';
-	// 		if (/^\./.test(config.baseUrl)) {
-	// 			config.baseUrl = joinPaths(currDir(), config.baseUrl);
-	// 		}
-	// 		log.info('`baseUrl` resolved to', config.baseUrl);
+			// figure out where modules are located
+			appRoot = args.appRoot || results.appRoot;
+			if (appRoot) {
+				log.info('`appRoot` resolved to', appRoot);
+				config.baseUrl = joinPaths(appRoot, config.baseUrl);
+			}
+			if (config.baseUrl == '') config.baseUrl = './';
+			if (/^\./.test(config.baseUrl)) {
+				config.baseUrl = joinPaths(currDir(), config.baseUrl);
+			}
+			log.info('`baseUrl` resolved to', config.baseUrl);
 
-	// 		loader = args.loader || results.loader;
-	// 		config.output = ensureDotJs(args.output || results.output || '.cram/linked/bundle.js');
-	// 		log.info('`output` resolved to', config.output);
+			loader = args.loader || results.loader;
+			config.output = ensureDotJs(args.output || results.output || '.cram/linked/bundle.js');
+			log.info('`output` resolved to', config.output);
 
-	// 		// remove things that curl will try to auto-load
-	// 		if (config.main) {
-	// 			results.modules = results.modules.concat(config.main);
-	// 			delete config.main;
-	// 		}
-	// 		if (config.preloads) {
-	// 			results.preloads = config.preloads;
-	// 			delete config.preloads;
-	// 		}
+			// remove things that curl will try to auto-load
+			if (config.main) {
+				results.modules = results.modules.concat(config.main);
+				delete config.main;
+			}
+			if (config.preloads) {
+				results.preloads = config.preloads;
+				delete config.preloads;
+			}
 
-	// 		// convert excludes array to excludeIds hashmap
-	// 		results.excludes.forEach(function (exclude) {
-	// 			results.excludeIds[exclude] = true;
-	// 		});
+			// convert excludes array to excludeIds hashmap
+			results.excludes.forEach(function (exclude) {
+				results.excludeIds[exclude] = true;
+			});
 
-	// 		// convert config.excludeRx RegExp/string array to RegExp array
-	// 		results.excludeRx = results.excludeRx
-	// 			.map(function (rx) {
-	// 				return typeof rx == 'string' ? new RegExp(rx) : rx;
-	// 			});
+			// convert config.excludeRx RegExp/string array to RegExp array
+			results.excludeRx = results.excludeRx
+				.map(function (rx) {
+					return typeof rx == 'string' ? new RegExp(rx) : rx;
+				});
 
-	// 		if (loader) {
-	// 			log.info('Loader to be bundled:', loader);
-	// 			results.prepend.unshift(ioText.getReader(loader)());
-	// 		}
+			if (loader) {
+				log.info('Loader to be bundled:', loader);
+				results.prepend.unshift(ioText.getReader(loader)());
+			}
 
-	// 		// configure curl
-	// 		// TODO: put this in its own step rather than a side-effect here
-	// 		curl(config);
+			// configure curl
+			// TODO: put this in its own step rather than a side-effect here
+			curl(config);
 
-	// 		return results;
-	// 	}
+			return results;
+		}
 
-	// 	function createBuildContext (results) {
-	// 		var discovered = [];
+		function createBuildContext (results) {
+			var discovered = [];
 
-	// 		return {
-	// 			config: results.config,
-	// 			prepend: results.prepend,
-	// 			preloads: results.preloads,
-	// 			modules: results.modules,
-	// 			append: results.append,
-	// 			// collect modules encountered, in order
-	// 			// dual array/hashmap
-	// 			discovered: discovered,
+			return {
+				config: results.config,
+				prepend: results.prepend,
+				preloads: results.preloads,
+				modules: results.modules,
+				append: results.append,
+				// collect modules encountered, in order
+				// dual array/hashmap
+				discovered: discovered,
 
-	// 			// compile phase:
-	// 			// transform it to AMD, if necessary
-	// 			// scan for dependencies, etc.
-	// 			// cache AST here
-	// 			io: {
-	// 				readFile: function (filename) {
-	// 					return ioText.getReader(filename)();
-	// 				},
-	// 				readModule: function (ctx) {
-	// 					return ioText.getReader(ctx.withExt(ctx.toUrl(ctx.absId)))();
-	// 				},
-	// 				writeModule: function (ctx, contents) {
-	// 					return ioText.getWriter(results.config.output)(guardSource(contents));
-	// 				},
-	// 				readMeta: function (ctx) {
-	// 					return ioText.getReader(joinPaths('.cram/meta', ctx.absId + '.json'))();
-	// 				},
-	// 				writeMeta: function (ctx, contents) {
-	// 					return ioText.getWriter(joinPaths('.cram/meta', ctx.absId + '.json'))(contents);
-	// 				},
-	// 				collect: function (id, thing) {
-	// 					var top, skip;
-	// 					skip = (id in discovered)
-	// 						|| (id in results.excludeIds)
-	// 						|| results.excludeRx.some(function (rx) {
-	// 							return rx.test(id);
-	// 						});
-	// 					if (skip) return;
-	// 					top = discovered.length;
-	// 					discovered[id] = top;
-	// 					discovered[top] = thing;
-	// 				},
-	// 				info: log.info,
-	// 				warn: log.warn,
-	// 				error: fail
-	// 			}
-	// 		};
-	// 	}
+				// compile phase:
+				// transform it to AMD, if necessary
+				// scan for dependencies, etc.
+				// cache AST here
+				io: {
+					readFile: function (filename) {
+						return ioText.getReader(filename)();
+					},
+					readModule: function (ctx) {
+						return ioText.getReader(ctx.withExt(ctx.toUrl(ctx.absId)))();
+					},
+					writeModule: function (ctx, contents) {
+						return ioText.getWriter(results.config.output)(guardSource(contents));
+					},
+					readMeta: function (ctx) {
+						return ioText.getReader(joinPaths('.cram/meta', ctx.absId + '.json'))();
+					},
+					writeMeta: function (ctx, contents) {
+						return ioText.getWriter(joinPaths('.cram/meta', ctx.absId + '.json'))(contents);
+					},
+					collect: function (id, thing) {
+						var top, skip;
+						skip = (id in discovered)
+							|| (id in results.excludeIds)
+							|| results.excludeRx.some(function (rx) {
+								return rx.test(id);
+							});
+						if (skip) return;
+						top = discovered.length;
+						discovered[id] = top;
+						discovered[top] = thing;
+					},
+					info: log.info,
+					warn: log.warn,
+					error: fail
+				}
+			};
+		}
 
-	// 	function writeFiles (files, io, ctx) {
-	// 		return when.reduce(files, function(_, file) {
-	// 			return io.writeModule(ctx, file);
-	// 		}, undef);
-	// 	}
+		function writeFiles (files, io, ctx) {
+			return when.reduce(files, function(_, file) {
+				return io.writeModule(ctx, file);
+			}, undef);
+		}
 
-	// 	function cleanup () {
-	// 		return ioText.closeAll && ioText.closeAll();
-	// 	}
-	// }
+		function cleanup () {
+			return ioText.closeAll && ioText.closeAll();
+		}
+	}
 
 	function guardSource (source) {
 		// ensure that any previous code that didn't end correctly (ends
@@ -517,17 +548,6 @@ define(function (require) {
 			throw new Error('Could not determine cram\'s working directory.');
 		}
 		return dir;
-	}
-
-	function currDir () {
-		var curdir;
-		curdir = typeof environment != 'undefined' && 'user.dir' in environment
-			? environment['user.dir']
-			: typeof process != 'undefined' && process.cwd && process.cwd();
-		if (curdir == undef) {
-			throw new Error('Could not determine current working directory.');
-		}
-		return curdir;
 	}
 
 	function ensureDotJs (filename) {
