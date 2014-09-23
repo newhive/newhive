@@ -270,12 +270,8 @@ body:not(.mobile) {
     width: 0;
     margin-right: -4px;
 }
-.overlay.panel.nav {
-    //display: block;
-    position: fixed;
-    z-index: $nav_layer;
-    right: 20px;
 
+.overlay.panel.nav.right {
     .edit_icon {
         background-image: asset_url('skin/nav/edit.png');
         &.active { background-image: asset_url('skin/nav/edit-hover.png'); }
@@ -308,6 +304,15 @@ body:not(.mobile) {
     .signup {
         display: inline-block;
         vertical-align: top;
+    }
+}
+
+.overlay.panel.nav.left {
+    .audio_ctrl {
+        .icon {
+            background-image: asset_url('skin/nav/play.png');
+            &.active { background-image: asset_url('skin/nav/play-hover.png') }
+        }
     }
 }
 
@@ -655,12 +660,6 @@ $action: love comment republish;
 }
 
 .hive_logo {
-    display: block;
-    margin-left: 0px;
-    margin-right: 3px;
-    height: 44px;
-    width: 44px;
-    left: 20px;
     background-image: asset_url('skin/nav/logo.png');
     &.active {
         background-image: asset_url('skin/nav/logo-hover.png');

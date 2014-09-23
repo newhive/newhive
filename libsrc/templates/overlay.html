@@ -6,6 +6,7 @@
 <div class="main-header">
   <form class="search_bar_form" method='GET' action='/search' name='search_form'>
   <div class="nav_top_row">
+
     {# LEFT content. #}
     <div class="cell left{<if (not user.logged_in)} for_logo{>}">
       {# LOGGED OUT: #}
@@ -59,6 +60,7 @@
         </div>
       {>}
     </div>
+
   </div>
   </form>
   
@@ -84,8 +86,9 @@
 </div>
 {>}
 
-<div class='overlay bottom panel nav
-  {<if (and query.clean (not (contains clean_options "social")))} stay_hidden{>}'>
+<div class='overlay bottom panel nav right
+  {<if (and query.clean (not (contains clean_options "social")))
+} stay_hidden{>}'>
   {# create or signup/login #}
   {<unless user.logged_in}
     <span class='signup'>
@@ -124,8 +127,11 @@
      {<if (and query.clean (not (contains clean_options "collection")))} stay_hidden{>}'></div>
 {>}
 
-{# hive logo button #}
-{<with null "standalone" true}{|templates/hive_menu.html}{>}
+{# hive logo panel #}
+<div class='overlay bottom panel nav left'>
+  {<with null "standalone" true}{|templates/hive_menu.html}{>}
+  <div class='audio_ctrl hide'><div class='icon'></div></div>
+</div>
 
 {# menu: logo #}
 <div id='logo_menu' class='menu drawer {<if (eq query.template "embed")} stay_hidden{>}' data-handle='.hive_logo'>
