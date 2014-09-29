@@ -17,4 +17,3 @@ compiled.*
 /log/*.txt
 newhive.log
 .pivrc
-.pivrc
