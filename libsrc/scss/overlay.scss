@@ -311,7 +311,7 @@ body:not(.mobile) {
     .audio_ctrl {
         .icon {
             background-image: asset_url('skin/nav/play.png');
-            &.active { background-image: asset_url('skin/nav/play-hover.png') }
+            // &.active { background-image: asset_url('skin/nav/play-hover.png') }
         }
     }
 }
@@ -660,6 +660,13 @@ $action: love comment republish;
 }
 
 .hive_logo {
+    display: block;
+    margin-left: 0px;
+    margin-right: 3px;
+    height: 44px;
+    width: 44px;
+    left: 20px;
+
     background-image: asset_url('skin/nav/logo.png');
     &.active {
         background-image: asset_url('skin/nav/logo-hover.png');
