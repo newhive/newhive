@@ -15,8 +15,8 @@
           ><img class="logo splash" src='{asset "skin/site/logo_text.png"}' 
           title="Newhive Logo"></a>
       {>}{<else}
-        {# Main navigation #}
-        <div class='network_nav inline'>
+        {# Main navigation, logged out version in .network_nav below #}
+        <div class='network_nav inline_middle'>
           <a { anchor_attrs "expressions_public" "owner_name" user.name }>
             <div class='text_btn item teal_hover username ellipsis
             {<if route.profile} black_btn{>}'>{user.name}</div></a>
@@ -37,7 +37,7 @@
       {<vcenter (cond user.logged_in "" "full_height")}
         {<if (not user.logged_in)}
           {# Main navigation #}
-          <div class='network_nav inline'>
+          <div class='network_nav inline_middle'>
             {# empty <a> for css #}
             <a><div class='login_btn text_btn item teal_hover'>Log in</div></a>
             <a {anchor_attrs "signup"}>

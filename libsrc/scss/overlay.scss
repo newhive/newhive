@@ -136,7 +136,7 @@ body:not(.mobile) {
         &.block { position:absolute; clear: both; }
         &:hover, &:focus {
             width: 250px;
-            padding: 6px;
+            padding: 0 6px;
             opacity: 1;
             // show on next line when in narrow mode
             &.block {
