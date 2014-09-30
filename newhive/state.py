@@ -48,17 +48,23 @@ class Database:
     def __init__(self, config=None, assets=None):
         config = self.config = (config if config else newhive.config)
 
-        self.con = pymongo.MongoClient(host=config.database_host, port=config.database_port)
+        self.con = pymongo.MongoClient(host=config.database_host,
+            port=config.database_port)
         self.mdb = self.con[config.database]
         self.s3 = S3Interface(config)
         self.assets = assets
 
-        self.collections = map(lambda entity_type: entity_type.Collection(self, entity_type), entity_types)
+        self.collections = map(
+            lambda entity_type: entity_type.Collection(self, entity_type),
+            entity_types )
         for col in self.collections:
             setattr(self, col.entity.__name__, col)
             for index in col.entity.indexes:
-                (key, opts) = index if type(index) == tuple and type(index[1]) == dict else (index, {})
-                key = map(lambda a: a if type(a) == tuple else (a, 1), [key] if not isinstance(key, list) else key)
+                (key, opts) = index if(
+                    isinstance(index, tuple) and isinstance(index[1], dict)
+                    else (index, {}) )
+                key = map(lambda a: a if isinstance(a, tuple) else (a, 1),
+                    [key] if not isinstance(key, list) else key)
                 col._col.ensure_index(key, **opts)
 
         # initialize elasticsearch index (not used currently)
@@ -223,7 +229,7 @@ class Collection(object):
     def fetch_empty(self, key, keyname='_id'): return self.find_empty({ keyname : key })
 
     def fetch(self, key, keyname='_id', **opts):
-        if type(key) == list:
+        if isinstance(key, list):
             return list(self.search(key, **opts))
         else:
             return self.find({ keyname : key }, **opts)
@@ -238,7 +244,7 @@ class Collection(object):
         return self.new(r)
 
     def search(self, spec, filter={}, **opts):
-        if type(spec) == list:
+        if isinstance(spec, list):
             items = {}
             res = []
             filter.update({'_id': {'$in': spec }})
@@ -260,7 +266,7 @@ class Collection(object):
 
         at = int(at)
         limit = int(limit)
-        if type(spec) == dict:
+        if isinstance(spec, dict):
             # if page_is_id:
             #     page_start = self.fetch(at)
             #     at = page_start[sort] if page_start else None
@@ -277,7 +283,7 @@ class Collection(object):
                 res = list(res)
             return res
 
-        elif type(spec) == list:
+        elif isinstance(spec, list):
             # spec = uniq(spec)
             # assert( not at or page_is_id )
 
@@ -316,10 +322,6 @@ class Collection(object):
     # self.new can be overridden to return custom object types
     def new(self, doc): return self.entity(self, doc)
 
-    def esdb_new(self, r):
-        r['id'] = r.get_id()
-        return self.entity(self, r)
-
     def create(self, doc):
         new_entity = self.new(doc)
         return new_entity.create()
@@ -341,7 +343,7 @@ class Cursor(object):
 
             def wrap(*a, **b):
                 rv = wrapped(*a, **b)
-                if type(rv) == pymongo.cursor.Cursor: return self
+                if isinstance(rv, pymongo.cursor.Cursor): return self
                 else: return rv
             return wrap
 
@@ -1400,13 +1402,13 @@ class User(HasSocial):
 
     def has_group(self, group, level=None):
         groups = self.get('groups')
-        if type(group) == list: return False
+        if isinstance(group, list): return False
         if not groups or not group in groups:
             return False
         return level == None or level == groups[group]
 
     def add_group(self, group, level):
-        assert type(group) == str and len(group) <=3
+        assert isinstance(group, basestring) and len(group) <=3
         if not self.has_key('groups'): self['groups'] = {}
         self['groups'][group] = level
         #TODO: add warning if groups are too long for google analytics
@@ -1493,7 +1495,7 @@ class Expr(HasSocial):
             args.update(sort=sort)
 
             filter = {}
-            spec2 = spec if type(spec) == dict else filter
+            spec2 = spec if isinstance(spec, dict) else filter
             # Hack for Zach. TODO-cleanup: verify with Zach that this link
             # isn't needed anymore and remove
             if (spec2.has_key('tags_index') 
@@ -1723,14 +1725,14 @@ class Expr(HasSocial):
         return self.snapshot_name(size)
 
     def related_next(self, spec={}, **kwargs):
-        if type(spec) == dict:
+        if isinstance(spec, dict):
             shared_spec = spec.copy()
             shared_spec.update({'auth': 'public', 'apps': {'$exists': True}})
         else: shared_spec = spec
         return super(Expr, self).related_next(shared_spec, **kwargs)
 
     def related_prev(self, spec={}, **kwargs):
-        if type(spec) == dict:
+        if isinstance(spec, dict):
             shared_spec = spec.copy()
             shared_spec.update({'auth': 'public', 'apps': {'$exists': True}})
         else: shared_spec = spec
@@ -2094,8 +2096,8 @@ class File(Entity):
         if self.has_key('tmp_file'): del self['tmp_file']
 
     def __del__(self):
-        if (type(self._file) == file
-            and (not self._file.closed)): self._file.close()
+        if( isinstance(self._file, file)
+            and (not self._file.closed) ): self._file.close()
 
     @property
     def file(self):
@@ -2515,7 +2517,7 @@ class Broadcast(Feed):
     def create(self):
         if self.entity['owner'] == self['initiator']:
             raise "You mustn't broadcast your own newhive"
-        if type(self.entity) != Expr: raise "You may only broadcast newhives"
+        if not isinstance(self.entity, Expr): raise "You may only broadcast newhives"
         if self.db.Broadcast.find({ 'initiator': self['initiator'], 'entity': self['entity'] }): return True
         return super(Broadcast, self).create()
 
@@ -2526,7 +2528,7 @@ class Remix(Feed):
     def create(self):
         # if self.entity['owner'] == self['initiator']:
         #     raise "You mustn't remix your own expression"
-        if type(self.entity) != Expr: raise "You may only remix newhives"
+        if not isinstance(self.entity, Expr): raise "You may only remix newhives"
         # if self.db.Remix.find({ 'initiator': self['initiator'], 'entity': self['entity'] }): return True
         new_expr = self.get('new_expr')
         if new_expr:
@@ -2722,7 +2724,8 @@ def mk_password(v):
     return crypt(v.encode('UTF8'), salt)
 
 def get_id(entity_or_id):
-    return entity_or_id if type(entity_or_id) == str else entity_or_id.id
+    return( entity_or_id if isinstance(entity_or_id, basestring)
+        else entity_or_id.id )
 
 
 ## analytics utils
