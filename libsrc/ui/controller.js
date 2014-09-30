@@ -201,7 +201,7 @@ define([
             dataType: 'json',
             success: add_cards,
             complete: function() { loading = false; },
-            data: $.extend({ at: context.page_data.cards.length }, route.query)
+            data: $.extend({ at: context.page_data.next_cards_at }, route.query)
         };
         $.ajax(api_call);
     };

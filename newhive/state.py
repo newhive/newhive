@@ -815,7 +815,7 @@ class User(HasSocial):
         if not expression_id_list: 
             # List missing. calculate it.
             expression_list = self.db.Expr.search({
-                'owner': self.id, 'tags_index': tag })
+                'owner': self.id, 'tags_index': tag }, sort=[('updated',-1)] )
             if expression_list:
                 expression_id_list = map(lambda e: e.id, expression_list)
             if force_update:
