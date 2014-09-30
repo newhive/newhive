@@ -59,7 +59,11 @@ beta_testers = admins + [
 
 user_groups = { 'logged_in':set([]), 'logged_out':set(['logged_out']), 'all':set([]), 
     'admins':set(admins), 'beta_testers':set(beta_testers), 'devs':set(devs) }
+
 site_flags = {
+
+    ## When adding new flags, make comment in issue with flag name!
+
     # Features
     'show_hive_all': ['newduke','nd4']
     ,'merge_recent': ['cara', 'fatsycline']
