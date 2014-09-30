@@ -852,7 +852,7 @@ o.Selection = function(o) {
         o[fn_name] = delegate_fn(fn_name);
     }
     var delegates = ["color", "color_set", "opacity", "opacity_set"
-        ,"border_radius", "border_radius_set", "link", "link_set"
+        ,"border_radius", "border_radius_set",
         ,"stroke_width", "stroke_width_set", "stroke_update", "reframe"
         ,"blur", "blur_set", "stroke", "stroke_set", 'run', 'edit', 'stop'
         ,'css_class', 'css_class_set', "border_width", "border_width_set"

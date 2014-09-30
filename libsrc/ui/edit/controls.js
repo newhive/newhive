@@ -46,20 +46,25 @@ o.Controls = function(app, multiselect, delegate) {
         app.controls = false;
     };
 
+    // TODO: should be a has_link_picker, and should have stringjay HTML instead
+    // of hardcoded.
     o.append_link_picker = function(d, opts) {
         opts = $.extend({ open: noop, close: noop }, opts);
-        var e = $("<div class='control drawer link'>");
+        var drawer = $("<div class='control drawer link'>");
         var cancel_btn = $("<img>").addClass('hoverable')
             .attr('src', asset('skin/edit/delete_app.png'))
             .attr('title', 'Clear link')
             // .css('margin', '12px 0 0 5px');
-        var input = $('<input type="text">');
+        var input = $('<input type="text" placeholder="link">')
+            ,input_name = $('<input type="text" placeholder="anchor name">')
+            ,inputs = input.add(input_name)
 
-        d.append(e);
+        cancel_btn.css({/*margin: -23px -46px 0px 2px; */margin: "7px -2px 0px 4px"})
+        d.append(drawer);
         // Protect the input in its own frame so it doesn't change the selection
         // of the current frame
-        input_frame(input, e);
-        e.append(cancel_btn);
+        input_frame(inputs, drawer);
+        drawer.append(cancel_btn).css({border: "solid 1px", padding: "3px 6px"});
 
         // set_link is called when input is blurred
         var set_link = function(){
@@ -73,19 +78,25 @@ o.Controls = function(app, multiselect, delegate) {
                 // Auto-add http:// to urls
                 v = 'http://' + v;
             o.app.link_set(v);
-            env.History.saver(sel_app.link, sel_app.link_set, 'link image').exec(v);
+            env.History.begin()
+            env.History.saver(sel_app.link, sel_app.link_set, 'link').exec(v);
+            v = input_name.val().trim().replace(/[^a-zA-Z0-9]/g,"_")
+            env.History.saver(sel_app.link_name, sel_app.link_name_set, 
+                'link name').exec(v);
+            env.History.group("link")
         };
 
         // Don't have to worry about duplicating handlers because all elements
         // were just created from scratch
-        input.on('blur', set_link);
+        inputs.on('blur', set_link);
 
-        var m = o.hover_menu(d.find('.button.link'), e, {
+        var m = o.hover_menu(d.find('.button.link'), drawer, {
              open : function() {
                  var link = o.app.link();
                  opts.open();
                  input.focus();
                  input.val(link);
+                 input_name.val(o.app.link_name())
              }
             ,click_persist : input
             ,close : function() {
@@ -105,12 +116,12 @@ o.Controls = function(app, multiselect, delegate) {
         var close_on_delay = function(){
             setTimeout(function(){m.close(true)}, 0);
         };
-        e.find('img').click(function() {
+        cancel_btn.click(function() {
             input.focus();
-            input.val('');
+            inputs.val('');
             close_on_delay();
         });
-        input.keypress(function(e) {
+        inputs.keypress(function(e) {
             if(e.keyCode == 13) {
                 close_on_delay();
             }
@@ -362,7 +373,9 @@ o.Controls = function(app, multiselect, delegate) {
 };
 
 var input_frame = function(input, parent, opts){
-    opts = $.extend({width: 200, height: 45}, opts)
+    opts = $.extend({width: 200, height: 87}, opts)
+    if (! context.flags.anchor_name)
+        opts.height = 45
 
     var frame_load = function(){
         frame.contents().find('body')
@@ -372,9 +385,9 @@ var input_frame = function(input, parent, opts){
     var frame = $('<iframe>').load(frame_load)
         .width(opts.width).height(opts.height)
         .css({
-            'display': 'inline-block',
-            'float': 'left',
-            'margin-top': '5px'
+            'display': 'inline-block'
+            ,'float': 'left'
+            // ,'margin-top': '5px'
         });
     parent.append(frame);
     input.css({

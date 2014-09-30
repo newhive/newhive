@@ -47,28 +47,30 @@ o.History.init = function(){
     };
 
     o.undo = function(count){
-        if (count < 1) return false
+        if (count < 1 || ! o[o.current]) {
+            o.update_btn_titles();
+            env.layout_apps();
+            env.exit_safe_set(o.current == -1)
+            return false
+        }
         count = count || 1
 
-        if(! o[o.current]) return false;
         o[o.current].undo();
         o.current -= 1;
-        o.update_btn_titles();
-        env.layout_apps();
-        env.exit_safe_set(o.current == -1)
         return o.undo(count - 1);
     };
 
     o.redo = function(count){
-        if (count < 1) return false
-        count = count || 1
-
+        count = (count === undefined) ? 1 : count
         var next = o[ o.current + 1 ];
-        if( ! next ) return false;
+        if (count < 1 || !next) {
+            o.update_btn_titles();
+            env.layout_apps();
+            return false
+        }
+
         next.redo();
         o.current += 1;
-        o.update_btn_titles();
-        env.layout_apps();
         return o.redo(count - 1);
     };
         
