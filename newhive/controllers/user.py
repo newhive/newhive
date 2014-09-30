@@ -138,7 +138,7 @@ class User(ModelController):
                 user_id = request.form.get('user_id')
                 user = self.db.User.fetch(user_id)
                 col_name = request.form.get('col_name')
-                if not user or not tag_name or not col_name:
+                if not user or not tag_name:
                     return self.serve_json(response, { 'error': 'error'})
 
                 col = user.make_collection(col_name)
