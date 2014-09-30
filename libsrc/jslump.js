@@ -45,7 +45,7 @@ define(function (require) {
 		'jslump/lump',
 		'jslump/io/text',
 		'jslump/log'
-	], function start(
+	], function(
 		getCtx,
 		lump,
 		ioText,
@@ -72,7 +72,7 @@ define(function (require) {
 			'curl/plugin/json!server/compiled.config.json',
 			'curl/plugin/sj!templates/form_overlay.html'
 		], io, ctx)
-	}, fail)
+	})
 
 	return
 

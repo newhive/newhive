@@ -15,6 +15,5 @@ compiled.*
 *.pyc
 *.DS_Store
 /log/*.txt
-newhive.log
-.pivrc
+test.log
 .pivrc

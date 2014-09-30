@@ -419,12 +419,28 @@ Hive.App = function(init_state, opts) {
     }
 
     var css_ify = function(k) { return Math.max(1, Math.round(k)) }
+    o.special_layout = function() {
+        if (o.zoom_fit()) {
+            var opts = { fit:o.zoom_fit()
+                , pos:[0, 0], dims: [1000,1000*$(window).height()/$(window).width()]}
+            o.fit_to(opts)
+            if (o.fixed()) {
+                o.pos_set(u._add(o.pos(), [env.scrollX, env.scrollY]))
+            }
+        }
+    }
+    o.zoom_fit = function() { return o.init_state.fit }
+    var in_layout = false
     o.layout = function(pos, dims){
         if (Hive.Apps.defer_layout()) {
             o.needs_layout = true;
             return true;
         }
+        if (in_layout)
+            return
+        in_layout = true
         o.needs_layout = false;
+        (o.special_layout())
         var pos = pos || o.pos(), dims = dims || o.dims();
         u.inline_style(o.div[0], { 'left' : pos[0], 'top' : pos[1] 
             // rounding fixes SVG layout bug in Chrome
@@ -435,6 +451,7 @@ Hive.App = function(init_state, opts) {
         if(env.Selection && u.array_equals(env.Selection.elements(), [o])) {
             env.Selection.update_relative_coords();
         }
+        in_layout = false
     };
 
     o.pos_relative = function(){ return _pos.slice(); };
@@ -3214,7 +3231,8 @@ Hive.App.has_color = function(o, name){
 Hive.App.Background = function(o) {
     var o = {}
     o.layout = function(){
-        layout.img_fill(o.img, null, $(window))
+        layout.img_fill(o.img, 
+            [o.img.prop('naturalWidth'), o.img.prop('naturalHeight')], $(window))
     }
 
     o.div = $('#bg')

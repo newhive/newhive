@@ -91,14 +91,12 @@ define([
                 }
                 ++cur_mini
                 // Load new mini views, staying 3 ahead of what is shown to user
-                var pos, card = context.page_data.cards[0]
+                var pos = $slides.children().length
+                    ,card = context.page_data.cards[0]
                     ,mini_views = card.thumbs
-                for (; pos < cur_mini + 3; ++pos) {
-                    pos = $slides.children().length
-                    if (pos < mini_views.length) {
-                        template_mini_expr([context, card, {item: mini_views[pos]}])
-                            .appendTo($slides)
-                    }
+                for (; pos < cur_mini + 3 && pos < mini_views.length; ++pos) {
+                    template_mini_expr([context, card, {item: mini_views[pos]}])
+                        .appendTo($slides)
                 }
                 // Transition to the new mini view
                 $slides.find("a").removeClass("notransition")
@@ -120,7 +118,7 @@ define([
         })
     }
     o.attach_handlers = function(){
-        if (context.route.include_categories)
+        if (context.route.client_method == "cat")// && context.route.include_categories)
             attach_handlers_cat()
 
         // TODO-cleanup: These values need to be saved last in render order

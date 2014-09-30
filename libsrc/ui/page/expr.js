@@ -917,6 +917,9 @@ define([
             return
         } else if(msg == 'prev' || msg == 'next') {
             o.navigate_page((msg == "prev") ? -1 : 1);
+        } else if(msg == 'play' || msg == 'play_pause') {
+            $(".overlay.panel.playpause").hidehide()
+            $(".overlay.panel." + msg).showshow()
         } else {
             o.page_btn_handle(msg);
         }
