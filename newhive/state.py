@@ -575,11 +575,14 @@ def collection_client_view(db, collection, ultra=False, viewer=None):
         if ultra: expr_cv["thumbs"][-1]["snapshot_ultra"] = expr.snapshot_name("ultra")
 
     # determine if this is an owned or curated collection
-    owned_exprs = (db.Expr.search(
-        {'owner': owner.id, '_id': {'$in': exprs}}))
-    expr_cv['curated'] = not (
-        owned_exprs and (owned_exprs.count() == len(exprs)))
-
+    if tag:
+        owned_exprs = (db.Expr.search(
+            {'owner': owner.id, '_id': {'$in': exprs}}))
+        expr_cv['curated'] = not (
+            owned_exprs and (owned_exprs.count() == len(exprs)))
+    else:
+        expr_cv['curated'] = False
+        
     return expr_cv
 
 ################

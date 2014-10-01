@@ -2217,9 +2217,20 @@ Hive.App.has_link_picker = function(app) {
     app.link_set = function(v){ 
         app.init_state.href = v;
     };
-    app.link = function(v) {
+    app.link = function() {
         return app.init_state.href;
     };
+    app.link_name_set = function(v){ 
+        app.init_state.href_name = v;
+    };
+    app.link_name = function() {
+        return app.init_state.href_name;
+    };
+    if (!env.Selection.link_set) {
+        ["link", "link_set", "link_name", "link_name_set"].map(function(el,i) {
+            env.Selection.set_standard_delegate(el)
+        })
+    }
     var controls = function(controls) {
         // var app = controls.single()
         find_or_create_button(controls, ".link")

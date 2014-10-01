@@ -7,6 +7,12 @@ from newhive.utils import dfilter, now, get_embedly_oembed, tag_string
 from newhive.utils import is_number_list
 from newhive.controllers.controller import ModelController
 
+def anchor_tag(link, name, xlink=False):
+    xlink = "xlink:" if xlink else ""
+    link = xlink + 'href="' + link + '" ' if link else ''
+    name = xlink + 'name="' + name + '" ' if name else ''
+    return link + name
+
 class Expr(ModelController):
     model_name = 'Expr'
 
@@ -337,6 +343,8 @@ class Expr(ModelController):
         type = app.get('type')
         klass = type.replace('.', '_')
         app_id = app.get('id', 'app_' + str(app['z']))
+        link = app.get('href')
+        link_name = app.get('href_name')
         if type == 'hive.circle':
             type = 'hive.rectangle'
 
@@ -400,9 +408,9 @@ class Expr(ModelController):
                 encoded_content = cgi.escape(app.get('content',''), quote=True)
                 html = '%s' % (app.get('content',''))
         elif type == 'hive.polygon':
-            link = app.get('href')
             link_text = ('','')
-            if link: link_text = ("<a xlink:href='%s'>" % link,"</a>")
+            if link or link_name: 
+                link_text = ("<a %s>" % anchor_tag(link, link_name, True),"</a>")
 
             points = filter(lambda point: is_number_list(point, 2)
                 ,app.get('points', []))
@@ -450,8 +458,8 @@ class Expr(ModelController):
         )
 
         if type != 'hive.polygon':
-            link = app.get('href')
-            if link: html = "<a href='%s'>%s</a>" % (link, html)
+            if link or link_name:
+                html = "<a %s>%s</a>" % (anchor_tag(link, link_name), html)
 
         return html
 

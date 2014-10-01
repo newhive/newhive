@@ -89,6 +89,7 @@ site_flags = {
     ,'shape_link': ['admins', 'devs']
     ,'autoplay': ['admins', 'devs']
     ,'context_help': ['admins', 'devs']
+    ,'anchor_name': ['admins', 'devs']
     # Admin
     ,'admin': ['admins']
     # Old / unused

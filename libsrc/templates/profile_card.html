@@ -95,7 +95,7 @@
           {>}
           {# + to category #}
           {# we may flag this somehow, but for now, only display for root #}
-          {<if (and (eq user.name "root") (tag_selected) (not route.include_categories))}
+          {<if (and (eq user.name "root") (not route.include_categories))}
             ><div class='spacer inline'></div>
             <div class="plus_cats icon" title="Add to Category..."></div
           {>}
