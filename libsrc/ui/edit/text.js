@@ -177,7 +177,8 @@ o.Text = function(o) {
             var link = app.rte.get_link();
         }
         o.link_menu = o.append_link_picker(d.find('.buttons'),
-                        {open: link_open, field_to_focus: app.content_element});
+                        {open: link_open, field_to_focus: app.content_element
+                            ,height: 45});
 
         var cmd_buttons = function(query, func) {
             $(query).each(function(i, e) {
@@ -254,6 +255,7 @@ o.goog_rte = function(content_element, app){
     this.content_element = content_element;
     this.app = app;
 
+    // API link here please
     goog.editor.SeamlessField.call(this, id);
 
     this.make_uneditable = function() {

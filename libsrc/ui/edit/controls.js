@@ -63,7 +63,7 @@ o.Controls = function(app, multiselect, delegate) {
         d.append(drawer);
         // Protect the input in its own frame so it doesn't change the selection
         // of the current frame
-        input_frame(inputs, drawer);
+        input_frame(inputs, drawer, opts);
         drawer.append(cancel_btn).css({border: "solid 1px", padding: "3px 6px"});
 
         // set_link is called when input is blurred
@@ -80,7 +80,9 @@ o.Controls = function(app, multiselect, delegate) {
             o.app.link_set(v);
             env.History.begin()
             env.History.saver(sel_app.link, sel_app.link_set, 'link').exec(v);
-            v = input_name.val().trim().replace(/[^a-zA-Z0-9]/g,"_")
+            // http://stackoverflow.com/questions/566276/what-two-separator-characters-would-work-in-a-url-anchor
+            // We allow "?" and "&" to replace query params
+            v = input_name.val().trim().replace(/[^a-zA-Z0-9_.\-&?=]/g,"_")
             env.History.saver(sel_app.link_name, sel_app.link_name_set, 
                 'link name').exec(v);
             env.History.group("link")
