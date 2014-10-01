@@ -1,14 +1,23 @@
 #! /bin/sh
 
-PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:$PATH"
+# what is this for?
+PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin::$PATH"
+
 # TODO: if running on AWS, remove this server from load balancer
+
+### Asset building ###
+
 rm lib/libsrc
 if [ "$1" = "clean" ]; then
     echo "cleaning..."
     sudo rm -rf libsrc/.cram libsrc/.webassets-cache
     find|grep *.pyc|sudo xargs rm
 fi
+
+# cram sucks and tries to open unreasonable numbers of files
+ulimit -S -n 4000 # hard limit default on Ubuntu seems to 4096
 bin/build_assets.py
+
 sudo apache2ctl graceful
 # TODO: run automated tests
 # TODO: put this server back into load balancer
