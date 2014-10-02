@@ -419,11 +419,13 @@ Hive.App = function(init_state, opts) {
     }
 
     var css_ify = function(k) { return Math.max(1, Math.round(k)) }
+    // why isn't this all in o.layout?
     o.special_layout = function() {
         if (o.zoom_fit()) {
             var opts = { fit:o.zoom_fit()
                 , pos:[0, 0], dims: [1000,1000*$(window).height()/$(window).width()]}
             o.fit_to(opts)
+            // why not use CSS position:fixed?
             if (o.fixed()) {
                 o.pos_set(u._add(o.pos(), [env.scrollX, env.scrollY]))
             }
