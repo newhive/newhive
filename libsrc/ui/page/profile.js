@@ -358,11 +358,20 @@ define([
             if (! save_immediately)
                 $(".save_bar").showshow();
             card_deletes++;
-            var i = card.index();
             card.animate({opacity: 0},
                 { duration: anim_duration, complete: function() {
-                    if (context.page_data.cards)
+                    var cards = context.page_data.cards
+                        ,card_num = card.data("num")
+                    if (cards) {
+                        for (var i = 0; i < cards.length; i++) {
+                            if (cards[i].card_num == card_num)
+                                break
+                        }
+                        if (i == cards.length) 
+                            var i = card.index();
+
                         context.page_data.cards.splice(i, 1);
+                    }
                     ui_page.add_grid_borders();
                     card.remove();
                     if (save_immediately)

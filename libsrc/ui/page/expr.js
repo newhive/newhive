@@ -239,6 +239,7 @@ define([
                     o.last_found = find_card(o.expr.id)
                     o.page_btn_handle()
                 }
+                context.page_data.next_cards_at = page_data.cards.length
             }
 
             if(context.query.q){
@@ -856,56 +857,69 @@ define([
     o.page_next = function() { o.navigate_page(1); };
     o.navigate_page = function(offset){
         o.animating = true;
-        var page_data = context.page_data;
-        if (page_data.cards != undefined) {
+        var page_data = context.page_data, overflow = false;
+        do {
+            if (page_data.cards == undefined) {
+                overflow = true
+                break
+            }
             var len = page_data.cards.length
             var found = get_found();
-            // TODO: do we need error handling?
-            if (found >= 0) {
-                var orig_found = found;
-                // don't loop, just go back to previous page.
-                if (found + offset >= len) {
-                    window.history.go(-1)
-                    return
-                }
-                found = (found + len + offset) % len;
-                debug("navigate (" + offset + ") to " + found);
-                if ((offset < 0 && found > orig_found) 
-                    || (offset > 0 && found + 5 > len))
-                {
-                    // Async fetch more expressions and concat to cards.
-                    on_scroll_add_page();
-                }
-                // Cache upcoming expressions
-                var cache_offsets = o.cache_offsets;
-                var expr_ids = [];
-                for (var i = 0, off; off = cache_offsets[i]; ++i) {
-                    if (offset < 0)
-                        off = -off;
-                    var found_next = (found + len + off) % len;
-                    expr_ids = expr_ids.concat(page_data.cards[found_next].id);
-                }
-                o.cache_frames(expr_ids);
-                if (offset) {
-                    o.next_found = found
-                    var card = page_data.cards[found]
-                    page_data.expr_id = card.id;
-                    var data = {
-                        id: page_data.expr_id,
-                        owner_name: page_data.cards[found].owner.name,
-                        expr_name: page_data.cards[found].name
-                    };
-                    if (card.json) {
-                        $.extend(page_data, card.json);
-                        o.render(page_data);
-                        o.attach_handlers();
-                        o.controller.fake_open('view_expr', data, context.query);
-                    } else {
-                        o.controller.open('view_expr', data, context.query);
-                    }
+            if (found < 0) {
+                overflow = true
+                break
+                // TODO: do we need error handling?
+            }
+            var orig_found = found;
+            // don't loop, just go back to previous page.
+            if (context.from_categories &&
+                (found + offset >= len || found + offset < 0
+            )) {
+                overflow = true
+                break
+            }
+            found = (found + len + offset) % len;
+            debug("navigate (" + offset + ") to " + found);
+            if ((offset < 0 && found > orig_found) 
+                || (offset > 0 && found + 5 > len))
+            {
+                // Async fetch more expressions and concat to cards.
+                on_scroll_add_page();
+            }
+            // Cache upcoming expressions
+            var cache_offsets = o.cache_offsets;
+            var expr_ids = [];
+            for (var i = 0, off; off = cache_offsets[i]; ++i) {
+                if (offset < 0)
+                    off = -off;
+                var found_next = (found + len + off) % len;
+                expr_ids = expr_ids.concat(page_data.cards[found_next].id);
+            }
+            o.cache_frames(expr_ids);
+            if (offset) {
+                o.next_found = found
+                var card = page_data.cards[found]
+                page_data.expr_id = card.id;
+                var data = {
+                    id: page_data.expr_id,
+                    owner_name: page_data.cards[found].owner.name,
+                    expr_name: page_data.cards[found].name
+                };
+                if (card.json) {
+                    $.extend(page_data, card.json);
+                    o.render(page_data);
+                    o.attach_handlers();
+                    o.controller.fake_open('view_expr', data, context.query);
+                } else {
+                    o.controller.open('view_expr', data, context.query);
                 }
             }
+        } while (false)
+        if (overflow && context.from_categories) {
+            window.history.go(-1)
+            return
         }
+
     };
     // Handles messages from PostMessage (from other frames)
     o.handle_message = function(m){
@@ -932,15 +946,16 @@ define([
         if (!msg)
             msg = page_btn_state;
         // don't render the page buttons if there is nothing to page through!
-        if (context.page_data.cards == undefined
+        if (!context.from_categories && 
+            (context.page_data.cards == undefined
             || context.page_data.cards.length == 1
             || !context.page_data.expr
             || no_paging
-        ) {
+        )) {
             msg = 'hide';
         }
 
-        if(msg == 'show_prev') {
+        if (msg == 'show_prev') {
             $('.page_btn.page_prev').showshow();
             $('.page_btn.page_next').hidehide();
         } else if(msg == 'show_next') {
@@ -950,9 +965,9 @@ define([
             $('.page_btn').hidehide();
         }
 
-        if (o.last_found == 0) {
-            $('.page_btn.page_prev').hidehide();
-        }
+        // if (o.last_found == 0) {
+        //     $('.page_btn.page_prev').hidehide();
+        // }
 
         // should reflect whether left or right page_btn should be visible if
         // page is not loading. See .page_btn.page_btn_load_hack

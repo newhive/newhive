@@ -2224,7 +2224,7 @@ Hive.App.has_link_picker = function(app) {
         app.init_state.href_name = v;
     };
     app.link_name = function() {
-        return app.init_state.href_name;
+        return app.init_state.href_name || "";
     };
     if (!env.Selection.link_set) {
         ["link", "link_set", "link_name", "link_name_set"].map(function(el,i) {

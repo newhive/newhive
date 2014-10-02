@@ -452,14 +452,15 @@ class Expr(ModelController):
 
         data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
         data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
+        
+        if type != 'hive.polygon':
+            if link or link_name:
+                html = "<a %s>%s</a>" % (anchor_tag(link, link_name), html)
+
         html = "<div class='happ %s %s' id='%s' style='%s'%s>%s</div>" % (
             klass, app.get('css_class', ''), app_id,
             css_for_app(app) + more_css, data, html
         )
-
-        if type != 'hive.polygon':
-            if link or link_name:
-                html = "<a %s>%s</a>" % (anchor_tag(link, link_name), html)
 
         return html
 

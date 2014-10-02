@@ -121,6 +121,13 @@ define([
         if (route_name == "expr")
             route_name = "view_expr";
         context.route = routes[route_name];
+        
+        // We need to know if the route came via category to control the 
+        // behavior of the page through arrows
+        if (context.route.include_categories)
+            context.from_categories = true
+        else if (context.route.client_method != "expr")
+            context.from_categories = false
         var old_cards = context.page_data.cards
             , old_cards_route = context.page_data.cards_route
         context.page_data = page_data;

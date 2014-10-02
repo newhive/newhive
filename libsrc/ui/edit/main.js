@@ -435,7 +435,13 @@ Hive.pre_init = function(){
     Hive.send({ready: true})
 }
 
-var revert = {}
+var revert = {}, exit_safe = true
+env.exit_safe_set = function(v){
+    if(v == exit_safe) return
+    Hive.send({exit_safe: v})
+    exit_safe = v
+}
+
 Hive.init = function(exp, site_context, _revert){
     revert = _revert
     // this reference must be maintained, do not assign to Exp
@@ -452,13 +458,6 @@ Hive.init = function(exp, site_context, _revert){
     env.squish_full_bleed = env.gifwall;
     env.show_mini_selection_border = 
         env.gifwall || context.flags.show_mini_selection_border;
-
-    var exit_safe = true
-    env.exit_safe_set = function(v){
-        if(v == exit_safe) return
-        Hive.send({exit_safe: v})
-        exit_safe = v
-    }
 
     if (env.gifwall)
         $("body").addClass("gifwall");
