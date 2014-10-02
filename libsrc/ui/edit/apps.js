@@ -973,27 +973,31 @@ Hive.App.Code = function(o){
         )
     }
     var insert_code = function(load){
+        var code
         iter++
 
-        var code
-        if(o.init_state.code_type == 'js'){
+        if(o.init_state.code_type == 'js')
             code = module_code()
-        }
         else code = o.content()
 
-        // either a module with code content, or a script with url
-        if(o.is_module()) o.code_element.removeAttr('src')
-        else o.code_element.attr('src', o.init_state.url)
+        var el = o.code_element =
+            o.init_state.code_type == 'css' ? $('<style>') : $('<script>')
+        el.attr('type', o.mime).appendTo('#dynamic_group')
 
-        // Now we load the new code into the page
-        o.code_element.appendTo('body')[0].onload = function(){
+        // either a module with code content, or a script with url
+        if(o.is_module()) el.removeAttr('src')
+        else el.attr('src', o.init_state.url)
+
+        el[0].onload = function(){
             last_success = iter
             // TODO-unhack: this should break for scripts that take longer than 100ms to compile
             setTimeout(load, 100)
         }
         // use a blob for source so syntax errors are properly reported,
         // instead of creating mysterious exception
-        o.code_element.attr('src', u.string_to_url(code, o.mime))
+        if(o.init_state.code_type == 'js')
+            el.attr('src', u.string_to_url(code, o.mime))
+        else el.html(code)
     }
 
     var animate_go
@@ -1090,19 +1094,16 @@ Hive.App.Code = function(o){
         _remove()
     }
 
-    keymap = {
+    var keymap = {
         'Ctrl-/': function(cm){ cm.execCommand('toggleComment') }
     }
 
-    if(!o.init_state.code_type) o.init_state.code_type = 'js'
-    if(o.init_state.code_type == 'js'){
-        o.mime = 'application/javascript'
-        o.code_element = $('<script>').attr('type', o.mime)
-    }
-    if(o.init_state.code_type == 'css'){
-        o.mime = 'text/css'
-        o.code_element = $('<style>').attr('type', o.mime)
-    }
+    var mimes = { js: 'application/javascript', css: 'text/css' }
+
+    o.init_state.code_type == 'js' || o.init_state.code_type == 'css' || (
+        o.init_state.code_type = 'js' )
+    o.mime = mimes[o.init_state.code_type]
+    o.code_element = $()
 
     // o.content_element = $('<textarea>').addClass('content code drag').appendTo(o.div);
     var mode = o.init_state.code_type
