@@ -155,6 +155,17 @@ define(['browser/jquery', 'ui/util'], function($, util) {
         return $img;
     }
 
+    // TODO-cleanup: merge with very similar logic in img_fill, make
+    // wrapper function for getting natural image dims
+    o.letterbox = function(dims, parent_dims){
+        var aspect = dims[1] / dims[0], out = parent_dims.slice()
+        if( aspect > parent_dims[1] / parent_dims[0] )
+            out[1] = out[0] * aspect
+        else
+            out[0] = out[1] / aspect
+        return out
+    }
+
     // TODO: fix this
     var is_fullscreen = function(){
         return document.height == window.screen.height && document.width == window.screen.width;
