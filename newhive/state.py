@@ -561,7 +561,8 @@ def collection_client_view(db, collection, ultra=False, viewer=None):
     if ultra: expr_cv["snapshot_ultra"] = expr.snapshot_name("ultra")
     expr_cv["thumbs"] = []
     if len(el) > 1: 
-      for i in xrange(1 if len(el) > 2 and not ultra else 0, len(el)):
+      ultrahack = True
+      for i in xrange(1 if len(el) > 2 and not (ultra and not ultrahack) else 0, len(el)):
         expr = el[i]
         expr_cv["thumbs"].append({
             "owner_name": expr['owner_name']

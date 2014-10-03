@@ -643,11 +643,13 @@ body {
             bottom: 20px;
             width: 3*$mini_view_height;
             height: $mini_view_height;
-            border: 3px solid $mini_view_color;
+            // border: 3px solid $mini_view_color;
+            // border-right: 0px;
+            padding: 3px 0px 3px 3px;
             background: $mini_view_color;
             img.snapshot {
                 height: 100%;
-                width: 33%;
+                width: 33.2%;
                 border: 3px solid $mini_view_color;
                 box-sizing: border-box;
             }

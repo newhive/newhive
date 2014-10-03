@@ -105,6 +105,7 @@ define([
             }
         }
         $(document).ready(function(ev) {
+            return
             $slides = context.undefer($(".card[data-num=0] .defer.mini_views"))
             $slides.removeClass("mini_views").bind_once_anon("lazy_load.page", function() {
                 if (! $slides.is(".loaded")) return
@@ -315,7 +316,7 @@ define([
             ,card_num = card.data("num")
         $mini_views.css({opacity: (dir == "in") ? 1 : 0})
         
-        if (card_num > 0)
+        // if (card_num > 0)
             $mini_views = context.undefer(card.find(".mini_views.defer"))
         if ($mini_views.length) {
             $mini_views.on("lazy_load", function() {
