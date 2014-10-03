@@ -419,11 +419,13 @@ Hive.App = function(init_state, opts) {
     }
 
     var css_ify = function(k) { return Math.max(1, Math.round(k)) }
+    // why isn't this all in o.layout?
     o.special_layout = function() {
         if (o.zoom_fit()) {
             var opts = { fit:o.zoom_fit()
                 , pos:[0, 0], dims: [1000,1000*$(window).height()/$(window).width()]}
             o.fit_to(opts)
+            // why not use CSS position:fixed?
             if (o.fixed()) {
                 o.pos_set(u._add(o.pos(), [env.scrollX, env.scrollY]))
             }
@@ -920,10 +922,10 @@ Hive.App.Code = function(o){
     env.show_css_class = true
 
     o.content = function(){ return o.editor.getValue() }
-    o.run_module_func = function(module_func, callback) {
+    o.run_module_func = function(module_func, callback, no_err) {
         var curl_func = function() {
             editor.current_code = o;
-            curl([o.module_name()], function(module) {
+            curl([o.module_name(no_err)], function(module) {
                 if (!module) {
                     console.log("Module load error")
                 } else {
@@ -945,24 +947,23 @@ Hive.App.Code = function(o){
 
     // TODO: fix auto-loading by running first within try-catch, and if it 
     // has errors, defer it to run after editor load (setTimeout sufficient?)
+    // otherwise the entire editor breaks when a code embed has syntax error.
+    // DO NOT UNCOMMENT UNTIL FIXED
+    // var _load = o.load
+    // o.load = function() {
+    //     if (_load) _load()
+    //     if(o.is_module()) {
+    //         setTimeout(function() {
+    //             insert_code()
+    //             o.run_module_func("editor")
+    //         }, 1000)
+    //     }
+    // }
 
-    // With commented load, if script has a syntax error, all editor code aborts
-    // TODO: if we definitely want custom code to execute when editor loads,
-    // investigate using eval instead of <script> tag. Test debugging of code
-    // run from eval
-    var _load = o.load
-    o.load = function() {
-        if (_load) _load()
-        if(o.is_module()) {
-            setTimeout(function() {
-                insert_code()
-                o.run_module_func("editor")
-            }, 1000)
-        }
+    var iter = -1, last_success = -1
+    o.module_name = function(without_error){
+        return "module_" + o.id + "_" + (without_error ? last_success : iter)
     }
-
-    var iter = 0;
-    o.module_name = function() { return "module_" + o.id + "_" + iter; }
     var module_code = function() {
         // return o.content();
         if( o.init_state.url ) return '' // can't have src and script body
@@ -973,54 +974,66 @@ Hive.App.Code = function(o){
             + "return self\n})"
         )
     }
-    var insert_code = function(){
+    var insert_code = function(load){
         var code
-        if(o.init_state.code_type == 'js'){
-            ++iter;
+        iter++
+
+        if(o.init_state.code_type == 'js')
             code = module_code()
-        }
         else code = o.content()
 
+        var el = o.code_element =
+            o.init_state.code_type == 'css' ? $('<style>') : $('<script>')
+        el.attr('type', o.mime).appendTo('#dynamic_group')
+
         // either a module with code content, or a script with url
-        if(o.is_module()) o.code_element.removeAttr('src')
-        else o.code_element.attr('src', o.init_state.url)
-        // jquery script insert messes up debugging, so we use straight js
-        o.code_element.html(code).appendTo('body')
+        if(o.is_module()) el.removeAttr('src')
+        else el.attr('src', o.init_state.url)
+
+        el[0].onload = function(){
+            last_success = iter
+            // TODO-unhack: this should break for scripts that take longer than 100ms to compile
+            setTimeout(load, 100)
+        }
+        // use a blob for source so syntax errors are properly reported,
+        // instead of creating mysterious exception
+        if(o.init_state.code_type == 'js')
+            el.attr('src', u.string_to_url(code, o.mime))
+        else el.html(code)
     }
 
     var animate_go
     o.run = function() {
         o.stop();
-        insert_code()
-
-        if(!o.is_module()) return
-        o.run_module_func("run", function(module) {
-            if(!module.animate) return
-            var animate_frame = function(){
-                module.animate()
-                // TODO-compat: if requestAnimationFrame not supported,
-                // fallback to setTimeout
-                if(animate_go) requestAnimationFrame(animate_frame)
-            }
-            animate_go = 1
-            animate_frame()
-        }, { 
-            editor: true 
+        insert_code(function(){
+            if(!o.is_module()) return
+            o.run_module_func("run", function(module){
+                if(!module.animate) return
+                var animate_frame = function(){
+                    module.animate()
+                    // TODO-compat: if requestAnimationFrame not supported,
+                    // fallback to setTimeout
+                    if(animate_go) requestAnimationFrame(animate_frame)
+                }
+                animate_go = 1
+                animate_frame()
+            })
         })
     }
     o.stop = function() {
         if(o.is_module()){
-            if (!iter) return;
+            if (last_success < 0) return
             o.run_module_func("stop", function() {
                 animate_go = 0
-            })
+            }, true)
         }
         o.code_element.remove()
     }
     o.edit = function() {
         if (o.created_controls.length == 0) {
-            insert_code()
-            o.run_module_func("edit", function() { fixup_controls() })
+            insert_code(function(){
+                o.run_module_func("edit", function() { fixup_controls() })
+            })
         } else {
             var apps = env.Apps.filtered(function(a) { return a.client_visible; })
             // remove the associated edit controls from their apps
@@ -1083,16 +1096,16 @@ Hive.App.Code = function(o){
         _remove()
     }
 
-    keymap = {
+    var keymap = {
         'Ctrl-/': function(cm){ cm.execCommand('toggleComment') }
     }
 
-    if(!o.init_state.code_type)
-        o.init_state.code_type = 'js'
-    if(o.init_state.code_type == 'js')
-        o.code_element = $('<script>')
-    if(o.init_state.code_type == 'css')
-        o.code_element = $('<style>')
+    var mimes = { js: 'application/javascript', css: 'text/css' }
+
+    o.init_state.code_type == 'js' || o.init_state.code_type == 'css' || (
+        o.init_state.code_type = 'js' )
+    o.mime = mimes[o.init_state.code_type]
+    o.code_element = $()
 
     // o.content_element = $('<textarea>').addClass('content code drag').appendTo(o.div);
     var mode = o.init_state.code_type
