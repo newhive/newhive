@@ -69,7 +69,7 @@
   {>}
 
   {# Category Buttons #}
-  <div class="header">
+  <div class='header {<unless flags.categories}hide{>}'>
     {<if flags.categories}
     <ul>
       {<for home.cats "count"}

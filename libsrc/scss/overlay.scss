@@ -41,7 +41,7 @@ body:not(.mobile) {
     }
     .main-header {
         @include transition(all, $anim_time, linear);
-        .logo, .item, .icon, a.splash.container, .cell, .cell>a, .vcenter_outer {
+        .header, .logo, .item, .icon, a.splash.container, .cell, .cell>a, .vcenter_outer {
             @include transition(all, $anim_time, linear);
         }
     }
@@ -60,7 +60,7 @@ body:not(.mobile) {
     top: 0px;
     left: 0px;
     right: 0px;
-    padding-bottom: 17px;
+    // padding-bottom: 17px;
 
     z-index: $nav_layer;
     background-color: white;
@@ -153,6 +153,8 @@ body:not(.mobile) {
         // line-height: 0px; // To remove extra whitespace
         @if $debug { background-color: aqua; }
         line-height: 0px;
+        margin: 50px auto 0px auto;
+        max-width: 1053px;
 
         ul {
             -webkit-margin-before: 0em;
@@ -165,6 +167,9 @@ body:not(.mobile) {
             display: inline-block;
             text-align: justify;
             width: 100%;
+            list-style: none;
+            padding-left: 0;
+            margin: 0;
 
             overflow: hidden;
 
@@ -208,6 +213,9 @@ body:not(.mobile) {
     &.condensed {
         @include box-shadow(rgba(black, 0.4) 0px 3px 10px);
         .hide_condensed { display: none; }
+        .header {
+            margin: 22px auto 0px auto;
+        }
         .logo.splash, .right .vcenter_outer.full_height {
             height: 40px;
             // margin: 0;

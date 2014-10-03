@@ -70,6 +70,7 @@
 .table {
     display: table;
     width: 100%;
+    &.fixed { table-layout: fixed; }
     &>.cell, &> a > .cell{
         display: table-cell;
         &.left { text-align: left; }

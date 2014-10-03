@@ -643,7 +643,7 @@ body {
             bottom: 20px;
             width: 3*$mini_view_height;
             height: $mini_view_height;
-            border: 7px solid $mini_view_color;
+            border: 3px solid $mini_view_color;
             background: $mini_view_color;
             img.snapshot {
                 height: 100%;
@@ -765,6 +765,7 @@ body {
                     width: 308px;
                     left: -5px;
                     top: 0px;
+                    padding: 0px 13px;
 
                     overflow: hidden;
                     // background: white;
@@ -774,6 +775,9 @@ body {
                         height: 100%; 
                         width: auto; 
                         margin: 0px 0px 0px -3px;
+                        box-sizing: border-box;
+                        padding: 5px 5px 5px 0px;
+                        background-color: white;
                     }
                 }
             }

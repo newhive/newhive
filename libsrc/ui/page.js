@@ -766,7 +766,7 @@ define([
         }
         if (!condensed) {
             height_nav_uncondensed = new_nav_height
-            $("#site").css({"margin-top": height_nav_uncondensed })
+            $("#site").css({"margin-top": height_nav_uncondensed + 3 })
             return;
         }
     }
