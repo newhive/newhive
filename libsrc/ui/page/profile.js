@@ -104,7 +104,11 @@ define([
                 $slide.css({opacity: 1, "pointer-events":"auto"})
             }
         }
-        $(document).ready(function(ev) {
+
+
+        var ready = false, on_ready = function(ev) {
+            if(ready) return
+            ready = true
             $slides = context.undefer($(".card[data-num=0] .defer.mini_views"))
             $slides.removeClass("mini_views").bind_once_anon("lazy_load.page", function() {
                 if (! $slides.is(".loaded")) return
@@ -115,7 +119,9 @@ define([
                 $slides.children().slice(1).addClass("notransition").css({opacity: 0})
                 setInterval(next_slide, 3000)
             })
-        })
+        }
+        $(document).ready(on_ready)
+        $(window).ready(on_ready)
     }
     o.attach_handlers = function(){
         if (context.route.client_method == "cat")// && context.route.include_categories)

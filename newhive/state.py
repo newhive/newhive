@@ -508,10 +508,13 @@ def add_to_category(category, collection):
 
 # client view of a collection
 def collection_client_view(db, collection, ultra=False, viewer=None):
+    ## we have just a single expr
     if isinstance(collection, basestring):
         expr = db.Expr.fetch(collection)
         if not expr: return None
         expr_cv = expr.client_view(viewer=viewer)
+        # individual pages can appear in categories, so this gets
+        # a collection attribute that's actually its own id
         expr_cv.update({
             'collection': collection
             ,"snapshot_tiny": expr.snapshot_name("tiny")
@@ -520,6 +523,9 @@ def collection_client_view(db, collection, ultra=False, viewer=None):
         })
         if ultra: expr_cv["snapshot_ultra"] = expr.snapshot_name("ultra")
         return expr_cv
+
+    ## it's a real collection   
+
     username = collection.get('username')
     if not username: return None
     owner = db.User.named(username)
@@ -540,7 +546,6 @@ def collection_client_view(db, collection, ultra=False, viewer=None):
     expr = el[0]
     if not expr: return None
 
-    # TODO-perf: this method belongs as standalone in state.
     expr_cv = {
         # TODO-perf: trim this to essentials
         "owner": owner.client_view(viewer=viewer)
@@ -575,6 +580,7 @@ def collection_client_view(db, collection, ultra=False, viewer=None):
         if ultra: expr_cv["thumbs"][-1]["snapshot_ultra"] = expr.snapshot_name("ultra")
 
     # determine if this is an owned or curated collection
+    # for "by USER" or "curated by USER" on card
     if tag:
         owned_exprs = (db.Expr.search(
             {'owner': owner.id, '_id': {'$in': exprs}}))
