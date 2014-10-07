@@ -73,6 +73,7 @@ site_flags = {
     ,'user_search': ['nd4', 'newduke','abram','it1']
     ,'new_nav': ['admins', 'devs']
     ,'categories': ['admins', 'devs']
+    ,'category_hovers': ['admins', 'devs']
     ,'force_stumble': ['admins', 'devs']
     # Editor
     ,'snap_crop': ['admins','nd4']

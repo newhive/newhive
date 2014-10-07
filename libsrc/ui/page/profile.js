@@ -104,7 +104,10 @@ define([
                 $slide.css({opacity: 1, "pointer-events":"auto"})
             }
         }
-        $(document).ready(function(ev) {
+
+        var ready = false, on_ready = function(ev) {
+            if(ready) return
+            ready = true
             $slides = context.undefer($(".card[data-num=0] .defer.mini_views"))
             $slides.removeClass("mini_views").bind_once_anon("lazy_load.page", function() {
                 if (! $slides.is(".loaded")) return
@@ -115,7 +118,11 @@ define([
                 $slides.children().slice(1).addClass("notransition").css({opacity: 0})
                 setInterval(next_slide, 3000)
             })
-        })
+        }
+        if (context.flags.category_hovers) {
+            $(document).ready(on_ready)
+            $(window).ready(on_ready)
+        }
     }
     o.attach_handlers = function(){
         if (context.route.client_method == "cat")// && context.route.include_categories)
@@ -307,12 +314,9 @@ define([
         $(".overlay.panel").hidehide();
     };
 
-    var card_animate = function(card, dir){
-        var prop = "opacity"
-            ,goal = 1.0
-            ,duration = 350
-            ,$mini_views = card.find(".mini_views")
-            ,card_num = card.data("num")
+    var mini_view_animate = function(card, dir, card_num) {
+        var $mini_views = card.find(".mini_views")
+
         $mini_views.css({opacity: (dir == "in") ? 1 : 0})
         
         if (card_num > 0)
@@ -327,6 +331,15 @@ define([
                 if ($(".card:hover").data("num") == card_num)
                     setTimeout(function() { $mini_views.css({opacity: 1}) }, 1)
             }).css({opacity: 0})
+        }
+    }
+    var card_animate = function(card, dir){
+        var prop = "opacity"
+            ,goal = 1.0
+            ,duration = 350
+            ,card_num = card.data("num")
+        if (context.flags.category_hovers) {
+            mini_view_animate(card, dir, card_num)
         }
         if (dir == "in") {
             var card_data = context.page_data.cards[card_num]
