@@ -74,52 +74,76 @@ Hive.toggle_grid = function() {
 
 Hive.help_selection = function (start) {
     start = ui_util.defalt(start, true)
-    var $elems = $("body #happs .happ, #controls .control.buttons > *")
+    var $elems = $("body #happs .happ, #controls .control.buttons > *, .app_btns > *")
         ,$highlight = $("#overlays_group .help_highlight")
         ,$help_target, depth = 0
     if (!$highlight.length) 
         $highlight = $("<div class='help_highlight'>").appendTo("#overlays_group")
-    $elems = $elems.add($highlight) 
+    $elems = $elems.add($highlight)
+    $("body").addremoveClass("help", start)
     Menu.no_hover = start
-    if (start) {
-        $elems.bind_once_anon("mouseenter.help mouseleave.help",function(ev) {
-            var $target = $(ev.currentTarget), enter = (ev.type == "mouseenter")
-                ,css = $target.get(0).getBoundingClientRect()
-            depth += enter ? 1 : -1
-            console.log("class: " + $target.attr("class") + ", depth: " + depth)
-            if ($(ev.currentTarget).is(".help_highlight"))
-                return
-            $help_target = $target
-            $highlight.showshow().css(css)
-            if (!depth) setTimeout(function() {
-                $highlight.showhide(depth)
-            },1)
-        })
-        .bind_once_anon("mousedown.help", function(ev) {
-            Hive.help_selection(false)
-            var help_file, klasses = $help_target.attr("class")
-                , help_files = {
-                ".hive_image": "Image App"
-                ,".happ": "Generic App"
-                ,".button.opacity": "Set opacity"
-            }
-            for (var selector in help_files) {
-                if ($help_target.is(selector)) {
-                    help_file = help_files[selector]
-                    break
-                }
-            }
-            u.set_debug_info(help_file ? help_file : "File not found. " 
-                + klasses, 5000)
-            return false
-        })
-    } else {
+    if (!start) {
         $elems.off("mouseenter.help mouseleave.help mousedown.help")
         $highlight.hidehide()
+        return
     }
 
+    // start == true
+    $elems.bind_once_anon("mouseenter.help mouseleave.help",function(ev) {
+        var $target = $(ev.currentTarget), enter = (ev.type == "mouseenter")
+            ,css = $target.get(0).getBoundingClientRect()
+        depth += enter ? 1 : -1
+        if (!depth) setTimeout(function() {
+            $highlight.showhide(depth)
+            // $help_target = undefined
+        },100)
+        if ($(ev.currentTarget).is(".help_highlight"))
+            return
+        if (enter)
+            $help_target = $target
+        $highlight.showshow().css(css)
+    })
+    .add($("body, body *")).bind_once_anon("mousedown.help", function(ev) {
+        $("body, body *").off("mousedown.help")
+        Hive.help_selection(false)
+        if (! $(this).is(".help_highlight"))
+            return false
+        var klasses = $help_target.attr("class")
+            , help_file = "File not found. " + klasses
+            , help_files = {
+                ".happ.hive_image": "#images"
+                ,".insert_image": "#images"
+                ,".happ.hive_text": "#text"
+                ,".insert_text": "#text"
+                // ,".happ.hive_polygon": "#shape"
+                // ,".happ.insert_shape": "#shape"
+                // ,".happ": "Generic App"
+                // ,".button.opacity": "Set opacity"
+            }
+        for (var selector in help_files) {
+            if ($help_target.is(selector)) {
+                help_file = help_files[selector]
+                break
+            }
+        }
+        if (help_file[0] == "#") {
+            $("#dia_editor_help").data("dialog").open()
+            var $iframe = $("#dia_editor_help iframe")
+                ,url = $iframe.prop("src").replace(/#.*$/, '')
+            $iframe.prop("src", url + help_file)
+        } else if (context.flags.can_debug) {
+            u.set_debug_info(help_file, 5000)
+        }
+        return false
+    })
 }
+
 Hive.init_menus = function() {
+    if (context.flags.context_help) {
+        $("#btn_help").bind_once_anon("click", function(ev) {
+            Hive.help_selection()
+        })
+    }
     hive_app.App.has_slider_menu(null, ""
         ,env.padding_set, env.padding, null, null
         ,{ min: 0, max: 30, quant: 1
