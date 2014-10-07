@@ -44,7 +44,7 @@
               <div class='text_btn item teal_hover'>Sign Up</div></a>
             <a {anchor_attrs "view_expr"
               "owner_name" config.site_user "expr_name" "about"}>
-              <div class='text_btn item teal_hover'>About</div></a>
+              <div class='text_btn item teal_hover about_menu'>About</div></a>
           </div>
         {>}
         <div class="middle_block inline search_bar">
@@ -69,7 +69,7 @@
   {>}
 
   {# Category Buttons #}
-  <div class='header {<unless flags.categories}hide{>}'>
+  <div class='header {<unless flags.categories}stay_hidden{>}'>
     {<if flags.categories}
     <ul>
       {<for home.cats "count"}
@@ -157,21 +157,41 @@
     {# About #}
     <a {anchor_attrs "view_expr"
       "owner_name" config.site_user "expr_name" "about"}
-      class='menu_item'>About</a>
+      class='menu_item about_menu'>About</a>
 
     {# Logout #}
     <div id='logout_btn' class='menu_item'>Logout</div>
-
-    {# FAQ #}
-    {# <a {anchor_attrs "faq"} class='menu_item hoverable'>FAQ</a> #}
-    {# <div id='invite_btn' class='menu_item'>Invites</div> #}
   {>}{<else}
     <a {anchor_attrs "signup"} class='menu_item'>Sign Up</a>
     <div class='login_btn menu_item'>Log in</div>
+    {# About #}
     <a {anchor_attrs "view_expr"
       "owner_name" config.site_user "expr_name" "about"}
-      class='menu_item'>About NewHive</a>
+      class='menu_item about'>About NewHive</a>
+    {# FAQ #}
+    <a {anchor_attrs "view_expr"
+      "owner_name" config.site_user "expr_name" "faq"}
+      class='menu_item'>FAQ</a>
     <a {anchor_attrs "home"} class='menu_item default'>The Hive</a>
+  {>}
+</div>
+{# About menu #}
+<div class='menu drawer about_menu activity items'
+  data-handle='{cond user.logged_in "#logo_menu" ".main-header"} .about_menu' 
+  {cond user.logged_in "data-parent='#logo'" ""} data-menu-opts='"offset_y":5'>
+  {# About #}
+  <a {anchor_attrs "view_expr"
+    "owner_name" config.site_user "expr_name" "about"}
+    class='menu_item default about'>About NewHive</a>
+  {# FAQ #}
+  <a {anchor_attrs "view_expr"
+    "owner_name" config.site_user "expr_name" "faq"}
+    class='menu_item'>FAQ</a>
+  {# User Guide #}
+  {<if flags.show_user_guide}
+    <a {anchor_attrs "view_expr"
+      "owner_name" config.site_user "expr_name" "user-guide"}
+      class='menu_item'>User Guide</a>
   {>}
 </div>
 

@@ -177,7 +177,10 @@ body:not(.mobile) {
                 display: inline-block;
                 @for $i from 1 through 7 {
                     &:nth-of-type( #{$i} ) {
-                        .black_btn { background-color: nth($category_colors, $i); }
+                        .black_btn { 
+                            background-color: nth($category_colors, $i); 
+                            &:hover { background-color: $color_selected; }
+                        }
                     }
                 }
             }
