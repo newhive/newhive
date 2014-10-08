@@ -97,13 +97,16 @@ define([
             o.attach_point = this_dia.parent();
             if (!opts.leave_in_dom || this_dia.parent().get(0) != document.body) {
                 this_dia.detach();
+                // Make sure this isn't a duplicate dialog
+                var $prev_dia = $("#" + this_dia.prop("id"))
+                $prev_dia.remove()
                 // Add to body to create a new z index stack
                 this_dia.appendTo(document.body);
             }
             opts.shield = $("<div class='dialog_shield'>");
             if(opts.fade) opts.shield.addClass('fade');
             // Insert the shield before the topmost dialog in the stack
-            opts.shield.insertBefore($("body > .dialog")).last().click(o.close);
+            opts.shield.insertBefore($("body > .dialog:not(.hide)")).last().click(o.close);
 
             this_dia.find("form").unbind('success', opts.handler)
                 .on('success', opts.handler)
