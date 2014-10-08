@@ -44,7 +44,8 @@
               <div class='text_btn item teal_hover'>Sign Up</div></a>
             <a {anchor_attrs "view_expr"
               "owner_name" config.site_user "expr_name" "about"}>
-              <div class='text_btn item teal_hover about_menu'>About</div></a>
+              <div class='text_btn item teal_hover about_menu'>About
+              </div></a>
           </div>
         {>}
         <div class="middle_block inline search_bar">
@@ -144,20 +145,21 @@
     <a {anchor_attrs "network" "username" user.name} class='menu_item hoverable'>Network</a>
 
     {# Username #}
-    <a id='user_btn' { anchor_attrs "expressions_public" "owner_name" user.name }
-      class='menu_item hoverable'>{user.name|e}</a>
-
-    {# Activity #}
-    <div id='activity_btn' class='menu_item hoverable'>
+    <a id='activity_btn' { anchor_attrs "expressions_public" "owner_name" user.name }
+      class='menu_item hoverable'>
         <div class='icon'></div>
         <div class='count'>0</div>
-        Activity
-    </div>
+        {user.name|e}
+      </a>
 
     {# About #}
     <a {anchor_attrs "view_expr"
       "owner_name" config.site_user "expr_name" "about"}
-      class='menu_item about_menu'>About</a>
+      class='menu_item about_menu'>About
+    {<if flags.ui_test}
+      <img class="right_expand" src='{asset "skin/nav/search-arrow.png"}'>
+    {>}
+    </a>
 
     {# Logout #}
     <div id='logout_btn' class='menu_item'>Logout</div>

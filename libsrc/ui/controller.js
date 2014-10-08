@@ -1,9 +1,11 @@
 define([
     'browser/jquery'
     ,'browser/js'
+
     ,'ui/page'
     ,'ui/page/pages'
     ,'ui/util'
+    ,'ui/menu'
     ,'context'
     ,'json!ui/routes.json'
     // ,'history/history'
@@ -13,9 +15,11 @@ define([
 ], function(
      $
     ,js
+
     ,page
     ,pages
     ,util
+    ,menu
     ,context
     ,routes
     //,history
@@ -176,6 +180,9 @@ define([
                     route_name: route_name
                 };
             e.preventDefault();
+            // TODO: decide if this (and dialog.close_all) should be called
+            // on every open_route
+            menu.close_all();
             o.open_route(page_state);
             return false;
         });
