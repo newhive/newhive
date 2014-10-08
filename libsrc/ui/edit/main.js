@@ -763,13 +763,17 @@ Hive.keydown = function(ev){
 Hive.scroll = function(ev){
     var scrolledX = window.scrollX - env.scrollX
         ,scrolledY = window.scrollY - env.scrollY
+        ,has_fixed = false
     env.scrollX += scrolledX
     env.scrollY += scrolledY
     env.Apps.all().map(function(app){
         if (app.fixed()) {
             app.pos_set(u._add(app.pos(), [scrolledX, scrolledY]))
+            has_fixed = true
         }
     })
+    if (has_fixed)
+        env.Selection.update_relative_coords()
     if (env.Selection.controls)
         env.Selection.controls.layout()
     env.Selection.elements().map(function(app){

@@ -232,8 +232,9 @@ Hive.App = function(init_state, opts) {
     o.css_state = {};
     o.content = function(content) { return $.extend({}, o.css_state); };
     o.set_css = function(props) {
-        o.content_element.css(props);
         $.extend(o.css_state, props);
+        delete props.position
+        o.content_element.css(props);
         if(o.controls) o.controls.layout();
     }
     o.css_getter = function(css_prop){ return function(){
@@ -426,7 +427,7 @@ Hive.App = function(init_state, opts) {
                 , pos:[0, 0], dims: [1000,1000*$(window).height()/$(window).width()]}
             o.fit_to(opts)
             // why not use CSS position:fixed?
-            if (o.fixed()) {
+            if (o.is_fixed()) {
                 o.pos_set(u._add(o.pos(), [env.scrollX, env.scrollY]))
             }
         }
@@ -609,22 +610,17 @@ Hive.App = function(init_state, opts) {
             position: _pos.slice(),
             dimensions: _dims.slice()
         }
-        if (o.fixed())
+        if (o.is_fixed())
             pos_dims.position = 
                 u._sub(pos_dims.position, 
                     u._div([env.scrollX, env.scrollY], env.scale()))
         return pos_dims
     };
-    o.fixed = function() { return o.div.is(".fixed") }
-    // o.fixed_offset_set = function(new_offset) {
-    //     var diff = u._sub(new_offset, o.fixed_offset)
-    //     o.fixed_offset = new_offset
-    //     o.
-    // }
+    o.is_fixed = function() { return o.fixed && o.fixed() }
     o.state_relative_set = function(s){
         if(s.position) {
             _pos = s.position.slice();
-            if (o.fixed())
+            if (o.is_fixed())
                 _pos = u._add(_pos,
                     u._div([env.scrollX, env.scrollY], env.scale()))
         }
@@ -640,7 +636,7 @@ Hive.App = function(init_state, opts) {
             id: o.id
         });
         if(o.content) s.content = o.content()
-        if(Object.keys(o.css_state).length)
+        // if(Object.keys(o.css_state).length)
             s.css_state = $.extend({}, o.css_state);
         return $.extend({}, s);
     };
@@ -708,8 +704,10 @@ Hive.App = function(init_state, opts) {
         o.set_css(o.init_state.css_state);
     if (o.has_align)
         Hive.App.has_align(o);
-    if (o.add_to_collection)
+    if (o.add_to_collection) {
         o.apps.add(o); // add to apps collection
+        Hive.App.has_fixed(o).display_order = 8
+    }
     // Add the currently active controls from editor extensions
     o.make_controls = o.make_controls.concat(active_controls)
     if (o.client_visible && o.add_to_collection && context.flags.css_classes) {
@@ -1705,6 +1703,7 @@ Hive.App.Polygon = function(o){
         //     //     }, .5, o.dims_relative())
         //     // props['stroke-width'] = Math.min(v, max_width[0], max_width[1])
         // }
+        delete props.position
         poly_el.css(props)
     }
     o.css_setter = function(css_prop){ return function(v) {
@@ -2786,9 +2785,22 @@ Hive.App.has_toggle = function(o, toggle_name){
     fixup_controls.display_order = 9
     o.make_controls.push(memoize('has_' + toggle_name + '_fixup', fixup_controls))
     o.make_controls.push(memoize('has_' + toggle_name, controls));
+    return controls
 }
 Hive.App.has_autoplay = function(o){
     return Hive.App.has_toggle(o, "autoplay")
+}
+Hive.App.has_fixed = function(o){
+    var res = Hive.App.has_toggle(o, "fixed")
+    var _fixed_set = o.fixed_set
+    o.fixed_set = function(v) {
+        _fixed_set(v)
+        if (v)
+            o.css_state['position'] = 'fixed'
+        else
+            delete o.css_state['position']
+    }
+    return res
 }
 Hive.App.has_autohide = function(o){
     var res = Hive.App.has_toggle(o, "autohide")
