@@ -59,7 +59,7 @@ define([
         // context.is_secure not set until after module instantiation
         o.content_url_base = (context.is_secure ?
                 context.config.secure_content_url : context.config.content_url);
-        window.addEventListener('message', o.handle_message, false);
+        window.addEventListener('message.expr', o.handle_message, false);
     };
 
     o.hide_panel = function(){
@@ -192,6 +192,7 @@ define([
         $('.page_btn').hidehide();
         $('.overlay.panel .expr_actions').hidehide()
         $(".overlay.panel .signup").showshow()
+        window.removeEventListener('message.expr', o.handle_message, false);
     };
 
     // Check to see if tags overflows its bounds.
