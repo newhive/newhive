@@ -59,7 +59,7 @@ define([
         // context.is_secure not set until after module instantiation
         o.content_url_base = (context.is_secure ?
                 context.config.secure_content_url : context.config.content_url);
-        window.addEventListener('message.expr', o.handle_message, false);
+        window.addEventListener('message', o.handle_message, false);
     };
 
     o.hide_panel = function(){
@@ -182,6 +182,10 @@ define([
         o.resize();
     }
 
+    o.do_handle_message = false
+    o.enter = function(){
+        o.do_handle_message = true
+    };
     o.exit = function(){
         o.last_found = -1;
         o.next_found = -1;
@@ -192,7 +196,7 @@ define([
         $('.page_btn').hidehide();
         $('.overlay.panel .expr_actions').hidehide()
         $(".overlay.panel .signup").showshow()
-        window.removeEventListener('message.expr', o.handle_message, false);
+        o.do_handle_message = false
     };
 
     // Check to see if tags overflows its bounds.
@@ -924,6 +928,8 @@ define([
     };
     // Handles messages from PostMessage (from other frames)
     o.handle_message = function(m){
+        if (!o.do_handle_message)
+            return
         var msg = m.data;
         if (msg == "expr_click") {
             popup = $('#social_overlay');
