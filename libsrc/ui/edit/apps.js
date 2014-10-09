@@ -57,15 +57,16 @@ env.new_app = Hive.new_app = function(s, opts) {
     opts.load = function(a) {
         // Hive.upload_finish();
         if (!s.position && !opts.position) {
-            a.center_weird(opts.offset);
-            if (a.type.tname == "hive.image") {
-                var pos = a.pos_relative()
-                var not_it = env.Apps.all().filter(function(x) { return a.id != x.id; });
-                a.pos_relative_set([
-                    pos[0]
-                    ,env.padding() + Math.max(pos[1], u.app_bounds(not_it).bottom)
-                ])
-            }
+            a.center_weird(s.center_offset);
+            // Push images down to the bottom of the frame
+            // if (a.type.tname == "hive.image") {
+            //     var pos = a.pos_relative()
+            //     var not_it = env.Apps.all().filter(function(x) { return a.id != x.id; });
+            //     a.pos_relative_set([
+            //         pos[0]
+            //         ,env.padding() + Math.max(pos[1], u.app_bounds(not_it).bottom)
+            //     ])
+            // }
         }
         a.dims_set(a.dims());
         if (env.gifwall) {

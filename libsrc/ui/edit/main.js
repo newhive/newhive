@@ -302,8 +302,10 @@ Hive.init_menus = function() {
             env.click_app = undefined;
             return;
         }
-        center = u._mul([ev.clientX, ev.clientY])(env.scale());
-        u.new_file(files, { center: center });
+        var opts = {}, center = [$(window).width()/2, $(window).height()/2]
+        if (env.dragging)
+            opts.center_offset = u._sub([env.dragX, env.dragY], center);
+        u.new_file(files, opts);
     }).on('success', function(ev, files){ u.on_media_upload(files) });
 
     $('#link_upload').on('with_files', function(ev, files){
@@ -358,6 +360,7 @@ Hive.init_global_handlers = function(){
     evs.on(drag_base, 'dragstart');
     evs.on(drag_base, 'drag');
     evs.on(drag_base, 'dragend');
+    evs.on(drag_base, 'dragover');
 
     // The plus button needs to be clickable, but pass other events through
     $(".prompts .plus_btn").add($(".prompts .hint"))
@@ -368,6 +371,7 @@ Hive.init_global_handlers = function(){
         })
         .on('dragover', function(ev){
             ev.preventDefault();
+            drag_base.trigger("dragover");
         })
         .on("mouseenter", function(ev){
             drag_base.trigger("dragenter");
@@ -714,10 +718,15 @@ Hive.handler_type = 3;
 var dragging_count = 0;
 Hive.dragenter = function(ev){ 
     // hovers_active(false);
+    env.dragging = true 
     Hive.global_highlight(true);
     dragging_count++;
     ev.preventDefault();
     return false;
+};
+Hive.dragover = function(ev){ 
+    env.dragX = ev.originalEvent.clientX
+    env.dragY = ev.originalEvent.clientY
 };
 Hive.dragstart = function(){ 
     // hovers_active(false);
@@ -730,12 +739,16 @@ Hive.dragend = function(){
     // In case scrollbar has been toggled:
     u.layout_apps();
 };
-Hive.drop = Hive.dragleave = function(){
+Hive.drop = Hive.dragleave = function(ev){
     if (dragging_count > 0) 
         --dragging_count;
 
-    if (0 == dragging_count)
+    if (0 == dragging_count) {
         Hive.global_highlight(false);
+        if (ev.type == "drop") setTimeout(function(){ 
+            env.dragging = false
+        }, 100)
+    }
     return false;
 };
 // TODO-feature-editor-prompts: could be used in handlers for non-pointer
