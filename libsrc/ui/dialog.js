@@ -102,11 +102,18 @@ define([
                 $prev_dia.remove()
                 // Add to body to create a new z index stack
                 this_dia.appendTo(document.body);
+            } else {
+                // Move the current dialog to the top of the stack
+                // NOTE: we don't want to ACTUALLY mess with this_dia's position
+                // in the DOM because that would cause it to reload its child
+                // iframe's.
+                $("body > .dialog, body > .dialog_shield").not(this_dia)
+                    .insertBefore(this_dia)
             }
+
             opts.shield = $("<div class='dialog_shield'>");
             if(opts.fade) opts.shield.addClass('fade');
-            // Insert the shield before the topmost dialog in the stack
-            opts.shield.insertBefore($("body > .dialog:not(.hide)")).last().click(o.close);
+            opts.shield.insertBefore(this_dia).click(o.close);
 
             this_dia.find("form").unbind('success', opts.handler)
                 .on('success', opts.handler)
