@@ -2,6 +2,19 @@
 # place appropriate db credentials in newhive/config/live_secret
 # and delete immediately afterwards
 
+#
+# Recipes
+
+# Copy expression off live server to local
+# remote_db = dbs('live')
+# remote_expr = remote_db.Expr.with_url('http://staging.newhive.com/newhive/faq?q=faq')
+# cp_expr(remote_expr, db)
+
+# Copy local expression to remote
+# remote_db = dbs('dev')
+# expr = db.Expr.last()
+# cp_expr(expr, remote_db)
+
 from pymongo.errors import DuplicateKeyError
 
 from newhive import state

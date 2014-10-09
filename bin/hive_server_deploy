@@ -7,7 +7,6 @@ PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin::$PATH"
 
 ### Asset building ###
 
-rm lib/libsrc
 if [ "$1" = "clean" ]; then
     echo "cleaning..."
     sudo rm -rf libsrc/.cram libsrc/.webassets-cache

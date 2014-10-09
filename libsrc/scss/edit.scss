@@ -22,6 +22,10 @@ background-color: lightgrey;
         opacity: .6;
     }
 }
+&.help {
+    cursor: help;
+    * { cursor: help !important; }
+}
 &.gifwall {
     overflow-x:hidden;
     .overlay .fluff {display:none !important}

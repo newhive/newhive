@@ -32,7 +32,7 @@ cloudfront_domains = {
 # strings
 str_expression  = 'newhive'
 
-admins          = ['it1','abram', 'cara', 'zach', 'newduke', 'fatsycline','root','newhive']
+admins          = ['abram', 'cara', 'zach', 'newduke', 'fatsycline','root','newhive']
 
 default_email_subscriptions = ['love', 'listen', 'share_expr', 'comment', 'broadcast', 'featured', 'milestone']
 milestones = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000,
@@ -66,6 +66,7 @@ site_flags = {
 
     # Features
     'show_hive_all': ['newduke','nd4']
+    ,'show_user_guide': ['newduke','nd4']
     ,'merge_recent': ['cara', 'fatsycline']
     ,'can_debug': ['admins','nd4']
     ,'open_signup': []
@@ -93,6 +94,7 @@ site_flags = {
     ,'anchor_name': ['admins', 'devs']
     # Admin
     ,'admin': ['admins']
+    ,'ui_test': ['admins']
     # Old / unused
     ,'logged': ['logged_out']
 }

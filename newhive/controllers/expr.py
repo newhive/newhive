@@ -374,7 +374,10 @@ class Expr(ModelController):
             html = "<img src='%s' class='content'>" % content.get('src')
         elif type == 'hive.rectangle':
             c = app.get('content', {})
-            css = ';'.join([p + ':' + str(c[p]) for p in c])
+            container_attrs = ['position']
+            css = ';'.join([p + ':' + str(c[p]) for p in c if p not in container_attrs])
+            more_css = ';'.join([p + ':' + str(c[p]) for p in c if p in container_attrs])
+
             html = "<div style='%s' class='content'></div>" % css
         elif type == 'hive.html':
             html_original = '%s' % (app.get('content',''))
@@ -414,11 +417,14 @@ class Expr(ModelController):
 
             points = filter(lambda point: is_number_list(point, 2)
                 ,app.get('points', []))
+            # shouldn't style go into .content, not the .happ as was earlier?
+            style = app.get('style', {})
+            css = ';'.join([ k+':'+str(v) for k,v in style.items()])
             html = (
                   "<svg class='content' xmlns='http://www.w3.org/2000/svg'"
                 + " xmlns:xlink='http://www.w3.org/1999/xlink'"
                 + " viewbox='0 0 %f %f" % tuple(dimensions)
-                + "'>"
+                + "' style='%s'>" % css
                 + "<filter id='%s_blur'" % app_id 
                 + " filterUnits='userSpaceOnUse'><feGaussianBlur stdDeviation='"
                 + "%f'></filter>" % app.get('blur', 0)
@@ -427,8 +433,6 @@ class Expr(ModelController):
                 + "' style='filter:url(#%s_blur)'/>%s</svg>" % (
                     app_id, link_text[1])
             )
-            style = app.get('style', {})
-            more_css = ';'.join([ k+':'+str(v) for k,v in style.items()])
         elif type == 'hive.code':
             ctype = app.get('code_type', 'js')
             if ctype == 'js':
