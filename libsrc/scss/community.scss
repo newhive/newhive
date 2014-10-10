@@ -669,10 +669,13 @@ body {
             }
         }
     }
+    $card_margins:20;
+    $card_overlaps:50;
+    $max_cat_width:1037;
     .feed.cat._3col .card {
         .lazy_load.slides {
-            margin-left: -40px;
-            width: #{1037 + 2*(20 + 20)}px;
+            margin-left: #{-$card_margins - $card_overlaps}px;
+            width: #{$max_cat_width + 2*($card_margins + $card_overlaps)}px;
         }
     }
     .feed.cat.wide {

@@ -74,17 +74,19 @@ define([
 
     var attach_handlers_cat = function() {
         var cur_mini = 0, max_mini = -1, min_mini = 0, $slides, $slider
-            , card, mini_views, CACHE = 2, margin = 20
+            , card, mini_views, CACHE = 2
+            , card_margins = 20, card_overlaps = 50//, max_cat_width = 1037
         var mini_mod = function(n) {
             return (n + mini_views.length) % mini_views.length
         }
         o.scroll_slide = function(duration) {
             duration = duration || 0
-            var width = margin + $slides.width(), pad = margin
+            var width = card_margins + $slides.width()
+                , pad = card_overlaps //- 2*card_margins
             if ($(".feed._3col").length)
-                width -= 80
+                width -= 2*(card_margins + card_overlaps)
             else
-                pad -= 40
+                pad = -card_margins
             $slider.animate({"margin-left": pad - width*cur_mini}, duration)
         }
         $(window).bind_once_anon("resize.profile", function(ev) {
