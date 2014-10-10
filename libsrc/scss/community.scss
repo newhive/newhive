@@ -635,6 +635,16 @@ body {
             top: 0px;
             right: 0px;
         }
+        .lazy_load.slides > .slider {
+            width: 1000%;
+            height: 100%;
+            overflow: hidden;
+            img {
+                width: auto;
+                height: 100%;
+                margin-left: 20px;
+            }
+        }
         $mini_view_color: white;
         $mini_view_height: 20%;
         .mini_views {
@@ -657,6 +667,12 @@ body {
                 width: 2*$mini_view_height;
                 img.snapshot { width: 49.5%; }
             }
+        }
+    }
+    .feed.cat._3col .card {
+        .lazy_load.slides {
+            margin-left: -40px;
+            width: #{1037 + 2*(20 + 20)}px;
         }
     }
     .feed.cat.wide {

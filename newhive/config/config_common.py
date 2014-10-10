@@ -63,6 +63,8 @@ user_groups = { 'logged_in':set([]), 'logged_out':set(['logged_out']), 'all':set
 site_flags = {
 
     ## When adding new flags, make comment in issue with flag name!
+    # FLAG: foo
+    ## And update https://github.com/hivedev/newhive/wiki/Site-flags
 
     # Features
     'show_hive_all': ['newduke','nd4']
