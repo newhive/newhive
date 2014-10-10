@@ -115,8 +115,14 @@ Hive.help_selection = function (start) {
                 ,".insert_image": "#images"
                 ,".happ.hive_text": "#text"
                 ,".insert_text": "#text"
-                // ,".happ.hive_polygon": "#shape"
-                // ,".happ.insert_shape": "#shape"
+                ,".happ.hive_audio": "#audio"
+                ,".insert_audio": "#audio"
+                // ,".happ.hive_html": "#embeds"
+                ,".insert_embed": "#embeds"
+                ,".happ.hive_polygon": "#shapes"
+                ,".insert_shape": "#shapes"
+                // ,".happ.hive_polygon": "#shapes"
+                ,".insert_file": "#files"
                 // ,".happ": "Generic App"
                 // ,".button.opacity": "Set opacity"
             }
@@ -126,14 +132,15 @@ Hive.help_selection = function (start) {
                 break
             }
         }
-        if (help_file[0] == "#") {
-            $("#dia_editor_help").data("dialog").open()
-            var $iframe = $("#dia_editor_help iframe")
-                ,url = $iframe.prop("src").replace(/#.*$/, '')
-            $iframe.prop("src", url + help_file)
-        } else if (context.flags.can_debug) {
-            u.set_debug_info(help_file, 5000)
+        if (help_file[0] != "#") {
+            if (context.flags.can_debug)
+                u.set_debug_info(help_file, 5000)
+            help_file = "#general"
         }
+        $("#dia_editor_help").data("dialog").open()
+        var $iframe = $("#dia_editor_help iframe")
+            ,url = $iframe.prop("src").replace(/#.*$/, '')
+        $iframe.prop("src", url + help_file)
         return false
     })
 }
