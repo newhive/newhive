@@ -74,14 +74,22 @@ define([
 
     var attach_handlers_cat = function() {
         var cur_mini = 0, max_mini = -1, min_mini = 0, $slides, $slider
-            , card, mini_views, CACHE = 2
+            , card, mini_views, CACHE = 2, margin = 20
         var mini_mod = function(n) {
             return (n + mini_views.length) % mini_views.length
         }
         o.scroll_slide = function(duration) {
             duration = duration || 0
-            $slider.animate({"margin-left": 20 -1057*cur_mini}, duration)
+            var width = margin + $slides.width(), pad = margin
+            if ($(".feed._3col").length)
+                width -= 80
+            else
+                pad -= 40
+            $slider.animate({"margin-left": pad - width*cur_mini}, duration)
         }
+        $(window).bind_once_anon("resize.profile", function(ev) {
+            o.scroll_slide()
+        })
         var unload_slide = function(back) {
             var $children = $slider.children()
                 , $slide = back ? $children.last() : $children.eq(0)
@@ -120,6 +128,7 @@ define([
         }
         // auto-loop expressions from main category
         var next_slide = function(offset) {
+            // return
             if (offset === undefined) offset = 1
             load_slide(offset > 0)
             unload_slide(offset < 0)
