@@ -84,7 +84,7 @@
           data-handle='.category_btn[data-name={item}]'><table>
           {<for (get home.categories item) "kount"}
             <td><a {query_attrs "home_cat" kount "tag_name" item}>
-              <img title={title} class='menu_item{cond kount "" " default"}''
+              <img title={title|e} class='menu_item{cond kount "" " default"}'
                 src={<if snapshot_small}"{snapshot_small}"{>}
                 {<else}{asset "skin/site/expr_placeholder_small.jpg"}{>}>
             </a></td>
