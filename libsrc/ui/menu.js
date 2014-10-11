@@ -201,7 +201,19 @@ var menu = function(handle, drawer, options) {
             opts.auto_height = true;
             // opts.offset_y = (95 - handle.outerHeight()) / 2;
             opts.offset_y = 0;
+        } else if (drawer.is(".category_hover")) {
+            var $header = $(".main-header .header")
+                , bounds = $header[0].getBoundingClientRect()
+            $.extend(css_opts, {
+                width: bounds.width,
+                left: bounds.left,
+                right: bounds.right,
+                top: bounds.bottom + opts.offset_y,
+            })
+            drawer.css(css_opts)
+            return
         }
+
         d_size = drawer[0].getBoundingClientRect();
         // pick top of menu based on if menu would go past bottom of
         // window if below handle, or above top of window if above the handle

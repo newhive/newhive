@@ -196,6 +196,7 @@ define([
     // TODO-cleanup: make query argument an object, using stringjay
     //   object constructor, see TODO-cleanup-object in text/stringjay
     o.query_attrs = function(scope, route_name, query){
+        query = "" + query // must be a string
         var args = get_route_args(Array.prototype.slice.call(arguments, 1));
         query = $.map(query.split("&"),function(e) {
             return $.map(e.split("="),function(k) {

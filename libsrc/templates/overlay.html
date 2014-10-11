@@ -77,9 +77,19 @@
         <li><a { anchor_attrs "home_cat" "tag_name" item}>
           <div class='category_btn teal_hover' data-name={item}>
             {item}</div></a></li>&nbsp;
-        {<if (eq (plus count 1) (floor (mul (len home.cats) 0.5)))}
+        {<if (eq (plus count 0) (floor (mul (len home.cats) 0.5)))}
           <div class="show_narrow"></div>
         {>}
+        <div class='menu drawer category_hover' 
+          data-handle='.category_btn[data-name={item}]'><table>
+          {<for (get home.categories item) "kount"}
+            <td><a {query_attrs "home_cat" kount "tag_name" item}>
+              <img title={title} class='menu_item{cond kount "" " default"}''
+                src={<if snapshot_small}"{snapshot_small}"{>}
+                {<else}{asset "skin/site/expr_placeholder_small.jpg"}{>}>
+            </a></td>
+          {>}
+        </table></div>
       {>}
     </ul>
     {>}

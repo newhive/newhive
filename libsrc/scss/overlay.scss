@@ -193,6 +193,13 @@ body:not(.mobile) {
                 font-size: 16px;
             }
 
+            .menu.drawer.category_hover .menu_item {
+                // display: inline-block;
+                width: 100%;
+                padding: 7px;
+                box-sizing: border-box;
+            }
+
             .show_narrow { 
                 display: inline-block;
                 width: 100%; 

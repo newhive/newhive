@@ -144,6 +144,8 @@ define([
             ready = true
             card = context.page_data.cards[0]
             mini_views = card.thumbs
+            if (!mini_views)
+                return // Nothing to cycle
 
             var $old_snapshot = $(".card[data-num=0] .lazy_load.snapshot")
             $slides = $('<div class="lazy_load _5_3 slides">')
