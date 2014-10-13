@@ -1,5 +1,7 @@
 @import "common";
 
+$debug:false;
+
 // Text
 .upper { text-transform: uppercase; }
 .ellipsis {
@@ -70,6 +72,7 @@
 .table {
     display: table;
     width: 100%;
+    &.fixed { table-layout: fixed; }
     &>.cell, &> a > .cell{
         display: table-cell;
         &.left { text-align: left; }
@@ -110,6 +113,13 @@ button {
 .arrow {
     cursor: default;
 }
+.right_expand {
+    // background-image: asset_url("skin/nav/search-arrow.png");
+    float: right;
+    height: 28px;
+    @if ($debug) { background-color: red; }
+}
+
 .teal_btn, .text_btn, .grey_btn, .black_btn {
     padding: 10px;
     font-family: Gibson;

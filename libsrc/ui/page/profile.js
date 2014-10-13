@@ -116,7 +116,7 @@ define([
                 // immediately hide the non-zeroth children 
                 // and begin animation at 1st card
                 $slides.children().slice(1).addClass("notransition").css({opacity: 0})
-                setInterval(next_slide, 3000)
+                setInterval(next_slide, 6000)
             })
         }
         if (context.flags.category_hovers) {

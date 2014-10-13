@@ -13,20 +13,26 @@ define([
 
     window.asset_loaded = function(el, error) {
         var $el = $(el)
+        // Move up the DOM tree
         while (true) {
             $el.removeClass("loading").addClass("loaded")
                 .trigger("lazy_load", $el).addClass(error ? "error" : "")
             if ($el.is(".lazy_load"))
                 break
             $el = $el.parent()
+            // There is no lazy_load container, or 
             if (! $el.length || $el.find(".loading").length)
                 break
         }
     }
     o.onload = function(context) {
+        // have to use global event handler because imgs can be cached, and
+        // loaded before any of our initialization code
         return "onload='asset_loaded(this)' onerror='asset_loaded(this, true)'"
     }
 
+    // For loop that iterates over arguments as well as a given list
+    // TODO-cleanup: merge with actual loop
     o.lazy_load = function(context, block, extra_classes) {
         var out = '<div class="lazy_load ' + extra_classes + '">'
             ,args = Array.prototype.slice.call(arguments, 3)

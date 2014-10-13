@@ -44,7 +44,8 @@
               <div class='text_btn item teal_hover'>Sign Up</div></a>
             <a {anchor_attrs "view_expr"
               "owner_name" config.site_user "expr_name" "about"}>
-              <div class='text_btn item teal_hover'>About</div></a>
+              <div class='text_btn item teal_hover about_menu'>About
+              </div></a>
           </div>
         {>}
         <div class="middle_block inline search_bar">
@@ -69,7 +70,7 @@
   {>}
 
   {# Category Buttons #}
-  <div class="header">
+  <div class='header {<unless flags.categories}stay_hidden{>}'>
     {<if flags.categories}
     <ul>
       {<for home.cats "count"}
@@ -144,34 +145,55 @@
     <a {anchor_attrs "network" "username" user.name} class='menu_item hoverable'>Network</a>
 
     {# Username #}
-    <a id='user_btn' { anchor_attrs "expressions_public" "owner_name" user.name }
-      class='menu_item hoverable'>{user.name|e}</a>
-
-    {# Activity #}
-    <div id='activity_btn' class='menu_item hoverable'>
+    <a id='activity_btn' { anchor_attrs "expressions_public" "owner_name" user.name }
+      class='menu_item hoverable'>
         <div class='icon'></div>
         <div class='count'>0</div>
-        Activity
-    </div>
+        {user.name|e}
+      </a>
 
     {# About #}
     <a {anchor_attrs "view_expr"
       "owner_name" config.site_user "expr_name" "about"}
-      class='menu_item'>About</a>
+      class='menu_item about_menu'>About
+    {<if flags.ui_test}
+      <img class="right_expand" src='{asset "skin/nav/search-arrow.png"}'>
+    {>}
+    </a>
 
     {# Logout #}
     <div id='logout_btn' class='menu_item'>Logout</div>
-
-    {# FAQ #}
-    {# <a {anchor_attrs "faq"} class='menu_item hoverable'>FAQ</a> #}
-    {# <div id='invite_btn' class='menu_item'>Invites</div> #}
   {>}{<else}
     <a {anchor_attrs "signup"} class='menu_item'>Sign Up</a>
     <div class='login_btn menu_item'>Log in</div>
+    {# About #}
     <a {anchor_attrs "view_expr"
       "owner_name" config.site_user "expr_name" "about"}
-      class='menu_item'>About NewHive</a>
+      class='menu_item about'>About NewHive</a>
+    {# FAQ #}
+    <a {anchor_attrs "view_expr"
+      "owner_name" config.site_user "expr_name" "faq"}
+      class='menu_item'>FAQ</a>
     <a {anchor_attrs "home"} class='menu_item default'>The Hive</a>
+  {>}
+</div>
+{# About menu #}
+<div class='menu drawer about_menu activity items'
+  data-handle='{cond user.logged_in "#logo_menu" ".main-header"} .about_menu' 
+  {cond user.logged_in "data-parent='#logo'" ""} data-menu-opts='"offset_y":5'>
+  {# About #}
+  <a {anchor_attrs "view_expr"
+    "owner_name" config.site_user "expr_name" "about"}
+    class='menu_item default about'>About NewHive</a>
+  {# FAQ #}
+  <a {anchor_attrs "view_expr"
+    "owner_name" config.site_user "expr_name" "faq"}
+    class='menu_item'>FAQ</a>
+  {# User Guide #}
+  {<if flags.show_user_guide}
+    <a {anchor_attrs "view_expr"
+      "owner_name" config.site_user "expr_name" "user-guide"}
+      class='menu_item'>User Guide</a>
   {>}
 </div>
 

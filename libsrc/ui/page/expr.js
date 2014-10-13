@@ -182,6 +182,10 @@ define([
         o.resize();
     }
 
+    o.do_handle_message = false
+    o.enter = function(){
+        o.do_handle_message = true
+    };
     o.exit = function(){
         o.last_found = -1;
         o.next_found = -1;
@@ -192,6 +196,7 @@ define([
         $('.page_btn').hidehide();
         $('.overlay.panel .expr_actions').hidehide()
         $(".overlay.panel .signup").showshow()
+        o.do_handle_message = false
     };
 
     // Check to see if tags overflows its bounds.
@@ -923,6 +928,8 @@ define([
     };
     // Handles messages from PostMessage (from other frames)
     o.handle_message = function(m){
+        if (!o.do_handle_message)
+            return
         var msg = m.data;
         if (msg == "expr_click") {
             popup = $('#social_overlay');

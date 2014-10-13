@@ -76,11 +76,11 @@ define([
     const anim_duration = 700;
 
     o.init = function(controller){
-        (function() {
-          var li = document.createElement('script'); li.type = 'text/javascript'; li.async = true;
-          li.src = ('https:' == document.location.protocol ? 'https:' : 'http:') + '//platform.stumbleupon.com/1/widgets.js';
-          var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(li, s);
-        })();
+        // (function() {
+        //   var li = document.createElement('script'); li.type = 'text/javascript'; li.async = true;
+        //   li.src = ('https:' == document.location.protocol ? 'https:' : 'http:') + '//platform.stumbleupon.com/1/widgets.js';
+        //   var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(li, s);
+        // })();
 
         o.anim_direction = 0;
         o.controller = controller;
@@ -766,7 +766,7 @@ define([
         }
         if (!condensed) {
             height_nav_uncondensed = new_nav_height
-            $("#site").css({"margin-top": height_nav_uncondensed })
+            $("#site").css({"margin-top": height_nav_uncondensed + 3 })
             return;
         }
     }

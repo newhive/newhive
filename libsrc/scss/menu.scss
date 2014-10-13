@@ -27,6 +27,7 @@
 
     #activity_btn {
         position: relative;
+        padding-right: 50px;
 
         &.active .icon {
             background-image: asset_url('skin/nav/activity-hover.png');

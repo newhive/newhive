@@ -1197,6 +1197,15 @@ o.remove_all_apps = function() {
     $.map(apps, function(a) { a.remove() });
 };
 
+// fuck me this is silly.
+o.string_to_url = function(data, mime){
+    var opts = {}
+    if(mime) opts.type = mime
+    var b = new Blob(data.split(''), opts)
+    return URL.createObjectURL(b)
+}
+
+
 //// END-debugging
 env.util = o
 return o;
