@@ -110,7 +110,11 @@ class Community(Controller):
                 # query_string can indicate which card to sort first
                 q = request.query_string
                 if q:
-                    top_card = int(q)
+                    top_card = 0
+                    try:
+                        top_card = int(q)
+                    except Exception, e:
+                        pass;
                     if top_card > 0 and top_card < 8:
                         temp = cards[top_card]
                         cards[top_card] = cards[0]
