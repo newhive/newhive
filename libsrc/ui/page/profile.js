@@ -83,13 +83,13 @@ define([
         o.scroll_slide = function(duration) {
             if (!$slides) return
             duration = duration || 0
-            var width = card_margins + $slides.width()
-                , pad = card_overlaps //- 2*card_margins
-            if ($(".feed._3col").length)
-                width -= 2*(card_margins + card_overlaps)
-            else
+            var width = $slides.find("a").width()
+                , pad = card_overlaps
+            if (! $(".feed._3col").length)
                 pad = -card_margins
-            $slider.animate({"margin-left": pad - width*cur_mini}, 
+            var new_margin = pad + $(".slider")[0].getBoundingClientRect()['left']
+                - $(".slider a:nth(" + cur_mini + ")")[0].getBoundingClientRect()['left']
+            $slider.animate({"margin-left": new_margin}, 
                 duration, 'easeInOutQuart')
         }
         var unload_slide = function(back) {
@@ -100,8 +100,10 @@ define([
                 max_mini = mini_mod(max_mini - 1)
             } else {
                 min_mini = mini_mod(min_mini + 1)
-                if ($slide.length)
+                if ($slide.length) {
                     cur_mini--
+                    o.scroll_slide()
+                }
             }
         }
         var load_slide = function(back, errors) {
@@ -114,6 +116,8 @@ define([
                 .attr("data-num", pos)
                 .bind_once_anon("lazy_load.page",function(ev) {
                     var $el = $(ev.currentTarget)
+                    o.scroll_slide()
+
                     if ($el.is(".error") && !(errors > 5)) {
                         $el.remove()
                         if (!back)
