@@ -74,7 +74,8 @@ define([
 
     var attach_handlers_cat = function() {
         var cur_mini = 0, max_mini = -1, min_mini = 0, $slides, $slider
-            , card, mini_views, CACHE = 2
+            , card, mini_views, 
+            CACHE = 2, slide_duration = 1200, flip_time = 6000
             , card_margins = 20, card_overlaps = 50//, max_cat_width = 1037
         var mini_mod = function(n) {
             return (n + mini_views.length) % mini_views.length
@@ -88,7 +89,8 @@ define([
                 width -= 2*(card_margins + card_overlaps)
             else
                 pad = -card_margins
-            $slider.animate({"margin-left": pad - width*cur_mini}, duration)
+            $slider.animate({"margin-left": pad - width*cur_mini}, 
+                duration, 'easeInOutQuart')
         }
         var unload_slide = function(back) {
             var $children = $slider.children()
@@ -135,7 +137,7 @@ define([
             unload_slide(offset < 0)
             o.scroll_slide()
             cur_mini += offset
-            o.scroll_slide(800)
+            o.scroll_slide(slide_duration)
         }
 
         var ready = false, on_ready = function(ev) {
@@ -161,7 +163,7 @@ define([
             $(window).bind_once_anon("resize.profile", function(ev) {
                 o.scroll_slide()
             })
-            setInterval(next_slide, 6000)
+            setInterval(next_slide, flip_time)
         }
         if (context.flags.category_hovers) {
             $(document).ready(on_ready)
