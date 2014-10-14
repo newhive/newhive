@@ -251,6 +251,9 @@ var menu = function(handle, drawer, options) {
                 hp.left - d_size.width + handle.outerWidth() : hp.left );
             if (opts.layout_x == "center")
                 css_opts.left += (handle.outerWidth() - d_size.width) / 2;
+            if (css_opts.left < 0) css_opts.left = 0
+            if (css_opts.left + d_size.width > $(window).width()) 
+                css_opts.left = $(window).width()
 
             // TODO-polish: check that the menu still fits on window
             // Namely, shift it into screen at the bottom of code
