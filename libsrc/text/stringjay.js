@@ -537,15 +537,21 @@ define(['browser/js', 'module'],
 	context_base.strip_slash = function(context, str){
 		return str.replace(/^\/\//, '')
 	};
+	context_base['list'] = function(context) {
+		return Array.prototype.slice.call(arguments, 1)
+	}
 	// TODO: write as accumulate
 	// {set "k" (concat "you " "are " "awesome")}
+	// {set "v" (concat [1] [2 3] [4])}
 	context_base.concat = function(context){
-		var res = "";
-		for(var i = 1; i < arguments.length; ++i){
-			if (typeof(arguments[i]) == "string")
-				res += arguments[i];
+		if (arguments.length < 2)
+			return ""
+		var res = arguments[1]
+		for(var i = 2; i < arguments.length; ++i){
+			if (typeof(arguments[i]) == typeof(res))
+				res = res.concat(arguments[i])
 		}
-		return res;
+		return res
 	};
 	// Set lhs to the value of rhs
 	// ex: {set "my_var" 3}
