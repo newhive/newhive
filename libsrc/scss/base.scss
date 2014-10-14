@@ -115,7 +115,9 @@ button {
 }
 .right_expand {
     // background-image: asset_url("skin/nav/search-arrow.png");
-    float: right;
+    // float: right;
+    position: absolute;
+    right: 15px;
     height: 28px;
     @if ($debug) { background-color: red; }
 }

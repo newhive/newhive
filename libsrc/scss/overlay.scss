@@ -154,23 +154,27 @@ body:not(.mobile) {
         margin: auto;
     }
 
+    .category_menu {
+        @for $i from 1 through 7 {
+            :nth-of-type( #{$i + 1} ) {
+                .black_btn { 
+                    background-color: nth($category_colors, $i); 
+                    &:hover { background-color: $color_selected; }
+                }
+            }
+        }
+    }
+
     .header {
+        &.clean {
+            display: none
+        }
+
         @if $debug { background-color: aqua; }
         line-height: 0px;
         margin: 50px auto 0px auto;
         max-width: 1053px;
         padding: 0px 50px;
-
-        .category_menu {
-            @for $i from 1 through 7 {
-                :nth-of-type( #{$i + 1} ) {
-                    .black_btn { 
-                        background-color: nth($category_colors, $i); 
-                        &:hover { background-color: $color_selected; }
-                    }
-                }
-            }
-        }
 
         ul {
             -webkit-margin-before: 0em;
@@ -264,6 +268,9 @@ body:not(.mobile) {
 @media all and (max-width:639px) {
     .main-header .header ul {
         display: none;
+    }
+    .main-header .header.logged_out {
+        display: none
     }
 }
 
