@@ -15,8 +15,9 @@ define([
         var $el = $(el)
         // Move up the DOM tree
         while (true) {
-            $el.removeClass("loading").addClass("loaded")
-                .trigger("lazy_load", $el).addClass(error ? "error" : "")
+            $el.removeClass("loading")
+                .addClass("loaded" + (error ? " error" : ""))
+                .trigger("lazy_load", $el)
             if ($el.is(".lazy_load"))
                 break
             $el = $el.parent()

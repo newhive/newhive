@@ -80,6 +80,7 @@ define([
             return (n + mini_views.length) % mini_views.length
         }
         o.scroll_slide = function(duration) {
+            if (!$slides) return
             duration = duration || 0
             var width = card_margins + $slides.width()
                 , pad = card_overlaps //- 2*card_margins
@@ -89,9 +90,6 @@ define([
                 pad = -card_margins
             $slider.animate({"margin-left": pad - width*cur_mini}, duration)
         }
-        $(window).bind_once_anon("resize.profile", function(ev) {
-            o.scroll_slide()
-        })
         var unload_slide = function(back) {
             var $children = $slider.children()
                 , $slide = back ? $children.last() : $children.eq(0)
@@ -104,21 +102,22 @@ define([
                     cur_mini--
             }
         }
-        var load_slide = function(back) {
+        var load_slide = function(back, errors) {
             if (back) {
                 var pos = max_mini = mini_mod(max_mini + 1)
             } else {
                 pos = min_mini = mini_mod(min_mini - 1)
             }
-            $slide = template_mini_expr([context, card, {item: mini_views[pos]}])
+            var $slide = template_mini_expr([context, card, {item: mini_views[pos]}])
                 .attr("data-num", pos)
                 .bind_once_anon("lazy_load.page",function(ev) {
                     var $el = $(ev.currentTarget)
-                    if ($el.is(".error")) {
+                    if ($el.is(".error") && !(errors > 5)) {
                         $el.remove()
                         if (!back)
                             cur_mini--
-                        // TODO: force recaching
+                        // force recaching
+                        load_slide(back, errors ? errors + 1 : 1)
                     }
                 })
             if (back) {
@@ -159,6 +158,9 @@ define([
                 load_slide(true)
             }
             o.scroll_slide()
+            $(window).bind_once_anon("resize.profile", function(ev) {
+                o.scroll_slide()
+            })
             setInterval(next_slide, 6000)
         }
         if (context.flags.category_hovers) {
