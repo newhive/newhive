@@ -202,12 +202,13 @@ var menu = function(handle, drawer, options) {
             // opts.offset_y = (95 - handle.outerHeight()) / 2;
             opts.offset_y = 0;
         } else if (drawer.is(".category_hover")) {
-            var $header = $(".main-header .header")
+            var $header = $(".main-header .header"), $card = $(".feed .card")
                 , bounds = $header[0].getBoundingClientRect()
+                , bounds_img = $card.length ? $card[0].getBoundingClientRect() : bounds
             $.extend(css_opts, {
-                width: bounds.width,
-                left: bounds.left,
-                right: bounds.right,
+                width: bounds_img.width,
+                left: bounds_img.left,
+                right: bounds_img.right,
                 top: bounds.bottom + opts.offset_y,
             })
             drawer.css(css_opts)
