@@ -74,23 +74,29 @@ define([
 
     var attach_handlers_cat = function() {
         var cur_mini = 0, max_mini = -1, min_mini = 0, $slides, $slider
-            , card, mini_views, 
-            CACHE = 2, slide_duration = 1200, flip_time = 6000
+            , card, mini_views, card_opacity = .75
+            , CACHE = 2, slide_duration = 1200, flip_time = 6000
             , card_margins = 20, card_overlaps = 50//, max_cat_width = 1037
         var mini_mod = function(n) {
             return (n + mini_views.length) % mini_views.length
         }
         o.scroll_slide = function(duration) {
-            if (!$slides) return
             duration = duration || 0
-            var width = $slides.find("a").width()
-                , pad = card_overlaps
-            if (! $(".feed._3col").length)
-                pad = -card_margins
-            var new_margin = pad + $(".slider")[0].getBoundingClientRect()['left']
-                - $(".slider a:nth(" + cur_mini + ")")[0].getBoundingClientRect()['left']
+            var $cur_slide = $(".slider a:nth(" + cur_mini + ")")
+            card_overlaps = ($(window).width() - $cur_slide.width() - card_margins) / 2
+            var wide = ($(".feed._3col").length)
+                , pad = wide ? card_overlaps : -card_margins// + 5
+                , $slider = $(".slider")
+                , new_margin = $(".slider")[0].getBoundingClientRect()['left']
+                - $cur_slide[0].getBoundingClientRect()['left'] + pad
+            $slides.css({width: $(window).width(),
+                "margin-left": -card_overlaps - card_margins})
+            if (!wide)
+                $slides.css({width: "auto", "margin-left": 0})
             $slider.animate({"margin-left": new_margin}, 
                 duration, 'easeInOutQuart')
+            $cur_slide.animate({opacity:1}, duration)
+            $(".slider a").not($cur_slide).animate({opacity:card_opacity}, duration)
         }
         var unload_slide = function(back) {
             var $children = $slider.children()
@@ -113,7 +119,7 @@ define([
                 pos = min_mini = mini_mod(min_mini - 1)
             }
             var $slide = template_mini_expr([context, card, {item: mini_views[pos]}])
-                .attr("data-num", pos)
+                .attr("data-num", pos).css({opacity:card_opacity})
                 .bind_once_anon("lazy_load.page",function(ev) {
                     var $el = $(ev.currentTarget)
                     o.scroll_slide()
@@ -145,7 +151,7 @@ define([
         }
 
         var ready = false, on_ready = function(ev) {
-            if(ready) return
+            if(ready || $(".lazy_load.slides .slider").length) return
             ready = true
             card = context.page_data.cards[0]
             mini_views = card.thumbs
