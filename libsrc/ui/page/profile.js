@@ -1,5 +1,6 @@
 define([
     'browser/jquery',
+    'browser/js',
     'ui/dialog',
     'context',
     'sj!templates/cards.html',
@@ -9,6 +10,7 @@ define([
     'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js'
 ], function(
     $,
+    js,
     dialog,
     context,
     cards_template,
@@ -74,22 +76,28 @@ define([
 
     var attach_handlers_cat = function() {
         var cur_mini = 0, max_mini = -1, min_mini = 0, $slides, $slider
-            , card, mini_views, card_opacity = 1//.75
+            , do_fade = false, fade_css = {position: "absolute", left: 0, top: 0
+                , width: "100%", height: "100%"}
+            , do_full_bleed = false, do_overlaps = false
+            , card, mini_views, card_opacity = do_fade ? 0 : .3
             , CACHE = 2, slide_duration = 1200, flip_time = 6000
-            , card_margins = 20, card_overlaps = 50//, max_cat_width = 1037
+            , card_margins = 20, card_overlaps = do_overlaps ? 80 : -card_margins
+
         var mini_mod = function(n) {
             return (n + mini_views.length) % mini_views.length
         }
-        o.scroll_slide = function(duration) {
+        o.scroll_slide = function(duration, callback) {
+            if (!$slides)
+                return
             duration = duration || 0
             var $cur_slide = $(".slider a:nth(" + cur_mini + ")")
                 , slide_width = $cur_slide.width()
-            card_overlaps = -card_margins
-                // Uncommment for full-bleed
-                //($(window).width() - slide_width - card_margins) / 2
+            // card_overlaps = -card_margins
+            if (do_full_bleed)
+                card_overlaps = ($(window).width() - slide_width - card_margins) / 2
             var wide = ($(".feed._3col").length)
                 , pad = wide ? card_overlaps : -card_margins
-                , $slider = $(".slider")
+                // , $slider = $(".slider")
                 , new_margin = $(".slider")[0].getBoundingClientRect()['left']
                     - $cur_slide[0].getBoundingClientRect()['left'] + pad
             $slides.css({width: slide_width + 2*card_overlaps + card_margins 
@@ -97,9 +105,10 @@ define([
             if (!wide)
                 $slides.css({width: "auto", "margin-left": 0})
             $slider.animate({"margin-left": new_margin}, 
-                duration, 'easeInOutQuart')
+                duration, 'easeInOutQuart', callback ? callback : js.noop)
             $cur_slide.animate({opacity:1}, duration)
-            $(".slider a").not($cur_slide).animate({opacity:card_opacity}, duration)
+            $(".slider a").not($cur_slide).animate({opacity:card_opacity}, 
+                duration, 'easeInOutQuart')
         }
         var unload_slide = function(back) {
             var $children = $slider.children()
@@ -135,6 +144,8 @@ define([
                         load_slide(back, errors ? errors + 1 : 1)
                     }
                 })
+            if (do_fade)
+                $slide.css(fade_css)
             if (back) {
                 $slide.appendTo($slider)
             } else {
@@ -147,10 +158,11 @@ define([
             // return
             if (offset === undefined) offset = 1
             load_slide(offset > 0)
-            unload_slide(offset < 0)
             o.scroll_slide()
             cur_mini += offset
-            o.scroll_slide(slide_duration)
+            o.scroll_slide(slide_duration, function() {
+                unload_slide(offset < 0)
+            })
         }
 
         var ready = false, on_ready = function(ev) {
