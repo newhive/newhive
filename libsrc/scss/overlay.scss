@@ -155,10 +155,12 @@ body:not(.mobile) {
     }
 
     .category_menu {
-        @for $i from 1 through 7 {
+        @for $i from 1 through 8 {
             :nth-of-type( #{$i + 1} ) {
-                .black_btn { 
+                .black_btn.menu_item { 
                     background-color: nth($category_colors, $i); 
+                    border-color: nth($category_colors, $i);
+
                     &:hover { background-color: $color_selected; }
                 }
             }
@@ -195,27 +197,53 @@ body:not(.mobile) {
 
             li { 
                 display: inline-block;
-                @for $i from 1 through 7 {
+                .active {
+                    color: white;
+                    background-color: black;
+                }
+
+                @for $i from 1 through 8 {
                     &:nth-of-type( #{$i} ) {
-                        .black_btn { 
+                        .active {
+                            // color: white;
+                            // background-color: black;
                             background-color: nth($category_colors, $i); 
-                            &:hover { background-color: $color_selected; }
+                        }
+
+                        .black_btn { 
+
+                            &:not(.active) {
+                                border: 1px solid black;
+                                color: black;
+                                background-color: white;
+                            }
+                            // &:hover {
+                            //     color: white;
+                            //     background-color: black;
+                            // }
+                            // background-color: nth($category_colors, $i); 
+                            // &:hover { background-color: $color_selected; }
                         }
                     }
                 }
             }
 
             .category_btn {
-                text-transform: uppercase;
+                text-transform: lowercase;
                 padding: 10px;
                 font-family: Gibson Semibold;
-                font-size: 16px;
+                font-size: 20px;
             }
 
             .menu.drawer.category_hover .menu_item {
                 width: 100%;
-                padding: 7px;
+                padding: 4px;
                 box-sizing: border-box;
+            }
+            .menu.drawer.category_hover table {
+                // border-collapse: collapse;
+                padding: 5px;
+                // border-top: 1px solid black;
             }
 
             .show_narrow { 

@@ -72,7 +72,8 @@
 
   {# Category Buttons #}
   <div class="menu drawer category_menu divided"
-    data-handle=".main-header .category_handle" data-menu-opts='"layout_x":"center"'>
+    data-handle=".main-header .category_handle" 
+    data-menu-opts='"layout_x":"center","offset_y":0'>
     {<for (concat (list "featured") home.cats) "count"}
       <a { anchor_attrs "home_cat" "tag_name" item}>
         <div class='menu_item category_btn teal_hover' data-name={item}>
@@ -88,13 +89,14 @@
     <ul>
       {<for home.cats "count"}
         <li><a { anchor_attrs "home_cat" "tag_name" item}>
-          <div class='category_btn teal_hover' data-name={item}>
+          <div class='category_btn hoverable' data-name={item}>
             {item}</div></a></li>&nbsp;
         {<if (eq (plus count 0) (floor (mul (len home.cats) 0.5)))}
           <div class="show_narrow"></div>
         {>}
         <div class='menu drawer category_hover' 
-          data-handle='li .category_btn[data-name={item}]'><table>
+          data-handle='li .category_btn[data-name={item}]'
+          data-menu-opts='"offset_y":-5'><table>
           {<for (get home.categories item) "kount"}
             <td><a {query_attrs "home_cat" kount "tag_name" item}>
               <img title={title|e} class='menu_item{cond kount "" " default"}'

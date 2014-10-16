@@ -87,7 +87,7 @@ define([
             return (n + mini_views.length) % mini_views.length
         }
         o.scroll_slide = function(duration, callback) {
-            if (!$slides)
+            if (!$slides || !$slider[0])
                 return
             duration = duration || 0
             var $cur_slide = $(".slider a:nth(" + cur_mini + ")")
