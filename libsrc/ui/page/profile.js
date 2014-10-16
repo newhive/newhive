@@ -74,6 +74,7 @@ define([
                 && context.page_data.owner.id == context.user.id
     };
 
+    var flip_timer
     var attach_handlers_cat = function() {
         var cur_mini = 0, max_mini = -1, min_mini = 0, $slides, $slider
             , do_fade = false, fade_css = {position: "absolute", left: 0, top: 0
@@ -87,7 +88,7 @@ define([
             return (n + mini_views.length) % mini_views.length
         }
         o.scroll_slide = function(duration, callback) {
-            if (!$slides || !$slider[0])
+            if (!$slides)
                 return
             duration = duration || 0
             var $cur_slide = $(".slider a:nth(" + cur_mini + ")")
@@ -98,7 +99,7 @@ define([
             var wide = ($(".feed._3col").length)
                 , pad = wide ? card_overlaps : -card_margins
                 // , $slider = $(".slider")
-                , new_margin = $(".slider")[0].getBoundingClientRect()['left']
+                , new_margin = $slider[0].getBoundingClientRect()['left']
                     - $cur_slide[0].getBoundingClientRect()['left'] + pad
             $slides.css({width: slide_width + 2*card_overlaps + card_margins 
                 ,"margin-left": -card_overlaps - card_margins})
@@ -188,7 +189,7 @@ define([
             $(window).bind_once_anon("resize.profile", function(ev) {
                 o.scroll_slide()
             })
-            setInterval(next_slide, flip_time)
+            flip_timer = setInterval(next_slide, flip_time)
         }
         if (context.flags.category_hovers) {
             $(document).ready(on_ready)
@@ -383,6 +384,8 @@ define([
     o.exit = function(){
         $(".network_nav").showshow();
         $(".overlay.panel").hidehide();
+        $(window).off("resize.profile");
+        clearInterval(flip_timer);
     };
 
     var mini_view_animate = function(card, dir, card_num) {
