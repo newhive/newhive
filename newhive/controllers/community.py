@@ -115,7 +115,7 @@ class Community(Controller):
                         top_card = int(q)
                     except Exception, e:
                         pass;
-                    if top_card > 0 and top_card < 8:
+                    if top_card > 0 and top_card <= config.cat_hover_count:
                         temp = cards[top_card]
                         cards[top_card] = cards[0]
                         cards[0] = temp

@@ -1235,7 +1235,7 @@ class User(HasSocial):
         home['cats'] = cats = ru.get('ordered_cats')
         home['categories'] = { 
             cat: [collection_client_view(self.db, col, thumbs=False)
-                for col in ru.get_category(cat)['collections'][:7]]
+                for col in ru.get_category(cat)['collections'][:config.cat_hover_count]]
             for cat in cats
         }
         return home
