@@ -74,7 +74,7 @@ define([
 
     var attach_handlers_cat = function() {
         var cur_mini = 0, max_mini = -1, min_mini = 0, $slides, $slider
-            , card, mini_views, card_opacity = .75
+            , card, mini_views, card_opacity = 1//.75
             , CACHE = 2, slide_duration = 1200, flip_time = 6000
             , card_margins = 20, card_overlaps = 50//, max_cat_width = 1037
         var mini_mod = function(n) {
@@ -83,14 +83,17 @@ define([
         o.scroll_slide = function(duration) {
             duration = duration || 0
             var $cur_slide = $(".slider a:nth(" + cur_mini + ")")
-            card_overlaps = ($(window).width() - $cur_slide.width() - card_margins) / 2
+                , slide_width = $cur_slide.width()
+            card_overlaps = -card_margins
+                // Uncommment for full-bleed
+                //($(window).width() - slide_width - card_margins) / 2
             var wide = ($(".feed._3col").length)
-                , pad = wide ? card_overlaps : -card_margins// + 5
+                , pad = wide ? card_overlaps : -card_margins
                 , $slider = $(".slider")
                 , new_margin = $(".slider")[0].getBoundingClientRect()['left']
-                - $cur_slide[0].getBoundingClientRect()['left'] + pad
-            $slides.css({width: $(window).width(),
-                "margin-left": -card_overlaps - card_margins})
+                    - $cur_slide[0].getBoundingClientRect()['left'] + pad
+            $slides.css({width: slide_width + 2*card_overlaps + card_margins 
+                ,"margin-left": -card_overlaps - card_margins})
             if (!wide)
                 $slides.css({width: "auto", "margin-left": 0})
             $slider.animate({"margin-left": new_margin}, 
