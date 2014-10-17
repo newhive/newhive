@@ -33,6 +33,10 @@ body.nav .main-header {
     .main-header .username.username { max-width: 115px; }
 }
 
+@media all and (max-width:499px) {
+    .main-header .left .network_nav { display: none; }
+}
+
 $anim_time: 0.15s;
 @if $debug { $anim_time: 1.15s; }
 body:not(.mobile) {
@@ -41,7 +45,8 @@ body:not(.mobile) {
     }
     .main-header {
         @include transition(all, $anim_time, linear);
-        .header, .logo, .item, .icon, a.splash.container, .cell, .cell>a, .vcenter_outer {
+        .header, .logo, .item, .icon, a.splash.container, .cell, .cell>a, 
+        .vcenter_outer, .category_btn {
             @include transition(all, $anim_time, linear);
         }
     }
@@ -73,6 +78,7 @@ body:not(.mobile) {
     .nav_top_row .cell {
         display: inline-block;
         padding: 5px;
+        line-height: 0px;
     }
     .nav_top_row .right {
         float: right;
@@ -174,7 +180,7 @@ body:not(.mobile) {
 
         @if $debug { background-color: aqua; }
         line-height: 0px;
-        margin: 50px auto 0px auto;
+        margin: 30px auto 0px auto;
         max-width: 1053px;
         padding: 0px 50px;
 
@@ -204,16 +210,10 @@ body:not(.mobile) {
 
                 @for $i from 1 through 8 {
                     &:nth-of-type( #{$i} ) {
-                        .active {
-                            // color: white;
-                            // background-color: black;
-                            background-color: nth($category_colors, $i); 
-                        }
-
                         .black_btn { 
+                            border: 1px solid black;
 
                             &:not(.active) {
-                                border: 1px solid black;
                                 color: black;
                                 background-color: white;
                             }
@@ -223,6 +223,13 @@ body:not(.mobile) {
                             // }
                             // background-color: nth($category_colors, $i); 
                             // &:hover { background-color: $color_selected; }
+                        }
+                        .active {
+                            // color: white;
+                            // background-color: black;
+                            background-color: nth($category_colors, $i); 
+                            border-color: nth($category_colors, $i); 
+
                         }
                     }
                 }
@@ -272,17 +279,17 @@ body:not(.mobile) {
             margin: 22px auto 0px auto;
         }
         .logo.splash, .right .vcenter_outer.full_height {
-            height: 40px;
+            height: 44px;
             // margin: 0;
         }
         .splash.container.narrow {
-            width: 44px;
+            width: 48px;
         }
         padding-bottom: 0px;
         .nav_top_row {
             &>.left.for_logo {
-                width: 180px;
-                &.narrow { width: 44px; }
+                width: 196px;
+                &.narrow { width: 48px; }
             }
         }
     }

@@ -91,7 +91,7 @@
         <li><a { anchor_attrs "home_cat" "tag_name" item}>
           <div class='category_btn hoverable' data-name={item}>
             {item}</div></a></li>&nbsp;
-        {<if (eq (plus count 0) (floor (mul (len home.cats) 0.5)))}
+        {<if (eq count (floor (mul 0.5 (plus -1 (len home.cats)))))}
           <div class="show_narrow"></div>
         {>}
         <div class='menu drawer category_hover' 
