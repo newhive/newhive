@@ -118,7 +118,7 @@ define([
 
     };
     o.dispatch = function(route_name, page_data){
-        if (route_name == "home" && context.flags.new_nav)
+        if(route_name == "home")
             route_name = "home_cat"
         analytics.track_pageview(route_name)
         context.route_name = route_name;

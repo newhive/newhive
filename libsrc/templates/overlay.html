@@ -1,8 +1,6 @@
 {set "clean_options" (string_to_list query.clean)}
 {# TODO: create default for clean_options here. right now it is set it in dialog_embed.html #}
 
-{# TODO: un-flag this after ship #}
-{<if flags.new_nav}
 <div class="main-header">
   <form class="search_bar_form" method='GET' action='/search' name='search_form'>
   <div class="nav_top_row">
@@ -110,7 +108,6 @@
     {>}
   </div>
 </div>
-{>}
 
 <div class='overlay bottom panel nav right
   {<if (and query.clean (not (contains clean_options "social")))
