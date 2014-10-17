@@ -77,10 +77,10 @@ define([
     var flip_timer
     var attach_handlers_cat = function() {
         var cur_mini = 0, max_mini = -1, min_mini = 0, $slides, $slider
-            , do_fade = false, fade_css = {position: "absolute", left: 0, top: 0
+            , do_fade = true, fade_css = {position: "absolute", left: 0, top: 0
                 , width: "100%", height: "100%"}
-            , do_full_bleed = false, do_overlaps = false
-            , card, mini_views, card_opacity = do_fade ? 0 : .3
+            , do_full_bleed = true && !do_fade, do_overlaps = true
+            , card, mini_views, card_opacity = do_fade ? 0 : .1
             , CACHE = 2, slide_duration = 1200, flip_time = 6000
             , card_margins = 20, card_overlaps = do_overlaps ? 80 : -card_margins
 
@@ -88,17 +88,15 @@ define([
             return (n + mini_views.length) % mini_views.length
         }
         o.scroll_slide = function(duration, callback) {
-            if (!$slides)
-                return
             duration = duration || 0
             var $cur_slide = $(".slider a:nth(" + cur_mini + ")")
                 , slide_width = $cur_slide.width()
-            // card_overlaps = -card_margins
+            if (!$slides || !$cur_slide)
+                return
             if (do_full_bleed)
                 card_overlaps = ($(window).width() - slide_width - card_margins) / 2
             var wide = ($(".feed._3col").length)
                 , pad = wide ? card_overlaps : -card_margins
-                // , $slider = $(".slider")
                 , new_margin = $slider[0].getBoundingClientRect()['left']
                     - $cur_slide[0].getBoundingClientRect()['left'] + pad
             $slides.css({width: slide_width + 2*card_overlaps + card_margins 
