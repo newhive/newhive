@@ -38,9 +38,9 @@ var menu = function(handle, drawer, options) {
     if (util.mobile()) 
         $.extend(opts, mobile_opts);
     if(!handle.length)
-        throw("menu has no handle");
+        console.error('menu has no handle:', drawer)
     if(!drawer.length)
-        throw("menu has no drawer");
+        console.error('ERROR: menu has no drawer:', handle)
     if(!opts.group) opts.group = { menus: [] };
 
     o.menus = [];
