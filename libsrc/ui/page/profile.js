@@ -78,7 +78,7 @@ define([
     var attach_handlers_cat = function() {
         var cur_mini = 0, max_mini = -1, min_mini = 0, $slides, $slider
             , do_fade = true, fade_css = {position: "absolute", left: 0, top: 0
-                , width: "100%", height: "100%"}
+                , height: "100%"}
             , do_full_bleed = true && !do_fade, do_overlaps = true
             , card, mini_views, card_opacity = do_fade ? 0 : .1
             , CACHE = 2, slide_duration = 1200, flip_time = 6000
