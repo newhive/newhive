@@ -33,6 +33,10 @@ body.nav .main-header {
     .main-header .username.username { max-width: 115px; }
 }
 
+@media all and (max-width:499px) {
+    .main-header .left .network_nav { display: none; }
+}
+
 $anim_time: 0.15s;
 @if $debug { $anim_time: 1.15s; }
 body:not(.mobile) {
@@ -41,7 +45,8 @@ body:not(.mobile) {
     }
     .main-header {
         @include transition(all, $anim_time, linear);
-        .header, .logo, .item, .icon, a.splash.container, .cell, .cell>a, .vcenter_outer {
+        .header, .logo, .item, .icon, a.splash.container, .cell, .cell>a, 
+        .vcenter_outer, .category_btn {
             @include transition(all, $anim_time, linear);
         }
     }

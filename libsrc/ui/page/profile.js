@@ -367,7 +367,7 @@ define([
     o.enter = function(){
         o.exit();
         if (context.page_data.owner) {
-            $(".network_nav").hidehide();
+            // $(".network_nav").hidehide();
             show_tags(context.route.include_tags);
         }
         if (o.show_more_tags) toggle_more_tags();
@@ -380,7 +380,7 @@ define([
         o.show_more_tags = ($(".tag_list.main").hasClass("expanded"));
     }
     o.exit = function(){
-        $(".network_nav").showshow();
+        // $(".network_nav").showshow();
         $(".overlay.panel").hidehide();
         $(window).off("resize.profile");
         clearInterval(flip_timer);
