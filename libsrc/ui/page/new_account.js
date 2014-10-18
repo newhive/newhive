@@ -30,7 +30,7 @@ define([
         }
         if(!name || old_name == name)
             return;
-        if(! name.match(/^[a-z][a-z0-9]{2,23}$/)){
+        if(! name.match(/^[a-z0-9]{3,24}$/)){
             set_name_err(false);
             return;
         }
