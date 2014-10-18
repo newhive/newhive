@@ -15,8 +15,9 @@ define([
         var $el = $(el)
         // Move up the DOM tree
         while (true) {
-            $el.removeClass("loading").addClass("loaded")
-                .trigger("lazy_load", $el).addClass(error ? "error" : "")
+            $el.removeClass("loading")
+                .addClass("loaded" + (error ? " error" : ""))
+                .trigger("lazy_load", $el)
             if ($el.is(".lazy_load"))
                 break
             $el = $el.parent()
@@ -196,6 +197,7 @@ define([
     // TODO-cleanup: make query argument an object, using stringjay
     //   object constructor, see TODO-cleanup-object in text/stringjay
     o.query_attrs = function(scope, route_name, query){
+        query = "" + query // must be a string
         var args = get_route_args(Array.prototype.slice.call(arguments, 1));
         query = $.map(query.split("&"),function(e) {
             return $.map(e.split("="),function(k) {

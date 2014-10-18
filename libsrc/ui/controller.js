@@ -196,12 +196,14 @@ define([
     };
 
     // TODO-cleanup: merge with open_route?
-    var loading = false;
+    // var loading = false;
     o.next_cards = function(with_cards){
-        if (loading)
+        if (context.loading_cards)
             return false;
-        loading = true;
+        context.loading_cards = true;
         var add_cards = function(data){
+            // TODO: should also send card_at data from server and bail
+            // if there is a discrepency.
             context.page_data.cards = context.page_data.cards.concat(data.cards);
             context.page_data.cards_at = context.page_data.next_cards_at
             context.page_data.next_cards_at += data.cards.length

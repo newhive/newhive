@@ -54,13 +54,16 @@
     max-height: 600px;
 }
 
+.menu.drawer.divided :nth-child(n + 2) {
+    &.menu_item, .menu_item {
+       border-top: 1px solid $color_light_grey;
+    }
+}
+
 #share_menu .menu_item, #logo_menu .menu_item {
     height: 28px;
     line-height: 28px;
 
-    & + * {
-    	border-top: 1px solid $color_light_grey;
-    }
     &.active, &.active + .menu_item { border-color: $color_selected; }
     // padding: 7px;
 }

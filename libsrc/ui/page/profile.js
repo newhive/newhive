@@ -73,51 +73,110 @@ define([
     };
 
     var attach_handlers_cat = function() {
-        // auto-loop expressions from main category
-        var cur_mini = 1, $slides
-        var next_slide = function() {
-            if ($slides.is(":visible")) {
-                // Find the next available view
-                for (;;) {
-                    var $slide = $slides.find("a:nth(" + cur_mini + ")")
-                    if (! $slide.length) {
-                        cur_mini = 0
-                        continue
-                    } else if (!$slide.is(".loaded") || $slide.is(".error")) {
-                        ++cur_mini
-                        continue
-                    }
-                    break
+        var cur_mini = 0, max_mini = -1, min_mini = 0, $slides, $slider
+            , card, mini_views, card_opacity = 1//.75
+            , CACHE = 2, slide_duration = 1200, flip_time = 6000
+            , card_margins = 20, card_overlaps = 50//, max_cat_width = 1037
+        var mini_mod = function(n) {
+            return (n + mini_views.length) % mini_views.length
+        }
+        o.scroll_slide = function(duration) {
+            duration = duration || 0
+            var $cur_slide = $(".slider a:nth(" + cur_mini + ")")
+                , slide_width = $cur_slide.width()
+            card_overlaps = -card_margins
+                // Uncommment for full-bleed
+                //($(window).width() - slide_width - card_margins) / 2
+            var wide = ($(".feed._3col").length)
+                , pad = wide ? card_overlaps : -card_margins
+                , $slider = $(".slider")
+                , new_margin = $(".slider")[0].getBoundingClientRect()['left']
+                    - $cur_slide[0].getBoundingClientRect()['left'] + pad
+            $slides.css({width: slide_width + 2*card_overlaps + card_margins 
+                ,"margin-left": -card_overlaps - card_margins})
+            if (!wide)
+                $slides.css({width: "auto", "margin-left": 0})
+            $slider.animate({"margin-left": new_margin}, 
+                duration, 'easeInOutQuart')
+            $cur_slide.animate({opacity:1}, duration)
+            $(".slider a").not($cur_slide).animate({opacity:card_opacity}, duration)
+        }
+        var unload_slide = function(back) {
+            var $children = $slider.children()
+                , $slide = back ? $children.last() : $children.eq(0)
+            $slide.remove()
+            if (back) {
+                max_mini = mini_mod(max_mini - 1)
+            } else {
+                min_mini = mini_mod(min_mini + 1)
+                if ($slide.length) {
+                    cur_mini--
+                    o.scroll_slide()
                 }
-                ++cur_mini
-                // Load new mini views, staying 3 ahead of what is shown to user
-                var pos = $slides.children().length
-                    ,card = context.page_data.cards[0]
-                    ,mini_views = card.thumbs
-                for (; pos < cur_mini + 3 && pos < mini_views.length; ++pos) {
-                    template_mini_expr([context, card, {item: mini_views[pos]}])
-                        .appendTo($slides)
-                }
-                // Transition to the new mini view
-                $slides.find("a").removeClass("notransition")
-                    .css({opacity: 0, "pointer-events":"none"})
-                $slide.css({opacity: 1, "pointer-events":"auto"})
             }
+        }
+        var load_slide = function(back, errors) {
+            if (back) {
+                var pos = max_mini = mini_mod(max_mini + 1)
+            } else {
+                pos = min_mini = mini_mod(min_mini - 1)
+            }
+            var $slide = template_mini_expr([context, card, {item: mini_views[pos]}])
+                .attr("data-num", pos).css({opacity:card_opacity})
+                .bind_once_anon("lazy_load.page",function(ev) {
+                    var $el = $(ev.currentTarget)
+                    o.scroll_slide()
+
+                    if ($el.is(".error") && !(errors > 5)) {
+                        $el.remove()
+                        if (!back)
+                            cur_mini--
+                        // force recaching
+                        load_slide(back, errors ? errors + 1 : 1)
+                    }
+                })
+            if (back) {
+                $slide.appendTo($slider)
+            } else {
+                $slide.prependTo($slider)
+                cur_mini++
+            }
+        }
+        // auto-loop expressions from main category
+        var next_slide = function(offset) {
+            // return
+            if (offset === undefined) offset = 1
+            load_slide(offset > 0)
+            unload_slide(offset < 0)
+            o.scroll_slide()
+            cur_mini += offset
+            o.scroll_slide(slide_duration)
         }
 
         var ready = false, on_ready = function(ev) {
-            if(ready) return
+            if(ready || $(".lazy_load.slides .slider").length) return
             ready = true
-            $slides = context.undefer($(".card[data-num=0] .defer.mini_views"))
-            $slides.removeClass("mini_views").bind_once_anon("lazy_load.page", function() {
-                if (! $slides.is(".loaded")) return
-                $slides.showshow().addClass("slides").off("lazy_load.page")
-                    .siblings("",".lazy_load").hidehide()
-                // immediately hide the non-zeroth children 
-                // and begin animation at 1st card
-                $slides.children().slice(1).addClass("notransition").css({opacity: 0})
-                setInterval(next_slide, 6000)
+            card = context.page_data.cards[0]
+            mini_views = card.thumbs
+            if (!mini_views)
+                return // Nothing to cycle
+
+            var $old_snapshot = $(".card[data-num=0] .lazy_load.snapshot")
+            $slides = $('<div class="lazy_load _5_3 slides">')
+                .insertAfter($old_snapshot)
+            $old_snapshot.hidehide()
+            $slider = $("<div class='slider notransition'>")
+            $slider.appendTo($slides)
+            load_slide(true)
+            for (var i = 0; i < CACHE; ++i) {
+                load_slide(false)
+                load_slide(true)
+            }
+            o.scroll_slide()
+            $(window).bind_once_anon("resize.profile", function(ev) {
+                o.scroll_slide()
             })
+            setInterval(next_slide, flip_time)
         }
         if (context.flags.category_hovers) {
             $(document).ready(on_ready)

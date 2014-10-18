@@ -30,7 +30,7 @@ body.nav .main-header {
     }
 }
 @media all and (max-width:610px) {
-    .main-header .username.username { max-width: 120px; }
+    .main-header .username.username { max-width: 115px; }
 }
 
 $anim_time: 0.15s;
@@ -147,14 +147,34 @@ body:not(.mobile) {
             }
         }
     }
+    .category_handle {
+        background-image: asset_url('skin/nav/categories.png');
+        width: 44px;
+        height: 44px;
+        margin: auto;
+    }
+
+    .category_menu {
+        @for $i from 1 through 7 {
+            :nth-of-type( #{$i + 1} ) {
+                .black_btn { 
+                    background-color: nth($category_colors, $i); 
+                    &:hover { background-color: $color_selected; }
+                }
+            }
+        }
+    }
+
     .header {
-        // display: none; // until we implement categories
-        // height: 39px; // Ew.  Should be computed.
-        // line-height: 0px; // To remove extra whitespace
+        &.clean {
+            display: none
+        }
+
         @if $debug { background-color: aqua; }
         line-height: 0px;
         margin: 50px auto 0px auto;
         max-width: 1053px;
+        padding: 0px 50px;
 
         ul {
             -webkit-margin-before: 0em;
@@ -185,7 +205,6 @@ body:not(.mobile) {
                 }
             }
 
-            // .text_btn { margin: 0px; }
             .category_btn {
                 text-transform: uppercase;
                 padding: 10px;
@@ -194,7 +213,6 @@ body:not(.mobile) {
             }
 
             .menu.drawer.category_hover .menu_item {
-                // display: inline-block;
                 width: 100%;
                 padding: 7px;
                 box-sizing: border-box;
@@ -203,7 +221,7 @@ body:not(.mobile) {
             .show_narrow { 
                 display: inline-block;
                 width: 100%; 
-                @media all and (min-width:700px) {
+                @media all and (min-width:860px) {
                     display: none;
                 }
             }
@@ -212,7 +230,6 @@ body:not(.mobile) {
                 content: '';
                 display: inline-block;
                 width: 100%;
-                // height: 0px;
             }
         }
     }
@@ -240,6 +257,20 @@ body:not(.mobile) {
                 &.narrow { width: 44px; }
             }
         }
+    }
+}
+
+@media all and (min-width:640px) {
+    .main-header .category_handle {
+        display: none;
+    }
+}
+@media all and (max-width:639px) {
+    .main-header .header ul {
+        display: none;
+    }
+    .main-header .header.logged_out {
+        display: none
     }
 }
 

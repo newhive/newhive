@@ -239,6 +239,8 @@ define([
 
             // find position of current page within cards
             var set_cards = function(data){
+                context.loading_cards = false
+
                 page_data.cards = data.cards 
                 if (o.last_found == -1) {
                     o.last_found = find_card(o.expr.id)
@@ -246,7 +248,7 @@ define([
                 }
                 context.page_data.next_cards_at = page_data.cards.length
             }
-
+            context.loading_cards = true
             if(context.query.q){
                 var query = {q: context.query.q, id: o.expr.id };
                 if (context.query.e) 
