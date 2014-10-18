@@ -467,6 +467,7 @@ body {
     }
     #tag_bar {
         // padding-bottom: 10px;
+        padding-top: 20px;
         margin: 35px auto;
         margin-bottom: 40px;
         position: relative;
@@ -693,6 +694,7 @@ body {
 
             &[data-num="0"] {
                 width: 100%;
+                .tag_list { display: none; }
                 .card_title, .info {
                     position: absolute;
                 }

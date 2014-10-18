@@ -1,5 +1,6 @@
 define([
     'browser/jquery',
+    'browser/js',
     'ui/dialog',
     'context',
     'sj!templates/cards.html',
@@ -9,6 +10,7 @@ define([
     'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js'
 ], function(
     $,
+    js,
     dialog,
     context,
     cards_template,
@@ -72,34 +74,40 @@ define([
                 && context.page_data.owner.id == context.user.id
     };
 
+    var flip_timer
     var attach_handlers_cat = function() {
         var cur_mini = 0, max_mini = -1, min_mini = 0, $slides, $slider
-            , card, mini_views, card_opacity = 1//.75
+            , do_fade = true, fade_css = {position: "absolute", left: 0, top: 0
+                , height: "100%"}
+            , do_full_bleed = true && !do_fade, do_overlaps = true
+            , card, mini_views, card_opacity = do_fade ? 0 : .1
             , CACHE = 2, slide_duration = 1200, flip_time = 6000
-            , card_margins = 20, card_overlaps = 50//, max_cat_width = 1037
+            , card_margins = 20, card_overlaps = do_overlaps ? 80 : -card_margins
+
         var mini_mod = function(n) {
             return (n + mini_views.length) % mini_views.length
         }
-        o.scroll_slide = function(duration) {
+        o.scroll_slide = function(duration, callback) {
             duration = duration || 0
             var $cur_slide = $(".slider a:nth(" + cur_mini + ")")
                 , slide_width = $cur_slide.width()
-            card_overlaps = -card_margins
-                // Uncommment for full-bleed
-                //($(window).width() - slide_width - card_margins) / 2
+            if (!$slides || !$cur_slide)
+                return
+            if (do_full_bleed)
+                card_overlaps = ($(window).width() - slide_width - card_margins) / 2
             var wide = ($(".feed._3col").length)
                 , pad = wide ? card_overlaps : -card_margins
-                , $slider = $(".slider")
-                , new_margin = $(".slider")[0].getBoundingClientRect()['left']
+                , new_margin = $slider[0].getBoundingClientRect()['left']
                     - $cur_slide[0].getBoundingClientRect()['left'] + pad
             $slides.css({width: slide_width + 2*card_overlaps + card_margins 
                 ,"margin-left": -card_overlaps - card_margins})
             if (!wide)
                 $slides.css({width: "auto", "margin-left": 0})
             $slider.animate({"margin-left": new_margin}, 
-                duration, 'easeInOutQuart')
+                duration, 'easeInOutQuart', callback ? callback : js.noop)
             $cur_slide.animate({opacity:1}, duration)
-            $(".slider a").not($cur_slide).animate({opacity:card_opacity}, duration)
+            $(".slider a").not($cur_slide).animate({opacity:card_opacity}, 
+                duration, 'easeInOutQuart')
         }
         var unload_slide = function(back) {
             var $children = $slider.children()
@@ -135,6 +143,8 @@ define([
                         load_slide(back, errors ? errors + 1 : 1)
                     }
                 })
+            if (do_fade)
+                $slide.css(fade_css)
             if (back) {
                 $slide.appendTo($slider)
             } else {
@@ -147,10 +157,11 @@ define([
             // return
             if (offset === undefined) offset = 1
             load_slide(offset > 0)
-            unload_slide(offset < 0)
             o.scroll_slide()
             cur_mini += offset
-            o.scroll_slide(slide_duration)
+            o.scroll_slide(slide_duration, function() {
+                unload_slide(offset < 0)
+            })
         }
 
         var ready = false, on_ready = function(ev) {
@@ -176,7 +187,7 @@ define([
             $(window).bind_once_anon("resize.profile", function(ev) {
                 o.scroll_slide()
             })
-            setInterval(next_slide, flip_time)
+            flip_timer = setInterval(next_slide, flip_time)
         }
         if (context.flags.category_hovers) {
             $(document).ready(on_ready)
@@ -356,7 +367,7 @@ define([
     o.enter = function(){
         o.exit();
         if (context.page_data.owner) {
-            $(".network_nav").hidehide();
+            // $(".network_nav").hidehide();
             show_tags(context.route.include_tags);
         }
         if (o.show_more_tags) toggle_more_tags();
@@ -369,8 +380,10 @@ define([
         o.show_more_tags = ($(".tag_list.main").hasClass("expanded"));
     }
     o.exit = function(){
-        $(".network_nav").showshow();
+        // $(".network_nav").showshow();
         $(".overlay.panel").hidehide();
+        $(window).off("resize.profile");
+        clearInterval(flip_timer);
     };
 
     var mini_view_animate = function(card, dir, card_num) {

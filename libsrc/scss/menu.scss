@@ -57,6 +57,7 @@
 .menu.drawer.divided :nth-child(n + 2) {
     &.menu_item, .menu_item {
        border-top: 1px solid $color_light_grey;
+       &.active { border-color: $color_selected; }
     }
 }
 

@@ -525,6 +525,7 @@ define(['browser/js', 'module'],
         //     throw o.render_error('debug break', context,
 		  	   // current_node(context));
 		// possibly add rendering context in invisible div
+		console.error('template debug')
 		return do_debugger ? '' : 
 			'<div>DEBUG inserted</div><div style="display:none">' + '' + '</div>';
 	};
