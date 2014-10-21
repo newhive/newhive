@@ -76,11 +76,11 @@ define([
     const anim_duration = 700;
 
     o.init = function(controller){
-        (function() {
-          var li = document.createElement('script'); li.type = 'text/javascript'; li.async = true;
-          li.src = ('https:' == document.location.protocol ? 'https:' : 'http:') + '//platform.stumbleupon.com/1/widgets.js';
-          var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(li, s);
-        })();
+        // (function() {
+        //   var li = document.createElement('script'); li.type = 'text/javascript'; li.async = true;
+        //   li.src = ('https:' == document.location.protocol ? 'https:' : 'http:') + '//platform.stumbleupon.com/1/widgets.js';
+        //   var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(li, s);
+        // })();
 
         o.anim_direction = 0;
         o.controller = controller;
@@ -247,9 +247,10 @@ define([
         $(".main-header .network_nav .item").removeClass("black_btn")
         $(".main-header .network_nav .item." + context.route_name)
             .addClass("black_btn")
-        $(".main-header .header").showhide(context.route.client_method == "cat")
-        $(".main-header .header .category_btn").removeClass("black_btn")
-        $(".main-header .header .category_btn[data-name='" 
+        $(".main-header .header")
+            .addremoveClass("clean", context.route.client_method != "cat")
+        $(".main-header .category_btn").removeClass("black_btn")
+        $(".main-header .category_btn[data-name='" 
             + context.page_data.tag_selected + "']").addClass("black_btn")
 
         var has_nav = has_nav_bar()

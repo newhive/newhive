@@ -44,7 +44,8 @@
               <div class='text_btn item teal_hover'>Sign Up</div></a>
             <a {anchor_attrs "view_expr"
               "owner_name" config.site_user "expr_name" "about"}>
-              <div class='text_btn item teal_hover about_menu'>About</div></a>
+              <div class='text_btn item teal_hover about_menu'>About
+              </div></a>
           </div>
         {>}
         <div class="middle_block inline search_bar">
@@ -58,6 +59,9 @@
           <a {anchor_attrs "create_expr"} title='Create newhive'
             class='needs_login create item btn hoverable'></a>
         </div>
+        {<if (not user.logged_in)}
+          <div class="category_handle inline item"></div>
+        {>}
       {>}
     </div>
 
@@ -69,16 +73,42 @@
   {>}
 
   {# Category Buttons #}
-  <div class='header {<unless flags.categories}stay_hidden{>}'>
+  <div class="menu drawer category_menu divided"
+    data-handle=".main-header .category_handle" 
+    data-menu-opts='"layout_x":"center","offset_y":7'>
+    {<for (concat (list "featured") home.cats) "count"}
+      <a { anchor_attrs "home_cat" "tag_name" item}>
+        <div class='menu_item category_btn teal_hover' data-name={item}>
+          {item}</div></a>
+    {>}
+  </div>
+  <div class='header{<unless user.logged_in} logged_out{>}
+    {<unless flags.categories} stay_hidden{>}'>
     {<if flags.categories}
+    {<if user.logged_in} 
+      <div class="category_handle item"></div>
+    {>}
     <ul>
       {<for home.cats "count"}
         <li><a { anchor_attrs "home_cat" "tag_name" item}>
-          <div class='category_btn teal_hover' data-name={item}>
+          <div class='category_btn hoverable' data-name={item}>
             {item}</div></a></li>&nbsp;
-        {<if (eq (plus count 1) (floor (mul (len home.cats) 0.5)))}
+        {<if (eq count (floor (mul 0.5 (plus -1 (len home.cats)))))}
           <div class="show_narrow"></div>
         {>}
+        {# Category hover menu #}
+        <div class='menu drawer category_hover' 
+          data-handle='li .category_btn[data-name={item}]'
+          data-menu-opts='"offset_y":-5'><table>
+          {<for (get home.categories item) "kount"}
+            {# <a {query_attrs "home_cat" kount "tag_name" item}> #}
+            <td><a {anchor_attrs "home_cat" "tag_name" item}>
+              <img title={title|e} class='menu_item{cond kount "" " default"}'
+                src={<if snapshot_small}"{snapshot_small}"{>}
+                {<else}{asset "skin/site/expr_placeholder_small.jpg"}{>}>
+            </a></td>
+          {>}
+        </table></div>
       {>}
     </ul>
     {>}
@@ -134,9 +164,9 @@
 </div>
 
 {# menu: logo #}
-<div id='logo_menu' class='menu drawer {<if (eq query.template "embed")} stay_hidden{>}' data-handle='.hive_logo'>
+<form {form_attrs "logout"} method='POST' id='logout_form'></form>
+<div id='logo_menu' class='menu drawer divided {<if (eq query.template "embed")} stay_hidden{>}' data-handle='.hive_logo'>
   {<if user.logged_in}
-    <form {form_attrs "logout"} method='POST' id='logout_form'></form>
     {# Home #}
     <a {anchor_attrs "home"} class='menu_item default hoverable'>The Hive</a>
 
@@ -144,20 +174,28 @@
     <a {anchor_attrs "network" "username" user.name} class='menu_item hoverable'>Network</a>
 
     {# Username #}
-    <a id='user_btn' { anchor_attrs "expressions_public" "owner_name" user.name }
-      class='menu_item hoverable'>{user.name|e}</a>
-
-    {# Activity #}
-    <div id='activity_btn' class='menu_item hoverable'>
+    {<if flags.mobile}
+      <a { anchor_attrs "expressions_public" "owner_name" user.name }
+        class='menu_item hoverable'>
+          {user.name|e}
+      </a>
+    {>}{<else}
+      <a id='activity_btn' { anchor_attrs "expressions_public" "owner_name" user.name }
+        class='menu_item hoverable'>
         <div class='icon'></div>
         <div class='count'>0</div>
-        Activity
-    </div>
+        {user.name|e}
+      </a>
+    {>}
 
     {# About #}
     <a {anchor_attrs "view_expr"
       "owner_name" config.site_user "expr_name" "about"}
-      class='menu_item about_menu'>About</a>
+      class='menu_item about_menu'>About
+    {<if flags.ui_test}
+      <img class="right_expand" src='{asset "skin/nav/search-arrow.png"}'>
+    {>}
+    </a>
 
     {# Logout #}
     <div id='logout_btn' class='menu_item'>Logout</div>

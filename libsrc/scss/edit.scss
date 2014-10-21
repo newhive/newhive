@@ -8,8 +8,7 @@ background-color: lightgrey;
 // TODO: Make Gibson default and migrate all old expressions to override
 // default
 .happ.text { font-family: Helvetica, Arial, sans-serif; }
-.happ.fixed { position: absolute; }
-.happ.hive_image > * {
+.happ, .happ > * {
     position : absolute;
 }
 
@@ -22,6 +21,10 @@ background-color: lightgrey;
         background-color: $color_selected;
         opacity: .6;
     }
+}
+&.help {
+    cursor: help;
+    * { cursor: help !important; }
 }
 &.gifwall {
     overflow-x:hidden;

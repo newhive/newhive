@@ -347,18 +347,24 @@ body.mobile .user_header {
     }
 }
 
-.icon.plus_menu, .icon.delete, .icon.add_queue, .icon.plus_cats {
-    // display:inline-block;
-    width: 44px;
-    height: 44px;
-    // background-color: transparent;
-    background-color: white;
-    vertical-align: middle;
-    margin: -12px 5px 0px -16px;
+.tag_list {
+    .icon.plus_menu, .icon.delete, .icon.add_queue, .icon.plus_cats {
+        // display:inline-block;
+        width: 44px;
+        height: 44px;
+        vertical-align: middle;
+        margin: -12px 5px 0px -16px;
+    }
+    .icon.plus_menu, .icon.plus_cats, .icon.add_queue {
+        float: left;
+    }
 }
 .icon.plus_menu, .icon.plus_cats, .icon.add_queue {
     background-image: asset_url('skin/nav/plus.png');
-    float: left;
+}
+.icon.plus_menu, .icon.delete {
+    // background-color: transparent;
+    background-color: white;
 }
 .icon.plus_cats {
     background-color: aqua;
@@ -467,6 +473,7 @@ body {
     }
     #tag_bar {
         // padding-bottom: 10px;
+        padding-top: 20px;
         margin: 35px auto;
         margin-bottom: 40px;
         position: relative;
@@ -623,7 +630,8 @@ body {
     }
     .feed.cat.narrow .card {
         width: 100%;
-        padding: 10px 10px 5px 10px;
+        padding: 5px;//10px 10px 5px 10px;
+        box-sizing: border-box;
     }
     .feed.cat.wide._3col .card {
         width: 33.3%;
@@ -634,6 +642,17 @@ body {
             position: absolute;
             top: 0px;
             right: 0px;
+        }
+        // .lazy_load.slides { overflow: visible; } //!!
+        .lazy_load.slides > .slider {
+            width: 1000%;
+            height: 100%;
+            // overflow: hidden;
+            img {
+                width: auto;
+                height: 100%;
+                margin-left: 20px;
+            }
         }
         $mini_view_color: white;
         $mini_view_height: 20%;
@@ -659,6 +678,15 @@ body {
             }
         }
     }
+    $card_margins:20;
+    $card_overlaps:50;
+    $max_cat_width:1037;
+    .feed.cat._3col .card {
+        .lazy_load.slides {
+            margin-left: #{-$card_margins - $card_overlaps}px;
+            width: #{$max_cat_width + 2*($card_margins + $card_overlaps)}px;
+        }
+    }
     .feed.cat.wide {
         text-align: center;
         > * {
@@ -672,6 +700,7 @@ body {
 
             &[data-num="0"] {
                 width: 100%;
+                .tag_list { display: none; }
                 .card_title, .info {
                     position: absolute;
                 }

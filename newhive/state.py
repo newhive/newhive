@@ -507,7 +507,7 @@ def add_to_category(category, collection):
     category['collections'] += [collection]
 
 # client view of a collection
-def collection_client_view(db, collection, ultra=False, viewer=None):
+def collection_client_view(db, collection, ultra=False, viewer=None, thumbs=True):
     ## we have just a single expr
     if isinstance(collection, basestring):
         expr = db.Expr.fetch(collection)
@@ -564,20 +564,21 @@ def collection_client_view(db, collection, ultra=False, viewer=None):
         }
     }
     if ultra: expr_cv["snapshot_ultra"] = expr.snapshot_name("ultra")
-    expr_cv["thumbs"] = []
-    if len(el) > 1: 
-      for i in xrange(1 if len(el) > 2 and not ultra else 0, len(el)):
-        expr = el[i]
-        expr_cv["thumbs"].append({
-            "owner_name": expr['owner_name']
-            ,"name": expr['name']
-            ,"id": expr.id
-            ,"search_query": search_query
-            ,"snapshot_tiny": expr.snapshot_name("tiny")
-            ,"snapshot_small": expr.snapshot_name("small")
-            ,"snapshot_big": expr.snapshot_name("big")
-        })
-        if ultra: expr_cv["thumbs"][-1]["snapshot_ultra"] = expr.snapshot_name("ultra")
+    if thumbs:
+        expr_cv["thumbs"] = []
+        if len(el) > 1: 
+          for i in xrange(1 if len(el) > 2 and not ultra else 0, len(el)):
+            expr = el[i]
+            expr_cv["thumbs"].append({
+                "owner_name": expr['owner_name']
+                ,"name": expr['name']
+                ,"id": expr.id
+                ,"search_query": search_query
+                ,"snapshot_tiny": expr.snapshot_name("tiny")
+                ,"snapshot_small": expr.snapshot_name("small")
+                ,"snapshot_big": expr.snapshot_name("big")
+            })
+            if ultra: expr_cv["thumbs"][-1]["snapshot_ultra"] = expr.snapshot_name("ultra")
 
     # determine if this is an owned or curated collection
     # for "by USER" or "curated by USER" on card
@@ -1227,6 +1228,17 @@ class User(HasSocial):
                 map(lambda r: r.client_view(),
                     list(self.activity(limit=activity))) )
         return user
+
+    def get_home(self):
+        ru = self.db.User.root_user
+        home = {}
+        home['cats'] = cats = ru.get('ordered_cats')
+        home['categories'] = { 
+            cat: [collection_client_view(self.db, col, thumbs=False)
+                for col in ru.get_category(cat)['collections'][:config.cat_hover_count]]
+            for cat in cats
+        }
+        return home
 
     def get_root_categories(self):
         ru = self.db.User.root_user

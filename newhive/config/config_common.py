@@ -29,10 +29,18 @@ cloudfront_domains = {
     'asset': None
 }
 
+################################################################
+# constants
+################################################################
+cat_hover_count = 6
+
+################################################################
 # strings
+################################################################
 str_expression  = 'newhive'
 
-admins          = ['it1','abram', 'cara', 'zach', 'newduke', 'fatsycline','root','newhive']
+################################################################
+admins          = ['abram', 'cara', 'zach', 'newduke', 'fatsycline','root','newhive']
 
 default_email_subscriptions = ['love', 'listen', 'share_expr', 'comment', 'broadcast', 'featured', 'milestone']
 milestones = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000,
@@ -63,6 +71,8 @@ user_groups = { 'logged_in':set([]), 'logged_out':set(['logged_out']), 'all':set
 site_flags = {
 
     ## When adding new flags, make comment in issue with flag name!
+    # FLAG: foo
+    ## And update https://github.com/hivedev/newhive/wiki/Site-flags
 
     # Features
     'show_hive_all': ['newduke','nd4']
@@ -94,6 +104,7 @@ site_flags = {
     ,'anchor_name': ['admins', 'devs']
     # Admin
     ,'admin': ['admins']
+    ,'ui_test': ['admins']
     # Old / unused
     ,'logged': ['logged_out']
 }

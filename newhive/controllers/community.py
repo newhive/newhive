@@ -107,6 +107,18 @@ class Community(Controller):
                 at = int(db_args.get('at', 0))
                 limit = int(db_args.get('limit', 20))
                 cards = cards[at:at + limit if limit else None]
+                # query_string can indicate which card to sort first
+                q = request.query_string
+                if q:
+                    top_card = 0
+                    try:
+                        top_card = int(q)
+                    except Exception, e:
+                        pass;
+                    if top_card > 0 and top_card <= self.config.cat_hover_count:
+                        temp = cards[top_card]
+                        cards[top_card] = cards[0]
+                        cards[0] = temp
                 # insert client view of collections into cards
                 client_cards = [collection_client_view(self.db, x) if x 
                     else self.missing_expression() for x in cards]

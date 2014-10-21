@@ -19,7 +19,10 @@ from pymongo.errors import DuplicateKeyError
 
 from newhive import state
 
-def cp_expr(expr, dest_db):
+def cp_expr(expr, dest_db, overwrite=False):
+    if overwrite:
+        old_expr = dest_db.Expr.find({"name": expr['name'], "owner_name": expr['owner_name']})
+        if old_expr: old_expr.purge()
     new_expr = dest_db.Expr.new(expr)
     new_expr.pop('snapshot_id', None) # snapshot should be rerendered from dest
     new_expr.pop('snapshot_time', None)
