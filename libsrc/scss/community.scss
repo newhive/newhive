@@ -347,18 +347,24 @@ body.mobile .user_header {
     }
 }
 
-.icon.plus_menu, .icon.delete, .icon.add_queue, .icon.plus_cats {
-    // display:inline-block;
-    width: 44px;
-    height: 44px;
-    // background-color: transparent;
-    background-color: white;
-    vertical-align: middle;
-    margin: -12px 5px 0px -16px;
+.tag_list {
+    .icon.plus_menu, .icon.delete, .icon.add_queue, .icon.plus_cats {
+        // display:inline-block;
+        width: 44px;
+        height: 44px;
+        vertical-align: middle;
+        margin: -12px 5px 0px -16px;
+    }
+    .icon.plus_menu, .icon.plus_cats, .icon.add_queue {
+        float: left;
+    }
 }
 .icon.plus_menu, .icon.plus_cats, .icon.add_queue {
     background-image: asset_url('skin/nav/plus.png');
-    float: left;
+}
+.icon.plus_menu, .icon.delete {
+    // background-color: transparent;
+    background-color: white;
 }
 .icon.plus_cats {
     background-color: aqua;
