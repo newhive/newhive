@@ -174,12 +174,19 @@
     <a {anchor_attrs "network" "username" user.name} class='menu_item hoverable'>Network</a>
 
     {# Username #}
-    <a id='activity_btn' { anchor_attrs "expressions_public" "owner_name" user.name }
-      class='menu_item hoverable'>
+    {<if flags.mobile}
+      <a { anchor_attrs "expressions_public" "owner_name" user.name }
+        class='menu_item hoverable'>
+          {user.name|e}
+      </a>
+    {>}{<else}
+      <a id='activity_btn' { anchor_attrs "expressions_public" "owner_name" user.name }
+        class='menu_item hoverable'>
         <div class='icon'></div>
         <div class='count'>0</div>
         {user.name|e}
       </a>
+    {>}
 
     {# About #}
     <a {anchor_attrs "view_expr"
