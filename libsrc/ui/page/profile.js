@@ -91,7 +91,7 @@ define([
             duration = duration || 0
             var $cur_slide = $(".slider a:nth(" + cur_mini + ")")
                 , slide_width = $cur_slide.width()
-            if (!$slides || !$cur_slide)
+            if (!$slides || !$slides.length || !$cur_slide.length)
                 return
             if (do_full_bleed)
                 card_overlaps = ($(window).width() - slide_width - card_margins) / 2
