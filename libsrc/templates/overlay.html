@@ -94,11 +94,13 @@
         {<if (eq count (floor (mul 0.5 (plus -1 (len home.cats)))))}
           <div class="show_narrow"></div>
         {>}
+        {# Category hover menu #}
         <div class='menu drawer category_hover' 
           data-handle='li .category_btn[data-name={item}]'
           data-menu-opts='"offset_y":-5'><table>
           {<for (get home.categories item) "kount"}
-            <td><a {query_attrs "home_cat" kount "tag_name" item}>
+            {# <a {query_attrs "home_cat" kount "tag_name" item}> #}
+            <td><a {anchor_attrs "home_cat" "tag_name" item}>
               <img title={title|e} class='menu_item{cond kount "" " default"}'
                 src={<if snapshot_small}"{snapshot_small}"{>}
                 {<else}{asset "skin/site/expr_placeholder_small.jpg"}{>}>
