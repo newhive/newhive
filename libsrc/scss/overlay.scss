@@ -304,13 +304,7 @@ body:not(.mobile) {
     }
 }
 
-@media all and (min-width:640px) {
-    .main-header .category_handle {
-        display: none;
-    }
-}
-@media all and (max-width:639px) {
-    .main-header .header ul {
+@media all and (min-width:640px) {.main-header .header .category_handle.item {display: none; } } @media all and (max-width:639px) {.main-header .header ul {
         display: none;
     }
     .main-header .header.logged_out {
