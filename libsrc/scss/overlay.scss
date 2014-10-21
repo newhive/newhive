@@ -155,6 +155,10 @@ body:not(.mobile) {
     }
     .category_handle {
         background-image: asset_url('skin/nav/categories.png');
+        &.active { 
+            background-image: asset_url('skin/nav/categories-on.png'); 
+            background-color: black;
+        }
         width: 44px;
         height: 44px;
         margin: auto;
@@ -176,6 +180,10 @@ body:not(.mobile) {
     .header {
         &.clean {
             display: none
+        }
+
+        .category_handle.item {
+            display: block;
         }
 
         @if $debug { background-color: aqua; }

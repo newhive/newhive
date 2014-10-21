@@ -37,7 +37,6 @@
       {<vcenter (cond user.logged_in "" "full_height")}
         {<if (not user.logged_in)}
           {# Main navigation #}
-          <div class="category_handle inline"></div>
           <div class='network_nav inline_middle'>
             {# empty <a> for css #}
             <a><div class='login_btn text_btn item teal_hover'>Log in</div></a>
@@ -60,6 +59,9 @@
           <a {anchor_attrs "create_expr"} title='Create newhive'
             class='needs_login create item btn hoverable'></a>
         </div>
+        {<if (not user.logged_in)}
+          <div class="category_handle inline item"></div>
+        {>}
       {>}
     </div>
 
@@ -73,7 +75,7 @@
   {# Category Buttons #}
   <div class="menu drawer category_menu divided"
     data-handle=".main-header .category_handle" 
-    data-menu-opts='"layout_x":"center","offset_y":0'>
+    data-menu-opts='"layout_x":"center","offset_y":7'>
     {<for (concat (list "featured") home.cats) "count"}
       <a { anchor_attrs "home_cat" "tag_name" item}>
         <div class='menu_item category_btn teal_hover' data-name={item}>
@@ -84,7 +86,7 @@
     {<unless flags.categories} stay_hidden{>}'>
     {<if flags.categories}
     {<if user.logged_in} 
-      <div class="category_handle"></div>
+      <div class="category_handle item"></div>
     {>}
     <ul>
       {<for home.cats "count"}
