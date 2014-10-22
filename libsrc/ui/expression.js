@@ -220,7 +220,8 @@ define([
     }
 
     o.expr_receive = function(ev){
-        if ( ev.data.action == "show" ) {
+        var msg = ev.data
+        if( msg.action == 'show' ){
             function callback(data){
                 $('body').html(data);
                 setTimeout(o.show, 0);
@@ -231,7 +232,8 @@ define([
                 o.show();
             }
         } 
-        else if ( ev.data.action == "hide" ) o.hide();
+        else if( msg.action == 'hide' ) o.hide()
+        else if( msg.action == 'play_toggle' ) o.play_first()
     }
 
     o.margin = function () {
@@ -273,12 +275,17 @@ define([
         paused = pause
         o.send_top(paused ? "play_pause" : "play")
     }
-    var play_pause = function() {
+    o.play_pause = function() {
         var $player = current_player()
             ,pause_func = $player.data("pause_func")
         if ( typeof(pause_func) == "function" )
             pause_func()
         set_pause(true)
+    }
+    o.play = function(){
+        var $player = current_player()
+            ,play_func = $player.data("play_func")
+        play_func()
     }
     var play_first = function() {
         current_playing = 0
@@ -484,7 +491,7 @@ define([
         code_modules.map(function(module){ module.stop && module.stop() })
         $('script.code_module').remove()
 
-        play_pause()
+        o.play_pause()
     };
 
 
