@@ -283,7 +283,7 @@ define([
                 opts['layout_x'] = 'submenu';
                 // opts['layout'] =  'center_y';
             }
-            if ($handle.length && $handle.is("a")) {
+            if (ui_util.mobile() && $handle.length && $handle.is("a")) {
                 $handle.removeAttr("href data-route-name")//, "").removeAttr("data-route-name")
             }
             menu($handle, el, opts);
