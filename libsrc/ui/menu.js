@@ -254,7 +254,7 @@ var menu = function(handle, drawer, options) {
                 css_opts.left += (handle.outerWidth() - d_size.width) / 2;
             if (css_opts.left < 0) css_opts.left = 0
             if (css_opts.left + d_size.width > $(window).width()) 
-                css_opts.left = $(window).width()
+                css_opts.left = $(window).width() - d_size.width
 
             // TODO-polish: check that the menu still fits on window
             // Namely, shift it into screen at the bottom of code
@@ -275,12 +275,13 @@ var menu = function(handle, drawer, options) {
             var scroller = drawer.find('.items');
             if (! scroller.length)
                 scroller = drawer
+            if (css_opts.top < margin_y) {
+                // drawer.css("max-height", d_size.height + css_opts.top - margin_y)
+                css_opts.top = margin_y;
+            }
             if(css_opts.top + d_size.height > $(window).height()) {
                 scroller.css('max-height', $(window).height() - margin_y - css_opts.top -
                     (d_size.height - scroller.outerHeight()));
-            } else if (css_opts.top < margin_y) {
-                drawer.css("max-height", d_size.height + css_opts.top - margin_y)
-                css_opts.top = 50;
             }
         }
 
