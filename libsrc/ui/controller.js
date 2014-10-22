@@ -216,7 +216,7 @@ define([
                 route.route_args, route.query).api,
             dataType: 'json',
             success: add_cards,
-            complete: function() { loading = false; },
+            complete: function() { context.loading_cards = false; },
             data: $.extend({ at: context.page_data.next_cards_at }, route.query)
         };
         $.ajax(api_call);
