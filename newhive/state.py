@@ -1379,11 +1379,6 @@ class Expr(HasSocial):
 
             filter = {}
             spec2 = spec if isinstance(spec, dict) else filter
-            # Hack for Zach. TODO-cleanup: verify with Zach that this link
-            # isn't needed anymore and remove
-            if (spec2.has_key('tags_index') 
-                and ['deck2014'] in spec2.get('tags_index').values()):
-                    override_unlisted = True
             # Set up auth filtering
             if auth:
                 spec2.update(auth=auth)
