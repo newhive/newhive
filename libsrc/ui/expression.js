@@ -233,7 +233,7 @@ define([
             }
         } 
         else if( msg.action == 'hide' ) o.hide()
-        else if( msg.action == 'play_toggle' ) o.play_first()
+        else if( msg.action == 'play_toggle' ) o.play_toggle()
     }
 
     o.margin = function () {
@@ -286,6 +286,10 @@ define([
         var $player = current_player()
             ,play_func = $player.data("play_func")
         play_func()
+    }
+    o.play_toggle = function(){
+        if(paused) o.play()
+        else o.play_pause()
     }
     var play_first = function() {
         current_playing = 0

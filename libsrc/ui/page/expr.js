@@ -933,21 +933,29 @@ define([
         if (!o.do_handle_message)
             return
         var msg = m.data;
-        if (msg == "expr_click") {
-            popup = $('#social_overlay');
-            if (popup.css('display') != 'none')
-                o.social_toggle();
+        if (msg == "expr_click"){
+            o.expr_click()
             return
         } else if(msg == 'prev' || msg == 'next') {
-            o.navigate_page((msg == "prev") ? -1 : 1);
+            o.navigate_page((msg == "prev") ? -1 : 1)
+            return
         } else if(msg == 'play' || msg == 'play_pause') {
-            var action = (msg == 'play') ? 'play' : 'pause'
-            $(".overlay.panel .play_pause").hidehide()
-            $(".overlay.panel." + msg).showshow()
+            o.play_pause_update(msg == 'play')
+            return
         } else {
             o.page_btn_handle(msg);
         }
     };
+
+    o.expr_click = function(){
+        if ($('#social_overlay').css('display') != 'none')
+            o.social_toggle()
+    }
+
+    o.play_pause_update = function(playing){
+        $('.overlay.panel .play_pause').showshow().removeClass('play pause').
+            addClass(playing ? 'play' : 'pause')
+    }
 
     var page_btn_state = '';
     o.page_btn_handle = function(msg){
