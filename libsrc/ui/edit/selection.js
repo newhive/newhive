@@ -176,8 +176,7 @@ o.Selection = function(o) {
 
         var delta = [dd.deltaX, dd.deltaY];
         o.sensitivity = u.calculate_sensitivity(delta);
-        var app = ev.data;
-        if(app && !selecting){
+        if(drag_target && !selecting){
             o.move_handler(ev, delta);
             return
         }
@@ -195,9 +194,9 @@ o.Selection = function(o) {
         menu.no_hover = false;
         dragging = false;
 
-        var app = ev.data;
-        if(app && !selecting){
+        if(drag_target && !selecting){
             o.move_end();
+            drag_target = undefined
             return false;
         }
 
