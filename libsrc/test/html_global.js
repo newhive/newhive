@@ -49,12 +49,12 @@ define([
     ,'sj!templates/edit_sandbox.html'
     ,'sj!templates/edit_container.html'
 ], function(context){
-    o = {}
+    o = {}, templates = Array.prototype.slice.call(arguments, 1)
     
     o.render = function(){
         var all_divs = $("<div>")
-        for (var i = 1; i < arguments.length; ++i) {
-            var template = arguments[i]
+        for (var i = 0; i < templates.length; ++i) {
+            var template = templates[i]
             all_divs.append(template())
         }
         

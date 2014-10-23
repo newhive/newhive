@@ -274,8 +274,8 @@ define([
 
         dom.find('.menu.drawer[data-handle]').each(function(i, el){
             var selector = $(el).attr('data-handle')
-                , handle = dom.find(selector)
-            // if(!handle.length) throw 'missing handle';
+                , $handle = dom.find(selector)
+            // if(!$handle.length) throw 'missing handle';
             var parent = dom.find($(el).attr('data-parent'));
             var opts = {};
             if (parent.length && parent.data('menu')) {
@@ -283,7 +283,10 @@ define([
                 opts['layout_x'] = 'submenu';
                 // opts['layout'] =  'center_y';
             }
-            menu(handle, el, opts);
+            if (ui_util.mobile() && $handle.length && $handle.is("a")) {
+                $handle.removeAttr("href data-route-name")//, "").removeAttr("data-route-name")
+            }
+            menu($handle, el, opts);
         });
 
         dom.find('.dialog[data-handle]').each(function(i, el){

@@ -387,7 +387,7 @@ define([
         el.mouseenter(function() {
             if(o.hoverable.disabled) return;
             $(this).addClass('active');
-        }).mouseout(function() {
+        }).mouseleave(function() {
             if(!$(this).data('busy')) $(this).removeClass('active');
         });
 
