@@ -867,6 +867,7 @@ class User(HasSocial):
         try:
             return self.activity_bug(**args) 
         except Exception as e:
+            print "activity_bug!!!"
             print e
             return []
 
