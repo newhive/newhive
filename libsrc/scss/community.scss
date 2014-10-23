@@ -399,6 +399,11 @@ body.mobile {
     }
 }
 // TODO: should also have body.default
+body:not(.mobile) .card[data-num="0"] {
+    .card_title, .info {
+        @include transition(opacity, 0.2s, linear);
+    }
+}
 body {
     z-index: 0;
     left: 0px; 
@@ -721,6 +726,7 @@ body {
                     padding-right: 10px;
                     margin: 0;
                 }
+
                 .user_list {
                     width: 378px;
                 }
@@ -732,7 +738,13 @@ body {
             &[data-num="1"], &[data-num="2"] {
                 width: 50%;
             }
-        }            
+            &.active[data-num="0"] {
+                .card_title, .info {
+                    opacity: .3;
+                    &:hover { opacity: 1; }
+                }
+            }
+        }
     }
     .feed.grid.narrow, .feed.cat.narrow {
         .card .card_title {

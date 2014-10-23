@@ -199,6 +199,11 @@ define([
             $(document).ready(on_ready)
             $(window).ready(on_ready)
         }
+        // TODO: remove after unflagged
+        if (!context.flags.ui_test) {
+            $('.card[data-num="0"]').find(".card_title, .info")
+                .css("opacity","1")
+        }
     }
     o.attach_handlers = function(){
         if (context.route.client_method == "cat")// && context.route.include_categories)
