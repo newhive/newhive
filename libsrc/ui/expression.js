@@ -258,7 +258,7 @@ define([
 
     // Handle autoplay
     var current_playing = -1, current_pos = 0, looping = false, fail_count = 0
-        ,paused = false
+        ,paused = true
 
     // return list of autoplaying apps, sorted top-to-bottom
     var autoplayers = function() {
@@ -267,8 +267,10 @@ define([
         } )
     }
     var current_player = function() {
-        return autoplayers().slice(current_playing, current_playing + 1)
+        return ( autoplayers().slice(current_playing, current_playing + 1).
+            find(".jp-jplayer") )
     }
+
     var set_pause = function(pause) {
         if (pause == paused)
             return
@@ -276,64 +278,38 @@ define([
         o.send_top(paused ? "play_pause" : "play")
     }
     o.play_pause = function() {
-        var $player = current_player()
-            ,pause_func = $player.data("pause_func")
-        if ( typeof(pause_func) == "function" )
-            pause_func()
+        var player = current_player()
+        if(paused || !player.length) return
+        var status = player.data("jPlayer").status.currentTime
+        if(status.currentTime) current_pos = status.currentTime
+        player.jPlayer('pause')
         set_pause(true)
     }
     o.play = function(){
-        var $player = current_player()
-            ,play_func = $player.data("play_func")
-        play_func()
+        if(!paused) return
+        if(current_playing == -1) current_playing = 0
+        current_player().jPlayer('play', current_pos)
+    }
+    o.resume = function(){
+        if(current_playing == -1) return
+        o.play()
     }
     o.play_toggle = function(){
         if(paused) o.play()
         else o.play_pause()
     }
-    var play_first = function() {
-        current_playing = 0
-        var $player = current_player()
-            ,ready_func = $player.data("ready_func")
-            ,play_func = $player.data("play_func")
-        // Play the app
-        if ( typeof(play_func) == "function" ) {
-            play_func()
-            set_pause(false)
-        }
-        // But be ready to play it when it loads if it hasn't yet
-        if (typeof(ready_func) == "function" ) {
-            ready_func(function() {
-                current_playing = -1
-                play_next()
-            })
-        }
-    }
-    var play_next = function (player) {
-        if (player && !player.hasClass("autoplay"))
-            return
-        var $players = autoplayers()
-        if ($players.length == 0)
-            return
+    var play_next = function(){
+        var players = autoplayers()
+        if(players.length == 0) return
         current_playing++
         if (looping)
             current_playing %= $players.length
-        else if (current_playing >= $players.length)
-            return -1
-
-        var $player = current_player()
-            ,play_func = $player.data("play_func")
-        if ( typeof(play_func) == "function" ) {
-            fail_count = 0
-            play_func()
-            set_pause(false)
-        } else {
-            fail_count++
-            // skip apps which don't "play", but also don't skip on loop forever
-            if (fail_count < $players.length)
-                play_next()
-        }
+        else if (current_playing >= $players.length){
+            current_playing = -1
+            return
+        o.play()
     }
+
     o.init_content = function(){
         if (0) {
             // Scroll the page on drags
@@ -367,24 +343,24 @@ define([
 
         // Init jplayer, and autoplay as needed
         jplayer.init_jplayer();
-       
         // http://jplayer.org/latest/developer-guide/ 
         $(".hive_audio").each(function (i, el) {
-            var $jp = $(el).find(".jp-jplayer")
-            $(el).data("play_func", function(t) {
-                $jp.bind_once_anon($.jPlayer.event.ended + ".hive", 
-                    function() { play_next($(el)) })
-                return $jp.jPlayer("play", t)
-            })
-            $(el).data("pause_func", function() {
-                var status = $jp.data("jPlayer").status
-                current_pos = status.currentTime
-                return $jp.jPlayer("pause")
-            })
-            $(el).data("ready_func", function(on_ready) {
-                $jp.bind_once_anon($.jPlayer.event.ready + ".hive",
-                    function() { on_ready($(el)) })
-            })
+            // var $jp = $(el).find(".jp-jplayer")
+            // $(el).data("play_func", function(t) {
+            //     $jp.bind_once_anon($.jPlayer.event.ended + ".hive", 
+            //         function() { play_next($(el)) })
+            //     return $jp.jPlayer("play", t)
+            // })
+            // $(el).data("pause_func", function() {
+            //     var status = $jp.data("jPlayer").status
+            //     current_pos = status.currentTime
+            //     return $jp.jPlayer("pause")
+            // })
+            // $(el).data("ready_func", function(on_ready) {
+            //     $jp.bind_once_anon($.jPlayer.event.ready + ".hive",
+            //         function() { on_ready($(el)) })
+            // })
+
             // HACK to fix audio player layout
             $(el).attr("data-scale", $(el).height() / 36.1)
         })
@@ -473,11 +449,7 @@ define([
             ).addClass('code_module').appendTo('body')
         })
 
-        var $player = current_player()
-            ,play_func = $player.data("play_func")
-        if ( typeof(play_func) == "function" ) {
-            play_func()
-        }
+        o.resume()
     }
     o.hide = function(){
         visible = false
