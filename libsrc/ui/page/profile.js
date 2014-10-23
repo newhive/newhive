@@ -110,7 +110,7 @@ define([
                 $slides.css({width: "auto", "margin-left": 0})
             $slider.animate({"margin-left": new_margin}, 
                 duration, 'easeInOutQuart', callback ? callback : js.noop)
-            $cur_slide.animate({opacity:1}, duration)
+            $cur_slide.animate({opacity:1}, duration).css({"pointer-events": "initial"})
             $(".slider a").not($cur_slide).animate({opacity:card_opacity}, 
                 duration, 'easeInOutQuart')
         }
@@ -135,7 +135,8 @@ define([
                 pos = min_mini = mini_mod(min_mini - 1)
             }
             var $slide = template_mini_expr([context, card, {item: mini_views[pos]}])
-                .attr("data-num", pos).css({opacity:card_opacity})
+                .attr("data-num", pos)
+                .css({opacity:card_opacity, "pointer-events": "none"})
                 .bind_once_anon("lazy_load.page",function(ev) {
                     var $el = $(ev.currentTarget)
                     o.scroll_slide()
