@@ -118,16 +118,13 @@ site_flags = {
     },'Admin/admin': {
         'description':'Enable administrative features'
         , 'values':['admins']
-    },'Admin/ui_test': {
-        'description':'Test versions of the UI'
-        , 'values':['admins']
     },'Admin/UI': {
         'description':'Test versions of the UI'
-    },'Admin/UI/ui_test1': {
-        'description':'Test versions of the UI'
+    },'Admin/UI/expander_arrows': {
+        'description':'Show expander arrows for submenus'
         , 'values':['admins']
-    },'Admin/UI/ui_test2': {
-        'description':'Test versions of the UI'
+    },'Admin/UI/dim_top_card_hover': {
+        'description':'Dim the UI on the top category card during mouseover'
         , 'values':['admins']
     }
     # Old / unused

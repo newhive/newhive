@@ -201,7 +201,7 @@ define([
             $(window).ready(on_ready)
         }
         // TODO: remove after unflagged
-        if (!context.flags.ui_test) {
+        if (!context.flags.Admin.UI.dim_top_card_hover) {
             $('.card[data-num="0"]').find(".card_title, .info")
                 .css("opacity","1")
         }

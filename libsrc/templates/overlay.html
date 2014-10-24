@@ -192,7 +192,7 @@
     <a {anchor_attrs "view_expr"
       "owner_name" config.site_user "expr_name" "about"}
       class='menu_item about_menu'>About
-    {<if flags.ui_test}
+    {<if flags.Admin.UI.expander_arrows}
       <img class="right_expand" src='{asset "skin/nav/search-arrow.png"}'>
     {>}
     </a>
