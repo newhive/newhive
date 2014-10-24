@@ -201,6 +201,8 @@ var menu = function(handle, drawer, options) {
             opts.auto_height = true;
             // opts.offset_y = (95 - handle.outerHeight()) / 2;
             opts.offset_y = 0;
+            if (util.mobile())
+                return
         } else if (drawer.is(".category_hover")) {
             var $header = $(".main-header .header"), $card = $(".feed .card")
                 , bounds = $header[0].getBoundingClientRect()

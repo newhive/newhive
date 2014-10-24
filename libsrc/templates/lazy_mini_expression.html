@@ -1,6 +1,7 @@
 {# Lazy mini expression
   context is a card
   item is a mini card
+  tiny is true for mini hovers (vs the top cards)
 #}
 
 <a {<with item}
@@ -8,6 +9,7 @@
     search_query "id" id "expr_name" name "owner_name" owner_name}
   }
   ><img class="snapshot loading" {|onload}
-    src={cond (and (not flags.mobile) from_cat (eq card_num 0)) 
-    (cond snapshot_ultra snapshot_ultra snapshot_big) snapshot_small} >
+    src={cond tiny snapshot_tiny
+      (cond (and (not flags.mobile) from_cat (eq card_num 0)) 
+        (cond snapshot_ultra snapshot_ultra snapshot_big) snapshot_small)} >
 </a>{>}

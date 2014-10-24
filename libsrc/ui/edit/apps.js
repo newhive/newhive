@@ -234,7 +234,9 @@ Hive.App = function(init_state, opts) {
     o.content = function(content) { return $.extend({}, o.css_state); };
     o.set_css = function(props) {
         $.extend(o.css_state, props);
+        // These properties are set in view mode, but should never be set in edit.
         delete props.position
+        delete props.visibility
         o.content_element.css(props);
         if(o.controls) o.controls.layout();
     }
@@ -2794,6 +2796,8 @@ Hive.App.has_autoplay = function(o){
 Hive.App.has_fixed = function(o){
     var res = Hive.App.has_toggle(o, "fixed")
     var _fixed_set = o.fixed_set
+    // TODO-cleanup: override default behavior of fixed and fixed_set
+    // to use css_state instead of client_data
     o.fixed_set = function(v) {
         _fixed_set(v)
         if (v)
