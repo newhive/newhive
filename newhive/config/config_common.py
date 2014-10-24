@@ -148,7 +148,7 @@ site_flags = {
         , 'values':['admins']
     },'Admin/UI/expander_arrows': {
         'description':'Show an indication of submenus'
-        , 'values':['all=0,admins']
+        , 'values':['all=0','admins']
     },'Admin/UI/mobile_activity': {
         'description':'Show activity menu under logo on mobile'
         , 'values':['admins','nd4']
