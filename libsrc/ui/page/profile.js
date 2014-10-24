@@ -78,7 +78,7 @@ define([
     var attach_handlers_cat = function() {
         var cur_mini = 0, max_mini = -1, min_mini = 0, $slides, $slider
             , do_fade = true
-            , do_overlaps = true
+            , do_overlaps = !do_fade && true
             , do_full_bleed = true && !do_fade
             , fade_css = {position: "absolute", left: 0, top: 0, height: "100%"}
             , card, mini_views
