@@ -3,6 +3,8 @@ from werkzeug import Request, Response
 from collections import namedtuple
 from newhive import auth, config, utils
 from newhive.utils import abs_url, log_error, dfilter
+from copy import deepcopy
+import re
 
 class TransactionData(utils.FixedAttrs):
     """ One of these is associated with each request cycle to put stuff in
@@ -65,31 +67,58 @@ class Controller(object):
             config.debug_mode or tdata.user.get('name') in config.beta_testers)
 
         # Find flags appropriate to current user
-        flags = config.site_flags
+        flags = deepcopy(config.site_flags)
         su = self.db.User.site_user
         live_server = config.live_server and (config.dev_prefix != 'staging')
         flags_name = 'live_flags' if live_server else 'site_flags'
         flags.update(su.get(flags_name, {}))
+        # TODO: remove after flags have migrated
+        for flag, v in flags.items():
+            path = flag.split("/")
+            flag_name = path[-1]
+            old_value = flags.get(flag_name)
+            if len(path) > 1 and old_value:
+                # Overwrite new flag with old values
+                flags[flag]['values'] = old_value
+        flags = {k:v for k,v in flags.iteritems() if k in config.site_flags}
+
+        config.global_flags = deepcopy(flags)
         user_flags = {}
         user = tdata.user
+
         for flag, v in flags.items():
-            add = False
-            inclusion = set([])
-            for user_list in v:
-                if user_list in ['all', 'logged_in']:
-                    add = user_list
-                    break
-                inclusion = inclusion | config.user_groups.get(user_list, set([user_list]))
-                # TODO-polish: allow exclusion list
-                # if user_list.begins_with('!'): add_to_exclusion_list(user_list)
-                # TODO-polish: allow setting specific flag values
-                # if user_list.match('value=(.*)'): set_value = $1
-            if (add == 'all' or (add == 'logged_in' and user.get('name')) 
-                or user.get('name', 'logged_out') in inclusion):
-                user_flags[flag] = True
+            if flag not in config.site_flags:
+                continue
+            if type(v) == dict:
+                v = v.get('values')
+            if type(v) != list:
+                continue
+            for user_settings in v:
+                user_list = user_settings.split("=", 1)
+                val = True
+                if len(user_list) > 1:
+                    val = float(user_list[1])
+                user_list = user_list[0]
+
+                inclusion = config.user_groups.get(user_list, set([user_list]))
+                if (user_list == 'all' or (user_list == 'logged_in' and user.get('name')) 
+                    or user.get('name', 'logged_out') in inclusion
+                ):
+                    # flag = flag.lower()
+                    path = flag.split("/")
+                    flag_path = user_flags
+                    for v in path[:-1]:
+                        flag_path.setdefault(v, {})
+                        flag_path = flag_path[v]
+                    # if path[-1] == "admin":
+                    #     import ipdb; ipdb.set_trace() #//!!
+                    flag_path[path[-1]] = val
+                    # TODO: remove after flags have migrated
+                    if len(path) > 1:
+                        user_flags[path[-1]] = val
+
         tdata.context.update(flags=user_flags)
         self.flags = user_flags
-
 
         return (tdata, response)
 
