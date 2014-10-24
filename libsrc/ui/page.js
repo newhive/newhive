@@ -37,7 +37,6 @@ define([
     'sj!templates/icon_count.html',
     'sj!templates/dialog_embed.html',
     'sj!templates/dialog_share.html',
-    'sj!templates/network_nav.html',
     'sj!templates/login_form.html', 
     'sj!templates/tag_buttons.html', 
     'sj!templates/hive_menu.html', 
@@ -413,25 +412,26 @@ define([
             if ($(this).find("#search_box").val() == "")
                 return false
         })
-        if (context.flags.new_nav) {
-            $(".main-header .icon.go_search").bind_once_anon("tap.page mouseenter.page", 
-                function(ev) {
-                    var search_box = $(".main-header #search_box")
-                    if(search_box.is(':focus')) return
-                    ev.preventDefault()
-                    search_box.focus()
-            })
-            // Animate header
-            $(window).bind_once_anon("scroll.page", function(ev) {
-                var scrolled_to = $(this).scrollTop()
-                if (scrolled_to > 1)
-                    $(".main-header").addClass("condensed")
-                else
-                    $(".main-header").removeClass("condensed")
-                search_flow = ''
-                reflow_nav()
-            })
-        }
+
+        // top nav search box show
+        $(".main-header .icon.go_search").bind_once_anon("tap.page mouseenter.page", 
+            function(ev) {
+                var search_box = $(".main-header #search_box")
+                if(search_box.is(':focus')) return
+                ev.preventDefault()
+                search_box.focus()
+        })
+        // Animate header
+        $(window).bind_once_anon("scroll.page", function(ev) {
+            var scrolled_to = $(this).scrollTop()
+            if (scrolled_to > 1)
+                $(".main-header").addClass("condensed")
+            else
+                $(".main-header").removeClass("condensed")
+            search_flow = ''
+            reflow_nav()
+        })
+
         // Add expression to collection
         var add_to_collection = function(category) { return function(e) {
             var dialog_selector = ".dialog.add_to_collection." + category

@@ -98,9 +98,6 @@ site_flags = {
     },'Features/user_search': {
         'description':'Return users in search results'
         , 'values':['devs']
-    },'Features/new_nav': {
-        'description':'Show category bar in nav'
-        , 'values':['devs']
     },'Features/categories': {
         'description':'Show category bar in nav'
         , 'values':['devs']

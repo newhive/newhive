@@ -20,11 +20,11 @@ define([
     var o = {}, save_dialog, expr, ui_page, default_expr = {
         auth: 'public'
         ,container: {
-            facebook_btn: true
-            ,twitter_btn: true
-            ,love_btn: true
-            ,republish_btn: true
-            ,comment_btn: true
+            facebook_btn: false
+            ,twitter_btn: false
+            ,love_btn: false
+            ,republish_btn: false
+            ,comment_btn: false
         }
     }
 
