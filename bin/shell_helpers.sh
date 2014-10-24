@@ -36,5 +36,21 @@ alias og=grep_results
 
 # git root dir
 alias groot="git rev-parse --show-toplevel"
+alias cdg='cd $(groot)'
 alias routes='e `groot`/newhive/routes.json'
-alias config='e `ff /config.py$`'
+alias ff='find|grep -i'
+alias config='e $(groot)/newhive/config/config.py'
+alias config_common='e $(groot)/newhive/config/config_common.py'
+
+# server management
+psk(){
+   if pgrep -f $1; then
+       pgrep -f $1 | xargs kill;
+   else
+       return 1;
+   fi
+} 
+alias newhive='(cdg; ./server.py)'
+alias killserver='psk server.py'
+alias rrr='reset; cdg; killserver; newhive'
+
