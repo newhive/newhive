@@ -86,7 +86,7 @@ define([
                 , card_margins = do_fade ? 0 : opts.card_margins
                 , card_overlaps = do_overlaps ? opts.card_overlaps : -2//-card_margins
             , fade_css = {position: "absolute", left: 0, top: 0, height: "100%"}
-            , card_opacity = do_fade ? 0 : .1
+            , card_opacity = do_fade ? 0 : opts.card_opacity
             , CACHE = 2
             , slide_duration = opts.slide_duration
             , flip_time = opts.flip_time
