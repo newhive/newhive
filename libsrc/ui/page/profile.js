@@ -76,18 +76,20 @@ define([
 
     var flip_timer
     var attach_handlers_cat = function() {
+
         var cur_mini = 0, max_mini = -1, min_mini = 0, $slides, $slider
-            , do_fade = true
-            , do_overlaps = !do_fade && true
-            , do_full_bleed = true && !do_fade
-            , fade_css = {position: "absolute", left: 0, top: 0, height: "100%"}
             , card, mini_views
+            , opts = context.flags.Admin.UI.top_card
+            , do_fade = opts.do_fade
+                , do_overlaps = !do_fade && opts.do_overlaps
+                , do_full_bleed = opts.do_full_bleed && !do_fade
+                , card_margins = do_fade ? 0 : opts.card_margins
+                , card_overlaps = do_overlaps ? opts.card_overlaps : -2//-card_margins
+            , fade_css = {position: "absolute", left: 0, top: 0, height: "100%"}
             , card_opacity = do_fade ? 0 : .1
             , CACHE = 2
-            , slide_duration = 1200
-            , flip_time = 6000
-            , card_margins = do_fade ? 0 : 20
-            , card_overlaps = do_overlaps ? 80 : -2//-card_margins
+            , slide_duration = opts.slide_duration
+            , flip_time = opts.flip_time
 
         var mini_mod = function(n) {
             return (n + mini_views.length) % mini_views.length

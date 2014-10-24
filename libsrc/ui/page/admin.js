@@ -22,7 +22,7 @@ define([
                 ,value = content
                 ,description = content.description
                 ,path = flag.split("/")
-            if (description) {
+            if (typeof(description) == "string") {
                 value = content.values
             }
             if (value) {

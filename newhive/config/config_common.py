@@ -120,9 +120,32 @@ site_flags = {
         , 'values':['admins']
     },'Admin/UI': {
         'description':'Test versions of the UI'
-    },'Admin/UI/expander_arrows': {
-        'description':'Show expander arrows for submenus'
+    },'Admin/UI/top_card': {
+        'description':'Test versions of top card UI'
+    },'Admin/UI/top_card/do_fade': {
+        'description':'Fade instead of scroll'
         , 'values':['admins']
+    },'Admin/UI/top_card/do_overlaps': {
+        'description':'Show overlapping regions to left and right'
+        , 'values':['all','admins=1']
+    },'Admin/UI/top_card/do_full_bleed': {
+        'description':'Show overlaps exending to window edgdes'
+        , 'values':['all','admins=1']
+    },'Admin/UI/top_card/card_margins': {
+        'description':'Margin between scrolling cards (px)'
+        , 'values':['all=20','admins=20']
+    },'Admin/UI/top_card/card_overlaps': {
+        'description':'Width of overlapping regions to left and right (px)'
+        , 'values':['all=80','admins=80']
+    },'Admin/UI/top_card/card_opacity': {
+        'description':'Opacity of overlapping cards'
+        , 'values':['all=.1','admins=.1']
+    },'Admin/UI/top_card/slide_duration': {
+        'description':'Time to complete fade/scroll animation (ms)'
+        , 'values':['all=1200','admins=1200']
+    },'Admin/UI/top_card/flip_time': {
+        'description':'Time between card cycling (ms)'
+        , 'values':['all=6000','admins=6000']
     },'Admin/UI/dim_top_card_hover': {
         'description':'Dim the UI on the top category card during mouseover'
         , 'values':['admins']
