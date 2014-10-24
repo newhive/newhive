@@ -291,7 +291,11 @@ define([
         autoplay_pos = player.pause()
     }
     o.autoplay = function(resume){
-        if(resume && !autoplay_playing) return
+        if(!autoplayers.length) return
+        if(resume && !autoplay_playing){
+            o.send_top('play_pause')
+            return
+        }
         if(autoplay_current == -1) autoplay_current = 0
         var player = autoplayers[autoplay_current]
         if(!player) return

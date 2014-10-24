@@ -938,7 +938,10 @@ define([
         }
 
     };
+
     // Handles messages from PostMessage (from other frames)
+    // TODO-cleanup: rename all frame message handlers to
+    // send_parent / send_child / receive_parent / receive_FOO
     o.handle_message = function(m){
         if (!o.do_handle_message)
             return
