@@ -75,38 +75,113 @@ site_flags = {
     ## And update https://github.com/hivedev/newhive/wiki/Site-flags
 
     # Features
-    'show_hive_all': ['newduke','nd4']
-    ,'show_user_guide': ['newduke','nd4']
-    ,'merge_recent': ['cara', 'fatsycline']
-    ,'can_debug': ['admins','nd4']
-    ,'open_signup': []
-    ,'mobile_web': ['nd4']
-    ,'user_search': ['nd4', 'newduke','abram','it1']
-    ,'new_nav': ['admins', 'devs']
-    ,'categories': ['admins', 'devs']
-    ,'category_hovers': ['admins', 'devs']
-    ,'force_stumble': ['admins', 'devs']
-    # Editor
-    ,'snap_crop': ['admins','nd4']
-    ,'shift_does_raise': ['newduke','nd4','abram']
-    ,'rect_drag_drop': ['admins','nd4']
-    ,'modify_special_tags': ['admins','nd4']
-    ,'show_mini_selection_border': ['admins','nd4']
-    ,'copy_table': ['admins','nd4']
-    ,'button_options': ['admins']
-    ,'shapes': ['admins']
-    ,'custom_domain': []
-    ,'tile_multiple_images': ['admins', 'nd4']
-    ,'css_classes': ['admins', 'devs']
-    ,'shape_link': ['admins', 'devs']
-    ,'autoplay': ['admins', 'devs']
-    ,'context_help': ['admins', 'devs']
-    ,'anchor_name': ['admins', 'devs']
+    'Features': { 
+        'description':'Flagged features'
+    },'Features/show_hive_all': {
+        'description':'Community pages show "Hive All"'
+        , 'values':['newduke','nd4']
+    },'Features/open_signup': {
+        'description':'Allow anyone to sign up'
+        , 'values':['all']
+    },'Features/show_user_guide': {
+        'description':'User guide appears in the "about" menu'
+        ,'values':['devs']
+    },'Features/merge_recent': {
+        'description':'Community pages don\'t have "Network"'
+        , 'values':['cara', 'fatsycline']
+    },'Features/can_debug': {
+        'description':'User receives debug info (like the blue sensitivity debug window in editor)'
+        , 'values':['devs']
+    },'Features/mobile_web': {
+        'description':'Override to force mobile view of site'
+        , 'values':['nd4']
+    },'Features/user_search': {
+        'description':'Return users in search results'
+        , 'values':['devs']
+    },'Features/new_nav': {
+        'description':'Show category bar in nav'
+        , 'values':['devs']
+    },'Features/categories': {
+        'description':'Show category bar in nav'
+        , 'values':['devs']
+    },'Features/category_hovers': {
+        'description':'Show hovers/animations on cards in category views'
+        , 'values':['devs']
+    },'Features/force_stumble': {
+        'description':'Force the stumbleupon logo'
+        , 'values':['none']
+    }
+
     # Admin
-    ,'admin': ['admins']
-    ,'ui_test': ['admins']
+    ,'Admin': { 
+        'description':'Flags for administering the website'
+    },'Admin/admin': {
+        'description':'Enable administrative features'
+        , 'values':['admins']
+    },'Admin/ui_test': {
+        'description':'Test versions of the UI'
+        , 'values':['admins']
+    },'Admin/UI': {
+        'description':'Test versions of the UI'
+    },'Admin/UI/ui_test1': {
+        'description':'Test versions of the UI'
+        , 'values':['admins']
+    },'Admin/UI/ui_test2': {
+        'description':'Test versions of the UI'
+        , 'values':['admins']
+    }
     # Old / unused
     ,'logged': ['logged_out']
+
+    # Editor
+    ,'Editor': { 
+        'description':'Flags pertaining to the editor'
+    },'Editor/snap_crop': {
+        'description':'Allow snapping when shifting crop bounds of cropped images'
+        , 'values':['admins','nd4']
+    },'Editor/shift_does_raise': {
+        'description':'user can shift-click an app to raise, ctrl-shift-click to lower'
+        ,'values':['newduke:4','nd4','abram']
+    },'Editor/rect_drag_drop': {
+        'description':'user can drag images onto rectangles and images'
+        , 'values':['admins','nd4']
+    },'Editor/modify_special_tags': {
+        'description':'user can add and remove "reserved" tags, e.g., "#Gifwall"'
+        , 'values':['admins','nd4']
+    },'Editor/show_mini_selection_border': {
+        'description':'always show the focused selection border (vs only when multiselecting)'
+        , 'values':['admins','nd4']
+    },'Editor/copy_table': {
+        'description':'allow dragging of "duplicate" button to create tables of duplicates'
+        , 'values':['admins','nd4']
+    },'Editor/button_options': {
+        'description':'Show the sharing options UI in editor save dialog.'
+        , 'values':['admins','nd4']
+    },'Editor/shapes': {
+        'description':'Show the shape creation options'
+        , 'values':['admins','nd4']
+    },'Editor/custom_domain': {
+        'description':'Show the custom domain UI in editor save dialog.'
+        , 'values':[]
+    },'Editor/tile_multiple_images': {
+        'description':'Drag and drop multiple images onto rectangle/image/background tiles the images into space the width of the drop target'
+        , 'values':['admins','nd4']
+    },'Editor/css_classes': {
+        'description':'Let user edit the css class of an app'
+        , 'values':['admins','devs']
+    },'Editor/shape_link': {
+        'description':'Allow links and anchors on shape apps'
+        , 'values':['admins','devs']
+    },'Editor/autoplay': {
+        'description':'Show the autoplay and autohide controls on audio apps'
+        , 'values':['admins','devs']
+    },'Editor/context_help': {
+        'description':'Use the "?" for context-sensitive help'
+        , 'values':['admins','devs']
+    },'Editor/anchor_name': {
+        'description':'Show the anchor option for links'
+        , 'values':['admins','devs']
+    }
 }
 
 site_user = 'newhive'
