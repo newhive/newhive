@@ -196,7 +196,6 @@ define([
     };
 
     // TODO-cleanup: merge with open_route?
-    // var loading = false;
     o.next_cards = function(with_cards){
         if (context.loading_cards)
             return false;

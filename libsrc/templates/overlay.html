@@ -175,6 +175,14 @@
         class='menu_item hoverable'>
           {user.name|e}
       </a>
+      {<if flags.Admin.UI.mobile_activity}
+        <a id='activity_btn'
+          class='menu_item hoverable'>
+          <div class='icon'></div>
+          <div class='count'>0</div>
+          Activity
+        </a>
+      {>}
     {>}{<else}
       <a id='activity_btn' { anchor_attrs "expressions_public" "owner_name" user.name }
         class='menu_item hoverable'>

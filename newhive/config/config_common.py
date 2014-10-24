@@ -146,6 +146,12 @@ site_flags = {
     },'Admin/UI/dim_top_card_hover': {
         'description':'Dim the UI on the top category card during mouseover'
         , 'values':['admins']
+    },'Admin/UI/expander_arrows': {
+        'description':'Show an indication of submenus'
+        , 'values':['all=0,admins']
+    },'Admin/UI/mobile_activity': {
+        'description':'Show activity menu under logo on mobile'
+        , 'values':['admins','nd4']
     }
     # Old / unused
     ,'logged': ['logged_out']

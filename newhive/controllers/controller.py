@@ -81,6 +81,7 @@ class Controller(object):
                 # Overwrite new flag with old values
                 flags[flag]['values'] = old_value
         flags = {k:v for k,v in flags.iteritems() if k in config.site_flags}
+        # end migration
 
         config.global_flags = deepcopy(flags)
         user_flags = {}
@@ -110,8 +111,6 @@ class Controller(object):
                     for v in path[:-1]:
                         flag_path.setdefault(v, {})
                         flag_path = flag_path[v]
-                    # if path[-1] == "admin":
-                    #     import ipdb; ipdb.set_trace() #//!!
                     flag_path[path[-1]] = val
                     # TODO: remove after flags have migrated
                     if len(path) > 1:

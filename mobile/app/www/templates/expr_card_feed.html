@@ -27,7 +27,9 @@
     <img class="snapshot" src={item} {|onload}>
   {>}
   {<if thumbs}{<defer "mini_views"}{<lazy_load "_5_3 mini_views hide" (slice thumbs 0 3)}
-    {|templates/lazy_mini_expression.html}
+    {<with null "tiny" true}
+      {|templates/lazy_mini_expression.html}
+    {>}
   {>}{>}{>}
   {#
   <div class="lazy_load _5_3"><img class="snapshot" src=

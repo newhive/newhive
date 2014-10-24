@@ -34,7 +34,7 @@ define([
             else {
                 var headers = ['h2','h3','h4','h5']
                     ,header = headers[path.length - 1] || 'h6'
-                $("<" + header + ">" + flag + ": " + description + "</" + header + ">")
+                $("<" + header + ">" + flag.replace(/.*[/]/,'') + ": " + description + "</" + header + ">")
                     .appendTo($insert_point)
             }
             $insert_point.children().last().css("padding-left", (path.length - 1) * 50)
