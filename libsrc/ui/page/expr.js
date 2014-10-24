@@ -36,6 +36,7 @@ define([
     o.next_found = -1
     o.cache_offsets = [1, -1, 2];
     o.anim_duration = (util.mobile()) ? 400 : 400;
+    o.current = false
 
     // pagination functions here
     o.set_page = function(page){
@@ -156,6 +157,7 @@ define([
         $(".overlay.panel").showshow();
         $(".overlay.panel .signup").hidehide()
         $(".panel .expr").showshow();
+        $('.play_pause').hide()
 
         var show_edit = false
         if(page_data.expr.tags
@@ -371,7 +373,12 @@ define([
     };
 
     o.expr_show = function(frame_el){
-        frame_el.get(0).contentWindow.postMessage({action: 'show'}, '*')
+        o.current = frame_el
+        o.send_current({action: 'show'})
+    }
+
+    o.send_current = function(msg){
+        o.current.get(0).contentWindow.postMessage(msg, '*')
     }
 
     o.play_timer = false;
@@ -568,6 +575,9 @@ define([
     o.attach_handlers = function(){
         $(".page_btn.page_prev").bind_once('click', o.page_prev);
         $(".page_btn.page_next").bind_once('click', o.page_next);
+        $('.play_pause').bind_once_anon('click', function(){
+            o.send_current({action: 'play_toggle'})
+        })
         $("#social_plus").bind_once('click', o.social_toggle);
         $("#social_close").bind_once_anon("click", o.social_toggle);
         $(".social_btn").bind_once_anon("click", o.social_toggle);
@@ -954,7 +964,7 @@ define([
 
     o.play_pause_update = function(playing){
         $('.overlay.panel .play_pause').showshow().removeClass('play pause').
-            addClass(playing ? 'play' : 'pause')
+            addClass(playing ? 'pause' : 'play')
     }
 
     var page_btn_state = '';

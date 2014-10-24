@@ -133,7 +133,7 @@
   <span class='expr expr_actions'></span>{# no \n #}
   <span class='expr hide edit_ui'></span>{# no \n #}
   <div class='play_pause btn item hoverable play hide'><div
-    class='play_pause icon'></div></div>
+    class='icon'></div></div>
   {# Create button #}
   <a {anchor_attrs "create_expr"} title='Create newhive'
     class='needs_login create item btn hoverable'></a>
@@ -157,10 +157,7 @@
 {>}
 
 {# hive logo panel #}
-<div class='overlay bottom panel nav left'>
-  {<with null "standalone" true}{|templates/hive_menu.html}{>}
-  <div class='audio_ctrl hide'><div class='icon'></div></div>
-</div>
+{<with null "standalone" true}{|templates/hive_menu.html}{>}
 
 {# menu: logo #}
 <form {form_attrs "logout"} method='POST' id='logout_form'></form>
