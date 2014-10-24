@@ -649,7 +649,7 @@ class User(HasSocial):
     def create(self):
         self['name'] = self['name'].lower()
         # self['signup_group'] = self.collection.config.signup_group
-        assert re.match('[a-z][a-z0-9]{2,23}$', self['name']) != None, (
+        assert re.match('[a-z0-9]{3,24}$', self['name']) != None, (
             'Invalid username')
         assert not (self['name'] in reserved_words)
         dict.update(self,

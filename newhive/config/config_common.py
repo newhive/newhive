@@ -82,7 +82,6 @@ site_flags = {
     ,'open_signup': []
     ,'mobile_web': ['nd4']
     ,'user_search': ['nd4', 'newduke','abram','it1']
-    ,'new_nav': ['admins', 'devs']
     ,'categories': ['admins', 'devs']
     ,'category_hovers': ['admins', 'devs']
     ,'force_stumble': ['admins', 'devs']

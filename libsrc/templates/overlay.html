@@ -1,8 +1,6 @@
 {set "clean_options" (string_to_list query.clean)}
 {# TODO: create default for clean_options here. right now it is set it in dialog_embed.html #}
 
-{# TODO: un-flag this after ship #}
-{<if flags.new_nav}
 <div class="main-header">
   <form class="search_bar_form" method='GET' action='/search' name='search_form'>
   <div class="nav_top_row">
@@ -85,36 +83,35 @@
   <div class='header{<unless user.logged_in} logged_out{>}
     {<unless flags.categories} stay_hidden{>}'>
     {<if flags.categories}
-    {<if user.logged_in} 
-      <div class="category_handle item"></div>
-    {>}
-    <ul>
-      {<for home.cats "count"}
-        <li><a { anchor_attrs "home_cat" "tag_name" item}>
-          <div class='category_btn hoverable' data-name={item}>
-            {item}</div></a></li>&nbsp;
-        {<if (eq count (floor (mul 0.5 (plus -1 (len home.cats)))))}
-          <div class="show_narrow"></div>
-        {>}
-        {# Category hover menu #}
-        <div class='menu drawer category_hover' 
-          data-handle='li .category_btn[data-name={item}]'
-          data-menu-opts='"offset_y":-5'><table>
-          {<for (get home.categories item) "kount"}
-            {# <a {query_attrs "home_cat" kount "tag_name" item}> #}
-            <td><a {anchor_attrs "home_cat" "tag_name" item}>
-              <img title={title|e} class='menu_item{cond kount "" " default"}'
-                src={<if snapshot_small}"{snapshot_small}"{>}
-                {<else}{asset "skin/site/expr_placeholder_small.jpg"}{>}>
-            </a></td>
-          {>}
-        </table></div>
+      {<if user.logged_in} 
+        <div class="category_handle item"></div>
       {>}
-    </ul>
+      <ul>
+        {<for home.cats "count"}
+          <li><a { anchor_attrs "home_cat" "tag_name" item}>
+            <div class='category_btn hoverable' data-name={item}>
+              {item}</div></a></li>&nbsp;
+          {<if (eq count (floor (mul 0.5 (plus -1 (len home.cats)))))}
+            <div class="show_narrow"></div>
+          {>}
+          {# Category hover menu #}
+          <div class='menu drawer category_hover' 
+            data-handle='li .category_btn[data-name={item}]'
+            data-menu-opts='"offset_y":-5'><table>
+            {<for (get home.categories item) "kount"}
+              {# <a {query_attrs "home_cat" kount "tag_name" item}> #}
+              <td><a {anchor_attrs "home_cat" "tag_name" item}>
+                <img title={title|e} class='menu_item{cond kount "" " default"}'
+                  src={<if snapshot_small}"{snapshot_small}"{>}
+                  {<else}{asset "skin/site/expr_placeholder_small.jpg"}{>}>
+              </a></td>
+            {>}
+          </table></div>
+        {>}
+      </ul>
     {>}
   </div>
 </div>
-{>}
 
 <div class='overlay bottom panel nav right
   {<if (and query.clean (not (contains clean_options "social")))
@@ -135,6 +132,8 @@
   {# expression specific #}
   <span class='expr expr_actions'></span>{# no \n #}
   <span class='expr hide edit_ui'></span>{# no \n #}
+  <div class='play_pause btn item hoverable play hide'><div
+    class='icon'></div></div>
   {# Create button #}
   <a {anchor_attrs "create_expr"} title='Create newhive'
     class='needs_login create item btn hoverable'></a>
@@ -158,10 +157,7 @@
 {>}
 
 {# hive logo panel #}
-<div class='overlay bottom panel nav left'>
-  {<with null "standalone" true}{|templates/hive_menu.html}{>}
-  <div class='audio_ctrl hide'><div class='icon'></div></div>
-</div>
+{<with null "standalone" true}{|templates/hive_menu.html}{>}
 
 {# menu: logo #}
 <form {form_attrs "logout"} method='POST' id='logout_form'></form>
