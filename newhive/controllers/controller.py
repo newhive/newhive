@@ -98,7 +98,12 @@ class Controller(object):
                 user_list = user_settings.split("=", 1)
                 val = True
                 if len(user_list) > 1:
-                    val = float(user_list[1])
+                    try:
+                        val = float(user_list[1])
+                    except Exception as e:
+                        print "unparsable flag: " + flag + " " + user_settings
+                        continue
+
                 user_list = user_list[0]
 
                 inclusion = config.user_groups.get(user_list, set([user_list]))
