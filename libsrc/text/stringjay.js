@@ -467,6 +467,8 @@ define(['browser/js', 'module'],
 			typeof(iteratee) != "object")) return '';
 		var res = ""
 		$.each(iteratee, function(i, v) {
+            // automagically filter out undefined and null from lists
+            if(v === undefined || v === null) return
 			// If iterating through literals, the value of the literal
 			// is passed in the context as the variable "item"
 			if(typeof(v) != "object") {
@@ -560,8 +562,8 @@ define(['browser/js', 'module'],
 		context[context.length - 1][lhs] = rhs;
 		return '';
 	};
-	context_base.get = function(context, obj, key){
-		return obj[key];
+	context_base.get = function(context, obj, key, def){
+        return ( (typeof obj[key]) == 'undefined' ? def : obj[key] )
 	};
 	context_base.len = function(context, obj){
 		return obj.length;
