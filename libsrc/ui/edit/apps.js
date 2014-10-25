@@ -1126,8 +1126,8 @@ Hive.registerApp(Hive.App.Code, 'hive.code')
 Hive.App.Image = function(o) {
     o.is_image = true;
     o.fixed_aspect = true;
-    o.has_crop = false;
     Hive.App.has_resize(o);
+    Hive.App.has_crop(o);
     // TODO-cleanup: aspects should be y/x
     o.get_aspect = function() {
         if (o.init_state.scale_x)
@@ -1160,13 +1160,13 @@ Hive.App.Image = function(o) {
     };
 
     o.url_set = function(src) {
-        if(o.img) o.img.remove();
-        o.img = $("<img class='content'>").attr('src', src);
-        // o.content_element = o.img;
+        if(o.$img) o.$img.remove();
+        o.$img = $("<img class='content'>").attr('src', src);
+        // o.content_element = o.$img;
         o.content_element = o.content_element || $("<div>").appendTo(o.div);
-        o.content_element.append(o.img).addClass('crop_box');
-        // o.div.append(o.img);
-        o.img.load(function(){setTimeout(o.img_load, 1)});
+        o.content_element.append(o.$img).addClass('crop_box');
+        // o.div.append(o.$img);
+        o.$img.load(function(){setTimeout(o.img_load, 1)});
         // We recreated the content_element, so reapply its handlers.
         Hive.App.has_image_drop(o);
     };
@@ -1190,7 +1190,7 @@ Hive.App.Image = function(o) {
             }
             o.init_state.dimensions = [ iw, ih ];
         }
-        o.img.css('width', o.dims()[0] + 'px');
+        o.$img.css('width', o.dims()[0] + 'px');
         // fit and crop as needed
         if (o.init_state.fit) {
             var opts = { dims:o.dims_relative(), pos:o.pos_relative(), fit:o.init_state.fit, 
@@ -1209,53 +1209,74 @@ Hive.App.Image = function(o) {
         o.load();
     };
 
-    // TODO-cleanup: move to has_crop
-    (function(){
-        var drag_hold, fake_img, ref_offset, ref_dims, ref_scale_x, crop_bg
+    o.recenter = function() {
+        var dims = o.dims_relative(), nat_height = dims[0] / o.aspect;
+        o.init_state.offset[0] = 0
+        o.init_state.offset[1] = 
+            (dims[1] - nat_height) / 2 / dims[0] / o.init_state.scale_x;
+        o.layout()
+    }
 
-        o.recenter = function() {
-            var dims = o.dims_relative(), nat_height = dims[0] / o.aspect;
-            o.init_state.offset[0] = 0
-            o.init_state.offset[1] = 
-                (dims[1] - nat_height) / 2 / dims[0] / o.init_state.scale_x;
+    // TODO-cleanup: move to has_crop
+    ;(function(){
+        var cropping, $fake_img, $crop_bg, ref_offset, ref_dims, ref_scale_x
+        o.crop_ui_showhide = function(crop) {
+            if (!crop) {
+                if (! $fake_img)
+                    return
+                o.$img = o.$img.not($fake_img).not($crop_bg);
+                $fake_img.remove()
+                $crop_bg.remove()
+                $fake_img = $crop_bg = undefined
+                return
+            }
+
+            // show new img w/ opacity
+            if ($fake_img)
+                return
+            $crop_bg = $('<div>').css('background-color', 'black')
+                .appendTo(o.div)
+            $fake_img = o.$img.clone().appendTo(o.div).css({ 'opacity': .5
+                , 'z-index': 0 })
+            o.$img = o.$img.add($fake_img).add($crop_bg);
             o.layout()
         }
         // UI for setting .offset of apps on drag after long_hold
         o.long_hold = function(ev){
             if(o != ev.data) return;
-            if( o.has_full_bleed() && ($(ev.target).hasClass("resize")
+            if(o.has_full_bleed() && ($(ev.target).hasClass("resize")
                 || $(ev.target).hasClass("resize_v")) ) return;
             if(!o.init_state.scale_x) 
                 if (!o.allow_crop()) return false;
             // TODO: should we only hide controls if selected?
             $("#controls").showhide(false);
             // env.Selection.hide_controls();
-            ev.stopPropagation();
-            drag_hold = true;
 
-            // show new img w/ opacity
-            crop_bg = $('<div>').css('background-color', 'black')
-                .appendTo(o.div)
-            fake_img = o.img.clone().appendTo(o.div).css({ 'opacity': .5
-                , 'z-index': 0 })
-            o.img = o.img.add(fake_img).add(crop_bg);
-            o.layout()
+            ev.stopPropagation();
+            if (cropping)
+                return
+            cropping = true;
+            o.crop_ui_showhide(true);
             return false;
         };
         o.long_hold_cancel = function(ev){
-            if(!drag_hold) return;
+            if(!cropping) return;
+            cropping = false;
+
             $("#controls").showhide(true);
             // env.Selection.show_controls();
+            if (!o.cropping_active)
+                o.crop_ui_showhide(false);
             if (ev)
                 ev.stopPropagation();
-            drag_hold = false;
-            o.img = o.img.not(fake_img).not(crop_bg);
-            fake_img.remove();
-            crop_bg.remove()
         };
 
         o.dragstart = function(ev){
-            if (!drag_hold) return;
+            if (!cropping) {
+                if (!o.cropping_active)
+                    return;
+                o.long_hold(ev)
+            }
             ev.stopPropagation();
             ref_offset = o.offset();
             // This code "fixes" one of the coordinates so it won't be modifyable
@@ -1263,7 +1284,7 @@ Hive.App.Image = function(o) {
             history_point = env.History.saver(o.offset, o.offset_set, 'move crop');
         };
         o.drag = function (ev, dd, shallow) {
-            if(!drag_hold || !ref_offset) return;
+            if(!cropping || !ref_offset) return;
             ev.stopPropagation();
             var delta = [dd.deltaX, dd.deltaY];
             if(ev.shiftKey)
@@ -1297,7 +1318,7 @@ Hive.App.Image = function(o) {
             o.layout();
         };
         o.dragend = function(ev){
-            if(!drag_hold) return;
+            if(!cropping) return;
             history_point.save();
             o.long_hold_cancel(ev);
         };
@@ -1305,7 +1326,7 @@ Hive.App.Image = function(o) {
         var _resize = o.resize, _resize_end = o.resize_end, 
             _resize_start = o.resize_start;
         o.resize_start = function() {
-            if (!drag_hold) 
+            if (!cropping) 
                 return _resize_start();
             ref_dims = o.dims_relative();
             ref_scale_x = o.init_state.scale_x;
@@ -1313,7 +1334,7 @@ Hive.App.Image = function(o) {
                 o.state, o.state_update, 'move crop');
         };
         o.resize = function(delta) {
-            if(!drag_hold)
+            if(!cropping)
                 return _resize(delta);
             delta = u._div(delta)(env.scale());
             var dims = u._add(ref_dims)(delta);
@@ -1327,7 +1348,7 @@ Hive.App.Image = function(o) {
             o.dims_relative_set(dims);
         };
         o.resize_end = function(skip_history) {
-            if(!drag_hold) 
+            if(!cropping) 
                 return _resize_end(skip_history);
             history_point.save();
             o.long_hold_cancel();
@@ -1356,7 +1377,7 @@ Hive.App.Image = function(o) {
             // o.is_cropped = true;
             // var happ = o.content_element.parent();
             // o.content_element = $('<div class="crop_box">');
-            // o.img.appendTo(o.content_element);
+            // o.$img.appendTo(o.content_element);
             // o.content_element.appendTo(happ);
             o.div_aspect = o.dims()[0] / o.dims()[1];
             o.layout();
@@ -1379,10 +1400,10 @@ Hive.App.Image = function(o) {
         if (_layout()) return true;
         var dims = o.dims(), scale_x = o.init_state.scale_x || 1,
             scale_y = scale_x / o.aspect;
-        o.img.css({ 'width': scale_x * dims[0], 'height': scale_y * dims[0] })
+        o.$img.css({ 'width': scale_x * dims[0], 'height': scale_y * dims[0] })
         var offset = o.offset();
         if (offset) {
-            o.img.css({"margin-left": offset[0], "margin-top": offset[1]});
+            o.$img.css({"margin-left": offset[0], "margin-top": offset[1]});
             var border_width = o.border_width()
             o.div.find(".crop_box img").css(
                 {"margin-left": offset[0] - border_width
@@ -1391,7 +1412,7 @@ Hive.App.Image = function(o) {
     };
 
     o.pixel_size = function(){
-        return [o.img.prop('naturalWidth'), o.img.prop('naturalHeight')];
+        return [o.$img.prop('naturalWidth'), o.$img.prop('naturalHeight')];
     };
 
     function controls(o) {
@@ -1407,7 +1428,7 @@ Hive.App.Image = function(o) {
     Hive.App.has_opacity(o);
     Hive.App.has_border_radius(o);
 
-    o.img = $();
+    o.$img = $();
     Hive.App.has_border_width(o);
     Hive.App.has_color(o, "stroke");
     o.state_update(o.init_state);
@@ -2666,16 +2687,21 @@ Hive.App.has_resize = function(o) {
         };
 
         o.c.resize.drag('start', function(ev, dd) {
-                o.drag_target = ev.target;
-                o.drag_target.busy = true;
-                o.app.resize_start();
-            })
-            .drag(function(e, dd){ 
-                env.ev = e; o.app.resize([ dd.deltaX, dd.deltaY ]); })
-            .drag('end', function(e, dd){
-                o.drag_target.busy = false;
-                o.app.resize_end();
-            });
+
+            if (app.cropping_active) {
+                ev.data = app
+                app.long_hold(ev)
+            }
+            o.drag_target = ev.target;
+            o.drag_target.busy = true;
+            o.app.resize_start();
+        })
+        .drag(function(e, dd){ 
+            env.ev = e; o.app.resize([ dd.deltaX, dd.deltaY ]); })
+        .drag('end', function(e, dd){
+            o.drag_target.busy = false;
+            o.app.resize_end();
+        });
 
         return o;
     }
@@ -2794,7 +2820,7 @@ Hive.App.has_autoplay = function(o){
     return Hive.App.has_toggle(o, "autoplay")
 }
 Hive.App.has_fixed = function(o){
-    var res = Hive.App.has_toggle(o, "fixed")
+    var controls = Hive.App.has_toggle(o, "fixed")
     var _fixed_set = o.fixed_set
     // TODO-cleanup: override default behavior of fixed and fixed_set
     // to use css_state instead of client_data
@@ -2805,10 +2831,10 @@ Hive.App.has_fixed = function(o){
         else
             delete o.css_state['position']
     }
-    return res
+    return controls
 }
 Hive.App.has_autohide = function(o){
-    var res = Hive.App.has_toggle(o, "autohide")
+    var controls = Hive.App.has_toggle(o, "autohide")
     var _autohide_set = o.autohide_set
     o.autohide_set = function(v) {
         _autohide_set(v)
@@ -2817,11 +2843,42 @@ Hive.App.has_autohide = function(o){
         else
             delete o.css_state['visibility']
     }
-    return res
+    return controls
 }
-Hive.App.has_rotate = function(o) {
-    var app = o
 
+Hive.App.has_crop = function(o) {
+    var sel = env.Selection
+
+    o.unfocus.add(function() {
+        if (o.cropping_active) {
+            o.cropping_active = false
+            o.crop_ui_showhide(false)
+        }
+    })
+
+    var controls = function (o) {
+        var app = o.app.sel_app()
+
+        var fixup_controls = function(o) {
+            var $control = $("#controls .crop"), toggle = app.cropping_active ? "-on" : ""
+            $control.prop("src", ui_util.asset("skin/edit/crop" + toggle + ".png"))
+        }
+        find_or_create_button(o, '.crop')
+        .click(function(ev) {
+            app.cropping_active = !app.cropping_active
+            app.crop_ui_showhide(app.cropping_active)
+            fixup_controls(o)
+        })
+
+        fixup_controls(o)
+        return o
+    }
+    controls.display_order = 7
+    controls.single = true
+    o.make_controls.push(memoize('has_crop', controls));
+}
+
+Hive.App.has_rotate = function(o) {
     function controls(o) {
         var common = $.extend({}, o), ref_angle = null, offsetAngle = null,
             ref_centroid, app = o.app.sel_app();
@@ -3272,12 +3329,12 @@ Hive.App.has_color = function(o, name){
 Hive.App.Background = function(o) {
     var o = {}
     o.layout = function(){
-        layout.img_fill(o.img, 
-            [o.img.prop('naturalWidth'), o.img.prop('naturalHeight')], $(window))
+        layout.img_fill(o.$img, 
+            [o.$img.prop('naturalWidth'), o.$img.prop('naturalHeight')], $(window))
     }
 
     o.div = $('#bg')
-    o.img = o.div.find('img')
+    o.$img = o.div.find('img')
 
     return o
 }
