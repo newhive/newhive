@@ -1,8 +1,15 @@
 #! /bin/bash
 # Usage: add the following line to your ~/.bashrc
-# source ~/src/newhive/newduke/bin/git_grep_nd.sh
+# source ~/src/newhive/newduke/bin/shell_helpers.sh
 
-source $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/git_grep.sh
+# figure out where we are, using $NEWHIVE_HOME as override:
+if [ -n "$NEWHIVE_HOME" ]; then : ;
+elif [ -L ${BASH_SOURCE[0]} ]; then
+    NEWHIVE_HOME=$( dirname $( readlink -f ${BASH_SOURCE[0]} ) )/..
+else 
+    NEWHIVE_HOME=$( dirname "${BASH_SOURCE[0]}" )/..
+fi
+source $NEWHIVE_HOME/bin/git_grep.sh
 
 filter_broken="${filter_broken}|/titanium/|history/history|/jquery-1|/old|/broken|/curl|google_closure.js|/d3/|codemirror.js|jquery-ui|/jquery/|/codemirror/|mobile/|zepto-"
 
