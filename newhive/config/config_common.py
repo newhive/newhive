@@ -115,46 +115,50 @@ site_flags = {
     },'Admin/admin': {
         'description':'Enable administrative features'
         , 'values':['admins']
-    },'Admin/UI': {
+    }
+    
+    # UI    
+    ,'UI': {
         'description':'Test versions of the UI'
-    },'Admin/UI/top_card': {
+    },'UI/top_card': {
         'description':'Test versions of top card UI'
-    },'Admin/UI/top_card/do_fade': {
+    },'UI/top_card/do_fade': {
         'description':'Fade instead of scroll'
-        , 'values':['admins']
-    },'Admin/UI/top_card/do_overlaps': {
+        , 'values':['all','admins']
+    },'UI/top_card/do_overlaps': {
         'description':'Show overlapping regions to left and right'
         , 'values':['all','admins=1']
-    },'Admin/UI/top_card/do_full_bleed': {
+    },'UI/top_card/do_full_bleed': {
         'description':'Show overlaps exending to window edgdes'
         , 'values':['all','admins=1']
-    },'Admin/UI/top_card/card_margins': {
+    },'UI/top_card/card_margins': {
         'description':'Margin between scrolling cards (px)'
         , 'values':['all=20','admins=20']
-    },'Admin/UI/top_card/card_overlaps': {
+    },'UI/top_card/card_overlaps': {
         'description':'Width of overlapping regions to left and right (px)'
         , 'values':['all=80','admins=80']
-    },'Admin/UI/top_card/card_opacity': {
+    },'UI/top_card/card_opacity': {
         'description':'Opacity of overlapping cards'
         , 'values':['all=.1','admins=.1']
-    },'Admin/UI/top_card/slide_duration': {
+    },'UI/top_card/slide_duration': {
         'description':'Time to complete fade/scroll animation (ms)'
         , 'values':['all=1200','admins=1200']
-    },'Admin/UI/top_card/flip_time': {
+    },'UI/top_card/flip_time': {
         'description':'Time between card cycling (ms)'
         , 'values':['all=6000','admins=6000']
-    },'Admin/UI/dim_top_card_hover': {
+    },'UI/dim_top_card_hover': {
         'description':'Dim the UI on the top category card during mouseover'
         , 'values':['admins']
-    },'Admin/UI/expander_arrows': {
+    },'UI/expander_arrows': {
         'description':'Show an indication of submenus'
         , 'values':['all=0','admins']
-    },'Admin/UI/mobile_activity': {
+    },'UI/mobile_activity': {
         'description':'Show activity menu under logo on mobile'
         , 'values':['admins','nd4']
     }
+    
     # Old / unused
-    ,'logged': ['logged_out']
+    #,'logged': ['logged_out']
 
     # Editor
     ,'Editor': { 

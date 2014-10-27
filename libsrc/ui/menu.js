@@ -204,9 +204,16 @@ var menu = function(handle, drawer, options) {
             if (util.mobile())
                 return
         } else if (drawer.is(".category_hover")) {
-            var $header = $(".main-header .header"), $card = $(".feed .card")
+            var $header = $(".main-header .header"), $card = $(".feed .card").eq(0)
                 , bounds = $header[0].getBoundingClientRect()
-                , bounds_img = $card.length ? $card[0].getBoundingClientRect() : bounds
+                , bounds_img = bounds
+            if ($card.length) {
+                bounds_img = $.extend({}, $card[0].getBoundingClientRect())
+                var pad = parseFloat($card.css("padding"))
+                bounds_img.width -= 2*pad
+                bounds_img.left += pad
+                bounds_img.right -= pad
+            }
             $.extend(css_opts, {
                 width: bounds_img.width,
                 left: bounds_img.left,
