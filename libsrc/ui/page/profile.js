@@ -79,7 +79,7 @@ define([
 
         var cur_mini = 0, max_mini = -1, min_mini = 0, $slides, $slider
             , card, mini_views
-            , opts = context.flags.Admin.UI.top_card
+            , opts = context.flags.UI.top_card
             , do_fade = opts.do_fade
                 , do_overlaps = !do_fade && opts.do_overlaps
                 , do_full_bleed = opts.do_full_bleed && !do_fade
@@ -203,7 +203,7 @@ define([
             $(window).ready(on_ready)
         }
         // TODO: remove after unflagged
-        if (!context.flags.Admin.UI.dim_top_card_hover) {
+        if (!context.flags.UI.dim_top_card_hover) {
             $('.card[data-num="0"]').find(".card_title, .info")
                 .css("opacity","1")
         }

@@ -142,4 +142,4 @@ def export_csv(data, file_name='newhive_query'):
     f = open(file_name, 'wb')
     wr = csv.writer(f, quoting=csv.QUOTE_ALL)
     for row in data:
-        wr.writerow(mylist)
+        wr.writerow(row)
