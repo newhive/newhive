@@ -1,0 +1,11 @@
+<VirtualHost *:80>
+    DocumentRoot /var/www/newhive/lib/pages
+    ErrorDocument 503 /sys-maintenance.html
+
+    RewriteEngine on
+    RewriteCond %{REQUEST_URI} !^/sys-maintenance.html
+    RewriteRule (.*) /sys-maintenance.html [R=503,L]
+
+    Header always set Retry-After "18000"
+    Header always set Cache-Control "max-age=0, no-store"
+</VirtualHost>
