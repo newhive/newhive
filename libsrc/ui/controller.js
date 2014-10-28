@@ -95,6 +95,7 @@ define([
             context.server_url.replace(/.*\/\//,"")))
             context.referer = null
 
+
         routing.register_state(route_args);
         if (util.mobile()) {
             $("body").addClass('mobile');

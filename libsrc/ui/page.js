@@ -258,6 +258,15 @@ define([
             // .toggleClass("item", has_nav)
             .prependTo(has_nav_embedded_logo ? ".main-header .left" : "#overlays")
             .toggleClass("hide", has_nav && !has_nav_embedded_logo)
+        $("#logo_handle")
+            // .toggleClass("item", has_nav)
+            .prependTo(has_nav_embedded_logo ? ".main-header .left" : "#overlays")
+            // .showhide(true)
+            // .showhide(has_nav && !has_nav_embedded_logo)
+            // .toggleClass("hide", has_nav && !has_nav_embedded_logo)
+        $("#logo_handle .hive_logo")
+            .toggleClass("overlay", ! has_nav_embedded_logo)
+            .toggleClass("hide", has_nav && !has_nav_embedded_logo)
         // reverse the logo menu if it's up top
         if (! $("#logo_menu").is(".inverted") != has_nav_embedded_logo) {
             $("#logo_menu").toggleClass("inverted", ! has_nav_embedded_logo)
