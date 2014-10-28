@@ -50,6 +50,7 @@ alias og=grep_results
 alias groot='git rev-parse --show-toplevel'
 alias cdg='cd $(groot)' # top level of current repo
 alias cdnh='cd $NEWHIVE_HOME' # go to default repo from outside 
+alias cdnhp='cd /var/www/newhive' # go to default production home
 
 alias ff='find|grep -i'
 
