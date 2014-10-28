@@ -4,7 +4,12 @@
 $debug: true;
 $debug: false;
 
-@media print { #nav { display: none; } }
+@media print {
+    .overlay {
+        display: none !important; // overridden by JS
+        visibility: hidden;
+    }
+}
 
 body.nav .main-header {
     display: block;
