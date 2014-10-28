@@ -176,7 +176,7 @@ define([
                 swipe_x = js.bound(x, -swipe_max, 0)
             if(swipe_x < 0) swipe_el.css('left', 140 + swipe_x)
             else swipe_el.css('right', 140 - swipe_x)
-            swipe_el.addremoveClass('on', Math.abs(swipe_x) == swipe_max)
+            swipe_el.toggleClass('on', Math.abs(swipe_x) == swipe_max)
         }, swipe_end = function(){
             swiping = touch_start = false
             swipe_container_el.remove()

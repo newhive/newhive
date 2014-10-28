@@ -399,7 +399,7 @@ Hive.App = function(init_state, opts) {
     o.full = function(){ return full }
     o.full_set = function(v){
         full = Boolean(v)
-        o.div.addremoveClass('full', full)
+        o.div.toggleClass('full', full)
     }
 
     var hidden_controls = false;
@@ -807,11 +807,11 @@ Hive.App.Html = function(o) {
     var edit_src = memoize('edit_src', function(controls){
         var app = controls.single()
             ,btn = controls.addButton($('#controls_misc .edit_src'))
-                .addremoveClass('on', app._edit_intent)
+                .toggleClass('on', app._edit_intent)
         btn.on('click', function(){
             app._edit_intent = !app._edit_intent
             app.edit_mode(app._edit_intent)
-            btn.addremoveClass('on', app._edit_intent)
+            btn.toggleClass('on', app._edit_intent)
         })
     })
     edit_src.single = true

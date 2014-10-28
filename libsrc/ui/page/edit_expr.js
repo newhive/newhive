@@ -49,7 +49,7 @@ define([
     };
 
     o.save_enabled_set = function(v){
-        $('#save_submit').addremoveClass('disabled', !v).prop('disabled', !v) }
+        $('#save_submit').toggleClass('disabled', !v).prop('disabled', !v) }
 
     o.success = function(ev, ret){
         // Hive.upload_finish();
