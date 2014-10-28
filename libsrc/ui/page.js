@@ -41,8 +41,6 @@ define([
     'sj!templates/tag_buttons.html', 
     'sj!templates/hive_menu.html', 
     'sj!templates/request_invite_form.html',
-    // 'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js',
-    'js!browser/jquery/jquery.mobile-events.js', //!!
     'sj!templates/cards.html'
 ], function(
     $,
