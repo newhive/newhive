@@ -347,18 +347,24 @@ body.mobile .user_header {
     }
 }
 
-.icon.plus_menu, .icon.delete, .icon.add_queue, .icon.plus_cats {
-    // display:inline-block;
-    width: 44px;
-    height: 44px;
-    // background-color: transparent;
-    background-color: white;
-    vertical-align: middle;
-    margin: -12px 5px 0px -16px;
+.tag_list {
+    .icon.plus_menu, .icon.delete, .icon.add_queue, .icon.plus_cats {
+        // display:inline-block;
+        width: 44px;
+        height: 44px;
+        vertical-align: middle;
+        margin: -12px 5px 0px -16px;
+    }
+    .icon.plus_menu, .icon.plus_cats, .icon.add_queue {
+        float: left;
+    }
 }
 .icon.plus_menu, .icon.plus_cats, .icon.add_queue {
     background-image: asset_url('skin/nav/plus.png');
-    float: left;
+}
+.icon.plus_menu, .icon.delete {
+    // background-color: transparent;
+    background-color: white;
 }
 .icon.plus_cats {
     background-color: aqua;
@@ -393,6 +399,11 @@ body.mobile {
     }
 }
 // TODO: should also have body.default
+body:not(.mobile) .card[data-num="0"] {
+    .card_title, .info {
+        @include transition(opacity, 0.2s, linear);
+    }
+}
 body {
     z-index: 0;
     left: 0px; 
@@ -715,6 +726,7 @@ body {
                     padding-right: 10px;
                     margin: 0;
                 }
+
                 .user_list {
                     width: 378px;
                 }
@@ -726,7 +738,13 @@ body {
             &[data-num="1"], &[data-num="2"] {
                 width: 50%;
             }
-        }            
+            &.active[data-num="0"] {
+                .card_title, .info {
+                    opacity: .3;
+                    &:hover { opacity: 1; }
+                }
+            }
+        }
     }
     .feed.grid.narrow, .feed.cat.narrow {
         .card .card_title {
