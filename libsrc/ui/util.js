@@ -102,12 +102,6 @@ define([
             };
         }(jQuery));
         (function($){
-            $.fn.addremoveClass = function( klass, addremove ) {
-                if (addremove) return $(this).addClass(klass);
-                else return $(this).removeClass(klass);
-            };
-        }(jQuery));
-        (function($){
             $.fn.toggleshow = function( speed, easing, callback) {
                 var elem = $(this);
                 if (elem.hasClass("hide") || elem.css("display") == "none")

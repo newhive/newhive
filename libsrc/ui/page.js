@@ -247,7 +247,7 @@ define([
         $(".main-header .network_nav .item." + context.route_name)
             .addClass("black_btn")
         $(".main-header .header")
-            .addremoveClass("clean", context.route.client_method != "cat")
+            .toggleClass("clean", context.route.client_method != "cat")
         $(".main-header .category_btn").removeClass("black_btn")
         $(".main-header .category_btn[data-name='" 
             + context.page_data.tag_selected + "']").addClass("black_btn")
@@ -256,16 +256,16 @@ define([
             ,has_nav_embedded_logo = has_nav && context.user.logged_in
 
         $("#overlays .hive_logo")
-            .addremoveClass("overlay", ! has_nav_embedded_logo)
-            // .addremoveClass("item", has_nav)
+            .toggleClass("overlay", ! has_nav_embedded_logo)
+            // .toggleClass("item", has_nav)
             .prependTo(has_nav_embedded_logo ? ".main-header .left" : "#overlays")
-            .addremoveClass("hide", has_nav && !has_nav_embedded_logo)
+            .toggleClass("hide", has_nav && !has_nav_embedded_logo)
         // reverse the logo menu if it's up top
         if (! $("#logo_menu").is(".inverted") != has_nav_embedded_logo) {
-            $("#logo_menu").addremoveClass("inverted", ! has_nav_embedded_logo)
+            $("#logo_menu").toggleClass("inverted", ! has_nav_embedded_logo)
                 .append($("#logo_menu").children().get().reverse())
         }
-        $(".overlay.panel").addremoveClass("hide", has_nav || $("body").is(".edit"))
+        $(".overlay.panel").toggleClass("hide", has_nav || $("body").is(".edit"))
     }
     var custom_classes = ""
     o.render = function(method, data){
@@ -790,7 +790,7 @@ define([
         var new_split = !logged_in && !condensed && win_width < 800
         if (split != new_split) {
             split = new_split
-            $('.main-header').addremoveClass('split', split)
+            $('.main-header').toggleClass('split', split)
         }
 
         setTimeout(reflow_site_margin, 200)
@@ -804,7 +804,7 @@ define([
 
         var new_search_flow = win_width < 730 ? 'block' : 'inline-block'
         $('.main-header .splash.container, .main-header .left')
-            .addremoveClass('narrow', win_width < 830)
+            .toggleClass('narrow', win_width < 830)
         if(search_flow != new_search_flow){
             search_flow = new_search_flow
             if(search_flow == 'block')
@@ -858,9 +858,9 @@ define([
     // Set up the grid borders
     o.add_grid_borders = function(columns){
         var columns = o.columns;
-        $(".feed").addremoveClass("wide", columns > 1)
-        $(".feed").addremoveClass("_3col", columns > 2)
-        $(".feed").addremoveClass("narrow", columns == 1)
+        $(".feed").toggleClass("wide", columns > 1)
+        $(".feed").toggleClass("_3col", columns > 2)
+        $(".feed").toggleClass("narrow", columns == 1)
         if(context.page_data.layout != 'grid') return;
         var expr_cards = $('.feed .card');
         // Count of cards which fit to even multiple of columns
