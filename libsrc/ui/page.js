@@ -255,10 +255,14 @@ define([
         var has_nav = has_nav_bar()
             ,has_nav_embedded_logo = has_nav && context.user.logged_in
 
-        $("#overlays .hive_logo")
-            .addremoveClass("overlay", ! has_nav_embedded_logo)
+        $("#logo_handle")
             // .addremoveClass("item", has_nav)
             .prependTo(has_nav_embedded_logo ? ".main-header .left" : "#overlays")
+            // .showhide(true)
+            // .showhide(has_nav && !has_nav_embedded_logo)
+            // .addremoveClass("hide", has_nav && !has_nav_embedded_logo)
+        $("#logo_handle .hive_logo")
+            .addremoveClass("overlay", ! has_nav_embedded_logo)
             .addremoveClass("hide", has_nav && !has_nav_embedded_logo)
         // reverse the logo menu if it's up top
         if (! $("#logo_menu").is(".inverted") != has_nav_embedded_logo) {
