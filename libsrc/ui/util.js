@@ -1,8 +1,9 @@
 define([
-    'jquery',
+    'browser/jquery',
     'json!server/compiled.assets.json',
     'browser/jquery/nh_utils',
-    'browser/jquery/easing'
+    'browser/jquery/easing',
+    'js!browser/jquery/event/mobile'
 ], function($, assets){
     var o = {};
 

@@ -1,4 +1,4 @@
-define(['jquery'], function(jQuery){
+define(['browser/jquery'], function(jQuery){
 
 // show and hide helpers that use 'hide' class, so elements can have an
 // initial show hide state from template
