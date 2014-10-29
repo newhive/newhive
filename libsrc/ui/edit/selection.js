@@ -26,6 +26,7 @@ define([
 var o = {}
     ,Funcs = js.Funcs
     ,elements = []
+    ,groups = [] 
 ;
 
 o.Selection = function(o) {
@@ -49,6 +50,32 @@ o.Selection = function(o) {
     o.fixed_aspect = true;
     o.make_controls = [];
     o.handler_type = 2;
+
+    //////////////////////////////////////////////////////////
+    // Grouping 
+    //////////////////////////////////////////////////////////
+    // Get maximal group set
+    o.get_groups = function() {
+
+    }
+    // Set the selection as a group
+    o.set_group = function() {
+        if (groups.length == 1)
+            return
+
+        var g = env.Groups()
+        groups.map(function(el) {
+            g.add(el)
+        })
+        elements.map(function(el) {
+            if (!g.parent())
+                g.add(el)
+        })
+        groups = [g]
+    }
+    // if the selection is a group, break it
+    o.break_group = function() {}
+    //////////////////////////////////////////////////////////
 
     // relative coords and sizes for each app
     var _positions = [], _scales = [];
@@ -109,7 +136,13 @@ o.Selection = function(o) {
             if(o.selected(app)) o.unfocus(app);
             else o.push(app)
         }
-        else o.update([ app ])
+        else {
+            var g = app.parent()
+            if (g) {
+                o.update(g.children_flat())
+            } else
+                o.update([ app ])
+        }
     }
 
     o.transform_start = function(){
