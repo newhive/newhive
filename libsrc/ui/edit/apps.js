@@ -106,17 +106,24 @@ env.new_app = Hive.new_app = function(s, opts) {
 // editing functions.
 var g_groups = {}
 
-var groups = function(id) {
+var groups = function(state) {
     var o = {}
     var children_ids = []
+    if (state) {
+        children_ids = state.children_ids || []
+        o.id = state.id
+    }
+    o.id = o.id || u.random_str()
     var parent
 
-    o.id = id || u.random_str()
     g_groups[o.id] = o
 
     // o.id = function() { return _id }
     o.children = function() {
         return children_ids.map(function(id) { return groups.fetch(id) || env.Apps.fetch(id) })
+    }
+    o.children_ids = function() {
+        return children_ids.slice()
     }
     o.children_flat = function() {
         var apps = [], children = o.children()
@@ -172,9 +179,29 @@ var groups = function(id) {
 groups.fetch = function(id) {
     return g_groups[id]
 }
+groups.state = function() {
+    var states = []
+    $.each(g_groups, function(id, g) {
+        var state = { id:id, children_ids:g.children_ids() }
+        states.push(state)
+    })
+    return states
+}
+groups.init = function(states) {
+    states.map(function(state) {
+        groups(state)
+    })
+    // Now fixup the parent pointers
+    $.each(g_groups, function(id, g) {
+        g.children().map(function(child) {
+            child.parent_set(g)
+        })
+    })
+
+}
 env.Groups = groups
-env.debug = {}
-env.debug.groups = g_groups
+// env.debug = env.debug || {}
+// env.debug.groups = g_groups
 
 env.Apps = Hive.Apps = (function(){
     var o = [], apps = {};

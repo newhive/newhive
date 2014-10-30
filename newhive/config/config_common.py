@@ -208,6 +208,9 @@ site_flags = {
     },'Editor/anchor_name': {
         'description':'Show the anchor option for links'
         , 'values':['admins','devs']
+    },'Editor/grouping': {
+        'description':'Show grouping UI, editor shortcuts'
+        , 'values':['admins','devs']
     }
 }
 

@@ -185,12 +185,8 @@ o.Selection = function(o) {
             else o.push(app)
         }
         else {
-            // var g = app.parent()
-            // if (g) {
-                apps = o.traverse_groups(app).children_flat()
-                o.update(apps)
-            // } else
-            //     o.update([ app ])
+            apps = o.traverse_groups(app).children_flat()
+            o.update(apps)
         }
     }
 
@@ -889,6 +885,8 @@ o.Selection = function(o) {
             66: function(){ o.stack_bottom(ev) }, // b
             70: function(){ o.stack_top(ev) }, // f
             71: function(){  // g
+                if (!context.flags.Editor.grouping)
+                    return
                 if (ev.shiftKey)
                     o.break_group(ev) 
                 else
