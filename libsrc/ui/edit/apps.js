@@ -104,8 +104,107 @@ env.new_app = Hive.new_app = function(s, opts) {
 // collection object for all App objects in page. An App is a widget
 // that you can move, resize, and copy. Each App type has more specific
 // editing functions.
+var g_groups = {}
+
+var groups = function(state) {
+    var o = {}
+    var children_ids = []
+    if (state) {
+        children_ids = state.children_ids || []
+        o.id = state.id
+    }
+    o.id = o.id || u.random_str()
+    var parent
+
+    g_groups[o.id] = o
+
+    // o.id = function() { return _id }
+    o.children = function() {
+        return children_ids.map(function(id) { return groups.fetch(id) || env.Apps.fetch(id) })
+    }
+    o.children_ids = function() {
+        return children_ids.slice()
+    }
+    o.children_flat = function() {
+        var apps = [], children = o.children()
+        children.map(function(app_or_group) {
+            apps = apps.concat(app_or_group.children_flat())
+        })
+        return apps
+    }
+    o.parent = function() {
+        return parent
+    }
+    o.parents = function() {
+        var parents = [o]
+        if (parent)
+            parents = parents.concat(parent.parents())
+        return parents
+    }
+    o.parent_set = function(g) {
+        // if (id && !groups.fetch(id)) throw "parent group missing"
+        parent = g
+    }
+    o.add = function(app_or_group_or_id) {
+        var id = app_or_group_or_id.id || app_or_group_or_id
+        children_ids.push(id)
+        var g = env.Apps.app_or_group(id)
+        if (g)
+            g.parent_set(o)
+    }
+    o.remove = function(app_or_group_or_id) {
+        var id = app_or_group_or_id.id || app_or_group_or_id
+        var index = children_ids.indexOf(id)
+        if (index > -1) {
+            children_ids.splice(index, 1)
+            var app_or_group = env.Apps.app_or_group(id)
+            app_or_group.parent_set(null)
+        }
+    }
+    o.ungroup = function() {
+        var children = o.children()
+        children.map(function(child) { 
+            o.remove(child) 
+            if (parent)
+                parent.add(child)
+        })
+        if (parent) 
+            parent.remove(o.id)
+        delete g_groups[o.id]
+        return children
+    }
+
+    return o
+}
+groups.fetch = function(id) {
+    return g_groups[id]
+}
+groups.state = function() {
+    var states = []
+    $.each(g_groups, function(id, g) {
+        var state = { id:id, children_ids:g.children_ids() }
+        states.push(state)
+    })
+    return states
+}
+groups.init = function(states) {
+    states.map(function(state) {
+        groups(state)
+    })
+    // Now fixup the parent pointers
+    $.each(g_groups, function(id, g) {
+        g.children().map(function(child) {
+            child.parent_set(g)
+        })
+    })
+
+}
+env.Groups = groups
+// env.debug = env.debug || {}
+// env.debug.groups = g_groups
+
 env.Apps = Hive.Apps = (function(){
-    var o = [];
+    var o = [], apps = {};
 
     o.state = function() {
         return $.map(o.all(), function(app) { return app.state(); });
@@ -182,6 +281,7 @@ env.Apps = Hive.Apps = (function(){
             o.restack(true)
         } else // This case is on expression load
             stack[app.layer()] = app;
+        apps[app.id] = app
         return i;
     };
     o.copy = function(elements, opts) {
@@ -194,8 +294,12 @@ env.Apps = Hive.Apps = (function(){
         });
     } 
     o.fetch = function(id){
-        for(var i = 0; i < o.length; i++) if( o[i].id == id ) return o[i];
+        return apps[id]
+        // for(var i = 0; i < o.length; i++) if( o[i].id == id ) return o[i];
     };
+    o.app_or_group = function(id) {
+        return apps[id] || groups.fetch(id)
+    }
     o.all = function(){ return $.grep(o, function(e){ return ! e.deleted; }); };
     o.filtered = function(filter) { return $.grep(o, filter); };
     o.init = function(initial_state, load){
@@ -216,6 +320,8 @@ env.Apps = Hive.Apps = (function(){
     return o;
 })();
 
+
+
 // Creates generic initial object for all App types.
 Hive.App = function(init_state, opts) {
     var o = {};
@@ -229,6 +335,31 @@ Hive.App = function(init_state, opts) {
     o.id = init_state.id || u.random_str();
     o.handler_type = 0;
     o.make_controls = [];
+
+    //////////////////////////////////////////////////////////
+    // Grouping 
+    //////////////////////////////////////////////////////////
+    var parent
+    o.parent = function() {
+        return parent
+    }
+    o.parents = function() {
+        var parents = [o]
+        if (parent)
+            parents = parents.concat(parent.parents())
+        return parents
+    }
+    o.parent_set = function(g) {
+        // if (id && !groups.fetch(id)) throw "parent group missing"
+        parent = g
+    }
+    o.children = function() {
+        return [o]
+    }
+    o.children_flat = function() {
+        return [o]
+    }
+    //////////////////////////////////////////////////////////
 
     o.css_state = {};
     o.content = function(content) { return $.extend({}, o.css_state); };

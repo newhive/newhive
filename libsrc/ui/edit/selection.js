@@ -26,6 +26,7 @@ define([
 var o = {}
     ,Funcs = js.Funcs
     ,elements = []
+    ,groups = [] 
 ;
 
 o.Selection = function(o) {
@@ -49,6 +50,80 @@ o.Selection = function(o) {
     o.fixed_aspect = true;
     o.make_controls = [];
     o.handler_type = 2;
+
+    //////////////////////////////////////////////////////////
+    // Grouping 
+    //////////////////////////////////////////////////////////
+
+    // Get maximal group set
+    o.get_groups = function(elements) {
+        var groups = []
+        elements = elements.slice()
+        while (elements.length) {
+            var el = elements[0], len = elements.length
+            var parents = el.parents()
+            var els, remainder, g
+            // find the largest parent group which is entirely selected
+            while (parents.length) {
+                g = parents.splice(-1, 1)[0]
+                els = g.children_flat()
+                remainder = u.except(elements, els)
+                if (remainder.length + els.length == len)
+                    break
+            }
+            groups = groups.concat([g])
+            elements = remainder
+        }
+        return groups
+    }
+
+    o.can_group = function() {
+        if (groups.length <= 1)
+            return false
+
+        var parent = groups[0].parent()
+        groups.map(function(el) {
+            if (el.parent() != parent)
+                return false
+        })
+
+        return true
+    }
+    // Set the selection as a group
+    o.set_group = function() {
+        if (!o.can_group())
+            return
+
+        var new_group = env.Groups(), parent = groups[0].parent()
+        groups.map(function(el) {
+            new_group.add(el)
+        })
+        if (parent)
+            parent.add(new_group)
+        groups = [new_group]
+    }
+    // if the selection is a group, break it
+    o.break_group = function() {
+        if (groups.length != 1)
+            return 
+
+        groups = groups[0].ungroup()
+    }
+    // traverse the groups which contain app
+    o.traverse_groups = function(el) {
+        var parents = el.parents(), top_most = parents.slice(-1)[0]
+        var els, remainder, g, len = elements.length
+        // find the largest parent group which is entirely selected
+        while (parents.length > 1) {
+            g = parents.splice(-1, 1)[0]
+            els = g.children_flat()
+            remainder = u.except(elements, els)
+            if (remainder.length + els.length == len)
+                return parents.slice(-1)[0]
+        }
+        return top_most
+    }
+    //////////////////////////////////////////////////////////
 
     // relative coords and sizes for each app
     var _positions = [], _scales = [];
@@ -109,7 +184,10 @@ o.Selection = function(o) {
             if(o.selected(app)) o.unfocus(app);
             else o.push(app)
         }
-        else o.update([ app ])
+        else {
+            apps = o.traverse_groups(app).children_flat()
+            o.update(apps)
+        }
     }
 
     o.transform_start = function(){
@@ -133,11 +211,18 @@ o.Selection = function(o) {
         menu.no_hover = true;
         var app = ev.data;
         if(app && !u.is_ctrl(ev)) {
+            prev_selection = elements.slice()
             // If target is in selection, drag whole selection
             if(elements.indexOf(ev.data) >= 0)
                 drag_target = o;
-            else
+            else {
                 drag_target = ev.data;
+                if (!drag_target.is_selection) {
+                    var g = o.traverse_groups(drag_target)
+                    o.update(g.children_flat())
+                    drag_target = o
+                }
+            }
             if (ev.altKey) {
                 // alt + drag = duplicate
                 drag_target.copy({offset:[0, 0]})
@@ -197,6 +282,7 @@ o.Selection = function(o) {
         if(drag_target && !selecting){
             o.move_end();
             drag_target = undefined
+            o.update(prev_selection)
             return false;
         }
 
@@ -550,6 +636,7 @@ o.Selection = function(o) {
         });
 
         elements = $.merge([], apps);
+        groups = o.get_groups(elements)
 
         o.update_relative_coords();
 
@@ -797,6 +884,14 @@ o.Selection = function(o) {
             46: function(){ o.remove() }, // del
             66: function(){ o.stack_bottom(ev) }, // b
             70: function(){ o.stack_top(ev) }, // f
+            71: function(){  // g
+                if (!context.flags.Editor.grouping)
+                    return
+                if (ev.shiftKey)
+                    o.break_group(ev) 
+                else
+                    o.set_group(ev) 
+            },
         }
         if(handlers[ev.keyCode]){
             if(handlers[ev.keyCode]()) return;

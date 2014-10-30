@@ -79,7 +79,7 @@ class Expr(ModelController):
         allowed_attributes = [
             'name', 'url', 'title', 'apps', 'dimensions', 'auth', 'password',
             'tags', 'background', 'thumb', 'images', 'remix_parent_id',
-            'container', 'clip_x', 'clip_y', 'layout_coord'
+            'container', 'clip_x', 'clip_y', 'layout_coord', 'groups'
         ]
         # TODO: fixed expressions, styles, and scripts, need to be done right
         # if tdata.user.is_admin:
