@@ -119,12 +119,9 @@ var groups = function(id) {
         return children_ids.map(function(id) { return groups.fetch(id) || env.Apps.fetch(id) })
     }
     o.children_flat = function() {
-        var apps = []
-        return children_ids.map(function(id) {
-            var group = groups.fetch(id)
-            if (group)
-                group.children_flat()
-            apps.push(env.Apps.fetch(id))
+        var apps = [], children = o.children()
+        children.map(function(app_or_group) {
+            apps = apps.concat(app_or_group.children_flat())
         })
         return apps
     }
@@ -139,7 +136,7 @@ var groups = function(id) {
     }
     o.parent_set = function(g) {
         // if (id && !groups.fetch(id)) throw "parent group missing"
-        o.parent = g
+        parent = g
     }
     o.add = function(app_or_group_or_id) {
         var id = app_or_group_or_id.id || app_or_group_or_id
@@ -148,25 +145,26 @@ var groups = function(id) {
         if (g)
             g.parent_set(o)
     }
-    o.remove = function(app) {
+    o.remove = function(app_or_group_or_id) {
+        var id = app_or_group_or_id.id || app_or_group_or_id
         var index = children_ids.indexOf(id)
         if (index > -1) {
             children_ids.splice(index, 1)
-            var g = groups.fetch(id)
-            if (g)
-                g.parent_set(null)
-            else
-               env.Apps.fetch(id).group_set(null)
+            var app_or_group = env.Apps.app_or_group(id)
+            app_or_group.parent_set(null)
         }
     }
     o.ungroup = function() {
-        children_ids.map(function(g) { 
-            o.remove(g) 
+        var children = o.children()
+        children.map(function(child) { 
+            o.remove(child) 
             if (parent)
-                g.parent_set(parent)
+                parent.add(child)
         })
         if (parent) 
             parent.remove(o.id)
+        delete g_groups[o.id]
+        return children
     }
 
     return o
@@ -319,13 +317,20 @@ Hive.App = function(init_state, opts) {
         return parent
     }
     o.parents = function() {
+        var parents = [o]
         if (parent)
-            return parent.parents()
-        return null
+            parents = parents.concat(parent.parents())
+        return parents
     }
     o.parent_set = function(g) {
         // if (id && !groups.fetch(id)) throw "parent group missing"
         parent = g
+    }
+    o.children = function() {
+        return [o]
+    }
+    o.children_flat = function() {
+        return [o]
     }
     //////////////////////////////////////////////////////////
 
