@@ -227,12 +227,15 @@ def dfilter(d, keys):
 
 
 def normalize(ws):
-    return list( OrderedSet( filter( lambda s: re.match('\w', s, flags=re.UNICODE),
-        re.split('\W', ws.lower(), flags=re.UNICODE) ) ) )
+    return list( OrderedSet( map(normalize_word, filter(
+        lambda s: re.match('\w', s, flags=re.UNICODE),
+        re.split('\W', ws, flags=re.UNICODE) ) ) ) )
+
+def normalize_word(w):
+    return w.lower()[0:40]
         
 def format_tags(s):
-    return re.sub(r'[_\W]','',s.lower(), flags = re.UNICODE)
-
+    return re.sub(r'[_\W]','', s, flags = re.UNICODE)
 
 def normalize_tags(ws):
     # 1. if 'tags' has comma:  separate out quoted strings, split on all commas and hash, replace space with nothing
@@ -246,7 +249,9 @@ def normalize_tags(ws):
         l2 = re.split(r'[#]', ws_no_quotes, flags=re.UNICODE)
     else:
         l2 = re.split(r'[\s]', ws_no_quotes, flags=re.UNICODE)
-    return list(set(filter(None,map(format_tags, l1+l2))))
+
+    return list( set( map( normalize_word, filter(
+        None, map(format_tags, l1+l2) ) ) ) )
 
 def tag_string(tags):
     return " ".join([ "#" + x for x in tags ])
