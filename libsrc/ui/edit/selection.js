@@ -45,6 +45,7 @@ o.Selection = function(o) {
             elements.slice() : [drag_target]; 
     };
     o.add_to_collection = false;
+    o.is_app_object = false;
     o.has_align = false;
     o.is_selection = true;
     o.fixed_aspect = true;
@@ -96,10 +97,10 @@ o.Selection = function(o) {
 
         var new_group = env.Groups(), parent = groups[0].parent()
         groups.map(function(el) {
-            new_group.add(el)
+            new_group.add_child(el)
         })
         if (parent)
-            parent.add(new_group)
+            parent.add_child(new_group)
         groups = [new_group]
     }
     // if the selection is a group, break it
