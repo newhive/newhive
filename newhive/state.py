@@ -28,7 +28,7 @@ import Queue
 import threading
 from subprocess import call
 
-from newhive.utils import *
+from newhive.utils import now, junkstr, dfilter, normalize, normalize_tags, tag_string, cached, AbsUrl, log_error
 from newhive.routes import reserved_words
 
 from newhive.profiling import g_flags
