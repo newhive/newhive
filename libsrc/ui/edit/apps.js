@@ -101,37 +101,94 @@ env.new_app = Hive.new_app = function(s, opts) {
     return app;
 };
 
-// collection object for all App objects in page. An App is a widget
-// that you can move, resize, and copy. Each App type has more specific
-// editing functions.
-var g_groups = {}
+// TODO: root, selection, app inherits pseudoApp
+// TODO-perf: ? For all inheritance, use prototype.
 
-var groups = function(state) {
+// PseudoApp cannot be added to selection
+// It has no (server) state.
+// Hive.PseudoApp = function(o) {
+//     o = o || {}
+//     o.is_pseudo_app = true
+
+//     return o
+// };
+// Hive.registerApp(Hive.App.PseudoApp, 'hive.pseudo');
+
+// Top of inheritance for editor objects
+Hive.AppObject = function() {
+    // Inhertance: javascript object
     var o = {}
-    var children_ids = []
-    if (state) {
-        children_ids = state.children_ids || []
-        o.id = state.id
-    }
+    // Type definition
+    // o.is_pseudo_app = true
+
+    return o
+};
+
+Hive.Saveable = function(init_state) {
+    // // prevent reentry
+    // if (o && o.is_saveable)
+    //     return o
+
+    // Inheritance: editor object
+    var o = Hive.AppObject()
+    // Type definition
+    o.is_saveable = true
+
+    o.init_state = $.extend(true, {}, init_state) || {}
+
+    // getter and setter for state which is visible to history
+    o.history_state = Funcs(function() {
+        o.history_state.return_val = {}
+    }) 
+    o.history_state_set = Funcs(function(s) {
+    })
+
+    // getter and setter for state which is invisible to history
+    o.state = Funcs(function() {
+        var s = $.extend(true, {}, o.init_state, o.history_state())
+        o.state.return_val = s
+    })
+    o.state_update = Funcs(function(s) {
+        $.extend(true, {}, o.init_state, s);
+    })
+
+    return o
+}
+
+// id is (probabalistically) unique across editor
+Hive.has_id = function(o) {
+    if (!o.id && o.init_state && o.init_state.id)
+        o.id = o.init_state.id
     o.id = o.id || u.random_str()
+
+    if (!o.is_saveable) throw "has_id requires Saveable"
+    o.state.add(function() {
+        var s = { id: o.id }
+        o.state.return_val = $.extend(o.state.return_val, s)
+    })
+}
+
+// Give objects a numeric sequence name
+Hive.has_sequence = function(o) {
+    var seq_type = (typeof(o.typename) == "function") ? o.typename() : "object"
+    var count = Hive.has_sequence[seq_type] || 0
+    Hive.has_sequence[seq_type] = count + 1
+    var name = seq_type + "_" + count
+
+    o.name = function() {
+        return name
+    }
+    o.name_set = function(v) {
+        name = v
+    }
+
+    // TODO: saveable
+    if (!o.is_saveable) throw "has_sequence requires Saveable"
+}
+
+// Grouping 
+Hive.has_group = function(o) {
     var parent
-
-    g_groups[o.id] = o
-
-    // o.id = function() { return _id }
-    o.children = function() {
-        return children_ids.map(function(id) { return groups.fetch(id) || env.Apps.fetch(id) })
-    }
-    o.children_ids = function() {
-        return children_ids.slice()
-    }
-    o.children_flat = function() {
-        var apps = [], children = o.children()
-        children.map(function(app_or_group) {
-            apps = apps.concat(app_or_group.children_flat())
-        })
-        return apps
-    }
     o.parent = function() {
         return parent
     }
@@ -145,14 +202,65 @@ var groups = function(state) {
         // if (id && !groups.fetch(id)) throw "parent group missing"
         parent = g
     }
-    o.add = function(app_or_group_or_id) {
+    o.children = function() {
+        return [o]
+    }
+    o.children_flat = function() {
+        return [o]
+    }
+}
+
+var g_groups = {}
+
+var groups = function(state) {
+    var o = Hive.Saveable(state)
+    o.is_group = true
+
+    Hive.has_group(o)
+    Hive.has_id(o)
+
+    var children_ids = []
+    g_groups[o.id] = o
+
+    //////////////////////////////////////////////////////////////
+    // Saveable
+    if (state) {
+       children_ids = state.children_ids || []
+    }
+    o.state.add(function() {
+        var s = { children_ids: children_ids }
+        $.extend(o.state.return_val, s)
+    })
+    //////////////////////////////////////////////////////////////
+
+    //////////////////////////////////////////////////////////////
+    // has_group
+    o.children = function() {
+        return children_ids.map(function(id) { 
+            return groups.fetch(id) || env.Apps.fetch(id) 
+        })
+    }
+    o.children_flat = function() {
+        var apps = [], children = o.children()
+        children.map(function(app_or_group) {
+            apps = apps.concat(app_or_group.children_flat())
+        })
+        return apps
+    }
+    //////////////////////////////////////////////////////////////
+
+    // o.id = function() { return _id }
+    o.children_ids = function() {
+        return children_ids.slice()
+    }
+    o.add_child = function(app_or_group_or_id) {
         var id = app_or_group_or_id.id || app_or_group_or_id
         children_ids.push(id)
         var g = env.Apps.app_or_group(id)
         if (g)
             g.parent_set(o)
     }
-    o.remove = function(app_or_group_or_id) {
+    o.remove_child = function(app_or_group_or_id) {
         var id = app_or_group_or_id.id || app_or_group_or_id
         var index = children_ids.indexOf(id)
         if (index > -1) {
@@ -161,15 +269,17 @@ var groups = function(state) {
             app_or_group.parent_set(null)
         }
     }
+    // Disband this group, setting all of its children to be children
+    // of its parent
     o.ungroup = function() {
         var children = o.children()
         children.map(function(child) { 
-            o.remove(child) 
-            if (parent)
-                parent.add(child)
+            o.remove_child(child) 
+            if (parent())
+                parent().add_child(child)
         })
-        if (parent) 
-            parent.remove(o.id)
+        if (parent()) 
+            parent().remove_child(o.id)
         delete g_groups[o.id]
         return children
     }
@@ -182,8 +292,7 @@ groups.fetch = function(id) {
 groups.state = function() {
     var states = []
     $.each(g_groups, function(id, g) {
-        var state = { id:id, children_ids:g.children_ids() }
-        states.push(state)
+        states.push(g.state())
     })
     return states
 }
@@ -191,18 +300,20 @@ groups.init = function(states) {
     states.map(function(state) {
         groups(state)
     })
-    // Now fixup the parent pointers
+    // Now fix up the parent pointers
     $.each(g_groups, function(id, g) {
         g.children().map(function(child) {
             child.parent_set(g)
         })
     })
-
 }
 env.Groups = groups
 // env.debug = env.debug || {}
 // env.debug.groups = g_groups
 
+// collection object for all App objects in page. An App is a widget
+// that you can move, resize, and copy. Each App type has more specific
+// editing functions.
 env.Apps = Hive.Apps = (function(){
     var o = [], apps = {};
 
@@ -314,17 +425,19 @@ env.Apps = Hive.Apps = (function(){
             load_count--;
             if(!load_count) load();
         };
-        $.map(initial_state, function(e){ Hive.App(e, { load: load_counter }) } );
+        $.map(initial_state, function(e){ 
+            var app = Hive.App(e, { load: load_counter }) 
+        } );
     };
 
     return o;
 })();
 
 
-
 // Creates generic initial object for all App types.
 Hive.App = function(init_state, opts) {
-    var o = {};
+    var o = Hive.Saveable(init_state)
+    o.is_app_object = true
     o.apps = Hive.Apps;
     if(!opts) opts = {};
 
@@ -332,34 +445,11 @@ Hive.App = function(init_state, opts) {
     o.init_state = { z: null };
     $.extend(o.init_state, init_state);
     o.type = Hive.appTypes[init_state.type];
-    o.id = init_state.id || u.random_str();
     o.handler_type = 0;
     o.make_controls = [];
 
-    //////////////////////////////////////////////////////////
-    // Grouping 
-    //////////////////////////////////////////////////////////
-    var parent
-    o.parent = function() {
-        return parent
-    }
-    o.parents = function() {
-        var parents = [o]
-        if (parent)
-            parents = parents.concat(parent.parents())
-        return parents
-    }
-    o.parent_set = function(g) {
-        // if (id && !groups.fetch(id)) throw "parent group missing"
-        parent = g
-    }
-    o.children = function() {
-        return [o]
-    }
-    o.children_flat = function() {
-        return [o]
-    }
-    //////////////////////////////////////////////////////////
+    Hive.has_group(o);
+    Hive.has_id(o)
 
     o.css_state = {};
     o.content = function(content) { return $.extend({}, o.css_state); };
@@ -421,28 +511,6 @@ Hive.App = function(init_state, opts) {
         return o;
     }
 
-    // Chain "more_method" onto an existing "method" (or noop if method 
-    // does not exist)
-    // opts.order = ("before", "after", "user")
-    o.USER = 0; o.BEFORE = 1; o.AFTER = 2;
-    o.add_to = function(method, more_method, opts){
-        opts = $.extend({ order: o.BEFORE }, opts);
-        // Add functionality to methods, used by behavior and child constructors
-        var old_method = o[method] || noop;
-        o[method] = function(more_args){
-            switch (opts.order) {
-            case (o.BEFORE):
-                return more_method(old_method(more_args));
-            case (o.AFTER):
-                return old_method(more_method(more_args));
-            case (o.USER):
-                return more_method(old_method);
-            }
-        };
-    };
-    o.add_after = function(method, more_method) 
-        { return o.add_to(method, more_method, {order: o.AFTER}) };
-
     o._remove = function(){
         o.unfocus();
         env.Selection.unfocus(o);
@@ -459,17 +527,19 @@ Hive.App = function(init_state, opts) {
         env.History.save(o._unremove, o._remove, 'delete');
     };
 
+    // stacking order of apps
+    var layer = init_state.z;
+    o.layer = function(){ return layer; };
+    o.layer_set = function(n){
+        layer = n;
+        o.div.css('z-index', n);
+    };
     var stack_to = function(i){ o.apps.stack(o.layer(), i); };
     o.stack_to = function(to){
         var from = o.layer();
         if(from == to) return;
         env.History.saver(o.layer, stack_to, 'change layer').exec(to);
     };
-    o.stack_down = function(ignore){
-
-    }
-    o.stack_up = function(ignore){
-    }
     o.stack_bottom = function(){
         o.stack_to(0) };
     o.stack_top = function(){
@@ -487,14 +557,6 @@ Hive.App = function(init_state, opts) {
         focused = false;
         evs.handler_del(o);
     }, o.focused);
-
-    // stacking order of aps
-    var layer = init_state.z;
-    o.layer = function(){ return layer; };
-    o.layer_set = function(n){
-        layer = n;
-        o.div.css('z-index', n);
-    };
 
     // BEGIN-coords: client space and editor space (called relative)
     // position and dimension methods
@@ -738,8 +800,13 @@ Hive.App = function(init_state, opts) {
         }
         $highlight.showhide(opts.on);
     }
+    o.is_fixed = function() { return o.fixed && o.fixed() }
+
+    /////////////////////////////////////////////////////////////////////////
+    // Saveable
     // TODO-cleanup-history: use state instead
-    o.state_relative = function(){ 
+    // Hive.Saveable(o)
+    o.history_state.add(function() {
         var pos_dims = {
             position: _pos.slice(),
             dimensions: _dims.slice()
@@ -748,10 +815,12 @@ Hive.App = function(init_state, opts) {
             pos_dims.position = 
                 u._sub(pos_dims.position, 
                     u._div([env.scrollX, env.scrollY], env.scale()))
-        return pos_dims
-    };
-    o.is_fixed = function() { return o.fixed && o.fixed() }
-    o.state_relative_set = function(s){
+        $.extend(o.history_state.return_val, pos_dims)
+    })
+    o.state_relative = function(){
+        return o.history_state()
+    }
+    o.history_state_set.add(function(s){
         if(s.position) {
             _pos = s.position.slice();
             if (o.is_fixed())
@@ -760,24 +829,25 @@ Hive.App = function(init_state, opts) {
         }
         if(s.dimensions)
             _dims = s.dimensions.slice();
+    })
+    o.state_relative_set = function(s){
+        o.history_state_set(s)
         o.layout();
     };
 
-    o.state = function(){
-        var s = $.extend(true, {}, o.init_state, o.state_relative(), {
-            z: o.layer(),
-            full_bleed_coord: o.full_coord,
-            id: o.id
-        });
-        if(o.content) s.content = o.content()
+    o.state.add(function(){
+        var s = { z: o.layer() }
+        if(o.full_coord) 
+            s.full_bleed_coord = o.full_coord
+        if(o.content) 
+            s.content = o.content()
         // if(Object.keys(o.css_state).length)
             s.css_state = $.extend({}, o.css_state);
-        return $.extend({}, s);
-    };
-    o.state_update = function(s){
-        $.extend(o.init_state, s);
+        $.extend(true, o.state.return_val, s);
+    });
+    o.state_update.add(function(s) {
         o.state_relative_set(s);
-    };
+    });
 
     o.history_helper_relative = function(name){
         var o2 = { name: name };
@@ -792,6 +862,7 @@ Hive.App = function(init_state, opts) {
         };
         return o2;
     };
+    /////////////////////////////////////////////////////////////////////////
 
     o.css_class = function(){
         return o.init_state.css_class || "" }
@@ -868,21 +939,6 @@ Hive.App = function(init_state, opts) {
     return o;
 };
 Hive.registerApp(Hive.App, 'hive.app');
-
-// TODO: root, selection, app inherits pseudoApp
-// TODO-perf: ? For all inheritance, use prototype.
-
-// PseudoApp cannot be added to selection
-// It has no (server) state.
-Hive.App.PseudoApp = function(o) {
-
-};
-Hive.registerApp(Hive.App.PseudoApp, 'hive.pseudo');
-
-Hive.App.Root = function(o) {
-    // Automatic top level app for layout and template logic
-
-};
 
 // This App shows an arbitrary single HTML tag.
 Hive.App.Html = function(o) {
@@ -1259,6 +1315,8 @@ Hive.App.Image = function(o) {
     o.fixed_aspect = true;
     Hive.App.has_resize(o);
     Hive.App.has_crop(o);
+    // Hive.App.has_color(o)
+
     // TODO-cleanup: aspects should be y/x
     o.get_aspect = function() {
         if (o.init_state.scale_x)
@@ -1270,25 +1328,25 @@ Hive.App.Image = function(o) {
         return o.init_state.url;
     }
 
-    // Hive.App.has_color(o)
-    var _state_update = o.state_update, _state_relative = o.state_relative
-        ,_state_relative_set = o.state_relative_set
-    o.state_relative = function() {
-        s = _state_relative()
-        if (o.init_state.scale_x) s.scale_x = o.init_state.scale_x
-        if (o.init_state.offset) s.offset = o.init_state.offset.slice()
-        return s
-    }
-    o.state_relative_set = function(s) {
+    /////////////////////////////////////////////////////////////////////////
+    // Saveable
+    o.history_state.add(function() {
+        s = {}
+        if (o.init_state.scale_x) 
+            s.scale_x = o.init_state.scale_x
+        if (o.init_state.offset) 
+            s.offset = o.init_state.offset.slice()
+        $.extend(o.history_state.return_val, s)
+    })
+    o.history_state_set.add(function(s) {
         if (s.scale_x) o.init_state.scale_x = s.scale_x
         if (s.offset) o.init_state.offset = s.offset.slice()
-        _state_relative_set(s)
-    }
-    o.state_update = function(s){
+    })
+    o.state_update.add(function(s){
         // TODO-cleanup: migrate to use only url for consistency with other apps
         s.content = s.url = (s.url || s.content);
-        _state_update(s);
-    };
+    })
+    /////////////////////////////////////////////////////////////////////////
 
     o.url_set = function(src) {
         if(o.$img) o.$img.remove();
@@ -1817,16 +1875,16 @@ Hive.App.Polygon = function(o){
         if(o.controls) o.controls.layout()
     }
 
-    var _sr = o.state_relative, _srs = o.state_relative_set
-    o.state_relative = function(){
-        var s = _sr()
-        s.points = o.points()
-        return s
-    }
-    o.state_relative_set = function(s){
-        _srs(s)
+    /////////////////////////////////////////////////////////////////////////
+    // Saveable
+    o.history_state.add(function() {
+        s = { points: o.points() }
+        $.extend(o.history_state.return_val, s)
+    })
+    o.history_state_set.add(function(s) {
         if(s.points) o.points_set(s.points)
-    }
+    })
+    /////////////////////////////////////////////////////////////////////////
 
     var _dims_relative_set = o.dims_relative_set
     o.dims_relative_set = function(dims) {
@@ -2329,9 +2387,9 @@ Hive.App.Audio = function(o) {
 
     o.set_shield = function() { return true; }
 
-    var _state_update = o.state_update;
-    o.state_update = function(s){
-        _state_update(s);
+    /////////////////////////////////////////////////////////////////////////
+    // Saveable
+    o.state_update.add(function(s){
         if(typeof s.file_meta == 'object')
             o.content_element.attr('title', [s.file_meta.artist, s.file_meta.album,
                 s.file_meta.title].join(' - '));
@@ -2344,7 +2402,8 @@ Hive.App.Audio = function(o) {
             // isn't reset, but this doesn't work, tested 2013-10
             //o.content_element.jPlayer('setMedia', s.url);
         }
-    };
+    })
+    /////////////////////////////////////////////////////////////////////////
 
     o.skin = function(){
         return $( $.jPlayer.skin.minimal(
@@ -2892,14 +2951,16 @@ Hive.has_scale = function(o){
     o.scale_set = function(s){ 
         scale = s; o.layout(); };
 
-    var _state_relative = o.state_relative, _state_relative_set = o.state_relative_set;
-    o.state_relative = function(){
-        return $.extend(_state_relative(), { 'scale': scale });
-    };
-    o.state_relative_set = function(s){
-        _state_relative_set(s);
+    /////////////////////////////////////////////////////////////////////////
+    // Saveable
+    o.history_state.add(function() {
+        s = { 'scale': scale}
+        $.extend(o.history_state.return_val, s)
+    })
+    o.history_state_set.add(function(s) {
         if(s.scale) o.scale_set(s.scale);
-    };
+    })
+    /////////////////////////////////////////////////////////////////////////
 };
 
 Hive.App.has_toggle = function(o, toggle_name){
@@ -3086,17 +3147,18 @@ Hive.App.has_rotate = function(o) {
         }
         o.load.add(function() { o.angle_set(o.angle()) });
 
-        var _sr = o.state_relative, _srs = o.state_relative_set
-        o.state_relative = function(){
-            var s = _sr();
+        /////////////////////////////////////////////////////////////////////////
+        // Saveable
+        o.history_state.add(function() {
+            s = {}
             if(angle === 0 || angle) s.angle = angle;
-            return s;
-        };
-        o.state_relative_set = function(s){
-            _srs(s)
+            $.extend(o.history_state.return_val, s)
+        })
+        o.history_state_set.add(function(s) {
             if(s.angle === 0 || s.angle)
                 o.angle_set(s.angle)
-        }
+        })
+        /////////////////////////////////////////////////////////////////////////
     }
     o.make_controls.push(memoize("rotate_controls", controls));
 }
@@ -3362,22 +3424,27 @@ Hive.App.has_opacity = function(o) {
         function(){ history_point.save() }
     );
     var opacity = o.init_state.opacity === undefined ? 1 : o.init_state.opacity; 
-   o.opacity = function(){ return opacity; };
+    o.opacity = function(){ return opacity; };
     o.opacity_set = function(s){
         opacity = s;
         o.content_element.css('opacity', s);
     };
-    o.add_to('state', function(s){
-        s.opacity = opacity;
-        if(opacity == 1) delete s.opacity;
-        return s;
+
+    /////////////////////////////////////////////////////////////////////////
+    // Saveable
+    o.history_state.add(function(){
+        s = {}
+        if(opacity != 1) s.opacity = opacity;
+        $.extend(o.history_state.return_val, s)
     });
+    /////////////////////////////////////////////////////////////////////////
 
     o.load.add(function(){
         if (o.content_element)
             o.opacity_set(opacity);
     });
 };
+
 // opts.name: function to call to get the value
 // opts.setter: function to call to set the value
 // opts.slider_opts: options to pass to slider
