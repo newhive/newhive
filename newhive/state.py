@@ -29,6 +29,7 @@ import threading
 from subprocess import call
 
 from newhive.utils import *
+from newhive.utils import normalize_word
 from newhive.routes import reserved_words
 
 from newhive.profiling import g_flags
@@ -118,11 +119,15 @@ class Database:
                     if search.get('text'):
                         # spec['$or'] = [{'text_index': {'$all': search['text']}},
                         #     {'title_index': {'$all': search['text']}}]
-                        # WAS: body OR title contained ALL search terms.
-                        # NOW: EACH text term is found in body OR title OR tags
-                        spec['$and'] = [ {'$or': [{'title_index': text}, 
-                            {'text_index': text}, {'tags_index': text}]}
-                            for text in search.get('text')]
+                        # spec['$and'] = [ {'$or': [{'title_index': text}, 
+                        #     {'text_index': text}, {'tags_index': text}]}
+                        #     for text in search.get('text')]
+                        # V0: body OR title contained ALL search terms.
+                        # V1: EACH text term is found in body OR title OR tags
+                        # V2: same as v1, but text index contains words in
+                        #     title, tags, and text_index for efficiency
+                        spec['$and'] = [{'text_index': text} for text in
+                            search.get('text')]
                     if search.get('user'):
                         spec['owner_name'] = search['user']
                     results = self.Expr.page(spec, **args)
@@ -175,8 +180,8 @@ class Database:
                 ]:
                     search['tags'].append( pattern[1] )
                 else: 
-                    search['tags'].append( pattern[1].lower() )
-            else: search['text'].append( pattern[0].lower() )
+                    search['tags'].append( normalize_word(pattern[1]) )
+            else: search['text'].append( normalize_word(pattern[0]) )
 
         for k in ['text', 'tags', 'phrases', 'feed']:
             if len(search[k]) == 0:
@@ -1663,22 +1668,25 @@ class Expr(HasSocial):
         return self
 
     def build_search(self, d):
-        tags = d.get('tags', self.get('tags'))
-        tag_list = []
-        if tags: tag_list = normalize_tags(tags)
-        d['tags_index'] = tag_list
-        
+        tags = d.get('tags', self.get('tags', ''))
+        d['tags_index'] = normalize_tags(tags)
+
         d['title_index'] = normalize(d.get('title', self.get('title', '')))
 
         text_index = []
         for a in d.get('apps', []):
-            if a.get('type') in ['hive.html', 'hive.text'] and a.get('content', '').strip():
+            if( a.get('type') in ['hive.html', 'hive.text']
+                and a.get('content', '').strip()
+            ):
                 text = html.fromstring( a.get('content') ).text_content()
                 text_index.extend( normalize(text) )
-        text_index = list( set( text_index + tag_list ) )
+        text_index = list( set( d['tags_index'] + d['title_index'] +
+            text_index ) )
         if text_index: d['text_index'] = text_index
 
-    def _collect_files(self, d, old=True, thumb=True, background=True, apps=True):
+    def _collect_files(self, d, old=True, thumb=True, background=True,
+        apps=True
+    ):
         ids = []
         if old: ids += self.get('file_id', [])
 
