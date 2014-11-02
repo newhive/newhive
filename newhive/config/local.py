@@ -9,3 +9,6 @@ database        = 'test'
 
 debug_mode      = True
 debug_unsecure  = True
+
+# TODO?: reimplement local file upload
+# aws_id = False # disable S3 connection for dev without Internet
