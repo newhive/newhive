@@ -1,4 +1,4 @@
-{|templates/network_nav.html}
+{# Network intro expression card for users with emptyish following #}
 {<if network_help}
   <div class="centered">
     <iframe src="{config.content_url}{config.site_user}/network-expression" 
@@ -6,39 +6,35 @@
     </iframe>
   </div>
 {>}
-{# display header #}
-{<if (not flags.new_nav)}
-  {<if (and header (or user.logged_in (neq route_name "home")))}
-    <div class='header_title'>
-      <span class='heading'>{ header.0 }
-        {<if header.1}: { header.1 }{>}</span>
-    </div>
-  {>}
-{>}
+
+{# A user card #}
 {<if owner}
   {<with owner}
     {|templates/profile_card.html}
   {>}
+
+  {# search bar appears hear when looking at profile, because no nav bar #}
+  <form class="search_bar{<if owner} hide{>}"
+    method='GET' action='/search' name='search_form'>
+      {#
+        <a href='/random' title="View Random Newhive" class='random_link'
+         ><div class='hoverable icon random inline'></div></a> 
+      #}
+      <div type="button" title="Toggle Tags" value="" class='hoverable icon hash inline'></div>
+      <input type="text" id="search_box" class="inline" placeholder="Search"
+        name='q' value='{query.q}'
+      ><input type="submit" value class='hoverable icon go_arrow inline'
+  ></form>
 {>}
-{<if (or owner (not flags.new_nav))}
-<form class="search_bar{<if owner} hide{>}"
-  method='GET' action='/search' name='search_form'>
-    {#
-      <a href='/random' title="View Random Newhive" class='random_link'
-       ><div class='hoverable icon random inline'></div></a> 
-    #}
-    <div type="button" title="Toggle Tags" value="" class='hoverable icon hash inline'></div>
-    <input type="text" id="search_box" class="inline" placeholder="Search"
-      name='q' value='{query.q}'
-    ><input type="submit" value class='hoverable icon go_arrow inline'
-  ></form
->
-{>}
+
+{# main tag list (TODO?-cleanup: maybe move into if owner block above) #}
 {<unless page "tag_search"}
   {<with null "extra_classes" "hide"} {# "expander" route.include_tags #}
     {|templates/tags_main.html}
   {>}
 {>}
+
+{# for editing tags #}
 {<if route.include_tags}
   <form {form_attrs "collection_order"} method="POST"
     class="centered save_bar hide block">
@@ -49,8 +45,13 @@
     <input type="hidden" name="deletes" value=0>
   </form>
 {>}
-<div class='feed {layout}{<unless route.private} public{>}
-  {<if (or (eq route_name "following") (eq route_name "followers"))} user{>}'>
+
+{# card / feed container #}
+<div class='feed {layout}
+  {# whether or not to opacify unlisted cards #}
+  {<unless route.private} public{>}
+  {<if (or (eq route_name "following") (eq route_name "followers"))} user{>}
+'>
   {# Insert 3-column layout here.  
     When unused, it's 0 height.
     When unused, the columns have 0 width #}

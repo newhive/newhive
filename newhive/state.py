@@ -27,6 +27,7 @@ import threading
 from subprocess import call
 
 from newhive.utils import *
+from newhive.utils import normalize_word
 from newhive.routes import reserved_words
 
 from newhive.profiling import g_flags
@@ -116,11 +117,15 @@ class Database:
                     if search.get('text'):
                         # spec['$or'] = [{'text_index': {'$all': search['text']}},
                         #     {'title_index': {'$all': search['text']}}]
-                        # WAS: body OR title contained ALL search terms.
-                        # NOW: EACH text term is found in body OR title OR tags
-                        spec['$and'] = [ {'$or': [{'title_index': text}, 
-                            {'text_index': text}, {'tags_index': text}]}
-                            for text in search.get('text')]
+                        # spec['$and'] = [ {'$or': [{'title_index': text}, 
+                        #     {'text_index': text}, {'tags_index': text}]}
+                        #     for text in search.get('text')]
+                        # V0: body OR title contained ALL search terms.
+                        # V1: EACH text term is found in body OR title OR tags
+                        # V2: same as v1, but text index contains words in
+                        #     title, tags, and text_index for efficiency
+                        spec['$and'] = [{'text_index': text} for text in
+                            search.get('text')]
                     if search.get('user'):
                         spec['owner_name'] = search['user']
                     results = self.Expr.page(spec, **args)
@@ -173,8 +178,8 @@ class Database:
                 ]:
                     search['tags'].append( pattern[1] )
                 else: 
-                    search['tags'].append( pattern[1].lower() )
-            else: search['text'].append( pattern[0].lower() )
+                    search['tags'].append( normalize_word(pattern[1]) )
+            else: search['text'].append( normalize_word(pattern[0]) )
 
         for k in ['text', 'tags', 'phrases', 'feed']:
             if len(search[k]) == 0:
@@ -505,11 +510,14 @@ def add_to_category(category, collection):
     category['collections'] += [collection]
 
 # client view of a collection
-def collection_client_view(db, collection, ultra=False, viewer=None):
+def collection_client_view(db, collection, ultra=False, viewer=None, thumbs=True):
+    ## we have just a single expr
     if isinstance(collection, basestring):
         expr = db.Expr.fetch(collection)
         if not expr: return None
         expr_cv = expr.client_view(viewer=viewer)
+        # individual pages can appear in categories, so this gets
+        # a collection attribute that's actually its own id
         expr_cv.update({
             'collection': collection
             ,"snapshot_tiny": expr.snapshot_name("tiny")
@@ -518,6 +526,9 @@ def collection_client_view(db, collection, ultra=False, viewer=None):
         })
         if ultra: expr_cv["snapshot_ultra"] = expr.snapshot_name("ultra")
         return expr_cv
+
+    ## it's a real collection   
+
     username = collection.get('username')
     if not username: return None
     owner = db.User.named(username)
@@ -538,7 +549,6 @@ def collection_client_view(db, collection, ultra=False, viewer=None):
     expr = el[0]
     if not expr: return None
 
-    # TODO-perf: this method belongs as standalone in state.
     expr_cv = {
         # TODO-perf: trim this to essentials
         "owner": owner.client_view(viewer=viewer)
@@ -557,22 +567,24 @@ def collection_client_view(db, collection, ultra=False, viewer=None):
         }
     }
     if ultra: expr_cv["snapshot_ultra"] = expr.snapshot_name("ultra")
-    expr_cv["thumbs"] = []
-    if len(el) > 1: 
-      for i in xrange(1 if len(el) > 2 and not ultra else 0, len(el)):
-        expr = el[i]
-        expr_cv["thumbs"].append({
-            "owner_name": expr['owner_name']
-            ,"name": expr['name']
-            ,"id": expr.id
-            ,"search_query": search_query
-            ,"snapshot_tiny": expr.snapshot_name("tiny")
-            ,"snapshot_small": expr.snapshot_name("small")
-            ,"snapshot_big": expr.snapshot_name("big")
-        })
-        if ultra: expr_cv["thumbs"][-1]["snapshot_ultra"] = expr.snapshot_name("ultra")
+    if thumbs:
+        expr_cv["thumbs"] = []
+        if len(el) > 1: 
+          for i in xrange(1 if len(el) > 2 and not ultra else 0, len(el)):
+            expr = el[i]
+            expr_cv["thumbs"].append({
+                "owner_name": expr['owner_name']
+                ,"name": expr['name']
+                ,"id": expr.id
+                ,"search_query": search_query
+                ,"snapshot_tiny": expr.snapshot_name("tiny")
+                ,"snapshot_small": expr.snapshot_name("small")
+                ,"snapshot_big": expr.snapshot_name("big")
+            })
+            if ultra: expr_cv["thumbs"][-1]["snapshot_ultra"] = expr.snapshot_name("ultra")
 
     # determine if this is an owned or curated collection
+    # for "by USER" or "curated by USER" on card
     if tag:
         owned_exprs = (db.Expr.search(
             {'owner': owner.id, '_id': {'$in': exprs}}))
@@ -640,7 +652,7 @@ class User(HasSocial):
     def create(self):
         self['name'] = self['name'].lower()
         # self['signup_group'] = self.collection.config.signup_group
-        assert re.match('[a-z][a-z0-9]{2,23}$', self['name']) != None, (
+        assert re.match('[a-z0-9]{3,24}$', self['name']) != None, (
             'Invalid username')
         assert not (self['name'] in reserved_words)
         dict.update(self,
@@ -858,6 +870,7 @@ class User(HasSocial):
         try:
             return self.activity_bug(**args) 
         except Exception as e:
+            print "activity_bug!!!"
             print e
             return []
 
@@ -1220,6 +1233,17 @@ class User(HasSocial):
                     list(self.activity(limit=activity))) )
         return user
 
+    def get_home(self):
+        ru = self.db.User.root_user
+        home = {}
+        home['cats'] = cats = ru.get('ordered_cats')
+        home['categories'] = { 
+            cat: [collection_client_view(self.db, col, thumbs=False)
+                for col in ru.get_category(cat)['collections'][:config.cat_hover_count]]
+            for cat in cats
+        }
+        return home
+
     def get_root_categories(self):
         ru = self.db.User.root_user
         cats = ru.get_cats()
@@ -1359,11 +1383,6 @@ class Expr(HasSocial):
 
             filter = {}
             spec2 = spec if isinstance(spec, dict) else filter
-            # Hack for Zach. TODO-cleanup: verify with Zach that this link
-            # isn't needed anymore and remove
-            if (spec2.has_key('tags_index') 
-                and ['deck2014'] in spec2.get('tags_index').values()):
-                    override_unlisted = True
             # Set up auth filtering
             if auth:
                 spec2.update(auth=auth)
@@ -1647,22 +1666,25 @@ class Expr(HasSocial):
         return self
 
     def build_search(self, d):
-        tags = d.get('tags', self.get('tags'))
-        tag_list = []
-        if tags: tag_list = normalize_tags(tags)
-        d['tags_index'] = tag_list
-        
+        tags = d.get('tags', self.get('tags', ''))
+        d['tags_index'] = normalize_tags(tags)
+
         d['title_index'] = normalize(d.get('title', self.get('title', '')))
 
         text_index = []
         for a in d.get('apps', []):
-            if a.get('type') in ['hive.html', 'hive.text'] and a.get('content', '').strip():
+            if( a.get('type') in ['hive.html', 'hive.text']
+                and a.get('content', '').strip()
+            ):
                 text = html.fromstring( a.get('content') ).text_content()
                 text_index.extend( normalize(text) )
-        text_index = list( set( text_index + tag_list ) )
+        text_index = list( set( d['tags_index'] + d['title_index'] +
+            text_index ) )
         if text_index: d['text_index'] = text_index
 
-    def _collect_files(self, d, old=True, thumb=True, background=True, apps=True):
+    def _collect_files(self, d, old=True, thumb=True, background=True,
+        apps=True
+    ):
         ids = []
         if old: ids += self.get('file_id', [])
 

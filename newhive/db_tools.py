@@ -1,4 +1,5 @@
 import re
+from collections import defaultdict
 
 import newhive
 from newhive import state
@@ -132,3 +133,13 @@ def new_referral_link(from_user_name, to_email='', reuse=1):
 def new_referral(from_user_name, to_email='', reuse=1):
     return db.User.named(from_user_name).new_referral(
         {'to': to_email, 'reuse': reuse})
+
+
+import csv
+# expects data to be list of lists
+def export_csv(data, file_name='newhive_query'):
+    if not re.search('.csv$', file_name): file_name += '.csv'
+    f = open(file_name, 'wb')
+    wr = csv.writer(f, quoting=csv.QUOTE_ALL)
+    for row in data:
+        wr.writerow(row)

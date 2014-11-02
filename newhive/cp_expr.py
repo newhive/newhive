@@ -2,11 +2,27 @@
 # place appropriate db credentials in newhive/config/live_secret
 # and delete immediately afterwards
 
+#
+# Recipes
+
+# Copy expression off live server to local
+# remote_db = dbs('live')
+# remote_expr = remote_db.Expr.with_url('http://staging.newhive.com/newhive/faq?q=faq')
+# cp_expr(remote_expr, db)
+
+# Copy local expression to remote
+# remote_db = dbs('dev')
+# expr = db.Expr.last()
+# cp_expr(expr, remote_db)
+
 from pymongo.errors import DuplicateKeyError
 
 from newhive import state
 
-def cp_expr(expr, dest_db):
+def cp_expr(expr, dest_db, overwrite=False):
+    if overwrite:
+        old_expr = dest_db.Expr.find({"name": expr['name'], "owner_name": expr['owner_name']})
+        if old_expr: old_expr.purge()
     new_expr = dest_db.Expr.new(expr)
     new_expr.pop('snapshot_id', None) # snapshot should be rerendered from dest
     new_expr.pop('snapshot_time', None)

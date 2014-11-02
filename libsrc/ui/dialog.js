@@ -94,14 +94,27 @@ define([
             opts.opened = true;
             var this_dia = opts.dialog;
             
+            o.attach_point = this_dia.parent();
+            if (!opts.leave_in_dom || this_dia.parent().get(0) != document.body) {
+                this_dia.detach();
+                // Make sure this isn't a duplicate dialog
+                var $prev_dia = $("#" + this_dia.prop("id"))
+                $prev_dia.remove()
+                // Add to body to create a new z index stack
+                this_dia.appendTo(document.body);
+            } else {
+                // Move the current dialog to the top of the stack
+                // NOTE: we don't want to ACTUALLY mess with this_dia's position
+                // in the DOM because that would cause it to reload its child
+                // iframe's.
+                $("body > .dialog, body > .dialog_shield").not(this_dia)
+                    .insertBefore(this_dia)
+            }
+
             opts.shield = $("<div class='dialog_shield'>");
             if(opts.fade) opts.shield.addClass('fade');
-            opts.shield.appendTo(document.body).click(o.close);
+            opts.shield.insertBefore(this_dia).click(o.close);
 
-            o.attach_point = this_dia.parent();
-            this_dia.detach();
-            // Add to body to create a new z index stack
-            this_dia.appendTo(document.body);
             this_dia.find("form").unbind('success', opts.handler)
                 .on('success', opts.handler)
             this_dia.find(".error_msg").hidehide();
@@ -123,6 +136,8 @@ define([
                 this_dia.data("_width", util.val(this_dia.css("width")));
             o.layout();
             $("body").off('keydown', key_handler).on("keydown", key_handler);
+            if (this_dia.find("iframe") && opts.leave_in_dom == undefined)
+                opts.leave_in_dom = true
             opts.open();
 
             return o
@@ -140,7 +155,8 @@ define([
             if(opts.cloned){
                 opts.dialog.remove()
             }else{
-                opts.dialog.detach().appendTo(o.attach_point);
+                if (!opts.leave_in_dom)
+                    opts.dialog.detach().appendTo(o.attach_point);
                 opts.dialog.hidehide();
             }
             if (opts.shield)

@@ -74,52 +74,83 @@ Hive.toggle_grid = function() {
 
 Hive.help_selection = function (start) {
     start = ui_util.defalt(start, true)
-    var $elems = $("body #happs .happ, #controls .control.buttons > *")
+    var $elems = $("body #happs .happ, #controls .control.buttons > *, .app_btns > *")
         ,$highlight = $("#overlays_group .help_highlight")
         ,$help_target, depth = 0
     if (!$highlight.length) 
         $highlight = $("<div class='help_highlight'>").appendTo("#overlays_group")
-    $elems = $elems.add($highlight) 
+    $elems = $elems.add($highlight)
+    $("body").toggleClass("help", start)
     Menu.no_hover = start
-    if (start) {
-        $elems.bind_once_anon("mouseenter.help mouseleave.help",function(ev) {
-            var $target = $(ev.currentTarget), enter = (ev.type == "mouseenter")
-                ,css = $target.get(0).getBoundingClientRect()
-            depth += enter ? 1 : -1
-            console.log("class: " + $target.attr("class") + ", depth: " + depth)
-            if ($(ev.currentTarget).is(".help_highlight"))
-                return
-            $help_target = $target
-            $highlight.showshow().css(css)
-            if (!depth) setTimeout(function() {
-                $highlight.showhide(depth)
-            },1)
-        })
-        .bind_once_anon("mousedown.help", function(ev) {
-            Hive.help_selection(false)
-            var help_file, klasses = $help_target.attr("class")
-                , help_files = {
-                ".hive_image": "Image App"
-                ,".happ": "Generic App"
-                ,".button.opacity": "Set opacity"
-            }
-            for (var selector in help_files) {
-                if ($help_target.is(selector)) {
-                    help_file = help_files[selector]
-                    break
-                }
-            }
-            u.set_debug_info(help_file ? help_file : "File not found. " 
-                + klasses, 5000)
-            return false
-        })
-    } else {
+    if (!start) {
         $elems.off("mouseenter.help mouseleave.help mousedown.help")
         $highlight.hidehide()
+        return
     }
 
+    // start == true
+    $elems.bind_once_anon("mouseenter.help mouseleave.help",function(ev) {
+        var $target = $(ev.currentTarget), enter = (ev.type == "mouseenter")
+            ,css = $target.get(0).getBoundingClientRect()
+        depth += enter ? 1 : -1
+        if (!depth) setTimeout(function() {
+            $highlight.showhide(depth)
+            // $help_target = undefined
+        },100)
+        if ($(ev.currentTarget).is(".help_highlight"))
+            return
+        if (enter)
+            $help_target = $target
+        $highlight.showshow().css(css)
+    })
+    .add($("body, body *")).bind_once_anon("mousedown.help", function(ev) {
+        $("body, body *").off("mousedown.help")
+        Hive.help_selection(false)
+        if (! $(this).is(".help_highlight"))
+            return false
+        var klasses = $help_target.attr("class")
+            , help_file = "File not found. " + klasses
+            , help_files = {
+                ".happ.hive_image": "#images"
+                ,".insert_image": "#images"
+                ,".happ.hive_text": "#text"
+                ,".insert_text": "#text"
+                ,".happ.hive_audio": "#audio"
+                ,".insert_audio": "#audio"
+                // ,".happ.hive_html": "#embeds"
+                ,".insert_embed": "#embeds"
+                ,".happ.hive_polygon": "#shapes"
+                ,".insert_shape": "#shapes"
+                // ,".happ.hive_polygon": "#shapes"
+                ,".insert_file": "#files"
+                // ,".happ": "Generic App"
+                // ,".button.opacity": "Set opacity"
+            }
+        for (var selector in help_files) {
+            if ($help_target.is(selector)) {
+                help_file = help_files[selector]
+                break
+            }
+        }
+        if (help_file[0] != "#") {
+            if (context.flags.can_debug)
+                u.set_debug_info(help_file, 5000)
+            help_file = "#general"
+        }
+        $("#dia_editor_help").data("dialog").open()
+        var $iframe = $("#dia_editor_help iframe")
+            ,url = $iframe.prop("src").replace(/#.*$/, '')
+        $iframe.prop("src", url + help_file)
+        return false
+    })
 }
+
 Hive.init_menus = function() {
+    if (context.flags.context_help) {
+        $("#btn_help").bind_once_anon("click", function(ev) {
+            Hive.help_selection()
+        })
+    }
     hive_app.App.has_slider_menu(null, ""
         ,env.padding_set, env.padding, null, null
         ,{ min: 0, max: 30, quant: 1
@@ -278,8 +309,10 @@ Hive.init_menus = function() {
             env.click_app = undefined;
             return;
         }
-        center = u._mul([ev.clientX, ev.clientY])(env.scale());
-        u.new_file(files, { center: center });
+        var opts = {}, center = [$(window).width()/2, $(window).height()/2]
+        if (env.dragging)
+            opts.center_offset = u._sub([env.dragX, env.dragY], center);
+        u.new_file(files, opts);
     }).on('success', function(ev, files){ u.on_media_upload(files) });
 
     $('#link_upload').on('with_files', function(ev, files){
@@ -334,6 +367,7 @@ Hive.init_global_handlers = function(){
     evs.on(drag_base, 'dragstart');
     evs.on(drag_base, 'drag');
     evs.on(drag_base, 'dragend');
+    evs.on(drag_base, 'dragover');
 
     // The plus button needs to be clickable, but pass other events through
     $(".prompts .plus_btn").add($(".prompts .hint"))
@@ -344,6 +378,7 @@ Hive.init_global_handlers = function(){
         })
         .on('dragover', function(ev){
             ev.preventDefault();
+            drag_base.trigger("dragover");
         })
         .on("mouseenter", function(ev){
             drag_base.trigger("dragenter");
@@ -385,7 +420,7 @@ Hive.init_global_handlers = function(){
         Hive.send({save_dialog: 1})
     })
     var has_revert = (revert.apps || revert.background)
-    $(".menu_item.revert").addremoveClass("hide", !has_revert)
+    $(".menu_item.revert").toggleClass("hide", !has_revert)
         .prop('disabled', !has_revert)
     $(".menu_item.revert").bind_once_anon("click", function(ev) {
         if (!has_revert) return
@@ -492,6 +527,7 @@ Hive.init = function(exp, site_context, _revert){
     env.Background = hive_app.App.Background()
     hive_app.Apps.init(Hive.Exp.apps);
     hive_app.Apps.restack();
+    env.Groups.init(Hive.Exp.groups || []);
     last_autosave = $.extend(true, {}, Hive.state())
     env.zoom_set(1)
 
@@ -666,6 +702,7 @@ Hive.state = function() {
     //Hive.Exp.domain = $('#domain').val();
     hive_app.Apps.restack(); // collapse layers of deleted apps
     Hive.Exp.apps = hive_app.Apps.state();
+    Hive.Exp.groups = env.Groups.state()
 
     // TODO: get height/maximum dimension
     // var h = u.app_bounds(env.Apps.all()).bottom
@@ -690,10 +727,15 @@ Hive.handler_type = 3;
 var dragging_count = 0;
 Hive.dragenter = function(ev){ 
     // hovers_active(false);
+    env.dragging = true 
     Hive.global_highlight(true);
     dragging_count++;
     ev.preventDefault();
     return false;
+};
+Hive.dragover = function(ev){ 
+    env.dragX = ev.originalEvent.clientX
+    env.dragY = ev.originalEvent.clientY
 };
 Hive.dragstart = function(){ 
     // hovers_active(false);
@@ -706,12 +748,16 @@ Hive.dragend = function(){
     // In case scrollbar has been toggled:
     u.layout_apps();
 };
-Hive.drop = Hive.dragleave = function(){
+Hive.drop = Hive.dragleave = function(ev){
     if (dragging_count > 0) 
         --dragging_count;
 
-    if (0 == dragging_count)
+    if (0 == dragging_count) {
         Hive.global_highlight(false);
+        if (ev.type == "drop") setTimeout(function(){ 
+            env.dragging = false
+        }, 100)
+    }
     return false;
 };
 // TODO-feature-editor-prompts: could be used in handlers for non-pointer
@@ -739,13 +785,17 @@ Hive.keydown = function(ev){
 Hive.scroll = function(ev){
     var scrolledX = window.scrollX - env.scrollX
         ,scrolledY = window.scrollY - env.scrollY
+        ,has_fixed = false
     env.scrollX += scrolledX
     env.scrollY += scrolledY
     env.Apps.all().map(function(app){
         if (app.fixed()) {
             app.pos_set(u._add(app.pos(), [scrolledX, scrolledY]))
+            has_fixed = true
         }
     })
+    if (has_fixed)
+        env.Selection.update_relative_coords()
     if (env.Selection.controls)
         env.Selection.controls.layout()
     env.Selection.elements().map(function(app){

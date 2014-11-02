@@ -38,9 +38,9 @@ var menu = function(handle, drawer, options) {
     if (util.mobile()) 
         $.extend(opts, mobile_opts);
     if(!handle.length)
-        throw("menu has no handle");
+        console.error('menu has no handle:', drawer)
     if(!drawer.length)
-        throw("menu has no drawer");
+        console.error('ERROR: menu has no drawer:', handle)
     if(!opts.group) opts.group = { menus: [] };
 
     o.menus = [];
@@ -201,7 +201,29 @@ var menu = function(handle, drawer, options) {
             opts.auto_height = true;
             // opts.offset_y = (95 - handle.outerHeight()) / 2;
             opts.offset_y = 0;
+            if (util.mobile())
+                return
+        } else if (drawer.is(".category_hover")) {
+            var $header = $(".main-header .header"), $card = $(".feed .card").eq(0)
+                , bounds = $header[0].getBoundingClientRect()
+                , bounds_img = bounds
+            if ($card.length) {
+                bounds_img = $.extend({}, $card[0].getBoundingClientRect())
+                var pad = parseFloat($card.css("padding"))
+                bounds_img.width -= 2*pad
+                bounds_img.left += pad
+                bounds_img.right -= pad
+            }
+            $.extend(css_opts, {
+                width: bounds_img.width,
+                left: bounds_img.left,
+                right: bounds_img.right,
+                top: bounds.bottom + opts.offset_y,
+            })
+            drawer.css(css_opts)
+            return
         }
+
         d_size = drawer[0].getBoundingClientRect();
         // pick top of menu based on if menu would go past bottom of
         // window if below handle, or above top of window if above the handle
@@ -239,6 +261,9 @@ var menu = function(handle, drawer, options) {
                 hp.left - d_size.width + handle.outerWidth() : hp.left );
             if (opts.layout_x == "center")
                 css_opts.left += (handle.outerWidth() - d_size.width) / 2;
+            if (css_opts.left < 0) css_opts.left = 0
+            if (css_opts.left + d_size.width > $(window).width()) 
+                css_opts.left = $(window).width() - d_size.width
 
             // TODO-polish: check that the menu still fits on window
             // Namely, shift it into screen at the bottom of code
@@ -259,12 +284,13 @@ var menu = function(handle, drawer, options) {
             var scroller = drawer.find('.items');
             if (! scroller.length)
                 scroller = drawer
+            if (css_opts.top < margin_y) {
+                // drawer.css("max-height", d_size.height + css_opts.top - margin_y)
+                css_opts.top = margin_y;
+            }
             if(css_opts.top + d_size.height > $(window).height()) {
                 scroller.css('max-height', $(window).height() - margin_y - css_opts.top -
                     (d_size.height - scroller.outerHeight()));
-            } else if (css_opts.top < margin_y) {
-                drawer.css("max-height", d_size.height + css_opts.top - margin_y)
-                css_opts.top = 50;
             }
         }
 

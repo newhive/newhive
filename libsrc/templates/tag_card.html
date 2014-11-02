@@ -13,7 +13,7 @@
         (or expr.remix_root_owner remix_root_owner)
         "tag_name" (or remix_root_tag expr.remix_root_tag)}
     {>}{<else}
-      {<if route.include_categories}
+      {<if (and route.include_categories main_view)}
         { anchor_attrs "collections_grid_cat" "owner_name" owner.name 
           "tag_name" tag_name}
       {>}{<elif route.include_tags}
@@ -37,9 +37,10 @@
   >
 {>}
 <div class=
-{<if (and main_view tag_selected (neq tag_selected tag_name))}
-  "tag_label tag_unselected"
-{>}{<else}
-  "tag_label tag_{mod tagnum 16}"
-{>}
->{tag_name}</div></a>
+  {<if (and main_view tag_selected (neq tag_selected tag_name))}
+    "tag_label tag_unselected"
+  {>}{<else}
+    "tag_label tag_{mod tagnum 16}"
+  {>}
+>{tag_name}</div>
+{cond suppress_link "" "</a>"}

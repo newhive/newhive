@@ -72,8 +72,7 @@ class Assets(object):
                 k.name = versioned_name
                 # assets expire 10 years from now (we rely on cache busting query string)
                 headers = {
-                    'Cache-Control': 'max-age=' + str(86400 * 3650),
-                    'Access-Control-Allow-Origin': '*'
+                    'Cache-Control': 'max-age=' + str(86400 * 3650)
                 }
                 if re.search(r'\.woff$', name):
                     headers['Content-Type'] = 'application/x-font-woff'

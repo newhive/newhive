@@ -10,6 +10,7 @@ define([
     ,'browser/layout'
     ,'ui/jplayer'
     ,'ui/util'
+    ,'ui/media_players'
     ,'analytics'
 
     ,'browser/jquery/jplayer/skin'
@@ -21,6 +22,7 @@ define([
     ,layout
     ,jplayer
     ,util
+    ,media_players
     ,analytics
 ){
     var o = {}
@@ -72,6 +74,8 @@ define([
             //     // $app.css({display:"none"})
             // }
         })
+
+        o.add_player_type(media_players.jplayer)
 
         context.parse_query();
         no_embed = ("no-embed" in context.query);
@@ -172,7 +176,7 @@ define([
                 swipe_x = js.bound(x, -swipe_max, 0)
             if(swipe_x < 0) swipe_el.css('left', 140 + swipe_x)
             else swipe_el.css('right', 140 - swipe_x)
-            swipe_el.addremoveClass('on', Math.abs(swipe_x) == swipe_max)
+            swipe_el.toggleClass('on', Math.abs(swipe_x) == swipe_max)
         }, swipe_end = function(){
             swiping = touch_start = false
             swipe_container_el.remove()
@@ -220,18 +224,20 @@ define([
     }
 
     o.expr_receive = function(ev){
-        if ( ev.data.action == "show" ) {
+        var msg = ev.data
+        if( msg.action == 'show' ){
             function callback(data){
                 $('body').html(data);
                 setTimeout(o.show, 0);
             };
-            if (ev.data.password && !$('body').children().length){
-                $.post('', { password: ev.data.password, partial: true }, callback);
+            if (msg.password && !$('body').children().length){
+                $.post('', { password: msg.password, partial: true }, callback);
             } else {
                 o.show();
             }
         } 
-        else if ( ev.data.action == "hide" ) o.hide();
+        else if( msg.action == 'hide' ) o.hide()
+        else if( msg.action == 'play_toggle' ) o.autoplay_toggle()
     }
 
     o.margin = function () {
@@ -254,75 +260,65 @@ define([
         }
     }
 
-    // Handle autoplay
-    var current_playing = -1, current_pos = 0, looping = false, fail_count = 0
-        ,paused = false
+    // autoplay state. play_playing is the intent, so remains true after hide()
+    var autoplayers = [], autoplay_current = -1, autoplay_playing = false,
+        autoplay_loop = false, player_constructors = [], autoplay_pos = 0
+    o.add_player_type = function(constructor){
+        player_constructors.push(constructor) }
+    o.get_player = function(el){
+        for(var i = 0; i < player_constructors.length; i++){
+            var player = player_constructors[i](el)
+            if(player) return player
+        }
+        return false // not supported
+    }
 
-    // return list of autoplaying apps, sorted top-to-bottom
-    var autoplayers = function() {
-        return $(".happ.autoplay").sort(function(a,b) { 
-            return a.getBoundingClientRect().top - b.getBoundingClientRect().top 
-        } )
-    }
-    var current_player = function() {
-        return autoplayers().slice(current_playing, current_playing + 1)
-    }
-    var set_pause = function(pause) {
-        if (pause == paused)
+    var autoplay_no_update = false
+    var autoplay_update = function(i, playing){
+        if(autoplay_no_update){
+            autoplay_no_update = false
             return
-        paused = pause
-        o.send_top(paused ? "play_pause" : "play")
-    }
-    var play_pause = function() {
-        var $player = current_player()
-            ,pause_func = $player.data("pause_func")
-        if ( typeof(pause_func) == "function" )
-            pause_func()
-        set_pause(true)
-    }
-    var play_first = function() {
-        current_playing = 0
-        var $player = current_player()
-            ,ready_func = $player.data("ready_func")
-            ,play_func = $player.data("play_func")
-        // Play the app
-        if ( typeof(play_func) == "function" ) {
-            play_func()
-            set_pause(false)
         }
-        // But be ready to play it when it loads if it hasn't yet
-        if (typeof(ready_func) == "function" ) {
-            ready_func(function() {
-                current_playing = -1
-                play_next()
-            })
-        }
+        if(playing == autoplay_playing) return
+        autoplay_current = i
+        autoplay_playing = playing
+        o.send_top(playing ? 'play' : 'play_pause')
     }
-    var play_next = function (player) {
-        if (player && !player.hasClass("autoplay"))
+    o.autoplay_pause = function(freeze){
+        var player = autoplayers[autoplay_current]
+        if(!player) return
+        if(freeze) autoplay_no_update = true
+        autoplay_pos = player.pause()
+    }
+    o.autoplay = function(resume){
+        if(!autoplayers.length) return
+        if(resume && !autoplay_playing){
+            o.send_top('play_pause')
             return
-        var $players = autoplayers()
-        if ($players.length == 0)
-            return
-        current_playing++
-        if (looping)
-            current_playing %= $players.length
-        else if (current_playing >= $players.length)
-            return -1
+        }
+        if(autoplay_current == -1) autoplay_current = 0
+        var player = autoplayers[autoplay_current]
+        if(!player) return
+        player.play(autoplay_pos)
+        autoplay_update(true)
+    }
+    o.autoplay_toggle = function(){
+        if(autoplay_playing) o.autoplay_pause()
+        else o.autoplay()
+    }
+    o.autoplay_next = function(){
+        autoplay_current++
+        if (autoplay_loop)
+            autoplay_current %= autoplayers.length
+        else if (autoplay_current >= autoplayers.length){
+            autoplay_current = -1
+            autoplay_playing = false
+        }
+        var player = autoplayers[autoplay_current]
+        if(!player) return
+        player.play()
+    }
 
-        var $player = current_player()
-            ,play_func = $player.data("play_func")
-        if ( typeof(play_func) == "function" ) {
-            fail_count = 0
-            play_func()
-            set_pause(false)
-        } else {
-            fail_count++
-            // skip apps which don't "play", but also don't skip on loop forever
-            if (fail_count < $players.length)
-                play_next()
-        }
-    }
     o.init_content = function(){
         if (0) {
             // Scroll the page on drags
@@ -356,31 +352,24 @@ define([
 
         // Init jplayer, and autoplay as needed
         jplayer.init_jplayer();
-       
-        // http://jplayer.org/latest/developer-guide/ 
+        // HACK to fix audio player layout
         $(".hive_audio").each(function (i, el) {
-            var $jp = $(el).find(".jp-jplayer")
-            $(el).data("play_func", function(t) {
-                $jp.bind_once_anon($.jPlayer.event.ended + ".hive", 
-                    function() { play_next($(el)) })
-                return $jp.jPlayer("play", t)
-            })
-            $(el).data("pause_func", function() {
-                var status = $jp.data("jPlayer").status
-                current_pos = status.currentTime
-                return $jp.jPlayer("pause")
-            })
-            $(el).data("ready_func", function(on_ready) {
-                $jp.bind_once_anon($.jPlayer.event.ready + ".hive",
-                    function() { on_ready($(el)) })
-            })
-            // HACK to fix audio player layout
             $(el).attr("data-scale", $(el).height() / 36.1)
         })
-        // HACK to fix audio player layout
         $(".hive_audio .jp-controls").add(".hive_audio .jp-controls *")
             .css({width:"",height:""})
-        play_first()
+
+        // get list of autoplaying apps, sorted top-to-bottom
+        autoplayers = $.map( $(".happ.autoplay").sort(function(a,b) {
+            return a.getBoundingClientRect().top - b.getBoundingClientRect().top 
+        } ), o.get_player )
+        $.each(autoplayers, function(i, player){
+            player.finish(o.autoplay_next)
+            player.play_change(function(playing){
+                autoplay_update(i, playing) })
+        })
+        if(autoplayers[0])
+            autoplayers[0].ready(function(){ o.autoplay() })
 
         if (util.mobile()) o.layout()
     };
@@ -462,20 +451,20 @@ define([
             ).addClass('code_module').appendTo('body')
         })
 
-        var $player = current_player()
-            ,play_func = $player.data("play_func")
-        if ( typeof(play_func) == "function" ) {
-            play_func()
-        }
+        o.autoplay(true)
     }
     o.hide = function(){
         visible = false
+
+        o.autoplay_pause(true)
+
         $('.hive_html').each(function(i, div) {
             var $div = $(div);
             if ($div.html() == '') return;
             $div.attr('data-content',$div.html());
             $div.html('');
         });
+
         $('.hive_audio .jp-jplayer').each(function(i, div) {
             $(div).jPlayer("pause");
         });
@@ -483,8 +472,6 @@ define([
         animate_go = 0
         code_modules.map(function(module){ module.stop && module.stop() })
         $('script.code_module').remove()
-
-        play_pause()
     };
 
 

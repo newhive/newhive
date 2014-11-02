@@ -18,6 +18,17 @@ db=state.Database()
 max_threads = 30
 max_time = 10.
 
+# This code assumes that the local db is (mostly) in sync
+# with the external one.  (If loadtest is running externally)
+# Alternatively, require the loadtest to run *on* the external machine
+
+# Using abs_url() means it will use the server in config.py
+# (which can point externally if desired)
+server_url = abs_url()[:-1]
+content_server = url_host(False)
+server_url = "http://staging.newhive.com"
+content_server = "staging.tnh.me/"
+
 # TODO: make this a serializable class
 # with an option to write to a file
 class Log(object):
@@ -57,16 +68,6 @@ def append_log(url, msg):
     log.append(url, msg)
     debug("%s: %s" % (url,msg))
 
-# This code assumes that the local db is (mostly) in sync
-# with the external one.  (If loadtest is running externally)
-# Alternatively, require the loadtest to run *on* the external machine
-
-# Using abs_url() means it will use the server in config.py
-# (which can point externally if desired)
-server_url = abs_url()[:-1]
-content_server = url_host(False)
-server_url = "http://live-6.newhive.com"
-content_server = "live-6.tnh.me/"
 
 exprs = db.Expr.search({ 'auth': 'public'})
 def generate_url_expr(count):

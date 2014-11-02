@@ -308,6 +308,7 @@ o.goog_rte = function(content_element, app){
         if (saved_range) that.restore_selection();
 
         that.range = that.get_range();
+        if (!that.range) return
         var r = that.range.cloneRange(); // save existing selection
 
         // Look for link in parents

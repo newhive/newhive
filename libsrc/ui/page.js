@@ -37,13 +37,10 @@ define([
     'sj!templates/icon_count.html',
     'sj!templates/dialog_embed.html',
     'sj!templates/dialog_share.html',
-    'sj!templates/network_nav.html',
     'sj!templates/login_form.html', 
     'sj!templates/tag_buttons.html', 
     'sj!templates/hive_menu.html', 
     'sj!templates/request_invite_form.html',
-    // 'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js',
-    'js!browser/jquery/jquery.mobile-events.js', //!!
     'sj!templates/cards.html'
 ], function(
     $,
@@ -76,11 +73,11 @@ define([
     const anim_duration = 700;
 
     o.init = function(controller){
-        (function() {
-          var li = document.createElement('script'); li.type = 'text/javascript'; li.async = true;
-          li.src = ('https:' == document.location.protocol ? 'https:' : 'http:') + '//platform.stumbleupon.com/1/widgets.js';
-          var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(li, s);
-        })();
+        // (function() {
+        //   var li = document.createElement('script'); li.type = 'text/javascript'; li.async = true;
+        //   li.src = ('https:' == document.location.protocol ? 'https:' : 'http:') + '//platform.stumbleupon.com/1/widgets.js';
+        //   var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(li, s);
+        // })();
 
         o.anim_direction = 0;
         o.controller = controller;
@@ -247,25 +244,28 @@ define([
         $(".main-header .network_nav .item").removeClass("black_btn")
         $(".main-header .network_nav .item." + context.route_name)
             .addClass("black_btn")
-        $(".main-header .header").showhide(context.route.client_method == "cat")
-        $(".main-header .header .category_btn").removeClass("black_btn")
-        $(".main-header .header .category_btn[data-name='" 
+        $(".main-header .header")
+            .toggleClass("clean", context.route.client_method != "cat")
+        $(".main-header .category_btn").removeClass("black_btn")
+        $(".main-header .category_btn[data-name='" 
             + context.page_data.tag_selected + "']").addClass("black_btn")
 
         var has_nav = has_nav_bar()
             ,has_nav_embedded_logo = has_nav && context.user.logged_in
 
-        $("#overlays .hive_logo")
-            .addremoveClass("overlay", ! has_nav_embedded_logo)
-            // .addremoveClass("item", has_nav)
+        // Move the logo handle into/out of the nav bar
+        $("#logo_handle")
             .prependTo(has_nav_embedded_logo ? ".main-header .left" : "#overlays")
-            .addremoveClass("hide", has_nav && !has_nav_embedded_logo)
-        // reverse the logo menu if it's up top
+        // And fix up the overlay/hide styles
+        $("#overlays .hive_logo")
+            .toggleClass("overlay", ! has_nav_embedded_logo)
+            .toggleClass("hide", has_nav && !has_nav_embedded_logo)
+        // Reverse the logo menu if it's up top
         if (! $("#logo_menu").is(".inverted") != has_nav_embedded_logo) {
-            $("#logo_menu").addremoveClass("inverted", ! has_nav_embedded_logo)
+            $("#logo_menu").toggleClass("inverted", ! has_nav_embedded_logo)
                 .append($("#logo_menu").children().get().reverse())
         }
-        $(".overlay.panel").addremoveClass("hide", has_nav || $("body").is(".edit"))
+        $(".overlay.panel").toggleClass("hide", has_nav || $("body").is(".edit"))
     }
     var custom_classes = ""
     o.render = function(method, data){
@@ -412,25 +412,26 @@ define([
             if ($(this).find("#search_box").val() == "")
                 return false
         })
-        if (context.flags.new_nav) {
-            $(".main-header .icon.go_search").bind_once_anon("tap.page mouseenter.page", 
-                function(ev) {
-                    var search_box = $(".main-header #search_box")
-                    if(search_box.is(':focus')) return
-                    ev.preventDefault()
-                    search_box.focus()
-            })
-            // Animate header
-            $(window).bind_once_anon("scroll.page", function(ev) {
-                var scrolled_to = $(this).scrollTop()
-                if (scrolled_to > 1)
-                    $(".main-header").addClass("condensed")
-                else
-                    $(".main-header").removeClass("condensed")
-                search_flow = ''
-                reflow_nav()
-            })
-        }
+
+        // top nav search box show
+        $(".main-header .icon.go_search").bind_once_anon("tap.page mouseenter.page", 
+            function(ev) {
+                var search_box = $(".main-header #search_box")
+                if(search_box.is(':focus')) return
+                ev.preventDefault()
+                search_box.focus()
+        })
+        // Animate header
+        $(window).bind_once_anon("scroll.page", function(ev) {
+            var scrolled_to = $(this).scrollTop()
+            if (scrolled_to > 1)
+                $(".main-header").addClass("condensed")
+            else
+                $(".main-header").removeClass("condensed")
+            search_flow = ''
+            reflow_nav()
+        })
+
         // Add expression to collection
         var add_to_collection = function(category) { return function(e) {
             var dialog_selector = ".dialog.add_to_collection." + category
@@ -766,7 +767,7 @@ define([
         }
         if (!condensed) {
             height_nav_uncondensed = new_nav_height
-            $("#site").css({"margin-top": height_nav_uncondensed })
+            $("#site").css({"margin-top": height_nav_uncondensed + 3 })
             return;
         }
     }
@@ -789,7 +790,7 @@ define([
         var new_split = !logged_in && !condensed && win_width < 800
         if (split != new_split) {
             split = new_split
-            $('.main-header').addremoveClass('split', split)
+            $('.main-header').toggleClass('split', split)
         }
 
         setTimeout(reflow_site_margin, 200)
@@ -803,7 +804,7 @@ define([
 
         var new_search_flow = win_width < 730 ? 'block' : 'inline-block'
         $('.main-header .splash.container, .main-header .left')
-            .addremoveClass('narrow', win_width < 830)
+            .toggleClass('narrow', win_width < 830)
         if(search_flow != new_search_flow){
             search_flow = new_search_flow
             if(search_flow == 'block')
@@ -857,9 +858,9 @@ define([
     // Set up the grid borders
     o.add_grid_borders = function(columns){
         var columns = o.columns;
-        $(".feed").addremoveClass("wide", columns > 1)
-        $(".feed").addremoveClass("_3col", columns > 2)
-        $(".feed").addremoveClass("narrow", columns == 1)
+        $(".feed").toggleClass("wide", columns > 1)
+        $(".feed").toggleClass("_3col", columns > 2)
+        $(".feed").toggleClass("narrow", columns == 1)
         if(context.page_data.layout != 'grid') return;
         var expr_cards = $('.feed .card');
         // Count of cards which fit to even multiple of columns

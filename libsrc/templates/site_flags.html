@@ -7,9 +7,12 @@
     {<if page_data.live_server}
         <h1 class="error">LIVE LIVE LIVE</h1>
     {>}
+{#
     {<for page_data.site_flags}
       <label>{key}: <input style="width:500px" name={key} value={item}></label><br>
     {>}
+#}
+    <div class="site_flags"></div>
     <br><br>
     <button class="teal_btn" type="submit">Save</button>
 </form></div>

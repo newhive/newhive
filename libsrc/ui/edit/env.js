@@ -34,7 +34,7 @@ o.canvas_size_update = function(){
     o.offset[0] = 0
     if(zoom < 1)
         o.offset[0] = offset_x = (1 - zoom) * o.win_size[0] / 2
-    o.apps_e.addremoveClass('zoomed', zoom < 1)
+    o.apps_e.toggleClass('zoomed', zoom < 1)
     canvas_size[1] = Math.max( canvas_size[1], o.Apps.dims()[1] )
 
     o.apps_e.add('#bg')

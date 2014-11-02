@@ -347,18 +347,24 @@ body.mobile .user_header {
     }
 }
 
-.icon.plus_menu, .icon.delete, .icon.add_queue, .icon.plus_cats {
-    // display:inline-block;
-    width: 44px;
-    height: 44px;
-    // background-color: transparent;
-    background-color: white;
-    vertical-align: middle;
-    margin: -12px 5px 0px -16px;
+.tag_list {
+    .icon.plus_menu, .icon.delete, .icon.add_queue, .icon.plus_cats {
+        // display:inline-block;
+        width: 44px;
+        height: 44px;
+        vertical-align: middle;
+        margin: -12px 5px 0px -16px;
+    }
+    .icon.plus_menu, .icon.plus_cats, .icon.add_queue {
+        float: left;
+    }
 }
 .icon.plus_menu, .icon.plus_cats, .icon.add_queue {
     background-image: asset_url('skin/nav/plus.png');
-    float: left;
+}
+.icon.plus_menu, .icon.delete {
+    // background-color: transparent;
+    background-color: white;
 }
 .icon.plus_cats {
     background-color: aqua;
@@ -393,6 +399,11 @@ body.mobile {
     }
 }
 // TODO: should also have body.default
+body:not(.mobile) .card[data-num="0"] {
+    .card_title, .info {
+        @include transition(opacity, 0.2s, linear);
+    }
+}
 body {
     z-index: 0;
     left: 0px; 
@@ -467,6 +478,7 @@ body {
     }
     #tag_bar {
         // padding-bottom: 10px;
+        padding-top: 20px;
         margin: 35px auto;
         margin-bottom: 40px;
         position: relative;
@@ -623,7 +635,8 @@ body {
     }
     .feed.cat.narrow .card {
         width: 100%;
-        padding: 10px 10px 5px 10px;
+        padding: 5px;//10px 10px 5px 10px;
+        box-sizing: border-box;
     }
     .feed.cat.wide._3col .card {
         width: 33.3%;
@@ -635,6 +648,17 @@ body {
             top: 0px;
             right: 0px;
         }
+        // .lazy_load.slides { overflow: visible; } //!!
+        .lazy_load.slides > .slider {
+            width: 1000%;
+            height: 100%;
+            // overflow: hidden;
+            img {
+                width: auto;
+                height: 100%;
+                margin-left: 20px;
+            }
+        }
         $mini_view_color: white;
         $mini_view_height: 20%;
         .mini_views {
@@ -643,11 +667,13 @@ body {
             bottom: 20px;
             width: 3*$mini_view_height;
             height: $mini_view_height;
-            border: 7px solid $mini_view_color;
+            // border: 3px solid $mini_view_color;
+            // border-right: 0px;
+            padding: 3px 0px 3px 3px;
             background: $mini_view_color;
             img.snapshot {
                 height: 100%;
-                width: 33%;
+                width: 33.2%;
                 border: 3px solid $mini_view_color;
                 box-sizing: border-box;
             }
@@ -655,6 +681,15 @@ body {
                 width: 2*$mini_view_height;
                 img.snapshot { width: 49.5%; }
             }
+        }
+    }
+    $card_margins:20;
+    $card_overlaps:50;
+    $max_cat_width:1037;
+    .feed.cat._3col .card {
+        .lazy_load.slides {
+            margin-left: #{-$card_margins - $card_overlaps}px;
+            width: #{$max_cat_width + 2*($card_margins + $card_overlaps)}px;
         }
     }
     .feed.cat.wide {
@@ -670,6 +705,7 @@ body {
 
             &[data-num="0"] {
                 width: 100%;
+                .tag_list { display: none; }
                 .card_title, .info {
                     position: absolute;
                 }
@@ -690,6 +726,7 @@ body {
                     padding-right: 10px;
                     margin: 0;
                 }
+
                 .user_list {
                     width: 378px;
                 }
@@ -701,7 +738,13 @@ body {
             &[data-num="1"], &[data-num="2"] {
                 width: 50%;
             }
-        }            
+            &.active[data-num="0"] {
+                .card_title, .info {
+                    opacity: .3;
+                    &:hover { opacity: 1; }
+                }
+            }
+        }
     }
     .feed.grid.narrow, .feed.cat.narrow {
         .card .card_title {
@@ -765,6 +808,7 @@ body {
                     width: 308px;
                     left: -5px;
                     top: 0px;
+                    padding: 0px 13px;
 
                     overflow: hidden;
                     // background: white;
@@ -774,6 +818,9 @@ body {
                         height: 100%; 
                         width: auto; 
                         margin: 0px 0px 0px -3px;
+                        box-sizing: border-box;
+                        padding: 5px 5px 5px 0px;
+                        background-color: white;
                     }
                 }
             }

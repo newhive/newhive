@@ -1,5 +1,10 @@
 @import "common";
 
+// For site flags
+.settings .site_flags input {
+  width: 700px;
+}
+
 .user_settings {
     form {
         width: 80%;

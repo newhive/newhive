@@ -1,13 +1,5 @@
 {<unless user.logged_in}
   <div class='centered logged_out header'>
-    {<unless flags.new_nav}
-      <img class="vert_spaced" src='{asset "skin/site/logo_text.png"}'>
-    
-      <div class="small heading">
-        NewHive is your blank canvas.<br>
-        It’s freedom of expression on the web.
-      </div>
-    {>}
     {<unless flags.open_signup}
       {<with null "compact" "true"}{|templates/request_invite_form.html}{>}
     {>}

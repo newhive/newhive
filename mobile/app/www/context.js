@@ -13,20 +13,27 @@ define([
 
     window.asset_loaded = function(el, error) {
         var $el = $(el)
+        // Move up the DOM tree
         while (true) {
-            $el.removeClass("loading").addClass("loaded")
-                .trigger("lazy_load", $el).addClass(error ? "error" : "")
+            $el.removeClass("loading")
+                .addClass("loaded" + (error ? " error" : ""))
+                .trigger("lazy_load", $el)
             if ($el.is(".lazy_load"))
                 break
             $el = $el.parent()
+            // There is no lazy_load container, or 
             if (! $el.length || $el.find(".loading").length)
                 break
         }
     }
     o.onload = function(context) {
+        // have to use global event handler because imgs can be cached, and
+        // loaded before any of our initialization code
         return "onload='asset_loaded(this)' onerror='asset_loaded(this, true)'"
     }
 
+    // For loop that iterates over arguments as well as a given list
+    // TODO-cleanup: merge with actual loop
     o.lazy_load = function(context, block, extra_classes) {
         var out = '<div class="lazy_load ' + extra_classes + '">'
             ,args = Array.prototype.slice.call(arguments, 3)
@@ -190,6 +197,7 @@ define([
     // TODO-cleanup: make query argument an object, using stringjay
     //   object constructor, see TODO-cleanup-object in text/stringjay
     o.query_attrs = function(scope, route_name, query){
+        query = "" + query // must be a string
         var args = get_route_args(Array.prototype.slice.call(arguments, 1));
         query = $.map(query.split("&"),function(e) {
             return $.map(e.split("="),function(k) {
@@ -266,8 +274,8 @@ define([
 
         dom.find('.menu.drawer[data-handle]').each(function(i, el){
             var selector = $(el).attr('data-handle')
-                , handle = dom.find(selector)
-            // if(!handle.length) throw 'missing handle';
+                , $handle = dom.find(selector)
+            // if(!$handle.length) throw 'missing handle';
             var parent = dom.find($(el).attr('data-parent'));
             var opts = {};
             if (parent.length && parent.data('menu')) {
@@ -275,7 +283,10 @@ define([
                 opts['layout_x'] = 'submenu';
                 // opts['layout'] =  'center_y';
             }
-            menu(handle, el, opts);
+            if (ui_util.mobile() && $handle.length && $handle.is("a")) {
+                $handle.removeAttr("href data-route-name")//, "").removeAttr("data-route-name")
+            }
+            menu($handle, el, opts);
         });
 
         dom.find('.dialog[data-handle]').each(function(i, el){

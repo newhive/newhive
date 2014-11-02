@@ -77,14 +77,16 @@ o.Controls = function(app, multiselect, delegate) {
                 // TODO: improve URL guessing.  
                 // Auto-add http:// to urls
                 v = 'http://' + v;
-            o.app.link_set(v);
+            sel_app.link_set(v);
             env.History.begin()
             env.History.saver(sel_app.link, sel_app.link_set, 'link').exec(v);
             // http://stackoverflow.com/questions/566276/what-two-separator-characters-would-work-in-a-url-anchor
             // We allow "?" and "&" to replace query params
             v = input_name.val().trim().replace(/[^a-zA-Z0-9_.\-&?=]/g,"_")
-            env.History.saver(sel_app.link_name, sel_app.link_name_set, 
+            if (sel_app.link_name) {
+                env.History.saver(sel_app.link_name, sel_app.link_name_set, 
                 'link name').exec(v);
+            }
             env.History.group("link")
         };
 
@@ -93,12 +95,13 @@ o.Controls = function(app, multiselect, delegate) {
         inputs.on('blur', set_link);
 
         var m = o.hover_menu(d.find('.button.link'), drawer, {
-             open : function() {
-                 var link = o.app.link();
-                 opts.open();
-                 input.focus();
-                 input.val(link);
-                 input_name.val(o.app.link_name())
+            open : function() {
+                var link = sel_app.link();
+                opts.open();
+                input.focus();
+                input.val(link);
+                if (sel_app.link_name)
+                   input_name.val(sel_app.link_name())
              }
             ,click_persist : input
             ,close : function() {

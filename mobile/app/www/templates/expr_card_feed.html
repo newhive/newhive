@@ -27,7 +27,9 @@
     <img class="snapshot" src={item} {|onload}>
   {>}
   {<if thumbs}{<defer "mini_views"}{<lazy_load "_5_3 mini_views hide" (slice thumbs 0 3)}
-    {|templates/lazy_mini_expression.html}
+    {<with null "tiny" true}
+      {|templates/lazy_mini_expression.html}
+    {>}
   {>}{>}{>}
   {#
   <div class="lazy_load _5_3"><img class="snapshot" src=
@@ -45,7 +47,7 @@
   {<if type "cat"}<a { anchor_attrs "expressions_tag"
       "owner_name" collection.username "tag_name" collection.tag}>
   {>}
-    <div class="card_title table">
+    <div class="card_title table fixed">
       {<if type "cat"}<div class="cell left vcenter">
         <img src={asset "skin/nav/collections.png"}>
       </div>{>}

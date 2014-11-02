@@ -20,11 +20,11 @@ define([
     var o = {}, save_dialog, expr, ui_page, default_expr = {
         auth: 'public'
         ,container: {
-            facebook_btn: true
-            ,twitter_btn: true
-            ,love_btn: true
-            ,republish_btn: true
-            ,comment_btn: true
+            facebook_btn: false
+            ,twitter_btn: false
+            ,love_btn: false
+            ,republish_btn: false
+            ,comment_btn: false
         }
     }
 
@@ -49,7 +49,7 @@ define([
     };
 
     o.save_enabled_set = function(v){
-        $('#save_submit').addremoveClass('disabled', !v).prop('disabled', !v) }
+        $('#save_submit').toggleClass('disabled', !v).prop('disabled', !v) }
 
     o.success = function(ev, ret){
         // Hive.upload_finish();
@@ -205,6 +205,7 @@ define([
         if(msg.save){
             expr.background = msg.save.background
             expr.apps = msg.save.apps
+            expr.groups = msg.save.groups
             if (msg.autosave) {
                 if (o.controller.ajax_pending())
                     return

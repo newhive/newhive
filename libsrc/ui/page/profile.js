@@ -1,5 +1,6 @@
 define([
     'browser/jquery',
+    'browser/js',
     'ui/dialog',
     'context',
     'sj!templates/cards.html',
@@ -9,6 +10,7 @@ define([
     'js!browser/jquery-ui/jquery-ui-1.10.3.custom.js'
 ], function(
     $,
+    js,
     dialog,
     context,
     cards_template,
@@ -72,50 +74,139 @@ define([
                 && context.page_data.owner.id == context.user.id
     };
 
+    var flip_timer
     var attach_handlers_cat = function() {
-        // auto-loop expressions from main category
-        var cur_mini = 1, $slides
-        var next_slide = function() {
-            if ($slides.is(":visible")) {
-                // Find the next available view
-                for (;;) {
-                    var $slide = $slides.find("a:nth(" + cur_mini + ")")
-                    if (! $slide.length) {
-                        cur_mini = 0
-                        continue
-                    } else if (!$slide.is(".loaded") || $slide.is(".error")) {
-                        ++cur_mini
-                        continue
-                    }
-                    break
+
+        var cur_mini = 0, max_mini = -1, min_mini = 0, $slides, $slider
+            , card, mini_views
+            , opts = context.flags.UI.top_card
+            , do_fade = opts.do_fade
+                , do_overlaps = !do_fade && opts.do_overlaps
+                , do_full_bleed = opts.do_full_bleed && !do_fade
+                , card_margins = do_fade ? 0 : opts.card_margins
+                , card_overlaps = do_overlaps ? opts.card_overlaps : -2//-card_margins
+            , fade_css = {position: "absolute", left: 0, top: 0, height: "100%"}
+            , card_opacity = do_fade ? 0 : opts.card_opacity
+            , CACHE = 2
+            , slide_duration = opts.slide_duration
+            , flip_time = opts.flip_time
+
+        var mini_mod = function(n) {
+            return (n + mini_views.length) % mini_views.length
+        }
+        o.scroll_slide = function(duration, callback) {
+            duration = duration || 0
+            var $cur_slide = $(".slider a:nth(" + cur_mini + ")")
+            if (!$slides || !$slides.length || !$cur_slide.length)
+                return
+            var slide_width = $slides.parents(".card").width()
+            if (do_full_bleed)
+                card_overlaps = ($(window).width() - slide_width - 2*card_margins) / 2
+            var wide = ($(".feed._3col").length)
+                , pad = wide ? card_overlaps : -card_margins
+                , new_margin = $slider[0].getBoundingClientRect()['left']
+                    - $cur_slide[0].getBoundingClientRect()['left'] + pad
+            $slides.css({width: slide_width + 2*card_overlaps + 2*card_margins 
+                ,"margin-left": -card_overlaps - card_margins})
+            if (!wide)
+                $slides.css({width: "auto", "margin-left": 0})
+            $slider.animate({"margin-left": new_margin}, 
+                duration, 'easeInOutQuart', callback ? callback : js.noop)
+            $cur_slide.animate({opacity:1}, duration).css({"pointer-events": "initial"})
+            $(".slider a").not($cur_slide).animate({opacity:card_opacity}, 
+                duration, 'easeInOutQuart')
+        }
+        var unload_slide = function(back) {
+            var $children = $slider.children()
+                , $slide = back ? $children.last() : $children.eq(0)
+            $slide.remove()
+            if (back) {
+                max_mini = mini_mod(max_mini - 1)
+            } else {
+                min_mini = mini_mod(min_mini + 1)
+                if ($slide.length) {
+                    cur_mini--
+                    o.scroll_slide()
                 }
-                ++cur_mini
-                // Load new mini views, staying 3 ahead of what is shown to user
-                var pos = $slides.children().length
-                    ,card = context.page_data.cards[0]
-                    ,mini_views = card.thumbs
-                for (; pos < cur_mini + 3 && pos < mini_views.length; ++pos) {
-                    template_mini_expr([context, card, {item: mini_views[pos]}])
-                        .appendTo($slides)
-                }
-                // Transition to the new mini view
-                $slides.find("a").removeClass("notransition")
-                    .css({opacity: 0, "pointer-events":"none"})
-                $slide.css({opacity: 1, "pointer-events":"auto"})
             }
         }
-        $(document).ready(function(ev) {
-            $slides = context.undefer($(".card[data-num=0] .defer.mini_views"))
-            $slides.removeClass("mini_views").bind_once_anon("lazy_load.page", function() {
-                if (! $slides.is(".loaded")) return
-                $slides.showshow().addClass("slides").off("lazy_load.page")
-                    .siblings("",".lazy_load").hidehide()
-                // immediately hide the non-zeroth children 
-                // and begin animation at 1st card
-                $slides.children().slice(1).addClass("notransition").css({opacity: 0})
-                setInterval(next_slide, 3000)
+        var load_slide = function(back, errors) {
+            if (back) {
+                var pos = max_mini = mini_mod(max_mini + 1)
+            } else {
+                pos = min_mini = mini_mod(min_mini - 1)
+            }
+            var $slide = template_mini_expr([context, card, {item: mini_views[pos]}])
+                .attr("data-num", pos)
+                .css({opacity:card_opacity, "pointer-events": "none"})
+                .bind_once_anon("lazy_load.page",function(ev) {
+                    var $el = $(ev.currentTarget)
+                    o.scroll_slide()
+
+                    if ($el.is(".error") && !(errors > 5)) {
+                        $el.remove()
+                        if (!back)
+                            cur_mini--
+                        // force recaching
+                        load_slide(back, errors ? errors + 1 : 1)
+                    }
+                })
+            $slide.find("img").css({"margin-left": card_margins})
+            if (do_fade)
+                $slide.css(fade_css)
+            if (back) {
+                $slide.appendTo($slider)
+            } else {
+                $slide.prependTo($slider)
+                cur_mini++
+            }
+        }
+        // auto-loop expressions from main category
+        var next_slide = function(offset) {
+            // return
+            if (offset === undefined) offset = 1
+            load_slide(offset > 0)
+            o.scroll_slide()
+            cur_mini += offset
+            o.scroll_slide(slide_duration, function() {
+                unload_slide(offset < 0)
             })
-        })
+        }
+
+        var ready = false, on_ready = function(ev) {
+            if(ready || $(".lazy_load.slides .slider").length) return
+            ready = true
+            card = context.page_data.cards[0]
+            mini_views = card.thumbs
+            if (!mini_views)
+                return // Nothing to cycle
+
+            var $old_snapshot = $(".card[data-num=0] .lazy_load.snapshot")
+            $slides = $('<div class="lazy_load _5_3 slides">')
+                .insertAfter($old_snapshot)
+            $old_snapshot.hidehide()
+            $slider = $("<div class='slider notransition'>")
+            $slider.appendTo($slides)
+            load_slide(true)
+            for (var i = 0; i < CACHE; ++i) {
+                load_slide(false)
+                load_slide(true)
+            }
+            o.scroll_slide()
+            $(window).bind_once_anon("resize.profile", function(ev) {
+                o.scroll_slide()
+            })
+            flip_timer = setInterval(next_slide, flip_time)
+        }
+        if (context.flags.category_hovers) {
+            $(document).ready(on_ready)
+            $(window).ready(on_ready)
+        }
+        // TODO: remove after unflagged
+        if (!context.flags.UI.dim_top_card_hover) {
+            $('.card[data-num="0"]').find(".card_title, .info")
+                .css("opacity","1")
+        }
     }
     o.attach_handlers = function(){
         if (context.route.client_method == "cat")// && context.route.include_categories)
@@ -290,7 +381,7 @@ define([
     o.enter = function(){
         o.exit();
         if (context.page_data.owner) {
-            $(".network_nav").hidehide();
+            // $(".network_nav").hidehide();
             show_tags(context.route.include_tags);
         }
         if (o.show_more_tags) toggle_more_tags();
@@ -303,16 +394,15 @@ define([
         o.show_more_tags = ($(".tag_list.main").hasClass("expanded"));
     }
     o.exit = function(){
-        $(".network_nav").showshow();
+        // $(".network_nav").showshow();
         $(".overlay.panel").hidehide();
+        $(window).off("resize.profile");
+        clearInterval(flip_timer);
     };
 
-    var card_animate = function(card, dir){
-        var prop = "opacity"
-            ,goal = 1.0
-            ,duration = 350
-            ,$mini_views = card.find(".mini_views")
-            ,card_num = card.data("num")
+    var mini_view_animate = function(card, dir, card_num) {
+        var $mini_views = card.find(".mini_views")
+
         $mini_views.css({opacity: (dir == "in") ? 1 : 0})
         
         if (card_num > 0)
@@ -327,6 +417,15 @@ define([
                 if ($(".card:hover").data("num") == card_num)
                     setTimeout(function() { $mini_views.css({opacity: 1}) }, 1)
             }).css({opacity: 0})
+        }
+    }
+    var card_animate = function(card, dir){
+        var prop = "opacity"
+            ,goal = 1.0
+            ,duration = 350
+            ,card_num = card.data("num")
+        if (context.flags.category_hovers) {
+            mini_view_animate(card, dir, card_num)
         }
         if (dir == "in") {
             var card_data = context.page_data.cards[card_num]

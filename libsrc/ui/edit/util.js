@@ -794,7 +794,7 @@ o.snap_helper = function(my_tuple, opts) {
     show_guide[1] = opts.guide_1;
 
     var left = 2;
-    for (var j = 0; j < my_tuple[0].length; j++){
+    for (var j = 0; j < 3; j++){
         if (my_tuple[0][j] != undefined && pos[0] == undefined) {
             pos[0] = my_tuple[0][j];
             --left;

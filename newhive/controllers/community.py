@@ -26,24 +26,15 @@ class Community(Controller):
             'title': "NewHive - ALL",
         }
 
+    # TODO-cleanup: rename to home / the_hive
     def trending(self, tdata, request, username=None, db_args={}, **args):
         user = self.db.User.named(username)
         if not user:
             user = tdata.user
+
         # New category view 
-        if self.flags.get('new_nav'):
-            return self.expressions_tag(tdata, request, _owner_name="root", 
-                tag_name="featured", db_args=db_args, include_categories=True)
-        # Logged out users see featured.
-        elif not user or not user.id:
-            return self.featured(tdata, request, db_args=db_args, **args)
-        return {
-            "network_help": (len(user.starred_user_ids) <= 1),
-            # "cards": self.db.query('#Network', **db_args),
-            "cards": user.feed_trending(**db_args),
-            'header': ("Network",), 
-            'title': "Network",
-        }
+        return self.expressions_tag(tdata, request, _owner_name="root", 
+            tag_name="featured", db_args=db_args, include_categories=True)
 
     def network_recent(self, tdata, request, username=None, db_args={}, **args):
         user = self.db.User.named(username)
@@ -107,6 +98,18 @@ class Community(Controller):
                 at = int(db_args.get('at', 0))
                 limit = int(db_args.get('limit', 20))
                 cards = cards[at:at + limit if limit else None]
+                # query_string can indicate which card to sort first
+                q = request.query_string
+                if q:
+                    top_card = 0
+                    try:
+                        top_card = int(q)
+                    except Exception, e:
+                        pass;
+                    if top_card > 0 and top_card <= self.config.cat_hover_count:
+                        temp = cards[top_card]
+                        cards[top_card] = cards[0]
+                        cards[0] = temp
                 # insert client view of collections into cards
                 client_cards = [collection_client_view(self.db, x) if x 
                     else self.missing_expression() for x in cards]

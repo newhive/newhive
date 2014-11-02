@@ -36,6 +36,7 @@ define([
     o.next_found = -1
     o.cache_offsets = [1, -1, 2];
     o.anim_duration = (util.mobile()) ? 400 : 400;
+    o.current = false
 
     // pagination functions here
     o.set_page = function(page){
@@ -156,6 +157,7 @@ define([
         $(".overlay.panel").showshow();
         $(".overlay.panel .signup").hidehide()
         $(".panel .expr").showshow();
+        $('.play_pause').hide()
 
         var show_edit = false
         if(page_data.expr.tags
@@ -182,6 +184,10 @@ define([
         o.resize();
     }
 
+    o.do_handle_message = false
+    o.enter = function(){
+        o.do_handle_message = true
+    };
     o.exit = function(){
         o.last_found = -1;
         o.next_found = -1;
@@ -192,6 +198,7 @@ define([
         $('.page_btn').hidehide();
         $('.overlay.panel .expr_actions').hidehide()
         $(".overlay.panel .signup").showshow()
+        o.do_handle_message = false
     };
 
     // Check to see if tags overflows its bounds.
@@ -234,6 +241,8 @@ define([
 
             // find position of current page within cards
             var set_cards = function(data){
+                context.loading_cards = false
+
                 page_data.cards = data.cards 
                 if (o.last_found == -1) {
                     o.last_found = find_card(o.expr.id)
@@ -241,7 +250,7 @@ define([
                 }
                 context.page_data.next_cards_at = page_data.cards.length
             }
-
+            context.loading_cards = true
             if(context.query.q){
                 var query = {q: context.query.q, id: o.expr.id };
                 if (context.query.e) 
@@ -364,7 +373,12 @@ define([
     };
 
     o.expr_show = function(frame_el){
-        frame_el.get(0).contentWindow.postMessage({action: 'show'}, '*')
+        o.current = frame_el
+        o.send_current({action: 'show'})
+    }
+
+    o.send_current = function(msg){
+        o.current.get(0).contentWindow.postMessage(msg, '*')
     }
 
     o.play_timer = false;
@@ -561,6 +575,9 @@ define([
     o.attach_handlers = function(){
         $(".page_btn.page_prev").bind_once('click', o.page_prev);
         $(".page_btn.page_next").bind_once('click', o.page_next);
+        $('.play_pause').bind_once_anon('click', function(){
+            o.send_current({action: 'play_toggle'})
+        })
         $("#social_plus").bind_once('click', o.social_toggle);
         $("#social_close").bind_once_anon("click", o.social_toggle);
         $(".social_btn").bind_once_anon("click", o.social_toggle);
@@ -921,23 +938,37 @@ define([
         }
 
     };
+
     // Handles messages from PostMessage (from other frames)
+    // TODO-cleanup: rename all frame message handlers to
+    // send_parent / send_child / receive_parent / receive_FOO
     o.handle_message = function(m){
+        if (!o.do_handle_message)
+            return
         var msg = m.data;
-        if (msg == "expr_click") {
-            popup = $('#social_overlay');
-            if (popup.css('display') != 'none')
-                o.social_toggle();
+        if (msg == "expr_click"){
+            o.expr_click()
             return
         } else if(msg == 'prev' || msg == 'next') {
-            o.navigate_page((msg == "prev") ? -1 : 1);
+            o.navigate_page((msg == "prev") ? -1 : 1)
+            return
         } else if(msg == 'play' || msg == 'play_pause') {
-            $(".overlay.panel.playpause").hidehide()
-            $(".overlay.panel." + msg).showshow()
+            o.play_pause_update(msg == 'play')
+            return
         } else {
             o.page_btn_handle(msg);
         }
     };
+
+    o.expr_click = function(){
+        if ($('#social_overlay').css('display') != 'none')
+            o.social_toggle()
+    }
+
+    o.play_pause_update = function(playing){
+        $('.overlay.panel .play_pause').showshow().removeClass('play pause').
+            addClass(playing ? 'pause' : 'play')
+    }
 
     var page_btn_state = '';
     o.page_btn_handle = function(msg){

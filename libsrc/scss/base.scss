@@ -1,5 +1,7 @@
 @import "common";
 
+$debug:false;
+
 // Text
 .upper { text-transform: uppercase; }
 .ellipsis {
@@ -70,6 +72,7 @@
 .table {
     display: table;
     width: 100%;
+    &.fixed { table-layout: fixed; }
     &>.cell, &> a > .cell{
         display: table-cell;
         &.left { text-align: left; }
@@ -110,6 +113,15 @@ button {
 .arrow {
     cursor: default;
 }
+.right_expand {
+    // background-image: asset_url("skin/nav/search-arrow.png");
+    // float: right;
+    position: absolute;
+    right: 15px;
+    height: 28px;
+    @if ($debug) { background-color: red; }
+}
+
 .teal_btn, .text_btn, .grey_btn, .black_btn {
     padding: 10px;
     font-family: Gibson;
@@ -237,10 +249,10 @@ img.centered, div.centered {
 }
 
 // Icons
-$icon_class:   logo  plus-minus love       comment       republish       share    views    facebook twitter;
-$icon_name:    logo  close      love-lg    comment-lg    republish-lg    share-lg views-lg facebook twitter;
-$icon_name_on: logo  close      love-lg-on comment-lg-on republish-lg-on share-lg views-lg facebook twitter;
-$panel_hover:  false false      false      false         false           false    false    true     true;
+$icon_class:   logo  plus-minus love       comment       republish       share    views    facebook twitter play     pause;
+$icon_name:    logo  close      love-lg    comment-lg    republish-lg    share-lg views-lg facebook twitter play     pause;
+$icon_name_on: logo  close      love-lg-on comment-lg-on republish-lg-on share-lg views-lg facebook twitter play     pause;
+$panel_hover:  false false      false      false         false           false    false    true     true    true     true;
 
 @for $nth from 1 through length($icon_class) {
     $class_name: nth($icon_class, $nth);
