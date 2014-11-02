@@ -211,6 +211,12 @@ site_flags = {
     },'Editor/grouping': {
         'description':'Show grouping UI, editor shortcuts'
         , 'values':['admins','devs']
+    },'Editor/resize_nw': {
+        'description':'Show resizers in NW'
+        , 'values':['admins','devs']
+    },'Editor/resize_all': {
+        'description':'Show all resizers'
+        , 'values':['admins','devs']
     }
 }
 

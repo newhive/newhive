@@ -80,6 +80,10 @@ define([
     };
     o.extend_jquery();
 
+    // Convert 2-vector into css for absolute div
+    o.array2css = function(a) {
+        return { left: a[0], top: a[1] }
+    }
     // For performance-critical ops, do not use jquery style
     var css_style = function(el, styles) {
         $(el).css(styles)

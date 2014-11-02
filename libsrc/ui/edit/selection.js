@@ -574,11 +574,11 @@ o.Selection = function(o) {
         if (!ref_dims)
             o.update_relative_coords();
     }
-    o.resize = function(delta){
-        var dims = _resize(delta);
+    o.resize = function(delta, coords){
+        var dims = _resize(delta, coords);
         if(!ref_dims) return;
         if (delegate_dims_set()) {
-            return elements[0].resize(delta);
+            return elements[0].resize(delta, coords);
         }
 
     };

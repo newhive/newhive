@@ -303,7 +303,10 @@ groups.init = function(states) {
     // Now fix up the parent pointers
     $.each(g_groups, function(id, g) {
         g.children().map(function(child) {
-            child.parent_set(g)
+            if (child)
+                child.parent_set(g)
+            // else
+            //     g.remove(child)
         })
     })
 }
@@ -1522,9 +1525,9 @@ Hive.App.Image = function(o) {
             history_point = env.History.saver(
                 o.state, o.state_update, 'move crop');
         };
-        o.resize = function(delta) {
+        o.resize = function(delta, coords) {
             if(!cropping)
-                return _resize(delta);
+                return _resize(delta, coords);
             delta = u._div(delta)(env.scale());
             var dims = u._add(ref_dims)(delta);
             dims[0] = Math.max(1, Math.min(dims[0],
@@ -2268,11 +2271,7 @@ Hive.App.Sketch = function(o) {
         if(c.brush_size) o.win.BRUSH_SIZE = c.brush_size;
     };
 
-    o.resize = function(delta) {
-        var dims = o.resize_to(delta), aspect = o.win.SCREEN_WIDTH / o.win.SCREEN_HEIGHT,
-            width = Math.max( dims[0], Math.round(dims[1] * aspect) );
-        o.dims_set([ width, Math.round(width / aspect) ]);
-    };
+    o.fixed_aspect = true;
 
     o.focus.add(function() { o.win.focus() });
 
@@ -2346,23 +2345,17 @@ Hive.App.Audio = function(o) {
         return o.content_element[0].outerHTML;
     };
 
-    o.resize = function(delta) {
-        var dims = o.resize_to(delta);
-
-        //Hack that forces play/pause image element to resize, at least on chrome
-        //o.div.find('.jp-controls img').click();
-        //o.player.jPlayer("playHead", 0);
-
-        // enforce 25px < height < 400px and minimum aspect ratio of 2.5:1
+    // enforce 25px < height < 400px and minimum aspect ratio of 2.5:1
+    var _dims_relative_set = o.dims_relative_set;
+    o.dims_relative_set = function(dims) {
         var sf = env.scale();
         if (dims[1] / sf < 25) dims[1] = 25 * sf;
         if (dims[1] / sf > 400) dims[1] = 400 * sf;
         if (dims[0] < 2.5 * dims[1]) dims[0] = 2.5 * dims[1];
 
         o.scale_set(dims[1] / 35);
-
-        o.dims_set(dims);
-    };
+        _dims_relative_set(dims);
+    }
 
     o.color = function(){
         return o.init_state.color; };
@@ -2614,7 +2607,7 @@ Hive.App.has_full_bleed = function(o, coord){
     }
     o._unremove = function() {
         o.dims_ref_set();
-        o.resize(remove_delta);
+        o.resize(remove_delta, [1, 1]);
         _unremove();
     }
     // TODO-cleanup: move to resize_start
@@ -2630,11 +2623,11 @@ Hive.App.has_full_bleed = function(o, coord){
             return a.id != o.id;
         });
     };
-    o.resize = function(delta){
+    o.resize = function(delta, coords){
         if (!env.gifwall || !o.has_full_bleed())
-            return _resize(delta);
+            return _resize(delta, coords);
         var start = o.max_pos()[o.stack_coord];
-        _resize(delta);
+        _resize(delta, coords);
         var dims = o.dims_relative();
         if (o.max_height && dims[1] > o.max_height()) {
             dims[1] = o.max_height();
@@ -2764,57 +2757,111 @@ Hive.App.has_border_radius = function(o) {
         function(){ history_point.save() }
     );
 }
+
+var str2coords = {
+      NW:[-1,-1], N:[0,-1], NE:[1,-1]
+    , W: [-1, 0], C:[0, 0], E: [1, 0]
+    , SW:[-1, 1], S:[0, 1], SE:[1, 1]
+}
+
 Hive.App.has_resize = function(o) {
-    var dims_ref, history_point;
-    o.dims_ref_set = function(){ dims_ref = o.dims(); };
+    var dims_ref, pos,ref, history_point;
+    // TODO: This ought to be in editor space
+    // TODO: rename to reflect that it saves aabb
+    o.dims_ref_set = function(){ 
+        dims_ref = o.dims_relative(); 
+        pos_ref = o.pos_relative();
+    };
     o.resize_start = function(){
         if (o.before_resize) o.before_resize();
         env.Selection.hide_controls()
-        dims_ref = o.dims();
+        o.dims_ref_set()
         u.reset_sensitivity();
+        // TODO: replace this last helper with the default history one
         history_point = o.history_helper_relative('resize');
     };
-    o.resize = function(delta) {
-        o.sensitivity = u.calculate_sensitivity(delta);
-        var dims = o.resize_to(delta);
-        if(!dims[0] || !dims[1]) return;
-        dims = u._div(dims)(env.scale());
-        // everything past this point is in editor space.
-        var aspect = o.get_aspect();
+
+    // Modifies (in-place) an axis-aligned bounding box to fit the given
+    // aspect ratio by moving the edge/corner specified by coords
+    // Also enforces dims[] >= 1
+    var fix_aabb_for_aspect = function(aabb, coords, aspect, aspect_choice) {
+        var old_dims = u._sub(aabb[1], aabb[0])
+            ,dims = old_dims.map(function(x) {
+                return Math.max(x, 1)
+            })
+        if (aspect) {
+            // If unspecified, choose the aspect which makes the object smaller
+            aspect_choice = (aspect_choice == undefined) ?
+                (dims[1] * aspect < dims[0]) : aspect_choice
+            // for edges, always choose the aspect of the edge
+            if (coords[0] == 0 || coords[1] == 0)
+                aspect_choice = (coords[0] == 0)
+            dims = aspect_choice ? 
+                [dims[1] * aspect, dims[1]] : [dims[0], dims[0] / aspect]
+        }
+        var dims_diff = u._sub(dims, old_dims)
+        for (var i = 0; i < 2; ++i) {
+            if (coords[i] == 0) {
+                aabb[0][i] -= dims_diff[i] / 2
+                aabb[1][i] += dims_diff[i] / 2
+            } else {
+                aabb[coords[i] > 0 ? 1 : 0][i] += coords[i] * dims_diff[i]
+            }
+        }
+        return aabb
+    }
+    o.resize_aspect = function() {
+        var aspect = o.get_aspect()
         if (!o.fixed_aspect) {
             var old_dims = o.dims_relative()
+            // var old_dims = dims_ref
             if (!env.ev.shiftKey)
                 aspect = false
             else
                 aspect = aspect || [ old_dims[0] / old_dims[1] ]
         }
+        return aspect        
+    }
+    o.resize = function(mouse_delta_screenspace, coords) {
+        var aabb = o.resize_helper(mouse_delta_screenspace, coords, 
+                !env.ev.altKey, o.resize_aspect())
+            , dims = u._sub(aabb[1], aabb[0])
+        o.pos_relative_set(aabb[0])
+        o.dims_relative_set(dims)
+    }
 
-        if (aspect) {
-            var newWidth = dims[1] * aspect;
-            dims = (newWidth < dims[0]) ? [newWidth, dims[1]] : 
-                [dims[0], dims[0] / aspect];
+    o.resize_helper = function(mouse_delta_screenspace, coords, snap, aspect) {
+        coords = coords || [1, 1]
+        o.sensitivity = u.calculate_sensitivity(mouse_delta_screenspace);
+        var scale = env.scale()
+            , mouse_delta = u._div(mouse_delta_screenspace, scale)
+            , delta = u._mul(coords, mouse_delta)
+            // pos_delta is mouse_delta for each coordinate for which
+            // coords[coord] == -1 (top and left)
+            , pos_delta = $.map(mouse_delta, function(x, i) {
+                if (coords[i] == -1)
+                    return x
+                return 0
+            })
+            , dims = u._add(dims_ref, delta)
+            , _pos = u._add(pos_ref, pos_delta)
+            , aabb = [_pos.slice(), u._add(_pos, dims)]
+
+        fix_aabb_for_aspect(aabb, coords, aspect)
+        if (snap) {
+            var tuple = [[], []], snap_dist = []
+            for (var i = 0; i < 2; ++i) {
+                snap_dist[i] = tuple[i][coords[i] + 1] 
+                    = aabb[Math.max(0, coords[i])][i]
+            }
+            var pos = o.snap_a_point(tuple)
+            for (var i = 0; i < 2; ++i) {
+                snap_dist[i] = Math.abs(snap_dist[i] - pos[i])
+                aabb[Math.max(0, coords[i])][i] = pos[i]
+            }
+            fix_aabb_for_aspect(aabb, coords, aspect, (snap_dist[0] < snap_dist[1]))
         }
-
-        // snap
-        var _pos = o.pos_relative();
-        var pos = [ _pos[0] + dims[0], _pos[1] + dims[1] ];
-        var snap_dims = o.resize_to_pos(pos, !aspect);
-
-        if (!aspect)
-            return snap_dims;
-
-        var snap_dist = u._apply(function(x,y) {return Math.abs(x-y);}, 
-            dims)(snap_dims);
-        dims = (snap_dist[0] < snap_dist[1]) ?
-            [snap_dims[1] * aspect, snap_dims[1]] :
-            [snap_dims[0], snap_dims[0] / aspect];
-
-        newWidth = dims[1] * aspect;
-        dims = (newWidth < dims[0] ? [newWidth, dims[1]]
-            : [dims[0], dims[0] / aspect]);
-        o.dims_relative_set(dims);
-
-        return dims
+        return aabb
     }
 
     o.resize_end = function(skip_history){ 
@@ -2823,18 +2870,8 @@ Hive.App.has_resize = function(o) {
         if (o.after_resize) skip_history |= o.after_resize();
         if (!skip_history) history_point.save();
     };
-    o.resize_to = function(delta){
-        dims_ref = dims_ref || o.dims();
-        return u._apply(Math.max, env.scale(), u._add(dims_ref, delta))
-    };
-    o.resize_to_pos = function(pos, doit) {
-        var _pos = o.pos_relative();
-        // TODO: allow snapping to aspect ratio (keyboard?)
-        // TODO: set snap parameters be set by user
+    o.snap_a_point = function(tuple) {
         if(u.should_snap() && !env.no_snap && !o.has_full_bleed()){
-            var tuple = [];
-            tuple[0] = [undefined, undefined, pos[0]];
-            tuple[1] = [undefined, undefined, pos[1]];
             excludes = {};
             excludes[o.id] = true;
             pos = u.snap_helper(tuple, {
@@ -2844,27 +2881,50 @@ Hive.App.has_resize = function(o) {
                 sensitivity: o.sensitivity / 2, 
             });
         }
-        var _dims = [];
-        _dims[0] = pos[0] - _pos[0];
-        _dims[1] = pos[1] - _pos[1];
-        if (o.full_coord != undefined)
-            _dims[o.full_coord] = 1000;
-        _dims = u._apply(Math.max, env.scale(), _dims);
-        if (doit || doit == undefined)
-            o.dims_relative_set(_dims);
-        return _dims;
-    };
+        return pos
+    }
 
     function controls(o) {
         var common = $.extend({}, o);
         o.resize_control = true;
         var app = o.app.sel_app();
+        o.c.resize = $()
+        var dirs = {}
 
         if (app.has_full_bleed())
+            // TODO: test and replace with subset of normal resizers
             o.c.resize = o.addControl($('#controls_misc .resize_v'));
-        else
-            o.c.resize = o.addControl($('#controls_misc .resize'));
+        else {
+            dirs = {SE: 1}
+            if (context.flags.Editor.resize_nw) {
+                $.extend(dirs, {NW: 1 })
+            }
+            if (context.flags.Editor.resize_all) {
+                $.extend(dirs, {
+                    NW: 1 ,N: 1 ,NE: 1
+                    ,W: 1 /* ,C: 1 */,E: 1
+                    ,SW: 1 ,S: 1 ,SE: 1
+                })
+            }
+        }
+        o.resizers = {}
+        for (dir in dirs) {
+            var $handle = o.addControl($('#controls_misc .resize'))
+                ,coords = str2coords[dir]
+                ,angle = Math.atan(coords[1] / (coords[0] + 0.0000001)) - Math.PI/4
+            $handle.data("coords", coords)
+                .css({"transform": "rotate(" + angle + "rad)"}) 
+            o.c.resize = o.c.resize.add($handle)
+            o.resizers[dir] = $handle
+        }
 
+        var control_pos = function(dims, padding, coords) {
+            var coords = coords.map(u._sign)
+                ,center = u._mul(.5, dims)
+                ,pos = u._add(center, u._mul(center, coords))
+                ,pos_padded = u._add(pos, u._mul(padding, coords))
+            return pos_padded
+        }
         o.layout = function() {
             common.layout()
             var p = o.padding;
@@ -2872,12 +2932,18 @@ Hive.App.has_resize = function(o) {
             if (app.has_full_bleed())
                 o.c.resize.css({ top: dims[1] - 13 + o.padding,
                     left: Math.min(dims[0] / 2 - 13, dims[0] - 54) });
-            else
+            else 
                 o.c.resize.css({ left: dims[0] -13 + p, top: dims[1] - 13 + p });
+            for (dir in o.resizers) {
+                var coords = str2coords[dir]
+                o.resizers[dir].css(ui_util.array2css(
+                    u._add([-19, -19], control_pos(dims, p + 6, coords))))
+            }
         };
 
+        var resize_coords = [1, 1]
         o.c.resize.drag('start', function(ev, dd) {
-
+            resize_coords = $(this).data("coords") || [1, 1]
             if (app.cropping_active) {
                 ev.data = app
                 app.long_hold(ev)
@@ -2887,7 +2953,9 @@ Hive.App.has_resize = function(o) {
             o.app.resize_start();
         })
         .drag(function(e, dd){ 
-            env.ev = e; o.app.resize([ dd.deltaX, dd.deltaY ]); })
+            env.ev = e; 
+            o.app.resize([ dd.deltaX, dd.deltaY ], resize_coords)
+        })
         .drag('end', function(e, dd){
             o.drag_target.busy = false;
             o.app.resize_end();
