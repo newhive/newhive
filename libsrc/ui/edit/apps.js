@@ -1527,19 +1527,22 @@ Hive.App.Image = function(o) {
         };
         o.resize = function(delta, coords) {
             if(!cropping)
-                return _resize(delta, coords);
-            // var aabb = o.resize_helper(delta, coords, false, false);
-            // var dims = u._sub(aabb[1], aabb[0])
-            delta = u._div(delta)(env.scale());
-            var dims = u._add(ref_dims)(delta);
-            dims[0] = Math.max(1, Math.min(dims[0],
-                ref_scale_x*ref_dims[0]*(1 + o.init_state.offset[0])));
-            dims[1] = Math.max(1, Math.min(dims[1],
-                ref_scale_x*ref_dims[0]*(1 / o.aspect + o.init_state.offset[1])));
+                return _resize(delta, coords)
+            env.Apps.begin_layout()
+            var aabb = o.resize_helper(delta, coords, false, false)
+            aabb = u.constrain_aabb(aabb, 
+                u.pos_dims2aabb(o.image_pos_dims()), [1, 1])
+            var pos = aabb[0], dims = u._sub(aabb[1], aabb[0])
+                ,pos_dims = u.aabb2pos_dims(aabb)
+                ,dims = pos_dims[1]
+            o.div_aspect = dims[0] / dims[1]
+            o.crop_pos_dims_set(pos_dims)
             var scaled = dims[0] / ref_dims[0];
             o.init_state.scale_x = ref_scale_x / scaled;
-            o.div_aspect = dims[0] / dims[1];
-            o.dims_relative_set(dims);
+            o.pos_relative_set(pos_dims[0])
+            o.dims_relative_set(pos_dims[1])
+            env.Apps.end_layout()
+            return
         };
         o.resize_end = function(skip_history) {
             if(!cropping) 
@@ -1548,6 +1551,22 @@ Hive.App.Image = function(o) {
             o.long_hold_cancel();
         };
 
+        // Editor bounds of uncropped image
+        o.image_pos_dims = function() {
+            var dims_x = o.dims_relative()[0], scale = []
+            scale[0] = o.init_state.scale_x || 1,
+            scale[1] = scale[0] / o.aspect;
+            var offset = u._mul(scale[0] * dims_x, o.init_state.offset)
+            var dims = u._mul(scale, dims_x)
+            var pos = u._add(offset, o.pos_relative())
+            return [pos, dims]
+        }
+        o.crop_pos_dims_set = function(pos_dims) {
+            var pos = pos_dims[0], dims = pos_dims[1], _bounds = o.image_pos_dims()
+            // o.init_state.scale_x = _bounds[1][0] / dims[0]
+            o.init_state.offset = u._div(u._sub(_bounds[0], pos), 
+                o.dims_relative()[0] * o.init_state.scale_x)
+        }
         // screen coordinates
         o.offset = function() {
             if (!o.init_state.scale_x)
@@ -3110,6 +3129,7 @@ Hive.App.has_autohide = function(o){
 
 Hive.App.has_crop = function(o) {
     var sel = env.Selection
+    o.cropping_active = false
 
     o.unfocus.add(function() {
         if (o.cropping_active) {
@@ -3119,11 +3139,14 @@ Hive.App.has_crop = function(o) {
     })
 
     var controls = function (o) {
-        var app = o.app.sel_app()
+        var app = o.app.sel_app(), $hidden_controls
 
         var fixup_controls = function(o) {
             var $control = $("#controls .crop"), toggle = app.cropping_active ? "-on" : ""
+                ,$hidden_controls = $hidden_controls || $("#controls .crop").parents(".controls")
+                .find(":visible").not(".hide").not(".crop,.buttons,.resize,.select_border")
             $control.prop("src", ui_util.asset("skin/edit/crop" + toggle + ".png"))
+            $hidden_controls.toggleClass("hidden", app.cropping_active)
         }
         find_or_create_button(o, '.crop')
         .click(function(ev) {

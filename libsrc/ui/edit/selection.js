@@ -575,12 +575,10 @@ o.Selection = function(o) {
             o.update_relative_coords();
     }
     o.resize = function(delta, coords){
-        var dims = _resize(delta, coords);
-        if(!ref_dims) return;
-        if (delegate_dims_set()) {
+        if (delegate_dims_set() && ref_dims) {
             return elements[0].resize(delta, coords);
         }
-
+        var dims = _resize(delta, coords);
     };
     o.get_aspect = function() {
         if (elements.length == 1 && !elements[0].get_aspect()) {

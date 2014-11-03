@@ -532,6 +532,39 @@ o.overlapped_apps = function(region, full) {
     });
 };
 
+o.pos_dims2aabb = function(pos_dims) {
+    var pos = pos_dims[0], dims = pos_dims[1]
+    return [pos, o._add(pos, dims)]
+}
+o.aabb2pos_dims = function(aabb) {
+    return [aabb[0], o._sub(aabb[1], aabb[0])]
+}
+o.aabb2intervals = function(aabb) {
+    var intervals = [[],[]]
+    for (var i = 0; i < 2; ++i) {
+        intervals[i] = [aabb[0][i], aabb[1][i]]
+    }
+    return intervals
+}
+// constrain a point to lie within an axis-aligned bounding box
+o.constrain_pt_aabb = function(aabb, pt) {
+    var intervals = o.aabb2intervals(aabb)
+    return pt.map(function(x, i) {
+        return o.interval_constrain(x, intervals[i])
+    })
+}
+// constrain one aabb to lie within another (_aabb)
+o.constrain_aabb = function(aabb, _aabb, _min) {
+    _min = _min || [-Infinity, -Infinity]
+    var res = aabb.map(function(pos, i) {
+        return o.constrain_pt_aabb(_aabb, pos)
+    })
+    res[1] = res[1].map(function(x, i) {
+        return Math.max(x, res[0][i] + _min[i])
+    })
+    return res
+}
+
 o.app_bounds = function(elements) { 
     var abs_mins = elements.map(function(el){ return el.min_pos() });
     var abs_maxs = elements.map(function(el){ return el.max_pos() });
