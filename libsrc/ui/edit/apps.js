@@ -149,7 +149,7 @@ Hive.Saveable = function(init_state) {
         o.state.return_val = s
     })
     o.state_update = Funcs(function(s) {
-        $.extend(true, {}, o.init_state, s);
+        $.extend(true, o.init_state, s);
     })
 
     return o
@@ -275,11 +275,11 @@ var groups = function(state) {
         var children = o.children()
         children.map(function(child) { 
             o.remove_child(child) 
-            if (parent())
+            if (o.parent())
                 parent().add_child(child)
         })
         if (parent()) 
-            parent().remove_child(o.id)
+            o.parent().remove_child(o.id)
         delete g_groups[o.id]
         return children
     }
@@ -1528,6 +1528,8 @@ Hive.App.Image = function(o) {
         o.resize = function(delta, coords) {
             if(!cropping)
                 return _resize(delta, coords);
+            // var aabb = o.resize_helper(delta, coords, false, false);
+            // var dims = u._sub(aabb[1], aabb[0])
             delta = u._div(delta)(env.scale());
             var dims = u._add(ref_dims)(delta);
             dims[0] = Math.max(1, Math.min(dims[0],
