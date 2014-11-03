@@ -2958,7 +2958,7 @@ Hive.App.has_resize = function(o) {
             for (dir in o.resizers) {
                 var coords = str2coords[dir]
                 o.resizers[dir].css(ui_util.array2css(
-                    u._add([-19, -19], control_pos(dims, p + 6, coords))))
+                    u._add([-19, -19], control_pos(dims, [p + 6, p - 8], coords))))
             }
         };
 
