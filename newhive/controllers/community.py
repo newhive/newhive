@@ -457,7 +457,7 @@ class Community(Controller):
         """
         # TODO: document all these args somewhere
         if special == 'top_tags':
-            if request.args.get('help', False):
+            if request.args.get('help', False) != False:
                 return {
                  'text_result': 
                     """
