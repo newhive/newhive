@@ -528,6 +528,10 @@ Hive.init = function(exp, site_context, _revert){
     hive_app.Apps.init(Hive.Exp.apps);
     hive_app.Apps.restack();
     env.Groups.init(Hive.Exp.groups || []);
+    Hive.Exp.globals = Hive.Exp.globals || {}
+    $.each(env.globals_set, function(name, func) {
+        func(Hive.Exp.globals[name])
+    })
     last_autosave = $.extend(true, {}, Hive.state())
     env.zoom_set(1)
 
@@ -703,6 +707,10 @@ Hive.state = function() {
     hive_app.Apps.restack(); // collapse layers of deleted apps
     Hive.Exp.apps = hive_app.Apps.state();
     Hive.Exp.groups = env.Groups.state()
+    Hive.Exp.globals = {}
+    $.each(env.globals, function(name, func) {
+        Hive.Exp.globals[name] = func()
+    })
 
     // TODO: get height/maximum dimension
     // var h = u.app_bounds(env.Apps.all()).bottom

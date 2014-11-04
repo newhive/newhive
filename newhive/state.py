@@ -253,27 +253,26 @@ class Collection(object):
         return self.find(spec, **opts)
 
     def paginate(self, spec, limit=20, at=0, sort='updated', 
-        order=-1, filter={}, **args):
+        order=-1, filter={}, **args
+    ):
         # page_is_id = is_mongo_key(at)
         # if at and not page_is_id:
-
         at = int(at)
         limit = int(limit)
+
         if isinstance(spec, dict):
             # if page_is_id:
             #     page_start = self.fetch(at)
             #     at = page_start[sort] if page_start else None
 
-            # if at and sort: spec[sort] = { '$lt' if order == -1 else '$gt': at }
+            # if at and sort:
+            #     spec[sort] = { '$lt' if order == -1 else '$gt': at }
 
-            res = self.search(spec, sort=[(sort, order)], filter=filter, skip=at, **args)
+            res = self.search(spec, sort=[(sort, order)], filter=filter,
+                skip=at, **args)
 
-            # if there's a limit, collapse to list, get sort value of last item
-            if limit:
-                if filter:
-                    res = ifilter(filter, res)
-                res = islice(res, limit)
-                res = [r for r in res]
+            # collapse to limit long list, omitting filtered results
+            res = [r for r in islice(res, limit)]
             return res
 
         elif isinstance(spec, list):
@@ -874,7 +873,7 @@ class User(HasSocial):
             print e
             return []
 
-    def activity_bug(self, **args):
+    def activity_bug(self, limit=100, **args):
         if not self.id: return []
         # TODO-feature: create list of exprs user is following comments on in
         # user record, so you can leave a comment thread
@@ -884,7 +883,7 @@ class User(HasSocial):
             {'entity_owner': self.id},
             {'initiator': self.id},
             {'entity': {'$in': commented_exprs}, 'class_name': 'Comment'}
-        ]}, **args)
+        ]}, limit=limit, **args)
 
     def feed_profile_entities(self, **args):
         res = self.feed_profile(**args)
