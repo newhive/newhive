@@ -277,8 +277,12 @@ var groups = function(state) {
         var id = app_or_group_or_id.id || app_or_group_or_id
         children_ids.push(id)
         var g = env.Apps.app_or_group(id)
-        if (g)
+        if (g) {
+            var parent = g.parent()
+            if (parent)
+                parent.remove_child(g)
             g.parent_set(o)
+        }
     }
     o.remove_child = function(app_or_group_or_id) {
         var id = app_or_group_or_id.id || app_or_group_or_id

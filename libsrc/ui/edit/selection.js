@@ -75,6 +75,27 @@ o.Selection = function(o) {
             groups = groups.concat([g])
             elements = remainder
         }
+        // For Debugging
+        var group2string = function(g, depth) {
+            depth = depth || 0
+            var pad = "                                    ".slice(0, depth)
+                ,children = g.children(), str = pad + g.name()
+            if (!g.is_group)
+                return str + "\n"
+            str += ":\n"
+            $.map(children, function(child) {
+                str += group2string(child, depth + 4)
+            })
+            return str
+        }
+        if (context.flags.can_debug) {
+            var help = ""
+            $.map(groups, function(g) {
+                help += group2string(g)
+            })
+            u.set_debug_info(help, 5000)
+        }
+        //
         return groups
     }
 
@@ -99,9 +120,9 @@ o.Selection = function(o) {
         groups.map(function(el) {
             new_group.add_child(el)
         })
-        if (parent)
+        if (parent) 
             parent.add_child(new_group)
-        groups = [new_group]
+        groups = o.get_groups(elements)
     }
     // WAS: if the selection is a group, break it
     // Break all groups in selection
@@ -117,6 +138,7 @@ o.Selection = function(o) {
             if (g.ungroup)
                 g.ungroup(common_parent)
         })
+        groups = o.get_groups(elements)
     }
     // traverse the groups which contain app
     o.traverse_groups = function(el) {
@@ -649,25 +671,6 @@ o.Selection = function(o) {
 
         elements = $.merge([], apps);
         groups = o.get_groups(elements)
-        var group2string = function(g, depth) {
-            depth = depth || 0
-            var pad = "                                    ".slice(0, depth)
-                ,children = g.children(), str = pad + g.name()
-            if (!g.is_group)
-                return str + "\n"
-            str += ":\n"
-            $.map(children, function(child) {
-                str += group2string(child, depth + 4)
-            })
-            return str
-        }
-        if (context.flags.can_debug) {
-            var help = ""
-            $.map(groups, function(g) {
-                help += group2string(g)
-            })
-            u.set_debug_info(help, 5000)
-        }
 
         o.update_relative_coords();
 
