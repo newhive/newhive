@@ -599,6 +599,7 @@ o.show_dialog = function(jq, opts){
     return d;
 };
 
+var set_debug_info_timeout
 o.set_debug_info = function(info, delay) {
     if (typeof(info) == "object")
         info = JSON.stringify(info).replace(/,/g,"\n")
@@ -611,11 +612,12 @@ o.set_debug_info = function(info, delay) {
         $debug.hidehide();
         return;
     }
+    clearTimeout(set_debug_info_timeout)
     if (delay) 
-        setTimeout(o.set_debug_info, delay)
+        set_debug_info_timeout = setTimeout(o.set_debug_info, delay)
     // TODO: option to put info over mouse
     $debug.showshow().css({ top: "0px", left: "0px" })
-        .text(info);
+        .text("This box can only be seen if you are flagged can_debug\n" + info);
 };
 
 var times, distances, delta_latched;

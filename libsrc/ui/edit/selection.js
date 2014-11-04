@@ -111,6 +111,8 @@ o.Selection = function(o) {
 
         // groups = groups[0].ungroup()
         var common_parent = env.Groups.common_parent(groups)
+        if (groups.length == 1)
+            common_parent = undefined
         groups.map(function(g) {
             if (g.ungroup)
                 g.ungroup(common_parent)
@@ -647,6 +649,25 @@ o.Selection = function(o) {
 
         elements = $.merge([], apps);
         groups = o.get_groups(elements)
+        var group2string = function(g, depth) {
+            depth = depth || 0
+            var pad = "                                    ".slice(0, depth)
+                ,children = g.children(), str = pad + g.name()
+            if (!g.is_group)
+                return str + "\n"
+            str += ":\n"
+            $.map(children, function(child) {
+                str += group2string(child, depth + 4)
+            })
+            return str
+        }
+        if (context.flags.can_debug) {
+            var help = ""
+            $.map(groups, function(g) {
+                help += group2string(g)
+            })
+            u.set_debug_info(help, 5000)
+        }
 
         o.update_relative_coords();
 
