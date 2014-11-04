@@ -209,7 +209,7 @@ var menu = function(handle, drawer, options) {
                 , bounds_img = bounds
             if ($card.length) {
                 bounds_img = $.extend({}, $card[0].getBoundingClientRect())
-                var pad = parseFloat($card.css("padding"))
+                var pad = parseFloat($card.css("padding-left"))
                 bounds_img.width -= 2*pad
                 bounds_img.left += pad
                 bounds_img.right -= pad
