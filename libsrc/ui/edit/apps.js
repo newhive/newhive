@@ -34,6 +34,10 @@ define([
     // ,app_has
 ){
 
+// TODO: flip strict
+if (0 && context.flags.Admin.use_strict)
+    "use strict";
+
 var Hive = {}
     ,noop = function(){}
     ,Funcs = js.Funcs
@@ -169,8 +173,8 @@ Hive.has_id = function(o) {
 }
 
 // Give objects a numeric sequence name
-Hive.has_sequence = function(o) {
-    var seq_type = (typeof(o.typename) == "function") ? o.typename() : "object"
+Hive.has_sequence = function(o, typename) {
+    var seq_type = typename || "object"
     var count = Hive.has_sequence[seq_type] || 0
     Hive.has_sequence[seq_type] = count + 1
     var name = seq_type + "_" + count
@@ -181,9 +185,24 @@ Hive.has_sequence = function(o) {
     o.name_set = function(v) {
         name = v
     }
-
-    // TODO: saveable
+    //////////////////////////////////////////////////////////////////
+    // Saveable
     if (!o.is_saveable) throw "has_sequence requires Saveable"
+    // getter and setter for state which is visible to history
+    o.history_state.add(function() {
+        var state = { name: o.name() }
+        $.extend(o.history_state.return_val, state)
+    }) 
+    o.history_state_set.add(function(state) {
+        if (state.name)
+            o.name_set(state.name)
+    })
+}
+env.globals.has_sequence = function() {
+    return $.extend({}, Hive.has_sequence)
+}
+env.globals_set.has_sequence = function(state) {
+    return $.extend(Hive.has_sequence, state)
 }
 
 // Grouping 
@@ -218,6 +237,7 @@ var groups = function(state) {
 
     Hive.has_group(o)
     Hive.has_id(o)
+    Hive.has_sequence(o, "group")
 
     var children_ids = []
     g_groups[o.id] = o
@@ -469,8 +489,12 @@ Hive.App = function(init_state, opts) {
     o.handler_type = 0;
     o.make_controls = [];
 
-    Hive.has_group(o);
+    Hive.has_group(o)
     Hive.has_id(o)
+    o.typename = function() {
+        return o.type.tname.replace("hive.", "")
+    }
+    Hive.has_sequence(o, o.typename())
 
     o.css_state = {};
     o.content = function(content) { return $.extend({}, o.css_state); };
@@ -1082,8 +1106,8 @@ Hive.registerApp(Hive.App.Html, 'hive.html');
 // Hive.registerApp(Hive.App.RawHtml, 'hive.raw_html');
 
 // TODO-refactor: We need to decide on an object model for developers
-editor = {};
-active_controls = [];
+var editor = {};
+var active_controls = [];
 editor.add_slider = function(name, opts) {
     opts = $.extend(opts, {handle_name: name})
     var apps = env.Apps.filtered(function(a) { return a.client_visible; })
@@ -1352,7 +1376,7 @@ Hive.App.Image = function(o) {
     /////////////////////////////////////////////////////////////////////////
     // Saveable
     o.history_state.add(function() {
-        s = {}
+        var s = {}
         if (o.init_state.scale_x) 
             s.scale_x = o.init_state.scale_x
         if (o.init_state.offset) 
@@ -2090,7 +2114,7 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
             $.extend(o, handle_template)
         }
         else{
-            for(k in handle_template) delete o[k]
+            for (var k in handle_template) delete o[k]
             $.extend(o, handle_freeform)
         }
         o.setup()
@@ -2911,7 +2935,7 @@ Hive.App.has_resize = function(o) {
     };
     o.snap_a_point = function(tuple) {
         if(u.should_snap() && !env.no_snap && !o.has_full_bleed()){
-            excludes = {};
+            var excludes = {};
             excludes[o.id] = true;
             pos = u.snap_helper(tuple, {
                 exclude_ids: excludes,
@@ -3261,7 +3285,7 @@ Hive.App.has_rotate = function(o) {
         /////////////////////////////////////////////////////////////////////////
         // Saveable
         o.history_state.add(function() {
-            s = {}
+            var s = {}
             if(angle === 0 || angle) s.angle = angle;
             $.extend(o.history_state.return_val, s)
         })
@@ -3544,7 +3568,7 @@ Hive.App.has_opacity = function(o) {
     /////////////////////////////////////////////////////////////////////////
     // Saveable
     o.history_state.add(function(){
-        s = {}
+        var s = {}
         if(opacity != 1) s.opacity = opacity;
         $.extend(o.history_state.return_val, s)
     });

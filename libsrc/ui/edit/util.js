@@ -193,10 +193,14 @@ o.array_equals = function(a, b) {
 o.epsilon_eq = function(a, b, epsilon) {
     return (Math.abs(a - b) < epsilon)
 }
+o.isNaN = function(x) {
+    return typeof(x) == "number" && isNaN(x)
+}
+    
 // deep object comparison
 o.deep_equals = function(o1, o2, epsilon) {
     if (o1 == null || o2 == null || typeof(o1) != "object" || typeof(o2) != "object")
-        return o1 == o2 || (isNaN(o1) && isNaN(o2))
+        return o1 == o2 || (o.isNaN(o1) && o.isNaN(o2))
              || (epsilon && typeof(o1) == "number" && typeof(o2) == "number" 
                 && o.epsilon_eq(o1, o2, epsilon))
 
