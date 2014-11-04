@@ -21,8 +21,6 @@ from collections import Counter
 from snapshots import Snapshots
 
 from s3 import S3Interface
-from boto.s3.connection import S3Connection
-from boto.s3.key import Key as S3Key
 
 import Queue
 import threading
@@ -253,7 +251,7 @@ class Collection(object):
         return Cursor(self, self._col.find(spec=spec, **opts))
 
     def last(self, spec={}, **opts):
-        opts.update({'sort' : [('_id', -1)]})
+        opts.update({'sort' : [('updated', -1)]})
         return self.find(spec, **opts)
 
     def paginate(self, spec, limit=20, at=0, sort='updated', 
@@ -2442,7 +2440,8 @@ class UpdatedExpr(Feed):
 
     def create(self):
         # if there's another update to this expr within 24 hours, delete it
-        prev = self.db.UpdatedExpr.last({ 'initiator': self['initiator'], 'entity': self['entity'] })
+        prev = self.db.UpdatedExpr.last({ 'initiator': self['initiator'],
+            'entity': self['entity'] })
         if prev and now() - prev['created'] < 86400: prev.delete()
         super(UpdatedExpr, self).create()
         return self
@@ -2454,7 +2453,9 @@ class FriendJoined(Feed):
         return self['entity'] == viewer.id
 
     def create(self):
-        if self.db.FriendJoined.find({ 'initiator': self['initiator'], 'entity': self['entity'] }): return True
+        if self.db.FriendJoined.find({ 'initiator': self['initiator'],
+            'entity': self['entity'] }
+        ): return True
         return super(FriendJoined, self).create()
 
 

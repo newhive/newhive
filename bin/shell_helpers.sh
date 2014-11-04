@@ -54,21 +54,26 @@ alias cdnhp='cd /var/www/newhive' # go to default production home
 
 alias ff='find|grep -i'
 
-alias routes='e `groot`/newhive/routes.json'
+alias routes='e $(groot)/newhive/routes.json'
 alias config='e $(groot)/newhive/config/config.py'
 alias config_common='e $(groot)/newhive/config/config_common.py'
 
 # server management
-psk(){
+function psk(){
    if pgrep -f $1; then
        pgrep -f $1 | xargs kill;
    else
        return 1;
    fi
 } 
-alias newhive='(cdg; ./server.py)'
+function newhive() {(
+  cdg
+  ./server.py $*
+)}
+
 alias killserver='psk server.py'
 alias rrr='reset; cdg; killserver; newhive'
+alias pylog='sudo less +F /var/log/apache2/error.log'
 
 # shell shortcuts
 alias his='history'

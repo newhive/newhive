@@ -59,7 +59,11 @@ body.mobile .search_bar input[type=text] { width: 380px; }
 }
 
 #site {
-    width:100%; height:100%;
+    width:100%; 
+    //height:100%;
+}
+body.edit #site {
+    height:100%;
 }
 
 #exprs {

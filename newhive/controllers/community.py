@@ -6,7 +6,7 @@ from newhive import mail
 from newhive.ui_strings import en as ui_str
 from newhive.utils import dfilter, now, abs_url, AbsUrl
 from newhive.controllers.controller import Controller
-from newhive.state import Entity, collection_client_view
+from newhive.state import Entity, collection_client_view, collection_of
 
 class Community(Controller):
     def featured(self, tdata, request, db_args={}, **args):
@@ -443,11 +443,47 @@ class Community(Controller):
         if not self.flags.get('admin'):
             return {}
 
-        q = json.loads(request.args.get('q', '{}'))
+        query = json.loads(request.args.get('q', '{}'))
+        special = request.args.get('special', '')
         # TODO-cleanup: handle sort arguments more generally in pre_dispatch
         db_args.update(sort=[(db_args.get('sort', 'updated'), db_args.get('order', -1))])
         db_args.setdefault('limit', 20)
-        res = self.db.Expr.search(q, **db_args)
+        db_args.update(json.loads(request.args.get('args', '{}')))
+        collection = collection_of(self.db, request.args.get('db', 'Expr').capitalize())
+        help = """
+            q: database query, e.g., {"owner_name": "zach"}
+            args: database arguments (limit, order, !!Fixme)
+            db: database collection, e.g., "expr"
+        """
+        # TODO: document all these args somewhere
+        if special == 'top_tags':
+            if request.args.get('help', False) != False:
+                return {
+                 'text_result': 
+                    """
+                    q: database query, e.g., {"owner_name": "zach"}
+                    Limit: number of newhives to scan
+                    """
+                }
+            collection = self.db.Expr
+            db_args.update({
+                'limit': int(request.args.get('limit', '1000'))
+            })
+            res = collection.search(query, **db_args)
+            tags = Counter()
+            for expr in res:
+                # print expr
+                tags.update(expr.get('tags_index', []))
+            return { 'text_result': 
+                "\n".join([x[0] + ": " + str(x[1]) for x in tags.most_common(100)]) }
+
+        else:
+            if request.args.get('help', False):
+                return {
+                    'text_result': help
+                }
+            res = collection.search(query, **db_args)
+
         return {
             'cards': list(res),
         }
