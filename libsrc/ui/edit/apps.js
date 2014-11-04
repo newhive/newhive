@@ -270,21 +270,39 @@ var groups = function(state) {
         }
     }
     // Disband this group, setting all of its children to be children
-    // of its parent
-    o.ungroup = function() {
+    // of {parent} or of its parent if unspecified
+    o.ungroup = function(new_parent) {
         var children = o.children()
+            , parent = (new_parent != undefined) ? new_parent : o.parent()
         children.map(function(child) { 
             o.remove_child(child) 
-            if (o.parent())
-                parent().add_child(child)
+            if (parent)
+                parent.add_child(child)
         })
-        if (parent()) 
-            o.parent().remove_child(o.id)
+        if (parent)
+            parent.remove_child(o.id)
         delete g_groups[o.id]
         return children
     }
 
     return o
+}
+// Find the (lowest) common parent in list of groups / apps
+groups.common_parent = function(groups) {
+    if (groups.length == 0)
+        return undefined
+    var parents = groups[0].parents()
+        , common_parent = groups[0]
+    for (var i = 1; i < groups.length && parents.length; ++i) {
+        var group = groups[i]
+        var new_parents_ids = group.parents().map(function(g) {return g.id})
+        while (parents.length) {
+            if (new_parents_ids.indexOf(parents[0].id) >= 0)
+                break;
+            parents.splice(0, 1)
+        }
+    }
+    return parents[0]
 }
 groups.fetch = function(id) {
     return g_groups[id]
@@ -2958,7 +2976,7 @@ Hive.App.has_resize = function(o) {
             for (dir in o.resizers) {
                 var coords = str2coords[dir]
                 o.resizers[dir].css(ui_util.array2css(
-                    u._add([-19, -19], control_pos(dims, p + 6, coords))))
+                    u._add([-19, -19], control_pos(dims, [p + 6, p - 6], coords))))
             }
         };
 

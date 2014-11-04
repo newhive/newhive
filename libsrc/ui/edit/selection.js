@@ -103,12 +103,18 @@ o.Selection = function(o) {
             parent.add_child(new_group)
         groups = [new_group]
     }
-    // if the selection is a group, break it
+    // WAS: if the selection is a group, break it
+    // Break all groups in selection
     o.break_group = function() {
-        if (groups.length != 1)
-            return 
+        // if (groups.length != 1)
+        //     return 
 
-        groups = groups[0].ungroup()
+        // groups = groups[0].ungroup()
+        var common_parent = env.Groups.common_parent(groups)
+        groups.map(function(g) {
+            if (g.ungroup)
+                g.ungroup(common_parent)
+        })
     }
     // traverse the groups which contain app
     o.traverse_groups = function(el) {
@@ -119,8 +125,13 @@ o.Selection = function(o) {
             g = parents.splice(-1, 1)[0]
             els = g.children_flat()
             remainder = u.except(elements, els)
-            if (remainder.length + els.length == len)
+            if (remainder.length + els.length == len) {
+                // Group of size 1, so just select top_most
+                // TODO: Should we allow groups of size 1?
+                if (els.length == 1)
+                    return top_most
                 return parents.slice(-1)[0]
+            }
         }
         return top_most
     }
