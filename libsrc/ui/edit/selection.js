@@ -45,6 +45,7 @@ o.Selection = function(o) {
             elements.slice() : [drag_target]; 
     };
     o.add_to_collection = false;
+    o.is_app_object = false;
     o.has_align = false;
     o.is_selection = true;
     o.fixed_aspect = true;
@@ -96,18 +97,26 @@ o.Selection = function(o) {
 
         var new_group = env.Groups(), parent = groups[0].parent()
         groups.map(function(el) {
-            new_group.add(el)
+            new_group.add_child(el)
         })
         if (parent)
-            parent.add(new_group)
+            parent.add_child(new_group)
         groups = [new_group]
     }
-    // if the selection is a group, break it
+    // WAS: if the selection is a group, break it
+    // Break all groups in selection
     o.break_group = function() {
-        if (groups.length != 1)
-            return 
+        // if (groups.length != 1)
+        //     return 
 
-        groups = groups[0].ungroup()
+        // groups = groups[0].ungroup()
+        var common_parent = env.Groups.common_parent(groups)
+        if (groups.length == 1)
+            common_parent = undefined
+        groups.map(function(g) {
+            if (g.ungroup)
+                g.ungroup(common_parent)
+        })
     }
     // traverse the groups which contain app
     o.traverse_groups = function(el) {
@@ -118,8 +127,13 @@ o.Selection = function(o) {
             g = parents.splice(-1, 1)[0]
             els = g.children_flat()
             remainder = u.except(elements, els)
-            if (remainder.length + els.length == len)
+            if (remainder.length + els.length == len) {
+                // Group of size 1, so just select top_most
+                // TODO: Should we allow groups of size 1?
+                if (els.length == 1)
+                    return top_most
                 return parents.slice(-1)[0]
+            }
         }
         return top_most
     }
@@ -573,13 +587,11 @@ o.Selection = function(o) {
         if (!ref_dims)
             o.update_relative_coords();
     }
-    o.resize = function(delta){
-        var dims = _resize(delta);
-        if(!ref_dims) return;
-        if (delegate_dims_set()) {
-            return elements[0].resize(delta);
+    o.resize = function(delta, coords){
+        if (delegate_dims_set() && ref_dims) {
+            return elements[0].resize(delta, coords);
         }
-
+        var dims = _resize(delta, coords);
     };
     o.get_aspect = function() {
         if (elements.length == 1 && !elements[0].get_aspect()) {
@@ -637,6 +649,25 @@ o.Selection = function(o) {
 
         elements = $.merge([], apps);
         groups = o.get_groups(elements)
+        var group2string = function(g, depth) {
+            depth = depth || 0
+            var pad = "                                    ".slice(0, depth)
+                ,children = g.children(), str = pad + g.name()
+            if (!g.is_group)
+                return str + "\n"
+            str += ":\n"
+            $.map(children, function(child) {
+                str += group2string(child, depth + 4)
+            })
+            return str
+        }
+        if (context.flags.can_debug) {
+            var help = ""
+            $.map(groups, function(g) {
+                help += group2string(g)
+            })
+            u.set_debug_info(help, 5000)
+        }
 
         o.update_relative_coords();
 

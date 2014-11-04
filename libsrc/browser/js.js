@@ -112,12 +112,14 @@ o.throttle = function(callback, min_delay, that) {
 o.Funcs = function(fn, filter) {
     var o = [];
     if(fn) o.push(fn);
-    var callback = function() {
+    function callback() {
         if (!filter || filter()){
             for(var i in o){
                 var ret = o[i].apply(this, arguments);
                 if(ret !== undefined) return ret;
             }
+            if (callback.return_val)
+                return callback.return_val
         }
     };
     callback.handlers = o;

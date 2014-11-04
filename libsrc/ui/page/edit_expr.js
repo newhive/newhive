@@ -206,6 +206,7 @@ define([
             expr.background = msg.save.background
             expr.apps = msg.save.apps
             expr.groups = msg.save.groups
+            expr.globals = msg.save.globals
             if (msg.autosave) {
                 if (o.controller.ajax_pending())
                     return

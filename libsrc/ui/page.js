@@ -253,21 +253,14 @@ define([
         var has_nav = has_nav_bar()
             ,has_nav_embedded_logo = has_nav && context.user.logged_in
 
+        // Move the logo handle into/out of the nav bar
+        $("#logo_handle")
+            .prependTo(has_nav_embedded_logo ? ".main-header .left" : "#overlays")
+        // And fix up the overlay/hide styles
         $("#overlays .hive_logo")
             .toggleClass("overlay", ! has_nav_embedded_logo)
-            // .toggleClass("item", has_nav)
-            .prependTo(has_nav_embedded_logo ? ".main-header .left" : "#overlays")
             .toggleClass("hide", has_nav && !has_nav_embedded_logo)
-        $("#logo_handle")
-            // .toggleClass("item", has_nav)
-            .prependTo(has_nav_embedded_logo ? ".main-header .left" : "#overlays")
-            // .showhide(true)
-            // .showhide(has_nav && !has_nav_embedded_logo)
-            // .toggleClass("hide", has_nav && !has_nav_embedded_logo)
-        $("#logo_handle .hive_logo")
-            .toggleClass("overlay", ! has_nav_embedded_logo)
-            .toggleClass("hide", has_nav && !has_nav_embedded_logo)
-        // reverse the logo menu if it's up top
+        // Reverse the logo menu if it's up top
         if (! $("#logo_menu").is(".inverted") != has_nav_embedded_logo) {
             $("#logo_menu").toggleClass("inverted", ! has_nav_embedded_logo)
                 .append($("#logo_menu").children().get().reverse())
