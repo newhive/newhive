@@ -806,6 +806,7 @@ Hive.App = function(init_state, opts) {
         if(!opts) opts = {};
         var app_state = $.extend({}, true, o.state());
         delete app_state.id;
+        delete app_state.name;
         if(opts.z_offset) app_state.z += opts.z_offset;
         var cp = Hive.App(app_state, opts);
         env.History.save(cp._remove, cp._unremove, 'copy');
