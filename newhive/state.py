@@ -17,7 +17,7 @@ from crypt import crypt
 from oauth2client.client import OAuth2Credentials
 from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredentialsError
 #import pyes
-from collections import defaultdict
+from collections import Counter
 from snapshots import Snapshots
 
 from s3 import S3Interface
@@ -26,8 +26,10 @@ import Queue
 import threading
 from subprocess import call
 
-from newhive.utils import *
-from newhive.utils import normalize_word
+from newhive import config
+from newhive.config import abs_url, url_host
+from newhive.utils import (now, junkstr, dfilter, normalize, normalize_tags,
+    tag_string, cached, AbsUrl, log_error, normalize_word)
 from newhive.routes import reserved_words
 
 from newhive.profiling import g_flags
