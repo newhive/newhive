@@ -258,7 +258,7 @@ var groups = function(state) {
     o.children = function() {
         return children_ids.map(function(id) { 
             return groups.fetch(id) || env.Apps.fetch(id) 
-        })
+        }).filter(function(g) { return g })
     }
     o.children_flat = function() {
         var apps = [], children = o.children()
@@ -1519,16 +1519,18 @@ Hive.App.Image = function(o) {
             }
             ev.stopPropagation();
             ref_offset = o.offset();
-            ref_pos = o.pos();
+            ref_pos = u._add(o.pos(), ref_offset);
             drag_fake = $(ev.target).hasClass("fake")
             // This code "fixes" one of the coordinates so it won't be modifyable
             // o.fixed_coord = (ref_offset[0] == 0) ? 0 : ((ref_offset[1] == 0) ? 1 : -1);
-            history_point = env.History.saver(o.offset, o.offset_set, 'move crop');
+            // history_point = env.History.saver(o.offset, o.offset_set, 'move crop');
+            env.History.change_start()
         };
         o.drag = function (ev, dd, shallow) {
             if(!cropping || !ref_offset) return;
             ev.stopPropagation();
             var delta = [dd.deltaX, dd.deltaY];
+            console.log(delta)
             if (!drag_fake)
                 delta = u._mul(-1, delta)
             if(ev.shiftKey)
@@ -1559,13 +1561,15 @@ Hive.App.Image = function(o) {
                 delta = u.snap_helper(my_tuple, { tuple: [ [tuple[0]], [tuple[1]] ] });
             }
             o.offset_set(delta);
+            console.log(delta)
             if (!drag_fake)
                 o.pos_set(u._add(ref_pos, u._mul(-1,delta)))
             o.layout();
         };
         o.dragend = function(ev){
             if(!cropping) return;
-            history_point.save();
+            env.History.change_end("Adjust crop")
+            // history_point.save();
             o.long_hold_cancel(ev);
         };
 
