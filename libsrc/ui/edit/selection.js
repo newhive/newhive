@@ -179,6 +179,8 @@ o.Selection = function(o) {
         // if mousedown on app or controls, store app in app_clicking,
         // if mousedown was not on selected app or controls, unselect all
         ev.stopPropagation()
+        if (ev.data && ev.data.cropping_active)
+            return
         app_clicking = ev.data
 
         var hit = false
@@ -253,7 +255,7 @@ o.Selection = function(o) {
                 drag_target = o;
             else {
                 drag_target = ev.data;
-                if (!drag_target.is_selection) {
+                if (!drag_target.is_selection && !drag_target.cropping_active) {
                     var g = o.traverse_groups(drag_target)
                     o.update(g.children_flat())
                     drag_target = o
@@ -318,7 +320,8 @@ o.Selection = function(o) {
         if(drag_target && !selecting){
             o.move_end();
             drag_target = undefined
-            o.update(prev_selection)
+            if (!o.cropping_active)
+                o.update(prev_selection)
             return false;
         }
 
