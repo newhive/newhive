@@ -37,7 +37,6 @@ from newhive.notifications import gcm
 import logging
 logger = logging.getLogger(__name__)
 
-
 entity_types = []
 def register(entity_cls):
     entity_types.append(entity_cls)
@@ -904,8 +903,9 @@ class User(HasSocial):
                 , 'initiator': { '$ne': self.id }
                 }
         or_clause = [user_action, own_broadcast, expression_action]
-        return self.db.Feed.search({ '$or': or_clause }, limit=limit,
-            sort=[('created', -1)])
+        return self.db.Feed.search({ '$query': {'$or': or_clause},
+            '$hint': {'created': 1} }).sort([['created',-1]]).limit(500)
+        #return self.db.Feed.search({ '$query': q }, limit=limit, sort=[['created', -1]])
 
     def exprs_tagged_following(self, per_tag_limit=20, limit=0):
         # return iterable of matching expressions for each tag you're following
@@ -947,8 +947,8 @@ class User(HasSocial):
     def feed_recent(self, spec={}, limit=20, at=0, **args):
         at=int(at)
         limit=int(limit)
-        feed_items = list(self.network_feed_items(
-            limit=g_flags['feed_max'], at=0))
+        feed_items = [item for item in
+            self.network_feed_items(limit=g_flags['feed_max'], at=0)]
         tagged_exprs = list(self.exprs_tagged_following())
 
         exprs = {}
@@ -2616,3 +2616,4 @@ def tags_by_frequency(query):
     counts = [[tags[t], t] for t in tags]
     counts.sort(reverse=True)
     return counts
+
