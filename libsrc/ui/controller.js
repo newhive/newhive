@@ -277,7 +277,7 @@ define([
             $.ajax(api_call);
             o.loading_start()
         } else 
-            callback({})
+            success({})
 
         function success_default(data){
             if (push_state == undefined || push_state) {
