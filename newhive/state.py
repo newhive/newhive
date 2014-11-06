@@ -142,10 +142,12 @@ class Database:
                 results = self.Expr.page(spec, **args)
                 if not expr_only:
                     results = results + self.User.page(spec, **args)
-                    results.sort(cmp=lambda x, y: cmp(x[sort], y[sort]), reverse=True)
+                    results.sort(cmp=lambda x, y: cmp(x[sort], y[sort]),
+                        reverse=True)
 
-            if not search_id or len(results) > 500 or args.get('limit', 27) > 1000:
-                break;
+            if( not search_id or len(results) > 500 or
+                args.get('limit', 27) > 1000
+            ): break;
             if len(filter(lambda x: x.id == search_id, results)):
                 break;
             args['limit'] = (args.get('limit', 27) * 3/2)
@@ -225,7 +227,8 @@ class Collection(object):
         self.entity = entity
         self.config = db.config
 
-    def fetch_empty(self, key, keyname='_id'): return self.find_empty({ keyname : key })
+    def fetch_empty(self, key, keyname='_id'):
+        return self.find_empty({ keyname : key })
 
     def fetch(self, key, keyname='_id', **opts):
         if isinstance(key, list):
@@ -466,12 +469,14 @@ class HasSocial(Entity):
     @property
     @cached
     def starrer_ids(self):
-        return [i['initiator'] for i in self.db.Star.search({ 'entity': self.id }) ]
+        return [i['initiator'] for i in
+            self.db.Star.search({ 'entity': self.id }) ]
 
     @property
     def star_count(self): return len(self.starrer_ids)
 
-    def starrer_page(self, **args): return self.db.User.page(self.starrer_ids, **args)
+    def starrer_page(self, **args):
+        return self.db.User.page(self.starrer_ids, **args)
 
     def stars(self, spec={}):
         """ Feed records indicating who is listening to or likes this entity """
@@ -499,7 +504,9 @@ def add_to_category(category, collection):
     category['collections'] += [collection]
 
 # client view of a collection
-def collection_client_view(db, collection, ultra=False, viewer=None, thumbs=True):
+def collection_client_view(db, collection, ultra=False, viewer=None,
+    thumbs=True
+):
     ## we have just a single expr
     if isinstance(collection, basestring):
         expr = db.Expr.fetch(collection)
@@ -570,7 +577,9 @@ def collection_client_view(db, collection, ultra=False, viewer=None, thumbs=True
                 ,"snapshot_small": expr.snapshot_name("small")
                 ,"snapshot_big": expr.snapshot_name("big")
             })
-            if ultra: expr_cv["thumbs"][-1]["snapshot_ultra"] = expr.snapshot_name("ultra")
+            if ultra:
+                expr_cv["thumbs"][-1]["snapshot_ultra"] = (
+                    expr.snapshot_name("ultra") )
 
     # determine if this is an owned or curated collection
     # for "by USER" or "curated by USER" on card
@@ -617,7 +626,8 @@ class User(HasSocial):
         def named(self, name): return self.find({'name' : name})
 
         def find_by_facebook(self, id):
-            return self.find({'facebook.id': id, 'facebook.disconnected': {'$exists': False}})
+            return self.find({ 'facebook.id': id,
+                'facebook.disconnected': {'$exists': False} })
 
         def get_root(self): return self.named('root')
         root_user = property(get_root)
@@ -649,7 +659,8 @@ class User(HasSocial):
             referrals = 0,
             flags = {},
         )
-        # self['email_subscriptions'] = self.collection.config.default_email_subscriptions
+        # self['email_subscriptions'] = (
+        #     self.collection.config.default_email_subscriptions )
 
         self.build_search(self)
         self.get_expr_count(force_update=True)
@@ -674,23 +685,29 @@ class User(HasSocial):
     @property
     @cached
     def my_stars(self):
-        """ Feed records indicating what newhives a user likes and who they're listening to """
-        return list(self.db.Star.search({ 'initiator': self.id }, sort=[('created', -1)]))
+        """ Feed records indicating what newhives a user likes and who they're
+            listening to """
+        return list( self.db.Star.search({ 'initiator': self.id },
+            sort=[('created', -1)]) )
 
     @property
     @cached
     def starred_user_ids(self):
-        return [i['entity'] for i in self.my_stars if i['entity_class'] == 'User']
+        return [ i['entity'] for i in self.my_stars
+            if i['entity_class'] == 'User' ]
 
     @property
     def starred_expr_ids(self):
-        return [i['entity'] for i in self.my_stars if i['entity_class'] == 'Expr']
+        return [ i['entity'] for i in self.my_stars
+            if i['entity_class'] == 'Expr' ]
 
-    def starred_user_page(self, **args): return self.collection.page(self.starred_user_ids, **args)
+    def starred_user_page(self, **args):
+        return self.collection.page(self.starred_user_ids, **args)
 
     @property
     @cached
-    def broadcast(self): return self.db.Broadcast.search({ 'initiator': self.id })
+    def broadcast(self):
+        return self.db.Broadcast.search({ 'initiator': self.id })
 
     @property
     def broadcast_ids(self): return [i['entity'] for i in self.broadcast]
@@ -813,7 +830,8 @@ class User(HasSocial):
             tag_entropy=tag_entropy)
 
     def get_tags(self, privacy, remove_singletons=True):
-        cnt = Counter(self.get('unlisted_tags' if privacy else 'public_tags', {}))
+        cnt = Counter( self.get('unlisted_tags'
+            if privacy else 'public_tags', {}) )
         # remove single-expression tags
         if remove_singletons:
             single_count = set(cnt.keys())
@@ -871,7 +889,8 @@ class User(HasSocial):
         res = self.feed_profile(**args)
         for i, item in enumerate(res):
             if item.type == 'FriendJoined': continue
-            entity = item.initiator if item.entity.id == self.id else item.entity
+            entity = ( item.initiator if item.entity.id == self.id
+                else item.entity )
             entity['feed'] = [item]
             res[i] = entity
         return res
@@ -895,7 +914,8 @@ class User(HasSocial):
     def exprs_tagged_following(self, per_tag_limit=20, limit=0):
         # return iterable of matching expressions for each tag you're following
         tags = self.get('tags_following', [])
-        queries = [self.db.query('#' + tag, limit=per_tag_limit) for tag in tags]
+        queries = [ self.db.query('#' + tag, limit=per_tag_limit)
+            for tag in tags ]
         flat = list(filter(lambda x:x != None, chain(*izip_longest(*queries))))
         if limit:
             return flat[0:limit]
@@ -956,13 +976,16 @@ class User(HasSocial):
             item = exprs.get(_id)
             if not item:
                 item = add_expr({'_id':_id, 'updated':0})
-            if item and (r['class_name'] != 'NewExpr') and len(item['feed']) < 3:
+            if( item and (r['class_name'] != 'NewExpr')
+                and len(item['feed']) < 3
+            ):
                 item['feed'].append(r)
                 # item update is the most recent of all its feed items
                 item['updated'] = max(item['updated'], r['updated'])
 
         # sort by inverse time
-        sorted_result = sorted(result, key = lambda r: r['updated'], reverse = True)
+        sorted_result = sorted( result, key = lambda r: r['updated'],
+            reverse = True )
         needed = at + limit
         start = 0
         end = at + limit + 5
@@ -977,7 +1000,8 @@ class User(HasSocial):
             for r in new_records:
                 exprs[r['_id']].update(r)
             # filter to public only
-            records = [e for e in sorted_result[:end] if e.get('auth') == 'public']
+            records = [ e for e in sorted_result[:end]
+                if e.get('auth') == 'public' ]
             if end > len(sorted_result):
                 break
             start = end
@@ -1024,7 +1048,8 @@ class User(HasSocial):
 
     def give_invites(self, count):
         self.increment({'referrals':count})
-        self.db.InviteNote.create(self.db.User.named(self.db.config.site_user), self, data={'count':count})
+        self.db.InviteNote.create( self.db.User.named(self.db.config.site_user),
+            self, data={'count':count} )
 
     def cmp_password(self, v):
         if not isinstance(v, (str, unicode)): return False
@@ -1055,7 +1080,8 @@ class User(HasSocial):
 
     #TODO-bug: when deleting/adding expression, this lags by one.
     def set_expr_count(self):
-        count = self.mdb.expr.find({"owner": self.id, "apps": {"$exists": True, "$not": {"$size": 0}}, "auth": "public"}).count()
+        count = self.mdb.expr.find({ "owner": self.id, "apps":
+            {"$exists": True, "$not": {"$size": 0}}, "auth": "public"}).count()
         self.update_cmd({"$set": {'analytics.expressions.count': count}})
         return count
 
@@ -1071,7 +1097,8 @@ class User(HasSocial):
     expr_count = property(get_expr_count)
 
     def _has_homepage(self):
-        return bool(self.mdb.expr.find({'owner': self.id, 'apps': {'$exists': True}, 'name': ''}).count())
+        return bool( self.mdb.expr.find({'owner': self.id,
+            'apps': {'$exists': True}, 'name': ''}).count() )
     has_homepage = property(_has_homepage)
 
     @property
@@ -1105,7 +1132,8 @@ class User(HasSocial):
     @property
     def fb_thumb(self):
         if self.has_key('facebook'):
-            return "https://graph.facebook.com/" + self.facebook_id + "/picture?type=square"
+            return ( "https://graph.facebook.com/" + self.facebook_id
+                + "/picture?type=square" )
 
     @property
     def fb_name(self):
@@ -1113,14 +1141,18 @@ class User(HasSocial):
             return self['facebook']['name']
 
     def facebook_disconnect(self):
-        if self.facebook_credentials and not self.facebook_credentials.access_token_expired:
+        if( self.facebook_credentials and not
+            self.facebook_credentials.access_token_expired
+        ):
             fbc = FacebookClient()
             try:
-                fbc.delete('https://graph.facebook.com/me/permissions', self.facebook_credentials)
+                fbc.delete('https://graph.facebook.com/me/permissions',
+                    self.facebook_credentials)
             except (FlowExchangeError, AccessTokenCredentialsError) as e:
                 print e
             self.facebook_credentials = None
-        #self.update_cmd({'$set': {'facebook.disconnected': True}}) # WTF? this doesn't actually disconnect you
+        # WTF? this doesn't actually disconnect you
+        #self.update_cmd({'$set': {'facebook.disconnected': True}})
         self.update_cmd({'$unset': {'facebook': 1}}) # this seems to work
         self.update_cmd({'$unset': {'oauth.facebook': 1}})
 
@@ -1133,7 +1165,10 @@ class User(HasSocial):
     @property
     def facebook_friends(self):
         friends = self.fb_client.friends()
-        return self.db.User.search({'facebook.id': {'$in': [str(friend['uid']) for friend in friends]}, 'facebook.disconnected': {'$exists': False}})
+        return self.db.User.search({
+            'facebook.id': {'$in': [str(friend['uid']) for friend in friends]},
+            'facebook.disconnected': {'$exists': False}
+        })
 
     def get_expressions(self, auth=None):
         spec = {'owner': self.id}
@@ -1143,12 +1178,14 @@ class User(HasSocial):
 
     # TODO: cache db query
     def get_top_expressions(self, count=6):
-        return self.get_expressions(auth='public').sort([('views', -1)]).limit(count)
+        return self.get_expressions( auth='public'
+            ).sort([('views', -1)] ).limit(count)
     top_expressions = property(get_top_expressions)
 
     # TODO: cache db query
     def get_recent_expressions(self, count=6):
-        return self.get_expressions(auth='public').sort([('updated', -1)]).limit(count)
+        return self.get_expressions( auth='public'
+            ).sort([('updated', -1)]).limit(count)
     recent_expressions = property(get_recent_expressions)
 
     def client_view(self, viewer=None, special={}, activity=0):
@@ -1165,8 +1202,10 @@ class User(HasSocial):
         if self.has_key('analytics'):
             updates = {}
             if not self['analytics'].has_key('views_by'):
-                updates.update({'views_by': 
-                    sum([r.get('views', 0) for r in self.db.Expr.search({'owner':self['_id']})])})
+                updates.update({ 'views_by': 
+                    sum([ r.get('views', 0) for r in
+                        self.db.Expr.search({'owner':self['_id']}) ])
+                })
             if not self['analytics'].has_key('loves_by'):
                 updates.update({'loves_by':
                     self.db.Feed.search({'entity_owner':self['_id'],
@@ -1177,8 +1216,9 @@ class User(HasSocial):
             dict.update(user, dict(
                 views_by = self['analytics']['views_by'],
                 loves_by = self['analytics']['loves_by'],
-                expressions = self.get_expr_count(), # Why expressions->count?  nothing else is in there.
-                ))
+                # Why expressions->count? nothing else is in there.
+                expressions = self.get_expr_count(), 
+            ))
 
         thumb_big = (self.get_thumb(222) or self.get_thumb(190) or
             self.db.assets.url('skin/site/user_placeholder_big.jpg'))
