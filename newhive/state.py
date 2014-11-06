@@ -17,19 +17,19 @@ from crypt import crypt
 from oauth2client.client import OAuth2Credentials
 from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredentialsError
 #import pyes
-from collections import defaultdict
+from collections import Counter
 from snapshots import Snapshots
 
 from s3 import S3Interface
-from boto.s3.connection import S3Connection
-from boto.s3.key import Key as S3Key
 
 import Queue
 import threading
 from subprocess import call
 
-from newhive.utils import *
-from newhive.utils import normalize_word
+from newhive import config
+from newhive.config import abs_url, url_host
+from newhive.utils import (now, junkstr, dfilter, normalize, normalize_tags,
+    tag_string, cached, AbsUrl, log_error, normalize_word)
 from newhive.routes import reserved_words
 
 from newhive.profiling import g_flags
@@ -251,31 +251,30 @@ class Collection(object):
         return Cursor(self, self._col.find(spec=spec, **opts))
 
     def last(self, spec={}, **opts):
-        opts.update({'sort' : [('_id', -1)]})
+        opts.update({'sort' : [('updated', -1)]})
         return self.find(spec, **opts)
 
     def paginate(self, spec, limit=20, at=0, sort='updated', 
-        order=-1, filter={}, **args):
+        order=-1, filter={}, **args
+    ):
         # page_is_id = is_mongo_key(at)
         # if at and not page_is_id:
-
         at = int(at)
         limit = int(limit)
+
         if isinstance(spec, dict):
             # if page_is_id:
             #     page_start = self.fetch(at)
             #     at = page_start[sort] if page_start else None
 
-            # if at and sort: spec[sort] = { '$lt' if order == -1 else '$gt': at }
+            # if at and sort:
+            #     spec[sort] = { '$lt' if order == -1 else '$gt': at }
 
-            res = self.search(spec, sort=[(sort, order)], filter=filter, skip=at, **args)
+            res = self.search(spec, sort=[(sort, order)], filter=filter,
+                skip=at, **args)
 
-            # if there's a limit, collapse to list, get sort value of last item
-            if limit:
-                if filter:
-                    res = ifilter(filter, res)
-                res = islice(res, limit)
-                res = [r for r in res]
+            # collapse to limit long list, omitting filtered results
+            res = [r for r in islice(res, limit)]
             return res
 
         elif isinstance(spec, list):
@@ -876,7 +875,7 @@ class User(HasSocial):
             print e
             return []
 
-    def activity_bug(self, **args):
+    def activity_bug(self, limit=100, **args):
         if not self.id: return []
         # TODO-feature: create list of exprs user is following comments on in
         # user record, so you can leave a comment thread
@@ -886,7 +885,7 @@ class User(HasSocial):
             {'entity_owner': self.id},
             {'initiator': self.id},
             {'entity': {'$in': commented_exprs}, 'class_name': 'Comment'}
-        ]}, **args)
+        ]}, limit=limit, **args)
 
     def feed_profile_entities(self, **args):
         res = self.feed_profile(**args)
@@ -2441,7 +2440,8 @@ class UpdatedExpr(Feed):
 
     def create(self):
         # if there's another update to this expr within 24 hours, delete it
-        prev = self.db.UpdatedExpr.last({ 'initiator': self['initiator'], 'entity': self['entity'] })
+        prev = self.db.UpdatedExpr.last({ 'initiator': self['initiator'],
+            'entity': self['entity'] })
         if prev and now() - prev['created'] < 86400: prev.delete()
         super(UpdatedExpr, self).create()
         return self
@@ -2453,7 +2453,9 @@ class FriendJoined(Feed):
         return self['entity'] == viewer.id
 
     def create(self):
-        if self.db.FriendJoined.find({ 'initiator': self['initiator'], 'entity': self['entity'] }): return True
+        if self.db.FriendJoined.find({ 'initiator': self['initiator'],
+            'entity': self['entity'] }
+        ): return True
         return super(FriendJoined, self).create()
 
 

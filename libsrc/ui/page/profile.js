@@ -363,8 +363,10 @@ define([
         }
     }
     o.preprocess_page_data = function (page_data){
-        page_data.ordered_tags = 
-            page_data.tag_list.slice(0, page_data.ordered_count);
+        page_data.ordered_tags = [] 
+        if (page_data.tag_list)
+            page_data.ordered_tags = 
+                page_data.tag_list.slice(0, page_data.ordered_count);
         if (context.route.include_categories)
             page_data.extra_tags = 
                 page_data.tag_list.slice(page_data.ordered_count);

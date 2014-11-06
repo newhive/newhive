@@ -75,6 +75,27 @@ o.Selection = function(o) {
             groups = groups.concat([g])
             elements = remainder
         }
+        // For Debugging
+        var group2string = function(g, depth) {
+            depth = depth || 0
+            var pad = "                                    ".slice(0, depth)
+                ,children = g.children(), str = pad + g.name()
+            if (!g.is_group)
+                return str + "\n"
+            str += ":\n"
+            $.map(children, function(child) {
+                str += group2string(child, depth + 4)
+            })
+            return str
+        }
+        if (context.flags.can_debug) {
+            var help = ""
+            $.map(groups, function(g) {
+                help += group2string(g)
+            })
+            u.set_debug_info(help, 5000)
+        }
+        //
         return groups
     }
 
@@ -99,16 +120,25 @@ o.Selection = function(o) {
         groups.map(function(el) {
             new_group.add_child(el)
         })
-        if (parent)
+        if (parent) 
             parent.add_child(new_group)
-        groups = [new_group]
+        groups = o.get_groups(elements)
     }
-    // if the selection is a group, break it
+    // WAS: if the selection is a group, break it
+    // Break all groups in selection
     o.break_group = function() {
-        if (groups.length != 1)
-            return 
+        // if (groups.length != 1)
+        //     return 
 
-        groups = groups[0].ungroup()
+        // groups = groups[0].ungroup()
+        var common_parent = env.Groups.common_parent(groups)
+        if (groups.length == 1)
+            common_parent = undefined
+        groups.map(function(g) {
+            if (g.ungroup)
+                g.ungroup(common_parent)
+        })
+        groups = o.get_groups(elements)
     }
     // traverse the groups which contain app
     o.traverse_groups = function(el) {
@@ -119,8 +149,13 @@ o.Selection = function(o) {
             g = parents.splice(-1, 1)[0]
             els = g.children_flat()
             remainder = u.except(elements, els)
-            if (remainder.length + els.length == len)
+            if (remainder.length + els.length == len) {
+                // Group of size 1, so just select top_most
+                // TODO: Should we allow groups of size 1?
+                if (els.length == 1)
+                    return top_most
                 return parents.slice(-1)[0]
+            }
         }
         return top_most
     }
@@ -144,6 +179,8 @@ o.Selection = function(o) {
         // if mousedown on app or controls, store app in app_clicking,
         // if mousedown was not on selected app or controls, unselect all
         ev.stopPropagation()
+        if (ev.data && ev.data.cropping_active)
+            return
         app_clicking = ev.data
 
         var hit = false
@@ -218,7 +255,7 @@ o.Selection = function(o) {
                 drag_target = o;
             else {
                 drag_target = ev.data;
-                if (!drag_target.is_selection) {
+                if (!drag_target.is_selection && !drag_target.cropping_active) {
                     var g = o.traverse_groups(drag_target)
                     o.update(g.children_flat())
                     drag_target = o
@@ -283,7 +320,8 @@ o.Selection = function(o) {
         if(drag_target && !selecting){
             o.move_end();
             drag_target = undefined
-            o.update(prev_selection)
+            if (!o.cropping_active)
+                o.update(prev_selection)
             return false;
         }
 

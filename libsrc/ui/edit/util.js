@@ -193,10 +193,14 @@ o.array_equals = function(a, b) {
 o.epsilon_eq = function(a, b, epsilon) {
     return (Math.abs(a - b) < epsilon)
 }
+o.isNaN = function(x) {
+    return typeof(x) == "number" && isNaN(x)
+}
+    
 // deep object comparison
 o.deep_equals = function(o1, o2, epsilon) {
     if (o1 == null || o2 == null || typeof(o1) != "object" || typeof(o2) != "object")
-        return o1 == o2 || (isNaN(o1) && isNaN(o2))
+        return o1 == o2 || (o.isNaN(o1) && o.isNaN(o2))
              || (epsilon && typeof(o1) == "number" && typeof(o2) == "number" 
                 && o.epsilon_eq(o1, o2, epsilon))
 
@@ -595,6 +599,7 @@ o.show_dialog = function(jq, opts){
     return d;
 };
 
+var set_debug_info_timeout
 o.set_debug_info = function(info, delay) {
     if (typeof(info) == "object")
         info = JSON.stringify(info).replace(/,/g,"\n")
@@ -607,11 +612,12 @@ o.set_debug_info = function(info, delay) {
         $debug.hidehide();
         return;
     }
+    clearTimeout(set_debug_info_timeout)
     if (delay) 
-        setTimeout(o.set_debug_info, delay)
+        set_debug_info_timeout = setTimeout(o.set_debug_info, delay)
     // TODO: option to put info over mouse
     $debug.showshow().css({ top: "0px", left: "0px" })
-        .text(info);
+        .text("This box can only be seen if you are flagged can_debug\n" + info);
 };
 
 var times, distances, delta_latched;

@@ -360,7 +360,9 @@ $panel_hover:  false false      false      false         false           false  
 
 // Resets
 iframe { border: none; }
-html, body { background-color: white; height: 100%; }
+html, body { background-color: white; 
+    // height: 100%; 
+}
 
 img.thumb { background-color: $color_grey_medium; }
 
