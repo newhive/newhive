@@ -2990,7 +2990,8 @@ Hive.App.has_resize = function(o) {
                 ,coords = str2coords[dir]
                 ,angle = Math.atan(coords[1] / (coords[0] + 0.0000001)) - Math.PI/4
             $handle.data("coords", coords)
-                .css({"transform": "rotate(" + angle + "rad)"}) 
+                .css({"transform": "rotate(" + angle + "rad)"
+                    ,"cursor": dir + "-resize"}) 
                 .width("22px")
             o.c.resize = o.c.resize.add($handle)
             o.resizers[dir] = $handle
