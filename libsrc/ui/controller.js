@@ -259,18 +259,17 @@ define([
         }
         o.back = false;
 
-        if(callback) callback = function(){
-            callback()
+        var success = ( callback ? function(d){
+            callback(d)
             o.loading_end()
-        }
-        else callback = success
+        } : success_default )
 
         if(page_state.api){
             var api_call = {
                 method: 'get',
                 url: page_state.api.toString(),
                 dataType: 'json',
-                success: callback,
+                success: success,
                 // TODO-polish: make an error report dialog
                 error: o.loading_end
             };
@@ -280,7 +279,7 @@ define([
         } else 
             callback({})
 
-        function success(data){
+        function success_default(data){
             if (push_state == undefined || push_state) {
                 if (history.state && history.state.route_name == "view_expr" &&
                     page_state.route_name == "view_expr"
