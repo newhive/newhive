@@ -276,7 +276,7 @@ background-color: lightgrey;
         display: none;
     }
 
-    .buttons,.top_buttons {
+    .buttons,.top_buttons,.controls_ne {
         pointer-events: none;
         * { pointer-events: auto; }
         .button {

@@ -372,9 +372,10 @@ define([
         return contentFrame;
     };
 
-    o.expr_show = function(frame_el){
-        o.current = frame_el
+    o.expr_show = function($frame_el){
+        o.current = $frame_el
         o.send_current({action: 'show'})
+        $frame_el.focus()
     }
 
     o.send_current = function(msg){

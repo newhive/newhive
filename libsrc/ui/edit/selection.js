@@ -179,6 +179,8 @@ o.Selection = function(o) {
         // if mousedown on app or controls, store app in app_clicking,
         // if mousedown was not on selected app or controls, unselect all
         ev.stopPropagation()
+        if (ev.data && ev.data.cropping_active)
+            return
         app_clicking = ev.data
 
         var hit = false
@@ -211,9 +213,9 @@ o.Selection = function(o) {
 
         if (context.flags.shift_does_raise && ev.shiftKey) {
             if(u.is_ctrl(ev))
-                app.stack_bottom(ev)
+                app.stack_bottom()
             else
-                app.stack_top(ev)
+                app.stack_top()
             return
         }
         if(o.is_multi(ev)){
@@ -253,7 +255,7 @@ o.Selection = function(o) {
                 drag_target = o;
             else {
                 drag_target = ev.data;
-                if (!drag_target.is_selection) {
+                if (!drag_target.is_selection && !drag_target.cropping_active) {
                     var g = o.traverse_groups(drag_target)
                     o.update(g.children_flat())
                     drag_target = o
@@ -318,7 +320,8 @@ o.Selection = function(o) {
         if(drag_target && !selecting){
             o.move_end();
             drag_target = undefined
-            o.update(prev_selection)
+            if (!o.cropping_active)
+                o.update(prev_selection)
             return false;
         }
 
@@ -475,7 +478,9 @@ o.Selection = function(o) {
                 guide_0: !env.gifwall && (!full_apps.length || coord_full == 1),
                 guide_1: !env.gifwall && (!full_apps.length || coord_full == 0),
                 sensitivity: o.sensitivity, });
-        }
+        } else
+            $(".ruler").hidehide();
+
         pos = u._sub(pos)(off);
         if (full_apps.length)
             o.pushing_move(pos);
@@ -849,14 +854,14 @@ o.Selection = function(o) {
             dir > 0 ? el.stack_top() : el.stack_bottom() })
         env.History.group('stack to ' + ((dir > 0) ? "top": "bottom"));
     };
-    o.stack_top = function(ev) {
-        if (!ev.shiftKey) {
+    o.stack_top = function(maximal) {
+        if (!maximal) {
             return o.stack_shift(1)
         }
         o.stack_end(1)
     }
-    o.stack_bottom = function(ev){
-        if (!ev.shiftKey) {
+    o.stack_bottom = function(maximal){
+        if (!maximal) {
             return o.stack_shift(-1)
         }
         o.stack_end(-1)
@@ -903,32 +908,48 @@ o.Selection = function(o) {
             o.controls.layout();
     }
 
-    o.keydown = Funcs(function(ev){ 
+    // Keyboard handlers
+    var handlers = {
         // ctrl+[shift+]a to select all or none
-        if( ev.keyCode == 65 && u.is_ctrl(ev) ){
-            o.select( ev.shiftKey ? [] : hive_app.Apps.all() );
-            return false;
-        }
-
-        var handlers = {
-            27: function(){ // esc
-                    if(elements.length) o.unfocus()
-                    else return true
-                },
-            46: function(){ o.remove() }, // del
-            66: function(){ o.stack_bottom(ev) }, // b
-            70: function(){ o.stack_top(ev) }, // f
-            71: function(){  // g
-                if (!context.flags.Editor.grouping)
-                    return
-                if (ev.shiftKey)
-                    o.break_group(ev) 
-                else
-                    o.set_group(ev) 
-            },
-        }
-        if(handlers[ev.keyCode]){
-            if(handlers[ev.keyCode]()) return;
+        "C+a": function(){
+            o.select( hive_app.Apps.all() );
+        },
+        "SC+a": function(){
+            o.select( [] );
+        },
+        "esc": function(){
+            if(elements.length) 
+                o.unfocus()
+            else return true
+        },
+        "del": function(){ o.remove() },
+        "b": function(){ o.stack_bottom() },
+        "S+b": function(){ o.stack_bottom(true) },
+        "f": function(){ o.stack_top() },
+        "S+f": function(){ o.stack_top(true) },
+    }
+    if (context.flags.Editor.grouping) {
+        $.extend(handlers, {
+            "S+g": function(){ o.break_group() },
+            "g": function(){ o.set_group() },
+            "C+u": function(){ o.break_group() },
+            "C+g": function(){ o.set_group() },
+            "SC+g": function(){ o.break_group() },
+        })
+    }
+    var keymap = { 27: "esc", 46: "del" }
+    o.keydown = Funcs(function(ev){ 
+        var shift = ev.shiftKey, meta = ev.altKey, ctrl = u.is_ctrl(ev)
+            ,smc = (shift ? "S" : "") + (meta ? "M" : "") + (ctrl ? "C" : "")
+            ,keycode = ev.keyCode
+            ,key = keymap[keycode]
+        if (smc.length)
+            smc = smc + "+"
+        if (keycode >= 65 && keycode <= 64 + 26)
+            key = String.fromCharCode(keycode).toLowerCase()
+        handler = handlers[smc + key] || handlers["*" + key]
+        if(handler){
+            if (handler(ev)) return;
             return false;
         }
 

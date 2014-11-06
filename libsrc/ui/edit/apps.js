@@ -258,7 +258,7 @@ var groups = function(state) {
     o.children = function() {
         return children_ids.map(function(id) { 
             return groups.fetch(id) || env.Apps.fetch(id) 
-        })
+        }).filter(function(g) { return g })
     }
     o.children_flat = function() {
         var apps = [], children = o.children()
@@ -1459,6 +1459,7 @@ Hive.App.Image = function(o) {
     // TODO-cleanup: move to has_crop
     ;(function(){
         var cropping, $fake_img, $crop_bg, ref_offset, ref_dims, ref_scale_x
+            ,drag_fake
         o.crop_ui_showhide = function(crop) {
             if (!crop) {
                 if (! $fake_img)
@@ -1476,7 +1477,7 @@ Hive.App.Image = function(o) {
             $crop_bg = $('<div>').css('background-color', 'black')
                 .appendTo(o.div)
             $fake_img = o.$img.clone().appendTo(o.div).css({ 'opacity': .5
-                , 'z-index': 0 })
+                , 'z-index': 0 }).addClass("fake")
             o.$img = o.$img.add($fake_img).add($crop_bg);
             o.layout()
         }
@@ -1518,14 +1519,19 @@ Hive.App.Image = function(o) {
             }
             ev.stopPropagation();
             ref_offset = o.offset();
+            ref_pos = u._add(o.pos(), ref_offset);
+            drag_fake = $(ev.target).hasClass("fake")
             // This code "fixes" one of the coordinates so it won't be modifyable
             // o.fixed_coord = (ref_offset[0] == 0) ? 0 : ((ref_offset[1] == 0) ? 1 : -1);
-            history_point = env.History.saver(o.offset, o.offset_set, 'move crop');
+            // history_point = env.History.saver(o.offset, o.offset_set, 'move crop');
+            env.History.change_start()
         };
         o.drag = function (ev, dd, shallow) {
             if(!cropping || !ref_offset) return;
             ev.stopPropagation();
             var delta = [dd.deltaX, dd.deltaY];
+            if (!drag_fake)
+                delta = u._mul(-1, delta)
             if(ev.shiftKey)
                 delta[ Math.abs(dd.deltaX) > Math.abs(dd.deltaY) & 1 ] = 0;
             // constrain delta for now to the "free" dimension
@@ -1554,11 +1560,14 @@ Hive.App.Image = function(o) {
                 delta = u.snap_helper(my_tuple, { tuple: [ [tuple[0]], [tuple[1]] ] });
             }
             o.offset_set(delta);
+            if (!drag_fake)
+                o.pos_set(u._add(ref_pos, u._mul(-1,delta)))
             o.layout();
         };
         o.dragend = function(ev){
             if(!cropping) return;
-            history_point.save();
+            env.History.change_end("Adjust crop")
+            // history_point.save();
             o.long_hold_cancel(ev);
         };
 
@@ -2928,7 +2937,8 @@ Hive.App.has_resize = function(o) {
                 aabb[Math.max(0, coords[i])][i] = pos[i]
             }
             fix_aabb_for_aspect(aabb, coords, aspect, (snap_dist[0] < snap_dist[1]))
-        }
+        } else
+            $(".ruler").hidehide();
         return aabb
     }
 
@@ -2981,7 +2991,9 @@ Hive.App.has_resize = function(o) {
                 ,coords = str2coords[dir]
                 ,angle = Math.atan(coords[1] / (coords[0] + 0.0000001)) - Math.PI/4
             $handle.data("coords", coords)
-                .css({"transform": "rotate(" + angle + "rad)"}) 
+                .css({"transform": "rotate(" + angle + "rad)"
+                    ,"cursor": dir + "-resize"}) 
+                .width("22px")
             o.c.resize = o.c.resize.add($handle)
             o.resizers[dir] = $handle
         }
@@ -3005,7 +3017,7 @@ Hive.App.has_resize = function(o) {
             for (dir in o.resizers) {
                 var coords = str2coords[dir]
                 o.resizers[dir].css(ui_util.array2css(
-                    u._add([-19, -19], control_pos(dims, [p + 6, p - 6], coords))))
+                    u._add([-11, -11], control_pos(dims, [p + 2, p + 2], coords))))
             }
         };
 
@@ -3193,7 +3205,8 @@ Hive.App.has_crop = function(o) {
                 ,$hidden_controls = $hidden_controls || $("#controls .crop").parents(".controls")
                 .find(":visible").not(".hide").not(".crop,.buttons,.resize,.select_border")
             $control.prop("src", ui_util.asset("skin/edit/crop" + toggle + ".png"))
-            $hidden_controls.toggleClass("hidden", app.cropping_active)
+            // $hidden_controls.toggleClass("hidden", app.cropping_active)
+            $hidden_controls.css("visibility", app.cropping_active ? "hidden" : "")
         }
         find_or_create_button(o, '.crop')
         .click(function(ev) {
@@ -3225,7 +3238,7 @@ Hive.App.has_rotate = function(o) {
             common.layout();
             var p = o.padding;
             var dims = o.dims();
-            o.rotateHandle.css({ left: dims[0] - 10 + o.padding,
+            o.rotateHandle.css({ left: dims[0] + 19 + o.padding,
                 top: Math.min(dims[1] / 2 - 20, dims[1] - 54) });
             env.Selection.each(function(i,a){
                 if(a.controls)
