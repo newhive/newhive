@@ -912,16 +912,19 @@ o.Selection = function(o) {
             o.select( ev.shiftKey ? [] : hive_app.Apps.all() );
             return false;
         }
+        var shift = ev.shiftKey, meta = ev.altKey, ctrl = u.is_ctrl(ev)
+            ,smc = (shift ? "S" : "") + (meta ? "M" : "") + (ctrl ? "C" : "")
+
 
         var handlers = {
-            27: function(){ // esc
+            "esc": function(){ // esc
                     if(elements.length) o.unfocus()
                     else return true
                 },
-            46: function(){ o.remove() }, // del
-            66: function(){ o.stack_bottom(ev) }, // b
-            70: function(){ o.stack_top(ev) }, // f
-            71: function(){  // g
+            "del": function(){ o.remove() }, // del
+            "*b": function(){ o.stack_bottom(ev) }, // b
+            "*f": function(){ o.stack_top(ev) }, // f
+            "*g": function(){  // g
                 if (!context.flags.Editor.grouping)
                     return
                 if (ev.shiftKey)
@@ -930,8 +933,14 @@ o.Selection = function(o) {
                     o.set_group(ev) 
             },
         }
-        if(handlers[ev.keyCode]){
-            if(handlers[ev.keyCode]()) return;
+        var keymap = { 27: "esc", 46: "del" }
+            ,keycode = ev.keyCode
+            ,key = keymap[keycode]
+        if (keycode >= 65 && keycode <= 64 + 26)
+            key = String.fromCharCode(keycode).toLowerCase()
+        handler = handlers[smc + "+" + key] || handlers["*" + key]
+        if(handler){
+            if (handler(ev)) return;
             return false;
         }
 

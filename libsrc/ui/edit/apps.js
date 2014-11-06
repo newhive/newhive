@@ -1530,7 +1530,6 @@ Hive.App.Image = function(o) {
             if(!cropping || !ref_offset) return;
             ev.stopPropagation();
             var delta = [dd.deltaX, dd.deltaY];
-            console.log(delta)
             if (!drag_fake)
                 delta = u._mul(-1, delta)
             if(ev.shiftKey)
@@ -1561,7 +1560,6 @@ Hive.App.Image = function(o) {
                 delta = u.snap_helper(my_tuple, { tuple: [ [tuple[0]], [tuple[1]] ] });
             }
             o.offset_set(delta);
-            console.log(delta)
             if (!drag_fake)
                 o.pos_set(u._add(ref_pos, u._mul(-1,delta)))
             o.layout();
