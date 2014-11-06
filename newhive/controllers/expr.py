@@ -121,26 +121,24 @@ class Expr(ModelController):
                 res = tdata.user.expr_create(upd)
                 return self.serve_json(response, { "autosave": 1, "expr": res })
 
-            # TODO-cleanup: move try/catch around only user.expr_create
-            try:
-              new_expression = True
-              res = tdata.user.expr_create(upd)
-              self.db.ActionLog.create(tdata.user, "new_expression_save"
-                , data={'expr_id': res.id})
+            # remix: ensure that the remixed tag is saved with a remix
+            if upd.get('remix_parent_id'):
+                upd['tags'] += " #remixed" # + remix_name
 
-              tdata.user.flag('expr_new')
-              #if tdata.user.get('flags').get('add_invites_on_save'):
-              #    tdata.user.unflag('add_invites_on_save')
-              #    tdata.user.give_invites(5)
+            # TODO-cleanup: move try/catch around only user.expr_create
+            new_expression = True
+            try:
+                res = tdata.user.expr_create(upd)
             except DuplicateKeyError:
                 duplicate = True
+            else:
+                self.db.ActionLog.create(tdata.user, "new_expression_save",
+                    data={'expr_id': res.id})
+                tdata.user.flag('expr_new')
         else:
             if not res['owner'] == tdata.user.id:
                 raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
 
-            # remix: ensure that the remix tag is not deletable
-            if res.get('remix_parent_id'):
-                upd['tags'] += " #remixed" # + remix_name
             reserved_tags = ["remixed", "gifwall"];
             # force "#draft" on draft
             if autosave and draft:
@@ -171,6 +169,8 @@ class Expr(ModelController):
             except DuplicateKeyError:
                 duplicate = True
 
+        # TODO-feature-rename: do not ever allow overwriting, instead rename
+        # new or old
         if duplicate:
             if expr.get('overwrite'):
                 self.db.Expr.named(tdata.user['name'], upd['name']).delete()
