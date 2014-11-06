@@ -454,6 +454,7 @@ class Community(Controller):
             q: database query, e.g., {"owner_name": "zach"}
             args: database arguments (limit, order, !!Fixme)
             db: database collection, e.g., "expr"
+            special: 'top_tags'
         """
         # TODO: document all these args somewhere
         if special == 'top_tags':
