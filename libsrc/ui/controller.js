@@ -259,10 +259,10 @@ define([
         }
         o.back = false;
 
-        var success = ( callback ? function(d){
-            callback(d)
+        var success = function(data){
+            callback && callback(data)
             o.loading_end()
-        } : success_default )
+        }
 
         if(page_state.api){
             var api_call = {
