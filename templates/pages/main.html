@@ -23,6 +23,8 @@
 {% endif %}
 
 {% block body %}
+  <img id='global_busy' src='{{ 'skin/nav/loading.gif'|asset_url }}'
+    class='hide'>
   <div id='overlays'></div>
   <div id='site'></div>
   <div id='exprs'><div class='expr blank'></div>

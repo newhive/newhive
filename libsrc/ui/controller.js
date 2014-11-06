@@ -235,6 +235,13 @@ define([
         }
     };
 
+    o.loading_start = function(){
+        $(document.body).addClass('loading')
+    }
+    o.loading_end = function(){
+        $(document.body).removeClass('loading')
+    }
+
     // TODO-cleanup: refactor these into distinct functionalities of
     // fetching data from server and opening a new page
     o.open_route = function(page_state, callback, push_state) {
@@ -252,18 +259,26 @@ define([
         }
         o.back = false;
 
-        callback = callback ? callback : success;
+        if(callback) callback = function(){
+            callback()
+            o.loading_end()
+        }
+        else callback = success
+
         if(page_state.api){
             var api_call = {
                 method: 'get',
                 url: page_state.api.toString(),
                 dataType: 'json',
-                success: callback
+                success: callback,
+                // TODO-polish: make an error report dialog
+                error: o.loading_end
             };
             // console.log(api_call)
             $.ajax(api_call);
+            o.loading_start()
         } else 
-            callback({});
+            callback({})
 
         function success(data){
             if (push_state == undefined || push_state) {
@@ -277,6 +292,7 @@ define([
             }
             context.parse_query(data.cards_route && data.cards_route.route_args);
             o.dispatch(page_state.route_name, data);
+            o.loading_end()
             if (page_state.route_name != "view_expr")
                 $("body").scrollTop(0);
         }

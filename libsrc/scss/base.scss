@@ -408,3 +408,16 @@ $placeholder_color: $color_light_charcoal;
 .color_active {
     color: $color_active;
 }
+
+body.loading {
+    cursor: wait;
+    * { cursor: wait; }
+    #global_busy { display: inline-block !important; }
+}
+#global_busy {
+    position: fixed;
+    left: 50%; top: 50%;
+    margin-left: -64px;
+    margin-top: -64px;
+    z-index: 10000;
+}
