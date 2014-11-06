@@ -2644,11 +2644,14 @@ def get_id(entity_or_id):
 
 ## analytics utils
 
-def tags_by_frequency(query):
-    tags = {}
-    for d in Expr.search(query):
-        if d.get('tags_index'):
-            for t in d.get('tags_index'): tags[t] = tags.get(t, 0) + 1
-    counts = [[tags[t], t] for t in tags]
-    counts.sort(reverse=True)
-    return counts
+def tags_by_frequency(db, spec={}, collection=None, **args):
+    if not collection:
+        collection = db.Expr
+
+    args.update(limit=int(args.get('limit', '1000')))
+    res = collection.search(spec, **args)
+    tags = Counter()
+    for r in res:
+        tags.update(r.get('tags_index', []))
+    return tags.most_common(100)
+Database.tags_by_frequency = tags_by_frequency
