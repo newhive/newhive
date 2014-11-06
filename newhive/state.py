@@ -1,6 +1,5 @@
-import newhive
 import re, pymongo, bson.objectid, random, urllib, urllib2, os, time, json, math
-import operator as op
+from pymongo.cursor import Cursor as PymongoCursor
 from ast import literal_eval
 from tempfile import mkstemp
 from os.path import join as joinpath
@@ -8,13 +7,19 @@ from md5 import md5
 from datetime import datetime
 from lxml import html
 from wsgiref.handlers import format_date_time
-from newhive import social_stats
 from itertools import ifilter, islice, izip_longest, chain
+from functools import partial
 import Image as Img
 from PIL import ImageOps
 from bson.code import Code
 from crypt import crypt
 from oauth2client.client import OAuth2Credentials
+# TODO-cleanup?: remove snapshots from webserver?
+import Queue
+import threading
+from subprocess import call
+
+import newhive
 from newhive.oauth import (FacebookClient, FlowExchangeError,
     AccessTokenCredentialsError)
 #import pyes
@@ -23,15 +28,12 @@ from snapshots import Snapshots
 
 from s3 import S3Interface
 
-import Queue
-import threading
-from subprocess import call
-
 from newhive import config
 from newhive.config import abs_url, url_host
 from newhive.utils import (now, junkstr, dfilter, normalize, normalize_tags,
     tag_string, cached, AbsUrl, log_error, normalize_word)
 from newhive.routes import reserved_words
+from newhive import social_stats
 
 from newhive.profiling import g_flags
 from newhive.notifications import gcm
@@ -250,9 +252,12 @@ class Collection(object):
             for i in spec:
                 if items.has_key(i): res.append(items[i])
             return res
+        # for DB optimization / debugging
         if False:
             print spec, opts
-        return Cursor(self, self._col.find(spec=spec, **opts))
+        return Cursor(self, spec=spec, **opts)
+        # can't figure out as_class param, which seems to not be passed an arg
+        #return self._col.find(spec=spec, as_class=self.new, **opts)
 
     def last(self, spec={}, **opts):
         opts.update({'sort' : [('updated', -1)]})
@@ -324,43 +329,16 @@ class Collection(object):
         new_entity = self.new(doc)
         return new_entity.create()
 
-    def map_reduce(self, *a, **b): return self._col.map_reduce(*a, **b)
+    def map_reduce(self, *a, **b):
+        return self._col.map_reduce(*a, **b)
 
-class Cursor(object):
-    def __init__(self, collection, cursor):
-        self.collection = collection
-        self._cur = cursor
-
-        # wrap pymongo.cursor.Cursor methods. mongodb cursors allow chaining of
-        # methods like sort and limit, however in this case rather than
-        # returning a pymongo.cursor.Cursor instance we want to return a
-        # newhive.state.Cursor instance, but for methods like count that return
-        # an integer or some other value, just return that
-        def mk_wrap(self, method):
-            wrapped = getattr(self._cur, m)
-
-            def wrap(*a, **b):
-                rv = wrapped(*a, **b)
-                if isinstance(rv, pymongo.cursor.Cursor): return self
-                else: return rv
-            return wrap
-
-        for m in ['count', 'distinct', 'explain', 'sort', 'limit']:
-            setattr(self, m, mk_wrap(self, m))
-
-    def __len__(self):
-        return self._cur.count()
-    def __getitem__(self, index):
-        return self.collection.new(self._cur.__getitem__(index))
-    def __iter__(self):
-        return self
-
-    def hint(self, arg):
-        self._cur.hint(arg)
-        return self
+class Cursor(PymongoCursor):
+    def __init__(self, collection, *args, **kwargs):
+        self._nh_collection = collection
+        super(Cursor, self).__init__(collection._col, *args, **kwargs)
 
     def next(self):
-        return self.collection.new(self._cur.next())
+        return self._nh_collection.new(super(Cursor, self).next())
 
 class Entity(dict):
     """Base-class for very simple wrappers for MongoDB collections"""
@@ -376,7 +354,7 @@ class Entity(dict):
         dict.update(self, doc)
 
         self.collection = collection
-        self._col = collection._col
+        self._col = self.collection._col
         self.db = collection.db
         self.mdb = self.db.mdb
 
@@ -412,7 +390,8 @@ class Entity(dict):
         if not d.has_key('updated'): d['updated'] = now()
         elif not d['updated']: del d['updated']
         dict.update(self, d)
-        return self._col.update({ '_id' : self.id }, { '$set' : d }, safe=True)
+        return self._col.update({ '_id' : self.id }, { '$set' : d },
+            safe=True)
 
     def update_cmd(self, d, **opts): 
         return self._col.update({ '_id' : self.id }, d, **opts)
@@ -1340,7 +1319,6 @@ class Expr(HasSocial):
         ,'updated'
         ,'random'
         ,'file_id'
-        ,'created'
     ]
     counters = ['owner_views', 'views', 'emails']
     _owner = None
@@ -2230,7 +2208,12 @@ class Unsubscribes(Entity):
 @register
 class Feed(Entity):
     cname = 'feed'
-    indexes = [ ('created', -1), ['entity', ('created', -1)], ['initiator', ('created', -1)], ['entity_owner', ('created', -1)] ]
+    indexes = [
+        'created',
+        ['entity', ('created', -1)],
+        ['initiator', ('created', -1)],
+        ['entity_owner', ('created', -1)]
+    ]
     _initiator = _entity = None
 
     class Collection(Collection):
