@@ -172,7 +172,7 @@ o.Controls = function(app, multiselect, delegate) {
 
     o.padding = 12;
     o.border_width = 5;
-    var pad_ul = [45, 55], pad_br = [45, 127], min_d = [135, 40];
+    var pad_ul = [45, 60], pad_br = [45, 127], min_d = [146, 40];
     if(multiselect){
         pad_ul = [3, 3];
         pad_br = [3, 3];
@@ -211,7 +211,8 @@ o.Controls = function(app, multiselect, delegate) {
             dims[1] = ap[1] - pos[1] + ad[1];
             minned_dims = dims.slice();
         }
-        pos = u._add(pos)(u._mul(delta_dir)(u._sub(minned_dims)(dims)))
+        var push_pos = u._mul(.5, delta_dir, u._sub(minned_dims, dims))
+        pos = u._add(pos, push_pos)
         pos = [ Math.max(pad_ul[0] + env.scrollX, pos[0]), 
             Math.max(pad_ul[1] + env.scrollY, pos[1]) ],
         pos = u._sub(pos, env.offset) // remove zoom offset
@@ -245,14 +246,14 @@ o.Controls = function(app, multiselect, delegate) {
 
         //o.c.undo   .css({ top   : -38 - p, right  :  61 - p });
         var help_padding = (context.flags.context_help) ? 36 : 0
-        o.c.ne     .css({ left: dims[0] - 70 + p - help_padding, top: -38 - p, width: 200 });
+        o.c.ne     .css({ left: dims[0] - 70 + p - help_padding, top: -43 - p, width: 200 });
         // o.c.help   .css({ left: dims[0] - 76 + p, top: -38 - p });
         // o.c.copy   .css({ left: dims[0] - 45 + p, top: -38 - p });
         // o.c.remove .css({ left: dims[0] - 14 + p, top: -38 - p });
 
-        o.c.stack  .css({ left: dims[0] - 78 + p, top: dims[1] + 8 + p });
+        o.c.stack  .css({ left: dims[0] - 78 + p, top: dims[1] + 13 + p });
         o.c.buttons.css({ left: -bw - p, top: dims[1] + p + 17,
-            width: dims[0] - 60 });
+            width: dims[0] - 50 });
         o.c.top_buttons.css({ left: -bw - p, top: -38 - p, width: dims[0] - 60 });
     };
 
