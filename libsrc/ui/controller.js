@@ -260,7 +260,7 @@ define([
         o.back = false;
 
         var success = function(data){
-            callback && callback(data)
+            callback ? callback(data) : success_default(data)
             o.loading_end()
         }
 
@@ -291,7 +291,6 @@ define([
             }
             context.parse_query(data.cards_route && data.cards_route.route_args);
             o.dispatch(page_state.route_name, data);
-            o.loading_end()
             if (page_state.route_name != "view_expr")
                 $("body").scrollTop(0);
         }
