@@ -465,6 +465,7 @@ class Community(Controller):
         if special == 'top_tags':
             if request.args.get('help', False) != False:
                 return { 'text_result': 'limit: default 1000' }
+            db_args.update(limit=json.loads(args.get('limit', '1000')))
             common = self.db.tags_by_frequency(collection=collection, **db_args)
             return { 'text_result':
                 "\n".join( [x[0] + ": " + str(x[1]) for x in common] ) }
