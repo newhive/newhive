@@ -2937,7 +2937,8 @@ Hive.App.has_resize = function(o) {
                 aabb[Math.max(0, coords[i])][i] = pos[i]
             }
             fix_aabb_for_aspect(aabb, coords, aspect, (snap_dist[0] < snap_dist[1]))
-        }
+        } else
+            $(".ruler").hidehide();
         return aabb
     }
 

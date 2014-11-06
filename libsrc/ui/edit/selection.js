@@ -478,7 +478,9 @@ o.Selection = function(o) {
                 guide_0: !env.gifwall && (!full_apps.length || coord_full == 1),
                 guide_1: !env.gifwall && (!full_apps.length || coord_full == 0),
                 sensitivity: o.sensitivity, });
-        }
+        } else
+            $(".ruler").hidehide();
+
         pos = u._sub(pos)(off);
         if (full_apps.length)
             o.pushing_move(pos);
