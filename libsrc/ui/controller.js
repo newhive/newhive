@@ -237,6 +237,7 @@ define([
 
     o.loading_start = function(){
         $(document.body).addClass('loading')
+        
     }
     o.loading_end = function(){
         $(document.body).removeClass('loading')
