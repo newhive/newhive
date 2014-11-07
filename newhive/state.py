@@ -971,10 +971,11 @@ class User(HasSocial):
             item = exprs.get(_id)
             if not item:
                 item = add_expr({'_id':_id, 'updated':0})
-            if item and (r['class_name'] != 'NewExpr') and len(item['feed']) < 3:
-                item['feed'].append(r)
+            if item:
                 # item update is the most recent of all its feed items
                 item['updated'] = max(item['updated'], r['updated'])
+                if (r['class_name'] != 'NewExpr') and len(item['feed']) < 3:
+                    item['feed'].append(r)
 
         # sort by inverse time
         sorted_result = sorted(result, key = lambda r: r['updated'], reverse = True)
