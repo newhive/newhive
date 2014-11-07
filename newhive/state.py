@@ -14,12 +14,15 @@ from PIL import ImageOps
 from bson.code import Code
 from crypt import crypt
 from oauth2client.client import OAuth2Credentials
+<<<<<<< HEAD
 # TODO-cleanup?: remove snapshots from webserver?
 import Queue
 import threading
 from subprocess import call
 
 import newhive
+=======
+>>>>>>> c0356760b0024c1dc713d5f5852c91b906f22402
 from newhive.oauth import (FacebookClient, FlowExchangeError,
     AccessTokenCredentialsError)
 #import pyes
@@ -40,7 +43,6 @@ from newhive.notifications import gcm
 
 import logging
 logger = logging.getLogger(__name__)
-
 
 entity_types = []
 def register(entity_cls):
@@ -255,12 +257,18 @@ class Collection(object):
             for i in spec:
                 if items.has_key(i): res.append(items[i])
             return res
+<<<<<<< HEAD
         # for DB optimization / debugging
         if False:
             print spec, opts
         return Cursor(self, spec=spec, **opts)
         # can't figure out as_class param, which seems to not be passed an arg
         #return self._col.find(spec=spec, as_class=self.new, **opts)
+=======
+        if False:
+            print spec, opts
+        return Cursor(self, self._col.find(spec=spec, **opts))
+>>>>>>> c0356760b0024c1dc713d5f5852c91b906f22402
 
     def last(self, spec={}, **opts):
         opts.update({'sort' : [('updated', -1)]})
@@ -340,8 +348,24 @@ class Cursor(PymongoCursor):
         self._nh_collection = collection
         super(Cursor, self).__init__(collection._col, *args, **kwargs)
 
+<<<<<<< HEAD
     def next(self):
         return self._nh_collection.new(super(Cursor, self).next())
+=======
+    def __len__(self):
+        return self._cur.count()
+    def __getitem__(self, index):
+        return self.collection.new(self._cur.__getitem__(index))
+    def __iter__(self):
+        return self
+
+    def hint(self, arg):
+        self._cur.hint(arg)
+        return self
+
+    def next(self):
+        return self.collection.new(self._cur.next())
+>>>>>>> c0356760b0024c1dc713d5f5852c91b906f22402
 
 class Entity(dict):
     """Base-class for very simple wrappers for MongoDB collections"""
@@ -952,8 +976,8 @@ class User(HasSocial):
     def feed_recent(self, spec={}, limit=20, at=0, **args):
         at=int(at)
         limit=int(limit)
-        feed_items = list(self.network_feed_items(
-            limit=g_flags['feed_max'], at=0))
+        feed_items = [item for item in
+            self.network_feed_items(limit=g_flags['feed_max'], at=0)]
         tagged_exprs = list(self.exprs_tagged_following())
 
         exprs = {}
@@ -976,12 +1000,11 @@ class User(HasSocial):
             item = exprs.get(_id)
             if not item:
                 item = add_expr({'_id':_id, 'updated':0})
-            if( item and (r['class_name'] != 'NewExpr')
-                and len(item['feed']) < 3
-            ):
-                item['feed'].append(r)
+            if item:
                 # item update is the most recent of all its feed items
                 item['updated'] = max(item['updated'], r['updated'])
+                if (r['class_name'] != 'NewExpr') and len(item['feed']) < 3:
+                    item['feed'].append(r)
 
         # sort by inverse time
         sorted_result = sorted( result, key = lambda r: r['updated'],
@@ -1359,6 +1382,7 @@ class Expr(HasSocial):
         ,'updated'
         ,'random'
         ,'file_id'
+        ,'created'
     ]
     counters = ['owner_views', 'views', 'emails']
     _owner = None
@@ -2644,6 +2668,7 @@ def get_id(entity_or_id):
 
 ## analytics utils
 
+<<<<<<< HEAD
 def tags_by_frequency(db, spec={}, collection=None, **args):
     if not collection:
         collection = db.Expr
@@ -2655,3 +2680,14 @@ def tags_by_frequency(db, spec={}, collection=None, **args):
         tags.update(r.get('tags_index', []))
     return tags.most_common(100)
 Database.tags_by_frequency = tags_by_frequency
+=======
+def tags_by_frequency(query):
+    tags = {}
+    for d in Expr.search(query):
+        if d.get('tags_index'):
+            for t in d.get('tags_index'): tags[t] = tags.get(t, 0) + 1
+    counts = [[tags[t], t] for t in tags]
+    counts.sort(reverse=True)
+    return counts
+
+>>>>>>> c0356760b0024c1dc713d5f5852c91b906f22402
