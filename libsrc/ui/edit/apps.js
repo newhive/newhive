@@ -2538,6 +2538,7 @@ Hive.App.has_link_picker = function(app) {
         controls.append_link_picker(controls.div.find('.buttons'));
     }
     controls.single = true
+    controls.display_order = 3
     app.make_controls.push(memoize("link_picker", controls))
 }
 
@@ -2784,6 +2785,10 @@ Hive.App.has_image_drop = function(o) {
         return false;
     });
     o.div.on("dblclick",function(ev) { 
+        // TODO: decide on dbl click behavior
+        ev.preventDefault()
+        return; 
+
         env.click_app = o;
         $("#media_input").click()
     });
@@ -3287,7 +3292,7 @@ Hive.App.has_rotate = function(o) {
                 if(!app.is_selection)
                     history_point.save()
             })
-            .dblclick(function(){ 
+            .dblclick(function(ev){ 
                 if(app.is_selection)
                     return;
                 history_point = env.History.saver(
