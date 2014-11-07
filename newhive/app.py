@@ -84,22 +84,16 @@ def split_domain(url):
 def handle(request):
     time_start = now()
     print(request)
-    print(request.url)
-    import ipdb; ipdb.set_trace() #//!!
     environ = copy.copy(request.environ)
+    # Redirect www. links to naked URL
     if request.host.startswith('www.'):
         return base_controller.redirect(Response(), 
             re.sub('//www.', '//', request.url, 1), permanent=True)
+    # Redirect thenewhive.com links to newhive.com
     if re.search('thenewhive.com', environ['HTTP_HOST']):
         return base_controller.redirect(Response(), 
-            re.sub(r'//(((\w+)\.)+)thenewhive\.com', r'//\1newhive.com', 
+            re.sub(r'//((.+\.)?)thenewhive\.com', r'//\1newhive.com', 
                 request.url), permanent=True)
-
-    if (re.search('/robots.txt$', environ['PATH_INFO'])
-        and re.search('thenewhive.com', environ['HTTP_HOST'])
-    ):
-        return base_controller.serve_html(
-            Response(), 'User-agent: *\nDisallow: /\n')
 
     prefix, site = split_domain(environ['HTTP_HOST'])
     # Convert any ip v4 address into a specific dns
