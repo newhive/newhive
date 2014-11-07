@@ -55,9 +55,11 @@ define([
         // Hive.upload_finish();
         if(typeof(ret) != 'object')
             alert("Sorry, something is broken :(. Please send us feedback");
-        if(ret.error == 'overwrite') {
-            $('#expr_name').html(expr.name);
-            $('#dia_overwrite').data('dialog').open();
+        if(ret.error == 'rename') {
+            $('#expr_name').html(expr.name)
+            $('#dia_rename_expr').data('dialog').open()
+            $('#dia_rename_expr .name_existing').html(ret.name_existing)
+            $('#dia_rename_expr .rename_existing').val(ret.rename_existing)
             o.save_enabled_set(true)
         } else if(ret.autosave) {
             o.sandbox_send({ autosave: (new Date()).getTime() })
@@ -77,7 +79,8 @@ define([
         if (ret.status == 403){
             relogin(function(){ $('#btn_save').click(); });
         }
-        o.save_enabled_set(false)
+        // TODO-polish: SHOW ERROR DIALOG, DO NOT DISABLE SAVE
+        // o.save_enabled_set(false)
     }
     o.info_submit = function(){
         if(!o.check_url()) return false
@@ -192,6 +195,13 @@ define([
             .on('before_submit', o.save_submit)
             .on('success', o.success).on('error', o.error)
 
+        dialog.create('#dia_rename_expr');
+        $('#expr_rename').off('before_submit success')
+            .on('before_submit', function(){
+                expr.rename_existing = $('#expr_rename .rename_existing').val()
+                $('#expr_rename .expr').val(JSON.stringify(expr))
+            }).on('success', o.success).on('error', o.error)
+        
         o.init_save_dialog()
         o.update_form()
         // update form will trigger an autosave, so cancel it
@@ -285,13 +295,6 @@ define([
         // save_dialog.opts.open = Hive.unfocus;
         // save_dialog.opts.close = Hive.focus;
 
-        var overwrite_dialog = dialog.create('#dia_overwrite');
-        $('#cancel_overwrite').click(overwrite_dialog.close);
-        $('#save_overwrite').click(function() {
-            expr.overwrite = true;
-            $('#expr_save').submit()
-        });
-        
         // Automatically update url unless it's an already saved
         // expression or the user has modified the url manually 
         $('#dia_save #save_title')

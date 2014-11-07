@@ -1441,6 +1441,30 @@ class Expr(HasSocial):
             query = self.featured_ids[0:limit]
             return self.db.Expr.fetch(query)
 
+        def unused_name(self, owner=None, name=None):
+            if not isinstance(name, basestring) or not len(name) or not owner:
+                raise ValueError('Expr / user not found')
+
+            m = re.match("(.*)-([0-9]+)$", name)
+            if m:
+                base_name = m.group(1)
+                num = int(m.group(2))
+            else:
+                base_name = name
+                num = 0
+            expr_names = [e['name'] for e in list(self.db.Expr.search({
+                'owner': owner.id, 'name': re.compile("^" + base_name + ".*")
+            }))]
+            while True:
+                if num:
+                    name = base_name + "-" + str(num)
+                else:
+                    name = base_name
+                if name not in expr_names:
+                    return name
+                num += 1
+
+
     # full_page = True to capture entire expression page, not just snapshot
     # timeout != 0. time in seconds to block before killing thread
     # retry = initial (multiplicate) delay to retry failed snapshots

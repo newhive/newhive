@@ -116,14 +116,24 @@
 </div>
 
 {# TODO-ilia: remove inline styling, fix styling in scss #}
-<div id='dia_overwrite' class='dialog confirm border selected'>
-  <div class="title">Overwrite</div>
-  You already have an expression at "/<span id='expr_name'></span>". Are you sure you want to replace it?<br><br>
-  <input id='cancel_overwrite' type='button' class='teal_btn upper' style="float: left" value='No'>
-  <input id='save_overwrite' type='button' class='grey_btn upper' value='Yes' style="float: right">&nbsp; &nbsp; &nbsp; 
+<div id='dia_rename_expr' class='dialog standard confirm border selected'>
+  <form {form_attrs "expr_save"} method='POst' id='expr_rename'>
+    <div class="title">Rename Needed</div>
+      You already have a newhive at
+      <h3 class='error name_existing'></h3>
+      Rename the existing page to:
+    <input type='text' class='rename_existing' name='rename_existing'>
+    <p>
+    All links to the existing page will now point to this page. Otherwise you
+    may close this and choose a different name.
+    </p> 
+    <input type='submit' class='grey_btn upper submit save'
+      value='RENAME EXISTING'>
+    <input type='hidden' name='expr' class='expr'>
+  </form>
 </div>
 
-<form {form_attrs "expr_save"} id='expr_save' method='POST'>
+<form {form_attrs "expr_save"} method='POST' id='expr_save'>
   <input type='hidden' name='expr' class='expr'>
   <input type='hidden' name='autosave' class='autosave'>
 </form>

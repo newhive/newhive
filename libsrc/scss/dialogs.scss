@@ -107,10 +107,9 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
 }
 .btn_dialog_close:hover, #btn_dialog_close:hover {background-image: asset_url("skin/1/close-hover.png")}
 
-#dia_overwrite{
-    padding : 20px;
-    width : 20em;
-    button[type=cancel] { float: left; }
+#dia_rename_expr {
+    width: 20em;
+    input[type=text] { text-align: center; }
 }
 #dia_delete_ok {
     padding: 20px;
