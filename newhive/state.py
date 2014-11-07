@@ -2222,7 +2222,7 @@ class Unsubscribes(Entity):
 @register
 class Feed(Entity):
     cname = 'feed'
-    indexes = [ ('created', -1), ['entity', ('created', -1)], ['initiator', ('created', -1)], ['entity_owner', ('created', -1)] ]
+    indexes = [ ('created', 1), ['entity', ('created', -1)], ['initiator', ('created', -1)], ['entity_owner', ('created', -1)] ]
     _initiator = _entity = None
 
     class Collection(Collection):
