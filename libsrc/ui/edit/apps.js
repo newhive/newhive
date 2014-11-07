@@ -207,11 +207,14 @@ env.globals_set.has_sequence = function(state) {
 }
 
 // Grouping 
+// This implements group functionality for groupable objects,
+// abstractly for nodes, and concretely for leaves
 Hive.has_group = function(o) {
     var parent
     o.parent = function() {
         return parent
     }
+    // return a list of parent, parent's parent, etc.
     o.parents = function() {
         var parents = [o]
         if (parent)
@@ -222,9 +225,11 @@ Hive.has_group = function(o) {
         // if (id && !groups.fetch(id)) throw "parent group missing"
         parent = g
     }
+    // return list of children
     o.children = function() {
-        return [o]
+        return []
     }
+    // return list of leaf children
     o.children_flat = function() {
         return [o]
     }
@@ -258,8 +263,8 @@ var groups = function(state) {
     // has_group
     o.children = function() {
         return children_ids.map(function(id) { 
-            return groups.fetch(id) || env.Apps.fetch(id) 
-        }).filter(function(g) { return g })
+            return groups.fetch(id) || env.Apps.fetch(id) || []
+        })
     }
     o.children_flat = function() {
         var apps = [], children = o.children()
@@ -270,7 +275,6 @@ var groups = function(state) {
     }
     //////////////////////////////////////////////////////////////
 
-    // o.id = function() { return _id }
     o.children_ids = function() {
         return children_ids.slice()
     }
@@ -1483,7 +1487,7 @@ Hive.App.Image = function(o) {
             o.layout()
         }
         // UI for setting .offset of apps on drag after long_hold
-        o.long_hold = function(ev){
+        o.long_hold = o.begin_crop = function(ev){
             if(o != ev.data) return;
             if(o.has_full_bleed() && ($(ev.target).hasClass("resize")
                 || $(ev.target).hasClass("resize_v")) ) return;
@@ -1516,7 +1520,7 @@ Hive.App.Image = function(o) {
             if (!cropping) {
                 if (!o.cropping_active)
                     return;
-                o.long_hold(ev)
+                o.begin_crop(ev)
             }
             ev.stopPropagation();
             ref_offset = o.offset();
@@ -2891,8 +2895,10 @@ Hive.App.has_resize = function(o) {
     o.resize_aspect = function() {
         var aspect = o.get_aspect()
         if (!o.fixed_aspect) {
-            var old_dims = o.dims_relative()
-            // var old_dims = dims_ref
+            // keep current aspect ratio
+            // var old_dims = o.dims_relative()
+            // keep original aspect ratio
+            var old_dims = dims_ref
             if (!env.ev.shiftKey)
                 aspect = false
             else
@@ -2925,7 +2931,7 @@ Hive.App.has_resize = function(o) {
             , _pos = u._add(pos_ref, pos_delta)
             , aabb = [_pos.slice(), u._add(_pos, dims)]
 
-        fix_aabb_for_aspect(aabb, coords, aspect)
+        aabb = fix_aabb_for_aspect(aabb, coords, aspect)
         if (snap) {
             var tuple = [[], []], snap_dist = []
             for (var i = 0; i < 2; ++i) {
@@ -2937,7 +2943,8 @@ Hive.App.has_resize = function(o) {
                 snap_dist[i] = Math.abs(snap_dist[i] - pos[i])
                 aabb[Math.max(0, coords[i])][i] = pos[i]
             }
-            fix_aabb_for_aspect(aabb, coords, aspect, (snap_dist[0] < snap_dist[1]))
+            aabb = fix_aabb_for_aspect(aabb, coords, aspect, 
+                (snap_dist[0] < snap_dist[1]))
         } else
             $(".ruler").hidehide();
         return aabb
@@ -2990,7 +2997,7 @@ Hive.App.has_resize = function(o) {
         for (dir in dirs) {
             var $handle = o.addControl($('#controls_misc .resize'))
                 ,coords = str2coords[dir]
-                ,angle = Math.atan(coords[1] / (coords[0] + 0.0000001)) - Math.PI/4
+                ,angle = Math.atan2(coords[1], coords[0]) - Math.PI/4
             $handle.data("coords", coords)
                 .css({"transform": "rotate(" + angle + "rad)"
                     ,"cursor": dir + "-resize"}) 
@@ -3018,7 +3025,7 @@ Hive.App.has_resize = function(o) {
             for (dir in o.resizers) {
                 var coords = str2coords[dir]
                 o.resizers[dir].css(ui_util.array2css(
-                    u._add([-11, -11], control_pos(dims, [p + 2, p + 2], coords))))
+                    u._add([-11, -11], control_pos(dims, p + 2, coords))))
             }
         };
 
@@ -3027,7 +3034,7 @@ Hive.App.has_resize = function(o) {
             resize_coords = $(this).data("coords") || [1, 1]
             if (app.cropping_active) {
                 ev.data = app
-                app.long_hold(ev)
+                app.begin_crop(ev)
             }
             o.drag_target = ev.target;
             o.drag_target.busy = true;

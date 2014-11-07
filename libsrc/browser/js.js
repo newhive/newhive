@@ -132,6 +132,18 @@ o.each = function(o, f){
     for(p in o) f(o[p], p);
 };
 
+o.invert = function (obj) {
+  var new_obj = {};
+
+  for (var prop in obj) {
+    if(obj.hasOwnProperty(prop)) {
+      new_obj[obj[prop]] = prop;
+    }
+  }
+
+  return new_obj;
+};
+
 o.parse_query = function(url){
     var d = function(s){
         return s ? decodeURIComponent(s.replace(/\+/, " ")) : null;
@@ -146,7 +158,9 @@ o.parse_query = function(url){
     return args;
 }
 
-o.capitalize = function(str) { return str[0].toUpperCase() + str.slice(1); };
+o.capitalize = function(str) { 
+    return str[0].toUpperCase() + str.slice(1).toLowerCase(); 
+};
 
 return o;
 });

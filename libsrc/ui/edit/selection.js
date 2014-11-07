@@ -940,6 +940,13 @@ o.Selection = function(o) {
             "SC+g": function(){ o.break_group() },
         })
     }
+    // If we want to take the keymap from jquery.UI
+    // var keymap = {}//js.invert($.ui.keyCode)
+    // $.each($.ui.keyCode, function(code, key) {
+    //     key = key.toLowerCase()
+    //     keymap[key] = code
+    //     keymap[key.slice(0,3)] = code
+    // })
     var keymap = { 27: "esc", 46: "del" }
     o.keydown = Funcs(function(ev){ 
         var shift = ev.shiftKey, meta = ev.altKey, ctrl = u.is_ctrl(ev)
