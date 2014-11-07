@@ -408,4 +408,4 @@ var input_frame = function(input, parent, opts){
 };
 
 return o.Controls;
-})
+});

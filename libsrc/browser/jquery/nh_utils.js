@@ -70,4 +70,4 @@ if (0) // to enable ajax debugging
     };
 }(jQuery));
 
-})
+});

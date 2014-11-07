@@ -1040,4 +1040,4 @@ o.Selection = function(o) {
 hive_app.registerApp(o.Selection, 'hive.selection');
 
 return o;
-})
+});

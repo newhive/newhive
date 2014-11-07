@@ -40,4 +40,4 @@ define([
     // see content_extension/media_play.js for postMessage API examples
 
     return players
-})
+});
