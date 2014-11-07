@@ -138,7 +138,7 @@ Hive.Saveable = function(init_state) {
     // Type definition
     o.is_saveable = true
 
-    o.init_state = $.extend(true, {}, init_state) || {}
+    o.init_state = $.extend(true, {}, init_state || {})
 
     // getter and setter for state which is visible to history
     o.history_state = Funcs(function() {
@@ -153,7 +153,8 @@ Hive.Saveable = function(init_state) {
         o.state.return_val = s
     })
     o.state_update = Funcs(function(s) {
-        $.extend(true, o.init_state, s);
+        $.extend(true, o.init_state, s)
+        o.history_state_set(s)
     })
 
     return o
@@ -244,9 +245,9 @@ var groups = function(state) {
 
     //////////////////////////////////////////////////////////////
     // Saveable
-    if (state) {
+    o.state_update.add(function(state) {
        children_ids = state.children_ids || []
-    }
+    })
     o.state.add(function() {
         var s = { children_ids: children_ids }
         $.extend(o.state.return_val, s)
@@ -305,7 +306,8 @@ var groups = function(state) {
         })
         if (parent)
             parent.remove_child(o.id)
-        delete g_groups[o.id]
+        // delete g_groups[o.id]
+        // TODO: group/ungroup history
         return children
     }
 
@@ -332,19 +334,18 @@ groups.fetch = function(id) {
     return g_groups[id]
 }
 groups.state = function() {
-    var states = []
-    $.each(g_groups, function(id, g) {
-        states.push(g.state())
+    return $.map(g_groups, function(g, id) {
+        // Do not save empty (orphaned) groups
+        return g.children().length ? g.state() : []
     })
-    return states
 }
 groups.init = function(states) {
     states.map(function(state) {
-        groups(state)
+        groups().state_update(state)
     })
     // Now fix up the parent pointers
     $.each(g_groups, function(id, g) {
-        g.children().map(function(child) {
+        $.each(g.children(), function(i, child) {
             if (child)
                 child.parent_set(g)
             // else

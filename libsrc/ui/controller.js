@@ -237,6 +237,7 @@ define([
 
     o.loading_start = function(){
         $(document.body).addClass('loading')
+        
     }
     o.loading_end = function(){
         $(document.body).removeClass('loading')
@@ -259,10 +260,10 @@ define([
         }
         o.back = false;
 
-        var success = ( callback ? function(d){
-            callback(d)
+        var success = function(data){
+            callback ? callback(data) : success_default(data)
             o.loading_end()
-        } : success_default )
+        }
 
         if(page_state.api){
             var api_call = {
@@ -291,7 +292,6 @@ define([
             }
             context.parse_query(data.cards_route && data.cards_route.route_args);
             o.dispatch(page_state.route_name, data);
-            o.loading_end()
             if (page_state.route_name != "view_expr")
                 $("body").scrollTop(0);
         }

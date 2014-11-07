@@ -470,7 +470,7 @@ class Community(Controller):
             return { 'text_result':
                 "\n".join( [x[0] + ": " + str(x[1]) for x in common] ) }
         else:
-            if request.args.get('help', False):
+            if request.args.get('help', False) != False:
                 return { 'text_result': help }
             res = collection.search(**db_args)
 

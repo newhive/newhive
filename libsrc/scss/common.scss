@@ -54,4 +54,3 @@ $default-prefixes: webkit moz;
 @mixin box-sizing($style) {
     @include build-prefix-values('box-sizing', $style);
 }
-

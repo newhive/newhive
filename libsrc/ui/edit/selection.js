@@ -909,6 +909,9 @@ o.Selection = function(o) {
     }
 
     // Keyboard handlers
+    // Key is [[S][M][C]+]<letter> || *<letter>
+    // *<letter> matches no matter the shift/ctrl/meta state
+    // otherwise SMC state must match exactly
     var handlers = {
         // ctrl+[shift+]a to select all or none
         "C+a": function(){
@@ -1040,4 +1043,4 @@ o.Selection = function(o) {
 hive_app.registerApp(o.Selection, 'hive.selection');
 
 return o;
-})
+});
