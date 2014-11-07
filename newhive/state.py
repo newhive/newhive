@@ -14,15 +14,12 @@ from PIL import ImageOps
 from bson.code import Code
 from crypt import crypt
 from oauth2client.client import OAuth2Credentials
-<<<<<<< HEAD
 # TODO-cleanup?: remove snapshots from webserver?
 import Queue
 import threading
 from subprocess import call
 
 import newhive
-=======
->>>>>>> c0356760b0024c1dc713d5f5852c91b906f22402
 from newhive.oauth import (FacebookClient, FlowExchangeError,
     AccessTokenCredentialsError)
 #import pyes
@@ -257,18 +254,12 @@ class Collection(object):
             for i in spec:
                 if items.has_key(i): res.append(items[i])
             return res
-<<<<<<< HEAD
         # for DB optimization / debugging
         if False:
             print spec, opts
         return Cursor(self, spec=spec, **opts)
         # can't figure out as_class param, which seems to not be passed an arg
         #return self._col.find(spec=spec, as_class=self.new, **opts)
-=======
-        if False:
-            print spec, opts
-        return Cursor(self, self._col.find(spec=spec, **opts))
->>>>>>> c0356760b0024c1dc713d5f5852c91b906f22402
 
     def last(self, spec={}, **opts):
         opts.update({'sort' : [('updated', -1)]})
@@ -348,24 +339,8 @@ class Cursor(PymongoCursor):
         self._nh_collection = collection
         super(Cursor, self).__init__(collection._col, *args, **kwargs)
 
-<<<<<<< HEAD
     def next(self):
         return self._nh_collection.new(super(Cursor, self).next())
-=======
-    def __len__(self):
-        return self._cur.count()
-    def __getitem__(self, index):
-        return self.collection.new(self._cur.__getitem__(index))
-    def __iter__(self):
-        return self
-
-    def hint(self, arg):
-        self._cur.hint(arg)
-        return self
-
-    def next(self):
-        return self.collection.new(self._cur.next())
->>>>>>> c0356760b0024c1dc713d5f5852c91b906f22402
 
 class Entity(dict):
     """Base-class for very simple wrappers for MongoDB collections"""
@@ -2692,7 +2667,6 @@ def get_id(entity_or_id):
 
 ## analytics utils
 
-<<<<<<< HEAD
 def tags_by_frequency(db, spec={}, collection=None, **args):
     if not collection:
         collection = db.Expr
@@ -2704,14 +2678,3 @@ def tags_by_frequency(db, spec={}, collection=None, **args):
         tags.update(r.get('tags_index', []))
     return tags.most_common(100)
 Database.tags_by_frequency = tags_by_frequency
-=======
-def tags_by_frequency(query):
-    tags = {}
-    for d in Expr.search(query):
-        if d.get('tags_index'):
-            for t in d.get('tags_index'): tags[t] = tags.get(t, 0) + 1
-    counts = [[tags[t], t] for t in tags]
-    counts.sort(reverse=True)
-    return counts
-
->>>>>>> c0356760b0024c1dc713d5f5852c91b906f22402
