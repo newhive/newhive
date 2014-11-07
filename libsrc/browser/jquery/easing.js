@@ -1,4 +1,4 @@
-define(['browser/jquery'], function(jQuery){
+ldefine(['browser/jquery'], function(jQuery){
 
 /*
  * jQuery Easing v1.3 - http://gsgd.co.uk/sandbox/jquery/easing/
@@ -206,4 +206,4 @@ jQuery.extend( jQuery.easing,
  *
  */
 
-})
+});
