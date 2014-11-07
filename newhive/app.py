@@ -84,7 +84,17 @@ def split_domain(url):
 def handle(request):
     time_start = now()
     print(request)
+    print(request.url)
+    import ipdb; ipdb.set_trace() #//!!
     environ = copy.copy(request.environ)
+    if request.host.startswith('www.'):
+        return base_controller.redirect(Response(), 
+            re.sub('//www.', '//', request.url, 1), permanent=True)
+    if re.search('thenewhive.com', environ['HTTP_HOST']):
+        return base_controller.redirect(Response(), 
+            re.sub(r'//(((\w+)\.)+)thenewhive\.com', r'//\1newhive.com', 
+                request.url), permanent=True)
+
     if (re.search('/robots.txt$', environ['PATH_INFO'])
         and re.search('thenewhive.com', environ['HTTP_HOST'])
     ):
