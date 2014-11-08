@@ -262,7 +262,7 @@ var groups = function(state) {
     //////////////////////////////////////////////////////////////
     // has_group
     o.children = function() {
-        return children_ids.map(function(id) { 
+        return $.map(children_ids, function(id) { 
             return groups.fetch(id) || env.Apps.fetch(id) || []
         })
     }
