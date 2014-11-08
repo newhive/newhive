@@ -2222,7 +2222,12 @@ class Unsubscribes(Entity):
 @register
 class Feed(Entity):
     cname = 'feed'
-    indexes = [ ('created', 1), ['entity', ('created', -1)], ['initiator', ('created', -1)], ['entity_owner', ('created', -1)] ]
+    # TODO-perf: add { background: true } to all indexes by making this default
+    # in Database constructor. Can't do now, because it would break
+    # for every index that's not currently set.
+    # Note currently safe also has to be set, to match indexes created
+    # by compose.io index UI, but is not actually wanted at all
+    indexes = [ ( ('created', 1), {'background': True, 'safe': True} ), ['entity', ('created', -1)], ['initiator', ('created', -1)], ['entity_owner', ('created', -1)] ]
     _initiator = _entity = None
 
     class Collection(Collection):
