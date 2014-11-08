@@ -15,7 +15,8 @@ from PIL import ImageOps
 from bson.code import Code
 from crypt import crypt
 from oauth2client.client import OAuth2Credentials
-from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredentialsError
+from newhive.oauth import (FacebookClient, FlowExchangeError,
+    AccessTokenCredentialsError)
 #import pyes
 from collections import defaultdict
 from snapshots import Snapshots
@@ -37,7 +38,6 @@ from newhive.notifications import gcm
 import logging
 logger = logging.getLogger(__name__)
 
-
 entity_types = []
 def register(entity_cls):
     entity_types.append(entity_cls)
@@ -51,6 +51,7 @@ class Database:
         self.con = pymongo.MongoClient(host=config.database_host,
             port=config.database_port)
         self.mdb = self.con[config.database]
+
         self.s3 = S3Interface(config)
         self.assets = assets
 
@@ -243,6 +244,8 @@ class Collection(object):
             for i in spec:
                 if items.has_key(i): res.append(items[i])
             return res
+        if False:
+            print spec, opts
         return Cursor(self, self._col.find(spec=spec, **opts))
 
     def last(self, spec={}, **opts):
@@ -339,14 +342,19 @@ class Cursor(object):
         for m in ['count', 'distinct', 'explain', 'sort', 'limit']:
             setattr(self, m, mk_wrap(self, m))
 
-    def __len__(self): return self.count()
+    def __len__(self):
+        return self._cur.count()
+    def __getitem__(self, index):
+        return self.collection.new(self._cur.__getitem__(index))
+    def __iter__(self):
+        return self
 
-    def __getitem__(self, index): return self.collection.new(self._cur.__getitem__(index))
+    def hint(self, arg):
+        self._cur.hint(arg)
+        return self
 
-    def next(self): 
+    def next(self):
         return self.collection.new(self._cur.next())
-
-    def __iter__(self): return self
 
 class Entity(dict):
     """Base-class for very simple wrappers for MongoDB collections"""
@@ -862,15 +870,7 @@ class User(HasSocial):
             f.append(pyes.filters.IdsFilter(self.starred_expr_ids))
         return pyes.filters.BoolFilter(should=f)
 
-    def activity(self, **args):
-        try:
-            return self.activity_bug(**args) 
-        except Exception as e:
-            print "activity_bug!!!"
-            print e
-            return []
-
-    def activity_bug(self, limit=100, **args):
+    def activity(self, limit=100, **args):
         if not self.id: return []
         # TODO-feature: create list of exprs user is following comments on in
         # user record, so you can leave a comment thread
@@ -905,7 +905,7 @@ class User(HasSocial):
                 }
         or_clause = [user_action, own_broadcast, expression_action]
         return self.db.Feed.search({ '$or': or_clause }, limit=limit,
-            sort=[('created', -1)])
+            sort=[('created', -1)]).hint([('created', 1)])
 
     def exprs_tagged_following(self, per_tag_limit=20, limit=0):
         # return iterable of matching expressions for each tag you're following
@@ -947,8 +947,8 @@ class User(HasSocial):
     def feed_recent(self, spec={}, limit=20, at=0, **args):
         at=int(at)
         limit=int(limit)
-        feed_items = list(self.network_feed_items(
-            limit=g_flags['feed_max'], at=0))
+        feed_items = [item for item in
+            self.network_feed_items(limit=g_flags['feed_max'], at=0)]
         tagged_exprs = list(self.exprs_tagged_following())
 
         exprs = {}
@@ -971,10 +971,11 @@ class User(HasSocial):
             item = exprs.get(_id)
             if not item:
                 item = add_expr({'_id':_id, 'updated':0})
-            if item and (r['class_name'] != 'NewExpr') and len(item['feed']) < 3:
-                item['feed'].append(r)
+            if item:
                 # item update is the most recent of all its feed items
                 item['updated'] = max(item['updated'], r['updated'])
+                if (r['class_name'] != 'NewExpr') and len(item['feed']) < 3:
+                    item['feed'].append(r)
 
         # sort by inverse time
         sorted_result = sorted(result, key = lambda r: r['updated'], reverse = True)
@@ -1334,6 +1335,7 @@ class Expr(HasSocial):
         ,'updated'
         ,'random'
         ,'file_id'
+        ,'created'
     ]
     counters = ['owner_views', 'views', 'emails']
     _owner = None
@@ -1379,11 +1381,6 @@ class Expr(HasSocial):
 
             filter = {}
             spec2 = spec if isinstance(spec, dict) else filter
-            # Hack for Zach. TODO-cleanup: verify with Zach that this link
-            # isn't needed anymore and remove
-            if (spec2.has_key('tags_index') 
-                and ['deck2014'] in spec2.get('tags_index').values()):
-                    override_unlisted = True
             # Set up auth filtering
             if auth:
                 spec2.update(auth=auth)
@@ -2225,7 +2222,7 @@ class Unsubscribes(Entity):
 @register
 class Feed(Entity):
     cname = 'feed'
-    indexes = [ ('created', -1), ['entity', ('created', -1)], ['initiator', ('created', -1)], ['entity_owner', ('created', -1)] ]
+    indexes = [ ('created', 1), ['entity', ('created', -1)], ['initiator', ('created', -1)], ['entity_owner', ('created', -1)] ]
     _initiator = _entity = None
 
     class Collection(Collection):
@@ -2621,3 +2618,4 @@ def tags_by_frequency(query):
     counts = [[tags[t], t] for t in tags]
     counts.sort(reverse=True)
     return counts
+
