@@ -2227,7 +2227,10 @@ class Feed(Entity):
     # for every index that's not currently set.
     # Note currently safe also has to be set, to match indexes created
     # by compose.io index UI, but is not actually wanted at all
-    indexes = [ ( ('created', 1), {'background': True, 'safe': True} ), ['entity', ('created', -1)], ['initiator', ('created', -1)], ['entity_owner', ('created', -1)] ]
+    #indexes = [ ( ('created', 1), {'background': True, 'safe': True} ), ['entity', ('created', -1)], ['initiator', ('created', -1)], ['entity_owner', ('created', -1)] ]
+    # removing created_1 / created_-1 index because I keep having to
+    # change it due to gremlin
+    indexes = [ ['entity', ('created', -1)], ['initiator', ('created', -1)], ['entity_owner', ('created', -1)] ]
     _initiator = _entity = None
 
     class Collection(Collection):
