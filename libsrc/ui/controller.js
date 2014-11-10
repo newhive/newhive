@@ -237,7 +237,10 @@ define([
 
     o.loading_start = function(){
         $(document.body).addClass('loading')
-        
+        // hack to make browser start animation at first frame
+        $('.hive_logo').css('background-image', 'url("' +
+            util.asset('skin/nav/logo-loading.gif') +
+            '#' + Math.random() + '")')
     }
     o.loading_end = function(){
         $(document.body).removeClass('loading')
