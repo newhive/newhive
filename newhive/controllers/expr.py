@@ -280,14 +280,16 @@ class Expr(ModelController):
             request.args.get('viewport', '1000x750').split('x')]
         snapshot_mode = request.args.get('snapshot') is not None
         tdata.context.update(
-            html = self.expr_to_html(expr_obj, snapshot_mode=snapshot_mode,
+            html = self.expr_to_html(expr_obj, snapshot_mode=False, #snapshot_mode,
                 viewport=viewport),
             expr = expr_obj,
             use_ga = False,
         )
 
         body_style = ''
-        if snapshot_mode or expr_obj.get('clip_x'):
+        if snapshot_mode:
+            body_style = 'overflow: hidden;'
+        if expr_obj.get('clip_x'):
             body_style = 'overflow-x: hidden;'
         if expr_obj.get('clip_y'):
             body_style += 'overflow-y: hidden;'

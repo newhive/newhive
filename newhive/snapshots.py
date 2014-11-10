@@ -20,7 +20,7 @@ from PIL import ImageOps
 
 def snapshot_test():
     snapshots = Snapshots()
-    snapshots.take_snapshot("50f737d36d902248910accfe", "snap_out.png", (640,480))
+    snapshots.take_snapshot("50f737d36d902248910accfe", "snap_out.jpg", (640,480))
 
 class Snapshots(object):
     # TODO-cleanup (everything about this)
@@ -40,10 +40,13 @@ class Snapshots(object):
             snap_dimensions = list(dimensions)
             if (snap_dimensions[0] < 1000):
                 snap_dimensions = [ 1000, 1000./dimensions[0]*dimensions[1] ]
-            cmd = ( ( join(config.src_home, 'bin/CutyCapt/CutyCapt') + 
-                ' --delay=10000 --max-wait=90000 --min-width=%s --min-height=%s' +
-                ' --plugins=on --url="%s" --out=%s' )
-                % (snap_dimensions[0],snap_dimensions[1],url,out_filename) )
+            # cmd = ( ( join(config.src_home, 'bin/CutyCapt/CutyCapt') + 
+            #     ' --delay=10000 --max-wait=90000 --min-width=%s --min-height=%s' +
+            #     ' --plugins=on --url="%s" --out=%s' )
+            #     % (snap_dimensions[0],snap_dimensions[1],url,out_filename) )
+            cmd = ( ( join(config.src_home, 'bin/awesomium_sampler') + 
+                ' "%s" %s' )
+                % (url,out_filename) )
             # cmd = ('webkit2png --feature=javascript --display=:99 '+                
             #     '--geometry=%s %s --output=%s %s' % (dimensions[0],dimensions[1],out_filename,url))
             # os.environ['DISPLAY'] =':99'
