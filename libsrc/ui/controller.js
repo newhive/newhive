@@ -244,6 +244,8 @@ define([
     }
     o.loading_end = function(){
         $(document.body).removeClass('loading')
+        $('.hive_logo').css('background-image', 'url("' +
+            util.asset('skin/nav/logo.png') + '")')
     }
 
     // TODO-cleanup: refactor these into distinct functionalities of
