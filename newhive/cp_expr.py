@@ -19,9 +19,11 @@ from pymongo.errors import DuplicateKeyError
 
 from newhive import state
 
-def cp_expr(expr, dest_db, overwrite=False):
+def cp_expr(expr, dest_db, overwrite=False, ctime=True, mtime=True):
+    """ ctime and mtime preserve 'created' and 'updated' attributes instead
+    of overwriting them with copy time """
     if overwrite:
-        old_expr = dest_db.Expr.find({"name": expr['name'], "owner_name": expr['owner_name']})
+        old_expr = dest_db.Expr.named(expr['owner_name'], expr['name'])
         if old_expr: old_expr.purge()
     new_expr = dest_db.Expr.new(expr)
     new_expr.pop('snapshot_id', None) # snapshot should be rerendered from dest
@@ -31,6 +33,7 @@ def cp_expr(expr, dest_db, overwrite=False):
     except DuplicateKeyError:
         print('skipping copying existing expr ' + new_expr.url)
         return
+
     src_db = expr.db
 
     apps = new_expr.get('apps',[])
@@ -59,4 +62,9 @@ def cp_expr(expr, dest_db, overwrite=False):
 
     apps.remove(bg)
     new_expr.save()
+
+    # rejigger created and updated
+    if ctime: new_expr.update(created=expr['created'], updated=False)
+    if mtime: new_expr.update(updated=expr['updated'])
+
     return new_expr
