@@ -908,7 +908,7 @@ class User(HasSocial):
                 }
         or_clause = [user_action, own_broadcast, expression_action]
         return self.db.Feed.search({ '$or': or_clause }, limit=limit,
-            sort=[('created', -1)]).hint([('created', 1)])
+            sort=[('created', -1)]).hint([('created', -1)])
 
     def exprs_tagged_following(self, per_tag_limit=20, limit=0):
         # return iterable of matching expressions for each tag you're following
