@@ -143,7 +143,8 @@ define([
                     var $el = $(ev.currentTarget)
                     o.scroll_slide()
 
-                    if ($el.is(".error") && !(errors > 5)) {
+                    if ($el.is(".error") && (errors <= 5)) {
+                        return
                         $el.remove()
                         if (!back)
                             cur_mini--
@@ -151,6 +152,7 @@ define([
                         load_slide(back, errors ? errors + 1 : 1)
                     }
                 })
+
             $slide.find("img").css({"margin-left": card_margins})
             if (do_fade)
                 $slide.css(fade_css)
