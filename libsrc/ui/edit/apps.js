@@ -3002,11 +3002,12 @@ Hive.App.has_resize = function(o) {
         for (dir in dirs) {
             var $handle = o.addControl($('#controls_misc .resize'))
                 ,coords = str2coords[dir]
-                ,angle = Math.atan2(coords[1], coords[0]) - Math.PI/4
-            $handle.data("coords", coords)
-                .css({"transform": "rotate(" + angle + "rad)"
-                    ,"cursor": dir + "-resize"}) 
-                .width("22px")
+                ,angle = Math.atan2(coords[1], coords[0])
+            // in case handles aren't symetrical
+            // $handle.data("coords", coords)
+            //     .css({'transform': 'translate(-20px, -20px) rotate(' + angle +
+            //         'rad) translate(-15px, 10px)', 'cursor': dir + '-resize'})
+            $handle.data("coords", coords).css({'cursor': dir + '-resize'})
             o.c.resize = o.c.resize.add($handle)
             o.resizers[dir] = $handle
         }
@@ -3026,11 +3027,11 @@ Hive.App.has_resize = function(o) {
                 o.c.resize.css({ top: dims[1] - 13 + o.padding,
                     left: Math.min(dims[0] / 2 - 13, dims[0] - 54) });
             else 
-                o.c.resize.css({ left: dims[0] -13 + p, top: dims[1] - 13 + p });
+                // o.c.resize.css({ left: dims[0] -13 + p, top: dims[1] - 13 + p });
             for (dir in o.resizers) {
                 var coords = str2coords[dir]
                 o.resizers[dir].css(ui_util.array2css(
-                    u._add([-11, -11], control_pos(dims, p + 2, coords))))
+                    u._add([0, 0], control_pos(dims, p + 2, coords))))
             }
         };
 
@@ -3251,8 +3252,8 @@ Hive.App.has_rotate = function(o) {
             common.layout();
             var p = o.padding;
             var dims = o.dims();
-            o.rotateHandle.css({ left: dims[0] + 19 + o.padding,
-                top: Math.min(dims[1] / 2 - 20, dims[1] - 54) });
+            o.rotateHandle.css({ left: dims[0] + 15 + o.padding,
+                top: dims[1] / 2 - 16 });
             env.Selection.each(function(i,a){
                 if(a.controls)
                     a.controls.select_box.rotate(a.angle()) })

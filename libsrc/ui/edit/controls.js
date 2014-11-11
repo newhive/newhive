@@ -170,7 +170,7 @@ o.Controls = function(app, multiselect, delegate) {
     o.single = function() {
         return (env.Selection.count() == 1) ? o.app.sel_app() : false }
 
-    o.padding = 12;
+    o.padding = 9;
     o.border_width = 5;
     var pad_ul = [45, 60], pad_br = [45, 127], min_d = [146, 40];
     if(multiselect){
@@ -228,7 +228,9 @@ o.Controls = function(app, multiselect, delegate) {
             ap = app.pos(),
             cx = dims[0] / 2, cy = dims[1] / 2, p = o.padding,
             bw = o.border_width, outer_l = -cx -bw - p,
-            outer_width = dims[0] + bw*2 + p*2, outer_height = dims[1] + p * 2 + 1;
+            outer_width = dims[0] + bw*2 + p*2,
+            outer_height = dims[1] + p * 2 + 1
+        ;
 
         u.inline_style(o.fixed_div[0], { left: ap[0], top: ap[1] })
         u.inline_style(o.div[0], { left: pos[0] - ap[0], top: pos[1] - ap[1] })
@@ -237,24 +239,28 @@ o.Controls = function(app, multiselect, delegate) {
         u.inline_style(o.select_borders[0], { left: outer_l,
             top: -cy -bw -p, width: outer_width, height: bw }); // top
         u.inline_style(o.select_borders[1], { left: cx + p,
-            top: -cy -p - bw + 1, height: outer_height + bw * 2 -2, width: bw }); // right
+            top: -cy -p - bw + 1, height: outer_height + bw * 2 -2,
+            width: bw }); // right
         u.inline_style(o.select_borders[2], { left: outer_l,
             top: cy + p, width: outer_width, height: bw }); // bottom
         u.inline_style(o.select_borders[3], { left: outer_l,
-            top: -cy -p - bw + 1, height: outer_height + bw * 2 -2, width: bw }); // left
+            top: -cy -p - bw + 1, height: outer_height + bw * 2 -2,
+            width: bw }); // left
         if(o.multiselect) return;
 
         //o.c.undo   .css({ top   : -38 - p, right  :  61 - p });
         var help_padding = (context.flags.context_help) ? 36 : 0
-        o.c.ne     .css({ left: dims[0] - 70 + p - help_padding, top: -43 - p, width: 200 });
+        o.c.ne.css({ left: dims[0] - 46 + p - help_padding,
+            top: -42 - p, width: 200 });
         // o.c.help   .css({ left: dims[0] - 76 + p, top: -38 - p });
         // o.c.copy   .css({ left: dims[0] - 45 + p, top: -38 - p });
         // o.c.remove .css({ left: dims[0] - 14 + p, top: -38 - p });
 
-        o.c.stack  .css({ left: dims[0] - 78 + p, top: dims[1] + 13 + p });
-        o.c.buttons.css({ left: -bw - p, top: dims[1] + p + 17,
-            width: dims[0] - 50 });
-        o.c.top_buttons.css({ left: -bw - p, top: -38 - p, width: dims[0] - 60 });
+        o.c.stack.css({ left: dims[0] - 46 + p, top: dims[1] + 17 + p });
+        o.c.buttons.css({ left: -bw - p - 3, top: dims[1] + p + 14,
+            width: dims[0] - 30 });
+        o.c.top_buttons.css({ left: -bw - p - 3, top: - 43 - p,
+            width: dims[0] - 60 });
     };
 
     o.fixed_div = $('<div>').addClass('fixed_controls').appendTo("#controls");
