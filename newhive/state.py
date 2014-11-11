@@ -2636,8 +2636,12 @@ class Searches(Entity):
                     actions = search.get('action', [])
                     for action in actions:
                         act_type = action.get('type')
-                        if act_type == 'gcm_notify':
-                            gcm.notify(action.get('reg_id'), notify_data)
+                        try:
+                            if act_type == 'gcm_notify':
+                                gcm.notify(action.get('reg_id'), notify_data)
+                        except Exception:
+                            # Should delete the broken ones
+                            pass 
 
         def get(self, search, _type="feed"):
             _search = str(search)
