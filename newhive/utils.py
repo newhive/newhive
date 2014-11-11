@@ -519,6 +519,9 @@ def analytics_email_number_format(number):
     if not decimal: return whole
     return whole + "." + zeros + decimal[:2]
 
+def validate_email(email):
+    return not not re.match(r"[-\w!#$%^&*'+/=?_`{|}~.]+@[\w-]+", email)
+
 # TODO: make this a class generator like collections.namedtuple
 class FixedAttrs(object):
     def __init__(self, *args, **kwargs):
