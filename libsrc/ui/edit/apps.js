@@ -503,7 +503,6 @@ Hive.App = function(init_state, opts) {
     o.typename = function() {
         return o.type.tname.replace("hive.", "")
     }
-    Hive.has_sequence(o, o.typename())
 
     o.css_state = {};
     o.content = function(content) { return $.extend({}, o.css_state); };
@@ -958,6 +957,7 @@ Hive.App = function(init_state, opts) {
     o.has_align = o.add_to_collection = o.client_visible = true;
 
     o.type(o); // add type-specific properties
+    Hive.has_sequence(o, o.typename())
 
     o.div.addClass(o.type.tname.replace(".", "_"))
     if (o.content_element && o.init_state.css_state)
@@ -1164,6 +1164,9 @@ Hive.App.Code = function(o){
     // ... or require a code to have been focused
     env.show_css_class = true
 
+    o.typename = function() {
+        return ('js' == o.init_state.code_type) ? "code" : "style"
+    }
     o.content = function(){ return o.editor.getValue() }
     o.run_module_func = function(module_func, callback, no_err) {
         var curl_func = function() {
@@ -1296,7 +1299,8 @@ Hive.App.Code = function(o){
         var sel = env.Selection
         find_or_create_button(o, '.run').click(sel.run)
         find_or_create_button(o, '.stop').click(sel.stop)
-        find_or_create_button(o, '.edit').click(sel.edit)
+        if (o.single() && 'js' == o.single().init_state.code_type)
+            find_or_create_button(o, '.edit').click(sel.edit)
         // o.hover_menu(o.div.find('.button.opts'), o.div.find('.drawer.opts'))
         // var showinview = o.div.find('.show_in_view')
         // showinview.prop('checked', o.app.init_state.show_in_view).on(
@@ -2859,8 +2863,8 @@ Hive.App.has_resize = function(o) {
         dims_ref = o.dims_relative(); 
         pos_ref = o.pos_relative();
     };
-    o.resize_start = function(){
-        if (o.before_resize) o.before_resize();
+    o.resize_start = function(coords){
+        if (o.before_resize) o.before_resize(coords);
         env.Selection.hide_controls()
         o.dims_ref_set()
         u.reset_sensitivity();
@@ -2999,6 +3003,10 @@ Hive.App.has_resize = function(o) {
             }
         }
         o.resizers = {}
+        if (o.single() && o.single().type.tname == "hive.text") {
+            delete dirs.N
+            delete dirs.S
+        }
         for (dir in dirs) {
             var $handle = o.addControl($('#controls_misc .resize'))
                 ,coords = str2coords[dir]
@@ -3044,7 +3052,7 @@ Hive.App.has_resize = function(o) {
             }
             o.drag_target = ev.target;
             o.drag_target.busy = true;
-            o.app.resize_start();
+            o.app.resize_start(resize_coords);
         })
         .drag(function(e, dd){ 
             env.ev = e; 
