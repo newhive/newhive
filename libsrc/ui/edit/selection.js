@@ -558,11 +558,11 @@ o.Selection = function(o) {
     }
     hive_app.App.has_resize(o);
     var ref_dims, _ref_dims, _resize = o.resize;
-    o.before_resize = function() {
+    o.before_resize = function(coords) {
         o.transform_start()
         set_full_apps();
         o.each(function(i, a) { 
-            if (a.resize_start) a.resize_start(); });
+            if (a.resize_start) a.resize_start(coords); });
 
         drag_target = o;
         ref_dims = o.dims_relative();

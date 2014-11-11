@@ -2863,8 +2863,8 @@ Hive.App.has_resize = function(o) {
         dims_ref = o.dims_relative(); 
         pos_ref = o.pos_relative();
     };
-    o.resize_start = function(){
-        if (o.before_resize) o.before_resize();
+    o.resize_start = function(coords){
+        if (o.before_resize) o.before_resize(coords);
         env.Selection.hide_controls()
         o.dims_ref_set()
         u.reset_sensitivity();
@@ -3003,6 +3003,10 @@ Hive.App.has_resize = function(o) {
             }
         }
         o.resizers = {}
+        if (o.single() && o.single().type.tname == "hive.text") {
+            delete dirs.N
+            delete dirs.S
+        }
         for (dir in dirs) {
             var $handle = o.addControl($('#controls_misc .resize'))
                 ,coords = str2coords[dir]
@@ -3047,7 +3051,7 @@ Hive.App.has_resize = function(o) {
             }
             o.drag_target = ev.target;
             o.drag_target.busy = true;
-            o.app.resize_start();
+            o.app.resize_start(resize_coords);
         })
         .drag(function(e, dd){ 
             env.ev = e; 
