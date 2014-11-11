@@ -17,6 +17,7 @@
 #include <Awesomium/BitmapSurface.h>
 #include <Awesomium/STLHelpers.h>
 #include <iostream>
+#include <stdlib.h>
 #if defined(__WIN32__) || defined(_WIN32)
 #include <windows.h>
 #elif defined(__APPLE__)
@@ -35,6 +36,22 @@ void Update(int sleep_ms);
 
 // Our main program
 int main(int argc, char **argv) {
+  // Parse command lin
+  const char* url_name = URL;
+  const char* out_file = "./result.jpg";
+  int width = WIDTH;
+  int height = HEIGHT;
+  if (argc > 1) {
+    url_name = argv[1];
+    if (argc > 2) {
+      out_file = argv[2];
+    }
+    if (argc > 4) {
+      width = atoi(argv[3]);
+      height = atoi(argv[4]);
+    }
+  }
+
   WebPreferences wp;
   wp.enable_plugins = true;
   wp.user_stylesheet = WSLit("body { overflow:hidden; }");
@@ -54,14 +71,6 @@ int main(int argc, char **argv) {
   // std::cout << my_value.ToString() << std::endl;;
 
   // Load a certain URL into our WebView instance
-  const char* url_name = URL;
-  const char* out_file = "./result.jpg";
-  if (argc > 1) {
-    url_name = argv[1];
-    if (argc > 2) {
-      out_file = argv[2];
-    }
-  }
   std::cout << "out_file: " << out_file << std::endl;;
   WebURL url(WSLit(url_name));
   view->LoadURL(url);

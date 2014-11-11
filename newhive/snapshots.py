@@ -45,8 +45,8 @@ class Snapshots(object):
             #     ' --plugins=on --url="%s" --out=%s' )
             #     % (snap_dimensions[0],snap_dimensions[1],url,out_filename) )
             cmd = ( ( join(config.src_home, 'bin/awesomium_sampler') + 
-                ' "%s" %s' )
-                % (url,out_filename) )
+                ' "%s" %s %s %s' )
+                % (url,out_filename, snap_dimensions[0],snap_dimensions[1]) )
             # cmd = ('webkit2png --feature=javascript --display=:99 '+                
             #     '--geometry=%s %s --output=%s %s' % (dimensions[0],dimensions[1],out_filename,url))
             # os.environ['DISPLAY'] =':99'
