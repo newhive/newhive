@@ -724,7 +724,7 @@ define([
         } else
             $('#site').empty().append(master_template(page_data));
         if (page_data.text_result) {
-            $('#site').prepend("<pre>" + page_data.text_result)
+            $('<pre>').appendTo('#site').text(page_data.text_result)
         }
     }
 

@@ -4,7 +4,7 @@ from werkzeug import Response
 
 from newhive import mail
 from newhive.ui_strings import en as ui_str
-from newhive.utils import dfilter, now, abs_url, AbsUrl
+from newhive.utils import dfilter, now, abs_url, AbsUrl, validate_email
 from newhive.controllers.controller import Controller
 from newhive.state import Entity, collection_client_view, collection_of
 
@@ -469,6 +469,12 @@ class Community(Controller):
             common = self.db.tags_by_frequency(collection=collection, **db_args)
             return { 'text_result':
                 "\n".join( [x[0] + ": " + str(x[1]) for x in common] ) }
+        elif special == 'emails':
+            db_args['fields'] = {k:True for k in ['name','email','fullname']}
+            db_args.update(limit=json.loads(args.get('limit', '0')))
+            res = self.db.User.search(**db_args)
+            return { 'text_result': ',\n'.join( '"' + r['fullname'] + '" ' + '<'
+                + r['email'] + '>' for r in res if validate_email(r['email']) )}
         else:
             if request.args.get('help', False) != False:
                 return { 'text_result': help }
