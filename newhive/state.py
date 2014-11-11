@@ -1011,13 +1011,19 @@ class User(HasSocial):
             'class_name': {'$in': ['Broadcast','UpdatedExpr','NewExpr','Remix']}
         }
 
+    # TODO-performance-cleanup: make profile query that uses $match, $sort, and
+    # $group that outputs the correct profile feed items. Consider de-
+    # normalizing entity.auth into feed
+    def profile2(self, limit=20, at=0):
+        pass
+
     def profile(self, limit=20, at=0):
         at=int(at)
         limit=int(limit)
         spec = self.profile_spec()
         result = []
         exprs = {}
-        for r in self.db.Feed.search(spec, order='created'):
+        for r in self.db.Feed.search(spec, sort=[('updated', -1)]):
             if len(result) >= (limit + at): break
             expr_id = r['entity']
             expr = r.entity
