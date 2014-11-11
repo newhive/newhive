@@ -473,8 +473,8 @@ class Community(Controller):
             db_args['fields'] = {k:True for k in ['name','email','fullname']}
             db_args.update(limit=json.loads(args.get('limit', '0')))
             res = self.db.User.search(**db_args)
-            return { 'text_result': ',\n'.join( '"' + r['fullname'] + '" ' + '<'
-                + r['email'] + '>' for r in res if validate_email(r['email']) )}
+            return { 'text_result': '\n'.join( json.dumps(r['fullname']) + ', ' +
+                json.dumps(r['email']) for r in res if validate_email(r['email']) )}
         else:
             if request.args.get('help', False) != False:
                 return { 'text_result': help }
