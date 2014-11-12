@@ -3201,12 +3201,17 @@ Hive.App.has_crop = function(o) {
         var app = o.app.sel_app(), $hidden_controls
 
         var fixup_controls = function(o) {
-            var $control = $("#controls .crop"), toggle = app.cropping_active ? "-on" : ""
-                ,$hidden_controls = $hidden_controls || $("#controls .crop").parents(".controls")
-                .find(":visible").not(".hide").not(".crop,.buttons,.resize,.select_border")
+            var $control = $("#controls .crop")
+                ,toggle = app.cropping_active ? "-on" : ""
+                ,$control_parent = $("#controls .crop").parents(".controls")
+                ,$hidden_controls = $hidden_controls || $control_parent
+                    .find(":visible").not(".hide").not(".crop,.buttons,.resize,.select_border")
             $control.prop("src", ui_util.asset("skin/edit/crop" + toggle + ".png"))
             // $hidden_controls.toggleClass("hidden", app.cropping_active)
             $hidden_controls.css("visibility", app.cropping_active ? "hidden" : "")
+            if (context.flags.Editor.crop_move_border)
+                $control_parent.find(".select_border").css("pointer-events",
+                    app.cropping_active ? "none" : "")
         }
         find_or_create_button(o, '.crop')
         .click(function(ev) {

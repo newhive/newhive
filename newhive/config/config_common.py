@@ -211,6 +211,9 @@ site_flags = {
     },'Editor/grouping': {
         'description':'Show grouping UI, editor shortcuts'
         , 'values':['admins','devs']
+    },'Editor/crop_move_border': {
+        'description':'Move the crop region when dragging border'
+        , 'values':['admins','all']
     },'Editor/resize_nw': {
         'description':'Show resizers in NW'
         , 'values':['admins','devs']
