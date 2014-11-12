@@ -1493,6 +1493,7 @@ Hive.App.Image = function(o) {
         // UI for setting .offset of apps on drag after long_hold
         o.long_hold = o.begin_crop = function(ev){
             if(o != ev.data) return;
+            if(o.resizing()) return; // don't begin crop in the middle of a resize
             if(o.has_full_bleed() && ($(ev.target).hasClass("resize")
                 || $(ev.target).hasClass("resize_v")) ) return;
             if(!o.init_state.scale_x) 
@@ -1614,6 +1615,7 @@ Hive.App.Image = function(o) {
                 return _resize_end(skip_history);
             history_point.save();
             o.long_hold_cancel();
+            ref_dims = undefined;
         };
 
         // Editor bounds of uncropped image
@@ -2863,6 +2865,9 @@ Hive.App.has_resize = function(o) {
         dims_ref = o.dims_relative(); 
         pos_ref = o.pos_relative();
     };
+    o.resizing = function() {
+        return !!dims_ref;
+    };
     o.resize_start = function(coords){
         if (o.before_resize) o.before_resize(coords);
         env.Selection.hide_controls()
@@ -2961,6 +2966,7 @@ Hive.App.has_resize = function(o) {
 
     o.resize_end = function(skip_history){ 
         u.set_debug_info("");
+        ref_dims = undefined;
         $(".ruler").hidehide();
         if (o.after_resize) skip_history |= o.after_resize();
         if (!skip_history) history_point.save();
