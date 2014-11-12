@@ -57,7 +57,7 @@
           <a {anchor_attrs "create_expr"} title='Create newhive'
             class='needs_login create item btn hoverable'></a>
         </div>
-        {<if (not user.logged_in)}
+        {<if (and (not user.logged_in) flags.categories)}
           <div class="category_handle inline item"></div>
         {>}
       {>}
@@ -71,15 +71,17 @@
   {>}
 
   {# Category Buttons #}
-  <div class="menu drawer category_menu divided"
-    data-handle=".main-header .category_handle" 
-    data-menu-opts='"layout_x":"center","offset_y":7'>
-    {<for (concat (list "featured") home.cats) "count"}
-      <a { anchor_attrs "home_cat" "tag_name" item}>
-        <div class='menu_item category_btn teal_hover' data-name={item}>
-          {item}</div></a>
-    {>}
-  </div>
+  {<if flags.categories}
+    <div class="menu drawer category_menu divided"
+      data-handle=".main-header .category_handle" 
+      data-menu-opts='"layout_x":"center","offset_y":7'>
+      {<for (concat (list "featured") home.cats) "count"}
+        <a { anchor_attrs "home_cat" "tag_name" item}>
+          <div class='menu_item category_btn teal_hover' data-name={item}>
+            {item}</div></a>
+      {>}
+    </div>
+  {>}
   <div class='header{<unless user.logged_in} logged_out{>}
     {<unless flags.categories} stay_hidden{>}'>
     {<if flags.categories}

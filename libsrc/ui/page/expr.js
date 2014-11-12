@@ -375,7 +375,9 @@ define([
     o.expr_show = function($frame_el){
         o.current = $frame_el
         o.send_current({action: 'show'})
-        $frame_el.focus()
+        $frame_el[0].contentWindow.focus()
+        // This is for FireFox
+        $frame_el.showshow().focus()
     }
 
     o.send_current = function(msg){

@@ -1,0 +1,26 @@
+Thanks for downloading Awesomium 1.7.2 for Linux 64-bit!
+This build does not yet contain .NET/Mono bindings and only supports offscreen
+views at this time.
+
+To install this library and compile the Hello World sample, just run:
+	sudo make all
+
+You should then be able to change directories to the ./bin directory and run
+the following samples (you may need to install SDL for the WebFlow sample):
+	./awesomium_sample_hello
+	./awesomium_sample_webflow
+
+To use most of the Awesomium API in your C++ code, just include the following:
+	#include <Awesomium/WebCore.h>
+
+To link against Awesomium 1.7.2 in your applications, just add "-lawesomium-1-7":
+	g++ main.cpp -lawesomium-1-7
+
+For more information about Awesomium, check out the following links:
+	Home: http://www.awesomium.com
+	Support: http://www.awesomium.com/support
+	Wiki: http://wiki.awesomium.com
+
+Follow us on Twitter! @awesomium
+
+Chat on IRC: #awesomium@irc.freenode.net

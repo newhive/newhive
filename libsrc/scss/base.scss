@@ -408,3 +408,8 @@ $placeholder_color: $color_light_charcoal;
 .color_active {
     color: $color_active;
 }
+
+body.loading {
+    cursor: wait;
+    * { cursor: wait; }
+}

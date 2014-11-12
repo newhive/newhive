@@ -206,4 +206,4 @@ jQuery.extend( jQuery.easing,
  *
  */
 
-})
+});

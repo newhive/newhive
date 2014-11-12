@@ -4,7 +4,7 @@ from werkzeug import Response
 
 from newhive import mail
 from newhive.ui_strings import en as ui_str
-from newhive.utils import dfilter, now, abs_url, AbsUrl
+from newhive.utils import dfilter, now, abs_url, AbsUrl, validate_email
 from newhive.controllers.controller import Controller
 from newhive.state import Entity, collection_client_view, collection_of
 
@@ -439,50 +439,46 @@ class Community(Controller):
             data.update({'tags_search': tags, 'page': 'tag_search', 'viewer': profile})
         return data
 
-    def admin_query(self, tdata, request, db_args={}, **kwargs):
+    def admin_query(self, tdata, request, **kwargs):
         if not self.flags.get('admin'):
             return {}
 
-        query = json.loads(request.args.get('q', '{}'))
-        special = request.args.get('special', '')
-        # TODO-cleanup: handle sort arguments more generally in pre_dispatch
-        db_args.update(sort=[(db_args.get('sort', 'updated'), db_args.get('order', -1))])
-        db_args.setdefault('limit', 20)
-        db_args.update(json.loads(request.args.get('args', '{}')))
-        collection = collection_of(self.db, request.args.get('db', 'Expr').capitalize())
+        args = request.args
+        special = args.get('special', '')
+        collection = collection_of(self.db,
+            args.get('col', 'Expr').capitalize())
+        db_args = dict(
+            spec=json.loads(args.get('q', '{}')),
+            sort=[( args.get('sort', 'updated'),
+                json.loads(args.get('order', '-1'))
+            )],
+            limit=json.loads(args.get('limit', '20')),
+        )
         help = """
             q: database query, e.g., {"owner_name": "zach"}
-            args: database arguments (limit, order, !!Fixme)
-            db: database collection, e.g., "expr"
+            sort: default updated
+            order: default -1
+            col: database collection, default 'expr'
+            special: 'top_tags' or None
         """
         # TODO: document all these args somewhere
         if special == 'top_tags':
             if request.args.get('help', False) != False:
-                return {
-                 'text_result': 
-                    """
-                    q: database query, e.g., {"owner_name": "zach"}
-                    Limit: number of newhives to scan
-                    """
-                }
-            collection = self.db.Expr
-            db_args.update({
-                'limit': int(request.args.get('limit', '1000'))
-            })
-            res = collection.search(query, **db_args)
-            tags = Counter()
-            for expr in res:
-                # print expr
-                tags.update(expr.get('tags_index', []))
-            return { 'text_result': 
-                "\n".join([x[0] + ": " + str(x[1]) for x in tags.most_common(100)]) }
-
+                return { 'text_result': 'limit: default 1000' }
+            db_args.update(limit=json.loads(args.get('limit', '1000')))
+            common = self.db.tags_by_frequency(collection=collection, **db_args)
+            return { 'text_result':
+                "\n".join( [x[0] + ": " + str(x[1]) for x in common] ) }
+        elif special == 'emails':
+            db_args['fields'] = {k:True for k in ['name','email','fullname']}
+            db_args.update(limit=json.loads(args.get('limit', '0')))
+            res = self.db.User.search(**db_args)
+            return { 'text_result': '\n'.join( json.dumps(r['fullname']) + ', ' +
+                json.dumps(r['email']) for r in res if validate_email(r['email']) )}
         else:
-            if request.args.get('help', False):
-                return {
-                    'text_result': help
-                }
-            res = collection.search(query, **db_args)
+            if request.args.get('help', False) != False:
+                return { 'text_result': help }
+            res = collection.search(**db_args)
 
         return {
             'cards': list(res),

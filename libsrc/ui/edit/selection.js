@@ -558,11 +558,11 @@ o.Selection = function(o) {
     }
     hive_app.App.has_resize(o);
     var ref_dims, _ref_dims, _resize = o.resize;
-    o.before_resize = function() {
+    o.before_resize = function(coords) {
         o.transform_start()
         set_full_apps();
         o.each(function(i, a) { 
-            if (a.resize_start) a.resize_start(); });
+            if (a.resize_start) a.resize_start(coords); });
 
         drag_target = o;
         ref_dims = o.dims_relative();
@@ -909,6 +909,9 @@ o.Selection = function(o) {
     }
 
     // Keyboard handlers
+    // Key is [[S][M][C]+]<letter> || *<letter>
+    // *<letter> matches no matter the shift/ctrl/meta state
+    // otherwise SMC state must match exactly
     var handlers = {
         // ctrl+[shift+]a to select all or none
         "C+a": function(){
@@ -937,6 +940,13 @@ o.Selection = function(o) {
             "SC+g": function(){ o.break_group() },
         })
     }
+    // If we want to take the keymap from jquery.UI
+    // var keymap = {}//js.invert($.ui.keyCode)
+    // $.each($.ui.keyCode, function(code, key) {
+    //     key = key.toLowerCase()
+    //     keymap[key] = code
+    //     keymap[key.slice(0,3)] = code
+    // })
     var keymap = { 27: "esc", 46: "del" }
     o.keydown = Funcs(function(ev){ 
         var shift = ev.shiftKey, meta = ev.altKey, ctrl = u.is_ctrl(ev)
@@ -1040,4 +1050,4 @@ o.Selection = function(o) {
 hive_app.registerApp(o.Selection, 'hive.selection');
 
 return o;
-})
+});

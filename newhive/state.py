@@ -1,6 +1,5 @@
-import newhive
 import re, pymongo, bson.objectid, random, urllib, urllib2, os, time, json, math
-import operator as op
+from pymongo.cursor import Cursor as PymongoCursor
 from ast import literal_eval
 from tempfile import mkstemp
 from os.path import join as joinpath
@@ -8,36 +7,39 @@ from md5 import md5
 from datetime import datetime
 from lxml import html
 from wsgiref.handlers import format_date_time
-from newhive import social_stats
 from itertools import ifilter, islice, izip_longest, chain
+from functools import partial
 import Image as Img
 from PIL import ImageOps
 from bson.code import Code
 from crypt import crypt
 from oauth2client.client import OAuth2Credentials
-from newhive.oauth import FacebookClient, FlowExchangeError, AccessTokenCredentialsError
+# TODO-cleanup?: remove snapshots from webserver?
+import Queue
+import threading
+from subprocess import call
+
+import newhive
+from newhive.oauth import (FacebookClient, FlowExchangeError,
+    AccessTokenCredentialsError)
 #import pyes
 from collections import Counter
 from snapshots import Snapshots
 
 from s3 import S3Interface
 
-import Queue
-import threading
-from subprocess import call
-
 from newhive import config
 from newhive.config import abs_url, url_host
 from newhive.utils import (now, junkstr, dfilter, normalize, normalize_tags,
     tag_string, cached, AbsUrl, log_error, normalize_word)
 from newhive.routes import reserved_words
+from newhive import social_stats
 
 from newhive.profiling import g_flags
 from newhive.notifications import gcm
 
 import logging
 logger = logging.getLogger(__name__)
-
 
 entity_types = []
 def register(entity_cls):
@@ -52,6 +54,7 @@ class Database:
         self.con = pymongo.MongoClient(host=config.database_host,
             port=config.database_port)
         self.mdb = self.con[config.database]
+
         self.s3 = S3Interface(config)
         self.assets = assets
 
@@ -138,10 +141,12 @@ class Database:
                 results = self.Expr.page(spec, **args)
                 if not expr_only:
                     results = results + self.User.page(spec, **args)
-                    results.sort(cmp=lambda x, y: cmp(x[sort], y[sort]), reverse=True)
+                    results.sort(cmp=lambda x, y: cmp(x[sort], y[sort]),
+                        reverse=True)
 
-            if not search_id or len(results) > 500 or args.get('limit', 27) > 1000:
-                break;
+            if( not search_id or len(results) > 500 or
+                args.get('limit', 27) > 1000
+            ): break;
             if len(filter(lambda x: x.id == search_id, results)):
                 break;
             args['limit'] = (args.get('limit', 27) * 3/2)
@@ -221,7 +226,8 @@ class Collection(object):
         self.entity = entity
         self.config = db.config
 
-    def fetch_empty(self, key, keyname='_id'): return self.find_empty({ keyname : key })
+    def fetch_empty(self, key, keyname='_id'):
+        return self.find_empty({ keyname : key })
 
     def fetch(self, key, keyname='_id', **opts):
         if isinstance(key, list):
@@ -248,7 +254,12 @@ class Collection(object):
             for i in spec:
                 if items.has_key(i): res.append(items[i])
             return res
-        return Cursor(self, self._col.find(spec=spec, **opts))
+        # for DB optimization / debugging
+        if False:
+            print spec, opts
+        return Cursor(self, spec=spec, **opts)
+        # can't figure out as_class param, which seems to not be passed an arg
+        #return self._col.find(spec=spec, as_class=self.new, **opts)
 
     def last(self, spec={}, **opts):
         opts.update({'sort' : [('updated', -1)]})
@@ -320,38 +331,16 @@ class Collection(object):
         new_entity = self.new(doc)
         return new_entity.create()
 
-    def map_reduce(self, *a, **b): return self._col.map_reduce(*a, **b)
+    def map_reduce(self, *a, **b):
+        return self._col.map_reduce(*a, **b)
 
-class Cursor(object):
-    def __init__(self, collection, cursor):
-        self.collection = collection
-        self._cur = cursor
+class Cursor(PymongoCursor):
+    def __init__(self, collection, *args, **kwargs):
+        self._nh_collection = collection
+        super(Cursor, self).__init__(collection._col, *args, **kwargs)
 
-        # wrap pymongo.cursor.Cursor methods. mongodb cursors allow chaining of
-        # methods like sort and limit, however in this case rather than
-        # returning a pymongo.cursor.Cursor instance we want to return a
-        # newhive.state.Cursor instance, but for methods like count that return
-        # an integer or some other value, just return that
-        def mk_wrap(self, method):
-            wrapped = getattr(self._cur, m)
-
-            def wrap(*a, **b):
-                rv = wrapped(*a, **b)
-                if isinstance(rv, pymongo.cursor.Cursor): return self
-                else: return rv
-            return wrap
-
-        for m in ['count', 'distinct', 'explain', 'sort', 'limit']:
-            setattr(self, m, mk_wrap(self, m))
-
-    def __len__(self): return self.count()
-
-    def __getitem__(self, index): return self.collection.new(self._cur.__getitem__(index))
-
-    def next(self): 
-        return self.collection.new(self._cur.next())
-
-    def __iter__(self): return self
+    def next(self):
+        return self._nh_collection.new(super(Cursor, self).next())
 
 class Entity(dict):
     """Base-class for very simple wrappers for MongoDB collections"""
@@ -367,7 +356,7 @@ class Entity(dict):
         dict.update(self, doc)
 
         self.collection = collection
-        self._col = collection._col
+        self._col = self.collection._col
         self.db = collection.db
         self.mdb = self.db.mdb
 
@@ -403,7 +392,8 @@ class Entity(dict):
         if not d.has_key('updated'): d['updated'] = now()
         elif not d['updated']: del d['updated']
         dict.update(self, d)
-        return self._col.update({ '_id' : self.id }, { '$set' : d }, safe=True)
+        return self._col.update({ '_id' : self.id }, { '$set' : d },
+            safe=True)
 
     def update_cmd(self, d, **opts): 
         return self._col.update({ '_id' : self.id }, d, **opts)
@@ -478,12 +468,14 @@ class HasSocial(Entity):
     @property
     @cached
     def starrer_ids(self):
-        return [i['initiator'] for i in self.db.Star.search({ 'entity': self.id }) ]
+        return [i['initiator'] for i in
+            self.db.Star.search({ 'entity': self.id }) ]
 
     @property
     def star_count(self): return len(self.starrer_ids)
 
-    def starrer_page(self, **args): return self.db.User.page(self.starrer_ids, **args)
+    def starrer_page(self, **args):
+        return self.db.User.page(self.starrer_ids, **args)
 
     def stars(self, spec={}):
         """ Feed records indicating who is listening to or likes this entity """
@@ -511,7 +503,9 @@ def add_to_category(category, collection):
     category['collections'] += [collection]
 
 # client view of a collection
-def collection_client_view(db, collection, ultra=False, viewer=None, thumbs=True):
+def collection_client_view(db, collection, ultra=False, viewer=None,
+    thumbs=True
+):
     ## we have just a single expr
     if isinstance(collection, basestring):
         expr = db.Expr.fetch(collection)
@@ -582,7 +576,9 @@ def collection_client_view(db, collection, ultra=False, viewer=None, thumbs=True
                 ,"snapshot_small": expr.snapshot_name("small")
                 ,"snapshot_big": expr.snapshot_name("big")
             })
-            if ultra: expr_cv["thumbs"][-1]["snapshot_ultra"] = expr.snapshot_name("ultra")
+            if ultra:
+                expr_cv["thumbs"][-1]["snapshot_ultra"] = (
+                    expr.snapshot_name("ultra") )
 
     # determine if this is an owned or curated collection
     # for "by USER" or "curated by USER" on card
@@ -629,7 +625,8 @@ class User(HasSocial):
         def named(self, name): return self.find({'name' : name})
 
         def find_by_facebook(self, id):
-            return self.find({'facebook.id': id, 'facebook.disconnected': {'$exists': False}})
+            return self.find({ 'facebook.id': id,
+                'facebook.disconnected': {'$exists': False} })
 
         def get_root(self): return self.named('root')
         root_user = property(get_root)
@@ -661,7 +658,8 @@ class User(HasSocial):
             referrals = 0,
             flags = {},
         )
-        # self['email_subscriptions'] = self.collection.config.default_email_subscriptions
+        # self['email_subscriptions'] = (
+        #     self.collection.config.default_email_subscriptions )
 
         self.build_search(self)
         self.get_expr_count(force_update=True)
@@ -686,23 +684,29 @@ class User(HasSocial):
     @property
     @cached
     def my_stars(self):
-        """ Feed records indicating what newhives a user likes and who they're listening to """
-        return list(self.db.Star.search({ 'initiator': self.id }, sort=[('created', -1)]))
+        """ Feed records indicating what newhives a user likes and who they're
+            listening to """
+        return list( self.db.Star.search({ 'initiator': self.id },
+            sort=[('created', -1)]) )
 
     @property
     @cached
     def starred_user_ids(self):
-        return [i['entity'] for i in self.my_stars if i['entity_class'] == 'User']
+        return [ i['entity'] for i in self.my_stars
+            if i['entity_class'] == 'User' ]
 
     @property
     def starred_expr_ids(self):
-        return [i['entity'] for i in self.my_stars if i['entity_class'] == 'Expr']
+        return [ i['entity'] for i in self.my_stars
+            if i['entity_class'] == 'Expr' ]
 
-    def starred_user_page(self, **args): return self.collection.page(self.starred_user_ids, **args)
+    def starred_user_page(self, **args):
+        return self.collection.page(self.starred_user_ids, **args)
 
     @property
     @cached
-    def broadcast(self): return self.db.Broadcast.search({ 'initiator': self.id })
+    def broadcast(self):
+        return self.db.Broadcast.search({ 'initiator': self.id })
 
     @property
     def broadcast_ids(self): return [i['entity'] for i in self.broadcast]
@@ -825,7 +829,8 @@ class User(HasSocial):
             tag_entropy=tag_entropy)
 
     def get_tags(self, privacy, remove_singletons=True):
-        cnt = Counter(self.get('unlisted_tags' if privacy else 'public_tags', {}))
+        cnt = Counter( self.get('unlisted_tags'
+            if privacy else 'public_tags', {}) )
         # remove single-expression tags
         if remove_singletons:
             single_count = set(cnt.keys())
@@ -867,15 +872,7 @@ class User(HasSocial):
             f.append(pyes.filters.IdsFilter(self.starred_expr_ids))
         return pyes.filters.BoolFilter(should=f)
 
-    def activity(self, **args):
-        try:
-            return self.activity_bug(**args) 
-        except Exception as e:
-            print "activity_bug!!!"
-            print e
-            return []
-
-    def activity_bug(self, limit=100, **args):
+    def activity(self, limit=100, **args):
         if not self.id: return []
         # TODO-feature: create list of exprs user is following comments on in
         # user record, so you can leave a comment thread
@@ -891,7 +888,8 @@ class User(HasSocial):
         res = self.feed_profile(**args)
         for i, item in enumerate(res):
             if item.type == 'FriendJoined': continue
-            entity = item.initiator if item.entity.id == self.id else item.entity
+            entity = ( item.initiator if item.entity.id == self.id
+                else item.entity )
             entity['feed'] = [item]
             res[i] = entity
         return res
@@ -910,12 +908,13 @@ class User(HasSocial):
                 }
         or_clause = [user_action, own_broadcast, expression_action]
         return self.db.Feed.search({ '$or': or_clause }, limit=limit,
-            sort=[('created', -1)])
+            sort=[('created', -1)]).hint([('created', -1)])
 
     def exprs_tagged_following(self, per_tag_limit=20, limit=0):
         # return iterable of matching expressions for each tag you're following
         tags = self.get('tags_following', [])
-        queries = [self.db.query('#' + tag, limit=per_tag_limit) for tag in tags]
+        queries = [ self.db.query('#' + tag, limit=per_tag_limit)
+            for tag in tags ]
         flat = list(filter(lambda x:x != None, chain(*izip_longest(*queries))))
         if limit:
             return flat[0:limit]
@@ -952,8 +951,8 @@ class User(HasSocial):
     def feed_recent(self, spec={}, limit=20, at=0, **args):
         at=int(at)
         limit=int(limit)
-        feed_items = list(self.network_feed_items(
-            limit=g_flags['feed_max'], at=0))
+        feed_items = [item for item in
+            self.network_feed_items(limit=g_flags['feed_max'], at=0)]
         tagged_exprs = list(self.exprs_tagged_following())
 
         exprs = {}
@@ -976,13 +975,15 @@ class User(HasSocial):
             item = exprs.get(_id)
             if not item:
                 item = add_expr({'_id':_id, 'updated':0})
-            if item and (r['class_name'] != 'NewExpr') and len(item['feed']) < 3:
-                item['feed'].append(r)
+            if item:
                 # item update is the most recent of all its feed items
                 item['updated'] = max(item['updated'], r['updated'])
+                if (r['class_name'] != 'NewExpr') and len(item['feed']) < 3:
+                    item['feed'].append(r)
 
         # sort by inverse time
-        sorted_result = sorted(result, key = lambda r: r['updated'], reverse = True)
+        sorted_result = sorted( result, key = lambda r: r['updated'],
+            reverse = True )
         needed = at + limit
         start = 0
         end = at + limit + 5
@@ -997,7 +998,8 @@ class User(HasSocial):
             for r in new_records:
                 exprs[r['_id']].update(r)
             # filter to public only
-            records = [e for e in sorted_result[:end] if e.get('auth') == 'public']
+            records = [ e for e in sorted_result[:end]
+                if e.get('auth') == 'public' ]
             if end > len(sorted_result):
                 break
             start = end
@@ -1009,13 +1011,19 @@ class User(HasSocial):
             'class_name': {'$in': ['Broadcast','UpdatedExpr','NewExpr','Remix']}
         }
 
+    # TODO-performance-cleanup: make profile query that uses $match, $sort, and
+    # $group that outputs the correct profile feed items. Consider de-
+    # normalizing entity.auth into feed
+    def profile2(self, limit=20, at=0):
+        pass
+
     def profile(self, limit=20, at=0):
         at=int(at)
         limit=int(limit)
         spec = self.profile_spec()
         result = []
         exprs = {}
-        for r in self.db.Feed.search(spec, order='created'):
+        for r in self.db.Feed.search(spec, sort=[('updated', -1)]):
             if len(result) >= (limit + at): break
             expr_id = r['entity']
             expr = r.entity
@@ -1044,7 +1052,8 @@ class User(HasSocial):
 
     def give_invites(self, count):
         self.increment({'referrals':count})
-        self.db.InviteNote.create(self.db.User.named(self.db.config.site_user), self, data={'count':count})
+        self.db.InviteNote.create( self.db.User.named(self.db.config.site_user),
+            self, data={'count':count} )
 
     def cmp_password(self, v):
         if not isinstance(v, (str, unicode)): return False
@@ -1075,7 +1084,8 @@ class User(HasSocial):
 
     #TODO-bug: when deleting/adding expression, this lags by one.
     def set_expr_count(self):
-        count = self.mdb.expr.find({"owner": self.id, "apps": {"$exists": True, "$not": {"$size": 0}}, "auth": "public"}).count()
+        count = self.mdb.expr.find({ "owner": self.id, "apps":
+            {"$exists": True, "$not": {"$size": 0}}, "auth": "public"}).count()
         self.update_cmd({"$set": {'analytics.expressions.count': count}})
         return count
 
@@ -1091,7 +1101,8 @@ class User(HasSocial):
     expr_count = property(get_expr_count)
 
     def _has_homepage(self):
-        return bool(self.mdb.expr.find({'owner': self.id, 'apps': {'$exists': True}, 'name': ''}).count())
+        return bool( self.mdb.expr.find({'owner': self.id,
+            'apps': {'$exists': True}, 'name': ''}).count() )
     has_homepage = property(_has_homepage)
 
     @property
@@ -1125,7 +1136,8 @@ class User(HasSocial):
     @property
     def fb_thumb(self):
         if self.has_key('facebook'):
-            return "https://graph.facebook.com/" + self.facebook_id + "/picture?type=square"
+            return ( "https://graph.facebook.com/" + self.facebook_id
+                + "/picture?type=square" )
 
     @property
     def fb_name(self):
@@ -1133,14 +1145,18 @@ class User(HasSocial):
             return self['facebook']['name']
 
     def facebook_disconnect(self):
-        if self.facebook_credentials and not self.facebook_credentials.access_token_expired:
+        if( self.facebook_credentials and not
+            self.facebook_credentials.access_token_expired
+        ):
             fbc = FacebookClient()
             try:
-                fbc.delete('https://graph.facebook.com/me/permissions', self.facebook_credentials)
+                fbc.delete('https://graph.facebook.com/me/permissions',
+                    self.facebook_credentials)
             except (FlowExchangeError, AccessTokenCredentialsError) as e:
                 print e
             self.facebook_credentials = None
-        #self.update_cmd({'$set': {'facebook.disconnected': True}}) # WTF? this doesn't actually disconnect you
+        # WTF? this doesn't actually disconnect you
+        #self.update_cmd({'$set': {'facebook.disconnected': True}})
         self.update_cmd({'$unset': {'facebook': 1}}) # this seems to work
         self.update_cmd({'$unset': {'oauth.facebook': 1}})
 
@@ -1153,7 +1169,10 @@ class User(HasSocial):
     @property
     def facebook_friends(self):
         friends = self.fb_client.friends()
-        return self.db.User.search({'facebook.id': {'$in': [str(friend['uid']) for friend in friends]}, 'facebook.disconnected': {'$exists': False}})
+        return self.db.User.search({
+            'facebook.id': {'$in': [str(friend['uid']) for friend in friends]},
+            'facebook.disconnected': {'$exists': False}
+        })
 
     def get_expressions(self, auth=None):
         spec = {'owner': self.id}
@@ -1163,12 +1182,14 @@ class User(HasSocial):
 
     # TODO: cache db query
     def get_top_expressions(self, count=6):
-        return self.get_expressions(auth='public').sort([('views', -1)]).limit(count)
+        return self.get_expressions( auth='public'
+            ).sort([('views', -1)] ).limit(count)
     top_expressions = property(get_top_expressions)
 
     # TODO: cache db query
     def get_recent_expressions(self, count=6):
-        return self.get_expressions(auth='public').sort([('updated', -1)]).limit(count)
+        return self.get_expressions( auth='public'
+            ).sort([('updated', -1)]).limit(count)
     recent_expressions = property(get_recent_expressions)
 
     def client_view(self, viewer=None, special={}, activity=0):
@@ -1185,8 +1206,10 @@ class User(HasSocial):
         if self.has_key('analytics'):
             updates = {}
             if not self['analytics'].has_key('views_by'):
-                updates.update({'views_by': 
-                    sum([r.get('views', 0) for r in self.db.Expr.search({'owner':self['_id']})])})
+                updates.update({ 'views_by': 
+                    sum([ r.get('views', 0) for r in
+                        self.db.Expr.search({'owner':self['_id']}) ])
+                })
             if not self['analytics'].has_key('loves_by'):
                 updates.update({'loves_by':
                     self.db.Feed.search({'entity_owner':self['_id'],
@@ -1197,8 +1220,9 @@ class User(HasSocial):
             dict.update(user, dict(
                 views_by = self['analytics']['views_by'],
                 loves_by = self['analytics']['loves_by'],
-                expressions = self.get_expr_count(), # Why expressions->count?  nothing else is in there.
-                ))
+                # Why expressions->count? nothing else is in there.
+                expressions = self.get_expr_count(), 
+            ))
 
         thumb_big = (self.get_thumb(222) or self.get_thumb(190) or
             self.db.assets.url('skin/site/user_placeholder_big.jpg'))
@@ -1339,6 +1363,7 @@ class Expr(HasSocial):
         ,'updated'
         ,'random'
         ,'file_id'
+        ,'created'
     ]
     counters = ['owner_views', 'views', 'emails']
     _owner = None
@@ -1420,6 +1445,30 @@ class Expr(HasSocial):
         def featured(self, limit):
             query = self.featured_ids[0:limit]
             return self.db.Expr.fetch(query)
+
+        def unused_name(self, owner=None, name=None):
+            if not isinstance(name, basestring) or not len(name) or not owner:
+                raise ValueError('Expr / user not found')
+
+            m = re.match("(.*)-([0-9]+)$", name)
+            if m:
+                base_name = m.group(1)
+                num = int(m.group(2))
+            else:
+                base_name = name
+                num = 0
+            expr_names = [e['name'] for e in list(self.db.Expr.search({
+                'owner': owner.id, 'name': re.compile("^" + base_name + ".*")
+            }))]
+            while True:
+                if num:
+                    name = base_name + "-" + str(num)
+                else:
+                    name = base_name
+                if name not in expr_names:
+                    return name
+                num += 1
+
 
     # full_page = True to capture entire expression page, not just snapshot
     # timeout != 0. time in seconds to block before killing thread
@@ -2228,7 +2277,19 @@ class Unsubscribes(Entity):
 @register
 class Feed(Entity):
     cname = 'feed'
-    indexes = [ ('created', -1), ['entity', ('created', -1)], ['initiator', ('created', -1)], ['entity_owner', ('created', -1)] ]
+    # TODO-perf: add { background: true } to all indexes by making this default
+    # in Database constructor. Can't do now, because it would break
+    # for every index that's not currently set.
+    # Note currently safe also has to be set, to match indexes created
+    # by compose.io index UI, but is not actually wanted at all
+    #indexes = [ ( ('created', 1), {'background': True, 'safe': True} ), ['entity', ('created', -1)], ['initiator', ('created', -1)], ['entity_owner', ('created', -1)] ]
+    # removing created_1 / created_-1 index because I keep having to
+    # change it due to gremlin
+    indexes = [
+        ['entity', ('created', -1)],
+        ['initiator', ('created', -1)],
+        ['entity_owner', ('created', -1)]
+    ]
     _initiator = _entity = None
 
     class Collection(Collection):
@@ -2581,8 +2642,12 @@ class Searches(Entity):
                     actions = search.get('action', [])
                     for action in actions:
                         act_type = action.get('type')
-                        if act_type == 'gcm_notify':
-                            gcm.notify(action.get('reg_id'), notify_data)
+                        try:
+                            if act_type == 'gcm_notify':
+                                gcm.notify(action.get('reg_id'), notify_data)
+                        except Exception:
+                            # Should delete the broken ones
+                            pass 
 
         def get(self, search, _type="feed"):
             _search = str(search)
@@ -2619,11 +2684,14 @@ def get_id(entity_or_id):
 
 ## analytics utils
 
-def tags_by_frequency(query):
-    tags = {}
-    for d in Expr.search(query):
-        if d.get('tags_index'):
-            for t in d.get('tags_index'): tags[t] = tags.get(t, 0) + 1
-    counts = [[tags[t], t] for t in tags]
-    counts.sort(reverse=True)
-    return counts
+def tags_by_frequency(db, spec={}, collection=None, **args):
+    if not collection:
+        collection = db.Expr
+
+    args.update(limit=int(args.get('limit', '1000')))
+    res = collection.search(spec, **args)
+    tags = Counter()
+    for r in res:
+        tags.update(r.get('tags_index', []))
+    return tags.most_common(100)
+Database.tags_by_frequency = tags_by_frequency

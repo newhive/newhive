@@ -8,4 +8,4 @@ define([
     'js!./codemirror.js'
 ], function(){
     return 1
-})
+});

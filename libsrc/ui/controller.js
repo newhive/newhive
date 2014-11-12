@@ -235,6 +235,19 @@ define([
         }
     };
 
+    o.loading_start = function(){
+        $(document.body).addClass('loading')
+        // hack to make browser start animation at first frame
+        $('.hive_logo').css('background-image', 'url("' +
+            util.asset('skin/nav/logo-loading.gif') +
+            '#' + Math.random() + '")')
+    }
+    o.loading_end = function(){
+        $(document.body).removeClass('loading')
+        $('.hive_logo').css('background-image', 'url("' +
+            util.asset('skin/nav/logo.png') + '")')
+    }
+
     // TODO-cleanup: refactor these into distinct functionalities of
     // fetching data from server and opening a new page
     o.open_route = function(page_state, callback, push_state) {
@@ -252,20 +265,27 @@ define([
         }
         o.back = false;
 
-        callback = callback ? callback : success;
+        var success = function(data){
+            callback ? callback(data) : success_default(data)
+            o.loading_end()
+        }
+
         if(page_state.api){
             var api_call = {
                 method: 'get',
                 url: page_state.api.toString(),
                 dataType: 'json',
-                success: callback
+                success: success,
+                // TODO-polish: make an error report dialog
+                error: o.loading_end
             };
             // console.log(api_call)
             $.ajax(api_call);
+            o.loading_start()
         } else 
-            callback({});
+            success({})
 
-        function success(data){
+        function success_default(data){
             if (push_state == undefined || push_state) {
                 if (history.state && history.state.route_name == "view_expr" &&
                     page_state.route_name == "view_expr"

@@ -75,6 +75,9 @@ alias killserver='psk server.py'
 alias rrr='reset; cdg; killserver; newhive'
 alias pylog='sudo less +F /var/log/apache2/error.log'
 
+# production mode
+alias pylog='less +F /var/log/apache2/error.log'
+
 # shell shortcuts
 alias his='history'
 alias wwhich='echo $PATH|tr : " "|xargs find|grep -i'

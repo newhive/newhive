@@ -138,7 +138,7 @@ Hive.Saveable = function(init_state) {
     // Type definition
     o.is_saveable = true
 
-    o.init_state = $.extend(true, {}, init_state) || {}
+    o.init_state = $.extend(true, {}, init_state || {})
 
     // getter and setter for state which is visible to history
     o.history_state = Funcs(function() {
@@ -153,7 +153,8 @@ Hive.Saveable = function(init_state) {
         o.state.return_val = s
     })
     o.state_update = Funcs(function(s) {
-        $.extend(true, o.init_state, s);
+        $.extend(true, o.init_state, s)
+        o.history_state_set(s)
     })
 
     return o
@@ -206,11 +207,14 @@ env.globals_set.has_sequence = function(state) {
 }
 
 // Grouping 
+// This implements group functionality for groupable objects,
+// abstractly for nodes, and concretely for leaves
 Hive.has_group = function(o) {
     var parent
     o.parent = function() {
         return parent
     }
+    // return a list of parent, parent's parent, etc.
     o.parents = function() {
         var parents = [o]
         if (parent)
@@ -221,9 +225,11 @@ Hive.has_group = function(o) {
         // if (id && !groups.fetch(id)) throw "parent group missing"
         parent = g
     }
+    // return list of children
     o.children = function() {
-        return [o]
+        return []
     }
+    // return list of leaf children
     o.children_flat = function() {
         return [o]
     }
@@ -244,9 +250,9 @@ var groups = function(state) {
 
     //////////////////////////////////////////////////////////////
     // Saveable
-    if (state) {
+    o.state_update.add(function(state) {
        children_ids = state.children_ids || []
-    }
+    })
     o.state.add(function() {
         var s = { children_ids: children_ids }
         $.extend(o.state.return_val, s)
@@ -256,9 +262,9 @@ var groups = function(state) {
     //////////////////////////////////////////////////////////////
     // has_group
     o.children = function() {
-        return children_ids.map(function(id) { 
-            return groups.fetch(id) || env.Apps.fetch(id) 
-        }).filter(function(g) { return g })
+        return $.map(children_ids, function(id) { 
+            return groups.fetch(id) || env.Apps.fetch(id) || []
+        })
     }
     o.children_flat = function() {
         var apps = [], children = o.children()
@@ -269,7 +275,6 @@ var groups = function(state) {
     }
     //////////////////////////////////////////////////////////////
 
-    // o.id = function() { return _id }
     o.children_ids = function() {
         return children_ids.slice()
     }
@@ -305,7 +310,8 @@ var groups = function(state) {
         })
         if (parent)
             parent.remove_child(o.id)
-        delete g_groups[o.id]
+        // delete g_groups[o.id]
+        // TODO: group/ungroup history
         return children
     }
 
@@ -332,19 +338,18 @@ groups.fetch = function(id) {
     return g_groups[id]
 }
 groups.state = function() {
-    var states = []
-    $.each(g_groups, function(id, g) {
-        states.push(g.state())
+    return $.map(g_groups, function(g, id) {
+        // Do not save empty (orphaned) groups
+        return g.children().length ? g.state() : []
     })
-    return states
 }
 groups.init = function(states) {
     states.map(function(state) {
-        groups(state)
+        groups().state_update(state)
     })
     // Now fix up the parent pointers
     $.each(g_groups, function(id, g) {
-        g.children().map(function(child) {
+        $.each(g.children(), function(i, child) {
             if (child)
                 child.parent_set(g)
             // else
@@ -498,7 +503,6 @@ Hive.App = function(init_state, opts) {
     o.typename = function() {
         return o.type.tname.replace("hive.", "")
     }
-    Hive.has_sequence(o, o.typename())
 
     o.css_state = {};
     o.content = function(content) { return $.extend({}, o.css_state); };
@@ -953,6 +957,7 @@ Hive.App = function(init_state, opts) {
     o.has_align = o.add_to_collection = o.client_visible = true;
 
     o.type(o); // add type-specific properties
+    Hive.has_sequence(o, o.typename())
 
     o.div.addClass(o.type.tname.replace(".", "_"))
     if (o.content_element && o.init_state.css_state)
@@ -1159,6 +1164,9 @@ Hive.App.Code = function(o){
     // ... or require a code to have been focused
     env.show_css_class = true
 
+    o.typename = function() {
+        return ('js' == o.init_state.code_type) ? "code" : "style"
+    }
     o.content = function(){ return o.editor.getValue() }
     o.run_module_func = function(module_func, callback, no_err) {
         var curl_func = function() {
@@ -1291,7 +1299,8 @@ Hive.App.Code = function(o){
         var sel = env.Selection
         find_or_create_button(o, '.run').click(sel.run)
         find_or_create_button(o, '.stop').click(sel.stop)
-        find_or_create_button(o, '.edit').click(sel.edit)
+        if (o.single() && 'js' == o.single().init_state.code_type)
+            find_or_create_button(o, '.edit').click(sel.edit)
         // o.hover_menu(o.div.find('.button.opts'), o.div.find('.drawer.opts'))
         // var showinview = o.div.find('.show_in_view')
         // showinview.prop('checked', o.app.init_state.show_in_view).on(
@@ -1482,7 +1491,7 @@ Hive.App.Image = function(o) {
             o.layout()
         }
         // UI for setting .offset of apps on drag after long_hold
-        o.long_hold = function(ev){
+        o.long_hold = o.begin_crop = function(ev){
             if(o != ev.data) return;
             if(o.has_full_bleed() && ($(ev.target).hasClass("resize")
                 || $(ev.target).hasClass("resize_v")) ) return;
@@ -1515,7 +1524,7 @@ Hive.App.Image = function(o) {
             if (!cropping) {
                 if (!o.cropping_active)
                     return;
-                o.long_hold(ev)
+                o.begin_crop(ev)
             }
             ev.stopPropagation();
             ref_offset = o.offset();
@@ -2533,6 +2542,7 @@ Hive.App.has_link_picker = function(app) {
         controls.append_link_picker(controls.div.find('.buttons'));
     }
     controls.single = true
+    controls.display_order = 3
     app.make_controls.push(memoize("link_picker", controls))
 }
 
@@ -2779,6 +2789,10 @@ Hive.App.has_image_drop = function(o) {
         return false;
     });
     o.div.on("dblclick",function(ev) { 
+        // TODO: decide on dbl click behavior
+        ev.preventDefault()
+        return; 
+
         env.click_app = o;
         $("#media_input").click()
     });
@@ -2849,8 +2863,8 @@ Hive.App.has_resize = function(o) {
         dims_ref = o.dims_relative(); 
         pos_ref = o.pos_relative();
     };
-    o.resize_start = function(){
-        if (o.before_resize) o.before_resize();
+    o.resize_start = function(coords){
+        if (o.before_resize) o.before_resize(coords);
         env.Selection.hide_controls()
         o.dims_ref_set()
         u.reset_sensitivity();
@@ -2890,8 +2904,10 @@ Hive.App.has_resize = function(o) {
     o.resize_aspect = function() {
         var aspect = o.get_aspect()
         if (!o.fixed_aspect) {
-            var old_dims = o.dims_relative()
-            // var old_dims = dims_ref
+            // keep current aspect ratio
+            // var old_dims = o.dims_relative()
+            // keep original aspect ratio
+            var old_dims = dims_ref
             if (!env.ev.shiftKey)
                 aspect = false
             else
@@ -2924,7 +2940,7 @@ Hive.App.has_resize = function(o) {
             , _pos = u._add(pos_ref, pos_delta)
             , aabb = [_pos.slice(), u._add(_pos, dims)]
 
-        fix_aabb_for_aspect(aabb, coords, aspect)
+        aabb = fix_aabb_for_aspect(aabb, coords, aspect)
         if (snap) {
             var tuple = [[], []], snap_dist = []
             for (var i = 0; i < 2; ++i) {
@@ -2936,7 +2952,8 @@ Hive.App.has_resize = function(o) {
                 snap_dist[i] = Math.abs(snap_dist[i] - pos[i])
                 aabb[Math.max(0, coords[i])][i] = pos[i]
             }
-            fix_aabb_for_aspect(aabb, coords, aspect, (snap_dist[0] < snap_dist[1]))
+            aabb = fix_aabb_for_aspect(aabb, coords, aspect, 
+                (snap_dist[0] < snap_dist[1]))
         } else
             $(".ruler").hidehide();
         return aabb
@@ -2986,14 +3003,19 @@ Hive.App.has_resize = function(o) {
             }
         }
         o.resizers = {}
+        if (o.single() && o.single().type.tname == "hive.text") {
+            delete dirs.N
+            delete dirs.S
+        }
         for (dir in dirs) {
             var $handle = o.addControl($('#controls_misc .resize'))
                 ,coords = str2coords[dir]
-                ,angle = Math.atan(coords[1] / (coords[0] + 0.0000001)) - Math.PI/4
-            $handle.data("coords", coords)
-                .css({"transform": "rotate(" + angle + "rad)"
-                    ,"cursor": dir + "-resize"}) 
-                .width("22px")
+                ,angle = Math.atan2(coords[1], coords[0])
+            // in case handles aren't symetrical
+            // $handle.data("coords", coords)
+            //     .css({'transform': 'translate(-20px, -20px) rotate(' + angle +
+            //         'rad) translate(-15px, 10px)', 'cursor': dir + '-resize'})
+            $handle.data("coords", coords).css({'cursor': dir + '-resize'})
             o.c.resize = o.c.resize.add($handle)
             o.resizers[dir] = $handle
         }
@@ -3013,11 +3035,11 @@ Hive.App.has_resize = function(o) {
                 o.c.resize.css({ top: dims[1] - 13 + o.padding,
                     left: Math.min(dims[0] / 2 - 13, dims[0] - 54) });
             else 
-                o.c.resize.css({ left: dims[0] -13 + p, top: dims[1] - 13 + p });
+                // o.c.resize.css({ left: dims[0] -13 + p, top: dims[1] - 13 + p });
             for (dir in o.resizers) {
                 var coords = str2coords[dir]
                 o.resizers[dir].css(ui_util.array2css(
-                    u._add([-11, -11], control_pos(dims, [p + 2, p + 2], coords))))
+                    u._add([0, 0], control_pos(dims, p + 2, coords))))
             }
         };
 
@@ -3026,11 +3048,11 @@ Hive.App.has_resize = function(o) {
             resize_coords = $(this).data("coords") || [1, 1]
             if (app.cropping_active) {
                 ev.data = app
-                app.long_hold(ev)
+                app.begin_crop(ev)
             }
             o.drag_target = ev.target;
             o.drag_target.busy = true;
-            o.app.resize_start();
+            o.app.resize_start(resize_coords);
         })
         .drag(function(e, dd){ 
             env.ev = e; 
@@ -3243,8 +3265,8 @@ Hive.App.has_rotate = function(o) {
             common.layout();
             var p = o.padding;
             var dims = o.dims();
-            o.rotateHandle.css({ left: dims[0] + 19 + o.padding,
-                top: Math.min(dims[1] / 2 - 20, dims[1] - 54) });
+            o.rotateHandle.css({ left: dims[0] + 15 + o.padding,
+                top: dims[1] / 2 - 16 });
             env.Selection.each(function(i,a){
                 if(a.controls)
                     a.controls.select_box.rotate(a.angle()) })
@@ -3284,7 +3306,7 @@ Hive.App.has_rotate = function(o) {
                 if(!app.is_selection)
                     history_point.save()
             })
-            .dblclick(function(){ 
+            .dblclick(function(ev){ 
                 if(app.is_selection)
                     return;
                 history_point = env.History.saver(
