@@ -125,7 +125,7 @@ o.Selection = function(o) {
         groups = o.get_groups(elements)
     }
     // Insert elements into selected group
-    o.insert_group = function() {
+    o.enter_group = function() {
         if (!o.can_group())
             return
 
@@ -961,6 +961,8 @@ o.Selection = function(o) {
         $.extend(handlers, {
             "S+g": function(){ o.break_group() },
             "g": function(){ o.set_group() },
+            "S+i": function(){ o.exit_group() },
+            "i": function(){ o.enter_group() },
             "C+u": function(){ o.break_group() },
             "C+g": function(){ o.set_group() },
             "SC+g": function(){ o.break_group() },
