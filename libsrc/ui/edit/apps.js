@@ -199,6 +199,7 @@ Hive.has_sequence = function(o, typename) {
             o.name_set(state.name)
     })
 }
+// Have the sequence number saved/loaded globally for this expression
 env.globals.has_sequence = function() {
     return $.extend({}, Hive.has_sequence)
 }
@@ -260,7 +261,12 @@ var groups = function(state) {
     //////////////////////////////////////////////////////////////
     // Saveable
     o.state_update.add(function(state) {
-       children_ids = state.children_ids || []
+        children_ids = state.children_ids || []
+        if (state.has_group_layout) {
+            if (state.alignment) {
+                has_group_align(o, state.alignment)
+            }
+        }
     })
     o.state.add(function() {
         var s = { children_ids: children_ids }
@@ -388,8 +394,16 @@ env.Groups = groups
 // Generic layout group class
 var has_group_layout = function(o) {
     if (!o.is_group) throw "Not a group"
-    if (o.has_group_layout) return
+    if (o.has_group_layout) return // reentrant
     o.has_group_layout = true
+
+    //////////////////////////////////////////////////////////////
+    // Saveable
+    o.state.add(function() {
+        var s = { has_group_layout: true }
+        $.extend(o.state.return_val, s)
+    })
+    //////////////////////////////////////////////////////////////
 
     // Called by children when they move around
     o.on_child_modification = function(child) {
@@ -408,11 +422,21 @@ var has_group_layout = function(o) {
 }
 
 // Group whose children are all aligned (left/right/top/bottom/center/justified)
-var has_group_align = function(o) {
+var has_group_align = function(o, alignment) {
     has_group_layout(o)
     // for each coordinate, -1 == none, 0 = minimum, 1 = maximal, 2 = center, 3 = justify
-    var alignment = [1, -1]
-    // var alignment = [[.5,0], [.5, 0]]
+    var alignment = alignment || [0, -1]
+
+    //////////////////////////////////////////////////////////////
+    // Saveable
+    o.state_update.add(function(state) {
+        o.alignment_set(state.alignment)
+    })
+    o.state.add(function() {
+        var s = { alignment: alignment }
+        $.extend(o.state.return_val, s)
+    })
+    //////////////////////////////////////////////////////////////
 
     o.alignment_set = function(_alignment) {
         alignment = _alignment
@@ -428,6 +452,7 @@ var has_group_align = function(o) {
                 if (alignment[coord] < 0)
                     continue
                 else if (alignment[coord] == 3) {
+                    // TODO: need to exclude self from bounds calculation
                     child_aabb[0][coord] = aabb[0][coord]
                     child_aabb[1][coord] = aabb[1][coord]
                     continue
@@ -785,10 +810,11 @@ Hive.App = function(init_state, opts) {
             return
         in_layout = true
         // TODO: have dirty bit
-        $.map(o.parents(), function(g) {
-            if (g.has_group_layout)
-                g.on_child_modification(o)
-        })
+        if (o.initialized)
+            $.map(o.parents(), function(g) {
+                if (g.has_group_layout)
+                    g.on_child_modification(o)
+            })
         o.needs_layout = false;
         (o.special_layout())
         var pos = pos || o.pos(), dims = dims || o.dims();
@@ -1043,6 +1069,7 @@ Hive.App = function(init_state, opts) {
         if (o.init_state.full_bleed_coord != undefined)
             Hive.App.has_full_bleed(o, o.init_state.full_coord);
         if(opts.load) opts.load(o);
+        o.initialized = true;
     });
 
     // initialize
@@ -1088,7 +1115,6 @@ Hive.App = function(init_state, opts) {
         .on(o.div, 'mousedown', o)
         .on(o.div, 'mouseup', o)
         // .long_hold(o.div, o);
-    o.initialized = true;
     return o;
 };
 Hive.registerApp(Hive.App, 'hive.app');
