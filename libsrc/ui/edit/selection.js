@@ -124,6 +124,32 @@ o.Selection = function(o) {
             parent.add_child(new_group)
         groups = o.get_groups(elements)
     }
+    // Insert elements into selected group
+    o.insert_group = function() {
+        if (!o.can_group())
+            return
+
+        var old_groups = $.map(groups, function(g) {
+            return g.is_group ? g : []
+        })
+        if (old_groups.length != 1)
+            return
+        var new_group = old_groups[0]
+        groups.map(function(el) {
+            if (!el.is_group)
+                new_group.add_child(el)
+        })
+        groups = o.get_groups(elements)
+    }
+    // Remove the selected objects from their groups
+    o.exit_group = function() {
+        $.map(groups, function(g) {
+            var parent = g.parent()
+            if (parent)
+                parent.remove_child(g)
+        })
+        groups = o.get_groups(elements)
+    }
     // WAS: if the selection is a group, break it
     // Break all groups in selection
     o.break_group = function() {
