@@ -111,6 +111,10 @@ o._div = function(){ return o._apply.apply(null,
 o._sub = function(){ return o._apply.apply(null, 
     [js.op['-']].concat(Array.prototype.slice.call(arguments, 0))) }
 o._inv = function(l){ return l.map(function(x){ return 1/x; }) }
+o._min = function(){ return o._apply.apply(null, 
+    [Math.min].concat(Array.prototype.slice.call(arguments, 0))) }
+o._max = function(){ return o._apply.apply(null, 
+    [Math.max].concat(Array.prototype.slice.call(arguments, 0))) }
 
 // Linear interpolation
 // Return a value that is alpha (scalar) of the way between old_val

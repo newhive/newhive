@@ -233,6 +233,15 @@ Hive.has_group = function(o) {
     o.children_flat = function() {
         return [o]
     }
+    // return whether this is in the parents list of given child
+    o.is_ancestor_of = function(child) {
+        if (!child)
+            return false
+        if (child == o) 
+            return true
+        var parent = child.parent()
+        return o.is_ancestor_of(parent)
+    }
 }
 
 var g_groups = {}
@@ -272,6 +281,23 @@ var groups = function(state) {
             apps = apps.concat(app_or_group.children_flat())
         })
         return apps
+    }
+    //////////////////////////////////////////////////////////////
+
+    //////////////////////////////////////////////////////////////
+    // TODO: break all location functions into child class
+    // TODO: cache and clear dirty bit
+    o.aabb = function() {
+        var children_aabb = $.map(o.children(), function(child) {
+            return [child.aabb()]
+        })
+        var nw = u._min.apply(0, u.nth(children_aabb, 0))
+            ,se = u._max.apply(0, u.nth(children_aabb, 1))
+        return [nw, se]
+    }
+    o.aabb.dirty = true
+    o.aabb_set = function(_aabb) {
+        // TODO: implement and integrate with selection
     }
     //////////////////////////////////////////////////////////////
 
@@ -358,8 +384,75 @@ groups.init = function(states) {
     })
 }
 env.Groups = groups
-// env.debug = env.debug || {}
-// env.debug.groups = g_groups
+
+// Generic layout group class
+var has_group_layout = function(o) {
+    if (!o.is_group) throw "Not a group"
+    if (o.has_group_layout) return
+    o.has_group_layout = true
+
+    // Called by children when they move around
+    o.on_child_modification = function(child) {
+        if (o.on_child_modification.semaphore)
+            return
+        if (!o.is_ancestor_of(child)) {
+            console.log("Error: on_child_modification called for no reason")
+            return
+        }
+        o.on_child_modification.semaphore = true
+        o._on_child_modification(child)
+        o.on_child_modification.semaphore = false
+    }
+    // abstract function to be defined by inherited classes
+    o._on_child_modification = function(child) {}
+}
+
+// Group whose children are all aligned (left/right/top/bottom/center/justified)
+var has_group_align = function(o) {
+    has_group_layout(o)
+    // for each coordinate, -1 == none, 0 = minimum, 1 = maximal, 2 = center, 3 = justify
+    var alignment = [1, -1]
+    // var alignment = [[.5,0], [.5, 0]]
+
+    o.alignment_set = function(_alignment) {
+        alignment = _alignment
+    }
+    o._on_child_modification = function(child) {
+        // find current bounds
+        var aabb = o.aabb()
+        // adjust all children to match an edge of bounds
+        $.map(o.children(), function(child) {
+            var child_aabb = child.aabb()
+            for (var coord = 0; coord < 2; ++coord) {
+                var shift = 0
+                if (alignment[coord] < 0)
+                    continue
+                else if (alignment[coord] == 3) {
+                    child_aabb[0][coord] = aabb[0][coord]
+                    child_aabb[1][coord] = aabb[1][coord]
+                    continue
+                } else if (alignment[coord] == 0) {
+                    shift = aabb[0][coord] - child_aabb[0][coord]
+                } else if (alignment[coord] == 1) {
+                    shift = aabb[1][coord] - child_aabb[1][coord]
+                } else if (alignment[coord] == 2) {
+                    shift += aabb[0][coord] - child_aabb[0][coord]
+                    shift += aabb[1][coord] - child_aabb[1][coord]
+                    shift *= .5
+                }
+                child_aabb[0][coord] += shift
+                child_aabb[1][coord] += shift
+            }
+            child.aabb_set(child_aabb)
+        })
+    }
+}
+//!! TESTING
+env.has_group_align = function(o, alignment) {
+    has_group_align(o)
+    if (alignment) 
+        o.alignment_set(alignment)
+}
 
 // collection object for all App objects in page. An App is a widget
 // that you can move, resize, and copy. Each App type has more specific
@@ -691,6 +784,11 @@ Hive.App = function(init_state, opts) {
         if (in_layout)
             return
         in_layout = true
+        // TODO: have dirty bit
+        $.map(o.parents(), function(g) {
+            if (g.has_group_layout)
+                g.on_child_modification(o)
+        })
         o.needs_layout = false;
         (o.special_layout())
         var pos = pos || o.pos(), dims = dims || o.dims();
@@ -989,7 +1087,7 @@ Hive.App = function(init_state, opts) {
         .on(o.div, 'dragend', o)
         .on(o.div, 'mousedown', o)
         .on(o.div, 'mouseup', o)
-        .long_hold(o.div, o);
+        // .long_hold(o.div, o);
     o.initialized = true;
     return o;
 };
@@ -1493,7 +1591,7 @@ Hive.App.Image = function(o) {
         // UI for setting .offset of apps on drag after long_hold
         o.long_hold = o.begin_crop = function(ev){
             if(o != ev.data) return;
-            if(o.resizing()) return; // don't begin crop in the middle of a resize
+            if(o.resizing() || cropping) return; // don't begin crop in the middle of a resize
             if(o.has_full_bleed() && ($(ev.target).hasClass("resize")
                 || $(ev.target).hasClass("resize_v")) ) return;
             if(!o.init_state.scale_x) 
@@ -1503,8 +1601,6 @@ Hive.App.Image = function(o) {
             // env.Selection.hide_controls();
 
             ev.stopPropagation();
-            if (cropping)
-                return
             cropping = true;
             o.crop_ui_showhide(true);
             return false;
@@ -1664,10 +1760,10 @@ Hive.App.Image = function(o) {
             return true;
         };
 
-        o.make_controls.push(function(sel){
-            evs.long_hold(sel.div.find('.resize'), sel.single());
-        })
-        o.make_controls[o.make_controls.length - 1].single = true;
+        // o.make_controls.push(function(sel){
+        //     evs.long_hold(sel.div.find('.resize'), sel.single());
+        // })
+        // o.make_controls[o.make_controls.length - 1].single = true;
     })();
 
     var _layout = o.layout;
@@ -2858,7 +2954,7 @@ var str2coords = {
 }
 
 Hive.App.has_resize = function(o) {
-    var dims_ref, pos,ref, history_point;
+    var dims_ref, pos,ref, history_point, resizing;
     // TODO: This ought to be in editor space
     // TODO: rename to reflect that it saves aabb
     o.dims_ref_set = function(){ 
@@ -2866,12 +2962,13 @@ Hive.App.has_resize = function(o) {
         pos_ref = o.pos_relative();
     };
     o.resizing = function() {
-        return !!dims_ref;
+        return resizing;
     };
     o.resize_start = function(coords){
         if (o.before_resize) o.before_resize(coords);
         env.Selection.hide_controls()
         o.dims_ref_set()
+        resizing = true
         u.reset_sensitivity();
         // TODO: replace this last helper with the default history one
         history_point = o.history_helper_relative('resize');
@@ -2966,7 +3063,7 @@ Hive.App.has_resize = function(o) {
 
     o.resize_end = function(skip_history){ 
         u.set_debug_info("");
-        ref_dims = undefined;
+        resizing = false;
         $(".ruler").hidehide();
         if (o.after_resize) skip_history |= o.after_resize();
         if (!skip_history) history_point.save();
