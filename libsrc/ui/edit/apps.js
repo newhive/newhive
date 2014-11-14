@@ -1115,6 +1115,7 @@ Hive.App = function(init_state, opts) {
         .on(o.div, 'mousedown', o)
         .on(o.div, 'mouseup', o)
         // .long_hold(o.div, o);
+    o.initialized = true;
     return o;
 };
 Hive.registerApp(Hive.App, 'hive.app');
