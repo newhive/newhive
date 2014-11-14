@@ -101,6 +101,10 @@ var menu = function(handle, drawer, options) {
     }
 
     o.do_open = function() {
+        var $defers = drawer.find(".defer")
+        $.map($defers, function(el) {
+            util.undefer($(el))
+        })
         if(opts.animate_open) drawer.animate(opts.animate_open, 100);
         else opts.open_menu();
     };

@@ -23,6 +23,15 @@ define([
         return "<stack unavailable> "
     }
 
+    // undefer an element which was defered using stringjay "defer"
+    o.undefer = function(el) {
+        var $el = $(el)
+        if (! $el.length) return $()
+        var $new_el = $($el.data("content"))
+        $el.replaceWith($new_el)
+        return $new_el
+    }
+
     o.all_assets = function() { return assets; }
     o.asset = function(name){
         return _asset(name) || "Not-found:" + name;

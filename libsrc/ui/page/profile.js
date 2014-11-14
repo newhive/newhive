@@ -2,6 +2,7 @@ define([
     'browser/jquery',
     'browser/js',
     'ui/dialog',
+    'ui/util',
     'context',
     'sj!templates/cards.html',
     'sj!templates/user_byline.html',
@@ -12,6 +13,7 @@ define([
     $,
     js,
     dialog,
+    util,
     context,
     cards_template,
     template_user_byline,
@@ -410,7 +412,7 @@ define([
         $mini_views.css({opacity: (dir == "in") ? 1 : 0})
         
         if (card_num > 0)
-            $mini_views = context.undefer(card.find(".mini_views.defer"))
+            $mini_views = util.undefer(card.find(".mini_views.defer"))
         if ($mini_views.length) {
             $mini_views.on("lazy_load", function() {
                 if (! $mini_views.is(".loaded")) return

@@ -84,13 +84,6 @@ define([
         return '<div class="defer hide' + extra_classes + '" data-content="'
             + escapeHtml(block(context)) + '"></div>';
     };
-    o.undefer = function(el) {
-        var $el = $(el)
-        if (! $el.length) return $()
-        var $new_el = $($el.data("content"))
-        $el.replaceWith($new_el)
-        return $new_el
-    }
 
     o.recency_time = function(context, time) {
         var now = Date.now();
