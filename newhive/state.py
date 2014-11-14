@@ -504,12 +504,14 @@ def add_to_category(category, collection):
 
 # client view of a collection
 def collection_client_view(db, collection, ultra=False, viewer=None,
-    thumbs=True
+    override_unlisted=False, thumbs=True
 ):
     ## we have just a single expr
     if isinstance(collection, basestring):
         expr = db.Expr.fetch(collection)
         if not expr: return None
+        if not override_unlisted and viewer and not viewer.can_view(expr):
+            return None
         expr_cv = expr.client_view(viewer=viewer)
         # individual pages can appear in categories, so this gets
         # a collection attribute that's actually its own id
@@ -522,7 +524,7 @@ def collection_client_view(db, collection, ultra=False, viewer=None,
         if ultra: expr_cv["snapshot_ultra"] = expr.snapshot_name("ultra")
         return expr_cv
 
-    ## it's a real collection   
+    ## it's a real collection
 
     username = collection.get('username')
     if not username: return None
@@ -543,6 +545,8 @@ def collection_client_view(db, collection, ultra=False, viewer=None,
     search_query= "q=" + search_query
     expr = el[0]
     if not expr: return None
+    if not override_unlisted and viewer and not viewer.can_view(expr):
+        return None
 
     expr_cv = {
         # TODO-perf: trim this to essentials
@@ -1262,9 +1266,12 @@ class User(HasSocial):
         ru = self.db.User.root_user
         home = {}
         home['cats'] = cats = ru.get('ordered_cats')
-        home['categories'] = { 
-            cat: [collection_client_view(self.db, col, thumbs=False)
-                for col in ru.get_category(cat)['collections'][:config.cat_hover_count]]
+        home['categories'] = {
+            cat: [
+                collection_client_view(self.db, col, thumbs=False, viewer=self)
+                for col in
+                ru.get_category(cat)['collections'][:config.cat_hover_count]
+            ]
             for cat in cats
         }
         return home
