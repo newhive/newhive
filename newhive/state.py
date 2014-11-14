@@ -63,10 +63,14 @@ class Database:
             entity_types )
         for col in self.collections:
             setattr(self, col.entity.__name__, col)
+
+    def build_indexes(self):
+        for col in self.collections:
             for index in col.entity.indexes:
                 if isinstance(index, tuple) and isinstance(index[1], dict):
                     (key, opts) = index
                 else: (key, opts) = (index, {})
+                opts.setdefault('background', True)
                 key = map(lambda a: a if isinstance(a, tuple) else (a, 1),
                     [key] if not isinstance(key, list) else key)
                 col._col.ensure_index(key, **opts)
