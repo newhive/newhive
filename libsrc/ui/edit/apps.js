@@ -989,7 +989,7 @@ Hive.App = function(init_state, opts) {
         .on(o.div, 'dragend', o)
         .on(o.div, 'mousedown', o)
         .on(o.div, 'mouseup', o)
-        .long_hold(o.div, o);
+        //.long_hold(o.div, o);
     o.initialized = true;
     return o;
 };
@@ -1662,10 +1662,10 @@ Hive.App.Image = function(o) {
             return true;
         };
 
-        o.make_controls.push(function(sel){
-            evs.long_hold(sel.div.find('.resize'), sel.single());
-        })
-        o.make_controls[o.make_controls.length - 1].single = true;
+        // o.make_controls.push(function(sel){
+        //     evs.long_hold(sel.div.find('.resize'), sel.single());
+        // })
+        // o.make_controls[o.make_controls.length - 1].single = true;
     })();
 
     var _layout = o.layout;
