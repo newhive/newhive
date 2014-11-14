@@ -655,7 +655,9 @@ o.Selection = function(o) {
         u.scroll_to_view(o.min_pos());
     }
     o.update = function(apps){
-        apps = $.grep(apps || elements, function(e){ return ! e.deleted; });
+        apps = $.grep(apps || elements, function(e){ 
+            return ! e.deleted && e.initialized; 
+        });
         var multi = true;
 
         // Previously focused elements that should be unfocused

@@ -944,6 +944,7 @@ Hive.App = function(init_state, opts) {
         o.state_relative_set(o.init_state);
         if (o.init_state.full_bleed_coord != undefined)
             Hive.App.has_full_bleed(o, o.init_state.full_coord);
+        o.initialized = true;
         if(opts.load) opts.load(o);
     });
 
@@ -957,6 +958,7 @@ Hive.App = function(init_state, opts) {
     o.has_align = o.add_to_collection = o.client_visible = true;
 
     o.type(o); // add type-specific properties
+    if (o.initialized) throw "load called too soon"
     Hive.has_sequence(o, o.typename())
 
     o.div.addClass(o.type.tname.replace(".", "_"))
@@ -989,8 +991,9 @@ Hive.App = function(init_state, opts) {
         .on(o.div, 'dragend', o)
         .on(o.div, 'mousedown', o)
         .on(o.div, 'mouseup', o)
-        //.long_hold(o.div, o);
-    o.initialized = true;
+        // .long_hold(o.div, o);
+    if (!o.defer_load)
+        setTimeout(o.load, 1);
     return o;
 };
 Hive.registerApp(Hive.App, 'hive.app');
@@ -1068,8 +1071,6 @@ Hive.App.Html = function(o) {
     }))
     o.make_controls[o.make_controls.length - 1].single = true;
 
-    setTimeout(function(){ o.load(); }, 100);
-
     return o;
 };
 Hive.registerApp(Hive.App.Html, 'hive.html');
@@ -1108,8 +1109,6 @@ Hive.registerApp(Hive.App.Html, 'hive.html');
 //         return o;
 //     };
 //     o.make_controls.push(controls);
-
-//     setTimeout(function(){ o.load(); }, 100);
 
 //     return o;
 // };
@@ -1363,8 +1362,6 @@ Hive.App.Code = function(o){
     // TODO-cleanup: Move to CSS
     o.div.css('background-color','white').css('opacity',.2);
 
-    o.load()
-
     return o;
 }
 Hive.registerApp(Hive.App.Code, 'hive.code')
@@ -1454,8 +1451,9 @@ Hive.App.Image = function(o) {
             o.init_state.fit = undefined;
         }
         o.allow_crop(true);
-        o.load();
+        o.load()
     };
+    o.defer_load = true
 
     o.recenter = function() {
         var dims = o.dims_relative(), nat_height = dims[0] / o.aspect;
@@ -1731,7 +1729,6 @@ Hive.App.Rectangle_Parent = function(o) {
         Hive.App.has_link_picker(o);
 
     o.content_element = $("<div class='content drag'>").appendTo(o.div)
-    setTimeout(function(){ o.load() }, 1);
 
     // Hive.App.has_image_drop(o);
     return o;
@@ -2112,8 +2109,6 @@ Hive.App.Polygon = function(o){
     if (o.init_state.is_line)
         o.line_set()
 
-    o.load()
-
     return o;
 };
 Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
@@ -2413,6 +2408,8 @@ Hive.App.Sketch = function(o) {
         if(o.init_state.content) o.set_content(o.init_state.content);
         o.load();
     });
+    o.defer_load = true
+
     o.update_shield();
 
     return o;
@@ -2511,7 +2508,6 @@ Hive.App.Audio = function(o) {
     }
 
     o.update_shield();
-    setTimeout(function(){ o.load(); }, 100);
     return o;
 };
 Hive.registerApp(Hive.App.Audio, 'hive.audio');
