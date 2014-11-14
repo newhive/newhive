@@ -39,6 +39,7 @@ form { display : inline; }
     position: relative;
     padding-top: 75%;
     overflow: hidden;
+    &.noclip { overflow: visible; padding-top: 0;}
     &._5_3 { padding-top: 60%; }
     &>* {
         position: absolute;
@@ -46,7 +47,9 @@ form { display : inline; }
         left: 0;
         right: 0;
         opacity: 0;
-        @include transition(opacity, .5s, linear);
+        // Why does it not work with commas?
+        // @include transition(opacity, 0.5s, linear);
+        @include transition(opacity .5s linear);
         &.loaded {
             opacity: 1;
         }

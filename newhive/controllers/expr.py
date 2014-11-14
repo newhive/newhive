@@ -280,7 +280,7 @@ class Expr(ModelController):
             request.args.get('viewport', '1000x750').split('x')]
         snapshot_mode = request.args.get('snapshot') is not None
         tdata.context.update(
-            html = self.expr_to_html(expr_obj, snapshot_mode=False, #snapshot_mode,
+            html = self.expr_to_html(expr_obj, snapshot_mode,
                 viewport=viewport),
             expr = expr_obj,
             use_ga = False,
@@ -308,8 +308,8 @@ class Expr(ModelController):
     def expr_to_html(self, exp, snapshot_mode=False, viewport=(1000, 750)):
         """Converts JSON object representing an expression to HTML"""
         if not exp: return ''
-        # TODO-feature-expr-orientation (use y)
-        expr_scale = float(viewport[0]) / 1000
+        # scale the objects on this page based on the given viewport
+        expr_scale = float(viewport[exp.get('layout_coord', 0)]) / 1000
 
         html_for_app = partial(self.html_for_app, scale=expr_scale,
             snapshot_mode=snapshot_mode)
@@ -321,10 +321,14 @@ class Expr(ModelController):
     def html_for_app(self, app, scale=1, snapshot_mode=False):
         content = app.get('content', '')
         more_css = ''
+        data = []
         dimensions = app.get('dimensions', [100,100])
         if not is_number_list(dimensions, 2): return ''
         if not is_number_list(app.get('position', []), 2): return ''
 
+        for prop in ['angle', 'scale']:
+            if app.get(prop): data.append(("data-" + prop, app.get(prop)))
+        
         type = app.get('type')
         klass = type.replace('.', '_')
         app_id = app.get('id', 'app_' + str(app['z']))
@@ -342,7 +346,13 @@ class Expr(ModelController):
             url = app.get('url') or content
             media = self.db.File.fetch(app.get('file_id'))
             scale_x = app.get('scale_x', 1)
-            if media: url = media.get_resample(dimensions[0] * scale * scale_x)
+            if media: 
+                data.append(("data-orig", url))
+                url = media.get_resample(dimensions[0] * scale * scale_x)
+                if not snapshot_mode: #//!! and self.flags.get('lazy_load'):
+                    data.append(("data-scaled", url))
+                    scale *= .25
+                    url = media.get_resample(dimensions[0] * scale * scale_x)
 
             html = "<img src='%s'>" % url
             if scale_x:
@@ -366,7 +376,7 @@ class Expr(ModelController):
             html = "<div style='%s' class='content'></div>" % css
         elif type == 'hive.html':
             html_original = '%s' % (app.get('content',''))
-            if snapshot_mode:
+            if False: #//!!snapshot_mode:
                 def get_embed_img_html(url):
                     ret_html = ''
                     oembed = get_embedly_oembed(url) if url else ''
@@ -439,16 +449,14 @@ class Expr(ModelController):
         else:
             html = "<div class='content'>%s</div>" % content
 
-        data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
-        data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
-        
         if type != 'hive.polygon':
             if link or link_name:
                 html = "<a %s>%s</a>" % (anchor_tag(link, link_name), html)
 
+        data = [prop + "=" + str(val) for (prop, val) in data]
         html = "<div class='happ %s %s' id='%s' style='%s'%s>%s</div>" % (
             klass, app.get('css_class', ''), app_id,
-            css_for_app(app) + more_css, data, html
+            css_for_app(app) + more_css, " ".join(data), html
         )
 
         return html

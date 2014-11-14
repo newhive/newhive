@@ -97,6 +97,19 @@ define([
                 zoom = new_zoom
             })
         }
+        var on_ready = js.once(function() {
+            console.log("once")
+            $("*[data-scaled]").map(function(i, app) {
+                var $app = $(app)
+                    ,$img = $app.find("img")
+                    ,$img2 = $img.clone()
+                $img2.lazy_load($app.data("scaled"))
+                $img = $img.addClass("loaded").add($img2)
+                $("<div class='lazy_load noclip'>").append($img).appendTo($app)
+            })
+        })
+        $(document).ready(on_ready)
+        $(window).ready(on_ready)
         $(window).on("scroll", layout.on_scroll)
             .click(function(){ o.send_top('focus'); });
         //if (0 && util.mobile()) {

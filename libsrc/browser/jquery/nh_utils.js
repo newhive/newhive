@@ -38,6 +38,16 @@ define(['browser/jquery'], function(jQuery){
             elem.hidehide();
     };
 }(jQuery));
+(function($){
+    $.fn.lazy_load = function(url) {
+        var $elem = $(this)
+        $elem.addClass("loading")
+        $elem.on("load", function() { asset_loaded(this) })
+            .on("error", function() { asset_loaded(this, true) })
+        if (url)
+            $elem.prop("src", url)
+    };
+}(jQuery));
 
 // Send extra debug info to the server on every AJAX call
 var debug_ajax = function($) {
