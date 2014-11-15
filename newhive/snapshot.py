@@ -7,39 +7,19 @@
 # sudo chown www-data:dev  /tmp/.X11-unix
 #
 
-
-from newhive import state, config
-db = state.Database(config)
-
-from werkzeug import Request, Response
-from newhive import auth, config, oauth, state
-from newhive.snapshots import Snapshots
-
-from boto.s3.connection import S3Connection
-from boto.s3.key import Key as S3Key
-
-import werkzeug.urls
-import uuid
-from md5 import md5
-import os
-
-from random import choice
-
-from subprocess import Popen
 # import envoy
 import threading
-
-from datetime import datetime
 import time
-from newhive.utils import now
 
+from newhive import state, config
+from newhive.snapshots import Snapshots
+from newhive.utils import now
 
 # TODO-for-the-love-god: move this code into the runner framework, massive cleanup.
 # def start_snapshots(query_and=False):
 
 
-
-
+db = state.Database(config)
 urls = ["http://tnh.me/50f60b796d902242fd02a754",
 "http://tnh.me/50f737d36d902248910accfe"]
 expr_ids = ["50f60b796d902242fd02a754",
@@ -98,19 +78,17 @@ continuous = True
 def get_exprs(query_and={}):
     time_last = now() - 10*60 # Don't re-snapshot within 10 minutes
     and_exp = [
+        {'snapshot_needed': True},
         {'snapshot_fails': {'$not': {'$gt': 5}}},
         {'$where': "!this.password && (!this.snapshot_fail_time || "
-            + "this.snapshot_fail_time < " + str(time_last) + ")"},
-        {"$or": [
-            {"snapshot_time": { "$exists": False }},
-            {"$where": "this.snapshot_time < this.updated"}
-        ]}
+            + "this.snapshot_fail_time < " + str(time_last) + ")"}
     ]
     if test and (not query_and):
         and_exp.append({'owner_name': 'abram'})
     if query_and:
         and_exp.append(query_and)
-    expressions_to_snapshot = db.Expr.search({'$and': and_exp}, sort=[('updated', -1)])
+    expressions_to_snapshot = db.Expr.search({'$and': and_exp},
+        sort=[('updated', -1)])
     return expressions_to_snapshot
 
 def start_snapshots(query_and=False):

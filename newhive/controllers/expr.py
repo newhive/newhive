@@ -203,8 +203,9 @@ class Expr(ModelController):
                 remix_owner['tagged'][remix_name].append(res.id)
                 remix_owner.update(updated=False, tagged=remix_owner['tagged'])
 
-        if not self.config.live_server and (upd.get('apps') or upd.get('background')):
-            res.threaded_snapshot(retry=120)
+        if( not self.config.snapshot_async
+            and ( upd.get('apps') or upd.get('background') )
+        ): res.threaded_snapshot(retry=120)
         # TODO-cleanup: create client_view for full expression record, instead
         # of just feed cards
         res['id'] = res.id

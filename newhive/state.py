@@ -1375,6 +1375,7 @@ class Expr(HasSocial):
         ,'random'
         ,'file_id'
         ,'created'
+        ,'snapshot_needed'
     ]
     counters = ['owner_views', 'views', 'emails']
     _owner = None
@@ -1655,7 +1656,7 @@ class Expr(HasSocial):
             self.db.File.fetch(self.get('snapshot_id')).purge()
 
         self.update(snapshot_time=snapshot_time, entropy=self['entropy'],
-            snapshot_id=file_record.id, updated=False)
+            snapshot_id=file_record.id, snapshot_needed=False, updated=False)
         self.reset('snapshot_fails')
         self.update(updated=False, snapshot_fail_time=0)
         return True
@@ -1663,7 +1664,9 @@ class Expr(HasSocial):
     # @property
     def snapshot(self, size='big', update=True):
         # Take new snapshot if necessary and requested
-        if update and (not self.get('snapshot_time') or self.get('updated') > self.get('snapshot_time')):
+        if update and (not self.get('snapshot_time')
+            or self.get('updated') > self.get('snapshot_time')
+        ):
             self.take_snapshots()
         return self.snapshot_name(size)
 
@@ -1695,7 +1698,8 @@ class Expr(HasSocial):
         if d.get('auth') == 'public':
             d['password'] = None
         # Reset fails if this is a real update
-        if d.get('updated', False): 
+        if ( d.get('apps') or d.get('background') ) and d.get('updated', True):
+            d['snapshot_needed'] = True
             d['snapshot_fails'] = 0
         super(Expr, self).update(**d)
 
@@ -1775,6 +1779,7 @@ class Expr(HasSocial):
         self['owner_name'] = self.db.User.fetch(self['owner'])['name']
         self['random'] = random.random()
         self['views'] = 0
+        self['snapshot_needed'] = True
         self.setdefault('title', 'Untitled')
         self.setdefault('auth', 'public')
         self._collect_files(self)

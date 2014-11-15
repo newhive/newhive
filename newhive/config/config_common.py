@@ -249,6 +249,7 @@ debug_unsecure  = False
 webassets_debug = False
 always_secure   = False
 threaded_dev_server = False
+snapshot_async = True
 
 interactive = False
 
