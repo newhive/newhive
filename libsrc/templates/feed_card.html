@@ -23,11 +23,11 @@
     be correct height #}
     {<if icon_only}
       {# TODO: generalize #}
-      <div class="lazy_load _1_1">
+      <div class="lazy_load">
         {<if lazy_loading}
           <img src='' data-lazy-src='{initiator_thumb_small}' class='thumb'>
         {>}{<else}
-          <img src='{initiator_thumb_small}' class='thumb loading' {|onload}>
+          <img src='{initiator_thumb_small}' class='thumb loading notransition' {|onload}>
         {>}
       </div>
     {>}{<else}

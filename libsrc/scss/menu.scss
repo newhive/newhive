@@ -117,7 +117,7 @@
         // max-width: ($icon_width + 2*$icon_padding)*4;
         max-height: ($icon_width + 2*$icon_padding)*5;
         // overflow: scroll;
-        .lazy_load { width: 55px; }
+        .lazy_load { width: 55px; height:55px; }
         .feed_item {
             img { height: $icon_width; }
             display: inline-block;
