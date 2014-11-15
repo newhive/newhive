@@ -70,18 +70,17 @@ class Apply(object):
             klass._col.update(_query, {'$unset': {'migrated':0}}, multi=True)
 
     @staticmethod
-    def apply_all(func, l, print_frequency=100, dryrun=False):
-        l = list(l)
-        total = len(l)
+    def apply_all(func, cursor, print_frequency=100, dryrun=False):
+        total = cursor.count()
         initial_success = len(Apply.success)
         print "Running on %s items." % total
         i = 0
-        for e in l:
+        for e in cursor:
             i = i + 1
             if not func(e, dryrun=dryrun):
-                Apply.error.append(e)
+                Apply.error.append(e.id)
             else:
-                Apply.success.append(e)
+                Apply.success.append(e.id)
                 if not dryrun:
                     e.inc('migrated')
             if (i % print_frequency == 0):

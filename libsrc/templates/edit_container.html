@@ -117,18 +117,22 @@
 
 {# TODO-ilia: remove inline styling, fix styling in scss #}
 <div id='dia_rename_expr' class='dialog standard confirm border selected'>
-  <form {form_attrs "expr_save"} method='POst' id='expr_rename'>
-    <div class="title">Rename Needed</div>
-      You already have a newhive at
-      <h3 class='error name_existing'></h3>
-      Rename the existing page to:
+  <form method='post' class='current'>
+    <div class="title">You already have a newhive at:</div>
+    <input type='text' class='name_existing'>
+    <input type='submit' class='teal_btn rename_new'
+      value='CHOOSE A DIFFERENT NAME'>
+  </form>
+  <hr>
+  <form method='post' class='existing'>
+    <div class="title">Rename existing newhive:</div>
     <input type='text' class='rename_existing' name='rename_existing'>
-    <p>
-    All links to the existing page will now point to this page. Otherwise you
-    may close this and choose a different name.
-    </p> 
-    <input type='submit' class='grey_btn upper submit save'
+    <input type='submit' class='black_btn upper save'
       value='RENAME EXISTING'>
+    <p>
+      This will save your current newhive<br>
+      and replace the URL of your pre-existing newhive.
+    </p>
     <input type='hidden' name='expr' class='expr'>
   </form>
 </div>
