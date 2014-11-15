@@ -1,4 +1,6 @@
 {% extends "minimal.html" %}
+{% block body_class %} expr {{ super() }}{% endblock %}
+
 
 {% block head %}
   <title>{{ expr.title|e }}</title>

@@ -48,7 +48,7 @@
   <div class="label _2column">
     <label for="save_tags" class='left fixed upper label medbold'>#Tags</label>
     <div class='right fill'
-      ><input type="text" value='' id='save_tags' placeholder="#sawitonnewhive"></input
+      ><input type="text" value='' id='save_tags' placeholder="#newhive"></input
     ></div>
   </div>
   
@@ -116,14 +116,28 @@
 </div>
 
 {# TODO-ilia: remove inline styling, fix styling in scss #}
-<div id='dia_overwrite' class='dialog confirm border selected'>
-  <div class="title">Overwrite</div>
-  You already have an expression at "/<span id='expr_name'></span>". Are you sure you want to replace it?<br><br>
-  <input id='cancel_overwrite' type='button' class='teal_btn upper' style="float: left" value='No'>
-  <input id='save_overwrite' type='button' class='grey_btn upper' value='Yes' style="float: right">&nbsp; &nbsp; &nbsp; 
+<div id='dia_rename_expr' class='dialog standard confirm border selected'>
+  <form method='post' class='current'>
+    <div class="title">You already have a newhive at:</div>
+    <input type='text' class='name_existing'>
+    <input type='submit' class='teal_btn rename_new'
+      value='CHOOSE A DIFFERENT NAME'>
+  </form>
+  <hr>
+  <form method='post' class='existing'>
+    <div class="title">Rename existing newhive:</div>
+    <input type='text' class='rename_existing' name='rename_existing'>
+    <input type='submit' class='black_btn upper save'
+      value='RENAME EXISTING'>
+    <p>
+      This will save your current newhive<br>
+      and replace the URL of your pre-existing newhive.
+    </p>
+    <input type='hidden' name='expr' class='expr'>
+  </form>
 </div>
 
-<form {form_attrs "expr_save"} id='expr_save' method='POST'>
+<form {form_attrs "expr_save"} method='POST' id='expr_save'>
   <input type='hidden' name='expr' class='expr'>
   <input type='hidden' name='autosave' class='autosave'>
 </form>

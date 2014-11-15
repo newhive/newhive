@@ -21,7 +21,7 @@ var Text = o = {};
 // var is_chrome = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
 o.Text = function(o) {
     hive_app.App.has_resize(o);
-    hive_app.App.has_resize_h(o);
+    // hive_app.App.has_resize_h(o);
     hive_app.App.has_opacity(o);
     hive_app.App.has_shield(o, {auto: false});
     // for now, having internal and external alignment is too weird.
@@ -103,7 +103,8 @@ o.Text = function(o) {
     }
 
     o.refresh_size = function() {
-        o.resize_h([o.calcWidth(), o.dims()[1]]);
+        // o.resize_h([o.calcWidth(), o.dims()[1]]);
+        o.dims_set([o.calcWidth(), o.calcHeight()]);
         if (env.Selection.selected(o)) 
             env.Selection.update_relative_coords();
     };
@@ -117,13 +118,15 @@ o.Text = function(o) {
 
     // New scaling code
     var scale_ref, dims_ref, history_point;
-    o.before_resize = function(){
+    o.before_resize = function(coords){
         scale_ref = o.scale();
         dims_ref = o.dims();
+        o.fixed_aspect = (coords[1] != 0)
     }
     o.after_resize = function() {
         scale_ref = dims_ref = undefined;
         o.refresh_size();
+        o.fixed_aspect = false
     }
     var _dims_relative_set = o.dims_relative_set;
     o.dims_relative_set = function(dims) {

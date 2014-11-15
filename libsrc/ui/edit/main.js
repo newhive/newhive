@@ -80,7 +80,7 @@ Hive.help_selection = function (start) {
     if (!$highlight.length) 
         $highlight = $("<div class='help_highlight'>").appendTo("#overlays_group")
     $elems = $elems.add($highlight)
-    $("body").addremoveClass("help", start)
+    $("body").toggleClass("help", start)
     Menu.no_hover = start
     if (!start) {
         $elems.off("mouseenter.help mouseleave.help mousedown.help")
@@ -420,7 +420,7 @@ Hive.init_global_handlers = function(){
         Hive.send({save_dialog: 1})
     })
     var has_revert = (revert.apps || revert.background)
-    $(".menu_item.revert").addremoveClass("hide", !has_revert)
+    $(".menu_item.revert").toggleClass("hide", !has_revert)
         .prop('disabled', !has_revert)
     $(".menu_item.revert").bind_once_anon("click", function(ev) {
         if (!has_revert) return
@@ -527,6 +527,11 @@ Hive.init = function(exp, site_context, _revert){
     env.Background = hive_app.App.Background()
     hive_app.Apps.init(Hive.Exp.apps);
     hive_app.Apps.restack();
+    env.Groups.init(Hive.Exp.groups || []);
+    Hive.Exp.globals = Hive.Exp.globals || {}
+    $.each(env.globals_set, function(name, func) {
+        func(Hive.Exp.globals[name])
+    })
     last_autosave = $.extend(true, {}, Hive.state())
     env.zoom_set(1)
 
@@ -701,6 +706,11 @@ Hive.state = function() {
     //Hive.Exp.domain = $('#domain').val();
     hive_app.Apps.restack(); // collapse layers of deleted apps
     Hive.Exp.apps = hive_app.Apps.state();
+    Hive.Exp.groups = env.Groups.state()
+    Hive.Exp.globals = {}
+    $.each(env.globals, function(name, func) {
+        Hive.Exp.globals[name] = func()
+    })
 
     // TODO: get height/maximum dimension
     // var h = u.app_bounds(env.Apps.all()).bottom

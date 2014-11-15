@@ -7,6 +7,9 @@ PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin::$PATH"
 
 ### Asset building ###
 
+sudo chown www-data:dev -R .
+sudo chmod g+rwX -R .
+
 if [ "$1" = "clean" ]; then
     echo "cleaning..."
     sudo rm -rf libsrc/.cram libsrc/.webassets-cache

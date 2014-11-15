@@ -76,18 +76,20 @@ define([
 
     var flip_timer
     var attach_handlers_cat = function() {
+
         var cur_mini = 0, max_mini = -1, min_mini = 0, $slides, $slider
-            , do_fade = true
-            , do_overlaps = true
-            , do_full_bleed = true && !do_fade
-            , fade_css = {position: "absolute", left: 0, top: 0, height: "100%"}
             , card, mini_views
-            , card_opacity = do_fade ? 0 : .1
+            , opts = context.flags.UI.top_card
+            , do_fade = opts.do_fade
+                , do_overlaps = !do_fade && opts.do_overlaps
+                , do_full_bleed = opts.do_full_bleed && !do_fade
+                , card_margins = do_fade ? 0 : opts.card_margins
+                , card_overlaps = do_overlaps ? opts.card_overlaps : -2//-card_margins
+            , fade_css = {position: "absolute", left: 0, top: 0, height: "100%"}
+            , card_opacity = do_fade ? 0 : opts.card_opacity
             , CACHE = 2
-            , slide_duration = 1200
-            , flip_time = 6000
-            , card_margins = do_fade ? 0 : 20
-            , card_overlaps = do_overlaps ? 80 : -2//-card_margins
+            , slide_duration = opts.slide_duration
+            , flip_time = opts.flip_time
 
         var mini_mod = function(n) {
             return (n + mini_views.length) % mini_views.length
@@ -141,7 +143,8 @@ define([
                     var $el = $(ev.currentTarget)
                     o.scroll_slide()
 
-                    if ($el.is(".error") && !(errors > 5)) {
+                    if ($el.is(".error") && (errors <= 5)) {
+                        return
                         $el.remove()
                         if (!back)
                             cur_mini--
@@ -149,6 +152,7 @@ define([
                         load_slide(back, errors ? errors + 1 : 1)
                     }
                 })
+
             $slide.find("img").css({"margin-left": card_margins})
             if (do_fade)
                 $slide.css(fade_css)
@@ -201,7 +205,7 @@ define([
             $(window).ready(on_ready)
         }
         // TODO: remove after unflagged
-        if (!context.flags.ui_test) {
+        if (!context.flags.UI.dim_top_card_hover) {
             $('.card[data-num="0"]').find(".card_title, .info")
                 .css("opacity","1")
         }
@@ -361,8 +365,10 @@ define([
         }
     }
     o.preprocess_page_data = function (page_data){
-        page_data.ordered_tags = 
-            page_data.tag_list.slice(0, page_data.ordered_count);
+        page_data.ordered_tags = [] 
+        if (page_data.tag_list)
+            page_data.ordered_tags = 
+                page_data.tag_list.slice(0, page_data.ordered_count);
         if (context.route.include_categories)
             page_data.extra_tags = 
                 page_data.tag_list.slice(page_data.ordered_count);

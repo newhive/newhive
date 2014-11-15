@@ -30,7 +30,6 @@ define([
     ,'sj!templates/icon_count.html'
     ,'sj!templates/login_form.html'
     ,'sj!templates/mini_expr.html'
-    ,'sj!templates/network_nav.html'
     ,'sj!templates/overlay.html'
     ,'sj!templates/password_reset.html'
     ,'sj!templates/profile_card.html'

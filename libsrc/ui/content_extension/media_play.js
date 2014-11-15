@@ -31,4 +31,4 @@ define([
     }
 
     return o
-})
+});

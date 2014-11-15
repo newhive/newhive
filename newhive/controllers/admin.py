@@ -1,10 +1,11 @@
-from json import loads
+from json import loads, dumps
 from itertools import chain
 
 from newhive.utils import now, lget, dfilter
 import newhive.mail
 from newhive import config
 from newhive.controllers.controller import Controller
+from copy import deepcopy
 
 class Admin(Controller):
     def pre_dispatch(self, func, tdata, request, response, **args):
@@ -26,14 +27,20 @@ class Admin(Controller):
             print request.form
 
             su = self.db.User.site_user
-            new_flags = {}
+            new_flags = deepcopy(config.site_flags)
             for k, v in request.form.items():
                 l = v.split(",")
-                new_flags[k] = l
+                if type(new_flags[k]) == dict:
+                    new_flags[k]['values'] = l
+                else:
+                    new_flags[k] = l
             update = {flags_name: new_flags}
             su.update(updated=False, **update)
 
-        flags = { k:','.join(v) for k,v in config.site_flags.items()}
+        new_flags = {k:v for k,v in config.global_flags.iteritems() 
+            if k in config.site_flags}
+        flags = dumps(new_flags)
+        #{ k:','.join(v) for k,v in config.site_flags.items()}
         tdata.context.update(page_data={'site_flags': flags,
             'live_server': live_server}, route_args=args)
         return self.serve_loader_page('pages/main.html', tdata, request, response)

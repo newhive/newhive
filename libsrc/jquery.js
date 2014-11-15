@@ -1,4 +1,4 @@
 define([
     'browser/jquery',
-    'browser/jquery/jquery.mobile-events'
+    'js!browser/jquery/event/mobile'
 ], function($){ return $ })

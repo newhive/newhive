@@ -4,7 +4,12 @@
 $debug: true;
 $debug: false;
 
-@media print { #nav { display: none; } }
+@media print {
+    .overlay {
+        display: none !important; // overridden by JS
+        visibility: hidden;
+    }
+}
 
 body.nav .main-header {
     display: block;
@@ -285,9 +290,9 @@ body:not(.mobile) {
     &.condensed {
         @include box-shadow(rgba(black, 0.4) 0px 3px 10px);
         .hide_condensed { display: none; }
-        .header {
-            margin: 22px auto 0px auto;
-        }
+        // .header {
+        //     margin: 22px auto 0px auto;
+        // }
         .logo.splash, .right .vcenter_outer.full_height {
             height: 44px;
             // margin: 0;

@@ -112,12 +112,14 @@ o.throttle = function(callback, min_delay, that) {
 o.Funcs = function(fn, filter) {
     var o = [];
     if(fn) o.push(fn);
-    var callback = function() {
+    function callback() {
         if (!filter || filter()){
             for(var i in o){
                 var ret = o[i].apply(this, arguments);
                 if(ret !== undefined) return ret;
             }
+            if (callback.return_val)
+                return callback.return_val
         }
     };
     callback.handlers = o;
@@ -128,6 +130,18 @@ o.Funcs = function(fn, filter) {
 
 o.each = function(o, f){
     for(p in o) f(o[p], p);
+};
+
+o.invert = function (obj) {
+  var new_obj = {};
+
+  for (var prop in obj) {
+    if(obj.hasOwnProperty(prop)) {
+      new_obj[obj[prop]] = prop;
+    }
+  }
+
+  return new_obj;
 };
 
 o.parse_query = function(url){
@@ -144,7 +158,9 @@ o.parse_query = function(url){
     return args;
 }
 
-o.capitalize = function(str) { return str[0].toUpperCase() + str.slice(1); };
+o.capitalize = function(str) { 
+    return str[0].toUpperCase() + str.slice(1).toLowerCase(); 
+};
 
 return o;
 });

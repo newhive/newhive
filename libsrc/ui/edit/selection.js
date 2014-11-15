@@ -26,6 +26,7 @@ define([
 var o = {}
     ,Funcs = js.Funcs
     ,elements = []
+    ,groups = [] 
 ;
 
 o.Selection = function(o) {
@@ -44,11 +45,121 @@ o.Selection = function(o) {
             elements.slice() : [drag_target]; 
     };
     o.add_to_collection = false;
+    o.is_app_object = false;
     o.has_align = false;
     o.is_selection = true;
     o.fixed_aspect = true;
     o.make_controls = [];
     o.handler_type = 2;
+
+    //////////////////////////////////////////////////////////
+    // Grouping 
+    //////////////////////////////////////////////////////////
+
+    // Get maximal group set
+    o.get_groups = function(elements) {
+        var groups = []
+        elements = elements.slice()
+        while (elements.length) {
+            var el = elements[0], len = elements.length
+            var parents = el.parents()
+            var els, remainder, g
+            // find the largest parent group which is entirely selected
+            while (parents.length) {
+                g = parents.splice(-1, 1)[0]
+                els = g.children_flat()
+                remainder = u.except(elements, els)
+                if (remainder.length + els.length == len)
+                    break
+            }
+            groups = groups.concat([g])
+            elements = remainder
+        }
+        // For Debugging
+        var group2string = function(g, depth) {
+            depth = depth || 0
+            var pad = "                                    ".slice(0, depth)
+                ,children = g.children(), str = pad + g.name()
+            if (!g.is_group)
+                return str + "\n"
+            str += ":\n"
+            $.map(children, function(child) {
+                str += group2string(child, depth + 4)
+            })
+            return str
+        }
+        if (context.flags.can_debug) {
+            var help = ""
+            $.map(groups, function(g) {
+                help += group2string(g)
+            })
+            u.set_debug_info(help, 5000)
+        }
+        //
+        return groups
+    }
+
+    o.can_group = function() {
+        if (groups.length <= 1)
+            return false
+
+        var parent = groups[0].parent()
+        groups.map(function(el) {
+            if (el.parent() != parent)
+                return false
+        })
+
+        return true
+    }
+    // Set the selection as a group
+    o.set_group = function() {
+        if (!o.can_group())
+            return
+
+        var new_group = env.Groups(), parent = groups[0].parent()
+        groups.map(function(el) {
+            new_group.add_child(el)
+        })
+        if (parent) 
+            parent.add_child(new_group)
+        groups = o.get_groups(elements)
+    }
+    // WAS: if the selection is a group, break it
+    // Break all groups in selection
+    o.break_group = function() {
+        // if (groups.length != 1)
+        //     return 
+
+        // groups = groups[0].ungroup()
+        var common_parent = env.Groups.common_parent(groups)
+        if (groups.length == 1)
+            common_parent = undefined
+        groups.map(function(g) {
+            if (g.ungroup)
+                g.ungroup(common_parent)
+        })
+        groups = o.get_groups(elements)
+    }
+    // traverse the groups which contain app
+    o.traverse_groups = function(el) {
+        var parents = el.parents(), top_most = parents.slice(-1)[0]
+        var els, remainder, g, len = elements.length
+        // find the largest parent group which is entirely selected
+        while (parents.length > 1) {
+            g = parents.splice(-1, 1)[0]
+            els = g.children_flat()
+            remainder = u.except(elements, els)
+            if (remainder.length + els.length == len) {
+                // Group of size 1, so just select top_most
+                // TODO: Should we allow groups of size 1?
+                if (els.length == 1)
+                    return top_most
+                return parents.slice(-1)[0]
+            }
+        }
+        return top_most
+    }
+    //////////////////////////////////////////////////////////
 
     // relative coords and sizes for each app
     var _positions = [], _scales = [];
@@ -68,6 +179,8 @@ o.Selection = function(o) {
         // if mousedown on app or controls, store app in app_clicking,
         // if mousedown was not on selected app or controls, unselect all
         ev.stopPropagation()
+        if (ev.data && ev.data.cropping_active)
+            return
         app_clicking = ev.data
 
         var hit = false
@@ -100,16 +213,19 @@ o.Selection = function(o) {
 
         if (context.flags.shift_does_raise && ev.shiftKey) {
             if(u.is_ctrl(ev))
-                app.stack_bottom(ev)
+                app.stack_bottom()
             else
-                app.stack_top(ev)
+                app.stack_top()
             return
         }
         if(o.is_multi(ev)){
             if(o.selected(app)) o.unfocus(app);
             else o.push(app)
         }
-        else o.update([ app ])
+        else {
+            apps = o.traverse_groups(app).children_flat()
+            o.update(apps)
+        }
     }
 
     o.transform_start = function(){
@@ -133,11 +249,18 @@ o.Selection = function(o) {
         menu.no_hover = true;
         var app = ev.data;
         if(app && !u.is_ctrl(ev)) {
+            prev_selection = elements.slice()
             // If target is in selection, drag whole selection
             if(elements.indexOf(ev.data) >= 0)
                 drag_target = o;
-            else
+            else {
                 drag_target = ev.data;
+                if (!drag_target.is_selection && !drag_target.cropping_active) {
+                    var g = o.traverse_groups(drag_target)
+                    o.update(g.children_flat())
+                    drag_target = o
+                }
+            }
             if (ev.altKey) {
                 // alt + drag = duplicate
                 drag_target.copy({offset:[0, 0]})
@@ -197,6 +320,8 @@ o.Selection = function(o) {
         if(drag_target && !selecting){
             o.move_end();
             drag_target = undefined
+            if (!o.cropping_active)
+                o.update(prev_selection)
             return false;
         }
 
@@ -353,7 +478,9 @@ o.Selection = function(o) {
                 guide_0: !env.gifwall && (!full_apps.length || coord_full == 1),
                 guide_1: !env.gifwall && (!full_apps.length || coord_full == 0),
                 sensitivity: o.sensitivity, });
-        }
+        } else
+            $(".ruler").hidehide();
+
         pos = u._sub(pos)(off);
         if (full_apps.length)
             o.pushing_move(pos);
@@ -431,11 +558,11 @@ o.Selection = function(o) {
     }
     hive_app.App.has_resize(o);
     var ref_dims, _ref_dims, _resize = o.resize;
-    o.before_resize = function() {
+    o.before_resize = function(coords) {
         o.transform_start()
         set_full_apps();
         o.each(function(i, a) { 
-            if (a.resize_start) a.resize_start(); });
+            if (a.resize_start) a.resize_start(coords); });
 
         drag_target = o;
         ref_dims = o.dims_relative();
@@ -487,13 +614,11 @@ o.Selection = function(o) {
         if (!ref_dims)
             o.update_relative_coords();
     }
-    o.resize = function(delta){
-        var dims = _resize(delta);
-        if(!ref_dims) return;
-        if (delegate_dims_set()) {
-            return elements[0].resize(delta);
+    o.resize = function(delta, coords){
+        if (delegate_dims_set() && ref_dims) {
+            return elements[0].resize(delta, coords);
         }
-
+        var dims = _resize(delta, coords);
     };
     o.get_aspect = function() {
         if (elements.length == 1 && !elements[0].get_aspect()) {
@@ -530,7 +655,9 @@ o.Selection = function(o) {
         u.scroll_to_view(o.min_pos());
     }
     o.update = function(apps){
-        apps = $.grep(apps || elements, function(e){ return ! e.deleted; });
+        apps = $.grep(apps || elements, function(e){ 
+            return ! e.deleted && e.initialized; 
+        });
         var multi = true;
 
         // Previously focused elements that should be unfocused
@@ -550,6 +677,7 @@ o.Selection = function(o) {
         });
 
         elements = $.merge([], apps);
+        groups = o.get_groups(elements)
 
         o.update_relative_coords();
 
@@ -728,14 +856,14 @@ o.Selection = function(o) {
             dir > 0 ? el.stack_top() : el.stack_bottom() })
         env.History.group('stack to ' + ((dir > 0) ? "top": "bottom"));
     };
-    o.stack_top = function(ev) {
-        if (!ev.shiftKey) {
+    o.stack_top = function(maximal) {
+        if (!maximal) {
             return o.stack_shift(1)
         }
         o.stack_end(1)
     }
-    o.stack_bottom = function(ev){
-        if (!ev.shiftKey) {
+    o.stack_bottom = function(maximal){
+        if (!maximal) {
             return o.stack_shift(-1)
         }
         o.stack_end(-1)
@@ -782,24 +910,58 @@ o.Selection = function(o) {
             o.controls.layout();
     }
 
-    o.keydown = Funcs(function(ev){ 
+    // Keyboard handlers
+    // Key is [[S][M][C]+]<letter> || *<letter>
+    // *<letter> matches no matter the shift/ctrl/meta state
+    // otherwise SMC state must match exactly
+    var handlers = {
         // ctrl+[shift+]a to select all or none
-        if( ev.keyCode == 65 && u.is_ctrl(ev) ){
-            o.select( ev.shiftKey ? [] : hive_app.Apps.all() );
-            return false;
-        }
-
-        var handlers = {
-            27: function(){ // esc
-                    if(elements.length) o.unfocus()
-                    else return true
-                },
-            46: function(){ o.remove() }, // del
-            66: function(){ o.stack_bottom(ev) }, // b
-            70: function(){ o.stack_top(ev) }, // f
-        }
-        if(handlers[ev.keyCode]){
-            if(handlers[ev.keyCode]()) return;
+        "C+a": function(){
+            o.select( hive_app.Apps.all() );
+        },
+        "SC+a": function(){
+            o.select( [] );
+        },
+        "esc": function(){
+            if(elements.length) 
+                o.unfocus()
+            else return true
+        },
+        "del": function(){ o.remove() },
+        "b": function(){ o.stack_bottom() },
+        "S+b": function(){ o.stack_bottom(true) },
+        "f": function(){ o.stack_top() },
+        "S+f": function(){ o.stack_top(true) },
+    }
+    if (context.flags.Editor.grouping) {
+        $.extend(handlers, {
+            "S+g": function(){ o.break_group() },
+            "g": function(){ o.set_group() },
+            "C+u": function(){ o.break_group() },
+            "C+g": function(){ o.set_group() },
+            "SC+g": function(){ o.break_group() },
+        })
+    }
+    // If we want to take the keymap from jquery.UI
+    // var keymap = {}//js.invert($.ui.keyCode)
+    // $.each($.ui.keyCode, function(code, key) {
+    //     key = key.toLowerCase()
+    //     keymap[key] = code
+    //     keymap[key.slice(0,3)] = code
+    // })
+    var keymap = { 27: "esc", 46: "del" }
+    o.keydown = Funcs(function(ev){ 
+        var shift = ev.shiftKey, meta = ev.altKey, ctrl = u.is_ctrl(ev)
+            ,smc = (shift ? "S" : "") + (meta ? "M" : "") + (ctrl ? "C" : "")
+            ,keycode = ev.keyCode
+            ,key = keymap[keycode]
+        if (smc.length)
+            smc = smc + "+"
+        if (keycode >= 65 && keycode <= 64 + 26)
+            key = String.fromCharCode(keycode).toLowerCase()
+        handler = handlers[smc + key] || handlers["*" + key]
+        if(handler){
+            if (handler(ev)) return;
             return false;
         }
 
@@ -890,4 +1052,4 @@ o.Selection = function(o) {
 hive_app.registerApp(o.Selection, 'hive.selection');
 
 return o;
-})
+});

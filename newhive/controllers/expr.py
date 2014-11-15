@@ -29,29 +29,6 @@ class Expr(ModelController):
 
         return self.serve_json(response, resp)
 
-    def _unused_name(self, name, owner):
-        if not name or not len(name) or not owner:
-            raise ValueError('Expr / user not found')
-
-        m = re.match("(.*)-([0-9]+)$", name)
-        if m:
-            base_name = m.group(1)
-            num = int(m.group(2))
-        else:
-            base_name = name
-            num = 0
-        expr_names = [e['name'] for e in list(self.db.Expr.search({
-            'owner': owner.id, 'name': re.compile("^" + base_name + ".*")
-        }))]
-        while True:
-            if num:
-                name = base_name + "-" + str(num)
-            else:
-                name = base_name
-            if name not in expr_names:
-                return name
-            num += 1
-
     def unused_name(self, tdata, request, response, **args):
         """ Returns an unused newhive name matching the base name provided """
 
@@ -60,7 +37,7 @@ class Expr(ModelController):
         owner_id = request.form.get("owner_id") or request.args.get("owner_id", "")
         owner = self.db.User.fetch(owner_id)
 
-        resp['name'] = self._unused_name(name, owner)
+        resp['name'] = self.db.Expr.unused_name(owner, name)
         return self.serve_json(response, resp)
     
     def save(self, tdata, request, response, **args):
@@ -79,7 +56,7 @@ class Expr(ModelController):
         allowed_attributes = [
             'name', 'url', 'title', 'apps', 'dimensions', 'auth', 'password',
             'tags', 'background', 'thumb', 'images', 'remix_parent_id',
-            'container', 'clip_x', 'clip_y', 'layout_coord'
+            'container', 'clip_x', 'clip_y', 'layout_coord', 'groups', 'globals'
         ]
         # TODO: fixed expressions, styles, and scripts, need to be done right
         # if tdata.user.is_admin:
@@ -109,38 +86,40 @@ class Expr(ModelController):
                 ,'file_id' : file_res.id
             })
 
+        def record_expr_save(res):
+            self.db.ActionLog.create(tdata.user, "new_expression_save",
+                data={'expr_id': res.id})
+            tdata.user.flag('expr_new')
+
         duplicate = False
         if not res or upd['name'] != res['name']:
+            """ we're creating a new page """
             if autosave:
                 # TODO-autosave: create anonymous expression
                 if upd.get('name','') == '':
-                    upd['name'] = self._unused_name(time.strftime("%Y_%m_%d"), tdata.user)
+                    upd['name'] = self.db.Expr.unused_name( tdata.user,
+                        time.strftime("%Y_%m_%d") )
                 upd['auth'] = "private"
                 upd['tags'] += " #draft"
                 upd['draft'] = True
                 res = tdata.user.expr_create(upd)
                 return self.serve_json(response, { "autosave": 1, "expr": res })
 
-            # TODO-cleanup: move try/catch around only user.expr_create
-            try:
-              new_expression = True
-              res = tdata.user.expr_create(upd)
-              self.db.ActionLog.create(tdata.user, "new_expression_save"
-                , data={'expr_id': res.id})
+            # remix: ensure that the remixed tag is saved with a remix
+            if upd.get('remix_parent_id'):
+                upd['tags'] += " #remixed" # + remix_name
 
-              tdata.user.flag('expr_new')
-              #if tdata.user.get('flags').get('add_invites_on_save'):
-              #    tdata.user.unflag('add_invites_on_save')
-              #    tdata.user.give_invites(5)
+            try:
+                res = tdata.user.expr_create(upd)
             except DuplicateKeyError:
                 duplicate = True
+            else:
+                record_expr_save(res)
         else:
+            """ we're updating a page """
             if not res['owner'] == tdata.user.id:
                 raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
 
-            # remix: ensure that the remix tag is not deletable
-            if res.get('remix_parent_id'):
-                upd['tags'] += " #remixed" # + remix_name
             reserved_tags = ["remixed", "gifwall"];
             # force "#draft" on draft
             if autosave and draft:
@@ -159,31 +138,35 @@ class Expr(ModelController):
                     res.update(updated=False, draft=upd)
                 return self.serve_json(response, { 'autosave': 1 } )
 
+            if draft: upd['draft'] = False
             try:
-                if draft:
-                    upd['draft'] = False
                 res.update(**upd)
-                    
-                new_expression = False
-
-                self.db.UpdatedExpr.create(res.owner, res)
-                self.db.ActionLog.create(tdata.user, "update_expression", data={'expr_id': res.id})
             except DuplicateKeyError:
                 duplicate = True
+            else:                    
+                self.db.UpdatedExpr.create(res.owner, res)
+                self.db.ActionLog.create(tdata.user, "update_expression", data={'expr_id': res.id})
+
+        def rename_error():
+            return self.serve_json(response, { 'error' : 'rename',
+                'rename_existing': self.db.Expr.unused_name(
+                    tdata.user, upd['name'] ),
+                'name_existing': upd['name']
+            })
 
         if duplicate:
-            if expr.get('overwrite'):
-                self.db.Expr.named(tdata.user['name'], upd['name']).delete()
-                if draft:
-                    res.update(**upd)
-                    self.db.UpdatedExpr.create(res.owner, res)
-                else:
+            if expr.get('rename_existing'):
+                existing = self.db.Expr.named(tdata.user['name'], upd['name'])
+                try:
+                    existing.update( updated=False,
+                        name=expr.get('rename_existing') )
                     res = tdata.user.expr_create(upd)
-                self.db.ActionLog.create(tdata.user, "new_expression_save", data={'expr_id': res.id, 'overwrite': True})
+                except DuplicateKeyError:
+                    return rename_error()
+                else:
+                    record_expr_save(res)
             else:
-                 #'A newhive already exists with the URL: ' + upd['name']
-                return self.serve_json(response, { 'error' : 'overwrite' })
-                # self.db.ActionLog.create(tdata.user, "new_expression_save_fail", data={'expr_id': res.id, 'error': 'overwrite'})
+                return rename_error()
 
         # autosave: Remove "draft" on first save
         if draft and not autosave:
@@ -297,14 +280,16 @@ class Expr(ModelController):
             request.args.get('viewport', '1000x750').split('x')]
         snapshot_mode = request.args.get('snapshot') is not None
         tdata.context.update(
-            html = self.expr_to_html(expr_obj, snapshot_mode=snapshot_mode,
+            html = self.expr_to_html(expr_obj, snapshot_mode=False, #snapshot_mode,
                 viewport=viewport),
             expr = expr_obj,
             use_ga = False,
         )
 
         body_style = ''
-        if snapshot_mode or expr_obj.get('clip_x'):
+        if snapshot_mode:
+            body_style = 'overflow: hidden;'
+        if expr_obj.get('clip_x'):
             body_style = 'overflow-x: hidden;'
         if expr_obj.get('clip_y'):
             body_style += 'overflow-y: hidden;'

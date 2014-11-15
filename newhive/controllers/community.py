@@ -4,9 +4,9 @@ from werkzeug import Response
 
 from newhive import mail
 from newhive.ui_strings import en as ui_str
-from newhive.utils import dfilter, now, abs_url, AbsUrl
+from newhive.utils import dfilter, now, abs_url, AbsUrl, validate_email
 from newhive.controllers.controller import Controller
-from newhive.state import Entity, collection_client_view
+from newhive.state import Entity, collection_client_view, collection_of
 
 class Community(Controller):
     def featured(self, tdata, request, db_args={}, **args):
@@ -26,24 +26,15 @@ class Community(Controller):
             'title': "NewHive - ALL",
         }
 
+    # TODO-cleanup: rename to home / the_hive
     def trending(self, tdata, request, username=None, db_args={}, **args):
         user = self.db.User.named(username)
         if not user:
             user = tdata.user
+
         # New category view 
-        if self.flags.get('new_nav'):
-            return self.expressions_tag(tdata, request, _owner_name="root", 
-                tag_name="featured", db_args=db_args, include_categories=True)
-        # Logged out users see featured.
-        elif not user or not user.id:
-            return self.featured(tdata, request, db_args=db_args, **args)
-        return {
-            "network_help": (len(user.starred_user_ids) <= 1),
-            # "cards": self.db.query('#Network', **db_args),
-            "cards": user.feed_trending(**db_args),
-            'header': ("Network",), 
-            'title': "Network",
-        }
+        return self.expressions_tag(tdata, request, _owner_name="root", 
+            tag_name="featured", db_args=db_args, include_categories=True)
 
     def network_recent(self, tdata, request, username=None, db_args={}, **args):
         user = self.db.User.named(username)
@@ -448,15 +439,47 @@ class Community(Controller):
             data.update({'tags_search': tags, 'page': 'tag_search', 'viewer': profile})
         return data
 
-    def admin_query(self, tdata, request, db_args={}, **kwargs):
+    def admin_query(self, tdata, request, **kwargs):
         if not self.flags.get('admin'):
             return {}
 
-        q = json.loads(request.args.get('q', '{}'))
-        # TODO-cleanup: handle sort arguments more generally in pre_dispatch
-        db_args.update(sort=[(db_args.get('sort', 'updated'), db_args.get('order', -1))])
-        db_args.setdefault('limit', 20)
-        res = self.db.Expr.search(q, **db_args)
+        args = request.args
+        special = args.get('special', '')
+        collection = collection_of(self.db,
+            args.get('col', 'Expr').capitalize())
+        db_args = dict(
+            spec=json.loads(args.get('q', '{}')),
+            sort=[( args.get('sort', 'updated'),
+                json.loads(args.get('order', '-1'))
+            )],
+            limit=json.loads(args.get('limit', '20')),
+        )
+        help = """
+            q: database query, e.g., {"owner_name": "zach"}
+            sort: default updated
+            order: default -1
+            col: database collection, default 'expr'
+            special: 'top_tags' or None
+        """
+        # TODO: document all these args somewhere
+        if special == 'top_tags':
+            if request.args.get('help', False) != False:
+                return { 'text_result': 'limit: default 1000' }
+            db_args.update(limit=json.loads(args.get('limit', '1000')))
+            common = self.db.tags_by_frequency(collection=collection, **db_args)
+            return { 'text_result':
+                "\n".join( [x[0] + ": " + str(x[1]) for x in common] ) }
+        elif special == 'emails':
+            db_args['fields'] = {k:True for k in ['name','email','fullname']}
+            db_args.update(limit=json.loads(args.get('limit', '0')))
+            res = self.db.User.search(**db_args)
+            return { 'text_result': '\n'.join( json.dumps(r['fullname']) + ', ' +
+                json.dumps(r['email']) for r in res if validate_email(r['email']) )}
+        else:
+            if request.args.get('help', False) != False:
+                return { 'text_result': help }
+            res = collection.search(**db_args)
+
         return {
             'cards': list(res),
         }

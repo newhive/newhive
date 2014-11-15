@@ -46,7 +46,8 @@ Day = pandas.datetools.Day
 import logging
 logger = logging.getLogger(__name__)
 
-connection = pymongo.Connection(host=config.database_host, port=config.database_port)
+connection = pymongo.MongoClient(host=config.database_host, port=config.database_port)
+# connection = pymongo.Connection(host=config.database_host, port=config.database_port)
 adb = connection[config.analytics_db]
 min_start_date = datetime.date(2011, 4, 16)
 

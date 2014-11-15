@@ -134,6 +134,13 @@ def new_referral(from_user_name, to_email='', reuse=1):
     return db.User.named(from_user_name).new_referral(
         {'to': to_email, 'reuse': reuse})
 
+# Switch a session's user
+# to_user: name of user to switch to
+# from_user: name of logged in user, or supply session_id    
+def switch_user(from_user, to_user, session_id=None):
+    session = ( db.Session.fetch(session_id) if session_id else
+        db.Session.last(mq(user=db.User.named(from_user).id)) )
+    session.update(user=db.User.named(to_user).id)
 
 import csv
 # expects data to be list of lists

@@ -85,11 +85,15 @@ def handle(request):
     time_start = now()
     print(request)
     environ = copy.copy(request.environ)
-    if (re.match('/robots.txt$', environ['PATH_INFO'])
-        and re.match('thenewhive.com', environ['HTTP_HOST'])
-    ):
-        return base_controller.serve_html(
-            Response(), 'User-agent: *\nDisallow: /\n')
+    # Redirect www. links to naked URL
+    if request.host.startswith('www.'):
+        return base_controller.redirect(Response(), 
+            re.sub('//www.', '//', request.url, 1), permanent=True)
+    # Redirect thenewhive.com links to newhive.com
+    if re.search('thenewhive.com', environ['HTTP_HOST']):
+        return base_controller.redirect(Response(), 
+            re.sub(r'//((.+\.)?)thenewhive\.com', r'//\1newhive.com', 
+                request.url), permanent=True)
 
     prefix, site = split_domain(environ['HTTP_HOST'])
     # Convert any ip v4 address into a specific dns

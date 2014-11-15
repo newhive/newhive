@@ -275,4 +275,4 @@
                 t && t.element && (n = N(e, t), e !== o.READY && n && C(u.REMOVE_LISTENER, e, t.element))
             }}, O(p.prototype, x(i)), O(p.prototype, x(s), !0)
     }), window.SC = window.SC || {}, window.SC.Widget = require("lib/api/api")
-})()
+})();

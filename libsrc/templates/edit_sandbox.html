@@ -145,19 +145,21 @@
 
 <div id="controls_group" class='hide'>
 <div id='controls_common' class='controls_src'>
-  {<if flags.context_help}
-    <img class='control help tip_N' 
-      src='{asset "skin/edit/help_btn.png"}' title='Help'>
-  {>}
-  <img class='control remove tip_NE' 
-    src='{asset "skin/edit/delete_app.png"}' title='Delete'>
+  <div class="control controls_ne">
+    {<if flags.context_help}
+      <img class='button help tip_N' 
+        src='{asset "skin/edit/help_btn.png"}' title='Help'>
+    {>}
+    <img class='button copy tip_N' src='{asset "skin/edit/copy.png"}'
+      title='Duplicate element'>
+    <img class='button remove tip_NE' 
+      src='{asset "skin/edit/delete_app.png"}' title='Delete'>
+  </div>
   <div class='control stack'>
     <img class='stack_up hoverable' 
       src='{asset "skin/edit/stack_up.png"}' title='Move to front'
     ><img class='stack_down hoverable' 
       src='{asset "skin/edit/stack_down.png"}' title='Move to back'></div>
-  <img class='control copy tip_N' src='{asset "skin/edit/copy.png"}'
-    title='Duplicate element'>
 </div>
 
 <div id='controls_text' class='controls_src'>
@@ -285,12 +287,7 @@
 </div>
 
 <div id='controls_misc' class='controls_src'>
-  <img class='control drag resize hoverable tip_SE' 
-    src='{asset "skin/edit/resize.png"}' title="Resize">
-  <img class='control drag resize_h hoverable tip_E' 
-    src='{asset "skin/edit/resize_h.png"}' title="Resize">
-  <img class='control drag resize_v hoverable tip_S' 
-    src='{asset "skin/edit/resize_v.png"}' title="Resize">
+  <div class='control drag resize'><div class='resize icon'></div></div>
   
   <img class='button link tip_W' src='{asset "skin/edit/link.png"}' title='Link'>
   <img class='button color' src='{asset "skin/edit/color.png"}' title="Color">
@@ -319,6 +316,8 @@
   <img class='button autohide' src='{asset "skin/edit/autohide.png"}'  title='Autohide'>
   {# lock #}
   <img class='button fixed' src='{asset "skin/edit/lock.png"}'  title='Lock'>
+  {# crop #}
+  <img class='button crop' src='{asset "skin/edit/crop.png"}'  title='Crop...'>
 
   {# polygon #}
   <img class='button blank stroke-width tip_N'

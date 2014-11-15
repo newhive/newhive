@@ -9,6 +9,9 @@ o.copy_table = false;
 
 o.scrollX = o.scrollY = 0;
 
+o.globals = {}
+o.globals_set = {}
+
 // 1 editor unit := scale client pixels
 // The editor is 1000 units wide inside a 1000*scale pixel window
 var scale = 1, zoom = 1, padding = 10
@@ -34,7 +37,7 @@ o.canvas_size_update = function(){
     o.offset[0] = 0
     if(zoom < 1)
         o.offset[0] = offset_x = (1 - zoom) * o.win_size[0] / 2
-    o.apps_e.addremoveClass('zoomed', zoom < 1)
+    o.apps_e.toggleClass('zoomed', zoom < 1)
     canvas_size[1] = Math.max( canvas_size[1], o.Apps.dims()[1] )
 
     o.apps_e.add('#bg')

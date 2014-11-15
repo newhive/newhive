@@ -70,18 +70,17 @@ class Apply(object):
             klass._col.update(_query, {'$unset': {'migrated':0}}, multi=True)
 
     @staticmethod
-    def apply_all(func, l, print_frequency=100, dryrun=False):
-        l = list(l)
-        total = len(l)
+    def apply_all(func, cursor, print_frequency=100, dryrun=False):
+        total = cursor.count()
         initial_success = len(Apply.success)
         print "Running on %s items." % total
         i = 0
-        for e in l:
+        for e in cursor:
             i = i + 1
             if not func(e, dryrun=dryrun):
-                Apply.error.append(e)
+                Apply.error.append(e.id)
             else:
-                Apply.success.append(e)
+                Apply.success.append(e.id)
                 if not dryrun:
                     e.inc('migrated')
             if (i % print_frequency == 0):
@@ -227,12 +226,15 @@ def dfilter(d, keys):
 
 
 def normalize(ws):
-    return list( OrderedSet( filter( lambda s: re.match('\w', s, flags=re.UNICODE),
-        re.split('\W', ws.lower(), flags=re.UNICODE) ) ) )
+    return list( OrderedSet( map(normalize_word, filter(
+        lambda s: re.match('\w', s, flags=re.UNICODE),
+        re.split('\W', ws, flags=re.UNICODE) ) ) ) )
+
+def normalize_word(w):
+    return w.lower()[0:40]
         
 def format_tags(s):
-    return re.sub(r'[_\W]','',s.lower(), flags = re.UNICODE)
-
+    return re.sub(r'[_\W]','', s, flags = re.UNICODE)
 
 def normalize_tags(ws):
     # 1. if 'tags' has comma:  separate out quoted strings, split on all commas and hash, replace space with nothing
@@ -246,7 +248,9 @@ def normalize_tags(ws):
         l2 = re.split(r'[#]', ws_no_quotes, flags=re.UNICODE)
     else:
         l2 = re.split(r'[\s]', ws_no_quotes, flags=re.UNICODE)
-    return list(set(filter(None,map(format_tags, l1+l2))))
+
+    return list( set( map( normalize_word, filter(
+        None, map(format_tags, l1+l2) ) ) ) )
 
 def tag_string(tags):
     return " ".join([ "#" + x for x in tags ])
@@ -513,6 +517,9 @@ def analytics_email_number_format(number):
     whole, remainder, zeros, decimal = re.match(r, str(number)).groups()
     if not decimal: return whole
     return whole + "." + zeros + decimal[:2]
+
+def validate_email(email):
+    return not not re.match(r"[-\w!#$%^&*'+/=?_`{|}~.]+@[\w-]+", email)
 
 # TODO: make this a class generator like collections.namedtuple
 class FixedAttrs(object):
