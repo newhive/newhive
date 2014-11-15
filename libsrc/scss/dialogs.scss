@@ -108,8 +108,18 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
 .btn_dialog_close:hover, #btn_dialog_close:hover {background-image: asset_url("skin/1/close-hover.png")}
 
 #dia_rename_expr {
-    width: 20em;
-    input[type=text] { text-align: center; }
+    width: 25em;
+    .title {
+        font-size: 25px;
+        margin: 0;
+        text-align: left;
+    }
+    input[type=text] { margin: 10px 0 15px 0; }
+    hr {
+        margin: 25px 0;
+        border: solid $color_grey_medium 1px;
+    }
+    p { margin-bottom: 0 }
 }
 #dia_delete_ok {
     padding: 20px;
