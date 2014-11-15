@@ -46,6 +46,7 @@ define(['browser/jquery'], function(jQuery){
             .on("error", function() { asset_loaded(this, true) })
         if (url)
             $elem.prop("src", url)
+        return $elem
     };
 }(jQuery));
 

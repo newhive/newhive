@@ -105,6 +105,14 @@ var menu = function(handle, drawer, options) {
         $.map($defers, function(el) {
             util.undefer($(el))
         })
+        var $lazies = drawer.find("img[data-lazy-src]")
+        $.map($lazies, function(el) {
+            var $img = $(el)
+                ,url = $img.data("lazy-src")
+            $img.removeAttr("data-lazy-src")
+            var $img2 = $img.clone()
+            $img2.lazy_load(url).insertAfter($img)
+        })
         if(opts.animate_open) drawer.animate(opts.animate_open, 100);
         else opts.open_menu();
     };

@@ -41,6 +41,7 @@ form { display : inline; }
     overflow: hidden;
     &.noclip { overflow: visible; padding-top: 0;}
     &._5_3 { padding-top: 60%; }
+    &._1_1 { padding-top: 100%; }
     &>* {
         position: absolute;
         top: 0;

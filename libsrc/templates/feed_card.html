@@ -22,7 +22,14 @@
     {# bugbug: style belongs elsewhere, namely icon from server should
     be correct height #}
     {<if icon_only}
-      <img src='{initiator_thumb_small}' class='thumb'>
+      {# TODO: generalize #}
+      <div class="lazy_load _1_1">
+        {<if lazy_loading}
+          <img src='' data-lazy-src='{initiator_thumb_small}' class='thumb'>
+        {>}{<else}
+          <img src='{initiator_thumb_small}' class='thumb loading' {|onload}>
+        {>}
+      </div>
     {>}{<else}
       <img src='{initiator_thumb_small}' class='thumb'>
       <div class='action_icon {lower action}'></div>
