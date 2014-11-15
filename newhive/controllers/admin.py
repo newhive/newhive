@@ -45,6 +45,17 @@ class Admin(Controller):
             'live_server': live_server}, route_args=args)
         return self.serve_loader_page('pages/main.html', tdata, request, response)
 
+    def version(self, tdata, request, response, **args):
+        """ Prints server version information
+        """
+
+        resp = {}
+
+        resp = { 'text_result': config.version }
+        tdata.context.update(page_data=resp, route_args=args)
+        return self.serve_loader_page('pages/main.html', tdata, request, response)
+        # return self.serve(response, resp)
+
     def add_featured_queue(self, tdata, request, response, **args):
         """ Adds an expression to the queue of new featured expressions
             Always called with ajax.

@@ -29,6 +29,16 @@ cloudfront_domains = {
     'asset': None
 }
 
+# version. Belongs elsewhere?
+def version():
+    import subprocess
+    ps = subprocess.Popen(["git","log","HEAD~1..HEAD"], stdout=subprocess.PIPE)
+    output=subprocess.Popen(["head","-3"], stdin=ps.stdout,stdout=subprocess.PIPE)
+    ps.wait()
+    return output.communicate()[0]
+
+version = version()
+
 ################################################################
 # constants
 ################################################################

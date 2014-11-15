@@ -511,6 +511,14 @@
         "client_method": "profile",
         "require_login": true
     },
+    "version": {
+        "page_route": "/home/admin/version",
+        "api_route": "/api/admin/version",
+        "controller": "admin",
+        "method": "version",
+        "client_method": "profile",
+        "require_login": true
+    },
 
 
     "empty": "----------------------------------------------------",
