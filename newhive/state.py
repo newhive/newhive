@@ -31,7 +31,7 @@ from s3 import S3Interface
 from newhive import config
 from newhive.config import abs_url, url_host
 from newhive.utils import (now, junkstr, dfilter, normalize, normalize_tags,
-    tag_string, cached, AbsUrl, log_error, normalize_word)
+    tag_string, cached, AbsUrl, log_error, normalize_word, lget)
 from newhive.routes import reserved_words
 from newhive import social_stats
 
@@ -547,7 +547,7 @@ def collection_client_view(db, collection, ultra=False, viewer=None,
         el = exprs
     
     search_query= "q=" + search_query
-    expr = el[0]
+    expr = lget(el, 0)
     if not expr: return None
     if not override_unlisted and viewer and not viewer.can_view(expr):
         return None
