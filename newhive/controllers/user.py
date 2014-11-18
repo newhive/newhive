@@ -29,7 +29,8 @@ class User(ModelController):
         query = ""
         if error:
             query = "#error=" + error
-        return self.redirect(response, (request.form.get('from') or abs_url()) + query)
+        return self.redirect( response, (request.form.get('from')
+            or abs_url()) + query )
 
     def logout(self, tdata, request, response, **args):
         auth.handle_logout(self.db, tdata.user, request, response)
