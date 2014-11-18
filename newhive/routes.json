@@ -255,6 +255,19 @@
         "controller": "user",
         "method": "logout"
     },
+    "content_login": {
+        "api_route": "/api/user/login",
+        "controller": "user",
+        "method": "content_login",
+        "secure": true,
+        "content_domain": true
+    },
+    "content_logout": {
+        "api_route": "/api/user/login",
+        "controller": "user",
+        "method": "content_logout",
+        "content_domain": true
+    },
     "signup": {
         "page_route": "/home/signup",
         "controller": "community",
