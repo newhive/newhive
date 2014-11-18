@@ -98,7 +98,6 @@ define([
             })
         }
         var on_ready = js.once(function() {
-            console.log("once")
             $("*[data-scaled]").map(function(i, app) {
                 var $app = $(app)
                     ,$img = $app.find("img")

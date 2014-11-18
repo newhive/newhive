@@ -29,6 +29,7 @@ cloudfront_domains = {
     'asset': None
 }
 
+
 ################################################################
 # constants
 ################################################################
@@ -107,9 +108,9 @@ site_flags = {
     },'Features/force_stumble': {
         'description':'Force the stumbleupon logo'
         , 'values':['none']
-    # },'Features/lazy_load': {
-    #     'description':'Load low-res images when initially fetching newhives'
-    #     , 'values':['admins', 'devs']
+    },'Features/lazy_loading': {
+        'description':'Lazy load various client images' #Load low-res images when initially fetching newhives'
+        , 'values':['admins', 'devs']
 
     # Admin
     },'Admin': { 
@@ -248,6 +249,7 @@ debug_unsecure  = False
 webassets_debug = False
 always_secure   = False
 threaded_dev_server = False
+snapshot_async = True
 
 interactive = False
 

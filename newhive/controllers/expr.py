@@ -203,8 +203,9 @@ class Expr(ModelController):
                 remix_owner['tagged'][remix_name].append(res.id)
                 remix_owner.update(updated=False, tagged=remix_owner['tagged'])
 
-        if not self.config.live_server and (upd.get('apps') or upd.get('background')):
-            res.threaded_snapshot(retry=120)
+        if( not self.config.snapshot_async
+            and ( upd.get('apps') or upd.get('background') )
+        ): res.threaded_snapshot(retry=120)
         # TODO-cleanup: create client_view for full expression record, instead
         # of just feed cards
         res['id'] = res.id
@@ -351,7 +352,7 @@ class Expr(ModelController):
                 url = media.get_resample(dimensions[0] * scale * scale_x)
                 if not snapshot_mode: #//!! and self.flags.get('lazy_load'):
                     data.append(("data-scaled", url))
-                    scale *= .25
+                    scale /= 8.0 #//!!self.flags.get('lazy_load_scale'):
                     url = media.get_resample(dimensions[0] * scale * scale_x)
 
             html = "<img src='%s'>" % url

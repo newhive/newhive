@@ -31,6 +31,20 @@ define([
         $el.replaceWith($new_el)
         return $new_el
     }
+    o.unlazy = function($container) {
+        var $defers = $container.find(".defer[data-content]")
+        $.map($defers, function(el) {
+            o.undefer($(el))
+        })
+        var $lazies = $container.find("img[data-lazy-src]")
+        $.map($lazies, function(el) {
+            var $img = $(el)
+                ,url = $img.data("lazy-src")
+            $img.removeAttr("data-lazy-src")
+            var $img2 = $img.clone()
+            $img2.lazy_load(url).insertAfter($img)
+        })
+    }
 
     o.all_assets = function() { return assets; }
     o.asset = function(name){

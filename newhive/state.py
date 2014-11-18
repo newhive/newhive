@@ -31,7 +31,7 @@ from s3 import S3Interface
 from newhive import config
 from newhive.config import abs_url, url_host
 from newhive.utils import (now, junkstr, dfilter, normalize, normalize_tags,
-    tag_string, cached, AbsUrl, log_error, normalize_word)
+    tag_string, cached, AbsUrl, log_error, normalize_word, lget)
 from newhive.routes import reserved_words
 from newhive import social_stats
 
@@ -385,7 +385,7 @@ class Entity(dict):
         return self['entropy']
 
     # should be avoided, because it clobbers record. Use update instead
-    def save(self, updated=True):
+    def save(self, updated=False):
         if updated: self['updated'] = now()
         return self.update_cmd(self)
 
@@ -393,8 +393,12 @@ class Entity(dict):
         dict.update(self, self.collection.fetch(self.id))
 
     def update(self, **d):
-        if not d.has_key('updated'): d['updated'] = now()
-        elif not d['updated']: del d['updated']
+        # TODO: change default of updated
+        # if d.get('updated') is True: d['updated'] = now()
+        # d.setdefault('updated', False)
+        
+        d.setdefault('updated',  now())
+        if not d['updated']: del d['updated']
         dict.update(self, d)
         return self._col.update({ '_id' : self.id }, { '$set' : d },
             safe=True)
@@ -547,7 +551,7 @@ def collection_client_view(db, collection, ultra=False, viewer=None,
         el = exprs
     
     search_query= "q=" + search_query
-    expr = el[0]
+    expr = lget(el, 0)
     if not expr: return None
     if not override_unlisted and viewer and not viewer.can_view(expr):
         return None
@@ -1375,6 +1379,7 @@ class Expr(HasSocial):
         ,'random'
         ,'file_id'
         ,'created'
+        ,'snapshot_needed'
     ]
     counters = ['owner_views', 'views', 'emails']
     _owner = None
@@ -1655,7 +1660,7 @@ class Expr(HasSocial):
             self.db.File.fetch(self.get('snapshot_id')).purge()
 
         self.update(snapshot_time=snapshot_time, entropy=self['entropy'],
-            snapshot_id=file_record.id, updated=False)
+            snapshot_id=file_record.id, snapshot_needed=False, updated=False)
         self.reset('snapshot_fails')
         self.update(updated=False, snapshot_fail_time=0)
         return True
@@ -1663,7 +1668,9 @@ class Expr(HasSocial):
     # @property
     def snapshot(self, size='big', update=True):
         # Take new snapshot if necessary and requested
-        if update and (not self.get('snapshot_time') or self.get('updated') > self.get('snapshot_time')):
+        if update and (not self.get('snapshot_time')
+            or self.get('updated') > self.get('snapshot_time')
+        ):
             self.take_snapshots()
         return self.snapshot_name(size)
 
@@ -1695,7 +1702,8 @@ class Expr(HasSocial):
         if d.get('auth') == 'public':
             d['password'] = None
         # Reset fails if this is a real update
-        if d.get('updated', False): 
+        if ( d.get('apps') or d.get('background') ) and d.get('updated', True):
+            d['snapshot_needed'] = True
             d['snapshot_fails'] = 0
         super(Expr, self).update(**d)
 
@@ -1775,6 +1783,7 @@ class Expr(HasSocial):
         self['owner_name'] = self.db.User.fetch(self['owner'])['name']
         self['random'] = random.random()
         self['views'] = 0
+        self['snapshot_needed'] = True
         self.setdefault('title', 'Untitled')
         self.setdefault('auth', 'public')
         self._collect_files(self)
