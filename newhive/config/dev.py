@@ -1,6 +1,7 @@
 from config_common import *
 
 dev_prefix      = None
+snapshot_async = False
 
 # TODO-dev-security: move credentials into non-version-controlled file
 database_host   = 'mongodb://dev:2GlebTyo@dev.newhive.com/test'

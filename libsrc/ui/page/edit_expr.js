@@ -58,7 +58,7 @@ define([
         if(ret.error == 'rename') {
             $('#expr_name').html(expr.name)
             $('#dia_rename_expr').data('dialog').open()
-            $('#dia_rename_expr .name_existing').html(ret.name_existing)
+            $('#dia_rename_expr .name_existing').val(ret.name_existing)
             $('#dia_rename_expr .rename_existing').val(ret.rename_existing)
             o.save_enabled_set(true)
         } else if(ret.autosave) {
@@ -93,6 +93,7 @@ define([
         return false
     }
     o.save_submit = function(){
+        // TODO: don't modify expr, but instead pass up options dict
         $('#expr_save .expr').val(JSON.stringify(expr))
         clearTimeout(autosave_timer)
     }
@@ -195,12 +196,20 @@ define([
             .on('before_submit', o.save_submit)
             .on('success', o.success).on('error', o.error)
 
-        dialog.create('#dia_rename_expr');
-        $('#expr_rename').off('before_submit success')
-            .on('before_submit', function(){
-                expr.rename_existing = $('#expr_rename .rename_existing').val()
-                $('#expr_rename .expr').val(JSON.stringify(expr))
-            }).on('success', o.success).on('error', o.error)
+        dialog.create('#dia_rename_expr')
+        $('#dia_rename_expr form.existing').off('submit')
+            .on('submit', function(){
+                // TODO: don't modify expr, but instead pass up options dict
+                expr.rename_existing = $('form.existing .rename_existing').val()
+                $('#expr_save').submit()
+                return false
+            })
+        $('#dia_rename_expr form.current').off('submit')
+            .on('submit', function(){
+                expr.name = $('form.current .name_existing').val()
+                $('#expr_save').submit()
+                return false
+            })
         
         o.init_save_dialog()
         o.update_form()

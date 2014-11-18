@@ -87,13 +87,12 @@ define([
     var init_overlays = function(){
         done_overlays = true;
         $('#overlays').empty().html(overlay_template(context));
-        // render_overlays();
-        // $('#login_form').submit(o.login);
-        $('#login_form [name=from]').val(window.location);
         if(!context.user.logged_in){
             o.login_dialog = dialog.create('#dia_login', {
                 open: function(){
-                    $("#login_form .username").focus(); },
+                    $("#login_form .username").focus();
+                    $('#login_form [name=from]').val(window.location);
+                },
                 handler: function(e, json) {
                     if (json.error != undefined) {
                         $('#login_form .error_msg').text(json.error).showshow().fadeIn("slow");

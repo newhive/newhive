@@ -37,16 +37,20 @@ form { display : inline; }
 
 .lazy_load {
     position: relative;
-    padding-top: 75%;
     overflow: hidden;
+    &.noclip { overflow: visible; }
     &._5_3 { padding-top: 60%; }
+    &._1_1 { padding-top: 100%; }
+    &._4_3 { padding-top: 75%; }
     &>* {
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
         opacity: 0;
-        @include transition(opacity, .5s, linear);
+        // Why does it not work with commas?
+        // @include transition(opacity, 0.5s, linear);
+        @include transition(opacity .5s linear);
         &.loaded {
             opacity: 1;
         }

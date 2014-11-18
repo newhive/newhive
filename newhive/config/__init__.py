@@ -38,6 +38,7 @@ def abs_url(path='', secure=False, domain=None, subdomain=None, relative=False):
 def client_view():
 	return dict(
         debug_mode=debug_mode,
+        # use_strict=config.use_strict,
         use_ga=live_server,
 	   	#streamified_url=streamified_url,
         #streamified_client_id=streamified_client_id,

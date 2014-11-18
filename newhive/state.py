@@ -31,7 +31,7 @@ from s3 import S3Interface
 from newhive import config
 from newhive.config import abs_url, url_host
 from newhive.utils import (now, junkstr, dfilter, normalize, normalize_tags,
-    tag_string, cached, AbsUrl, log_error, normalize_word)
+    tag_string, cached, AbsUrl, log_error, normalize_word, lget)
 from newhive.routes import reserved_words
 from newhive import social_stats
 
@@ -63,10 +63,14 @@ class Database:
             entity_types )
         for col in self.collections:
             setattr(self, col.entity.__name__, col)
+
+    def build_indexes(self):
+        for col in self.collections:
             for index in col.entity.indexes:
                 if isinstance(index, tuple) and isinstance(index[1], dict):
                     (key, opts) = index
                 else: (key, opts) = (index, {})
+                opts.setdefault('background', True)
                 key = map(lambda a: a if isinstance(a, tuple) else (a, 1),
                     [key] if not isinstance(key, list) else key)
                 col._col.ensure_index(key, **opts)
@@ -381,7 +385,7 @@ class Entity(dict):
         return self['entropy']
 
     # should be avoided, because it clobbers record. Use update instead
-    def save(self, updated=True):
+    def save(self, updated=False):
         if updated: self['updated'] = now()
         return self.update_cmd(self)
 
@@ -389,8 +393,12 @@ class Entity(dict):
         dict.update(self, self.collection.fetch(self.id))
 
     def update(self, **d):
-        if not d.has_key('updated'): d['updated'] = now()
-        elif not d['updated']: del d['updated']
+        # TODO: change default of updated
+        # if d.get('updated') is True: d['updated'] = now()
+        # d.setdefault('updated', False)
+        
+        d.setdefault('updated',  now())
+        if not d['updated']: del d['updated']
         dict.update(self, d)
         return self._col.update({ '_id' : self.id }, { '$set' : d },
             safe=True)
@@ -504,12 +512,14 @@ def add_to_category(category, collection):
 
 # client view of a collection
 def collection_client_view(db, collection, ultra=False, viewer=None,
-    thumbs=True
+    override_unlisted=False, thumbs=True
 ):
     ## we have just a single expr
     if isinstance(collection, basestring):
         expr = db.Expr.fetch(collection)
         if not expr: return None
+        if not override_unlisted and viewer and not viewer.can_view(expr):
+            return None
         expr_cv = expr.client_view(viewer=viewer)
         # individual pages can appear in categories, so this gets
         # a collection attribute that's actually its own id
@@ -522,7 +532,7 @@ def collection_client_view(db, collection, ultra=False, viewer=None,
         if ultra: expr_cv["snapshot_ultra"] = expr.snapshot_name("ultra")
         return expr_cv
 
-    ## it's a real collection   
+    ## it's a real collection
 
     username = collection.get('username')
     if not username: return None
@@ -541,8 +551,10 @@ def collection_client_view(db, collection, ultra=False, viewer=None,
         el = exprs
     
     search_query= "q=" + search_query
-    expr = el[0]
+    expr = lget(el, 0)
     if not expr: return None
+    if not override_unlisted and viewer and not viewer.can_view(expr):
+        return None
 
     expr_cv = {
         # TODO-perf: trim this to essentials
@@ -1262,9 +1274,12 @@ class User(HasSocial):
         ru = self.db.User.root_user
         home = {}
         home['cats'] = cats = ru.get('ordered_cats')
-        home['categories'] = { 
-            cat: [collection_client_view(self.db, col, thumbs=False)
-                for col in ru.get_category(cat)['collections'][:config.cat_hover_count]]
+        home['categories'] = {
+            cat: [
+                collection_client_view(self.db, col, thumbs=False, viewer=self)
+                for col in
+                ru.get_category(cat)['collections'][:config.cat_hover_count]
+            ]
             for cat in cats
         }
         return home
@@ -1364,6 +1379,7 @@ class Expr(HasSocial):
         ,'random'
         ,'file_id'
         ,'created'
+        ,'snapshot_needed'
     ]
     counters = ['owner_views', 'views', 'emails']
     _owner = None
@@ -1644,7 +1660,7 @@ class Expr(HasSocial):
             self.db.File.fetch(self.get('snapshot_id')).purge()
 
         self.update(snapshot_time=snapshot_time, entropy=self['entropy'],
-            snapshot_id=file_record.id, updated=False)
+            snapshot_id=file_record.id, snapshot_needed=False, updated=False)
         self.reset('snapshot_fails')
         self.update(updated=False, snapshot_fail_time=0)
         return True
@@ -1652,7 +1668,9 @@ class Expr(HasSocial):
     # @property
     def snapshot(self, size='big', update=True):
         # Take new snapshot if necessary and requested
-        if update and (not self.get('snapshot_time') or self.get('updated') > self.get('snapshot_time')):
+        if update and (not self.get('snapshot_time')
+            or self.get('updated') > self.get('snapshot_time')
+        ):
             self.take_snapshots()
         return self.snapshot_name(size)
 
@@ -1684,7 +1702,8 @@ class Expr(HasSocial):
         if d.get('auth') == 'public':
             d['password'] = None
         # Reset fails if this is a real update
-        if d.get('updated', False): 
+        if ( d.get('apps') or d.get('background') ) and d.get('updated', True):
+            d['snapshot_needed'] = True
             d['snapshot_fails'] = 0
         super(Expr, self).update(**d)
 
@@ -1764,6 +1783,7 @@ class Expr(HasSocial):
         self['owner_name'] = self.db.User.fetch(self['owner'])['name']
         self['random'] = random.random()
         self['views'] = 0
+        self['snapshot_needed'] = True
         self.setdefault('title', 'Untitled')
         self.setdefault('auth', 'public')
         self._collect_files(self)

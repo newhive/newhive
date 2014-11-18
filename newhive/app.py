@@ -69,6 +69,18 @@ rules = get_api_endpoints(api)
 routes = Map(rules, strict_slashes=False, host_matching=True,
     redirect_defaults=False)
 
+# version. Belongs elsewhere?
+def version():
+    import subprocess
+    import os;
+    os.chdir(config.src_home)
+    ps = subprocess.Popen(["git","log","HEAD~1..HEAD"], stdout=subprocess.PIPE)
+    # output=subprocess.Popen(["head","-3"], stdin=ps.stdout,stdout=subprocess.PIPE)
+    ps.wait()
+    return ps.communicate()[0]
+
+config.version = version()
+
 def split_domain(url):
     domain = url.replace('thenewhive','newhive')
     dev = config.dev_prefix + '.' if config.dev_prefix else ''

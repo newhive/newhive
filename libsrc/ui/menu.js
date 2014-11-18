@@ -101,6 +101,7 @@ var menu = function(handle, drawer, options) {
     }
 
     o.do_open = function() {
+        util.unlazy(drawer)
         if(opts.animate_open) drawer.animate(opts.animate_open, 100);
         else opts.open_menu();
     };

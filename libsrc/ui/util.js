@@ -23,6 +23,29 @@ define([
         return "<stack unavailable> "
     }
 
+    // undefer an element which was defered using stringjay "defer"
+    o.undefer = function(el) {
+        var $el = $(el)
+        if (! $el.length) return $()
+        var $new_el = $($el.data("content"))
+        $el.replaceWith($new_el)
+        return $new_el
+    }
+    o.unlazy = function($container) {
+        var $defers = $container.find(".defer[data-content]")
+        $.map($defers, function(el) {
+            o.undefer($(el))
+        })
+        var $lazies = $container.find("img[data-lazy-src]")
+        $.map($lazies, function(el) {
+            var $img = $(el)
+                ,url = $img.data("lazy-src")
+            $img.removeAttr("data-lazy-src")
+            var $img2 = $img.clone()
+            $img2.lazy_load(url).insertAfter($img)
+        })
+    }
+
     o.all_assets = function() { return assets; }
     o.asset = function(name){
         return _asset(name) || "Not-found:" + name;

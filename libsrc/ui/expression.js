@@ -97,6 +97,18 @@ define([
                 zoom = new_zoom
             })
         }
+        var on_ready = js.once(function() {
+            $("*[data-scaled]").map(function(i, app) {
+                var $app = $(app)
+                    ,$img = $app.find("img")
+                    ,$img2 = $img.clone()
+                $img2.lazy_load($app.data("scaled"))
+                $img = $img.addClass("loaded").add($img2)
+                $("<div class='lazy_load noclip'>").append($img).appendTo($app)
+            })
+        })
+        $(document).ready(on_ready)
+        $(window).ready(on_ready)
         $(window).on("scroll", layout.on_scroll)
             .click(function(){ o.send_top('focus'); });
         //if (0 && util.mobile()) {
@@ -337,16 +349,24 @@ define([
         }
 
         // bonus paging and scrolling features
-        var $window = $(window)
-        $(document.body).on('keydown', function(e){
-           if(e.keyCode == 32) // space
-               if($window.scrollTop() + $window.height()
+        var $window = $(window), keys_down = {}, scrolling = false
+        $(document).on('keydown', function(ev){
+            if(ev.keyCode == 32) // space
+                if($window.scrollTop() + $window.height()
                     >= document.body.scrollHeight) o.page_next()
-           if(e.keyCode == 39) // right arrow
-               if($window.scrollLeft() + $window.width()
-                    >= document.body.scrollWidth) o.page_next()
-           if(e.keyCode == 37)
-               if($window.scrollLeft() == 0) o.page_prev()
+            if(ev.keyCode == 39){ // right arrow
+                if( $window.scrollLeft() + $window.width() <
+                    document.body.scrollWidth
+                ) scrolling = true
+                else if(!scrolling) o.page_next()
+            }
+            if(ev.keyCode == 37){ // left arrow
+                if($window.scrollLeft() > 0) scrolling = true
+                else if(!scrolling) o.page_prev()
+            }
+        }).on('keyup', function(ev){
+            if(ev.keyCode == 39 || ev.keyCode == 37)
+                scrolling = false
         })
 
         $('a, form').each(function(i, e){ o.link_target(e) });

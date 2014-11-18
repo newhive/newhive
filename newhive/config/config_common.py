@@ -29,10 +29,12 @@ cloudfront_domains = {
     'asset': None
 }
 
+
 ################################################################
 # constants
 ################################################################
 cat_hover_count = 6
+# use_strict = False
 
 ################################################################
 # strings
@@ -107,18 +109,19 @@ site_flags = {
     },'Features/force_stumble': {
         'description':'Force the stumbleupon logo'
         , 'values':['none']
-    }
+    },'Features/lazy_loading': {
+        'description':'Lazy load various client images' #Load low-res images when initially fetching newhives'
+        , 'values':['admins', 'devs']
 
     # Admin
-    ,'Admin': { 
+    },'Admin': { 
         'description':'Flags for administering the website'
     },'Admin/admin': {
         'description':'Enable administrative features'
         , 'values':['admins']
-    }
     
     # UI    
-    ,'UI': {
+    },'UI': {
         'description':'Test versions of the UI'
     },'UI/top_card': {
         'description':'Test versions of top card UI'
@@ -155,13 +158,9 @@ site_flags = {
     },'UI/mobile_activity': {
         'description':'Show activity menu under logo on mobile'
         , 'values':['admins','nd4']
-    }
     
-    # Old / unused
-    #,'logged': ['logged_out']
-
     # Editor
-    ,'Editor': { 
+    },'Editor': { 
         'description':'Flags pertaining to the editor'
     },'Editor/snap_crop': {
         'description':'Allow snapping when shifting crop bounds of cropped images'
@@ -221,6 +220,10 @@ site_flags = {
         'description':'Show all resizers'
         , 'values':['admins','devs']
     }
+
+    # Old / unused
+    #,'logged': ['logged_out']
+
 }
 
 site_user = 'newhive'
@@ -247,6 +250,7 @@ debug_unsecure  = False
 webassets_debug = False
 always_secure   = False
 threaded_dev_server = False
+snapshot_async = True
 
 interactive = False
 

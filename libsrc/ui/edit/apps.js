@@ -1,3 +1,4 @@
+// "use strict";
 define([
     'browser/jquery'
     ,'browser/js'
@@ -33,11 +34,6 @@ define([
     ,evs
     // ,app_has
 ){
-
-// TODO: flip strict
-if (0 && context.flags.Admin.use_strict)
-    "use strict";
-
 var Hive = {}
     ,noop = function(){}
     ,Funcs = js.Funcs
@@ -444,6 +440,8 @@ var has_group_align = function(o, alignment) {
     o._on_child_modification = function(child) {
         // find current bounds
         var aabb = o.aabb()
+        // TODO: need to also calculate excluding child from bounds calculation
+        // var aabb = o.aabb({exclude: child})
         // adjust all children to match an edge of bounds
         $.map(o.children(), function(child) {
             var child_aabb = child.aabb()
@@ -452,7 +450,7 @@ var has_group_align = function(o, alignment) {
                 if (alignment[coord] < 0)
                     continue
                 else if (alignment[coord] == 3) {
-                    // TODO: need to exclude self from bounds calculation
+                    // TODO: need to exclude child from bounds calculation
                     child_aabb[0][coord] = aabb[0][coord]
                     child_aabb[1][coord] = aabb[1][coord]
                     continue
@@ -1068,8 +1066,8 @@ Hive.App = function(init_state, opts) {
         o.state_relative_set(o.init_state);
         if (o.init_state.full_bleed_coord != undefined)
             Hive.App.has_full_bleed(o, o.init_state.full_coord);
-        if(opts.load) opts.load(o);
         o.initialized = true;
+        if(opts.load) opts.load(o);
     });
 
     // initialize
@@ -1082,6 +1080,7 @@ Hive.App = function(init_state, opts) {
     o.has_align = o.add_to_collection = o.client_visible = true;
 
     o.type(o); // add type-specific properties
+    if (o.initialized) throw "load called too soon"
     Hive.has_sequence(o, o.typename())
 
     o.div.addClass(o.type.tname.replace(".", "_"))
@@ -1115,6 +1114,8 @@ Hive.App = function(init_state, opts) {
         .on(o.div, 'mousedown', o)
         .on(o.div, 'mouseup', o)
         // .long_hold(o.div, o);
+    if (!o.defer_load)
+        setTimeout(o.load, 1);
     return o;
 };
 Hive.registerApp(Hive.App, 'hive.app');
@@ -1192,8 +1193,6 @@ Hive.App.Html = function(o) {
     }))
     o.make_controls[o.make_controls.length - 1].single = true;
 
-    setTimeout(function(){ o.load(); }, 100);
-
     return o;
 };
 Hive.registerApp(Hive.App.Html, 'hive.html');
@@ -1232,8 +1231,6 @@ Hive.registerApp(Hive.App.Html, 'hive.html');
 //         return o;
 //     };
 //     o.make_controls.push(controls);
-
-//     setTimeout(function(){ o.load(); }, 100);
 
 //     return o;
 // };
@@ -1487,8 +1484,6 @@ Hive.App.Code = function(o){
     // TODO-cleanup: Move to CSS
     o.div.css('background-color','white').css('opacity',.2);
 
-    o.load()
-
     return o;
 }
 Hive.registerApp(Hive.App.Code, 'hive.code')
@@ -1578,8 +1573,9 @@ Hive.App.Image = function(o) {
             o.init_state.fit = undefined;
         }
         o.allow_crop(true);
-        o.load();
+        o.load()
     };
+    o.defer_load = true
 
     o.recenter = function() {
         var dims = o.dims_relative(), nat_height = dims[0] / o.aspect;
@@ -1855,7 +1851,6 @@ Hive.App.Rectangle_Parent = function(o) {
         Hive.App.has_link_picker(o);
 
     o.content_element = $("<div class='content drag'>").appendTo(o.div)
-    setTimeout(function(){ o.load() }, 1);
 
     // Hive.App.has_image_drop(o);
     return o;
@@ -2236,8 +2231,6 @@ Hive.App.Polygon = function(o){
     if (o.init_state.is_line)
         o.line_set()
 
-    o.load()
-
     return o;
 };
 Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
@@ -2537,6 +2530,8 @@ Hive.App.Sketch = function(o) {
         if(o.init_state.content) o.set_content(o.init_state.content);
         o.load();
     });
+    o.defer_load = true
+
     o.update_shield();
 
     return o;
@@ -2635,7 +2630,6 @@ Hive.App.Audio = function(o) {
     }
 
     o.update_shield();
-    setTimeout(function(){ o.load(); }, 100);
     return o;
 };
 Hive.registerApp(Hive.App.Audio, 'hive.audio');
@@ -2980,7 +2974,7 @@ var str2coords = {
 }
 
 Hive.App.has_resize = function(o) {
-    var dims_ref, pos,ref, history_point, resizing;
+    var dims_ref, pos_ref, history_point, resizing;
     // TODO: This ought to be in editor space
     // TODO: rename to reflect that it saves aabb
     o.dims_ref_set = function(){ 
@@ -3136,7 +3130,7 @@ Hive.App.has_resize = function(o) {
             delete dirs.N
             delete dirs.S
         }
-        for (dir in dirs) {
+        for (var dir in dirs) {
             var $handle = o.addControl($('#controls_misc .resize'))
                 ,coords = str2coords[dir]
                 ,angle = Math.atan2(coords[1], coords[0])
@@ -3165,7 +3159,7 @@ Hive.App.has_resize = function(o) {
                     left: Math.min(dims[0] / 2 - 13, dims[0] - 54) });
             else 
                 // o.c.resize.css({ left: dims[0] -13 + p, top: dims[1] - 13 + p });
-            for (dir in o.resizers) {
+            for (var dir in o.resizers) {
                 var coords = str2coords[dir]
                 o.resizers[dir].css(ui_util.array2css(
                     u._add([0, 0], control_pos(dims, p + 2, coords))))
@@ -3253,7 +3247,7 @@ Hive.has_scale = function(o){
     /////////////////////////////////////////////////////////////////////////
     // Saveable
     o.history_state.add(function() {
-        s = { 'scale': scale}
+        var s = { 'scale': scale}
         $.extend(o.history_state.return_val, s)
     })
     o.history_state_set.add(function(s) {
@@ -3940,5 +3934,4 @@ Hive.rect_test = function(w, h){
 };
 
 return Hive;
-
 });
