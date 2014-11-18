@@ -95,13 +95,22 @@ o.op = {
 
 /* Returns a function that calls that.callback no less than min_delay
  * milliseconds apart. Useful for wrapping mouse event handlers */
-o.throttle = function(callback, min_delay, that) {
-    var then = null;
+o.throttle = function(callback, min_delay, that, opts) {
+    opts = $.extend({ensure: false}, opts)
+    var then = null, timer, args;
+    var full_callback = function() {
+        then = new Date();
+        callback.apply(that, args);
+    }
     return function() {
+        clearTimeout(timer)
+        timer = undefined
+        args = Array.prototype.slice.apply(arguments)
         var now = new Date();
         if(now - then > min_delay) {
-            then = now;
-            callback.apply(that, arguments);
+            full_callback();
+        } else if (opts.ensure) {
+            timer = setTimeout(full_callback, min_delay)
         }
     }
 };

@@ -248,6 +248,7 @@ define([
         {
             expr = $.extend(true, {}, expr, expr.draft)
             o.update_form()
+            clearTimeout(autosave_timer)
         }
         o.sandbox_send({ init: true, expr: expr, context: edit_context, revert: revert})
     }
