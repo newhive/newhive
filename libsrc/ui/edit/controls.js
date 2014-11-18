@@ -1,3 +1,4 @@
+"use strict";
 define([
     'browser/jquery'
     ,'browser/js'
@@ -158,7 +159,7 @@ o.Controls = function(app, multiselect, delegate) {
     o.addControls = function(ctrls) { 
         return $($.map(ctrls.clone(false).children(), o.appendControl)); };
     o.addButtons = function(ctrls) {
-        $ctrls = ctrls.find(".control.buttons");
+        var $ctrls = ctrls.find(".control.buttons");
         if ($ctrls.length == 0)
             $ctrls = ctrls;
         return $($.map($ctrls.clone(false).children(), function (x) {
@@ -312,10 +313,12 @@ o.Controls = function(app, multiselect, delegate) {
         });
         if (env.copy_table) {
             var ref_copy;
-            const copy_grid = 30;
+            var copy_grid = 30; //! constant
             var grid_size = function(offset) {
                 var round = function(x) {
-                    return Math.max(1, Math.ceil(x));
+                    x = Math.ceil(x)
+                    return (x > 0) ? x : x - 1
+                    // return Math.max(1, Math.ceil(x));
                 }
                 offset = u._sub(offset)(ref_copy);
                 offset = u._div(offset)([copy_grid, -copy_grid]);
@@ -326,28 +329,38 @@ o.Controls = function(app, multiselect, delegate) {
                 ref_copy = [ev.clientX, ev.clientY];
             })
             .on('drag', function(ev) {
-                var grid = grid_size([ev.clientX, ev.clientY]);
-                d.find($(".copy_copy")).remove();
-                var copy = d.find(".copy");
-                var left = parseFloat(copy.css("left"));
-                var top = parseFloat(copy.css("top"));
+                var grid_sizes = grid_size([ev.clientX, ev.clientY]);
+                var grid = grid_sizes.map(Math.abs)
+                var grid_dir = grid_sizes.map(u._sign)
+                console.log(grid)
+                var $copy = o.c.copy
+                var $parent = $copy.parent()
+                $parent.find($(".copy_copy")).remove();
+                var bounds = $copy[0].getBoundingClientRect()
+
                 for (var x = 0; x < grid[0]; ++x) {
                     for (var y = 0; y < grid[1]; ++y) {
                         if (x == 0 && y == 0)
                             continue;
-                        var $el = copy.clone();
-                        $el.addClass("copy_copy")
-                            .css("left", left + x*copy_grid)
-                            .css("top", top - y*copy_grid)
-                            .appendTo(d);
+                        var $el = $copy.clone();
+                        $el.addClass("copy_copy").css({
+                            "left": bounds.left + x*copy_grid*grid_dir[0]
+                            ,"top": bounds.top - y*copy_grid*grid_dir[1]
+                            ,"position": "fixed"
+                        })
+                        .appendTo($parent);
                     }
                 }
             })
             .on('dragend', function(ev) {
-                var grid = grid_size([ev.clientX, ev.clientY]);
+                var grid_sizes = grid_size([ev.clientX, ev.clientY]);
+                var grid = grid_sizes.map(Math.abs)
+                var grid_dir = grid_sizes.map(u._sign)
                 d.find($(".copy_copy")).remove();
                 var count = grid[0] * grid[1] - 1;
-                copy_list = [o.app];
+                if (count == 0)
+                    return
+                var copy_list = [o.app];
                 if (o.app.elements)
                     copy_list = o.app.elements();
                 var padding = [env.padding(), env.padding()];
@@ -358,7 +371,7 @@ o.Controls = function(app, multiselect, delegate) {
                         if (x == 0 && y == 0)
                             continue;
                         var copy = o.app.copy({
-                            offset: u._mul([x, y])(grid_dims),
+                            offset: u._mul([x, -y], grid_dir, grid_dims),
                             load: function(){
                                 if (! --count)
                                     env.Selection.select(copy_list);

@@ -1,3 +1,4 @@
+// "use strict";
 define([
     'browser/jquery'
     ,'browser/js'
@@ -33,11 +34,6 @@ define([
     ,evs
     // ,app_has
 ){
-
-// TODO: flip strict
-if (0 && context.flags.Admin.use_strict)
-    "use strict";
-
 var Hive = {}
     ,noop = function(){}
     ,Funcs = js.Funcs
@@ -2978,7 +2974,7 @@ var str2coords = {
 }
 
 Hive.App.has_resize = function(o) {
-    var dims_ref, pos,ref, history_point, resizing;
+    var dims_ref, pos_ref, history_point, resizing;
     // TODO: This ought to be in editor space
     // TODO: rename to reflect that it saves aabb
     o.dims_ref_set = function(){ 
@@ -3134,7 +3130,7 @@ Hive.App.has_resize = function(o) {
             delete dirs.N
             delete dirs.S
         }
-        for (dir in dirs) {
+        for (var dir in dirs) {
             var $handle = o.addControl($('#controls_misc .resize'))
                 ,coords = str2coords[dir]
                 ,angle = Math.atan2(coords[1], coords[0])
@@ -3163,7 +3159,7 @@ Hive.App.has_resize = function(o) {
                     left: Math.min(dims[0] / 2 - 13, dims[0] - 54) });
             else 
                 // o.c.resize.css({ left: dims[0] -13 + p, top: dims[1] - 13 + p });
-            for (dir in o.resizers) {
+            for (var dir in o.resizers) {
                 var coords = str2coords[dir]
                 o.resizers[dir].css(ui_util.array2css(
                     u._add([0, 0], control_pos(dims, p + 2, coords))))
@@ -3251,7 +3247,7 @@ Hive.has_scale = function(o){
     /////////////////////////////////////////////////////////////////////////
     // Saveable
     o.history_state.add(function() {
-        s = { 'scale': scale}
+        var s = { 'scale': scale}
         $.extend(o.history_state.return_val, s)
     })
     o.history_state_set.add(function(s) {
@@ -3938,5 +3934,4 @@ Hive.rect_test = function(w, h){
 };
 
 return Hive;
-
 });

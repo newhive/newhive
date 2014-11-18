@@ -502,16 +502,23 @@ Hive.init = function(exp, site_context, _revert){
 
     Hive.init_dialogs();
     Hive.init_menus();
-    var last_autosave, last_autosave_time = 0
+    var last_autosave
     Hive.autosave_time = 0
+    var saver = js.throttle(function(save) {
+        $("#btn_save span").text("Saving ")
+        Hive.send(save)
+        env.exit_safe_set(false)
+    }, 10000, null, {ensure: true})
     setInterval(function() {
         // Only autosave if something has changed
         var expr = Hive.state()
         if (Hive.save_safe && !u.deep_equals(last_autosave, expr)) {
-            $("#btn_save span").text("Saving ")
             last_autosave = $.extend(true, {}, expr)
-            Hive.send({save: expr, autosave:1})
-            env.exit_safe_set(false)
+            if (Hive.autosave_time == 0) {
+                Hive.autosave_time = 1
+                return
+            }
+            saver({save: expr, autosave:1})
         }
     } , 1000)
 
