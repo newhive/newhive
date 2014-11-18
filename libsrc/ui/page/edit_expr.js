@@ -93,6 +93,7 @@ define([
         return false
     }
     o.save_submit = function(){
+        // TODO: don't modify expr, but instead pass up options dict
         $('#expr_save .expr').val(JSON.stringify(expr))
         clearTimeout(autosave_timer)
     }
@@ -198,6 +199,7 @@ define([
         dialog.create('#dia_rename_expr')
         $('#dia_rename_expr form.existing').off('submit')
             .on('submit', function(){
+                // TODO: don't modify expr, but instead pass up options dict
                 expr.rename_existing = $('form.existing .rename_existing').val()
                 $('#expr_save').submit()
                 return false

@@ -385,7 +385,7 @@ class Entity(dict):
         return self['entropy']
 
     # should be avoided, because it clobbers record. Use update instead
-    def save(self, updated=True):
+    def save(self, updated=False):
         if updated: self['updated'] = now()
         return self.update_cmd(self)
 
@@ -393,8 +393,12 @@ class Entity(dict):
         dict.update(self, self.collection.fetch(self.id))
 
     def update(self, **d):
-        if not d.has_key('updated'): d['updated'] = now()
-        elif not d['updated']: del d['updated']
+        # TODO: change default of updated
+        # if d.get('updated') is True: d['updated'] = now()
+        # d.setdefault('updated', False)
+        
+        d.setdefault('updated',  now())
+        if not d['updated']: del d['updated']
         dict.update(self, d)
         return self._col.update({ '_id' : self.id }, { '$set' : d },
             safe=True)

@@ -444,6 +444,8 @@ var has_group_align = function(o, alignment) {
     o._on_child_modification = function(child) {
         // find current bounds
         var aabb = o.aabb()
+        // TODO: need to also calculate excluding child from bounds calculation
+        // var aabb = o.aabb({exclude: child})
         // adjust all children to match an edge of bounds
         $.map(o.children(), function(child) {
             var child_aabb = child.aabb()
@@ -452,7 +454,7 @@ var has_group_align = function(o, alignment) {
                 if (alignment[coord] < 0)
                     continue
                 else if (alignment[coord] == 3) {
-                    // TODO: need to exclude self from bounds calculation
+                    // TODO: need to exclude child from bounds calculation
                     child_aabb[0][coord] = aabb[0][coord]
                     child_aabb[1][coord] = aabb[1][coord]
                     continue

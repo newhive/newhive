@@ -352,7 +352,7 @@ class Expr(ModelController):
                 url = media.get_resample(dimensions[0] * scale * scale_x)
                 if not snapshot_mode: #//!! and self.flags.get('lazy_load'):
                     data.append(("data-scaled", url))
-                    scale *= .25
+                    scale /= 8.0 #//!!self.flags.get('lazy_load_scale'):
                     url = media.get_resample(dimensions[0] * scale * scale_x)
 
             html = "<img src='%s'>" % url

@@ -72,10 +72,12 @@ routes = Map(rules, strict_slashes=False, host_matching=True,
 # version. Belongs elsewhere?
 def version():
     import subprocess
+    import os;
+    os.chdir(config.src_home)
     ps = subprocess.Popen(["git","log","HEAD~1..HEAD"], stdout=subprocess.PIPE)
-    output=subprocess.Popen(["head","-3"], stdin=ps.stdout,stdout=subprocess.PIPE)
+    # output=subprocess.Popen(["head","-3"], stdin=ps.stdout,stdout=subprocess.PIPE)
     ps.wait()
-    return output.communicate()[0]
+    return ps.communicate()[0]
 
 config.version = version()
 
