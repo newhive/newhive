@@ -16,7 +16,8 @@
   <script>
 curl(['context', 'browser/js'], function(context, util){
     util.copy({
-        user: {{ user.client_view(activity=20, special={"tagged":1})|json }},
+        user: {{ user.client_view( activity=20,
+          special={"tagged":1, "session":1} )|json }},
         home: {{ user.get_home()|json }},
         error: {{ error|json }},
         is_secure: {{ is_secure|json }},

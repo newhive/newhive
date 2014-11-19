@@ -32,8 +32,14 @@ define([
         if(route.api_route){
             state.api = o.substitute_variables(
                 route.api_route, route_args, true) + query;
-            if(route.secure || route_args.secure)
-                state.api = config.secure_server + state.api.slice(1);
+
+            // api routes are http://content_domain/foo,
+            // https://content_domain/foo, https://server_domain/foo, or /foo
+            prefix = ''
+            if(route.content_domain) prefix = (route.secure ?
+                config.secure_content_url : config.content_url).slice(0,-1)
+            else if(route.secure) prefix = config.secure_server.slice(0,-1)
+            state.api = prefix + state.api
         }
         return state;
     };

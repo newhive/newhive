@@ -1,12 +1,14 @@
 import json
 from collections import Counter
 from werkzeug import Response
+import re
 
 from newhive import mail
 from newhive.ui_strings import en as ui_str
 from newhive.utils import dfilter, now, abs_url, AbsUrl, validate_email
 from newhive.controllers.controller import Controller
 from newhive.state import Entity, collection_client_view, collection_of
+from newhive.mongo_helpers import mq
 
 class Community(Controller):
     def featured(self, tdata, request, db_args={}, **args):
@@ -484,6 +486,16 @@ class Community(Controller):
             res = self.db.User.search(**db_args)
             return { 'text_result': '\n'.join( json.dumps(r['fullname']) + ', ' +
                 json.dumps(r['email']) for r in res if validate_email(r['email']) )}
+        if special == 'top_lovers':
+            if request.args.get('help', False) != False:
+                return { 'text_result': 'last_days: default 30' }
+            last_days = json.loads(args.get('last_days', '30'))
+            loves_by_users = Counter()
+            for r in self.db.Feed.search( mq(class_name='Star',
+                entity_class='Expr').gt('created', now()-86400*last_days)
+            ): loves_by_users[r['initiator_name']] += 1
+            resp = json.dumps(loves_by_users.most_common())
+            return { 'text_result': re.sub(r'\],', '],\n', resp) }
         else:
             if request.args.get('help', False) != False:
                 return { 'text_result': help }

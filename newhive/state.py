@@ -1263,6 +1263,8 @@ class User(HasSocial):
             exprs = self.get_top_expressions(g_flags['mini_expressions'])
             dict.update(user, dict(
                 mini_expressions = map(lambda e:e.mini_view(), exprs)))
+        if special.has_key('session'):
+            user['session'] = { 'id': self.get('session') }
         if viewer: dict.update(user, listening = self.id in viewer.starred_user_ids )
         if activity > 0:
             dict.update( user, activity=
@@ -1360,6 +1362,9 @@ class Session(Entity):
     cname = 'session'
     class Collection(Collection):
         trashable = False
+
+    def client_view(self):
+        return dict(id=self.id)
 
 
 def media_path(user, name=None):
