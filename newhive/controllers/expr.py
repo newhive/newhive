@@ -1,9 +1,8 @@
-from bs4 import BeautifulSoup
 import os, json, cgi, base64, re, time
 from pymongo.errors import DuplicateKeyError
 from functools import partial
 
-from newhive.utils import dfilter, now, get_embedly_oembed, tag_string
+from newhive.utils import dfilter, now, tag_string
 from newhive.utils import is_number_list
 from newhive.controllers.controller import ModelController
 
@@ -353,7 +352,8 @@ class Expr(ModelController):
                 if not snapshot_mode: #//!! and self.flags.get('lazy_load'):
                     data.append(("data-scaled", url))
                     scale /= 8.0 #//!!self.flags.get('lazy_load_scale'):
-                    url = media.get_resample(dimensions[0] * scale * scale_x)
+                    url = (media.get_static_url() or 
+                        media.get_resample(dimensions[0] * scale * scale_x))
 
             html = "<img src='%s'>" % url
             if scale_x:
@@ -377,35 +377,8 @@ class Expr(ModelController):
             html = "<div style='%s' class='content'></div>" % css
         elif type == 'hive.html':
             html_original = '%s' % (app.get('content',''))
-            if False: #//!!snapshot_mode:
-                def get_embed_img_html(url):
-                    ret_html = ''
-                    oembed = get_embedly_oembed(url) if url else ''
-                    if oembed and oembed.get('thumbnail_url'):
-                        ret_html += '<img src="%s"/>' % oembed['thumbnail_url']
-                    return ret_html
-                html = ''
-                error = False
-                # Turn embeds in hive.html blocks to static images
-                hivehtml = BeautifulSoup(app.get('content',''))
-                # Youtube embeds are <object>, and not <iframe>. We handle this
-                # special case here.
-                for object_tags in hivehtml.find_all('object'):
-                    param_tags = object_tags.find_all('param')
-                    for param in param_tags:
-                        if param.get('name') == 'movie':
-                            html += get_embed_img_html(param.get('value'))
-                            more_css += ";overflow:hidden"
-                if not html:
-                    for iframe in hivehtml.find_all('iframe'):
-                        html = get_embed_img_html(iframe.get('src'))
-                        if not html:
-                            error = True
-                    if error:
-                        html = html_original
-            else:
-                encoded_content = cgi.escape(app.get('content',''), quote=True)
-                html = '%s' % (app.get('content',''))
+            encoded_content = cgi.escape(app.get('content',''), quote=True)
+            html = '%s' % (app.get('content',''))
         elif type == 'hive.polygon':
             link_text = ('','')
             if link or link_name: 
@@ -455,6 +428,7 @@ class Expr(ModelController):
                 html = "<a %s>%s</a>" % (anchor_tag(link, link_name), html)
 
         data = [prop + "=" + str(val) for (prop, val) in data]
+        more_css += ";opacity:0"
         html = "<div class='happ %s %s' id='%s' style='%s'%s>%s</div>" % (
             klass, app.get('css_class', ''), app_id,
             css_for_app(app) + more_css, " ".join(data), html
