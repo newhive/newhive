@@ -102,9 +102,12 @@ define([
                 var $app = $(app)
                     ,$img = $app.find("img")
                     ,$img2 = $img.clone()
-                $img2.lazy_load($app.data("scaled"))
                 $img = $img.addClass("loaded").add($img2)
                 $("<div class='lazy_load noclip'>").append($img).appendTo($app)
+                $img2.lazy_load($app.data("scaled"))
+                .on("lazy_load", function(ev, el) {
+                    $(el).siblings().css({opacity: 0})
+                })
             })
         })
         $(document).ready(on_ready)

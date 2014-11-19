@@ -2113,8 +2113,23 @@ class File(Entity):
         call (['identify', resample_filename], stdout=ident)
         ident.seek(0)
         ident_frames = ident.read().strip().split("\n")
-        # IIRC, this prevents animated gifs with any offsets from being resampled
-        if len([x for x in ident_frames if not re.search(r'\+0\+0',x)]) > 0:
+        full_frames = [x for x in ident_frames if re.search(r'\+0\+0',x)]
+        # get a sample of the first full frame
+        if len(ident_frames) > 1 and len(full_frames) > 0:
+            frame = full_frames[0].split(" ",1)[0]
+            # TODO: determine if we need alpha, otherwise use .jpg
+            tmp_fd, tmp_filename = mkstemp(suffix=".png")
+            mime = "image/png"
+            
+            cmd = ['convert', frame, tmp_filename]
+            call(cmd)
+            self.update(static=True)
+            self.db.s3.upload_file(tmp_filename, 'media',
+                self.get_static_name(), self.get_static_name(), mime)
+            os.remove(tmp_filename)
+
+        # Prevent animated gifs with any offsets from being resampled
+        if len(ident_frames) != len(full_frames):
             self.update(resamples=[])
             return False
 
@@ -2133,6 +2148,19 @@ class File(Entity):
         os.remove(resample_filename)
         resamples.reverse()
         self.update(resamples=resamples)
+        print "Resampling finished" #//!!
+
+    def get_static_name(self):
+        """ get the URL for a static representation of a video
+            TODO: accept w, h to get a resample of such
+        """
+        static = self.get('static')
+        if not static: return None
+        return self.id + '__s'
+
+    def get_static_url(self):
+        if not self.get_static_name(): return None
+        return self.url_base + self.get_static_name()
 
     def get_resample(self, w=None, h=None):
         resamples = self.get('resamples', []) or []
@@ -2203,6 +2231,11 @@ class File(Entity):
     @property
     def url(self):
         return self.db.s3.url('media', self.id,
+            bucket_name=self.get('s3_bucket'))
+
+    @property
+    def url_base(self):
+        return self.db.s3.url('media', '',
             bucket_name=self.get('s3_bucket'))
 
     def create_existing(self):

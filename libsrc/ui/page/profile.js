@@ -447,6 +447,7 @@ define([
                     $attachment.bind_once_anon("mouseenter mouseleave", function(ev) {
                         var entering = (ev.type == "mouseenter")
                         $attachment.css({opacity: entering ? 1 : 0})
+                        $attachment.siblings().css({opacity: entering ? 0 : 1})
                     })
                 }
             if (card_data && card_data.curated && !card_data.user_list) {
