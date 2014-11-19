@@ -3,8 +3,7 @@ from pymongo.errors import DuplicateKeyError
 from functools import partial
 import urllib
 
-from newhive.utils import ( dfilter, now, get_embedly_oembed, tag_string,
-    is_number_list, URL, lget )
+from newhive.utils import dfilter, now, tag_string, is_number_list, URL, lget
 from newhive.controllers.controller import ModelController
 
 def anchor_tag(link, name, xlink=False):
