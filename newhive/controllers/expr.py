@@ -2,9 +2,10 @@ from bs4 import BeautifulSoup
 import os, json, cgi, base64, re, time
 from pymongo.errors import DuplicateKeyError
 from functools import partial
+import urllib
 
-from newhive.utils import dfilter, now, get_embedly_oembed, tag_string
-from newhive.utils import is_number_list
+from newhive.utils import ( dfilter, now, get_embedly_oembed, tag_string,
+    is_number_list, URL, lget )
 from newhive.controllers.controller import ModelController
 
 def anchor_tag(link, name, xlink=False):
@@ -256,6 +257,13 @@ class Expr(ModelController):
             expr_obj = self.db.Expr.named(owner_name, expr_name)
         return self.serve_naked(tdata, request, response, expr_obj)
 
+    def expr_custom_domain(self, tdata, request, response, path='', **args):
+        url = request.host + ('/' if path else '') + path
+        expr = self.db.Expr.find({'url': url})
+        tdata.context['domain'] = request.host
+        return self.serve_naked(
+            tdata, request, self.response, expr)
+
     def serve_naked(self, tdata, request, response, expr_obj):
         if not expr_obj:
             return self.serve_404(tdata, request, response)
@@ -297,12 +305,6 @@ class Expr(ModelController):
         if body_style:
             tdata.context['css'] = 'body {' + body_style + '}'
 
-        # TODO: figure out 
-        # if hasattr(expr_obj,'client_view') :
-        #     tdata.context.update(expr=expr_obj.client_view(mode='page'))
-        # else:
-        #     tdata.context.update(expr_obj)
-        
         tdata.context.update(expr=expr_obj, expr_client=expr_client)
         return self.serve_page(tdata, response, 'pages/expr.html')
         
@@ -461,6 +463,64 @@ class Expr(ModelController):
         )
 
         return html
+
+    def oembed(self, tdata, request, response, **args):
+        format = request.args.get('format', 'json')
+        if format != 'json':
+            return self.serve_500(request, response, status=501)
+
+        url = URL(request.args.get('url'))
+        params = url.query
+        user_and_page = url.path[1:].split('/', 1)
+        user = lget(user_and_page, 0)
+        page = lget(user_and_page, 1, '')
+        r = self.db.Expr.named(user, page)
+        if not r:
+            return self.serve_404(tdata, request, response)
+        if r['auth'] == 'password':
+            return self.serve_forbidden(tdata, request, response, status=401)
+            type (required)
+
+        resp = dict(
+            title=r.get('title', r.get('name', '')),
+            author_name=r['owner_name'],
+            author_url=r.owner.url
+        )
+
+        # ultra snapshot doesn't exist on any old page
+        max_w = min(715, int(request.args.get('maxwidth', 715)))
+        max_h = min(430, int(request.args.get('maxheight', 430)))
+        size = r.snapshot_max_size(max_w, max_h)
+        dims = r.snapshot_dims(size)
+        if size:
+            snapshot = r.snapshot_name_http(size=size)
+            resp.update(
+                type='rich', version='1.0',
+                thumbnail_url=snapshot,
+                thumbnail_width=dims[0],
+                thumbnail_height=dims[1],
+                width=dims[0],
+                height=dims[1]
+            )
+            if request.args.get('template', 'iframe') == 'iframe':
+                # default click to play view
+                params['viewport'] = '{0}x{1}'.format(*dims)
+                resp.update( html=("<iframe src='{0}?{1}' " +
+                    "width='{2}' height='{3}'></iframe>"
+                ).format(r.url, urllib.urlencode(params), *dims) )
+            else:
+                # linked snapshot img
+                target = request.args.get('link_target', '_new')
+                resp.update( html=("<a href='{0}?{1}' target='{2}'><img " +
+                    "src='{3}' width='{4}' height='{5}'></a>"
+                    ).format(r.url, urllib.urlencode(params), target, snapshot,
+                        *dims)
+                )
+        else:
+            # uh-oh, missing snapshot, give a simple link
+            resp.update(type='link')
+
+        return self.serve_json(response, resp)
 
 # TODO-bug fix resizing after loading by sending pre-scaled expr
 # Requires client layout_apps() to use scaled expr dimensions

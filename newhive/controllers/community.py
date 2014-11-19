@@ -350,16 +350,6 @@ class Community(Controller):
             return None
         return self.serve_expr(tdata, request, expr)
 
-    def expr_custom_domain(self, tdata, request, path='', **args):
-        url = request.host + ('/' if path else '') + path
-        expr = self.db.Expr.find({'url': url})
-        tdata.context['domain'] = request.host
-        return self.controllers['expr'].serve_naked(
-            tdata, request, self.response, expr)
-        # page_data = self.serve_expr(tdata, request, expr)
-        # page_data['domain'] = request.host
-        # return page_data
-
     def serve_expr(self, tdata, request, expr):
         meta = {}
         resp = {
