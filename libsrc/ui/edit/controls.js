@@ -332,7 +332,6 @@ o.Controls = function(app, multiselect, delegate) {
                 var grid_sizes = grid_size([ev.clientX, ev.clientY]);
                 var grid = grid_sizes.map(Math.abs)
                 var grid_dir = grid_sizes.map(u._sign)
-                console.log(grid)
                 var $copy = o.c.copy
                 var $parent = $copy.parent()
                 $parent.find($(".copy_copy")).remove();
@@ -386,8 +385,8 @@ o.Controls = function(app, multiselect, delegate) {
                 env.History.group('copy grid');
             });
         }
-        d.find('.stack_up').click(o.app.stack_top);
-        d.find('.stack_down').click(o.app.stack_bottom);
+        d.find('.stack_up').click(o.app.stack_top_click);
+        d.find('.stack_down').click(o.app.stack_bottom_click);
 
         $.map(o.app.make_controls, function(f){ f(o) });
 

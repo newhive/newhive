@@ -289,8 +289,10 @@ var groups = function(state) {
     //////////////////////////////////////////////////////////////
     // TODO: break all location functions into child class
     // TODO: cache and clear dirty bit
-    o.aabb = function() {
+    o.aabb = function(opts) {
+        opts = $.extend({exclude: {}}, opts)
         var children_aabb = $.map(o.children(), function(child) {
+            if (opts.exclude[child.id]) return []
             return [child.aabb()]
         })
         var nw = u._min.apply(0, u.nth(children_aabb, 0))
@@ -299,7 +301,18 @@ var groups = function(state) {
     }
     o.aabb.dirty = true
     o.aabb_set = function(_aabb) {
-        // TODO: implement and integrate with selection
+        // TODO: integrate with selection
+        var aabb = o.aabb()
+        var scale = u._div(u._sub(_aabb[1], _aabb[0]), u._sub(aabb[1], aabb[0]))
+        var rescale = function(pt) {
+            return pt.map(function(p, coord) {
+                return (p - aabb[0][coord]) * scale[coord] + _aabb[0][coord]
+            })
+        }
+        $.map(o.children(), function(child) {
+            var child_aabb = child.aabb()
+            child.aabb_set(child_aabb.map(rescale))
+        })
     }
     //////////////////////////////////////////////////////////////
 
@@ -373,7 +386,7 @@ groups.state = function() {
 }
 groups.init = function(states) {
     states.map(function(state) {
-        groups().state_update(state)
+        groups(state).state_update(state)
     })
     // Now fix up the parent pointers
     $.each(g_groups, function(id, g) {
@@ -405,7 +418,7 @@ var has_group_layout = function(o) {
     o.on_child_modification = function(child) {
         if (o.on_child_modification.semaphore)
             return
-        if (!o.is_ancestor_of(child)) {
+        if (child && !o.is_ancestor_of(child)) {
             console.log("Error: on_child_modification called for no reason")
             return
         }
@@ -436,12 +449,16 @@ var has_group_align = function(o, alignment) {
 
     o.alignment_set = function(_alignment) {
         alignment = _alignment
+        // force re-layout
+        o.on_child_modification()
     }
     o._on_child_modification = function(child) {
         // find current bounds
-        var aabb = o.aabb()
-        // TODO: need to also calculate excluding child from bounds calculation
-        // var aabb = o.aabb({exclude: child})
+        var exclude = {}
+        exclude[child.id] = 1
+        var aabb = o.aabb({exclude: exclude})
+        // calculate again, excluding child from bounds calculation
+        // var aabb_others = o.aabb({exclude: child.id})
         // adjust all children to match an edge of bounds
         $.map(o.children(), function(child) {
             var child_aabb = child.aabb()
