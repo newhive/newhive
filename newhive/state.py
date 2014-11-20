@@ -1393,7 +1393,8 @@ class Expr(HasSocial):
         ignore_not_meta = { 'apps': 0, 'background': 0, 'text_index': 0,
             'title_index': 0, 'file_id': 0, 'images': 0  }
 
-        def named(self, username, name): return self.find({'owner_name': username, 'name': name})
+        def named(self, username, name, **opts):
+            return self.find({'owner_name': username, 'name': name}, **opts)
 
         def fetch(self, key, keyname='_id', meta=False):
             fields = { 'text_index': 0, 'title_index': 0 }
@@ -1561,15 +1562,21 @@ class Expr(HasSocial):
             res = "http:" + res
         return res
 
-    # size is 'big', 'small', or 'tiny'.
-    def snapshot_name(self, size="big"):
+    _snapshot_dims = [('ultra', (1600, 960)), ('big', (715, 430)),
+        ('small', (390, 235)), ('tiny', (70, 42))]
+    def snapshot_max_size(self, w=715, h=430):
+        return lget([r[0] for r in self._snapshot_dims
+            if r[1][0] <= w and r[1][1] <= h], 0)
+    def snapshot_dims(self, size='big'):
+        return dict(self._snapshot_dims).get(size, False)
+
+    # size is one of self._snapshots_dims[r][0]
+    def snapshot_name(self, size='big', max_dims=None):
         if not self.get('snapshot_id'):
             return False
 
-        dimensions = {"big": (715, 430), "small": (390, 235), 
-            'tiny': (70, 42), 'ultra': (1600, 960)}
         snapshot = self.db.File.fetch(self.get('snapshot') or self['snapshot_id'])
-        dimension = dimensions.get(size, False)
+        dimension = self.snapshot_dims(size)
         if not snapshot or not dimension:
             return False
         
