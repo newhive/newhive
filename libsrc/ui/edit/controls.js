@@ -307,9 +307,7 @@ o.Controls = function(app, multiselect, delegate) {
         })
         o.c.copy    = d.find('.copy'   );
         o.c.copy.click(function(){
-            var copy = o.app.copy({ load: function(a){
-                env.Selection.select(a);
-            } });
+            var copy = o.app.copy({ select_copy: 1 });
         });
         if (env.copy_table) {
             var ref_copy;

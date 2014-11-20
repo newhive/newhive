@@ -839,21 +839,20 @@ o.Selection = function(o) {
         opts = $.extend({ 
             offset: [ 0, o.dims_relative()[1] + 20 ],
             no_select: 1,
+            select_copy: 0,
             // 'z_offset': elements.length 
             },
             opts)
         opts.load = function(){
             load_count--;
             if( ! load_count ) {
-                o.select( copies );
                 if (_load)
                     _load();
-                // else
-                //     o.select( copies );
+                if (opts.select_copy) o.select( copies );
             }
         };
         env.History.begin();
-        var copies = hive_app.Apps.copy(elements, opts)
+        copies = hive_app.Apps.copy_groups(groups, opts)
         env.History.group('copy group');
         // load_count is one more than elements to guarantee copies existence
         // when loaded.

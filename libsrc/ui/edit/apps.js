@@ -169,19 +169,41 @@ Hive.has_id = function(o) {
     })
 }
 
+// map [ name ==> obj id ]
+var name_map = {}
+// find next unused name with same base name
+var unused_name = function(name) {
+    var base = name, count = 0
+        ,match = name.match(/_[0-9]+$/)
+    if (match) {
+        base = name.slice(0, -match[0].length)
+        count = parseInt(match[0].slice(1))
+    }
+    while (name_map[name]) {
+        ++count
+        name = base + "_" + count
+    }
+    return name
+}
 // Give objects a numeric sequence name
 Hive.has_sequence = function(o, typename) {
     var seq_type = typename || "object"
-    var count = Hive.has_sequence[seq_type] || 0
+        ,name
+        ,count = Hive.has_sequence[seq_type] || 0
     Hive.has_sequence[seq_type] = count + 1
-    var name = seq_type + "_" + count
 
     o.name = function() {
         return name
     }
     o.name_set = function(v) {
-        name = v
+        if (name == v)
+            return
+        if (name)
+            delete name_map[name]
+        name = unused_name(v)
+        name_map[name] = o.id
     }
+
     //////////////////////////////////////////////////////////////////
     // Saveable
     if (!o.is_saveable) throw "has_sequence requires Saveable"
@@ -194,6 +216,9 @@ Hive.has_sequence = function(o, typename) {
         if (state.name)
             o.name_set(state.name)
     })
+
+    // initial state
+    o.name_set((o.init_state && o.init_state.name) || seq_type + "_" + count)
 }
 // Have the sequence number saved/loaded globally for this expression
 env.globals.has_sequence = function() {
@@ -219,7 +244,7 @@ Hive.has_group = function(o) {
         return parents
     }
     o.parent_set = function(g) {
-        // if (id && !groups.fetch(id)) throw "parent group missing"
+        // if (id && !Hive.Groups.fetch(id)) throw "parent group missing"
         parent = g
     }
     // return list of children
@@ -243,7 +268,7 @@ Hive.has_group = function(o) {
 
 var g_groups = {}
 
-var groups = function(state) {
+Hive.Groups = function(state) {
     var o = Hive.Saveable(state)
     o.is_group = true
 
@@ -258,6 +283,7 @@ var groups = function(state) {
     // Saveable
     o.state_update.add(function(state) {
         children_ids = state.children_ids || []
+        children_ids = children_ids.slice()
         if (state.has_group_layout) {
             if (state.alignment) {
                 has_group_align(o, state.alignment)
@@ -265,7 +291,7 @@ var groups = function(state) {
         }
     })
     o.state.add(function() {
-        var s = { children_ids: children_ids }
+        var s = { children_ids: o.children_ids_existing() }
         $.extend(o.state.return_val, s)
     })
     //////////////////////////////////////////////////////////////
@@ -274,7 +300,7 @@ var groups = function(state) {
     // has_group
     o.children = function() {
         return $.map(children_ids, function(id) { 
-            return groups.fetch(id) || env.Apps.fetch(id) || []
+            return env.Apps.app_or_group(id) || []
         })
     }
     o.children_flat = function() {
@@ -316,9 +342,27 @@ var groups = function(state) {
     }
     //////////////////////////////////////////////////////////////
 
+    // This group, and all its children, recursively down to leaves
+    o.children_all = function() {
+        return $.map(o.children(), function(child) {
+            if (!child.is_group)
+                return []
+            return child.children_all()
+        }).concat(o)
+    }
+    // id's of children
     o.children_ids = function() {
         return children_ids.slice()
     }
+    // id's of children which exist and are not deleted
+    o.children_ids_existing = function() {
+        return $.map(o.children(), function(child) {
+            if (child && !child.deleted)
+                return child.id
+            return []
+        })
+    }
+    // add child to this group
     o.add_child = function(app_or_group_or_id) {
         var id = app_or_group_or_id.id || app_or_group_or_id
         children_ids.push(id)
@@ -330,6 +374,7 @@ var groups = function(state) {
             g.parent_set(o)
         }
     }
+    // remove child from this group
     o.remove_child = function(app_or_group_or_id) {
         var id = app_or_group_or_id.id || app_or_group_or_id
         var index = children_ids.indexOf(id)
@@ -356,10 +401,12 @@ var groups = function(state) {
         return children
     }
 
+    if (state) // init
+        o.state_update(state)
     return o
 }
 // Find the (lowest) common parent in list of groups / apps
-groups.common_parent = function(groups) {
+Hive.Groups.common_parent = function(groups) {
     if (groups.length == 0)
         return undefined
     var parents = groups[0].parents()
@@ -375,30 +422,28 @@ groups.common_parent = function(groups) {
     }
     return parents[0]
 }
-groups.fetch = function(id) {
+Hive.Groups.fetch = function(id) {
     return g_groups[id]
 }
-groups.state = function() {
+Hive.Groups.state = function() {
     return $.map(g_groups, function(g, id) {
         // Do not save empty (orphaned) groups
-        return g.children().length ? g.state() : []
+        return g.children_ids_existing().length ? g.state() : []
     })
 }
-groups.init = function(states) {
+Hive.Groups.init = function(states) {
     states.map(function(state) {
-        groups(state).state_update(state)
+        Hive.Groups(state)
     })
     // Now fix up the parent pointers
     $.each(g_groups, function(id, g) {
         $.each(g.children(), function(i, child) {
             if (child)
                 child.parent_set(g)
-            // else
-            //     g.remove(child)
         })
     })
 }
-env.Groups = groups
+env.Groups = Hive.Groups
 
 // Generic layout group class
 var has_group_layout = function(o) {
@@ -551,7 +596,7 @@ env.Apps = Hive.Apps = (function(){
     o.restack = function(include_deletes){
         var c_layer = 0
         for(var i = 0; i < stack.length; i++){
-            if(!include_deletes && (!stack[i] || stack[i].deleted))
+            if(!stack[i] || !include_deletes && stack[i].deleted)
                 continue
             stack[i].layer_set(c_layer)
             c_layer++
@@ -579,21 +624,55 @@ env.Apps = Hive.Apps = (function(){
         apps[app.id] = app
         return i;
     };
-    o.copy = function(elements, opts) {
-        elements =  elements.sort(function(a,b) {
+    o.copy_groups = function(groups, opts) {
+        var elements = $.map(groups, function(g) {
+            return g.children_flat()
+        })
+        // copy children in layer order so sort is consistent
+        elements = elements.sort(function(a,b) {
             return a.layer() - b.layer()
         });
         opts.z_index = "top"; // NaN goes to top
-        return $.map(elements, function(e){
-            return e.copy(opts)
+        // map [ original app/group ==> copied app/group ]
+        var child_map = {}
+        var copies = $.map(elements, function(e){
+            var child = e.copy(opts)
+            child_map[e.id] = child.id
+            return child
         });
-    } 
+        var old_groups = $.map(groups, function(g) {
+            if (!g.is_group)
+                return []
+            return g.children_all()
+        })
+        // copy the groups sans children
+        var group_copies = $.map(old_groups, function(g, i) {
+            if (!g.is_group)
+                return []
+            var state = g.state()
+            delete state.children_ids
+            delete state.id
+            var new_group = Hive.Groups(state)
+            child_map[g.id] = new_group.id
+            return new_group
+        })
+        // put the children back into the copied groups
+        $.each(child_map, function(old_id, new_id) {
+            var old_child = o.app_or_group(old_id)
+                ,new_child = o.app_or_group(new_id)
+                ,old_parent = old_child.parent()
+            if (!old_parent) 
+                return
+            var new_parent = o.app_or_group(child_map[old_parent.id])
+            if (new_parent) new_parent.add_child(new_child)
+        })
+        return copies
+    }
     o.fetch = function(id){
         return apps[id]
-        // for(var i = 0; i < o.length; i++) if( o[i].id == id ) return o[i];
     };
     o.app_or_group = function(id) {
-        return apps[id] || groups.fetch(id)
+        return apps[id] || Hive.Groups.fetch(id)
     }
     o.all = function(){ return $.grep(o, function(e){ return ! e.deleted; }); };
     o.filtered = function(filter) { return $.grep(o, filter); };
@@ -950,7 +1029,6 @@ Hive.App = function(init_state, opts) {
         if(!opts) opts = {};
         var app_state = $.extend({}, true, o.state());
         delete app_state.id;
-        delete app_state.name;
         if(opts.z_offset) app_state.z += opts.z_offset;
         var cp = Hive.App(app_state, opts);
         env.History.save(cp._remove, cp._unremove, 'copy');
