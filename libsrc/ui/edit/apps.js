@@ -455,7 +455,8 @@ var has_group_align = function(o, alignment) {
     o._on_child_modification = function(child) {
         // find current bounds
         var exclude = {}
-        exclude[child.id] = 1
+        if (child)
+            exclude[child.id] = 1
         var aabb = o.aabb({exclude: exclude})
         // calculate again, excluding child from bounds calculation
         // var aabb_others = o.aabb({exclude: child.id})
