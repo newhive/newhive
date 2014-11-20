@@ -159,6 +159,7 @@ define([
             remixed = true
         }
         if (remixed) {
+            delete expr.draft
             o.controller.get('expr_unused_name', {}, function(resp) {
                 expr.name = resp.name
                 o.update_form()
