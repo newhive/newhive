@@ -5,7 +5,7 @@
 // ,'js!./mode/javascript/javascript.js'
 // ,'js!./mode/css/css.js'
 define([
-    'js!./codemirror.js'
-], function(){
-    return 1
+    './codemirror'
+], function(cm){
+    return cm
 });

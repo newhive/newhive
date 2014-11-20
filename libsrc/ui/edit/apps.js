@@ -26,7 +26,7 @@ define([
     ,js_util
     ,ui_util
     ,colors
-    ,codemirror
+    ,CodeMirror
     ,menu
 
     ,env
