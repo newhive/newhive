@@ -132,11 +132,11 @@ o.Selection = function(o) {
         var old_groups = $.map(groups, function(g) {
             return g.is_group ? g : []
         })
-        if (old_groups.length != 1)
-            return
+        // if (old_groups.length != 1)
+        //     return
         var new_group = old_groups[0]
         groups.map(function(el) {
-            if (!el.is_group)
+            if (el.id != new_group.id)
                 new_group.add_child(el)
         })
         groups = o.get_groups(elements)
@@ -882,6 +882,8 @@ o.Selection = function(o) {
             dir > 0 ? el.stack_top() : el.stack_bottom() })
         env.History.group('stack to ' + ((dir > 0) ? "top": "bottom"));
     };
+    o.stack_top_click = function(ev) { o.stack_top(ev.shiftKey) }
+    o.stack_bottom_click = function(ev) { o.stack_bottom(ev.shiftKey) }
     o.stack_top = function(maximal) {
         if (!maximal) {
             return o.stack_shift(1)
