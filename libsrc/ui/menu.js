@@ -34,9 +34,8 @@ var menu = function(handle, drawer, options) {
             ,animate_close: false
             ,animate_open: false
             ,opened: false
-        }, options);
-    if (util.mobile()) 
-        $.extend(opts, mobile_opts);
+        }, util.mobile() ? mobile_opts : {}
+        , options);
     if(!handle.length)
         console.error('menu has no handle:', drawer)
     if(!drawer.length)
@@ -47,7 +46,7 @@ var menu = function(handle, drawer, options) {
     o.opened = opts.opened;
     o.sticky = opts.sticky;
     drawer.data('menu', o);
-    handle.data('menu', o);
+    handle.data('menu', o).addClass("handle");
     // TODO: make this more sofisticated
     var html_opts = drawer.attr("data-menu-opts");
     if (html_opts) {
@@ -319,7 +318,7 @@ var menu = function(handle, drawer, options) {
         .unbind('click').on("click", function(ev) { 
             menu.close_all(); 
         } );
-    handle.unbind('click').click(function(){
+    handle.unbind('click.menu').on("click.menu", function(){
         if(opts.default_item.length && opts.hover) {
             menu.close_all();
             opts.default_item.click();
@@ -355,7 +354,8 @@ var shield_handler = null, $shield = $();
 menu.set_menu_shield = function() {
     $shield = $("<div id='menu_shield'>").appendTo($("body"))
     shield_handler = util.global_handler("click", function(ev) {
-        if ($(ev.target).closest(".drawer").length == 0)
+        if ($(ev.target).closest(".drawer").length == 0
+            && $(ev.target).closest(".handle").length == 0)
             menu.close_all()    
     })
 }
