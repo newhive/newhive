@@ -18,7 +18,7 @@ var menu = function(handle, drawer, options) {
             ,sticky: false
             ,hover_close: true
             ,open_delay: 0
-            ,close_delay: 5000
+            ,close_delay: 500
             ,offset_y: 10
             ,offset_x: 10
             ,focus_persist: true
