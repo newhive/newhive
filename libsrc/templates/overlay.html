@@ -167,7 +167,7 @@
 {# menu: logo #}
 <form {form_attrs "logout"} method='POST' id='logout_form'></form>
 {<if (neq query.template "embed")}
-<div id='logo_menu' class='menu drawer divided {<if (eq query.template "embed")} stay_hidden{>}' data-handle='.hive_logo'>
+<div id='logo_menu' class='menu drawer divided {<if (eq query.template "embed")} stay_hidden{>}' data-handle='#logo'>
   {<if user.logged_in}
     {# Home #}
     <a {anchor_attrs "home"} class='menu_item default hoverable'>The Hive</a>
