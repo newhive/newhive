@@ -351,37 +351,17 @@ var menu = function(handle, drawer, options) {
     return o;
 }
 
-var global_handler = function(name, handler) {
-    var bodyEle = $("body").get(0);
-    if(bodyEle.addEventListener) {
-        bodyEle.addEventListener(name, handler, true);
-    } else if(bodyEle.attachEvent) {
-        handler = function(){
-            var event = window.event;
-            handler(event)
-        };
-        document.attachEvent("on" + name, handler)
-    }
-    return handler
-}
-var global_handler_off = function(name, handler) {
-    var bodyEle = $("body").get(0);
-    if(bodyEle.removeEventListener) {
-       bodyEle.removeEventListener(name, handler, true);
-    } else if(bodyEle.detachEvent) {
-       document.detachEvent("on" + name, handler);
-    }
-}
-
-var shield_handler = null;
+var shield_handler = null, $shield = $();
 menu.set_menu_shield = function() {
-    shield_handler = global_handler("click", function(ev) {
+    $shield = $("<div id='menu_shield'>").appendTo($("body"))
+    shield_handler = util.global_handler("click", function(ev) {
         if ($(ev.target).closest(".drawer").length == 0)
             menu.close_all()    
     })
 }
 menu.remove_menu_shield = function() {
-    global_handler_off("click", shield_handler)
+    $shield.remove()
+    util.global_handler_off("click", shield_handler)
     shield_handler = null;
 }
 menu.close_all = function() {

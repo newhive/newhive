@@ -23,6 +23,30 @@ define([
         return "<stack unavailable> "
     }
 
+    // Set a handler on the body DOM
+    o.global_handler = function(name, handler) {
+        var bodyEle = $("body").get(0);
+        if(bodyEle.addEventListener) {
+            bodyEle.addEventListener(name, handler, true);
+        } else if(bodyEle.attachEvent) {
+            var _handler = handler
+            handler = function(){
+                var event = window.event;
+                _handler(event)
+            };
+            document.attachEvent("on" + name, handler)
+        }
+        return handler
+    }
+    o.global_handler_off = function(name, handler) {
+        var bodyEle = $("body").get(0);
+        if(bodyEle.removeEventListener) {
+           bodyEle.removeEventListener(name, handler, true);
+        } else if(bodyEle.detachEvent) {
+           document.detachEvent("on" + name, handler);
+        }
+    }
+
     // undefer an element which was defered using stringjay "defer"
     o.undefer = function(el) {
         var $el = $(el)

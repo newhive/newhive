@@ -86,6 +86,7 @@ define([
 
         window.addEventListener('message', o.expr_receive)
         $(document).mousemove(check_hover);
+        
         $(document).click(expr_click);
         // $(document).mouseleave(function(e) { window.setTimeout(clear_hover, 600, e); });
 
@@ -258,17 +259,17 @@ define([
     o.margin = function () {
         return $(window).width() / 4;
     }
-    var expr_click = function (e) {
+    var expr_click = function (ev) {
         o.send_top("expr_click");
     }
-    var clear_hover = function (e) {
+    var clear_hover = function (ev) {
         o.send_top("hide_prev"); // $('.page_btn.page_prev').hidehide();
         o.send_top("hide_next"); // $('.page_btn.page_next').hidehide();
     }
-    var check_hover = function (e) {
-        if (e.clientX < o.margin()) {
+    var check_hover = function (ev) {
+        if (ev.clientX < o.margin()) {
             o.send_top("show_prev"); //$('.page_btn.page_prev').showshow();
-        } else if (e.clientX > $(window).width() - o.margin()) {
+        } else if (ev.clientX > $(window).width() - o.margin()) {
             o.send_top("show_next"); //$('.page_btn.page_next').showshow();
         } else {
             o.send_top("hide"); // $('.page_btn.page_prev').hidehide();
