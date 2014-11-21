@@ -18,7 +18,7 @@ var menu = function(handle, drawer, options) {
             ,sticky: false
             ,hover_close: true
             ,open_delay: 0
-            ,close_delay: 500
+            ,close_delay: 5000
             ,offset_y: 10
             ,offset_x: 10
             ,focus_persist: true
@@ -126,12 +126,12 @@ var menu = function(handle, drawer, options) {
         if(o.opened) return;
 
         o.opened = true;
+        if( opts.group.current && (opts.group.current != o) )
+            opts.group.current.close(true);
         if(!shield_handler) {
             menu.set_menu_shield();
         }
 
-        if( opts.group.current && (opts.group.current != o) )
-            opts.group.current.close(true);
         opts.group.current = o;
         handle.data('busy', true);
 
@@ -353,15 +353,15 @@ var menu = function(handle, drawer, options) {
 var shield_handler = null, $shield = $();
 menu.set_menu_shield = function() {
     $shield = $("<div id='menu_shield'>").appendTo($("body"))
-    shield_handler = util.global_handler("click", function(ev) {
-        if ($(ev.target).closest(".drawer").length == 0
-            && $(ev.target).closest(".handle").length == 0)
+    shield_handler = $shield.on("click mousedown tap", function(ev) {
+        // if ($(ev.target).closest(".drawer").length == 0
+        //     && $(ev.target).closest(".handle").length == 0)
             menu.close_all()    
     })
 }
 menu.remove_menu_shield = function() {
+    // $shield.off("click", shield_handler)
     $shield.remove()
-    util.global_handler_off("click", shield_handler)
     shield_handler = null;
 }
 menu.close_all = function() {
