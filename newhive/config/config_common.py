@@ -218,6 +218,9 @@ site_flags = {
     },'Editor/resize_all': {
         'description':'Show all resizers'
         , 'values':['admins','devs']
+    },'Editor/merge_minis': {
+        'description':'Merge the mini selection borders for groups'
+        , 'values':['admins','devs']
     }
 
     # Old / unused

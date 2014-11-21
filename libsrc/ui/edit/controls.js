@@ -38,7 +38,7 @@ o.Controls = function(app, multiselect, delegate) {
         else app.controls.remove(); // otherwise destroy them and reconstruct requested type
     }
     var o = app.controls = {};
-    var sel_app = app.sel_app()
+    var sel_app = env.Selection.single(app)
     o.app = app;
     o.multiselect = multiselect;
 
@@ -173,15 +173,25 @@ o.Controls = function(app, multiselect, delegate) {
 
     o.padding = 9;
     o.border_width = 5;
+    // pad is the amount space borders need from window edges
     var pad_ul = [45, 60], pad_br = [45, 127], min_d = [146, 40];
     if(multiselect){
         pad_ul = [3, 3];
         pad_br = [3, 3];
         min_d = [1, 1];
         o.padding = 1;
-        if (!env.gifwall)
-            o.border_width = 2;
+        if (!env.gifwall) {
+            if (context.flags.Editor.merge_minis) {
+                o.border_width = 3;
+                if (o.multiselect == 2) {
+                    o.padding += 3;
+                }
+            } else {
+                o.border_width = 2;
+            }
+        }
     }
+    // Padding must be at least the border size
     pad_ul = $.map(pad_ul, function(x) { return Math.max(x, o.border_width) });
     pad_br = $.map(pad_br, function(x) { return Math.max(x, o.border_width) });
     var pos_dims = function(){
@@ -270,6 +280,10 @@ o.Controls = function(app, multiselect, delegate) {
     // add borders
     o.select_box = $("<div style='position: absolute'>");
     var border = $('<div>').addClass('select_border drag');
+    if (context.flags.Editor.merge_minis) {
+        if (o.multiselect == 2) border.addClass('single_other')
+        else if (o.multiselect) border.addClass('single')
+    }
     o.select_borders = border.add(border.clone().addClass('right'))
         .add(border.clone().addClass('bottom'))
         .add(border.clone().addClass('left'));

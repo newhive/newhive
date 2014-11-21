@@ -37,6 +37,12 @@ o.Selection = function(o) {
             return elements[arguments[0]];
         return elements.slice(); 
     };
+    o.single = function(app){
+        if (o == app && o.count() == 1)
+            return o.elements(0);
+        return app;
+    }
+    o.groups = function(){ return groups.slice() }
     o.sorted = function(){ return elements.slice().sort(u.topo_cmp); }
     o.count = function(){ return elements.length; };
     o.each = function(fn){ $.each(elements, fn) };
@@ -511,6 +517,9 @@ o.Selection = function(o) {
         if (full_apps.length)
             o.pushing_move(pos);
         drag_target.pos_relative_set(pos);
+        $.map(mini_controls, function(c) {
+            c.layout()
+        })
         env.Apps.end_layout();
     };
     o.move_handler = function(ev, delta){
@@ -668,18 +677,21 @@ o.Selection = function(o) {
             // handlers on app type constructors
         }
         // Add mini-border
-        Controls(app, true);
+        if (!context.flags.Editor.merge_minis)
+            Controls(app, true);
     };
     o.app_unselect = function(app) {
         app.div.removeClass("selected");
         app.unfocus();
-        if(app.controls) app.controls.remove();
+        if (!context.flags.Editor.merge_minis)
+            if(app.controls) app.controls.remove();
     };
 
     o.scroll_to_view = function() {
         u.scroll_to_view(o.max_pos());
         u.scroll_to_view(o.min_pos());
     }
+    mini_controls = []
     o.update = function(apps){
         apps = $.grep(apps || elements, function(e){ 
             return ! e.deleted && e.initialized; 
@@ -704,6 +716,35 @@ o.Selection = function(o) {
 
         elements = $.merge([], apps);
         groups = o.get_groups(elements)
+
+        // Update the mini selection borders
+        if (context.flags.Editor.merge_minis) {
+            $.map(mini_controls, function(c) {
+                c.remove();
+            })
+            mini_controls = []
+            var sel_groups = groups
+            // if (groups.length == 1 && groups[0].is_group)
+            //     sel_groups = groups[0].children()
+            var all_groups = [], seen_ids = {}
+            var add_all = function(g) {
+                var parent = g.parent()
+                if (parent && !seen_ids[parent.id]) {
+                    seen_ids[parent.id] = 1
+                    all_groups.push(parent)
+                    add_all(parent)
+                }
+            }
+            $.map(groups, function(g) {
+                add_all(g)
+            })
+            $.map(sel_groups, function(g) {
+                mini_controls.push(Controls(g, 1))
+            })
+            $.map(all_groups, function(g) {
+                mini_controls.push(Controls(g, 2))
+            })
+        }
 
         o.update_relative_coords();
 

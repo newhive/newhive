@@ -228,6 +228,29 @@ env.globals_set.has_sequence = function(state) {
     return $.extend(Hive.has_sequence, state)
 }
 
+// This object has a location on canvas
+Hive.has_location = function(o) {
+    // TODO: organize all of the location functions
+    // var dirty = false
+    o.aabb = function() { return [[0, 0], [1, 1]] }
+    o.aabb_set = function() {}
+    o.pos_relative = function() { return o.aabb()[0] }
+    o.pos_relative_set = function() {}
+    o.dims_relative = function() { return u._sub(o.aabb()[1], o.aabb()[0]) }
+    o.dims_relative_set = function() {}
+
+    o.pos = function(){ return u._mul(o.pos_relative(), env.scale()) }
+    o.pos_set = function(pos){
+        o.pos_relative_set( u._div(pos, env.scale()) )
+    };
+    o.dims = function(){ return u._mul(o.dims_relative(), env.scale()) }
+    o.dims_set = function(dims){
+        o.dims_relative_set( u._div(dims, env.scale()) )
+    };
+    // o.width = function(){ return o.dims()[0] };
+    // o.height = function(){ return o.dims()[1] };
+}
+
 // Grouping 
 // This implements group functionality for groupable objects,
 // abstractly for nodes, and concretely for leaves
@@ -273,6 +296,7 @@ Hive.Groups = function(state) {
     o.is_group = true
 
     Hive.has_group(o)
+    Hive.has_location(o)
     Hive.has_id(o)
     Hive.has_sequence(o, "group")
 
