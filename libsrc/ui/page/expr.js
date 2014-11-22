@@ -585,7 +585,8 @@ define([
     };
 
     var handle_hover = function(ev) {
-        do_hover($this.is(".bottom"), $(ev.target))
+        var $this = $(ev.target)
+        do_hover($this.is(".bottom"), $this)
     }        
     var do_hover = function(bottom, $this) {
         var $object = $(), timer
