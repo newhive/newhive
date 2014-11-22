@@ -197,6 +197,8 @@ define([
     };
     o.exit = function(){
         $hovers.remove()
+        $(".bottom.overlay")
+            .off("mouseenter mouseleave mouseover.hover mouseout.hover")
         o.last_found = -1;
         o.next_found = -1;
         $('body').removeClass('expr')

@@ -990,16 +990,20 @@ o.Selection = function(o) {
         "SC+a": function(){
             o.select( [] );
         },
-        "esc": function(){
+        "escape": function(){
             if(elements.length) 
                 o.unfocus()
             else return true
         },
-        "del": function(){ o.remove() },
+        "delete": function(){ o.remove() },
         "b": function(){ o.stack_bottom() },
         "S+b": function(){ o.stack_bottom(true) },
         "f": function(){ o.stack_top() },
         "S+f": function(){ o.stack_top(true) },
+        "S+forward_slash": function() { 
+            $("#dia_editor_help").data("dialog").open()
+            // env.main.help_selection() 
+        },
     }
     if (context.flags.Editor.grouping) {
         $.extend(handlers, {
@@ -1012,14 +1016,112 @@ o.Selection = function(o) {
             "SC+g": function(){ o.break_group() },
         })
     }
-    // If we want to take the keymap from jquery.UI
-    // var keymap = {}//js.invert($.ui.keyCode)
-    // $.each($.ui.keyCode, function(code, key) {
-    //     key = key.toLowerCase()
-    //     keymap[key] = code
-    //     keymap[key.slice(0,3)] = code
-    // })
-    var keymap = { 27: "esc", 46: "del" }
+    var KEYCODES = {
+     'backspace' : '8',
+     'tab' : '9',
+     'enter' : '13',
+     'shift' : '16',
+     'ctrl' : '17',
+     'alt' : '18',
+     'pause_break' : '19',
+     'caps_lock' : '20',
+     'escape' : '27',
+     'page_up' : '33',
+     'page down' : '34',
+     'end' : '35',
+     'home' : '36',
+     'left_arrow' : '37',
+     'up_arrow' : '38',
+     'right_arrow' : '39',
+     'down_arrow' : '40',
+     'insert' : '45',
+     'delete' : '46',
+     '0' : '48',
+     '1' : '49',
+     '2' : '50',
+     '3' : '51',
+     '4' : '52',
+     '5' : '53',
+     '6' : '54',
+     '7' : '55',
+     '8' : '56',
+     '9' : '57',
+     'a' : '65',
+     'b' : '66',
+     'c' : '67',
+     'd' : '68',
+     'e' : '69',
+     'f' : '70',
+     'g' : '71',
+     'h' : '72',
+     'i' : '73',
+     'j' : '74',
+     'k' : '75',
+     'l' : '76',
+     'm' : '77',
+     'n' : '78',
+     'o' : '79',
+     'p' : '80',
+     'q' : '81',
+     'r' : '82',
+     's' : '83',
+     't' : '84',
+     'u' : '85',
+     'v' : '86',
+     'w' : '87',
+     'x' : '88',
+     'y' : '89',
+     'z' : '90',
+     'left_window key' : '91',
+     'right_window key' : '92',
+     'select_key' : '93',
+     'numpad 0' : '96',
+     'numpad 1' : '97',
+     'numpad 2' : '98',
+     'numpad 3' : '99',
+     'numpad 4' : '100',
+     'numpad 5' : '101',
+     'numpad 6' : '102',
+     'numpad 7' : '103',
+     'numpad 8' : '104',
+     'numpad 9' : '105',
+     'multiply' : '106',
+     'add' : '107',
+     'subtract' : '109',
+     'decimal point' : '110',
+     'divide' : '111',
+     'f1' : '112',
+     'f2' : '113',
+     'f3' : '114',
+     'f4' : '115',
+     'f5' : '116',
+     'f6' : '117',
+     'f7' : '118',
+     'f8' : '119',
+     'f9' : '120',
+     'f10' : '121',
+     'f11' : '122',
+     'f12' : '123',
+     'num_lock' : '144',
+     'scroll_lock' : '145',
+     'semi_colon' : '186',
+     'equal_sign' : '187',
+     'comma' : '188',
+     'dash' : '189',
+     'period' : '190',
+     'forward_slash' : '191',
+     'grave_accent' : '192',
+     'open_bracket' : '219',
+     'backslash' : '220',
+     'closebracket' : '221',
+     'single_quote' : '222'
+    }
+
+    var keymap = { }
+    $.each(KEYCODES, function(name, num) {
+        name = name.toLowerCase()
+        keymap[num] = name
+    })
     o.keydown = Funcs(function(ev){ 
         var shift = ev.shiftKey, meta = ev.altKey, ctrl = u.is_ctrl(ev)
             ,smc = (shift ? "S" : "") + (meta ? "M" : "") + (ctrl ? "C" : "")
@@ -1030,6 +1132,7 @@ o.Selection = function(o) {
         if (keycode >= 65 && keycode <= 64 + 26)
             key = String.fromCharCode(keycode).toLowerCase()
         handler = handlers[smc + key] || handlers["*" + key]
+            // || handlers[smc + key.slice(0, 3)] || handlers["*" + key.slice(0, 3)]
         if(handler){
             if (handler(ev)) return;
             return false;
