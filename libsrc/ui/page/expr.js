@@ -188,7 +188,7 @@ define([
     var $hovers = $()
     o.enter = function(){
         o.do_handle_message = true
-        if (context.flags.View.new_hovers) {
+        if (context.flags.View.expr_overlays_fade) {
             $hovers = $("<div class='hover left'>")
                 .add( $("<div class='hover right'>"))
                 .add( $("<div class='hover bottom'>"))
@@ -502,7 +502,7 @@ define([
         if(!contentFrame.data('loaded') && !no_paging){
             // bugbug: sometimes this is never followed by a contentFrame.load
             // console.log('showing');
-            if (!context.flags.View.new_hovers)
+            if(!context.flags.View.expr_overlays_fade)
                 $('.page_btn').showshow();
         }
         else {
@@ -591,7 +591,8 @@ define([
         var $this = $(ev.target)
         do_hover($this.is(".bottom"), $this)
     }        
-    var halfway_opacity = .7
+    // var halfway_opacity = .7
+    var opacity = context.flags.expr_overlays_fade ? 1 : 0 // && bottom ? halfway_opacity : 1
     var do_hover = function(bottom, $this) {
         var $object = $(), timer
         $this.hidehide()
@@ -608,8 +609,10 @@ define([
             $object = $this.is(".left") ? 
                 $(".page_btn.page_prev") : $(".page_btn.page_next")
         }
-        var opacity = context.flags.fade_controls && bottom ? halfway_opacity : 1
-        $object.stop(true).animate({"opacity":opacity},{duration:200}).showshow()
+        $object.stop(true).animate(
+                {"opacity":opacity},
+                {duration:context.flags.expr_overlays_fade_duration}
+            ).showshow()
             .bind_once("mouseover.hover", entered)
             .bind_once("mouseout.hover", function() {
                 timer = setTimeout(unhide, 2000)
@@ -628,12 +631,14 @@ define([
         $("#social_plus").bind_once('click', o.social_toggle);
         $("#social_close").bind_once_anon("click", o.social_toggle);
         $(".social_btn").bind_once_anon("click", o.social_toggle);
-        if (context.flags.fade_controls) {
+        if (context.flags.expr_overlays_fade) {
             $(".bottom.overlay")
                 .off("mouseenter").on("mouseenter", function(ev) {
-                    $(this).stop(true).animate({"opacity":1},{duration:200}) } )
+                    $(this).stop(true).animate( {"opacity":1},
+                        {duration: context.flags.expr_overlays_fade_duration} ) } )
                 .on("mouseleave", function(ev) { 
-                    $(this).animate({"opacity":halfway_opacity},{duration:200}) } )
+                    $(this).animate( {"opacity": opacity},
+                        {duration: context.flags.expr_overlays_fade_duration} ) } )
         }
         if ($("#site").children().length && context.page_data.cards_route)
             $(".title_spacer .title").addClass("pointer").unbind('click').click(function() {
@@ -1019,7 +1024,7 @@ define([
 
     var page_btn_state = '';
     o.page_btn_handle = function(msg){
-        if (context.flags.View.new_hovers)
+        if (context.flags.View.expr_overlays_fade)
             return 
 
         if(util.mobile())
