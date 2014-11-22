@@ -122,6 +122,13 @@ site_flags = {
         'description':'Enable administrative features'
         , 'values':['admins']
     
+    # View    
+    },'View': {
+        'description':'Changes in view mode'
+    },'View/new_hovers': {
+        'description':'Test versions hover behavior'
+        , 'values':['admins', 'devs']
+
     # UI    
     },'UI': {
         'description':'Test versions of the UI'

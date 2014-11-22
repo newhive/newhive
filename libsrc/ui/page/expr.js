@@ -185,10 +185,18 @@ define([
     }
 
     o.do_handle_message = false
+    var $hovers = $()
     o.enter = function(){
         o.do_handle_message = true
+        if (context.flags.View.new_hovers) {
+            $hovers = $("<div class='hover left'>")
+                .add( $("<div class='hover right'>"))
+                .add( $("<div class='hover bottom'>"))
+                .appendTo($("body"))
+        }
     };
     o.exit = function(){
+        $hovers.remove()
         o.last_found = -1;
         o.next_found = -1;
         $('body').removeClass('expr')
@@ -491,7 +499,8 @@ define([
         if(!contentFrame.data('loaded') && !no_paging){
             // bugbug: sometimes this is never followed by a contentFrame.load
             // console.log('showing');
-            $('.page_btn').showshow();
+            if (!context.flags.View.new_hovers)
+                $('.page_btn').showshow();
         }
         else {
             // console.log('resetting on show');
@@ -575,7 +584,38 @@ define([
         $('.social.overlay').hidehide();
     };
 
+    var handle_hover = function(ev) {
+        var $this = $(ev.target)
+        do_hover($this.is(".bottom"), $this)
+    }        
+    var do_hover = function(bottom, $this) {
+        var $object = $(), timer
+        $this.hidehide()
+        var entered = function(ev) {
+            clearTimeout(timer)
+        }
+        var unhide = function() {
+            $this.showshow()
+            $object.stop(true).animate({"opacity":0},{duration:400})
+        }
+        if (bottom) {
+            $object = $(".overlay.bottom")
+        } else {
+            $object = $this.is(".left") ? 
+                $(".page_btn.page_prev") : $(".page_btn.page_next")
+        }
+        var opacity = context.flags.fade_controls && bottom ? .4 : 1
+        $object.stop(true).animate({"opacity":opacity},{duration:200}).showshow()
+            .bind_once("mouseover.hover", entered)
+            .bind_once("mouseout.hover", function() {
+                timer = setTimeout(unhide, 2000)
+            })
+        timer = setTimeout(unhide, 2000)
+    }
     o.attach_handlers = function(){
+        $hovers.bind_once('mouseenter', handle_hover);
+        do_hover(true,$())
+
         $(".page_btn.page_prev").bind_once('click', o.page_prev);
         $(".page_btn.page_next").bind_once('click', o.page_next);
         $('.play_pause').bind_once_anon('click', function(){
@@ -585,7 +625,7 @@ define([
         $("#social_close").bind_once_anon("click", o.social_toggle);
         $(".social_btn").bind_once_anon("click", o.social_toggle);
         if (context.flags.fade_controls) {
-            $(".panel.overlay").css("opacity",.4)
+            $(".bottom.overlay")
                 .off("mouseenter").on("mouseenter", function(ev) {
                     $(this).stop(true).animate({"opacity":1},{duration:200}) } )
                 .on("mouseleave", function(ev) { 
@@ -679,11 +719,11 @@ define([
         $(".republish_btn").bind_once_anon("click", function(){
             o.social_btn_click("republish") })
 
-        $('.page_btn').bind_once_anon('mouseenter', function(event){
-            o.page_btn_animate($(this), "in");
-        }).bind_once_anon('mouseleave', function(e) {
-            o.page_btn_animate($(this), "out");
-        });
+        // $('.page_btn').bind_once_anon('mouseenter', function(event){
+        //     o.page_btn_animate($(this), "in");
+        // }).bind_once_anon('mouseleave', function(e) {
+        //     o.page_btn_animate($(this), "out");
+        // });
 
         $('#dia_delete_ok').each(function(i, e){
             $(e).data('dialog').opts.handler = function(e, data){
@@ -975,6 +1015,9 @@ define([
 
     var page_btn_state = '';
     o.page_btn_handle = function(msg){
+        if (context.flags.View.new_hovers)
+            return 
+
         if(util.mobile())
             return
         if (!msg)

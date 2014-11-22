@@ -262,10 +262,10 @@ define([
     var expr_click = function (ev) {
         o.send_top("expr_click");
     }
-    var clear_hover = function (ev) {
-        o.send_top("hide_prev"); // $('.page_btn.page_prev').hidehide();
-        o.send_top("hide_next"); // $('.page_btn.page_next').hidehide();
-    }
+    // var clear_hover = function (ev) {
+    //     o.send_top("hide_prev"); // $('.page_btn.page_prev').hidehide();
+    //     o.send_top("hide_next"); // $('.page_btn.page_next').hidehide();
+    // }
     var check_hover = function (ev) {
         if (ev.clientX < o.margin()) {
             o.send_top("show_prev"); //$('.page_btn.page_prev').showshow();

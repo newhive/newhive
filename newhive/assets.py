@@ -228,6 +228,7 @@ class HiveAssets(Assets):
             "scss/settings.scss", "scss/signup_flow.scss", "scss/menu.scss",
             "scss/jplayer.scss", "scss/forms.scss", "scss/overlay.scss",
             "scss/skin.scss", 'scss/edit.scss', 'scss/codemirror.css',
+            "scss/view.scss",
             filters=scss_filter,
             output='compiled.app.css',
             debug=False
