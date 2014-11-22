@@ -7,5 +7,5 @@ def migrate():
 
 def fixup(expr, dryrun=False):
     expr.build_search(expr)
-    expr.save()
+    expr.update(text_index=expr.get('text_index', ''), updated=False)
     return True
