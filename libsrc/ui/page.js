@@ -273,7 +273,7 @@ define([
             ,has_nav_embedded_logo = has_nav && context.user.logged_in
 
         // Move the logo handle into/out of the nav bar
-        $("#logo_handle")
+        $("#logo")
             .prependTo(has_nav_embedded_logo ? ".main-header .left" : "#overlays")
         // And fix up the overlay/hide styles
         $("#overlays .hive_logo")

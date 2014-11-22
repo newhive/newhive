@@ -1,14 +1,12 @@
 {# hive logo button #}
-<a id="logo_handle" 
+<a id='logo' class='bottom nav logo icon hive_logo item {extra_classes}
+    {<if (and standalone query.clean (not (contains clean_options "logo")))
+      } stay_hidden{>}'
   {<if (or context.referer (eq query.template "embed"))}
     {anchor_attrs "view_expr" 
         "owner_name" page_data.expr.owner.name "expr_name" page_data.expr.name}
   {>}{<else}
     {anchor_attrs "home"}
   {>}
->
-  <div id='logo' class='bottom nav logo icon hive_logo item {extra_classes}
-    {<if (and standalone query.clean (not (contains clean_options "logo")))
-      } stay_hidden{>}'></div>
-</a>
+></a>
     
