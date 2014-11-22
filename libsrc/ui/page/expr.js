@@ -588,6 +588,7 @@ define([
         var $this = $(ev.target)
         do_hover($this.is(".bottom"), $this)
     }        
+    var halfway_opacity = .7
     var do_hover = function(bottom, $this) {
         var $object = $(), timer
         $this.hidehide()
@@ -604,7 +605,7 @@ define([
             $object = $this.is(".left") ? 
                 $(".page_btn.page_prev") : $(".page_btn.page_next")
         }
-        var opacity = context.flags.fade_controls && bottom ? .4 : 1
+        var opacity = context.flags.fade_controls && bottom ? halfway_opacity : 1
         $object.stop(true).animate({"opacity":opacity},{duration:200}).showshow()
             .bind_once("mouseover.hover", entered)
             .bind_once("mouseout.hover", function() {
@@ -629,7 +630,7 @@ define([
                 .off("mouseenter").on("mouseenter", function(ev) {
                     $(this).stop(true).animate({"opacity":1},{duration:200}) } )
                 .on("mouseleave", function(ev) { 
-                    $(this).animate({"opacity":.4},{duration:200}) } )
+                    $(this).animate({"opacity":halfway_opacity},{duration:200}) } )
         }
         if ($("#site").children().length && context.page_data.cards_route)
             $(".title_spacer .title").addClass("pointer").unbind('click').click(function() {
