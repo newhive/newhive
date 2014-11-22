@@ -585,8 +585,7 @@ define([
     };
 
     var handle_hover = function(ev) {
-        var $this = $(ev.target)
-        do_hover($this.is(".bottom"), $this)
+        do_hover($this.is(".bottom"), $(ev.target))
     }        
     var do_hover = function(bottom, $this) {
         var $object = $(), timer
@@ -613,7 +612,7 @@ define([
         timer = setTimeout(unhide, 2000)
     }
     o.attach_handlers = function(){
-        $hovers.bind_once('mouseenter', handle_hover);
+        $hovers.bind_once('mouseenter.expr', handle_hover);
         do_hover(true,$())
 
         $(".page_btn.page_prev").bind_once('click', o.page_prev);
