@@ -591,8 +591,6 @@ define([
         var $this = $(ev.target)
         do_hover($this.is(".bottom"), $this)
     }        
-    // var halfway_opacity = .7
-    var opacity = context.flags.expr_overlays_fade ? 1 : 0 // && bottom ? halfway_opacity : 1
     var do_hover = function(bottom, $this) {
         var $object = $(), timer
         $this.hidehide()
@@ -610,7 +608,7 @@ define([
                 $(".page_btn.page_prev") : $(".page_btn.page_next")
         }
         $object.stop(true).animate(
-                {"opacity":opacity},
+                {"opacity":context.flags.expr_overlays_fade},
                 {duration:context.flags.expr_overlays_fade_duration}
             ).showshow()
             .bind_once("mouseover.hover", entered)
@@ -634,11 +632,15 @@ define([
         if (context.flags.expr_overlays_fade) {
             $(".bottom.overlay")
                 .off("mouseenter").on("mouseenter", function(ev) {
-                    $(this).stop(true).animate( {"opacity":1},
-                        {duration: context.flags.expr_overlays_fade_duration} ) } )
+                    $(this).stop(true).animate(
+                        {"opacity":1},
+                        {duration: context.flags.expr_overlays_fade_duration}
+                    ) } )
                 .on("mouseleave", function(ev) { 
-                    $(this).animate( {"opacity": opacity},
-                        {duration: context.flags.expr_overlays_fade_duration} ) } )
+                    $(this).animate(
+                        {"opacity": context.flags.expr_overlays_fade},
+                        {duration: context.flags.expr_overlays_fade_duration}
+                    ) } )
         }
         if ($("#site").children().length && context.page_data.cards_route)
             $(".title_spacer .title").addClass("pointer").unbind('click').click(function() {
