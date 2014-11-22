@@ -302,7 +302,7 @@ var menu = function(handle, drawer, options) {
     if(opts.hover) {
         handle.on('mouseover', null, { delay: opts.open_delay }, function(ev) {
             menu.from_hover = true; o.open(ev); menu.from_hover = true; })
-            .on('mouseleave', function(){ o.delayed_close(false) });
+            .on('mouseout', function(){ o.delayed_close(false) });
         drawer.mouseenter(o.cancel_close)
             .mouseleave(function(){ o.delayed_close(true) })
             .mousemove(o.cancel_close)

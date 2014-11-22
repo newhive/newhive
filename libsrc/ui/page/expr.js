@@ -199,6 +199,7 @@ define([
         $hovers.remove()
         $(".bottom.overlay")
             .off("mouseenter mouseleave mouseover.hover mouseout.hover")
+            .css({opacity: 1})
         o.last_found = -1;
         o.next_found = -1;
         $('body').removeClass('expr')
