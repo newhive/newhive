@@ -618,8 +618,6 @@ define([
         timer = setTimeout(unhide, 2000)
     }
     o.attach_handlers = function(){
-        $hovers.bind_once('mouseenter.expr', handle_hover);
-        do_hover(true,$())
 
         $(".page_btn.page_prev").bind_once('click', o.page_prev);
         $(".page_btn.page_next").bind_once('click', o.page_next);
@@ -630,7 +628,9 @@ define([
         $("#social_close").bind_once_anon("click", o.social_toggle);
         $(".social_btn").bind_once_anon("click", o.social_toggle);
         if (context.flags.expr_overlays_fade) {
-            $(".bottom.overlay")
+            $hovers.bind_once('mouseenter.expr', handle_hover);
+            do_hover(true,$())
+            $(".bottom.overlay,.page_btn.overlay")
                 .off("mouseenter").on("mouseenter", function(ev) {
                     $(this).stop(true).animate(
                         {"opacity":1},
@@ -641,6 +641,12 @@ define([
                         {"opacity": context.flags.expr_overlays_fade},
                         {duration: context.flags.expr_overlays_fade_duration}
                     ) } )
+        } else {
+            $('.page_btn').bind_once_anon('mouseenter', function(event){
+                o.page_btn_animate($(this), "in");
+            }).bind_once_anon('mouseleave', function(e) {
+                o.page_btn_animate($(this), "out");
+            });
         }
         if ($("#site").children().length && context.page_data.cards_route)
             $(".title_spacer .title").addClass("pointer").unbind('click').click(function() {
@@ -729,12 +735,6 @@ define([
             o.social_btn_click("love") })
         $(".republish_btn").bind_once_anon("click", function(){
             o.social_btn_click("republish") })
-
-        // $('.page_btn').bind_once_anon('mouseenter', function(event){
-        //     o.page_btn_animate($(this), "in");
-        // }).bind_once_anon('mouseleave', function(e) {
-        //     o.page_btn_animate($(this), "out");
-        // });
 
         $('#dia_delete_ok').each(function(i, e){
             $(e).data('dialog').opts.handler = function(e, data){
