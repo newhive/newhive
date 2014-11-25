@@ -6,7 +6,7 @@ prg="$2"
 special="$3"
 echo "special .$special."
 echo $progname
-windows=$(wmctrl -lx|grep "$progname")
+windows=$(wmctrl -lx|grep -i "$progname")
 echo $progname
 window_id=`grep "$progname" ~/bin/.runcycle|awk '{print $2}'`
 echo ".$windows."
