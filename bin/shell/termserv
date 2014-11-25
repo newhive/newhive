@@ -1,0 +1,2 @@
+#! /bin/bash
+gnome-terminal --window-with-profile=Server --geometry=99x65+177+375 --title="Server" --disable-factory --working-directory="/home/newduke/src/newhive/newduke" -e startserver

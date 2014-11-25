@@ -1,0 +1,38 @@
+#! /bin/bash
+
+# TODO: Comment me.
+progname="$1"
+prg="$2"
+special="$3"
+echo "special .$special."
+echo $progname
+windows=$(wmctrl -lx|grep "$progname")
+echo $progname
+window_id=`grep "$progname" ~/bin/.runcycle|awk '{print $2}'`
+echo ".$windows."
+echo $window_id
+if [ -n "$window_id" ]; then
+	echo "branch: -n id"
+	wmctrl -i -a $window_id
+	exit 0
+fi
+# echo "$windows"
+if [ -n "$windows" ]; then
+	echo "switching... $progname"
+	# fix to cycle, not just run.  
+	# Maybe stuff keyboard buffer with win-switch?
+	if [ -n "$special" ]; then
+		wmctrl -a $special
+	else
+		cycle.sh "$progname"
+	fi
+else
+	echo "branch: else -n windows"
+	if [ -n "$prg" ]; then
+		echo "executing... $prg"
+		echo "$prg &" > /tmp/tmp_5baer
+		bash < /tmp/tmp_5baer &
+		rm -f /tmp/tmp_5baer
+		# $($prg) &
+	fi
+fi

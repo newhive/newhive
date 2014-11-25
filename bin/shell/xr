@@ -1,0 +1,12 @@
+#! /bin/bash
+
+# xrandr -s 1366
+# xrandr --output DP1 --left-of LVDS1
+
+# xrandr --output LVDS1 --auto
+# xrandr --output DP1 --auto
+# xrandr --output DP1 --left-of LVDS1
+
+xrandr --output DP1 --primary --auto
+xrandr --output LVDS1 --auto --pos 1920x$((1200-768))
+# xrandr --output LVDS1 --pos 1920x$((1200-768)) 
