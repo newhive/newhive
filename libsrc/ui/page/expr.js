@@ -1,7 +1,7 @@
 define([
     'browser/jquery',
     'context',
-    'browser/js'
+    'browser/js',
     'browser/layout',
     'ui/util',
     'ui/menu',
