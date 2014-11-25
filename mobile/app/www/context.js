@@ -8,6 +8,7 @@ define([
     'ui/menu',
     'ui/dialog',
     'ui/util'
+
 ], function(api_routes, config, routing, js, upload, menu, dialog, ui_util){
     var o = { config: config };
 

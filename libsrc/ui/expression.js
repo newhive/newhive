@@ -15,6 +15,9 @@ define([
 
     ,'browser/jquery/jplayer/skin'
     ,'browser/jquery/rotate.js'
+
+    // TODO: pull in dynamically
+    ,'js!outsrc/processing.min.js'
 ], function(
     $
     ,js
