@@ -2128,18 +2128,23 @@ class File(Entity):
                 self.get_static_name(), self.get_static_name(), mime)
             os.remove(tmp_filename)
 
-        # Prevent animated gifs with any offsets from being resampled
+        def cmd_normal(size, file_name):
+            return ['mogrify', '-resize', size, file_name] 
+        def cmd_gif_offsets(size, file_name):
+            return ['convert', file_name, '-coalesce', '-resize', size,
+                '-layers', 'Optimize', file_name]
+        # Use special convert command if some frames are optimized with offsets
         if len(ident_frames) != len(full_frames):
-            self.update(resamples=[])
-            return False
+            resample_cmd = cmd_gif_offsets
+        else:
+            resample_cmd = cmd_normal
 
         resamples = []
         while (size[0] >= 100) or (size[0] >= 100):
             size = (size[0] / factor, size[1] / factor)
             size_rounded = (int(size[0] + .5), int(size[1] + .5))
             size_str = str(size_rounded[0]) + 'x' + str(size_rounded[1])
-            cmd = ['mogrify', '-resize', size_str, resample_filename]
-            call(cmd)
+            call( resample_cmd(size_str, resample_filename) )
             resamples.append(size_rounded)
             self.db.s3.upload_file(resample_filename, 'media',
                 self._resample_name(size_rounded[0]), 
