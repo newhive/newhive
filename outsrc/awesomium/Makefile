@@ -6,8 +6,8 @@ lib_process=bin/awesomium_process
 include_path=include/Awesomium
 
 # installation paths
-install_path_lib=/usr/lib
-install_path_include=/usr/include
+install_path_lib=/usr/local/lib
+install_path_include=/usr/local/include
 
 # lib names
 libname_shared_major_version=libawesomium-1-7.so.4
