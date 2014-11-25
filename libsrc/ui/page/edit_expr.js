@@ -311,7 +311,7 @@ define([
         $('#dia_save #save_title')
             .text(expr.title)
             .on('keydown keyup', function(){
-                if ((expr.draft || !(expr.home || expr.created))
+                if ((expr.draft === true || !(expr.home || expr.created))
                     && ! $('#save_url').hasClass('modified') ) 
                 {
                     var new_val = $('#save_title').val().toLowerCase()
