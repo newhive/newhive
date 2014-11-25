@@ -619,7 +619,7 @@ define([
         }
         $object.stop(true).animate(
                 {"opacity":context.flags.expr_overlays_fade},
-                {duration:flags.expr_overlays_fade_duration}
+                {duration:context.flags.expr_overlays_fade_duration}
             ).showshow()
             .bind_once("mouseover.hover", function() {
                 clearTimeout(timer)
