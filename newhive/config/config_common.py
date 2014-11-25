@@ -125,15 +125,15 @@ site_flags = {
     # View    
     },'View': {
         'description':'Changes in view mode'
-    },'View/new_hovers': {
-        'description':'Test versions hover behavior'
-        , 'values':['admins', 'devs']
     },'View/expr_overlays_fade': {
-        'description':'Whether to fade out overlays on newhives until hovered near'
+        'description':'Opacity to fade newhive overlay to when hovering nearby'
         , 'values':['all=0']
     },'View/expr_overlays_fade_duration': {
-        'description':'How long it takes for overlays on newhives to fade out'
+        'description':'How long it takes for overlays on newhives to fade in'
         , 'values':['all=200']
+    },'View/expr_overlays_fade_out_duration': {
+        'description':'How long it takes for overlays on newhives to fade out'
+        , 'values':['all=400']
 
     # UI    
     },'UI': {

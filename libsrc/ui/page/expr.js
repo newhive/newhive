@@ -599,17 +599,28 @@ define([
         }
         var unhide = function() {
             $this.showshow()
-            $object.stop(true).animate({"opacity":0},{duration:400})
+            $object.stop(true).animate({"opacity":0},
+                {duration:context.flags.expr_overlays_fade_out_duration})
         }
         if (bottom) {
             $object = $(".overlay.bottom")
         } else {
+            // don't render the page buttons if there is nothing to page through!
+            if (!context.from_categories && 
+                (context.page_data.cards == undefined
+                || context.page_data.cards.length == 1
+                || !context.page_data.expr
+                || no_paging
+            )) {
+                return
+            }
+
             $object = $this.is(".left") ? 
                 $(".page_btn.page_prev") : $(".page_btn.page_next")
         }
         $object.stop(true).animate(
                 {"opacity":context.flags.expr_overlays_fade},
-                {duration:context.flags.expr_overlays_fade_duration}
+                {duration:}
             ).showshow()
             .bind_once("mouseover.hover", entered)
             .bind_once("mouseout.hover", function() {
