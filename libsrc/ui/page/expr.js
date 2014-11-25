@@ -1,6 +1,7 @@
 define([
     'browser/jquery',
     'context',
+    'browser/js'
     'browser/layout',
     'ui/util',
     'ui/menu',
@@ -15,6 +16,7 @@ define([
 ], function(
     $,
     context,
+    js,
     browser_layout,
     util,
     menu,
@@ -594,9 +596,6 @@ define([
     var do_hover = function(bottom, $this) {
         var $object = $(), timer
         $this.hidehide()
-        var entered = function(ev) {
-            clearTimeout(timer)
-        }
         var unhide = function() {
             $this.showshow()
             $object.stop(true).animate({"opacity":0},
@@ -620,9 +619,11 @@ define([
         }
         $object.stop(true).animate(
                 {"opacity":context.flags.expr_overlays_fade},
-                {duration:}
+                {duration:flags.expr_overlays_fade_duration}
             ).showshow()
-            .bind_once("mouseover.hover", entered)
+            .bind_once("mouseover.hover", function() {
+                clearTimeout(timer)
+            })
             .bind_once("mouseout.hover", function() {
                 timer = setTimeout(unhide, 2000)
             })
@@ -639,8 +640,11 @@ define([
         $("#social_close").bind_once_anon("click", o.social_toggle);
         $(".social_btn").bind_once_anon("click", o.social_toggle);
         if (context.flags.expr_overlays_fade) {
-            $hovers.bind_once('mouseenter.expr', handle_hover);
-            do_hover(true,$())
+            $hovers.bind_once('mouseenter.expr', handle_hover)
+            js.on_ready(function() {
+                do_hover(true,$())
+            })
+
             $(".bottom.overlay,.page_btn.overlay")
                 .off("mouseenter").on("mouseenter", function(ev) {
                     $(this).stop(true).animate(

@@ -124,6 +124,13 @@ o.once = function(f) {
         return f.apply(this, arguments)
     }
 }
+o.on_ready = function(f) {
+    var on_ready = o.once(f)
+    $(document).ready(on_ready)
+    $(window).ready(on_ready)
+    return on_ready
+}
+
 // Returns a function that calls a list of functions (useful for creating
 // composable event handlers). If any function in collection have a return
 // value, return this and abort the remaining functions in list

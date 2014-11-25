@@ -98,7 +98,7 @@ define([
                 zoom = new_zoom
             })
         }
-        var on_ready = js.once(function() {
+        js.on_ready(function() {
             $("*[data-scaled]").map(function(i, app) {
                 var $app = $(app)
                     ,$img = $app.find("img")
@@ -111,8 +111,6 @@ define([
                 })
             })
         })
-        $(document).ready(on_ready)
-        $(window).ready(on_ready)
         $(window).on("scroll", layout.on_scroll)
             .click(function(){ o.send_top('focus'); });
         //if (0 && util.mobile()) {
