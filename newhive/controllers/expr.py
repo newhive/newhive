@@ -411,7 +411,8 @@ class Expr(ModelController):
                     html = "<script src='%s'></script>" % app.get('url')
                 else:
                     html = ( "<script>curl(['ui/expression'],function(expr){"
-                        + "expr.load_code(%s)" % json.dumps(app.get('content'))
+                        + "expr.load_code(%s,%s)" % (json.dumps(app.get('content')),
+                            json.dumps(app.get('modules', [])))
                         + "})</script>" )
             if ctype == 'css':
                 tag = 'style'

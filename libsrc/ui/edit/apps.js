@@ -1405,6 +1405,18 @@ Hive.App.Code = function(o){
     // ... or require a code to have been focused
     env.show_css_class = true
 
+    //////////////////////////////////////////////////////////////////
+    // Saveable
+    // getter and setter for state which is visible to history
+    o.history_state.add(function() {
+        var state = { modules: o.module_imports }
+        $.extend(o.history_state.return_val, state)
+    }) 
+    o.history_state_set.add(function(state) {
+        if (state.modules)
+            o.module_imports = state.modules
+    })
+
     o.typename = function() {
         return ('js' == o.init_state.code_type) ? "code" : "style"
     }
@@ -1429,7 +1441,7 @@ Hive.App.Code = function(o){
     }
 
     o.is_module = function(){
-        return o.init_state.code_type == 'js' && o.init_state.content
+        return o.init_state.code_type == 'js' && o.content()
     }
 
     // TODO: fix auto-loading by running first within try-catch, and if it 
@@ -1451,11 +1463,22 @@ Hive.App.Code = function(o){
     o.module_name = function(without_error){
         return "module_" + o.id + "_" + (without_error ? last_success : iter)
     }
+    o.module_imports = []
+    var module_modules = function() {
+        return [""].concat($.map(o.module_imports, 
+            function(m) { return "'" + m.path + "'" })).join(",")
+    }
+    var module_names = function() {
+        return [""].concat($.map(o.module_imports, 
+            function(m) { return m.name })).join(",")
+    }
+
     var module_code = function() {
         // return o.content();
         if( o.init_state.url ) return '' // can't have src and script body
         return ( "define('" + o.module_name() + "', "
-            + "['browser/jquery'], function($) {\n"
+            + "['browser/jquery'" + module_modules() + "], function($"
+            + module_names() + ") {\n"
             + "var self = {}\n\n"
             + o.content() + "\n\n"
             + "return self\n})"

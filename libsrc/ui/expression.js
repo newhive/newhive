@@ -425,8 +425,9 @@ define([
     // called from script element generated from
     // python newhive.controller.expr.html_for_app for each code app
     var code_srcs = [], code_modules = [], animate_go
-    o.load_code = function(code_src){
-        code_srcs.push(code_src) }
+    o.load_code = function(code_src, modules){
+        code_srcs.push({src:code_src, modules: modules})
+    }
 
     o.run_code = function(code_module){
         code_modules.push(code_module)
@@ -467,10 +468,23 @@ define([
 
         o.update_targets();
 
+        var module_paths = function(modules) {
+            return ["'browser/jquery'","'ui/expression'"]
+            .concat($.map(modules, function(p) { 
+                return "'" + (p.path_view || p.path) + "'"
+            }))
+            .join(",")
+        }
+        var module_names = function(modules) {
+            return ['$', 'expr']
+            .concat($.map(modules, function(p) { return p.name }))
+            .join(",")
+        }
         code_srcs.map(function(src){
             var script = $('<script>').html(
-                "curl(['browser/jquery','ui/expression'],function($, expr){"
-                + "var self={};" + src + ";expr.run_code(self) })"
+                "curl([" + module_paths(src.modules) + "],function("
+                + module_names(src.modules) + "){"
+                + "var self={};" + src.src + ";expr.run_code(self) })"
             ).addClass('code_module').appendTo('body')
         })
 
