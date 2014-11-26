@@ -89,12 +89,12 @@ define([
             context.config.secure_content_url : context.config.content_url;
 
         context.parse_query();
-        // context.referer holds the site host of the containing frame, if one exists.
-        // If it does not, it comes back as the same as server host, so we delete it here.
-        if (context.referer && (context.referer.replace(/.*\/\//,"") == 
-            context.server_url.replace(/.*\/\//,"")))
-            context.referer = null
 
+        // detect if in frame
+        context.embed = false
+        try {
+            if( window.parent == window.top ) context.embed = true
+        } catch { context.embed = true }
 
         routing.register_state(route_args);
         if (util.mobile()) {

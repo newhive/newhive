@@ -386,17 +386,16 @@ define([
         var href = $a.attr('href') || $a.attr('xlink:href') || $a.attr('action')
         if (!href) return
 
-        var non_relative = 
-            (href.indexOf('http') === 0 || href.slice(0,2) == "//")
+        var relative = !(href.indexOf('http') === 0 || href.slice(0,2) == "//")
 
-        if (href && non_relative && !re.test(href)) {
+        if (href && !relative && !re.test(href)) {
             $a.attr('target', '_blank');
-        } else if (href && non_relative && re.test(href)) {
+        } else if (href && !relative && re.test(href)) {
             $a.attr('target', '_top');
-        } else if (!context.referer && href && !non_relative && href.match(/^\/\w/)) {
+        } else if(!context.embed && href && relative && href.match(/^\/\w/)){
             // force relative links to top
-            $a.attr('href', context.config.server_url.replace(/\/$/, '') + href);
-            $a.attr('target', '_top');
+            $a.attr('href', context.config.server_url.replace(/\/$/, '') + href)
+            $a.attr('target', '_top')
         }
     };
 
