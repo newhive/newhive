@@ -71,10 +71,10 @@ define([
     }
 
     o.resize = function(){
-        if (!util.mobile()) {
+        // if (!util.mobile()) {
             browser_layout.center($('.page_btn.page_prev'), undefined, {'h': false});
             browser_layout.center($('.page_btn.page_next'), undefined, {'h': false});
-        }
+        // }
 
         var wide = ($(window).width() >= 1180) ? true : false;
         var columns = ($(window).width() >= 980) ? 2 : 1;
