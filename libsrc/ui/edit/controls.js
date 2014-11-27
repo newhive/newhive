@@ -1,3 +1,4 @@
+"use strict";
 define([
     'browser/jquery'
     ,'browser/js'
@@ -37,7 +38,7 @@ o.Controls = function(app, multiselect, delegate) {
         else app.controls.remove(); // otherwise destroy them and reconstruct requested type
     }
     var o = app.controls = {};
-    var sel_app = app.sel_app()
+    var sel_app = env.Selection.single(app)
     o.app = app;
     o.multiselect = multiselect;
 
@@ -158,7 +159,7 @@ o.Controls = function(app, multiselect, delegate) {
     o.addControls = function(ctrls) { 
         return $($.map(ctrls.clone(false).children(), o.appendControl)); };
     o.addButtons = function(ctrls) {
-        $ctrls = ctrls.find(".control.buttons");
+        var $ctrls = ctrls.find(".control.buttons");
         if ($ctrls.length == 0)
             $ctrls = ctrls;
         return $($.map($ctrls.clone(false).children(), function (x) {
@@ -172,15 +173,25 @@ o.Controls = function(app, multiselect, delegate) {
 
     o.padding = 9;
     o.border_width = 5;
+    // pad is the amount space borders need from window edges
     var pad_ul = [45, 60], pad_br = [45, 127], min_d = [146, 40];
     if(multiselect){
         pad_ul = [3, 3];
         pad_br = [3, 3];
         min_d = [1, 1];
         o.padding = 1;
-        if (!env.gifwall)
-            o.border_width = 2;
+        if (!env.gifwall) {
+            if (context.flags.Editor.merge_minis) {
+                o.border_width = 3;
+                if (o.multiselect == 2) {
+                    o.padding += 3;
+                }
+            } else {
+                o.border_width = 2;
+            }
+        }
     }
+    // Padding must be at least the border size
     pad_ul = $.map(pad_ul, function(x) { return Math.max(x, o.border_width) });
     pad_br = $.map(pad_br, function(x) { return Math.max(x, o.border_width) });
     var pos_dims = function(){
@@ -269,6 +280,10 @@ o.Controls = function(app, multiselect, delegate) {
     // add borders
     o.select_box = $("<div style='position: absolute'>");
     var border = $('<div>').addClass('select_border drag');
+    if (context.flags.Editor.merge_minis) {
+        if (o.multiselect == 2) border.addClass('single_other')
+        else if (o.multiselect) border.addClass('single')
+    }
     o.select_borders = border.add(border.clone().addClass('right'))
         .add(border.clone().addClass('bottom'))
         .add(border.clone().addClass('left'));
@@ -306,16 +321,16 @@ o.Controls = function(app, multiselect, delegate) {
         })
         o.c.copy    = d.find('.copy'   );
         o.c.copy.click(function(){
-            var copy = o.app.copy({ load: function(a){
-                env.Selection.select(a);
-            } });
+            var copy = o.app.copy({ select_copy: 1 });
         });
         if (env.copy_table) {
             var ref_copy;
-            const copy_grid = 30;
+            var copy_grid = 30; //! constant
             var grid_size = function(offset) {
                 var round = function(x) {
-                    return Math.max(1, Math.ceil(x));
+                    x = Math.ceil(x)
+                    return (x > 0) ? x : x - 1
+                    // return Math.max(1, Math.ceil(x));
                 }
                 offset = u._sub(offset)(ref_copy);
                 offset = u._div(offset)([copy_grid, -copy_grid]);
@@ -326,28 +341,37 @@ o.Controls = function(app, multiselect, delegate) {
                 ref_copy = [ev.clientX, ev.clientY];
             })
             .on('drag', function(ev) {
-                var grid = grid_size([ev.clientX, ev.clientY]);
-                d.find($(".copy_copy")).remove();
-                var copy = d.find(".copy");
-                var left = parseFloat(copy.css("left"));
-                var top = parseFloat(copy.css("top"));
+                var grid_sizes = grid_size([ev.clientX, ev.clientY]);
+                var grid = grid_sizes.map(Math.abs)
+                var grid_dir = grid_sizes.map(u._sign)
+                var $copy = o.c.copy
+                var $parent = $copy.parent()
+                $parent.find($(".copy_copy")).remove();
+                var bounds = $copy[0].getBoundingClientRect()
+
                 for (var x = 0; x < grid[0]; ++x) {
                     for (var y = 0; y < grid[1]; ++y) {
                         if (x == 0 && y == 0)
                             continue;
-                        var $el = copy.clone();
-                        $el.addClass("copy_copy")
-                            .css("left", left + x*copy_grid)
-                            .css("top", top - y*copy_grid)
-                            .appendTo(d);
+                        var $el = $copy.clone();
+                        $el.addClass("copy_copy").css({
+                            "left": bounds.left + x*copy_grid*grid_dir[0]
+                            ,"top": bounds.top - y*copy_grid*grid_dir[1]
+                            ,"position": "fixed"
+                        })
+                        .appendTo($parent);
                     }
                 }
             })
             .on('dragend', function(ev) {
-                var grid = grid_size([ev.clientX, ev.clientY]);
+                var grid_sizes = grid_size([ev.clientX, ev.clientY]);
+                var grid = grid_sizes.map(Math.abs)
+                var grid_dir = grid_sizes.map(u._sign)
                 d.find($(".copy_copy")).remove();
                 var count = grid[0] * grid[1] - 1;
-                copy_list = [o.app];
+                if (count == 0)
+                    return
+                var copy_list = [o.app];
                 if (o.app.elements)
                     copy_list = o.app.elements();
                 var padding = [env.padding(), env.padding()];
@@ -358,7 +382,7 @@ o.Controls = function(app, multiselect, delegate) {
                         if (x == 0 && y == 0)
                             continue;
                         var copy = o.app.copy({
-                            offset: u._mul([x, y])(grid_dims),
+                            offset: u._mul([x, -y], grid_dir, grid_dims),
                             load: function(){
                                 if (! --count)
                                     env.Selection.select(copy_list);
@@ -373,8 +397,8 @@ o.Controls = function(app, multiselect, delegate) {
                 env.History.group('copy grid');
             });
         }
-        d.find('.stack_up').click(o.app.stack_top);
-        d.find('.stack_down').click(o.app.stack_bottom);
+        d.find('.stack_up').click(o.app.stack_top_click);
+        d.find('.stack_down').click(o.app.stack_bottom_click);
 
         $.map(o.app.make_controls, function(f){ f(o) });
 

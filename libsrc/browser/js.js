@@ -95,16 +95,41 @@ o.op = {
 
 /* Returns a function that calls that.callback no less than min_delay
  * milliseconds apart. Useful for wrapping mouse event handlers */
-o.throttle = function(callback, min_delay, that) {
-    var then = null;
+o.throttle = function(callback, min_delay, that, opts) {
+    opts = $.extend({ensure: false}, opts)
+    var then = null, timer, args;
+    var full_callback = function() {
+        then = new Date();
+        callback.apply(that, args);
+    }
     return function() {
+        clearTimeout(timer)
+        timer = undefined
+        args = Array.prototype.slice.apply(arguments)
         var now = new Date();
         if(now - then > min_delay) {
-            then = now;
-            callback.apply(that, arguments);
+            full_callback();
+        } else if (opts.ensure) {
+            timer = setTimeout(full_callback, min_delay)
         }
     }
 };
+
+o.once = function(f) {
+    var executed = false
+    return function() {
+        if (executed)
+            return
+        executed = true
+        return f.apply(this, arguments)
+    }
+}
+o.on_ready = function(f) {
+    var on_ready = o.once(f)
+    $(document).ready(on_ready)
+    $(window).ready(on_ready)
+    return on_ready
+}
 
 // Returns a function that calls a list of functions (useful for creating
 // composable event handlers). If any function in collection have a return

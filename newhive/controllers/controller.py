@@ -53,9 +53,10 @@ class Controller(object):
             # Werkzeug provides form data as immutable dict, so it must be copied
             # fields may be left alone to mirror the request, or validated and normalized
             form=dict(request.form.items()), error={},
-            query=request.args, url=request.url,
+            query=request.args,
+            # not using request.url because its query string is unescaped
+            url=request.base_url + '?' + request.query_string,
             is_secure=request.is_secure, referer=request.headers.get('referer')
-
         ))
 
         authed = auth.authenticate_request(self.db, request, response)
@@ -163,20 +164,23 @@ class Controller(object):
         if json: return self.serve_json(response, {'error': 404 })
         else: return self.serve_page(tdata, response, 'pages/notfound.html')
 
-    def serve_forbidden(self, tdata, request, response, json=True):
+    def serve_forbidden(self, tdata, request, response, json=True, status=403):
         response = Response()
-        response.status_code = 403
-        return self.serve_text(response, 'Sorry, not going to do that. Perhaps you are not logged in, or not using https?')
+        response.status_code = status
+        return self.serve_json(response, {'error': status})
 
-    def serve_500(self, request, response, exception=None, traceback=None, json=True):
+    def serve_500(self, request, response, exception=None, traceback=None,
+        status=500, json=True
+    ):
         if config.debug_mode:
             raise exception, None, traceback
 
         log_error(self.db, message=exception, request=request,
             traceback=traceback, critical=True)
 
-        response.status_code = 500
-        if json: return self.serve_json(response, {'error': 500 })
+        response.status_code = status
+        if json:
+            return self.serve_json(response, {'error': status })
         else:
             tdata = TransactionData(user=self.db.User.new({}), context={})
             return self.serve_page(tdata, response, 'pages/exception.html')

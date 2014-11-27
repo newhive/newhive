@@ -31,7 +31,7 @@ from s3 import S3Interface
 from newhive import config
 from newhive.config import abs_url, url_host
 from newhive.utils import (now, junkstr, dfilter, normalize, normalize_tags,
-    tag_string, cached, AbsUrl, log_error, normalize_word)
+    tag_string, cached, AbsUrl, log_error, normalize_word, lget)
 from newhive.routes import reserved_words
 from newhive import social_stats
 
@@ -63,10 +63,14 @@ class Database:
             entity_types )
         for col in self.collections:
             setattr(self, col.entity.__name__, col)
+
+    def build_indexes(self):
+        for col in self.collections:
             for index in col.entity.indexes:
                 if isinstance(index, tuple) and isinstance(index[1], dict):
                     (key, opts) = index
                 else: (key, opts) = (index, {})
+                opts.setdefault('background', True)
                 key = map(lambda a: a if isinstance(a, tuple) else (a, 1),
                     [key] if not isinstance(key, list) else key)
                 col._col.ensure_index(key, **opts)
@@ -381,7 +385,7 @@ class Entity(dict):
         return self['entropy']
 
     # should be avoided, because it clobbers record. Use update instead
-    def save(self, updated=True):
+    def save(self, updated=False):
         if updated: self['updated'] = now()
         return self.update_cmd(self)
 
@@ -389,8 +393,12 @@ class Entity(dict):
         dict.update(self, self.collection.fetch(self.id))
 
     def update(self, **d):
-        if not d.has_key('updated'): d['updated'] = now()
-        elif not d['updated']: del d['updated']
+        # TODO: change default of updated
+        # if d.get('updated') is True: d['updated'] = now()
+        # d.setdefault('updated', False)
+        
+        d.setdefault('updated',  now())
+        if not d['updated']: del d['updated']
         dict.update(self, d)
         return self._col.update({ '_id' : self.id }, { '$set' : d },
             safe=True)
@@ -504,12 +512,14 @@ def add_to_category(category, collection):
 
 # client view of a collection
 def collection_client_view(db, collection, ultra=False, viewer=None,
-    thumbs=True
+    override_unlisted=False, thumbs=True
 ):
     ## we have just a single expr
     if isinstance(collection, basestring):
         expr = db.Expr.fetch(collection)
         if not expr: return None
+        if not override_unlisted and viewer and not viewer.can_view(expr):
+            return None
         expr_cv = expr.client_view(viewer=viewer)
         # individual pages can appear in categories, so this gets
         # a collection attribute that's actually its own id
@@ -522,7 +532,7 @@ def collection_client_view(db, collection, ultra=False, viewer=None,
         if ultra: expr_cv["snapshot_ultra"] = expr.snapshot_name("ultra")
         return expr_cv
 
-    ## it's a real collection   
+    ## it's a real collection
 
     username = collection.get('username')
     if not username: return None
@@ -541,8 +551,10 @@ def collection_client_view(db, collection, ultra=False, viewer=None,
         el = exprs
     
     search_query= "q=" + search_query
-    expr = el[0]
+    expr = lget(el, 0)
     if not expr: return None
+    if not override_unlisted and viewer and not viewer.can_view(expr):
+        return None
 
     expr_cv = {
         # TODO-perf: trim this to essentials
@@ -1251,6 +1263,8 @@ class User(HasSocial):
             exprs = self.get_top_expressions(g_flags['mini_expressions'])
             dict.update(user, dict(
                 mini_expressions = map(lambda e:e.mini_view(), exprs)))
+        if special.has_key('session'):
+            user['session'] = { 'id': self.get('session') }
         if viewer: dict.update(user, listening = self.id in viewer.starred_user_ids )
         if activity > 0:
             dict.update( user, activity=
@@ -1262,9 +1276,12 @@ class User(HasSocial):
         ru = self.db.User.root_user
         home = {}
         home['cats'] = cats = ru.get('ordered_cats')
-        home['categories'] = { 
-            cat: [collection_client_view(self.db, col, thumbs=False)
-                for col in ru.get_category(cat)['collections'][:config.cat_hover_count]]
+        home['categories'] = {
+            cat: [
+                collection_client_view(self.db, col, thumbs=False, viewer=self)
+                for col in
+                ru.get_category(cat)['collections'][:config.cat_hover_count]
+            ]
             for cat in cats
         }
         return home
@@ -1346,6 +1363,9 @@ class Session(Entity):
     class Collection(Collection):
         trashable = False
 
+    def client_view(self):
+        return dict(id=self.id)
+
 
 def media_path(user, name=None):
     p = joinpath(config.media_path, user['name'])
@@ -1364,6 +1384,7 @@ class Expr(HasSocial):
         ,'random'
         ,'file_id'
         ,'created'
+        ,'snapshot_needed'
     ]
     counters = ['owner_views', 'views', 'emails']
     _owner = None
@@ -1372,7 +1393,8 @@ class Expr(HasSocial):
         ignore_not_meta = { 'apps': 0, 'background': 0, 'text_index': 0,
             'title_index': 0, 'file_id': 0, 'images': 0  }
 
-        def named(self, username, name): return self.find({'owner_name': username, 'name': name})
+        def named(self, username, name, **opts):
+            return self.find({'owner_name': username, 'name': name}, **opts)
 
         def fetch(self, key, keyname='_id', meta=False):
             fields = { 'text_index': 0, 'title_index': 0 }
@@ -1540,15 +1562,21 @@ class Expr(HasSocial):
             res = "http:" + res
         return res
 
-    # size is 'big', 'small', or 'tiny'.
-    def snapshot_name(self, size="big"):
+    _snapshot_dims = [('ultra', (1600, 960)), ('big', (715, 430)),
+        ('small', (390, 235)), ('tiny', (70, 42))]
+    def snapshot_max_size(self, w=715, h=430):
+        return lget([r[0] for r in self._snapshot_dims
+            if r[1][0] <= w and r[1][1] <= h], 0)
+    def snapshot_dims(self, size='big'):
+        return dict(self._snapshot_dims).get(size, False)
+
+    # size is one of self._snapshots_dims[r][0]
+    def snapshot_name(self, size='big', max_dims=None):
         if not self.get('snapshot_id'):
             return False
 
-        dimensions = {"big": (715, 430), "small": (390, 235), 
-            'tiny': (70, 42), 'ultra': (1600, 960)}
         snapshot = self.db.File.fetch(self.get('snapshot') or self['snapshot_id'])
-        dimension = dimensions.get(size, False)
+        dimension = self.snapshot_dims(size)
         if not snapshot or not dimension:
             return False
         
@@ -1644,7 +1672,7 @@ class Expr(HasSocial):
             self.db.File.fetch(self.get('snapshot_id')).purge()
 
         self.update(snapshot_time=snapshot_time, entropy=self['entropy'],
-            snapshot_id=file_record.id, updated=False)
+            snapshot_id=file_record.id, snapshot_needed=False, updated=False)
         self.reset('snapshot_fails')
         self.update(updated=False, snapshot_fail_time=0)
         return True
@@ -1652,7 +1680,9 @@ class Expr(HasSocial):
     # @property
     def snapshot(self, size='big', update=True):
         # Take new snapshot if necessary and requested
-        if update and (not self.get('snapshot_time') or self.get('updated') > self.get('snapshot_time')):
+        if update and (not self.get('snapshot_time')
+            or self.get('updated') > self.get('snapshot_time')
+        ):
             self.take_snapshots()
         return self.snapshot_name(size)
 
@@ -1684,7 +1714,8 @@ class Expr(HasSocial):
         if d.get('auth') == 'public':
             d['password'] = None
         # Reset fails if this is a real update
-        if d.get('updated', False): 
+        if ( d.get('apps') or d.get('background') ) and d.get('updated', True):
+            d['snapshot_needed'] = True
             d['snapshot_fails'] = 0
         super(Expr, self).update(**d)
 
@@ -1764,6 +1795,7 @@ class Expr(HasSocial):
         self['owner_name'] = self.db.User.fetch(self['owner'])['name']
         self['random'] = random.random()
         self['views'] = 0
+        self['snapshot_needed'] = True
         self.setdefault('title', 'Untitled')
         self.setdefault('auth', 'public')
         self._collect_files(self)
@@ -2082,18 +2114,38 @@ class File(Entity):
         call (['identify', resample_filename], stdout=ident)
         ident.seek(0)
         ident_frames = ident.read().strip().split("\n")
-        # IIRC, this prevents animated gifs with any offsets from being resampled
-        if len([x for x in ident_frames if not re.search(r'\+0\+0',x)]) > 0:
-            self.update(resamples=[])
-            return False
+        full_frames = [x for x in ident_frames if re.search(r'\+0\+0',x)]
+        # get a sample of the first full frame
+        if len(ident_frames) > 1 and len(full_frames) > 0:
+            frame = full_frames[0].split(" ",1)[0]
+            # TODO: determine if we need alpha, otherwise use .jpg
+            tmp_fd, tmp_filename = mkstemp(suffix=".png")
+            mime = "image/png"
+            
+            cmd = ['convert', frame, tmp_filename]
+            call(cmd)
+            self.update(static=True)
+            self.db.s3.upload_file(tmp_filename, 'media',
+                self.get_static_name(), self.get_static_name(), mime)
+            os.remove(tmp_filename)
+
+        def cmd_normal(size, file_name):
+            return ['mogrify', '-resize', size, file_name] 
+        def cmd_gif_offsets(size, file_name):
+            return ['convert', file_name, '-coalesce', '-resize', size,
+                '-layers', 'Optimize', file_name]
+        # Use special convert command if some frames are optimized with offsets
+        if len(ident_frames) != len(full_frames):
+            resample_cmd = cmd_gif_offsets
+        else:
+            resample_cmd = cmd_normal
 
         resamples = []
         while (size[0] >= 100) or (size[0] >= 100):
             size = (size[0] / factor, size[1] / factor)
             size_rounded = (int(size[0] + .5), int(size[1] + .5))
             size_str = str(size_rounded[0]) + 'x' + str(size_rounded[1])
-            cmd = ['mogrify', '-resize', size_str, resample_filename]
-            call(cmd)
+            call( resample_cmd(size_str, resample_filename) )
             resamples.append(size_rounded)
             self.db.s3.upload_file(resample_filename, 'media',
                 self._resample_name(size_rounded[0]), 
@@ -2102,6 +2154,19 @@ class File(Entity):
         os.remove(resample_filename)
         resamples.reverse()
         self.update(resamples=resamples)
+        print "Resampling finished" #//!!
+
+    def get_static_name(self):
+        """ get the URL for a static representation of a video
+            TODO: accept w, h to get a resample of such
+        """
+        static = self.get('static')
+        if not static: return None
+        return self.id + '__s'
+
+    def get_static_url(self):
+        if not self.get_static_name(): return None
+        return self.url_base + self.get_static_name()
 
     def get_resample(self, w=None, h=None):
         resamples = self.get('resamples', []) or []
@@ -2172,6 +2237,11 @@ class File(Entity):
     @property
     def url(self):
         return self.db.s3.url('media', self.id,
+            bucket_name=self.get('s3_bucket'))
+
+    @property
+    def url_base(self):
+        return self.db.s3.url('media', '',
             bucket_name=self.get('s3_bucket'))
 
     def create_existing(self):

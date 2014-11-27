@@ -2,7 +2,7 @@
 # Usage: add the following line to your ~/.bashrc
 # source ~/src/newhive/newduke/bin/git_grep.sh
 
-filter_broken="/old/|/broken/|/curl/|google_closure.js|/d3/|codemirror.js|jquery-ui|/jquery[/_]"
+filter_broken="/old/|/broken/|/curl/|google_closure.js|/d3/|codemirror.js|jquery-ui|/jquery_"
 function open_file {
     (which e > /dev/null) && e $* || $EDITOR $*
 }

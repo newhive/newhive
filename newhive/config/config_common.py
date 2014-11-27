@@ -11,7 +11,6 @@ media_path      = '/home/domains/thenewhive.com'
 redirect_domains = ['newhive.com', 'thenewhive.com']
 live_prefixes   = ['live-2', 'live-3', 'live-4', 'live-5', 'live-6']
 
-embedly_key     = '1774adc27ebd4753a2f20c3635d1508e'
 analytics_db    = 'analytics'
 
 google_api_key  = 'AIzaSyDwFDcABJN8ldQKGCA2ohiO8kHoFst57X8'
@@ -29,10 +28,12 @@ cloudfront_domains = {
     'asset': None
 }
 
+
 ################################################################
 # constants
 ################################################################
 cat_hover_count = 6
+# use_strict = False
 
 ################################################################
 # strings
@@ -107,18 +108,35 @@ site_flags = {
     },'Features/force_stumble': {
         'description':'Force the stumbleupon logo'
         , 'values':['none']
-    }
+    },'Features/lazy_loading': {
+        'description':'Lazy load various client images' #Load low-res images when initially fetching newhives'
+        , 'values':['admins', 'devs']
+    },'Features/fade_controls': {
+        'description':'Fade bottom icons in newhive view'
+        , 'values':['admins', 'devs']
 
     # Admin
-    ,'Admin': { 
+    },'Admin': { 
         'description':'Flags for administering the website'
     },'Admin/admin': {
         'description':'Enable administrative features'
         , 'values':['admins']
-    }
     
+    # View    
+    },'View': {
+        'description':'Changes in view mode'
+    },'View/expr_overlays_fade': {
+        'description':'Opacity to fade newhive overlay to when hovering nearby'
+        , 'values':['all=0']
+    },'View/expr_overlays_fade_duration': {
+        'description':'How long it takes for overlays on newhives to fade in'
+        , 'values':['all=200']
+    },'View/expr_overlays_fade_out_duration': {
+        'description':'How long it takes for overlays on newhives to fade out'
+        , 'values':['all=400']
+
     # UI    
-    ,'UI': {
+    },'UI': {
         'description':'Test versions of the UI'
     },'UI/top_card': {
         'description':'Test versions of top card UI'
@@ -155,13 +173,9 @@ site_flags = {
     },'UI/mobile_activity': {
         'description':'Show activity menu under logo on mobile'
         , 'values':['admins','nd4']
-    }
     
-    # Old / unused
-    #,'logged': ['logged_out']
-
     # Editor
-    ,'Editor': { 
+    },'Editor': { 
         'description':'Flags pertaining to the editor'
     },'Editor/snap_crop': {
         'description':'Allow snapping when shifting crop bounds of cropped images'
@@ -211,13 +225,23 @@ site_flags = {
     },'Editor/grouping': {
         'description':'Show grouping UI, editor shortcuts'
         , 'values':['admins','devs']
+    },'Editor/crop_move_border': {
+        'description':'Move the crop region when dragging border'
+        , 'values':['admins','all']
     },'Editor/resize_nw': {
         'description':'Show resizers in NW'
         , 'values':['admins','devs']
     },'Editor/resize_all': {
         'description':'Show all resizers'
         , 'values':['admins','devs']
+    },'Editor/merge_minis': {
+        'description':'Merge the mini selection borders for groups'
+        , 'values':['admins','devs']
     }
+
+    # Old / unused
+    #,'logged': ['logged_out']
+
 }
 
 site_user = 'newhive'
@@ -244,6 +268,7 @@ debug_unsecure  = False
 webassets_debug = False
 always_secure   = False
 threaded_dev_server = False
+snapshot_async = True
 
 interactive = False
 

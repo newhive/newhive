@@ -1,12 +1,14 @@
 import json
 from collections import Counter
 from werkzeug import Response
+import re
 
 from newhive import mail
 from newhive.ui_strings import en as ui_str
 from newhive.utils import dfilter, now, abs_url, AbsUrl, validate_email
 from newhive.controllers.controller import Controller
 from newhive.state import Entity, collection_client_view, collection_of
+from newhive.mongo_helpers import mq
 
 class Community(Controller):
     def featured(self, tdata, request, db_args={}, **args):
@@ -86,6 +88,8 @@ class Community(Controller):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         tag_name = args.get('tag_name')
+        override_unlisted = (tdata.user.get('name') == owner_name)
+
         if args.get('include_categories'):
             if tag_name:
                 # TODO: this search should also go through query_echo
@@ -98,7 +102,8 @@ class Community(Controller):
                 at = int(db_args.get('at', 0))
                 limit = int(db_args.get('limit', 20))
                 cards = cards[at:at + limit if limit else None]
-                # query_string can indicate which card to sort first
+                # query_string can indicate which card to sort first, based on
+                # category (not used anymore currently)
                 q = request.query_string
                 if q:
                     top_card = 0
@@ -111,11 +116,17 @@ class Community(Controller):
                         cards[top_card] = cards[0]
                         cards[0] = temp
                 # insert client view of collections into cards
-                client_cards = [collection_client_view(self.db, x) if x 
-                    else self.missing_expression() for x in cards]
+                client_cards = [
+                    collection_client_view(self.db, x, viewer=tdata.user,
+                        override_unlisted=override_unlisted) if x 
+                    else self.missing_expression()
+                    for x in cards
+                ]
                 if at == 0:
-                    client_cards[0] = collection_client_view(self.db, cards[0], True)
-                client_cards = [x if x else self.missing_expression() for x in client_cards]
+                    client_cards[0] = collection_client_view(self.db, cards[0],
+                        True, viewer=tdata.user,
+                        override_unlisted=override_unlisted)
+                client_cards = [x for x in client_cards if x]
                 res = self.expressions_for(tdata, client_cards, owner, 
                     no_empty=True, **db_args)
                 res.update({
@@ -339,16 +350,6 @@ class Community(Controller):
             return None
         return self.serve_expr(tdata, request, expr)
 
-    def expr_custom_domain(self, tdata, request, path='', **args):
-        url = request.host + ('/' if path else '') + path
-        expr = self.db.Expr.find({'url': url})
-        tdata.context['domain'] = request.host
-        return self.controllers['expr'].serve_naked(
-            tdata, request, self.response, expr)
-        # page_data = self.serve_expr(tdata, request, expr)
-        # page_data['domain'] = request.host
-        # return page_data
-
     def serve_expr(self, tdata, request, expr):
         meta = {}
         resp = {
@@ -475,6 +476,16 @@ class Community(Controller):
             res = self.db.User.search(**db_args)
             return { 'text_result': '\n'.join( json.dumps(r['fullname']) + ', ' +
                 json.dumps(r['email']) for r in res if validate_email(r['email']) )}
+        if special == 'top_lovers':
+            if request.args.get('help', False) != False:
+                return { 'text_result': 'last_days: default 30' }
+            last_days = json.loads(args.get('last_days', '30'))
+            loves_by_users = Counter()
+            for r in self.db.Feed.search( mq(class_name='Star',
+                entity_class='Expr').gt('created', now()-86400*last_days)
+            ): loves_by_users[r['initiator_name']] += 1
+            resp = json.dumps(loves_by_users.most_common())
+            return { 'text_result': re.sub(r'\],', '],\n', resp) }
         else:
             if request.args.get('help', False) != False:
                 return { 'text_result': help }

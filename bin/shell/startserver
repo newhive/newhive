@@ -1,0 +1,15 @@
+#!/usr/bin/expect -f
+
+# Get a Bash shell
+spawn -noecho bash
+
+# Wait for a prompt
+expect "wirbu "
+
+# Type something
+send "refreshserver\n"
+
+# Hand over control to the user
+interact
+
+exit

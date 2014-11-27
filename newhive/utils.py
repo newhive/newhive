@@ -468,13 +468,13 @@ def modify_query(url, d):
 def set_cookie(response, name, data, secure = False, expires = True):
     expiration = None if expires else datetime(2100, 1, 1)
     max_age = 0 if expires else None
-    response.set_cookie(name, value = data, secure = secure,
+    response.set_cookie(name, value = data, secure = secure, httponly=True,
         # no longer using subdomains
-        #domain = None if secure else '.' + config.server_name, httponly = True,
-        expires = expiration)
+        #domain = None if secure else '.' + config.server_name
+        expires = expires)
 def get_cookie(request, name): return request.cookies.get(name, False)
-def rm_cookie(response, name, secure = False):
-    response.delete_cookie(name, domain=None)
+def rm_cookie(response, name):
+    response.delete_cookie(name)
 
 
 def local_date(offset=0):
@@ -533,20 +533,6 @@ class FixedAttrs(object):
         if not k in self.__dict__:
             raise AttributeError(k)
         self.__dict__[k] = v
-
-
-def get_embedly_oembed(url):
-    request_url = ( 'https://api.embed.ly/1/oembed?key=%s&url=%s' 
-        % (config.embedly_key,urllib.quote_plus(url.strip("/"))) )
-    try:
-        res = urllib2.urlopen(request_url, None, 30)
-    except:
-        # timeout or something else wrong in the supplied link.
-        # forget and move on.
-        return None
-    if res.getcode() != 200:
-        return None
-    return json.loads(res.read())
 
 
 ### utils for autocomplete and content recommendation ###

@@ -1,26 +1,32 @@
 {% extends "page.html" %}
 
-{% if 'home' %}
-  {% block meta %}
-    {% set description = ("Newhive by " + page_data.expr.owner.get('fullname') if page_data.expr else "We believe that your life is a blank canvas + you decide what goes on it. NewHive is your radically simple, DIY self publishing tool.") %}
-    {# Descripton for SEO #}
-    <meta name="description" content="{{description}}">
+{% block meta %}
+  {% set description = ("Newhive by " + page_data.expr.owner.get('fullname') if page_data.expr else "We believe that your life is a blank canvas + you decide what goes on it. NewHive is your radically simple, DIY self publishing tool.") %}
+  {# Descripton for SEO #}
+  <meta name="description" content="{{description}}">
 
-    {# Meta for twitter and facebook cards #}
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:site" content="@newhive">
-    <meta property="og:image" content=
-      '{{ img_url if img_url else 'skin/1/logo_medium.png'|asset_url }}'>
-    <meta name="twitter:image:src" content=
-      '{{ img_url if img_url else 'skin/1/logo_medium.png'|asset_url }}'>
-    <meta property="og:url" content='{{url}}'>
-    <meta property="og:title" content='{{page_data.title|e}}'>
-    <meta name="twitter:title" content='{{page_data.title|e}}'>
-    <meta property="og:description" content='{{description}}'>
-    <meta property="twitter:description" content='{{description}}'>
-    <meta id="viewport" name="viewport">
-  {% endblock meta %}
-{% endif %}
+  {# Meta for twitter card #}
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@newhive">
+  <meta property="twitter:description" content='{{description}}'>
+
+  {# and facebook card #}
+  <meta property="og:image" content=
+    '{{ img_url if img_url else 'skin/1/logo_medium.png'|asset_url }}'>
+  <meta name="twitter:image:src" content=
+    '{{ img_url if img_url else 'skin/1/logo_medium.png'|asset_url }}'>
+  <meta property="og:url" content='{{url}}'>
+  <meta property="og:title" content='{{page_data.title|e}}'>
+  <meta name="twitter:title" content='{{page_data.title|e}}'>
+  <meta property="og:description" content='{{description}}'>
+
+  {% if page_data.expr %}
+    <link rel='alternate' type='application/json+oembed'
+      href='{{config.abs_url()}}api/oembed?url={{url|param_esc}}'>
+  {% endif %}
+  
+  <meta id="viewport" name="viewport">
+{% endblock meta %}
 
 {% block body %}
   <div id='overlays'></div>

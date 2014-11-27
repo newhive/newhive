@@ -1,3 +1,4 @@
+// "use strict";
 define([
     'browser/jquery'
     ,'browser/js'
@@ -25,7 +26,7 @@ define([
     ,js_util
     ,ui_util
     ,colors
-    ,codemirror
+    ,CodeMirror
     ,menu
 
     ,env
@@ -33,11 +34,6 @@ define([
     ,evs
     // ,app_has
 ){
-
-// TODO: flip strict
-if (0 && context.flags.Admin.use_strict)
-    "use strict";
-
 var Hive = {}
     ,noop = function(){}
     ,Funcs = js.Funcs
@@ -173,19 +169,41 @@ Hive.has_id = function(o) {
     })
 }
 
+// map [ name ==> obj id ]
+var name_map = {}
+// find next unused name with same base name
+var unused_name = function(name) {
+    var base = name, count = 0
+        ,match = name.match(/_[0-9]+$/)
+    if (match) {
+        base = name.slice(0, -match[0].length)
+        count = parseInt(match[0].slice(1))
+    }
+    while (name_map[name]) {
+        ++count
+        name = base + "_" + count
+    }
+    return name
+}
 // Give objects a numeric sequence name
 Hive.has_sequence = function(o, typename) {
     var seq_type = typename || "object"
-    var count = Hive.has_sequence[seq_type] || 0
+        ,name
+        ,count = Hive.has_sequence[seq_type] || 0
     Hive.has_sequence[seq_type] = count + 1
-    var name = seq_type + "_" + count
 
     o.name = function() {
         return name
     }
     o.name_set = function(v) {
-        name = v
+        if (name == v)
+            return
+        if (name)
+            delete name_map[name]
+        name = unused_name(v)
+        name_map[name] = o.id
     }
+
     //////////////////////////////////////////////////////////////////
     // Saveable
     if (!o.is_saveable) throw "has_sequence requires Saveable"
@@ -198,12 +216,39 @@ Hive.has_sequence = function(o, typename) {
         if (state.name)
             o.name_set(state.name)
     })
+
+    // initial state
+    o.name_set((o.init_state && o.init_state.name) || seq_type + "_" + count)
 }
+// Have the sequence number saved/loaded globally for this expression
 env.globals.has_sequence = function() {
     return $.extend({}, Hive.has_sequence)
 }
 env.globals_set.has_sequence = function(state) {
     return $.extend(Hive.has_sequence, state)
+}
+
+// This object has a location on canvas
+Hive.has_location = function(o) {
+    // TODO: organize all of the location functions
+    // var dirty = false
+    o.aabb = function() { return [[0, 0], [1, 1]] }
+    o.aabb_set = function() {}
+    o.pos_relative = function() { return o.aabb()[0] }
+    o.pos_relative_set = function() {}
+    o.dims_relative = function() { return u._sub(o.aabb()[1], o.aabb()[0]) }
+    o.dims_relative_set = function() {}
+
+    o.pos = function(){ return u._mul(o.pos_relative(), env.scale()) }
+    o.pos_set = function(pos){
+        o.pos_relative_set( u._div(pos, env.scale()) )
+    };
+    o.dims = function(){ return u._mul(o.dims_relative(), env.scale()) }
+    o.dims_set = function(dims){
+        o.dims_relative_set( u._div(dims, env.scale()) )
+    };
+    // o.width = function(){ return o.dims()[0] };
+    // o.height = function(){ return o.dims()[1] };
 }
 
 // Grouping 
@@ -222,7 +267,7 @@ Hive.has_group = function(o) {
         return parents
     }
     o.parent_set = function(g) {
-        // if (id && !groups.fetch(id)) throw "parent group missing"
+        // if (id && !Hive.Groups.fetch(id)) throw "parent group missing"
         parent = g
     }
     // return list of children
@@ -233,15 +278,25 @@ Hive.has_group = function(o) {
     o.children_flat = function() {
         return [o]
     }
+    // return whether this is in the parents list of given child
+    o.is_ancestor_of = function(child) {
+        if (!child)
+            return false
+        if (child == o) 
+            return true
+        var parent = child.parent()
+        return o.is_ancestor_of(parent)
+    }
 }
 
 var g_groups = {}
 
-var groups = function(state) {
+Hive.Groups = function(state) {
     var o = Hive.Saveable(state)
     o.is_group = true
 
     Hive.has_group(o)
+    Hive.has_location(o)
     Hive.has_id(o)
     Hive.has_sequence(o, "group")
 
@@ -251,10 +306,16 @@ var groups = function(state) {
     //////////////////////////////////////////////////////////////
     // Saveable
     o.state_update.add(function(state) {
-       children_ids = state.children_ids || []
+        children_ids = state.children_ids || []
+        children_ids = children_ids.slice()
+        if (state.has_group_layout) {
+            if (state.alignment) {
+                has_group_align(o, state.alignment)
+            }
+        }
     })
     o.state.add(function() {
-        var s = { children_ids: children_ids }
+        var s = { children_ids: o.children_ids_existing() }
         $.extend(o.state.return_val, s)
     })
     //////////////////////////////////////////////////////////////
@@ -263,7 +324,7 @@ var groups = function(state) {
     // has_group
     o.children = function() {
         return $.map(children_ids, function(id) { 
-            return groups.fetch(id) || env.Apps.fetch(id) || []
+            return env.Apps.app_or_group(id) || []
         })
     }
     o.children_flat = function() {
@@ -275,9 +336,57 @@ var groups = function(state) {
     }
     //////////////////////////////////////////////////////////////
 
+    //////////////////////////////////////////////////////////////
+    // TODO: break all location functions into child class
+    // TODO: cache and clear dirty bit
+    o.aabb = function(opts) {
+        opts = $.extend({exclude: {}}, opts)
+        var children_aabb = $.map(o.children(), function(child) {
+            if (opts.exclude[child.id]) return []
+            return [child.aabb()]
+        })
+        var nw = u._min.apply(0, u.nth(children_aabb, 0))
+            ,se = u._max.apply(0, u.nth(children_aabb, 1))
+        return [nw, se]
+    }
+    o.aabb.dirty = true
+    o.aabb_set = function(_aabb) {
+        // TODO: integrate with selection
+        var aabb = o.aabb()
+        var scale = u._div(u._sub(_aabb[1], _aabb[0]), u._sub(aabb[1], aabb[0]))
+        var rescale = function(pt) {
+            return pt.map(function(p, coord) {
+                return (p - aabb[0][coord]) * scale[coord] + _aabb[0][coord]
+            })
+        }
+        $.map(o.children(), function(child) {
+            var child_aabb = child.aabb()
+            child.aabb_set(child_aabb.map(rescale))
+        })
+    }
+    //////////////////////////////////////////////////////////////
+
+    // This group, and all its children, recursively down to leaves
+    o.children_all = function() {
+        return $.map(o.children(), function(child) {
+            if (!child.is_group)
+                return []
+            return child.children_all()
+        }).concat(o)
+    }
+    // id's of children
     o.children_ids = function() {
         return children_ids.slice()
     }
+    // id's of children which exist and are not deleted
+    o.children_ids_existing = function() {
+        return $.map(o.children(), function(child) {
+            if (child && !child.deleted)
+                return child.id
+            return []
+        })
+    }
+    // add child to this group
     o.add_child = function(app_or_group_or_id) {
         var id = app_or_group_or_id.id || app_or_group_or_id
         children_ids.push(id)
@@ -289,6 +398,7 @@ var groups = function(state) {
             g.parent_set(o)
         }
     }
+    // remove child from this group
     o.remove_child = function(app_or_group_or_id) {
         var id = app_or_group_or_id.id || app_or_group_or_id
         var index = children_ids.indexOf(id)
@@ -315,10 +425,12 @@ var groups = function(state) {
         return children
     }
 
+    if (state) // init
+        o.state_update(state)
     return o
 }
 // Find the (lowest) common parent in list of groups / apps
-groups.common_parent = function(groups) {
+Hive.Groups.common_parent = function(groups) {
     if (groups.length == 0)
         return undefined
     var parents = groups[0].parents()
@@ -334,32 +446,123 @@ groups.common_parent = function(groups) {
     }
     return parents[0]
 }
-groups.fetch = function(id) {
+Hive.Groups.fetch = function(id) {
     return g_groups[id]
 }
-groups.state = function() {
+Hive.Groups.state = function() {
     return $.map(g_groups, function(g, id) {
         // Do not save empty (orphaned) groups
-        return g.children().length ? g.state() : []
+        return g.children_ids_existing().length ? g.state() : []
     })
 }
-groups.init = function(states) {
+Hive.Groups.init = function(states) {
     states.map(function(state) {
-        groups().state_update(state)
+        Hive.Groups(state)
     })
     // Now fix up the parent pointers
     $.each(g_groups, function(id, g) {
         $.each(g.children(), function(i, child) {
             if (child)
                 child.parent_set(g)
-            // else
-            //     g.remove(child)
         })
     })
 }
-env.Groups = groups
-// env.debug = env.debug || {}
-// env.debug.groups = g_groups
+env.Groups = Hive.Groups
+
+// Generic layout group class
+var has_group_layout = function(o) {
+    if (!o.is_group) throw "Not a group"
+    if (o.has_group_layout) return // reentrant
+    o.has_group_layout = true
+
+    //////////////////////////////////////////////////////////////
+    // Saveable
+    o.state.add(function() {
+        var s = { has_group_layout: true }
+        $.extend(o.state.return_val, s)
+    })
+    //////////////////////////////////////////////////////////////
+
+    // Called by children when they move around
+    o.on_child_modification = function(child) {
+        if (o.on_child_modification.semaphore)
+            return
+        if (child && !o.is_ancestor_of(child)) {
+            console.log("Error: on_child_modification called for no reason")
+            return
+        }
+        o.on_child_modification.semaphore = true
+        o._on_child_modification(child)
+        o.on_child_modification.semaphore = false
+    }
+    // abstract function to be defined by inherited classes
+    o._on_child_modification = function(child) {}
+}
+
+// Group whose children are all aligned (left/right/top/bottom/center/justified)
+var has_group_align = function(o, alignment) {
+    has_group_layout(o)
+    // for each coordinate, -1 == none, 0 = minimum, 1 = maximal, 2 = center, 3 = justify
+    var alignment = alignment || [0, -1]
+
+    //////////////////////////////////////////////////////////////
+    // Saveable
+    o.state_update.add(function(state) {
+        o.alignment_set(state.alignment)
+    })
+    o.state.add(function() {
+        var s = { alignment: alignment }
+        $.extend(o.state.return_val, s)
+    })
+    //////////////////////////////////////////////////////////////
+
+    o.alignment_set = function(_alignment) {
+        alignment = _alignment
+        // force re-layout
+        o.on_child_modification()
+    }
+    o._on_child_modification = function(child) {
+        // find current bounds
+        var exclude = {}
+        if (child)
+            exclude[child.id] = 1
+        var aabb = o.aabb({exclude: exclude})
+        // calculate again, excluding child from bounds calculation
+        // var aabb_others = o.aabb({exclude: child.id})
+        // adjust all children to match an edge of bounds
+        $.map(o.children(), function(child) {
+            var child_aabb = child.aabb()
+            for (var coord = 0; coord < 2; ++coord) {
+                var shift = 0
+                if (alignment[coord] < 0)
+                    continue
+                else if (alignment[coord] == 3) {
+                    // TODO: need to exclude child from bounds calculation
+                    child_aabb[0][coord] = aabb[0][coord]
+                    child_aabb[1][coord] = aabb[1][coord]
+                    continue
+                } else if (alignment[coord] == 0) {
+                    shift = aabb[0][coord] - child_aabb[0][coord]
+                } else if (alignment[coord] == 1) {
+                    shift = aabb[1][coord] - child_aabb[1][coord]
+                } else if (alignment[coord] == 2) {
+                    shift += aabb[0][coord] - child_aabb[0][coord]
+                    shift += aabb[1][coord] - child_aabb[1][coord]
+                    shift *= .5
+                }
+                child_aabb[0][coord] += shift
+                child_aabb[1][coord] += shift
+            }
+            child.aabb_set(child_aabb)
+        })
+    }
+}
+//!! TESTING
+env.has_group_align = function(o, alignment) {
+    has_group_align(o)
+    if (alignment) 
+        o.alignment_set(alignment)
+}
 
 // collection object for all App objects in page. An App is a widget
 // that you can move, resize, and copy. Each App type has more specific
@@ -417,7 +620,7 @@ env.Apps = Hive.Apps = (function(){
     o.restack = function(include_deletes){
         var c_layer = 0
         for(var i = 0; i < stack.length; i++){
-            if(!include_deletes && (!stack[i] || stack[i].deleted))
+            if(!stack[i] || !include_deletes && stack[i].deleted)
                 continue
             stack[i].layer_set(c_layer)
             c_layer++
@@ -445,21 +648,55 @@ env.Apps = Hive.Apps = (function(){
         apps[app.id] = app
         return i;
     };
-    o.copy = function(elements, opts) {
-        elements =  elements.sort(function(a,b) {
+    o.copy_groups = function(groups, opts) {
+        var elements = $.map(groups, function(g) {
+            return g.children_flat()
+        })
+        // copy children in layer order so sort is consistent
+        elements = elements.sort(function(a,b) {
             return a.layer() - b.layer()
         });
         opts.z_index = "top"; // NaN goes to top
-        return $.map(elements, function(e){
-            return e.copy(opts)
+        // map [ original app/group ==> copied app/group ]
+        var child_map = {}
+        var copies = $.map(elements, function(e){
+            var child = e.copy(opts)
+            child_map[e.id] = child.id
+            return child
         });
-    } 
+        var old_groups = $.map(groups, function(g) {
+            if (!g.is_group)
+                return []
+            return g.children_all()
+        })
+        // copy the groups sans children
+        var group_copies = $.map(old_groups, function(g, i) {
+            if (!g.is_group)
+                return []
+            var state = g.state()
+            delete state.children_ids
+            delete state.id
+            var new_group = Hive.Groups(state)
+            child_map[g.id] = new_group.id
+            return new_group
+        })
+        // put the children back into the copied groups
+        $.each(child_map, function(old_id, new_id) {
+            var old_child = o.app_or_group(old_id)
+                ,new_child = o.app_or_group(new_id)
+                ,old_parent = old_child.parent()
+            if (!old_parent) 
+                return
+            var new_parent = o.app_or_group(child_map[old_parent.id])
+            if (new_parent) new_parent.add_child(new_child)
+        })
+        return copies
+    }
     o.fetch = function(id){
         return apps[id]
-        // for(var i = 0; i < o.length; i++) if( o[i].id == id ) return o[i];
     };
     o.app_or_group = function(id) {
-        return apps[id] || groups.fetch(id)
+        return apps[id] || Hive.Groups.fetch(id)
     }
     o.all = function(){ return $.grep(o, function(e){ return ! e.deleted; }); };
     o.filtered = function(filter) { return $.grep(o, filter); };
@@ -691,6 +928,12 @@ Hive.App = function(init_state, opts) {
         if (in_layout)
             return
         in_layout = true
+        // TODO: have dirty bit
+        if (o.initialized)
+            $.map(o.parents(), function(g) {
+                if (g.has_group_layout)
+                    g.on_child_modification(o)
+            })
         o.needs_layout = false;
         (o.special_layout())
         var pos = pos || o.pos(), dims = dims || o.dims();
@@ -810,7 +1053,6 @@ Hive.App = function(init_state, opts) {
         if(!opts) opts = {};
         var app_state = $.extend({}, true, o.state());
         delete app_state.id;
-        delete app_state.name;
         if(opts.z_offset) app_state.z += opts.z_offset;
         var cp = Hive.App(app_state, opts);
         env.History.save(cp._remove, cp._unremove, 'copy');
@@ -1163,6 +1405,18 @@ Hive.App.Code = function(o){
     // ... or require a code to have been focused
     env.show_css_class = true
 
+    //////////////////////////////////////////////////////////////////
+    // Saveable
+    // getter and setter for state which is visible to history
+    o.history_state.add(function() {
+        var state = { modules: o.module_imports }
+        $.extend(o.history_state.return_val, state)
+    }) 
+    o.history_state_set.add(function(state) {
+        if (state.modules)
+            o.module_imports = state.modules
+    })
+
     o.typename = function() {
         return ('js' == o.init_state.code_type) ? "code" : "style"
     }
@@ -1187,7 +1441,7 @@ Hive.App.Code = function(o){
     }
 
     o.is_module = function(){
-        return o.init_state.code_type == 'js' && o.init_state.content
+        return o.init_state.code_type == 'js' && o.content()
     }
 
     // TODO: fix auto-loading by running first within try-catch, and if it 
@@ -1209,11 +1463,22 @@ Hive.App.Code = function(o){
     o.module_name = function(without_error){
         return "module_" + o.id + "_" + (without_error ? last_success : iter)
     }
+    o.module_imports = []
+    var module_modules = function() {
+        return [""].concat($.map(o.module_imports, 
+            function(m) { return "'" + m.path + "'" })).join(",")
+    }
+    var module_names = function() {
+        return [""].concat($.map(o.module_imports, 
+            function(m) { return m.name })).join(",")
+    }
+
     var module_code = function() {
         // return o.content();
         if( o.init_state.url ) return '' // can't have src and script body
         return ( "define('" + o.module_name() + "', "
-            + "['browser/jquery'], function($) {\n"
+            + "['browser/jquery'" + module_modules() + "], function($"
+            + module_names() + ") {\n"
             + "var self = {}\n\n"
             + o.content() + "\n\n"
             + "return self\n})"
@@ -1491,6 +1756,7 @@ Hive.App.Image = function(o) {
         // UI for setting .offset of apps on drag after long_hold
         o.long_hold = o.begin_crop = function(ev){
             if(o != ev.data) return;
+            if(o.resizing() || cropping) return; // don't begin crop in the middle of a resize
             if(o.has_full_bleed() && ($(ev.target).hasClass("resize")
                 || $(ev.target).hasClass("resize_v")) ) return;
             if(!o.init_state.scale_x) 
@@ -1500,8 +1766,6 @@ Hive.App.Image = function(o) {
             // env.Selection.hide_controls();
 
             ev.stopPropagation();
-            if (cropping)
-                return
             cropping = true;
             o.crop_ui_showhide(true);
             return false;
@@ -1612,6 +1876,7 @@ Hive.App.Image = function(o) {
                 return _resize_end(skip_history);
             history_point.save();
             o.long_hold_cancel();
+            ref_dims = undefined;
         };
 
         // Editor bounds of uncropped image
@@ -2199,6 +2464,12 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         template = Hive.new_app(s, {no_select: 1, position: [0,0]
             , load: function(a) {
                 a.center_relative_set(pos(ev))
+                // This fixes issue of creating polygon moving to 100,100
+                // because the load sequence applies a rotation and ref_center
+                // would be undefined
+                // TODO: should any op which dirties position call transform_start?
+                // namely, should app or polygon call transform_start from layout?
+                a.transform_start && a.transform_start(0)
             }})
         template.center_relative_set(pos(ev))
         o.finish(ev)
@@ -2852,17 +3123,21 @@ var str2coords = {
 }
 
 Hive.App.has_resize = function(o) {
-    var dims_ref, pos,ref, history_point;
+    var dims_ref, pos_ref, history_point, resizing;
     // TODO: This ought to be in editor space
     // TODO: rename to reflect that it saves aabb
     o.dims_ref_set = function(){ 
         dims_ref = o.dims_relative(); 
         pos_ref = o.pos_relative();
     };
+    o.resizing = function() {
+        return resizing;
+    };
     o.resize_start = function(coords){
         if (o.before_resize) o.before_resize(coords);
         env.Selection.hide_controls()
         o.dims_ref_set()
+        resizing = true
         u.reset_sensitivity();
         // TODO: replace this last helper with the default history one
         history_point = o.history_helper_relative('resize');
@@ -2957,6 +3232,7 @@ Hive.App.has_resize = function(o) {
 
     o.resize_end = function(skip_history){ 
         u.set_debug_info("");
+        resizing = false;
         $(".ruler").hidehide();
         if (o.after_resize) skip_history |= o.after_resize();
         if (!skip_history) history_point.save();
@@ -3003,7 +3279,7 @@ Hive.App.has_resize = function(o) {
             delete dirs.N
             delete dirs.S
         }
-        for (dir in dirs) {
+        for (var dir in dirs) {
             var $handle = o.addControl($('#controls_misc .resize'))
                 ,coords = str2coords[dir]
                 ,angle = Math.atan2(coords[1], coords[0])
@@ -3032,7 +3308,7 @@ Hive.App.has_resize = function(o) {
                     left: Math.min(dims[0] / 2 - 13, dims[0] - 54) });
             else 
                 // o.c.resize.css({ left: dims[0] -13 + p, top: dims[1] - 13 + p });
-            for (dir in o.resizers) {
+            for (var dir in o.resizers) {
                 var coords = str2coords[dir]
                 o.resizers[dir].css(ui_util.array2css(
                     u._add([0, 0], control_pos(dims, p + 2, coords))))
@@ -3120,7 +3396,7 @@ Hive.has_scale = function(o){
     /////////////////////////////////////////////////////////////////////////
     // Saveable
     o.history_state.add(function() {
-        s = { 'scale': scale}
+        var s = { 'scale': scale}
         $.extend(o.history_state.return_val, s)
     })
     o.history_state_set.add(function(s) {
@@ -3219,12 +3495,17 @@ Hive.App.has_crop = function(o) {
         var app = o.app.sel_app(), $hidden_controls
 
         var fixup_controls = function(o) {
-            var $control = $("#controls .crop"), toggle = app.cropping_active ? "-on" : ""
-                ,$hidden_controls = $hidden_controls || $("#controls .crop").parents(".controls")
-                .find(":visible").not(".hide").not(".crop,.buttons,.resize,.select_border")
+            var $control = $("#controls .crop")
+                ,toggle = app.cropping_active ? "-on" : ""
+                ,$control_parent = $("#controls .crop").parents(".controls")
+                ,$hidden_controls = $hidden_controls || $control_parent
+                    .find(":visible").not(".hide").not(".crop,.buttons,.resize,.select_border")
             $control.prop("src", ui_util.asset("skin/edit/crop" + toggle + ".png"))
             // $hidden_controls.toggleClass("hidden", app.cropping_active)
             $hidden_controls.css("visibility", app.cropping_active ? "hidden" : "")
+            if (context.flags.Editor.crop_move_border)
+                $control_parent.find(".select_border").css("pointer-events",
+                    app.cropping_active ? "none" : "")
         }
         find_or_create_button(o, '.crop')
         .click(function(ev) {
@@ -3700,6 +3981,8 @@ Hive.App.Background = function(o) {
     o.layout = function(){
         layout.img_fill(o.$img, 
             [o.$img.prop('naturalWidth'), o.$img.prop('naturalHeight')], $(window))
+        var canvas_size = env.canvas_size()
+        o.div.width(canvas_size[0]).height(canvas_size[1]).css('left', env.offset[0])
     }
 
     o.div = $('#bg')
@@ -3802,5 +4085,4 @@ Hive.rect_test = function(w, h){
 };
 
 return Hive;
-
 });

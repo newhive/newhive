@@ -15,6 +15,9 @@ define([
 
     ,'browser/jquery/jplayer/skin'
     ,'browser/jquery/rotate.js'
+
+    // TODO: pull in dynamically
+    ,'js!outsrc/processing.min.js'
 ], function(
     $
     ,js
@@ -86,6 +89,7 @@ define([
 
         window.addEventListener('message', o.expr_receive)
         $(document).mousemove(check_hover);
+        
         $(document).click(expr_click);
         // $(document).mouseleave(function(e) { window.setTimeout(clear_hover, 600, e); });
 
@@ -97,18 +101,19 @@ define([
                 zoom = new_zoom
             })
         }
-        var on_ready = js.once(function() {
+        js.on_ready(function() {
             $("*[data-scaled]").map(function(i, app) {
                 var $app = $(app)
                     ,$img = $app.find("img")
                     ,$img2 = $img.clone()
-                $img2.lazy_load($app.data("scaled"))
                 $img = $img.addClass("loaded").add($img2)
                 $("<div class='lazy_load noclip'>").append($img).appendTo($app)
+                $img2.lazy_load($app.data("scaled"))
+                .on("lazy_load", function(ev, el) {
+                    $(el).siblings().css({opacity: 0})
+                })
             })
         })
-        $(document).ready(on_ready)
-        $(window).ready(on_ready)
         $(window).on("scroll", layout.on_scroll)
             .click(function(){ o.send_top('focus'); });
         //if (0 && util.mobile()) {
@@ -255,17 +260,17 @@ define([
     o.margin = function () {
         return $(window).width() / 4;
     }
-    var expr_click = function (e) {
+    var expr_click = function (ev) {
         o.send_top("expr_click");
     }
-    var clear_hover = function (e) {
-        o.send_top("hide_prev"); // $('.page_btn.page_prev').hidehide();
-        o.send_top("hide_next"); // $('.page_btn.page_next').hidehide();
-    }
-    var check_hover = function (e) {
-        if (e.clientX < o.margin()) {
+    // var clear_hover = function (ev) {
+    //     o.send_top("hide_prev"); // $('.page_btn.page_prev').hidehide();
+    //     o.send_top("hide_next"); // $('.page_btn.page_next').hidehide();
+    // }
+    var check_hover = function (ev) {
+        if (ev.clientX < o.margin()) {
             o.send_top("show_prev"); //$('.page_btn.page_prev').showshow();
-        } else if (e.clientX > $(window).width() - o.margin()) {
+        } else if (ev.clientX > $(window).width() - o.margin()) {
             o.send_top("show_next"); //$('.page_btn.page_next').showshow();
         } else {
             o.send_top("hide"); // $('.page_btn.page_prev').hidehide();
@@ -349,16 +354,24 @@ define([
         }
 
         // bonus paging and scrolling features
-        var $window = $(window)
-        $(document.body).on('keydown', function(e){
-           if(e.keyCode == 32) // space
-               if($window.scrollTop() + $window.height()
+        var $window = $(window), keys_down = {}, scrolling = false
+        $(document).on('keydown', function(ev){
+            if(ev.keyCode == 32) // space
+                if($window.scrollTop() + $window.height()
                     >= document.body.scrollHeight) o.page_next()
-           if(e.keyCode == 39) // right arrow
-               if($window.scrollLeft() + $window.width()
-                    >= document.body.scrollWidth) o.page_next()
-           if(e.keyCode == 37)
-               if($window.scrollLeft() == 0) o.page_prev()
+            if(ev.keyCode == 39){ // right arrow
+                if( $window.scrollLeft() + $window.width() <
+                    document.body.scrollWidth
+                ) scrolling = true
+                else if(!scrolling) o.page_next()
+            }
+            if(ev.keyCode == 37){ // left arrow
+                if($window.scrollLeft() > 0) scrolling = true
+                else if(!scrolling) o.page_prev()
+            }
+        }).on('keyup', function(ev){
+            if(ev.keyCode == 39 || ev.keyCode == 37)
+                scrolling = false
         })
 
         $('a, form').each(function(i, e){ o.link_target(e) });
@@ -415,8 +428,9 @@ define([
     // called from script element generated from
     // python newhive.controller.expr.html_for_app for each code app
     var code_srcs = [], code_modules = [], animate_go
-    o.load_code = function(code_src){
-        code_srcs.push(code_src) }
+    o.load_code = function(code_src, modules){
+        code_srcs.push({src:code_src, modules: modules})
+    }
 
     o.run_code = function(code_module){
         code_modules.push(code_module)
@@ -457,10 +471,23 @@ define([
 
         o.update_targets();
 
+        var module_paths = function(modules) {
+            return ["'browser/jquery'","'ui/expression'"]
+            .concat($.map(modules, function(p) { 
+                return "'" + (p.path_view || p.path) + "'"
+            }))
+            .join(",")
+        }
+        var module_names = function(modules) {
+            return ['$', 'expr']
+            .concat($.map(modules, function(p) { return p.name }))
+            .join(",")
+        }
         code_srcs.map(function(src){
             var script = $('<script>').html(
-                "curl(['browser/jquery','ui/expression'],function($, expr){"
-                + "var self={};" + src + ";expr.run_code(self) })"
+                "curl([" + module_paths(src.modules) + "],function("
+                + module_names(src.modules) + "){"
+                + "var self={};" + src.src + ";expr.run_code(self) })"
             ).addClass('code_module').appendTo('body')
         })
 

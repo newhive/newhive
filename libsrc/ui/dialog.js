@@ -131,7 +131,7 @@ define([
             this_dia.removeClass('hide').showshow();
             // For old browsers which don't support autofocus.
             this_dia.find("*[autofocus]").focus();
-            o.undefer()
+            util.unlazy(o.opts.dialog)
             if (!this_dia.data("_width"))
                 this_dia.data("_width", util.val(this_dia.css("width")));
             o.layout();
@@ -142,12 +142,6 @@ define([
 
             return o
         };
-
-        o.undefer = function(){
-            $.each(o.opts.dialog.find(".defer"), function (i, el) {
-                $(el).replaceWith($($(el).attr("data-content")))
-            })
-        }
 
         o.close = function() {
             if(!opts.opened) return;
