@@ -350,7 +350,6 @@ Hive.save_safe = true
 Hive.init_global_handlers = function(){
     // Global event handlers
     $(window).on('resize', Hive.layout)
-    Hive.layout()
 
     $(window).on('scroll', Hive.scroll);
     Hive.scroll();
@@ -544,7 +543,7 @@ Hive.init = function(exp, site_context, _revert){
 
     $('.edit.overlay').showshow()
     Hive.init_global_handlers()
-    setTimeout(function() { env.layout_apps(); }, 100);
+    setTimeout(function() { env.canvas_size_update(); }, 100);
 };
 
 Hive.enter = function(){
