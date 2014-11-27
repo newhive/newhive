@@ -1,7 +1,8 @@
 import httplib2, urllib, re, json
 from newhive import auth, config, mail
 from newhive.controllers.controller import ModelController
-from newhive.utils import log_error, dfilter, lget, abs_url, junkstr
+from newhive.utils import (log_error, dfilter, lget, abs_url, junkstr,
+    set_cookie, rm_cookie)
 from newhive.state import Entity, collection_client_view
 
 class User(ModelController):
@@ -29,11 +30,23 @@ class User(ModelController):
         query = ""
         if error:
             query = "#error=" + error
-        return self.redirect(response, (request.form.get('from') or abs_url()) + query)
+        return self.redirect( response, (request.form.get('from')
+            or abs_url()) + query )
 
     def logout(self, tdata, request, response, **args):
         auth.handle_logout(self.db, tdata.user, request, response)
         return self.serve_json(response, True)
+
+    def content_login(self, tdata, request, response, **args):
+        # currently for flags only, intentionally not secure
+        session = request.args.get('session')
+        print 'session arg: ', session
+        set_cookie(response, 'session', session)
+        # return sparse user record
+        return self.serve_json(response, { 'session': {'id': session} })
+    def content_logout(self, tdata, request, response, **args):
+        rm_cookie(response, 'session')
+        return self.serve_json(response, {})
 
     def tag_order(self, tdata, request, response, **args):
         tag_order = request.form.get('tag_order').split(",")

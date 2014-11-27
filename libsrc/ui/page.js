@@ -11,6 +11,7 @@ define([
     'context',
     'browser/layout',
     'ui/page/pages',
+    'ui/routing',
 
     'sj!templates/form_overlay.html',
     'sj!templates/password_reset.html',
@@ -50,6 +51,7 @@ define([
     context,
     browser_layout,
     pages,
+    routing,
 
     form_overlay_template,
     password_template,
@@ -87,21 +89,23 @@ define([
     var init_overlays = function(){
         done_overlays = true;
         $('#overlays').empty().html(overlay_template(context));
-        // render_overlays();
-        // $('#login_form').submit(o.login);
-        $('#login_form [name=from]').val(window.location);
         if(!context.user.logged_in){
             o.login_dialog = dialog.create('#dia_login', {
                 open: function(){
-                    $("#login_form .username").focus(); },
-                handler: function(e, json) {
-                    if (json.error != undefined) {
-                        $('#login_form .error_msg').text(json.error).showshow().fadeIn("slow");
-                    } else {
-                        o.login_dialog.close();
-                        o.on_login();
-                    } }
-                } );
+                    $("#login_form .username").focus();
+                    $('#login_form [name=from]').val(window.location);
+                }
+                // No Async login cuz XHR doesn't reliably set cookies
+                // ,handler: function(e, json){
+                //     if (json.error != undefined) {
+                //         $('#login_form .error_msg').text(json.error).showshow()
+                //             .fadeIn("slow");
+                //     } else {
+                //         o.login_dialog.close();
+                //         o.on_login();
+                //     } }
+                // }
+            })
             $('#login_form .signup').click(function(){
                 context.login_form = {
                     username: $("#login_form [name=username]").val()
@@ -173,14 +177,29 @@ define([
             return o.controller.open("home", {});
         }
         o.controller.refresh();
+        
+        // WIP: content-request-identity
+        // un-identify content frame requests
+        // var $login = $('<iframe>').attr('src',
+        //     routing.page_state('content_logout').api)
+        // $login.on('load', function(){ $login.remove() }).appendTo('body')
     };
-    o.on_login = function(e) {
-        context.user.logged_in = true;
-        // overlays are rendered once on init, so not done on .refresh()
-        done_overlays = false;
-        init_overlays();
-        o.controller.refresh();
-    };
+    // // async login doesn't work
+    // o.on_login = function(e) {
+    //     context.user.logged_in = true;
+    //     // overlays are rendered once on init, so not done on .refresh()
+    //     done_overlays = false;
+    //     init_overlays();
+    //     o.controller.refresh();
+    // }
+    // WIP: content-request-identity
+    // o.content_login = js.once(function(){
+    //     // identify content frame requests (currently just for flags)
+    //     var $login = $('<iframe>').attr('src',
+    //         routing.page_state('content_login').api +
+    //         '?session=' + context.user.session.id)
+    //     $login.on('load', function(){ $login.remove() }).appendTo('body')
+    // })
     o.logout = function(){
         $.post('/api/user/logout', '', o.on_logout);
     };
@@ -254,7 +273,7 @@ define([
             ,has_nav_embedded_logo = has_nav && context.user.logged_in
 
         // Move the logo handle into/out of the nav bar
-        $("#logo_handle")
+        $("#logo")
             .prependTo(has_nav_embedded_logo ? ".main-header .left" : "#overlays")
         // And fix up the overlay/hide styles
         $("#overlays .hive_logo")
@@ -291,6 +310,8 @@ define([
             $('#login_form .error_msg').showshow().fadeIn("slow");
             delete context.error
         }
+        // WIP: content-request-identity
+        // if(context.user.logged_in) o.content_login()
         if(context.page != new_page){
             if(context.page && context.page.exit)
                 context.page.exit()
@@ -724,7 +745,7 @@ define([
         } else
             $('#site').empty().append(master_template(page_data));
         if (page_data.text_result) {
-            $('#site').prepend("<pre>" + page_data.text_result)
+            $('<pre>').appendTo('#site').text(page_data.text_result)
         }
     }
 

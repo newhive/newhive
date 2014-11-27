@@ -30,7 +30,9 @@ define(['browser/jquery', 'ui/util'], function($, util) {
 
         $('.happ').each(function(i, app_div) {
             var e = $(this);
+
             if(!e.data('css')) {
+                e.toggleClass("loading", false)
                 var c = {}, props = ['left', 'top', 'width', 'height'],
                     border = $(app_div).css('border-radius')
 

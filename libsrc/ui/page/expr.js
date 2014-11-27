@@ -1,6 +1,7 @@
 define([
     'browser/jquery',
     'context',
+    'browser/js',
     'browser/layout',
     'ui/util',
     'ui/menu',
@@ -15,6 +16,7 @@ define([
 ], function(
     $,
     context,
+    js,
     browser_layout,
     util,
     menu,
@@ -69,10 +71,10 @@ define([
     }
 
     o.resize = function(){
-        if (!util.mobile()) {
+        // if (!util.mobile()) {
             browser_layout.center($('.page_btn.page_prev'), undefined, {'h': false});
             browser_layout.center($('.page_btn.page_next'), undefined, {'h': false});
-        }
+        // }
 
         var wide = ($(window).width() >= 1180) ? true : false;
         var columns = ($(window).width() >= 980) ? 2 : 1;
@@ -185,10 +187,24 @@ define([
     }
 
     o.do_handle_message = false
+    var $hovers = $(), timers = []
     o.enter = function(){
         o.do_handle_message = true
+        if (context.flags.View.expr_overlays_fade) {
+            $hovers = $("<div class='hover left'>")
+                .add( $("<div class='hover right'>"))
+                .add( $("<div class='hover bottom'>"))
+                .appendTo($("body"))
+        }
     };
     o.exit = function(){
+        $hovers.remove()
+        $.map(timers, function(timer) {
+            clearTimeout(timer)
+        })
+        $(".bottom.overlay")
+            .off("mouseenter mouseleave mouseover.hover mouseout.hover")
+            .css({opacity: 1})
         o.last_found = -1;
         o.next_found = -1;
         $('body').removeClass('expr')
@@ -491,7 +507,8 @@ define([
         if(!contentFrame.data('loaded') && !no_paging){
             // bugbug: sometimes this is never followed by a contentFrame.load
             // console.log('showing');
-            $('.page_btn').showshow();
+            if(!context.flags.View.expr_overlays_fade)
+                $('.page_btn').showshow();
         }
         else {
             // console.log('resetting on show');
@@ -575,7 +592,50 @@ define([
         $('.social.overlay').hidehide();
     };
 
+    var handle_hover = function(ev) {
+        var $this = $(ev.target)
+        do_hover($this.is(".bottom"), $this)
+    }        
+    var do_hover = function(bottom, $this) {
+        var $object = $(), timer
+        $this.hidehide()
+        var unhide = function() {
+            $this.showshow()
+            $object.stop(true).animate({"opacity":0},
+                {duration:context.flags.expr_overlays_fade_out_duration})
+        }
+        if (bottom) {
+            $object = $(".overlay.bottom")
+        } else {
+            // don't render the page buttons if there is nothing to page through!
+            if (!context.from_categories && 
+                (context.page_data.cards == undefined
+                || context.page_data.cards.length == 1
+                || !context.page_data.expr
+                || no_paging
+            )) {
+                return
+            }
+
+            $object = $this.is(".left") ? 
+                $(".page_btn.page_prev") : $(".page_btn.page_next")
+        }
+        $object.stop(true).animate(
+                {"opacity":context.flags.expr_overlays_fade},
+                {duration:context.flags.expr_overlays_fade_duration}
+            ).showshow()
+            .bind_once("mouseover.hover", function() {
+                clearTimeout(timer)
+            })
+            .bind_once("mouseout.hover", function() {
+                timer = setTimeout(unhide, 2000)
+                timers.push(timer)
+            })
+        timer = setTimeout(unhide, 2000)
+        timers.push(timer)
+    }
     o.attach_handlers = function(){
+
         $(".page_btn.page_prev").bind_once('click', o.page_prev);
         $(".page_btn.page_next").bind_once('click', o.page_next);
         $('.play_pause').bind_once_anon('click', function(){
@@ -584,12 +644,29 @@ define([
         $("#social_plus").bind_once('click', o.social_toggle);
         $("#social_close").bind_once_anon("click", o.social_toggle);
         $(".social_btn").bind_once_anon("click", o.social_toggle);
-        if (context.flags.fade_controls) {
-            $(".panel.overlay").css("opacity",.4)
+        if (context.flags.expr_overlays_fade) {
+            $hovers.bind_once('mouseenter.expr', handle_hover)
+            js.on_ready(function() {
+                do_hover(true,$())
+            })
+
+            $(".bottom.overlay,.page_btn.overlay")
                 .off("mouseenter").on("mouseenter", function(ev) {
-                    $(this).stop(true).animate({"opacity":1},{duration:200}) } )
+                    $(this).stop(true).animate(
+                        {"opacity":1},
+                        {duration: context.flags.expr_overlays_fade_duration}
+                    ) } )
                 .on("mouseleave", function(ev) { 
-                    $(this).animate({"opacity":.4},{duration:200}) } )
+                    $(this).animate(
+                        {"opacity": context.flags.expr_overlays_fade},
+                        {duration: context.flags.expr_overlays_fade_duration}
+                    ) } )
+        } else {
+            $('.page_btn').bind_once_anon('mouseenter', function(event){
+                o.page_btn_animate($(this), "in");
+            }).bind_once_anon('mouseleave', function(e) {
+                o.page_btn_animate($(this), "out");
+            });
         }
         if ($("#site").children().length && context.page_data.cards_route)
             $(".title_spacer .title").addClass("pointer").unbind('click').click(function() {
@@ -678,12 +755,6 @@ define([
             o.social_btn_click("love") })
         $(".republish_btn").bind_once_anon("click", function(){
             o.social_btn_click("republish") })
-
-        $('.page_btn').bind_once_anon('mouseenter', function(event){
-            o.page_btn_animate($(this), "in");
-        }).bind_once_anon('mouseleave', function(e) {
-            o.page_btn_animate($(this), "out");
-        });
 
         $('#dia_delete_ok').each(function(i, e){
             $(e).data('dialog').opts.handler = function(e, data){
@@ -975,6 +1046,9 @@ define([
 
     var page_btn_state = '';
     o.page_btn_handle = function(msg){
+        if (context.flags.View.expr_overlays_fade)
+            return 
+
         if(util.mobile())
             return
         if (!msg)

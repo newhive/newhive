@@ -14,7 +14,7 @@ fi
 ############################################
 source $NEWHIVE_HOME/bin/git_grep.sh
 
-filter_broken="${filter_broken}|/titanium/|history/history|/jquery-1|/old|/broken|/curl|google_closure.js|/d3/|codemirror.js|jquery-ui|/jquery/|/codemirror/|mobile/|zepto-"
+filter_broken="${filter_broken}|/titanium/|history/history|/jquery-1|/old|/broken|/curl|google_closure.js|/d3/|codemirror.js|jquery-ui|/jquery/jquery|/codemirror/|mobile/[pt]|mobile/app/[^w]|zepto-|jquery.js"
 
 alias a="git_grep -o"
 alias n='a -o -n'
@@ -47,7 +47,14 @@ alias og=grep_results
 ############################################
 
 # git root dir
-alias groot='git rev-parse --show-toplevel'
+function groot() {(
+  gitroot=`git rev-parse --show-toplevel 2> /dev/null`
+  if [ -z $gitroot ]; then
+    echo $NEWHIVE_HOME
+  else
+    echo $gitroot
+  fi;
+)}
 alias cdg='cd $(groot)' # top level of current repo
 alias cdnh='cd $NEWHIVE_HOME' # go to default repo from outside 
 alias cdnhp='cd /var/www/newhive' # go to default production home
@@ -86,6 +93,7 @@ alias ...='cd ../../'
 alias ....='cd ../../../'
 alias .....='cd ../../../../'
 alias ers='e ~/.bashrc'
+alias egg='e `groot`/bin/shell_helpers.sh'
 alias rs='source ~/.bashrc'
 
 # basic linux utils
@@ -94,6 +102,19 @@ alias xx='chmod 755'
 alias xr='chmod 644'
 alias open='xdg-open'
 alias gi='grep -i'
+alias t='type'
+
+# diagnostics
+alias ping8='ping 8.8.8.8'
+alias myip="ifconfig|grep inet.addr|grep -v 127.0.0.1|awk '{print \$2}'|sed 's/addr://'|head -1"
+alias mygate='echo `myip|sed "s/[0-9]*\.[0-9]*$//"`0.1'
+alias pinggate='ping `mygate`'
+
+#completions
+complete -c t
+# git > /dev/null
+. $NEWHIVE_HOME/bin/git-completion.bash
+__git_complete g __git_main
 
 ### BEGIN git_stuff ###
 #######################

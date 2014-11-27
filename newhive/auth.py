@@ -14,6 +14,8 @@ def authenticate_request(db, request, response):
        returns state.User object, False when there's no session,
        or Exception on login failure."""
 
+    # TODO-perf: put session inside of user record for authenticated sessions,
+    # so another query for user record doesn't have to be made in series
     session = db.Session.fetch(get_cookie(request, 'identity'))
     if not session or not session.get('active'):
         return handle_login(db, request, response)
@@ -74,7 +76,7 @@ def handle_logout(db, user, request, response):
     session = db.Session.fetch(get_cookie(request, 'identity'))
 
     rm_cookie(response, 'plain_secret')
-    rm_cookie(response, 'secure_secret', True)
+    rm_cookie(response, 'secure_secret')
 
     user.logged_in = False
 

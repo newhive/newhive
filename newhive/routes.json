@@ -255,6 +255,19 @@
         "controller": "user",
         "method": "logout"
     },
+    "content_login": {
+        "api_route": "/api/user/login",
+        "controller": "user",
+        "method": "content_login",
+        "secure": true,
+        "content_domain": true
+    },
+    "content_logout": {
+        "api_route": "/api/user/login",
+        "controller": "user",
+        "method": "content_logout",
+        "content_domain": true
+    },
     "signup": {
         "page_route": "/home/signup",
         "controller": "community",
@@ -344,7 +357,7 @@
     "view_expr_custom_domain_home": {
         "page_route": "/",
         "api_route": "/api/expr/url",
-        "controller": "community",
+        "controller": "expr",
         "method": "expr_custom_domain",
         "client_method": "expr",
         "host": "<host>"
@@ -352,7 +365,7 @@
     "view_expr_custom_domain": {
         "page_route": "/<path:path>",
         "api_route": "/api/expr/url/<path:url>",
-        "controller": "community",
+        "controller": "expr",
         "method": "expr_custom_domain",
         "client_method": "expr",
         "host": "<host>"
@@ -511,7 +524,21 @@
         "client_method": "profile",
         "require_login": true
     },
+    "version": {
+        "page_route": "/home/admin/version",
+        "api_route": "/api/admin/version",
+        "controller": "admin",
+        "method": "version",
+        "client_method": "profile",
+        "require_login": true
+    },
 
+    "empty": "standard outside consumable API endpoints",
+    "oembed": {
+        "api_route": "/api/oembed",
+        "controller": "expr",
+        "method": "oembed"
+    },
 
     "empty": "----------------------------------------------------",
     "empty": "Note: this is clientside; there is no server handler",

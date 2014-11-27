@@ -37,6 +37,12 @@ o.Selection = function(o) {
             return elements[arguments[0]];
         return elements.slice(); 
     };
+    o.single = function(app){
+        if (o == app && o.count() == 1)
+            return o.elements(0);
+        return app;
+    }
+    o.groups = function(){ return groups.slice() }
     o.sorted = function(){ return elements.slice().sort(u.topo_cmp); }
     o.count = function(){ return elements.length; };
     o.each = function(fn){ $.each(elements, fn) };
@@ -122,6 +128,32 @@ o.Selection = function(o) {
         })
         if (parent) 
             parent.add_child(new_group)
+        groups = o.get_groups(elements)
+    }
+    // Insert elements into selected group
+    o.enter_group = function() {
+        if (!o.can_group())
+            return
+
+        var old_groups = $.map(groups, function(g) {
+            return g.is_group ? g : []
+        })
+        // if (old_groups.length != 1)
+        //     return
+        var new_group = old_groups[0]
+        groups.map(function(el) {
+            if (el.id != new_group.id)
+                new_group.add_child(el)
+        })
+        groups = o.get_groups(elements)
+    }
+    // Remove the selected objects from their groups
+    o.exit_group = function() {
+        $.map(groups, function(g) {
+            var parent = g.parent()
+            if (parent)
+                parent.remove_child(g)
+        })
         groups = o.get_groups(elements)
     }
     // WAS: if the selection is a group, break it
@@ -485,6 +517,9 @@ o.Selection = function(o) {
         if (full_apps.length)
             o.pushing_move(pos);
         drag_target.pos_relative_set(pos);
+        $.map(mini_controls, function(c) {
+            c.layout()
+        })
         env.Apps.end_layout();
     };
     o.move_handler = function(ev, delta){
@@ -558,11 +593,11 @@ o.Selection = function(o) {
     }
     hive_app.App.has_resize(o);
     var ref_dims, _ref_dims, _resize = o.resize;
-    o.before_resize = function() {
+    o.before_resize = function(coords) {
         o.transform_start()
         set_full_apps();
         o.each(function(i, a) { 
-            if (a.resize_start) a.resize_start(); });
+            if (a.resize_start) a.resize_start(coords); });
 
         drag_target = o;
         ref_dims = o.dims_relative();
@@ -642,20 +677,25 @@ o.Selection = function(o) {
             // handlers on app type constructors
         }
         // Add mini-border
-        Controls(app, true);
+        if (!context.flags.Editor.merge_minis)
+            Controls(app, true);
     };
     o.app_unselect = function(app) {
         app.div.removeClass("selected");
         app.unfocus();
-        if(app.controls) app.controls.remove();
+        if (!context.flags.Editor.merge_minis)
+            if(app.controls) app.controls.remove();
     };
 
     o.scroll_to_view = function() {
         u.scroll_to_view(o.max_pos());
         u.scroll_to_view(o.min_pos());
     }
+    mini_controls = []
     o.update = function(apps){
-        apps = $.grep(apps || elements, function(e){ return ! e.deleted; });
+        apps = $.grep(apps || elements, function(e){ 
+            return ! e.deleted && e.initialized; 
+        });
         var multi = true;
 
         // Previously focused elements that should be unfocused
@@ -676,6 +716,35 @@ o.Selection = function(o) {
 
         elements = $.merge([], apps);
         groups = o.get_groups(elements)
+
+        // Update the mini selection borders
+        if (context.flags.Editor.merge_minis) {
+            $.map(mini_controls, function(c) {
+                c.remove();
+            })
+            mini_controls = []
+            var sel_groups = groups
+            // if (groups.length == 1 && groups[0].is_group)
+            //     sel_groups = groups[0].children()
+            var all_groups = [], seen_ids = {}
+            var add_all = function(g) {
+                var parent = g.parent()
+                if (parent && !seen_ids[parent.id]) {
+                    seen_ids[parent.id] = 1
+                    all_groups.push(parent)
+                    add_all(parent)
+                }
+            }
+            $.map(groups, function(g) {
+                add_all(g)
+            })
+            $.map(sel_groups, function(g) {
+                mini_controls.push(Controls(g, 1))
+            })
+            $.map(all_groups, function(g) {
+                mini_controls.push(Controls(g, 2))
+            })
+        }
 
         o.update_relative_coords();
 
@@ -811,21 +880,20 @@ o.Selection = function(o) {
         opts = $.extend({ 
             offset: [ 0, o.dims_relative()[1] + 20 ],
             no_select: 1,
+            select_copy: 0,
             // 'z_offset': elements.length 
             },
             opts)
         opts.load = function(){
             load_count--;
             if( ! load_count ) {
-                o.select( copies );
                 if (_load)
                     _load();
-                // else
-                //     o.select( copies );
+                if (opts.select_copy) o.select( copies );
             }
         };
         env.History.begin();
-        var copies = hive_app.Apps.copy(elements, opts)
+        copies = hive_app.Apps.copy_groups(groups, opts)
         env.History.group('copy group');
         // load_count is one more than elements to guarantee copies existence
         // when loaded.
@@ -854,6 +922,8 @@ o.Selection = function(o) {
             dir > 0 ? el.stack_top() : el.stack_bottom() })
         env.History.group('stack to ' + ((dir > 0) ? "top": "bottom"));
     };
+    o.stack_top_click = function(ev) { o.stack_top(ev.shiftKey) }
+    o.stack_bottom_click = function(ev) { o.stack_bottom(ev.shiftKey) }
     o.stack_top = function(maximal) {
         if (!maximal) {
             return o.stack_shift(1)
@@ -920,34 +990,138 @@ o.Selection = function(o) {
         "SC+a": function(){
             o.select( [] );
         },
-        "esc": function(){
+        "escape": function(){
             if(elements.length) 
                 o.unfocus()
             else return true
         },
-        "del": function(){ o.remove() },
+        "delete": function(){ o.remove() },
         "b": function(){ o.stack_bottom() },
         "S+b": function(){ o.stack_bottom(true) },
         "f": function(){ o.stack_top() },
         "S+f": function(){ o.stack_top(true) },
+        "S+forward_slash": function() { 
+            $("#dia_editor_help").data("dialog").open()
+            // env.main.help_selection() 
+        },
     }
     if (context.flags.Editor.grouping) {
         $.extend(handlers, {
             "S+g": function(){ o.break_group() },
             "g": function(){ o.set_group() },
+            "S+i": function(){ o.exit_group() },
+            "i": function(){ o.enter_group() },
             "C+u": function(){ o.break_group() },
             "C+g": function(){ o.set_group() },
             "SC+g": function(){ o.break_group() },
         })
     }
-    // If we want to take the keymap from jquery.UI
-    // var keymap = {}//js.invert($.ui.keyCode)
-    // $.each($.ui.keyCode, function(code, key) {
-    //     key = key.toLowerCase()
-    //     keymap[key] = code
-    //     keymap[key.slice(0,3)] = code
-    // })
-    var keymap = { 27: "esc", 46: "del" }
+    var KEYCODES = {
+     'backspace' : '8',
+     'tab' : '9',
+     'enter' : '13',
+     'shift' : '16',
+     'ctrl' : '17',
+     'alt' : '18',
+     'pause_break' : '19',
+     'caps_lock' : '20',
+     'escape' : '27',
+     'page_up' : '33',
+     'page down' : '34',
+     'end' : '35',
+     'home' : '36',
+     'left_arrow' : '37',
+     'up_arrow' : '38',
+     'right_arrow' : '39',
+     'down_arrow' : '40',
+     'insert' : '45',
+     'delete' : '46',
+     '0' : '48',
+     '1' : '49',
+     '2' : '50',
+     '3' : '51',
+     '4' : '52',
+     '5' : '53',
+     '6' : '54',
+     '7' : '55',
+     '8' : '56',
+     '9' : '57',
+     'a' : '65',
+     'b' : '66',
+     'c' : '67',
+     'd' : '68',
+     'e' : '69',
+     'f' : '70',
+     'g' : '71',
+     'h' : '72',
+     'i' : '73',
+     'j' : '74',
+     'k' : '75',
+     'l' : '76',
+     'm' : '77',
+     'n' : '78',
+     'o' : '79',
+     'p' : '80',
+     'q' : '81',
+     'r' : '82',
+     's' : '83',
+     't' : '84',
+     'u' : '85',
+     'v' : '86',
+     'w' : '87',
+     'x' : '88',
+     'y' : '89',
+     'z' : '90',
+     'left_window key' : '91',
+     'right_window key' : '92',
+     'select_key' : '93',
+     'numpad 0' : '96',
+     'numpad 1' : '97',
+     'numpad 2' : '98',
+     'numpad 3' : '99',
+     'numpad 4' : '100',
+     'numpad 5' : '101',
+     'numpad 6' : '102',
+     'numpad 7' : '103',
+     'numpad 8' : '104',
+     'numpad 9' : '105',
+     'multiply' : '106',
+     'add' : '107',
+     'subtract' : '109',
+     'decimal point' : '110',
+     'divide' : '111',
+     'f1' : '112',
+     'f2' : '113',
+     'f3' : '114',
+     'f4' : '115',
+     'f5' : '116',
+     'f6' : '117',
+     'f7' : '118',
+     'f8' : '119',
+     'f9' : '120',
+     'f10' : '121',
+     'f11' : '122',
+     'f12' : '123',
+     'num_lock' : '144',
+     'scroll_lock' : '145',
+     'semi_colon' : '186',
+     'equal_sign' : '187',
+     'comma' : '188',
+     'dash' : '189',
+     'period' : '190',
+     'forward_slash' : '191',
+     'grave_accent' : '192',
+     'open_bracket' : '219',
+     'backslash' : '220',
+     'closebracket' : '221',
+     'single_quote' : '222'
+    }
+
+    var keymap = { }
+    $.each(KEYCODES, function(name, num) {
+        name = name.toLowerCase()
+        keymap[num] = name
+    })
     o.keydown = Funcs(function(ev){ 
         var shift = ev.shiftKey, meta = ev.altKey, ctrl = u.is_ctrl(ev)
             ,smc = (shift ? "S" : "") + (meta ? "M" : "") + (ctrl ? "C" : "")
@@ -958,6 +1132,7 @@ o.Selection = function(o) {
         if (keycode >= 65 && keycode <= 64 + 26)
             key = String.fromCharCode(keycode).toLowerCase()
         handler = handlers[smc + key] || handlers["*" + key]
+            // || handlers[smc + key.slice(0, 3)] || handlers["*" + key.slice(0, 3)]
         if(handler){
             if (handler(ev)) return;
             return false;

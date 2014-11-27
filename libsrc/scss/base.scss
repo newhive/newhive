@@ -412,12 +412,4 @@ $placeholder_color: $color_light_charcoal;
 body.loading {
     cursor: wait;
     * { cursor: wait; }
-    #global_busy { display: inline-block !important; }
-}
-#global_busy {
-    position: fixed;
-    left: 50%; top: 50%;
-    margin-left: -64px;
-    margin-top: -64px;
-    z-index: 10000;
 }

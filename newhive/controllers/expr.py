@@ -1,10 +1,9 @@
-from bs4 import BeautifulSoup
 import os, json, cgi, base64, re, time
 from pymongo.errors import DuplicateKeyError
 from functools import partial
+import urllib
 
-from newhive.utils import dfilter, now, get_embedly_oembed, tag_string
-from newhive.utils import is_number_list
+from newhive.utils import dfilter, now, tag_string, is_number_list, URL, lget
 from newhive.controllers.controller import ModelController
 
 def anchor_tag(link, name, xlink=False):
@@ -203,8 +202,9 @@ class Expr(ModelController):
                 remix_owner['tagged'][remix_name].append(res.id)
                 remix_owner.update(updated=False, tagged=remix_owner['tagged'])
 
-        if not self.config.live_server and (upd.get('apps') or upd.get('background')):
-            res.threaded_snapshot(retry=120)
+        if( not self.config.snapshot_async
+            and ( upd.get('apps') or upd.get('background') )
+        ): res.threaded_snapshot(retry=120)
         # TODO-cleanup: create client_view for full expression record, instead
         # of just feed cards
         res['id'] = res.id
@@ -255,6 +255,13 @@ class Expr(ModelController):
             expr_obj = self.db.Expr.named(owner_name, expr_name)
         return self.serve_naked(tdata, request, response, expr_obj)
 
+    def expr_custom_domain(self, tdata, request, response, path='', **args):
+        url = request.host + ('/' if path else '') + path
+        expr = self.db.Expr.find({'url': url})
+        tdata.context['domain'] = request.host
+        return self.serve_naked(
+            tdata, request, self.response, expr)
+
     def serve_naked(self, tdata, request, response, expr_obj):
         if not expr_obj:
             return self.serve_404(tdata, request, response)
@@ -280,34 +287,30 @@ class Expr(ModelController):
             request.args.get('viewport', '1000x750').split('x')]
         snapshot_mode = request.args.get('snapshot') is not None
         tdata.context.update(
-            html = self.expr_to_html(expr_obj, snapshot_mode=snapshot_mode,
+            html = self.expr_to_html(expr_obj, snapshot_mode,
                 viewport=viewport),
             expr = expr_obj,
             use_ga = False,
         )
 
         body_style = ''
-        if snapshot_mode or expr_obj.get('clip_x'):
+        if snapshot_mode:
+            body_style = 'overflow: hidden;'
+        if expr_obj.get('clip_x'):
             body_style = 'overflow-x: hidden;'
         if expr_obj.get('clip_y'):
             body_style += 'overflow-y: hidden;'
         if body_style:
             tdata.context['css'] = 'body {' + body_style + '}'
 
-        # TODO: figure out 
-        # if hasattr(expr_obj,'client_view') :
-        #     tdata.context.update(expr=expr_obj.client_view(mode='page'))
-        # else:
-        #     tdata.context.update(expr_obj)
-        
         tdata.context.update(expr=expr_obj, expr_client=expr_client)
         return self.serve_page(tdata, response, 'pages/expr.html')
         
     def expr_to_html(self, exp, snapshot_mode=False, viewport=(1000, 750)):
         """Converts JSON object representing an expression to HTML"""
         if not exp: return ''
-        # TODO-feature-expr-orientation (use y)
-        expr_scale = float(viewport[0]) / 1000
+        # scale the objects on this page based on the given viewport
+        expr_scale = float(viewport[exp.get('layout_coord', 0)]) / 1000
 
         html_for_app = partial(self.html_for_app, scale=expr_scale,
             snapshot_mode=snapshot_mode)
@@ -319,10 +322,14 @@ class Expr(ModelController):
     def html_for_app(self, app, scale=1, snapshot_mode=False):
         content = app.get('content', '')
         more_css = ''
+        data = []
         dimensions = app.get('dimensions', [100,100])
         if not is_number_list(dimensions, 2): return ''
         if not is_number_list(app.get('position', []), 2): return ''
 
+        for prop in ['angle', 'scale']:
+            if app.get(prop): data.append(("data-" + prop, app.get(prop)))
+        
         type = app.get('type')
         klass = type.replace('.', '_')
         app_id = app.get('id', 'app_' + str(app['z']))
@@ -340,7 +347,14 @@ class Expr(ModelController):
             url = app.get('url') or content
             media = self.db.File.fetch(app.get('file_id'))
             scale_x = app.get('scale_x', 1)
-            if media: url = media.get_resample(dimensions[0] * scale * scale_x)
+            if media: 
+                data.append(("data-orig", url))
+                url = media.get_resample(dimensions[0] * scale * scale_x)
+                if not snapshot_mode: #//!! and self.flags.get('lazy_load'):
+                    data.append(("data-scaled", url))
+                    scale /= 8.0 #//!!self.flags.get('lazy_load_scale'):
+                    url = (media.get_static_url() or 
+                        media.get_resample(dimensions[0] * scale * scale_x))
 
             html = "<img src='%s'>" % url
             if scale_x:
@@ -364,35 +378,8 @@ class Expr(ModelController):
             html = "<div style='%s' class='content'></div>" % css
         elif type == 'hive.html':
             html_original = '%s' % (app.get('content',''))
-            if snapshot_mode:
-                def get_embed_img_html(url):
-                    ret_html = ''
-                    oembed = get_embedly_oembed(url) if url else ''
-                    if oembed and oembed.get('thumbnail_url'):
-                        ret_html += '<img src="%s"/>' % oembed['thumbnail_url']
-                    return ret_html
-                html = ''
-                error = False
-                # Turn embeds in hive.html blocks to static images
-                hivehtml = BeautifulSoup(app.get('content',''))
-                # Youtube embeds are <object>, and not <iframe>. We handle this
-                # special case here.
-                for object_tags in hivehtml.find_all('object'):
-                    param_tags = object_tags.find_all('param')
-                    for param in param_tags:
-                        if param.get('name') == 'movie':
-                            html += get_embed_img_html(param.get('value'))
-                            more_css += ";overflow:hidden"
-                if not html:
-                    for iframe in hivehtml.find_all('iframe'):
-                        html = get_embed_img_html(iframe.get('src'))
-                        if not html:
-                            error = True
-                    if error:
-                        html = html_original
-            else:
-                encoded_content = cgi.escape(app.get('content',''), quote=True)
-                html = '%s' % (app.get('content',''))
+            encoded_content = cgi.escape(app.get('content',''), quote=True)
+            html = '%s' % (app.get('content',''))
         elif type == 'hive.polygon':
             link_text = ('','')
             if link or link_name: 
@@ -424,7 +411,8 @@ class Expr(ModelController):
                     html = "<script src='%s'></script>" % app.get('url')
                 else:
                     html = ( "<script>curl(['ui/expression'],function(expr){"
-                        + "expr.load_code(%s)" % json.dumps(app.get('content'))
+                        + "expr.load_code(%s,%s)" % (json.dumps(app.get('content')),
+                            json.dumps(app.get('modules', [])))
                         + "})</script>" )
             if ctype == 'css':
                 tag = 'style'
@@ -437,19 +425,75 @@ class Expr(ModelController):
         else:
             html = "<div class='content'>%s</div>" % content
 
-        data = " data-angle='" + str(app.get('angle')) + "'" if app.get('angle') else ''
-        data += " data-scale='" + str(app.get('scale')) + "'" if app.get('scale') else ''
-        
         if type != 'hive.polygon':
             if link or link_name:
                 html = "<a %s>%s</a>" % (anchor_tag(link, link_name), html)
 
-        html = "<div class='happ %s %s' id='%s' style='%s'%s>%s</div>" % (
+        data = [prop + "=" + str(val) for (prop, val) in data]
+        html = "<div class='happ %s %s loading' id='%s' style='%s'%s>%s</div>" % (
             klass, app.get('css_class', ''), app_id,
-            css_for_app(app) + more_css, data, html
+            css_for_app(app) + more_css, " ".join(data), html
         )
 
         return html
+
+    def oembed(self, tdata, request, response, **args):
+        format = request.args.get('format', 'json')
+        if format != 'json':
+            return self.serve_500(request, response, status=501)
+
+        url = URL(request.args.get('url'))
+        params = url.query
+        user_and_page = url.path[1:].split('/', 1)
+        user = lget(user_and_page, 0)
+        page = lget(user_and_page, 1, '')
+        r = self.db.Expr.named(user, page)
+        if not r:
+            return self.serve_404(tdata, request, response)
+        if r['auth'] == 'password':
+            return self.serve_forbidden(tdata, request, response, status=401)
+            type (required)
+
+        resp = dict(
+            title=r.get('title', r.get('name', '')),
+            author_name=r['owner_name'],
+            author_url=r.owner.url
+        )
+
+        # ultra snapshot doesn't exist on any old page
+        max_w = min(715, int(request.args.get('maxwidth', 715)))
+        max_h = min(430, int(request.args.get('maxheight', 430)))
+        size = r.snapshot_max_size(max_w, max_h)
+        dims = r.snapshot_dims(size)
+        if size:
+            snapshot = r.snapshot_name_http(size=size)
+            resp.update(
+                type='rich', version='1.0',
+                thumbnail_url=snapshot,
+                thumbnail_width=dims[0],
+                thumbnail_height=dims[1],
+                width=dims[0],
+                height=dims[1]
+            )
+            if request.args.get('template', 'iframe') == 'iframe':
+                # default click to play view
+                params['viewport'] = '{0}x{1}'.format(*dims)
+                resp.update( html=("<iframe src='{0}?{1}' " +
+                    "width='{2}' height='{3}'></iframe>"
+                ).format(r.url, urllib.urlencode(params), *dims) )
+            else:
+                # linked snapshot img
+                target = request.args.get('link_target', '_new')
+                resp.update( html=("<a href='{0}?{1}' target='{2}'><img " +
+                    "src='{3}' width='{4}' height='{5}'></a>"
+                    ).format(r.url, urllib.urlencode(params), target, snapshot,
+                        *dims)
+                )
+        else:
+            # uh-oh, missing snapshot, give a simple link
+            resp.update(type='link')
+
+        return self.serve_json(response, resp)
 
 # TODO-bug fix resizing after loading by sending pre-scaled expr
 # Requires client layout_apps() to use scaled expr dimensions

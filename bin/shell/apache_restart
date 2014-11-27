@@ -1,0 +1,6 @@
+#!/bin/bash
+
+#xmessage $(whoami)
+#xmessage $PATH
+sudo apache2ctl restart >& /home/newduke/foo.log
+

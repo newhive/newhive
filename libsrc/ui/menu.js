@@ -34,9 +34,8 @@ var menu = function(handle, drawer, options) {
             ,animate_close: false
             ,animate_open: false
             ,opened: false
-        }, options);
-    if (util.mobile()) 
-        $.extend(opts, mobile_opts);
+        }, util.mobile() ? mobile_opts : {}
+        , options);
     if(!handle.length)
         console.error('menu has no handle:', drawer)
     if(!drawer.length)
@@ -47,7 +46,7 @@ var menu = function(handle, drawer, options) {
     o.opened = opts.opened;
     o.sticky = opts.sticky;
     drawer.data('menu', o);
-    handle.data('menu', o);
+    handle.data('menu', o).addClass("handle");
     // TODO: make this more sofisticated
     var html_opts = drawer.attr("data-menu-opts");
     if (html_opts) {
@@ -101,6 +100,7 @@ var menu = function(handle, drawer, options) {
     }
 
     o.do_open = function() {
+        util.unlazy(drawer)
         if(opts.animate_open) drawer.animate(opts.animate_open, 100);
         else opts.open_menu();
     };
@@ -126,12 +126,12 @@ var menu = function(handle, drawer, options) {
         if(o.opened) return;
 
         o.opened = true;
+        if( opts.group.current && (opts.group.current != o) )
+            opts.group.current.close(true);
         if(!shield_handler) {
             menu.set_menu_shield();
         }
 
-        if( opts.group.current && (opts.group.current != o) )
-            opts.group.current.close(true);
         opts.group.current = o;
         handle.data('busy', true);
 
@@ -302,7 +302,7 @@ var menu = function(handle, drawer, options) {
     if(opts.hover) {
         handle.on('mouseover', null, { delay: opts.open_delay }, function(ev) {
             menu.from_hover = true; o.open(ev); menu.from_hover = true; })
-            .on('mouseleave', function(){ o.delayed_close(false) });
+            .on('mouseout', function(){ o.delayed_close(false) });
         drawer.mouseenter(o.cancel_close)
             .mouseleave(function(){ o.delayed_close(true) })
             .mousemove(o.cancel_close)
@@ -318,7 +318,7 @@ var menu = function(handle, drawer, options) {
         .unbind('click').on("click", function(ev) { 
             menu.close_all(); 
         } );
-    handle.unbind('click').click(function(){
+    handle.unbind('click.menu').on("click.menu", function(){
         if(opts.default_item.length && opts.hover) {
             menu.close_all();
             opts.default_item.click();
@@ -350,37 +350,18 @@ var menu = function(handle, drawer, options) {
     return o;
 }
 
-var global_handler = function(name, handler) {
-    var bodyEle = $("body").get(0);
-    if(bodyEle.addEventListener) {
-        bodyEle.addEventListener(name, handler, true);
-    } else if(bodyEle.attachEvent) {
-        handler = function(){
-            var event = window.event;
-            handler(event)
-        };
-        document.attachEvent("on" + name, handler)
-    }
-    return handler
-}
-var global_handler_off = function(name, handler) {
-    var bodyEle = $("body").get(0);
-    if(bodyEle.removeEventListener) {
-       bodyEle.removeEventListener(name, handler, true);
-    } else if(bodyEle.detachEvent) {
-       document.detachEvent("on" + name, handler);
-    }
-}
-
-var shield_handler = null;
+var shield_handler = null, $shield = $();
 menu.set_menu_shield = function() {
-    shield_handler = global_handler("click", function(ev) {
-        if ($(ev.target).closest(".drawer").length == 0)
+    $shield = $("<div id='menu_shield'>").appendTo($("body"))
+    shield_handler = $shield.on("click mousedown tap", function(ev) {
+        // if ($(ev.target).closest(".drawer").length == 0
+        //     && $(ev.target).closest(".handle").length == 0)
             menu.close_all()    
     })
 }
 menu.remove_menu_shield = function() {
-    global_handler_off("click", shield_handler)
+    // $shield.off("click", shield_handler)
+    $shield.remove()
     shield_handler = null;
 }
 menu.close_all = function() {

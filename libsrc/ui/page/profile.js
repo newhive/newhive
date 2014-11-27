@@ -2,6 +2,7 @@ define([
     'browser/jquery',
     'browser/js',
     'ui/dialog',
+    'ui/util',
     'context',
     'sj!templates/cards.html',
     'sj!templates/user_byline.html',
@@ -12,6 +13,7 @@ define([
     $,
     js,
     dialog,
+    util,
     context,
     cards_template,
     template_user_byline,
@@ -143,7 +145,8 @@ define([
                     var $el = $(ev.currentTarget)
                     o.scroll_slide()
 
-                    if ($el.is(".error") && !(errors > 5)) {
+                    if ($el.is(".error") && (errors <= 5)) {
+                        return
                         $el.remove()
                         if (!back)
                             cur_mini--
@@ -151,6 +154,7 @@ define([
                         load_slide(back, errors ? errors + 1 : 1)
                     }
                 })
+
             $slide.find("img").css({"margin-left": card_margins})
             if (do_fade)
                 $slide.css(fade_css)
@@ -408,7 +412,7 @@ define([
         $mini_views.css({opacity: (dir == "in") ? 1 : 0})
         
         if (card_num > 0)
-            $mini_views = context.undefer(card.find(".mini_views.defer"))
+            $mini_views = util.undefer(card.find(".mini_views.defer"))
         if ($mini_views.length) {
             $mini_views.on("lazy_load", function() {
                 if (! $mini_views.is(".loaded")) return
@@ -443,6 +447,7 @@ define([
                     $attachment.bind_once_anon("mouseenter mouseleave", function(ev) {
                         var entering = (ev.type == "mouseenter")
                         $attachment.css({opacity: entering ? 1 : 0})
+                        $attachment.siblings().css({opacity: entering ? 0 : 1})
                     })
                 }
             if (card_data && card_data.curated && !card_data.user_list) {
