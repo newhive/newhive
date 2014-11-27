@@ -23,7 +23,7 @@ a { color : inherit; text-decoration : none; }
     // TODO: This is only needed currently for sketch. Should merge w/ image.
     width : 100%;
 }
-.happ.loading { display:none; }
+.happ.loading { visibility:hidden; }
 // WTF? img?
 .happ.hive_text img { width: inherit; }
 .happ.hive_text .content { width: auto; height:auto; }
