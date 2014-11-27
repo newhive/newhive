@@ -187,7 +187,7 @@ define([
     }
 
     o.do_handle_message = false
-    var $hovers = $()
+    var $hovers = $(), timers = []
     o.enter = function(){
         o.do_handle_message = true
         if (context.flags.View.expr_overlays_fade) {
@@ -199,6 +199,9 @@ define([
     };
     o.exit = function(){
         $hovers.remove()
+        $.map(timers, function(timer) {
+            clearTimeout(timer)
+        })
         $(".bottom.overlay")
             .off("mouseenter mouseleave mouseover.hover mouseout.hover")
             .css({opacity: 1})
@@ -626,8 +629,10 @@ define([
             })
             .bind_once("mouseout.hover", function() {
                 timer = setTimeout(unhide, 2000)
+                timers.push(timer)
             })
         timer = setTimeout(unhide, 2000)
+        timers.push(timer)
     }
     o.attach_handlers = function(){
 
