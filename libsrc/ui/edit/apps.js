@@ -2464,6 +2464,12 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         template = Hive.new_app(s, {no_select: 1, position: [0,0]
             , load: function(a) {
                 a.center_relative_set(pos(ev))
+                // This fixes issue of creating polygon moving to 100,100
+                // because the load sequence applies a rotation and ref_center
+                // would be undefined
+                // TODO: should any op which dirties position call transform_start?
+                // namely, should app or polygon call transform_start from layout?
+                a.transform_start(0)
             }})
         template.center_relative_set(pos(ev))
         o.finish(ev)
