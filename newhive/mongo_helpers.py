@@ -34,8 +34,8 @@ class Query(dict):
         self[key] = {'$all': l}
         return self
 
-    def exists(self, key):
-        self[key] = {'$exists': True}
+    def exists(self, key, existance=True):
+        self[key] = {'$exists': existance}
         return self
 
     def add(self, key, val):
