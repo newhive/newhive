@@ -430,8 +430,7 @@ class Expr(ModelController):
                 html = "<a %s>%s</a>" % (anchor_tag(link, link_name), html)
 
         data = [prop + "=" + str(val) for (prop, val) in data]
-        more_css += ";opacity:0"
-        html = "<div class='happ %s %s' id='%s' style='%s'%s>%s</div>" % (
+        html = "<div class='happ %s %s loading' id='%s' style='%s'%s>%s</div>" % (
             klass, app.get('css_class', ''), app_id,
             css_for_app(app) + more_css, " ".join(data), html
         )

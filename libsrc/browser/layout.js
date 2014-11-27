@@ -32,7 +32,7 @@ define(['browser/jquery', 'ui/util'], function($, util) {
             var e = $(this);
 
             if(!e.data('css')) {
-                e.css("opacity", "")
+                e.toggleClass("loading", false)
                 var c = {}, props = ['left', 'top', 'width', 'height'],
                     border = $(app_div).css('border-radius')
 
