@@ -782,8 +782,14 @@ o.new_file = function(files, opts, app_opts, filter) {
     return apps;
 };
 
-env.layout_apps = o.layout_apps = function(){
+var old_scale
+env.layout_apps = o.layout_apps = function(force){
     env.scale_set();
+    // force = true//!!
+    if (!force && old_scale == env.scale())
+        return
+
+    old_scale = env.scale()
     $.map(env.Apps, function(a){ a.layout() });
     env.Background.layout()
     // handled by App.layout
