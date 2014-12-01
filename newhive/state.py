@@ -1802,11 +1802,12 @@ class Expr(HasSocial):
         self.build_search(self)
         super(Expr, self).create()
         if 'remixed' not in self.get('tags_index', []):
-            feed = self.db.NewExpr.create(self.owner, self)
+            self.db.NewExpr.create(self.owner, self)
         else:
             remixed_expr = self.db.Expr.fetch(self['remix_parent_id'])
-            feed = self.db.Remix.create(self.owner, remixed_expr, 
-                data={'new_expr':self})
+            if remixed_expr:
+                self.db.Remix.create(self.owner, remixed_expr, 
+                    data={'new_expr':self})
 
         self.update_owner([])
         return self
