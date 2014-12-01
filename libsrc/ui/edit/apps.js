@@ -504,14 +504,21 @@ var has_group_align = function(o, alignment) {
     has_group_layout(o)
     // for each coordinate, -1 == none, 0 = minimum, 1 = maximal, 2 = center, 3 = justify
     var alignment = alignment || [0, -1]
+    var stack = -1
+    var padding = 10
 
     //////////////////////////////////////////////////////////////
     // Saveable
     o.state_update.add(function(state) {
         o.alignment_set(state.alignment)
+        stack = state.layout_stack
+        padding = state.layout_padding
     })
     o.state.add(function() {
-        var s = { alignment: alignment }
+        var s = { alignment: alignment
+            , layout_stack: stack
+            , layout_padding: padding 
+        }
         $.extend(o.state.return_val, s)
     })
     //////////////////////////////////////////////////////////////
@@ -527,17 +534,29 @@ var has_group_align = function(o, alignment) {
         if (child)
             exclude[child.id] = 1
         var aabb = o.aabb({exclude: exclude})
+            , children = o.children()
         // calculate again, excluding child from bounds calculation
         // var aabb_others = o.aabb({exclude: child.id})
         // adjust all children to match an edge of bounds
-        $.map(o.children(), function(child) {
+        if (stack >= 0 && alignment[stack] == -1) {
+            var pos = o.aabb()[0].slice()
+            children = children.sort(function(a, b) {
+                return a.pos_relative()[stack] - b.pos_relative()[stack]
+            })
+        }
+        $.map(children, function(child) {
             var child_aabb = child.aabb()
             for (var coord = 0; coord < 2; ++coord) {
                 var shift = 0
-                if (alignment[coord] < 0)
+                if (alignment[coord] < 0) {
+                    if (stack != coord)
+                        continue
+                    var size = child_aabb[1][coord] - child_aabb[0][coord]
+                    child_aabb[0][coord] = pos[coord]
+                    child_aabb[1][coord] = pos[coord] + size
+                    pos[coord] += size + padding
                     continue
-                else if (alignment[coord] == 3) {
-                    // TODO: need to exclude child from bounds calculation
+                } else if (alignment[coord] == 3) {
                     child_aabb[0][coord] = aabb[0][coord]
                     child_aabb[1][coord] = aabb[1][coord]
                     continue

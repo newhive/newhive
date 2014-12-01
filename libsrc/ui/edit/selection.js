@@ -489,9 +489,15 @@ o.Selection = function(o) {
         ref_pos = moved_obj.pos_relative();
         env.History.change_start(full_apps.length);
     };
+    o.group_semaphore = function(groups, val) {
+        $.map(groups, function(g) {
+            if (g.on_child_modification) g.on_child_modification.semaphore = val
+        })
+    }
     o.move_relative = function(delta, axis_lock, snapping){
         if(!ref_pos) return;
         env.Apps.begin_layout();
+        o.group_semaphore(groups, true);
         if(axis_lock)
             delta[ Math.abs(delta[0]) > Math.abs(delta[1]) ? 1 : 0 ] = 0;
         var pos = u._add(ref_pos)(delta);
@@ -521,6 +527,7 @@ o.Selection = function(o) {
             c.layout()
         })
         env.Apps.end_layout();
+        o.group_semaphore(groups, false);
     };
     o.move_handler = function(ev, delta){
         delta = u._div(delta)(env.scale());
