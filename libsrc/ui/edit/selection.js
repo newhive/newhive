@@ -45,6 +45,7 @@ o.Selection = function(o) {
     o.groups = function(){ return groups.slice() }
     o.sorted = function(){ return elements.slice().sort(u.topo_cmp); }
     o.count = function(){ return elements.length; };
+    o.group_count = function(){ return groups.length; };
     o.each = function(fn){ $.each(elements, fn) };
     o.get_targets = function(){
         return (!drag_target || drag_target == o) ?
@@ -264,10 +265,12 @@ o.Selection = function(o) {
         o.hide_controls()
         // prevents chrome from pooping selection borders
         o.each(function(i,a){ a.hide_controls() })
+        $.map(mini_controls, function(a) { a.fixed_div.hidehide() })
     }
     o.transform_end = function(){
         o.show_controls()
         o.each(function(i,a){ a.show_controls() })
+        $.map(mini_controls, function(a) { a.fixed_div.showshow() })
         o.layout()
         env.canvas_size_update()
     }
@@ -983,6 +986,7 @@ o.Selection = function(o) {
         }
         if (o.controls)
             o.controls.layout();
+        $.map(mini_controls, function(a) { a.layout() })
     }
 
     // Keyboard handlers

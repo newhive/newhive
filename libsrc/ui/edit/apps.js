@@ -498,7 +498,60 @@ var has_group_layout = function(o) {
     // abstract function to be defined by inherited classes
     o._on_child_modification = function(child) {}
 }
-
+var realign = function(children, alignment, aabb, opts) {
+    opts = $.extend({stack: -1, padding: 10}, opts)
+    var stack = opts.stack, padding = opts.padding
+        ,outer_dims = u.aabb2pos_dims(aabb)[1]
+    if (stack >= 0 && alignment[stack] == -1) {
+        var pos = opts.pos || aabb[0].slice()
+            , dims_total = [0, 0], dims_min = [Infinity, Infinity]
+        children = children.sort(function(a, b) {
+            return a.pos_relative()[stack] - b.pos_relative()[stack]
+        })
+        $.map(children, function(child) {
+            var dims = child.dims_relative()
+            dims_total = u._add(dims_total, dims)
+            dims_min = u._min(dims_min, dims)
+        })
+        // Auto padding distributes padding evenly (justify)
+        if (padding == "auto" && children.length > 1) {
+            padding = (outer_dims[stack] - dims_total[stack]) / (children.length - 1)
+        }
+        // Don't allow stacking if it would change children order
+        if (padding < -dims_min[stack])
+            stack = -1
+    }
+    $.map(children, function(child) {
+        var child_aabb = child.aabb()
+        for (var coord = 0; coord < 2; ++coord) {
+            var shift = 0
+            if (alignment[coord] < 0) {
+                if (stack != coord)
+                    continue
+                var size = child_aabb[1][coord] - child_aabb[0][coord]
+                child_aabb[0][coord] = pos[coord]
+                child_aabb[1][coord] = pos[coord] + size
+                pos[coord] += size + padding
+                continue
+            } else if (alignment[coord] == 3) {
+                child_aabb[0][coord] = aabb[0][coord]
+                child_aabb[1][coord] = aabb[1][coord]
+                continue
+            } else if (alignment[coord] == 0) {
+                shift = aabb[0][coord] - child_aabb[0][coord]
+            } else if (alignment[coord] == 1) {
+                shift = aabb[1][coord] - child_aabb[1][coord]
+            } else if (alignment[coord] == 2) {
+                shift += aabb[0][coord] - child_aabb[0][coord]
+                shift += aabb[1][coord] - child_aabb[1][coord]
+                shift *= .5
+            }
+            child_aabb[0][coord] += shift
+            child_aabb[1][coord] += shift
+        }
+        child.aabb_set(child_aabb)
+    })
+}
 // Group whose children are all aligned (left/right/top/bottom/center/justified)
 var has_group_align = function(o, alignment) {
     has_group_layout(o)
@@ -535,9 +588,9 @@ var has_group_align = function(o, alignment) {
             exclude[child.id] = 1
         var aabb = o.aabb({exclude: exclude})
             , children = o.children()
+        //!! TODO: call realign
         // calculate again, excluding child from bounds calculation
         // var aabb_others = o.aabb({exclude: child.id})
-        // adjust all children to match an edge of bounds
         if (stack >= 0 && alignment[stack] == -1) {
             var pos = o.aabb()[0].slice()
             children = children.sort(function(a, b) {
@@ -3839,42 +3892,61 @@ Hive.App.has_align = function(o) {
         o.align_menu = o.hover_menu(o.div.find('.button.align'), 
             o.div.find('.drawer.align'));
 
-        o.div.find('.option[cmd]').each(function(i, el) {
-            $(el).on('mousedown', function(e) {
+        o.div.find('[canvas]').each(function(i, el) {
+            var $el = $(el)
+            $el.on('mousedown', function(e) {
                 e.preventDefault();
             }).click(function(){
                 env.History.change_start([o.app]);
-                var cmd = $(el).attr('cmd')
-                    ,coord = 0
-                    ,width = 1000
-                    ,pos = o.app.pos_relative()
-                    ,dims = o.app.dims_relative();
-                switch(cmd) {
-                  case "+alignLeft":
-                    pos[coord] = 0;
-                    break;
-                  case "+alignRight":
-                    pos[coord] = width - dims[coord];
-                    break;
-                  case "+alignCenter":
-                    pos[coord] = (width - dims[coord]) / 2;
-                    break;
-                  case "+alignFull":
-                    pos[coord] = 0;
-                    dims[coord] = width;
-                    var app = o.app;
-                    var aspect = app.get_aspect();
-                    if (aspect) {
-                        if (!coord) aspect = 1 / aspect;
-                        dims[1 - coord] = width * aspect;
-                    } else if (app.is_selection && app.count() == 1) {
-                        app = app.elements()[0];
-                        dims[1 - coord] = app.dims_relative()[1 - coord];
-                    }
-                    app.dims_relative_set(dims);
-                    break;
+                var type = parseInt($el.attr('type'))
+                    ,canvas = parseInt($el.attr('canvas'))
+                    ,coord = parseInt($el.attr('coord'))
+                    ,aabb = o.app.aabb()
+                    ,alignment = [-1, -1]
+                    ,opts = { padding: "auto" }
+                alignment[coord] = type
+
+                if (canvas) {
+                    var $win = $(window), pos = [env.scrollX, env.scrollY]
+                        ,dims = [$win.width(), $win.height()], s = env.scale()
+                    aabb = [u._div(pos, s), u._div(u._add(pos, dims), s)]
                 }
-                o.app.pos_relative_set(pos);
+
+                if (type == -1) {
+                    opts.stack = 1 - coord
+                }
+                realign(env.Selection.groups(), alignment, aabb, opts)
+                env.Selection.update_relative_coords();
+
+                // var width = 1000
+                //     ,pos = o.app.pos_relative()
+                //     ,dims = o.app.dims_relative()
+                // switch(type) {
+                //   case 0:
+                //     pos[coord] = 0;
+                //     break;
+                //   case 1:
+                //     pos[coord] = width - dims[coord];
+                //     break;
+                //   case 2:
+                //     pos[coord] = (width - dims[coord]) / 2;
+                //     break;
+                //   case 3:
+                //     pos[coord] = 0;
+                //     dims[coord] = width;
+                //     var app = o.app;
+                //     var aspect = app.get_aspect();
+                //     if (aspect) {
+                //         if (!coord) aspect = 1 / aspect;
+                //         dims[1 - coord] = width * aspect;
+                //     } else if (app.is_selection && app.count() == 1) {
+                //         app = app.elements()[0];
+                //         dims[1 - coord] = app.dims_relative()[1 - coord];
+                //     }
+                //     app.dims_relative_set(dims);
+                //     break;
+                // }
+                // o.app.pos_relative_set(pos);
                 env.History.change_end("align");
             });
         });
@@ -3882,6 +3954,11 @@ Hive.App.has_align = function(o) {
         return o;
     };
     o.make_controls.push(memoize('has_align_controls', controls));
+    var fixup_controls = function(o) {
+        o.div.find("[canvas=0]").showhide(env.Selection.group_count() > 1)
+    }
+    fixup_controls.display_order = 9
+    o.make_controls.push(memoize('has_align_controls_fixup', fixup_controls))
 };
     
 Hive.App.has_opacity = function(o) {
