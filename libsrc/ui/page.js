@@ -409,7 +409,7 @@ define([
                 context.page.navigate_page((e.keyCode == 39) ? speed : -speed);
             }
         } else if (/*$("#search_box").is(":visible") && */
-            ! $(":focus").length && !e.altKey && !e.ctrlKey
+            ! $(":focus").length && !e.altKey && !(ev.ctrlKey || ev.metaKey)
             && (( /[A-Z0-9]/.test(keychar) && ! e.shiftKey) ||
                 (/[A-Z23]/.test(keychar) && e.shiftKey))) 
         {
