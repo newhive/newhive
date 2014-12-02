@@ -543,7 +543,7 @@ Hive.init = function(exp, site_context, _revert){
 
     $('.edit.overlay').showshow()
     Hive.init_global_handlers()
-    setTimeout(function() { env.canvas_size_update(); }, 100);
+    setTimeout(Hive.layout, 100);
 };
 
 Hive.enter = function(){

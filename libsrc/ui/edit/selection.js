@@ -45,6 +45,7 @@ o.Selection = function(o) {
     o.groups = function(){ return groups.slice() }
     o.sorted = function(){ return elements.slice().sort(u.topo_cmp); }
     o.count = function(){ return elements.length; };
+    o.group_count = function(){ return groups.length; };
     o.each = function(fn){ $.each(elements, fn) };
     o.get_targets = function(){
         return (!drag_target || drag_target == o) ?
@@ -264,10 +265,12 @@ o.Selection = function(o) {
         o.hide_controls()
         // prevents chrome from pooping selection borders
         o.each(function(i,a){ a.hide_controls() })
+        $.map(mini_controls, function(a) { a.fixed_div.hidehide() })
     }
     o.transform_end = function(){
         o.show_controls()
         o.each(function(i,a){ a.show_controls() })
+        $.map(mini_controls, function(a) { a.fixed_div.showshow() })
         o.layout()
         env.canvas_size_update()
     }
@@ -489,9 +492,15 @@ o.Selection = function(o) {
         ref_pos = moved_obj.pos_relative();
         env.History.change_start(full_apps.length);
     };
+    o.group_semaphore = function(groups, val) {
+        $.map(groups, function(g) {
+            if (g.on_child_modification) g.on_child_modification.semaphore = val
+        })
+    }
     o.move_relative = function(delta, axis_lock, snapping){
         if(!ref_pos) return;
         env.Apps.begin_layout();
+        o.group_semaphore(groups, true);
         if(axis_lock)
             delta[ Math.abs(delta[0]) > Math.abs(delta[1]) ? 1 : 0 ] = 0;
         var pos = u._add(ref_pos)(delta);
@@ -521,6 +530,7 @@ o.Selection = function(o) {
             c.layout()
         })
         env.Apps.end_layout();
+        o.group_semaphore(groups, false);
     };
     o.move_handler = function(ev, delta){
         delta = u._div(delta)(env.scale());
@@ -976,6 +986,7 @@ o.Selection = function(o) {
         }
         if (o.controls)
             o.controls.layout();
+        $.map(mini_controls, function(a) { a.layout() })
     }
 
     // Keyboard handlers

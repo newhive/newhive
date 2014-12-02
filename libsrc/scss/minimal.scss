@@ -92,7 +92,7 @@ form { display : inline; }
         border-radius: 50%;
         background-color: white;
         &.on { background-color: grey; }
-        @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
+        @include box-shadow(rgba(#7A7F87, 0.33) 3px 3px 10px);
     }
 }
 
@@ -114,8 +114,8 @@ form { display : inline; }
 
     background-color: white;
     background-repeat: no-repeat;
-    @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
-    @include border-radius(11px);
+    @include box-shadow(rgba(#7A7F87, 0.33) 3px 3px 10px);
+    // @include border-radius(11px);
 
     background-image: asset_url('skin/nav/logo.png');
     &:hover {

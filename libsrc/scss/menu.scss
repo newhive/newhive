@@ -27,7 +27,7 @@
 
     #activity_btn {
         position: relative;
-        padding-right: 50px;
+        padding-right: 60px;
 
         &.active .icon {
             background-image: asset_url('skin/nav/activity-hover.png');
@@ -89,7 +89,7 @@
     z-index: $nav_layer + 2;
     background-color: white;
     overflow: auto;
-    @include box-shadow(rgba(black, 0.4) 2px 3px 5px);
+    @include box-shadow(rgba($color_grey_medium, 0.33) 2px 3px 5px);
     border-width: 0 1px 0 0;
     border-color: $color_light_grey;
     cursor: default;
