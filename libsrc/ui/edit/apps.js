@@ -3925,7 +3925,8 @@ Hive.App.has_align = function(o) {
 
                 if (canvas) {
                     var $win = $(window), pos = [env.scrollX, env.scrollY]
-                        ,dims = [$win.width(), $win.height()], s = env.scale()
+                        ,dims = [$win.width(), $win.height()]
+                        ,s = env.scale() / env.zoom()
                     aabb = [u._div(pos, s), u._div(u._add(pos, dims), s)]
                 }
 
