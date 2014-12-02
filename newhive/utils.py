@@ -38,6 +38,11 @@ def is_number_list_list(l, length=0):
     return all_prop(l, lambda v: is_number_list(v, length=length))
 
 class Apply(object):
+    """ Use for migrations. You should always use apply_continue to allow for
+    doing the migration in multiple runs (it creates migrated attribute for records
+    already procssed. Example:
+    Apply.apply_continue(fixup, db.Expr, {})
+    """
     error = []
     success = []
 
@@ -71,6 +76,7 @@ class Apply(object):
 
     @staticmethod
     def apply_all(func, cursor, print_frequency=100, dryrun=False):
+        """ most likely should not use, use apply_continue wrapper """
         total = cursor.count()
         initial_success = len(Apply.success)
         print "Running on %s items." % total
