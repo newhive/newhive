@@ -330,6 +330,10 @@ background-color: lightgrey;
 }
 
 // TODO: organize
+.drawer.align img:nth-child(4) { margin-left: 15px; }
+.drawer.align div:nth-child(1n + 2) { margin-top: 8px; }
+.drawer.align div { line-height: 0px; }
+
 .drawer.brush .option:hover { background-color: $color_selected; }
 .drawer.brush .option.selected { background-color: $color_pale_yellow; }
 .control .button, .control .option { cursor : default; }
