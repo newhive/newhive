@@ -3,7 +3,7 @@ db = state.Database()
 from newhive.utils import Apply
 
 def migrate():
-    return Apply.apply_all(fixup, db.Expr.search({}))
+    return Apply.apply_continue(fixup, db.Expr, {})
 
 def fixup(expr, dryrun=False):
     expr.build_search(expr)
