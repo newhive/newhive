@@ -106,6 +106,15 @@ o.throttle = function(callback, min_delay, that) {
     }
 };
 
+o.once = function(f) {
+    var executed = false
+    return function() {
+        if (executed)
+            return
+        executed = true
+        return f.apply(this, arguments)
+    }
+}
 // Returns a function that calls a list of functions (useful for creating
 // composable event handlers). If any function in collection have a return
 // value, return this and abort the remaining functions in list
