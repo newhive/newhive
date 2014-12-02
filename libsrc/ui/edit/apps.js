@@ -311,7 +311,7 @@ Hive.Groups = function(state) {
     //////////////////////////////////////////////////////////////
     // Saveable
     o.state_update.add(function(state) {
-        children_ids = state.children_ids || []
+        children_ids = state.children_ids || children_ids
         children_ids = children_ids.slice()
         if (state.has_group_layout) {
             if (state.alignment) {
@@ -580,9 +580,9 @@ var has_group_align = function(o, alignment) {
     //////////////////////////////////////////////////////////////
     // Saveable
     o.state_update.add(function(state) {
-        o.alignment_set(state.alignment)
-        stack = state.layout_stack
-        padding = state.layout_padding
+        state.alignment && o.alignment_set(state.alignment)
+        state.layout_stack && (stack = state.layout_stack)
+        state.layout_padding != undefined && (padding = state.layout_padding)
     })
     o.state.add(function() {
         var s = { alignment: alignment
@@ -594,6 +594,8 @@ var has_group_align = function(o, alignment) {
     //////////////////////////////////////////////////////////////
 
     o.alignment_set = function(_alignment) {
+        if (alignment == _alignment)
+            return
         alignment = _alignment
         // force re-layout
         o.on_child_modification()
