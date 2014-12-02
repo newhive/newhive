@@ -249,6 +249,11 @@ Hive.has_location = function(o) {
     };
     // o.width = function(){ return o.dims()[0] };
     // o.height = function(){ return o.dims()[1] };
+
+    o.get_aspect = function() {
+        var dims = o.dims_relative()
+        return dims[0] / dims [1]
+    }
 }
 
 // Grouping 
@@ -536,6 +541,18 @@ var realign = function(children, alignment, aabb, opts) {
             } else if (alignment[coord] == 3) {
                 child_aabb[0][coord] = aabb[0][coord]
                 child_aabb[1][coord] = aabb[1][coord]
+                var aspect = child.get_aspect();
+                if (aspect) {
+                    if (!coord) aspect = 1 / aspect;
+                    var size = aabb[1][coord] - aabb[0][coord]
+                    child_aabb[1][1 - coord] = 
+                        child_aabb[0][1 - coord] + size * aspect
+                }
+                // else if (app.is_selection && app.count() == 1) {
+                //     app = app.elements()[0];
+                //     dims[1 - coord] = app.dims_relative()[1 - coord];
+                // }
+
                 continue
             } else if (alignment[coord] == 0) {
                 shift = aabb[0][coord] - child_aabb[0][coord]
@@ -3913,7 +3930,10 @@ Hive.App.has_align = function(o) {
                 }
 
                 if (type == -1) {
-                    opts.stack = 1 - coord
+                    if (env.Selection.group_count() == 1)
+                        alignment[coord] = 3
+                    else
+                       opts.stack = 1 - coord
                 }
                 realign(env.Selection.groups(), alignment, aabb, opts)
                 env.Selection.update_relative_coords();
