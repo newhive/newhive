@@ -138,7 +138,7 @@ body.signup #right_column {
                 background: $color_tan;
                 color: $color_charcoal;
                 font-weight: bold;
-                @include border-radius(5px);
+                // @include border-radius(5px);
             }
         }
         #tos{

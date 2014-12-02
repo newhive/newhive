@@ -121,7 +121,9 @@ background-color: lightgrey;
     background-color: white;
     position: fixed;
     z-index: 4;
-    padding: 0 10px;
+    &.nav {
+        padding: 0 10px;
+    }
 }
 
 #edit_nav {
@@ -381,7 +383,7 @@ background-color: lightgrey;
 // .menu label { font-weight: normal; font-size: 15px; }
 
 #btn_save {
-    @include border-radius(10px);
+    // @include border-radius(10px);
     margin-right: -11px;
     padding-left: 8px;
     padding-right: 10px;
