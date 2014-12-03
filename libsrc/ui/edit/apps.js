@@ -2473,11 +2473,9 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         // , orig_dims
     o.handler_type = 1
 
-    o.setup = function() {
-        // orig_dims = template.dims_relative()
-    }
     o.mode = function(_template){
-        // set creation mode.
+        // set creation mode, by adding appropriate event handler properties to
+        // Hive.App.Polygon, which is given focus.
         // If _template is false, make free form (points picked by clicks)
         // Otherwise create a shape defined by a template Polygon object,
         if(_template){
@@ -2489,7 +2487,6 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
             for (var k in handle_template) delete o[k]
             $.extend(o, handle_freeform)
         }
-        o.setup()
     }
 
     o.finish = function(ev){
@@ -2508,7 +2505,6 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         creating.reframe && creating.reframe()
         creating = false
         point_i = false
-        o.setup()
     }
 
     o.focus = function(){
