@@ -10,38 +10,37 @@ class Query(dict):
         return self
 
     def is1(self, key, *l):
-        self.setdefault(key, {})
-        self[key].update({ '$in': l })
-        return self
+        return self.addd(key, '$in', l)
 
     def gt(self, key, val):
-        self.setdefault(key, {})
-        self[key].update({ '$gt': val })
-        return self
+        return self.addd(key, '$gt', val)
 
     def lt(self, key, val):
-        self.setdefault(key, {})
-        self[key].update({ '$lt': val })
-        return self
+        return self.addd(key, '$lt', val)
 
     def bt(self, key, val1, val2):
         self.gt(key, val1)
-        self.lt(key, val2)
-        return self
+        return self.lt(key, val2)
 
     def all(self, key, *l):
         if type( l[0] ) == list: l = l[0]
-        self[key] = {'$all': l}
-        return self
+        return self.addd(key, '$all', l)
 
     def exists(self, key, existance=True):
-        self[key] = {'$exists': existance}
-        return self
+        return self.addd(key, '$exists', existance)
+
+    def ne(self, key, val):
+        return self.addd(key, '$ne', val)
 
     def add(self, key, val):
         self[key] = val
         return self
-    
+
+    def addd(self, key, prop, val):
+        self.setdefault(key, {})
+        self[key][prop] = val
+        return self
+
     @property
     def mnot(self):
         return Query({'$not': self})
