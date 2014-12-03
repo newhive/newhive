@@ -579,7 +579,7 @@ var has_group_align = function(o, alignment) {
 
     //////////////////////////////////////////////////////////////
     // Saveable
-    o.state_update.add(function(state) {
+    var state_update = o.state_update.add(function(state) {
         state.alignment && o.alignment_set(state.alignment)
         state.layout_stack && (stack = state.layout_stack)
         state.layout_padding != undefined && (padding = state.layout_padding)
@@ -594,9 +594,9 @@ var has_group_align = function(o, alignment) {
     //////////////////////////////////////////////////////////////
 
     o.alignment_set = function(_alignment) {
-        if (alignment == _alignment)
+        if (u.deep_equals(alignment, _alignment))
             return
-        alignment = _alignment
+        alignment = _alignment.slice()
         // force re-layout
         o.on_child_modification()
     }
@@ -607,46 +607,13 @@ var has_group_align = function(o, alignment) {
             exclude[child.id] = 1
         var aabb = o.aabb({exclude: exclude})
             , children = o.children()
-        //!! TODO: call realign
-        // calculate again, excluding child from bounds calculation
-        // var aabb_others = o.aabb({exclude: child.id})
+            opts = {stack: stack, padding: padding}
         if (stack >= 0 && alignment[stack] == -1) {
-            var pos = o.aabb()[0].slice()
-            children = children.sort(function(a, b) {
-                return a.pos_relative()[stack] - b.pos_relative()[stack]
-            })
+            opts.pos = o.aabb()[0].slice()
         }
-        $.map(children, function(child) {
-            var child_aabb = child.aabb()
-            for (var coord = 0; coord < 2; ++coord) {
-                var shift = 0
-                if (alignment[coord] < 0) {
-                    if (stack != coord)
-                        continue
-                    var size = child_aabb[1][coord] - child_aabb[0][coord]
-                    child_aabb[0][coord] = pos[coord]
-                    child_aabb[1][coord] = pos[coord] + size
-                    pos[coord] += size + padding
-                    continue
-                } else if (alignment[coord] == 3) {
-                    child_aabb[0][coord] = aabb[0][coord]
-                    child_aabb[1][coord] = aabb[1][coord]
-                    continue
-                } else if (alignment[coord] == 0) {
-                    shift = aabb[0][coord] - child_aabb[0][coord]
-                } else if (alignment[coord] == 1) {
-                    shift = aabb[1][coord] - child_aabb[1][coord]
-                } else if (alignment[coord] == 2) {
-                    shift += aabb[0][coord] - child_aabb[0][coord]
-                    shift += aabb[1][coord] - child_aabb[1][coord]
-                    shift *= .5
-                }
-                child_aabb[0][coord] += shift
-                child_aabb[1][coord] += shift
-            }
-            child.aabb_set(child_aabb)
-        })
+        return realign(children, alignment, aabb, opts)
     }
+    state_update(o.init_state)
 }
 //!! TESTING
 env.has_group_align = function(o, alignment) {
