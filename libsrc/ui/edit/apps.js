@@ -545,8 +545,9 @@ var realign = function(children, alignment, aabb, opts) {
                 if (aspect) {
                     if (!coord) aspect = 1 / aspect;
                     var size = aabb[1][coord] - aabb[0][coord]
-                    child_aabb[1][1 - coord] = 
-                        child_aabb[0][1 - coord] + size * aspect
+                    var old_size = child_aabb[1][1 - coord] - child_aabb[0][1 - coord]
+                    child_aabb[0][1 - coord] += .5 * (old_size - size * aspect)
+                    child_aabb[1][1 - coord] = child_aabb[0][1 - coord] + size * aspect
                 }
                 // else if (app.is_selection && app.count() == 1) {
                 //     app = app.elements()[0];
@@ -3525,6 +3526,7 @@ Hive.App.has_fixed = function(o){
         else
             delete o.css_state['position']
     }
+    o.fixed_set(o.fixed())
     return controls
 }
 Hive.App.has_autohide = function(o){

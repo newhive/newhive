@@ -1156,7 +1156,7 @@ o.append_color_picker = function(container, callback, init_color, opts){
     }
 
     // TODO: shades was undefined at some point.  Can't repro
-    shades.click(get_shade).drag(get_shade);
+    if(shades) shades.click(get_shade).drag(get_shade);
     bar.click(get_hue).drag(get_hue);
     o.set_color(init_color);
 
