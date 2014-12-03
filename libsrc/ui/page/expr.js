@@ -211,6 +211,7 @@ define([
         hide_exprs();
         o.hide_panel();
         $('#site').showshow();
+        $('.play_pause').hide()
         $('.page_btn').hidehide();
         $('.overlay.panel .expr_actions').hidehide()
         $(".overlay.panel .signup").showshow()
