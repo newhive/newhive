@@ -634,6 +634,7 @@ define([
                 timer = setTimeout(unhide, 2000)
                 timers.push(timer)
             })
+            $object.data("opacity", opacity)
         timer = setTimeout(unhide, 2000)
         timers.push(timer)
     }
@@ -656,7 +657,6 @@ define([
             $(".bottom.overlay,.page_btn.overlay")
                 .off("mouseenter").on("mouseenter", function(ev) {
                     var $this = $(this)
-                    $this.data("opacity", $this.css("opacity"))
                     $this.stop(true).animate(
                         {"opacity":1},
                         {duration: context.flags.expr_overlays_fade_duration}
