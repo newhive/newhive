@@ -128,6 +128,9 @@ site_flags = {
     },'View/expr_overlays_fade': {
         'description':'Opacity to fade newhive overlay to when hovering nearby'
         , 'values':['all=0']
+    },'View/page_button_opacity': {
+        'description':'Opacity to fade page buttons when hovering nearby'
+        , 'values':['all=0.8']
     },'View/expr_overlays_fade_duration': {
         'description':'How long it takes for overlays on newhives to fade in'
         , 'values':['all=200']

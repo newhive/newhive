@@ -604,6 +604,7 @@ define([
             $object.stop(true).animate({"opacity":0},
                 {duration:context.flags.expr_overlays_fade_out_duration})
         }
+        var opacity = context.flags.expr_overlays_fade
         if (bottom) {
             $object = $(".overlay.bottom")
         } else {
@@ -619,9 +620,11 @@ define([
 
             $object = $this.is(".left") ? 
                 $(".page_btn.page_prev") : $(".page_btn.page_next")
+            if (context.flags.View.page_button_opacity)
+                opacity = context.flags.View.page_button_opacity
         }
         $object.stop(true).animate(
-                {"opacity":context.flags.expr_overlays_fade},
+                {"opacity": opacity},
                 {duration:context.flags.expr_overlays_fade_duration}
             ).showshow()
             .bind_once("mouseover.hover", function() {
@@ -631,6 +634,7 @@ define([
                 timer = setTimeout(unhide, 2000)
                 timers.push(timer)
             })
+            $object.data("opacity", opacity)
         timer = setTimeout(unhide, 2000)
         timers.push(timer)
     }
@@ -652,14 +656,15 @@ define([
 
             $(".bottom.overlay,.page_btn.overlay")
                 .off("mouseenter").on("mouseenter", function(ev) {
-                    $(this).stop(true).animate(
+                    var $this = $(this)
+                    $this.stop(true).animate(
                         {"opacity":1},
                         {duration: context.flags.expr_overlays_fade_duration}
                     ) } )
                 .on("mouseleave", function(ev) { 
                     $(this).animate(
-                        {"opacity": context.flags.expr_overlays_fade},
-                        {duration: context.flags.expr_overlays_fade_duration}
+                        {"opacity": $(this).data("opacity")},
+                        {duration: context.flags.expr_overlays_fade_out_duration}
                     ) } )
         } else {
             $('.page_btn').bind_once_anon('mouseenter', function(event){

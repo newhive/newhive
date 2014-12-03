@@ -20,6 +20,6 @@ fi
 ulimit -S -n 4000 # hard limit default on Ubuntu seems to 4096
 bin/build_assets.py
 
-sudo apache2ctl graceful
+sudo apache2ctl restart
 # TODO: run automated tests
 # TODO: put this server back into load balancer

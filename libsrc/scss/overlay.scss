@@ -96,6 +96,7 @@ body:not(.mobile) {
     .logo, .item, .icon {
         display: inline-block;
     }
+    .network_nav { padding-left: 3px; }
     .splash.container { width: 100%; overflow: hidden; }
     img.splash {
         display: block;
@@ -345,10 +346,12 @@ body:not(.mobile) {
     }
 }
 
-.page_btn {
-    opacity: .9;
+.overlay.page_btn {
+    // opacity: .9;
     width: 50px;
-    height: 50px;
+    height: 60px;
+    @include box-shadow(rgba($color_grey_medium, 0.04) 3px 3px 8px);
+
     // background-size: 42px 55px;
     &:hover { background-color: black; }
     &.page_prev {
@@ -765,7 +768,7 @@ $action: love comment republish;
 .hive_logo {
     display: block;
     margin-left: 0px;
-    margin-right: 3px;
+    // margin-right: 3px;
     height: 44px;
     width: 44px;
     left: 20px;

@@ -273,11 +273,12 @@ define([
             ,has_nav_embedded_logo = has_nav && context.user.logged_in
 
         // Move the logo handle into/out of the nav bar
-        $("#logo")
-            .prependTo(has_nav_embedded_logo ? ".main-header .left" : "#overlays")
+        $("#logo").prependTo(has_nav_embedded_logo ? ".main-header .left" :
+            "#overlays .overlay.logo_container")
         // And fix up the overlay/hide styles
+        $("#overlays .overlay.logo_container").showshow()//.css("background", "transparent")
         $("#overlays .hive_logo")
-            .toggleClass("overlay", ! has_nav_embedded_logo)
+            // .toggleClass("overlay", ! has_nav_embedded_logo)
             .toggleClass("hide", has_nav && !has_nav_embedded_logo)
         // Reverse the logo menu if it's up top
         if (! $("#logo_menu").is(".inverted") != has_nav_embedded_logo) {
