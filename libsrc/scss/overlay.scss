@@ -96,6 +96,7 @@ body:not(.mobile) {
     .logo, .item, .icon {
         display: inline-block;
     }
+    .network_nav { padding-left: 3px; }
     .splash.container { width: 100%; overflow: hidden; }
     img.splash {
         display: block;
@@ -767,7 +768,7 @@ $action: love comment republish;
 .hive_logo {
     display: block;
     margin-left: 0px;
-    margin-right: 3px;
+    // margin-right: 3px;
     height: 44px;
     width: 44px;
     left: 20px;

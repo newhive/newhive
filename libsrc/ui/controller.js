@@ -283,6 +283,7 @@ define([
             // console.log(api_call)
             $.ajax(api_call);
             o.loading_start()
+            
         } else 
             success({})
 

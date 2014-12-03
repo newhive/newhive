@@ -236,8 +236,9 @@ var menu = function(handle, drawer, options) {
                 + handle.outerHeight();
             //!! HACK for activity when in header
             var open_menus = menu.menus.filter(function(m) { return m.opened; })
-            if (open_menus.length && open_menus[0].handle.parents(".main-header")
-                && ! open_menus[0].handle.is(".overlay"))
+            if (open_menus.length 
+                && open_menus[0].handle.parents(".main-header").length
+                && ! open_menus[0].handle.parents(".overlay").length)
                 css_opts.top = hp.top + opts.offset_y;
         }
         else if(opts.layout == 'bottom' || opts.layout == 'top'){
