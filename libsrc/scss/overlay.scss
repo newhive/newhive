@@ -345,10 +345,12 @@ body:not(.mobile) {
     }
 }
 
-.page_btn {
-    opacity: .9;
-    width: 50px;
+.overlay.page_btn {
+    // opacity: .9;
+    width: 43px;
     height: 50px;
+    @include box-shadow(rgba($color_grey_medium, 0.04) 3px 3px 8px);
+
     // background-size: 42px 55px;
     &:hover { background-color: black; }
     &.page_prev {
