@@ -1200,6 +1200,7 @@ Hive.App = function(init_state, opts) {
     o.has_align = o.add_to_collection = o.client_visible = true;
 
     o.type(o); // add type-specific properties
+    opts.defer_load != undefined && (o.defer_load = opts.defer_load)
     if (o.initialized) throw "load called too soon"
     Hive.has_sequence(o, o.typename())
 
@@ -2550,8 +2551,9 @@ Hive.registerApp(Hive.App.Polygon, 'hive.polygon');
         if(!creating){
             creating = template = Hive.new_app( {'type': 'hive.polygon'
                 ,points: [[0,0], [0,0]], position: p, dimensions: [1,1] }
-                ,{no_select: 1} )
+                ,{ no_select: 1, defer_load: true } )
             point_i = 1
+            creating.load()
             creating.transform_start(0)
             ref_pos = creating.pos_relative()
             return false
