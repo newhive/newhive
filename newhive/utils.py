@@ -471,7 +471,7 @@ def set_cookie(response, name, data, secure = False, expires = True):
     response.set_cookie(name, value = data, secure = secure, httponly=True,
         # no longer using subdomains
         #domain = None if secure else '.' + config.server_name
-        expires = expires)
+        expires = expiration)
 def get_cookie(request, name): return request.cookies.get(name, False)
 def rm_cookie(response, name):
     response.delete_cookie(name)

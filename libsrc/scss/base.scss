@@ -309,7 +309,7 @@ $panel_hover:  false false      false      false         false           false  
 .counts_icon {
     display:inline-block;
     width:74px;
-    border-radius: 12px;
+    // border-radius: 12px;
 
     &.narrow {
         width:60px !important;
@@ -389,7 +389,7 @@ input[type=button], input[type=submit], button { border : none; margin: 0px; }
 .medbold { font-weight : bold; font-size : 1.2em; }
 
 .rounded {
-    @include border-radius(5px);
+    // @include border-radius(5px);
 }
 .black { background-color : black; color: white; }
 .error { color: $color_active; }

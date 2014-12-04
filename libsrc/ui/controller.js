@@ -210,6 +210,8 @@ define([
             if(with_cards) with_cards(data);
         };
         var route = context.page_data.cards_route;
+        if (!route)
+            return
         var api_call = {
             method: 'get',
             url: context.page_state(route.route_args.route_name,
@@ -281,6 +283,7 @@ define([
             // console.log(api_call)
             $.ajax(api_call);
             o.loading_start()
+            
         } else 
             success({})
 

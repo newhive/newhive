@@ -36,7 +36,7 @@ body.mobile .search_bar input[type=text] { width: 380px; }
     .icon.hash {
         visibility: hidden;
         background-color: transparent;
-        @include border-radius(0px);
+        // @include border-radius(0px);
         background-image: asset_url('skin/nav/collections.png');
         &:hover {
             // background-image: asset_url('skin/nav/collections-on.png'); 
@@ -52,7 +52,7 @@ body.mobile .search_bar input[type=text] { width: 380px; }
         }
     }
     .icon {
-        @include border-radius(11px);
+        // @include border-radius(11px);
         width: 42px;
         height: 44px;
     }
@@ -285,6 +285,7 @@ body.mobile .user_header {
     .username {
         font-family: Gibson Semibold;
         text-transform: uppercase;
+        padding-right: 3px;
     }
     .thumb {
         margin-right: 10px;
@@ -631,6 +632,7 @@ body {
         width: 33.3%;
     }
     .feed.cat .card {
+        img.cat { margin-right: 13px; }
         &> a { font-size: 1px; }
         .delete.icon {
             position: absolute;
@@ -705,6 +707,16 @@ body {
                     color: black;
                     width: auto;
                     padding: 0px 14px;
+                    padding-right: 18px;
+                    
+                    height: 90px;
+                    .title {
+                        // font-family: Gibson;
+                        font-size: 36px;
+                        line-height: 35px;
+                        max-width: 560px;
+                        max-height: 70px;
+                    }
                 }
                 .info {
                     position: absolute;
@@ -712,8 +724,9 @@ body {
                     left: 27px;
                     background: white;
                     padding: 5px;
-                    padding-right: 10px;
+                    padding-right: 20px;
                     margin: 0;
+                    img.thumb { margin-right: 19px; }
                 }
 
                 .user_list {
@@ -772,7 +785,9 @@ body {
                         background-color: beige;
                     }
                 }
-                .cell.left { width:44px; }
+                // Icon is 44px, padding is 5px. This needs to be specified
+                // because the cell refuses to take its children dimensions
+                .cell.left { width:49px; }
                 .title {
                     max-width: 390px;
                 }
@@ -789,7 +804,7 @@ body {
                 position: relative;
                 img.thumb { 
                     width: 44px;
-                    margin-right: 6px;
+                    margin-right: 9px;
                 }
                 .user_list {
                     position: absolute;
