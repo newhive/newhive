@@ -319,10 +319,17 @@ var menu = function(handle, drawer, options) {
         .unbind('click').on("click", function(ev) { 
             menu.close_all(); 
         } );
+    if(opts.default_item.length && opts.hover && 
+        ["", "auto"].indexOf(handle.css("cursor")) >= 0) {
+        var old = opts.default_item.css("cursor")
+        if (["", "auto"].indexOf(old) >= 0 && opts.default_item.is("a"))
+            old = "pointer"
+        handle.css("cursor", old)
+    }
     handle.unbind('click.menu').on("click.menu", function(){
         if(opts.default_item.length && opts.hover) {
             menu.close_all();
-            opts.default_item.click();
+            opts.default_item[0].click();
         } else if (o.opened && !opts.hover_close) {
             o.close();
         } else {
