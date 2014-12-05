@@ -106,12 +106,14 @@ define([
                 var $app = $(app)
                     ,$img = $app.find("img")
                     ,$img2 = $img.clone()
+                    ,$container = $img.parent()
                 $img = $img.addClass("loaded").add($img2)
-                $("<div class='lazy_load noclip'>").append($img).appendTo($app)
-                $img2.lazy_load($app.data("scaled"))
-                .on("lazy_load", function(ev, el) {
-                    $(el).siblings().css({opacity: 0})
-                })
+                $("<div class='lazy_load noclip'>").appendTo($container)
+                    .append($img)
+                $img2.lazy_load($app.data("scaled")).on("lazy_load",
+                    function(ev, el) {
+                        $(el).siblings().css({opacity: 0})
+                    })
             })
         })
         $(window).on("scroll", layout.on_scroll)
@@ -405,25 +407,21 @@ define([
         if ($a.attr('target')) return;
         // TODO: Match against internal links and use routing system
 
-        var re = new RegExp('^(https?:)?//[\\w-]*.?(' +
-            context.config.server_domain + '|' +
-            context.config.content_domain + ')');
-        var href = $a.attr('href') || $a.attr('xlink:href') || $a.attr('action')
+        var local_match = new RegExp('^(https?:)?//[\\w-]*.?' +
+                context.config.server_domain)
+            href = $a.attr('href') || $a.attr('xlink:href') || $a.attr('action'),
+            absolute = /(^\w+:)|(^\/\/)/.test(href)
         if (!href) return
 
-        var non_relative = 
-            (href.indexOf('http') === 0 || href.slice(0,2) == "//")
-
-        if (href && non_relative && !re.test(href)) {
-            $a.attr('target', '_blank');
-        } else if (href && non_relative && re.test(href)) {
-            $a.attr('target', '_top');
-        } else if (!context.referer && href && !non_relative && href.match(/^\/\w/)) {
-            // force relative links to top
-            $a.attr('href', context.config.server_url.replace(/\/$/, '') + href);
-            $a.attr('target', '_top');
+        if(absolute && !local_match.test(href)) {
+            $a.attr('target', '_blank')
+        } else {
+            $a.attr('target', '_top')
+            // move relative link from content domain to site domain
+            if(!absolute) $a.attr('href',
+                context.config.server_url.replace(/\/$/, '') + href)
         }
-    };
+    }
 
     // called from script element generated from
     // python newhive.controller.expr.html_for_app for each code app
