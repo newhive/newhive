@@ -95,6 +95,11 @@ define([
             context.server_url.replace(/.*\/\//,"")))
             context.referer = null
 
+        // detect if in frame
+        context.embed = false
+        try {
+            if( window.parent == window.top ) context.embed = true
+        } catch(e) { context.embed = true }
 
         routing.register_state(route_args);
         if (util.mobile()) {
