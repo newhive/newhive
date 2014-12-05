@@ -1990,6 +1990,7 @@ class Expr(HasSocial):
         expr['type'] = "expr"
         apps = expr['apps'] = {}
         expr['bg'] = self.get('background')
+        expr['path'] = self['owner_name'] + '/' + self['name']
         for app in self.get('apps',[]):
             app_id = app.get('id', 'app_' + str(app['z']))
             data = app.get('client_data', {})
