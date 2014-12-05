@@ -417,9 +417,15 @@ define([
             $a.attr('target', '_blank')
         } else {
             $a.attr('target', '_top')
-            // move relative link from content domain to site domain
-            if(!absolute) $a.attr('href',
-                context.config.server_url.replace(/\/$/, '') + href)
+            // move domain relative link from content domain to site domain
+            if(!absolute){
+                var domain = context.config.server_url.replace(/\/$/, '')
+                if(href.indexOf('/') == 0) href = domain + href
+                // add page path directory to path relative links
+                else href = ( domain + '/' + o.expr.path.replace(/[^\/]*$/, '')
+                    + href )
+                $a.attr('href', href)
+            }
         }
     }
 
