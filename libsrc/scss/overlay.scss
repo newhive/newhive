@@ -357,7 +357,7 @@ body:not(.mobile) {
     &.page_prev {
         background-image: asset_url('skin/nav/page_prev.png');
         &:hover { background-image: asset_url('skin/nav/page_prev-hover.png'); }
-        background-position: -1px 0px;
+        background-position: -2px 0px;
         left: 14px;
     }
     &.page_next {

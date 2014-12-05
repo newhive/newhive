@@ -130,7 +130,7 @@ site_flags = {
         , 'values':['all=0']
     },'View/page_button_opacity': {
         'description':'Opacity to fade page buttons when hovering nearby'
-        , 'values':['all=0.8']
+        , 'values':['all=0.9']
     },'View/expr_overlays_fade_duration': {
         'description':'How long it takes for overlays on newhives to fade in'
         , 'values':['all=200']
