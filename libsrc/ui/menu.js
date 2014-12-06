@@ -185,16 +185,20 @@ var menu = function(handle, drawer, options) {
         }
 
         var css_opts = {};
-        var z_index = "auto";
-        el = handle;
+
+        // calculate menu z_index, ensuring it is at least 40 and at greater 
+        // than the handle's z_index
+        $el = handle;
         var z_index_latch = 0;
-        while (el.length && ! (z_index_latch > 0)) {
-            z_index = el.css("z-index");
+        while ($el.length && ! (z_index_latch > 0)) {
+            var z_index = $el.css("z-index");
             z_index_latch = parseInt(z_index) + 1;
-            el = el.parent();
+            $el = $el.parent();
         }
+        z_index_latch = Math.max(40, z_index_latch)
         if (z_index_latch > 0)
             css_opts['z-index'] = z_index_latch;
+        
         // special stuff for activity menu. Belongs in template file
         // as special attributes
         if (drawer.is("#activity_menu")) {

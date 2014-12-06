@@ -301,6 +301,7 @@ background-color: lightgrey;
     }
 
     .buttons,.top_buttons,.controls_ne {
+        z-index: 2;
         pointer-events: none;
         * { pointer-events: auto; }
         .button {
