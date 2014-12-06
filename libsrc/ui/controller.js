@@ -89,11 +89,6 @@ define([
             context.config.secure_content_url : context.config.content_url;
 
         context.parse_query();
-        // context.referer holds the site host of the containing frame, if one exists.
-        // If it does not, it comes back as the same as server host, so we delete it here.
-        if (context.referer && (context.referer.replace(/.*\/\//,"") == 
-            context.server_url.replace(/.*\/\//,"")))
-            context.referer = null
 
         // detect if in frame
         context.embed = false
@@ -215,6 +210,8 @@ define([
             if(with_cards) with_cards(data);
         };
         var route = context.page_data.cards_route;
+        if (!route)
+            return
         var api_call = {
             method: 'get',
             url: context.page_state(route.route_args.route_name,
@@ -286,6 +283,7 @@ define([
             // console.log(api_call)
             $.ajax(api_call);
             o.loading_start()
+            
         } else 
             success({})
 

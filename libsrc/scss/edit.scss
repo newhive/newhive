@@ -121,7 +121,9 @@ background-color: lightgrey;
     background-color: white;
     position: fixed;
     z-index: 4;
-    padding: 0 10px;
+    &.nav {
+        padding: 0 10px;
+    }
 }
 
 #edit_nav {
@@ -330,6 +332,13 @@ background-color: lightgrey;
 }
 
 // TODO: organize
+.drawer.align {
+    padding: 15px;
+    img:nth-child(4) { margin-left: 15px; }
+    div:nth-child(1n + 2) { margin-top: 8px; }
+    div { line-height: 0px; }
+}
+
 .drawer.brush .option:hover { background-color: $color_selected; }
 .drawer.brush .option.selected { background-color: $color_pale_yellow; }
 .control .button, .control .option { cursor : default; }
@@ -377,7 +386,7 @@ background-color: lightgrey;
 // .menu label { font-weight: normal; font-size: 15px; }
 
 #btn_save {
-    @include border-radius(10px);
+    // @include border-radius(10px);
     margin-right: -11px;
     padding-left: 8px;
     padding-right: 10px;

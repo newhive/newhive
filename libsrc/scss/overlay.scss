@@ -96,6 +96,7 @@ body:not(.mobile) {
     .logo, .item, .icon {
         display: inline-block;
     }
+    .network_nav { padding-left: 3px; }
     .splash.container { width: 100%; overflow: hidden; }
     img.splash {
         display: block;
@@ -106,7 +107,8 @@ body:not(.mobile) {
         height: 80px;
     }
     .item {
-        @include border-radius(6px);
+        font-size: 17px;
+        // @include border-radius(6px);
     }
     .blurb {
         font-size: 19px;
@@ -196,7 +198,7 @@ body:not(.mobile) {
         line-height: 0px;
         margin: 30px auto 0px auto;
         max-width: 1037px;
-        padding: 0px 50px;
+        padding: 0px 54px;
 
         ul {
             -webkit-margin-before: 0em;
@@ -250,10 +252,14 @@ body:not(.mobile) {
             }
 
             .category_btn {
-                text-transform: lowercase;
+                // text-transform: lowercase;
+                // padding: 10px;
+                // font-family: Gibson Semibold;
+                // font-size: 20px;
+                text-transform: uppercase;
                 padding: 10px;
-                font-family: Gibson Semibold;
-                font-size: 20px;
+                font-family: Gibson;
+                font-size: 18px;
             }
 
             .menu.drawer.category_hover .menu_item {
@@ -288,7 +294,7 @@ body:not(.mobile) {
         .blurb { margin: 4px 4px 8px 4px; }
     }
     &.condensed {
-        @include box-shadow(rgba(black, 0.4) 0px 3px 10px);
+        @include box-shadow(rgba($color_grey_medium, 0.33) 0px 3px 10px);
         .hide_condensed { display: none; }
         // .header {
         //     margin: 22px auto 0px auto;
@@ -340,22 +346,24 @@ body:not(.mobile) {
     }
 }
 
-.page_btn {
-    opacity: .9;
-    width: 42px;
-    height: 55px;
+.overlay.page_btn {
+    // opacity: .9;
+    width: 50px;
+    height: 60px;
+    @include box-shadow(rgba($color_grey_medium, 0.04) 3px 3px 8px);
+
     // background-size: 42px 55px;
     &:hover { background-color: black; }
     &.page_prev {
         background-image: asset_url('skin/nav/page_prev.png');
         &:hover { background-image: asset_url('skin/nav/page_prev-hover.png'); }
-        background-position: -4px 0px;
+        background-position: -2px 0px;
         left: 14px;
     }
     &.page_next {
         background-image: asset_url('skin/nav/page_next.png');
         &:hover { background-image: asset_url('skin/nav/page_next-hover.png'); }
-        background-position: -6px 0px;
+        background-position: 1px 0px;
         right: 20px;
     }
 }
@@ -424,16 +432,15 @@ body:not(.mobile) {
     z-index: $nav_layer;
     background-color: white;
     background-repeat: no-repeat;
-    @include box-shadow(rgba(black, 0.4) 3px 3px 10px);
+    @include box-shadow(rgba($color_grey_medium, 0.33) 3px 3px 10px);
     // @include border-radius(11px);
-    @include border-radius(11px);
     &.bottom { bottom: 20px; }
     &.left { left: 20px; }
     &.right { right: 20px; }
 
-    .right { @include border-radius(0 11px 11px 0); }
-    .left {  @include border-radius(11px 0 0 11px); }
-    .left.right {  @include border-radius(11px); }
+    // .right { @include border-radius(0 11px 11px 0); }
+    // .left {  @include border-radius(11px 0 0 11px); }
+    // .left.right {  @include border-radius(11px); }
 
     &.panel {
         height: 44px;
@@ -487,8 +494,8 @@ body:not(.mobile) {
 }
 #social_overlay {
     z-index: #{$nav_layer + 1};
-    @include border-radius(25px 25px 0px 0px);
-    @include box-shadow(rgba(black, .3) 3px 3px 28px);
+    // @include border-radius(25px 25px 0px 0px);
+    @include box-shadow(rgba($color_grey_medium, 0.33) 3px 3px 22px);
 
     // max-width: 1024px;
     right: 0px;
@@ -761,7 +768,7 @@ $action: love comment republish;
 .hive_logo {
     display: block;
     margin-left: 0px;
-    margin-right: 3px;
+    // margin-right: 3px;
     height: 44px;
     width: 44px;
     left: 20px;

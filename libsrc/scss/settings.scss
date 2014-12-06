@@ -1,8 +1,9 @@
 @import "common";
 
 // For site flags
-.settings .site_flags input {
-  width: 700px;
+.settings .site_flags {
+  label { white-space: nowrap; }
+  input { width: 700px; }
 }
 
 .user_settings {
