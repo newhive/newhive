@@ -259,8 +259,7 @@ class Expr(ModelController):
         url = request.host + ('/' if path else '') + path
         expr = self.db.Expr.find({'url': url})
         tdata.context['domain'] = request.host
-        return self.serve_naked(
-            tdata, request, self.response, expr)
+        return self.serve_naked(tdata, request, response, expr)
 
     def serve_naked(self, tdata, request, response, expr_obj):
         if not expr_obj:

@@ -183,7 +183,7 @@ o.Controls = function(app, multiselect, delegate) {
         if (!env.gifwall) {
             if (context.flags.Editor.merge_minis) {
                 o.border_width = 3;
-                if (o.multiselect == 2) {
+                if (o.multiselect < 0) {
                     o.padding += 3;
                 }
             } else {
@@ -281,8 +281,8 @@ o.Controls = function(app, multiselect, delegate) {
     o.select_box = $("<div style='position: absolute'>");
     var border = $('<div>').addClass('select_border drag');
     if (context.flags.Editor.merge_minis) {
-        if (o.multiselect == 2) border.addClass('single_other')
-        else if (o.multiselect) border.addClass('single')
+        if (o.multiselect < 0) border.addClass('single_other')
+        else if (o.multiselect > 1) border.addClass('single')
     }
     o.select_borders = border.add(border.clone().addClass('right'))
         .add(border.clone().addClass('bottom'))

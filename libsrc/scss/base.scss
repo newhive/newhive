@@ -94,7 +94,18 @@ $debug:false;
 .notransition {
     @include build-prefix-values('transition', none !important);
 }
-
+$anim_time: .2s;
+body.transition_test {
+    .drawer .menu_item, .drawer .feed_item {
+        @include transition(all, $anim_time);
+    }
+    .overlay, .overlay > *:not(.drawer) {
+        @include transition(all, $anim_time);
+    }
+    .transition.all {
+        @include transition(all, $anim_time);
+    }
+}
 @media all and (min-width: 501px) {
     .show_narrow { display:none; }
 }

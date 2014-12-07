@@ -185,16 +185,20 @@ var menu = function(handle, drawer, options) {
         }
 
         var css_opts = {};
-        var z_index = "auto";
-        el = handle;
+
+        // calculate menu z_index, ensuring it is at least 40 and at greater 
+        // than the handle's z_index
+        $el = handle;
         var z_index_latch = 0;
-        while (el.length && ! (z_index_latch > 0)) {
-            z_index = el.css("z-index");
+        while ($el.length && ! (z_index_latch > 0)) {
+            var z_index = $el.css("z-index");
             z_index_latch = parseInt(z_index) + 1;
-            el = el.parent();
+            $el = $el.parent();
         }
+        z_index_latch = Math.max(40, z_index_latch)
         if (z_index_latch > 0)
             css_opts['z-index'] = z_index_latch;
+        
         // special stuff for activity menu. Belongs in template file
         // as special attributes
         if (drawer.is("#activity_menu")) {
@@ -319,10 +323,17 @@ var menu = function(handle, drawer, options) {
         .unbind('click').on("click", function(ev) { 
             menu.close_all(); 
         } );
+    if(opts.default_item.length && opts.hover && 
+        ["", "auto"].indexOf(handle.css("cursor")) >= 0) {
+        var old = opts.default_item.css("cursor")
+        if (["", "auto"].indexOf(old) >= 0 && opts.default_item.is("a"))
+            old = "pointer"
+        handle.css("cursor", old)
+    }
     handle.unbind('click.menu').on("click.menu", function(){
         if(opts.default_item.length && opts.hover) {
             menu.close_all();
-            opts.default_item.click();
+            opts.default_item[0].click();
         } else if (o.opened && !opts.hover_close) {
             o.close();
         } else {

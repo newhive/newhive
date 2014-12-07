@@ -301,6 +301,7 @@ background-color: lightgrey;
     }
 
     .buttons,.top_buttons,.controls_ne {
+        z-index: 2;
         pointer-events: none;
         * { pointer-events: auto; }
         .button {
@@ -332,9 +333,12 @@ background-color: lightgrey;
 }
 
 // TODO: organize
-.drawer.align img:nth-child(4) { margin-left: 15px; }
-.drawer.align div:nth-child(1n + 2) { margin-top: 8px; }
-.drawer.align div { line-height: 0px; }
+.drawer.align {
+    padding: 15px;
+    img:nth-child(4) { margin-left: 15px; }
+    div:nth-child(1n + 2) { margin-top: 8px; }
+    div { line-height: 0px; }
+}
 
 .drawer.brush .option:hover { background-color: $color_selected; }
 .drawer.brush .option.selected { background-color: $color_pale_yellow; }

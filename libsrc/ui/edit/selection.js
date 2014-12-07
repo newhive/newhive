@@ -749,10 +749,10 @@ o.Selection = function(o) {
                 add_all(g)
             })
             $.map(sel_groups, function(g) {
-                mini_controls.push(Controls(g, 1))
+                mini_controls.push(Controls(g, g.is_group ? 2 : 1))
             })
             $.map(all_groups, function(g) {
-                mini_controls.push(Controls(g, 2))
+                mini_controls.push(Controls(g, -1))
             })
         }
 
