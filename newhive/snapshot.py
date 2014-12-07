@@ -14,7 +14,7 @@ import time
 from newhive import state, config
 from newhive.snapshots import Snapshots
 from newhive.utils import now
-#from newhive.mongo_helpers import mq
+from newhive.mongo_helpers import mq
 
 # TODO-for-the-love-god: move this code into the runner framework, massive cleanup.
 # def start_snapshots(query_and=False):
@@ -22,10 +22,12 @@ from newhive.utils import now
 
 db = state.Database(config)
 snapshots = Snapshots()
-snapshots_pending = mq(snapshot_needed=True).lt('snapshot_fails', 6).js(
-    '!this.password && (!this.snapshot_fail_time || ' +
-    'this.snapshot_fail_time < ' + str(time_last) + ')'
-)
+def snapshots_pending(time_last=False):
+    if not time_last: time_last = now()
+    return mq(snapshot_needed=True).lt('snapshot_fails', 6).js(
+        '!this.password && (!this.snapshot_fail_time || ' +
+        'this.snapshot_fail_time < ' + str(time_last) + ')'
+    )
 test = False
 
 expr_limit = 10
@@ -33,7 +35,7 @@ continuous = True
 
 def get_exprs(query_and={}):
     time_last = now() - 10*60 # Don't re-snapshot within 10 minutes
-    q = mq(**snapshots_pending)
+    q = mq(**snapshots_pending(time_last))
 
     and_exp = []
     if query_and: and_expr.append(query_and)
