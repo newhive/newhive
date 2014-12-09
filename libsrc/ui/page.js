@@ -88,6 +88,7 @@ define([
 
     var init_overlays = function(){
         done_overlays = true;
+        context.flags.UI.transition_test && $("body").addClass("transition_test")
         $('#overlays').empty().html(overlay_template(context));
         if(!context.user.logged_in){
             o.login_dialog = dialog.create('#dia_login', {

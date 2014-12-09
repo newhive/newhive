@@ -497,6 +497,7 @@ Hive.init = function(exp, site_context, _revert){
         $("body").addClass("gifwall");
     else
         $("body").addClass("default");
+    context.flags.UI.transition_test && $("body").addClass("transition_test")
     $('body').append(edit_template())
 
     Hive.init_dialogs();

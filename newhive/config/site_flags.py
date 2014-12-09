@@ -70,6 +70,9 @@ site_flags = {
     # UI    
     },'UI': {
         'description':'Test versions of the UI'
+    },'UI/transition_test': {
+        'description':'CSS transitions across the site'
+        , 'values':['admins=.2']
     },'UI/top_card': {
         'description':'Test versions of top card UI'
     },'UI/top_card/do_fade': {
