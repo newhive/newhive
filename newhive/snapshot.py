@@ -24,9 +24,10 @@ db = state.Database(config)
 snapshots = Snapshots()
 def snapshots_pending(time_last=False):
     if not time_last: time_last = now()
-    return mq(snapshot_needed=True).lt('snapshot_fails', 6).js(
-        '!this.password && (!this.snapshot_fail_time || ' +
-        'this.snapshot_fail_time < ' + str(time_last) + ')'
+    return mq(snapshot_needed=True).js(
+        '!this.password && (!this.snapshot_fails || this.snapshot_fails < 6)' +
+        '&& (!this.snapshot_fail_time || ' + 
+            'this.snapshot_fail_time < ' + str(time_last) + ')'
     )
 test = False
 
