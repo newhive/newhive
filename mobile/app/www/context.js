@@ -2,6 +2,7 @@
 define([
     'json!ui/routes.json',
     'json!server/compiled.config.json',
+    
     'ui/routing',
     'browser/js',
     'browser/upload',
@@ -129,7 +130,7 @@ define([
 
     var attrs = function(route_name, args, query_args, is_form, suppress){
         if(!suppress) suppress = [];
-        if (o.referer && !is_form){
+        if (o.embed && !is_form){
             var page_state = o.page_state(route_name, args, query_args)
             if (page_state.page){
                 // slice is to remove the trailing "/"

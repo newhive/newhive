@@ -40,9 +40,6 @@ site_flags = {
     },'Features/lazy_loading': {
         'description':'Lazy load various client images' #Load low-res images when initially fetching newhives'
         , 'values':['admins', 'devs']
-    },'Features/fade_controls': {
-        'description':'Fade bottom icons in newhive view'
-        , 'values':['admins', 'devs']
 
     # Admin
     },'Admin': { 
