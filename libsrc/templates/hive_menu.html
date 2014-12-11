@@ -3,7 +3,7 @@
 <a id='logo' class='nav logo icon hive_logo item {extra_classes}
     {<if (and standalone query.clean (not (contains clean_options "logo")))
       } stay_hidden{>}'
-  {<if (or context.referer (eq query.template "embed"))}
+  {<if context.embed}
     {anchor_attrs "view_expr" 
         "owner_name" page_data.expr.owner.name "expr_name" page_data.expr.name}
   {>}{<else}

@@ -3,7 +3,7 @@ define([
     'json!server/compiled.assets.json',
     'browser/jquery/nh_utils',
     'browser/jquery/easing',
-    'js!browser/jquery/event/mobile'
+    'browser/jquery/event/mobile'
 ], function($, assets){
     var o = {};
 

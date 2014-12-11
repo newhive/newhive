@@ -4,6 +4,7 @@ def mq(**d):
 class Query(dict):
     def __init__(self, d):
         dict.update(self, d)
+        self.where = self.js
 
     def list_filter(self, key, *arg, **args):
         self[key] = { '$elemMatch': arg[0] if len(arg) else args }
@@ -31,6 +32,10 @@ class Query(dict):
 
     def ne(self, key, val):
         return self.addd(key, '$ne', val)
+
+    def js(self, val):
+        self['$where'] = val
+        return self
 
     def add(self, key, val):
         self[key] = val

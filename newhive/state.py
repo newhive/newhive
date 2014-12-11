@@ -1793,6 +1793,7 @@ class Expr(HasSocial):
     def create(self):
         assert map(self.has_key, ['owner', 'domain', 'name'])
         self['owner_name'] = self.db.User.fetch(self['owner'])['name']
+        self['name'] = self['name'][0:80]
         self['random'] = random.random()
         self['views'] = 0
         self['snapshot_needed'] = True
