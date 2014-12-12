@@ -102,6 +102,7 @@ define([
             })
         }
         js.on_ready(function() {
+            return
             $("*[data-scaled]").map(function(i, app) {
                 var $app = $(app)
                     ,$img = $app.find("img")
@@ -114,6 +115,7 @@ define([
                     function(ev, el) {
                         $(el).siblings().css({opacity: 0})
                     })
+                $app.removeAttr("data-scaled")
             })
         })
         $(window).on("scroll", layout.on_scroll)

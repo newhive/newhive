@@ -1,8 +1,41 @@
 define(['browser/jquery', 'ui/util'], function($, util) {
     var o = {};
 
-    o.on_scroll = function(ev) {
+    // Fetch expensive resources for objects which are on-screen
+    // TODO: if lazy-load is fast (because it was cached), skip transition effect
+    o.fix_lazy = function() {
+        // TODO: Extend this logic to the site domain (e.g., to lazy-load 
+        // paginating cards)
+        $("*[data-scaled]").each(function(i, el) {
+            var $img = $(el).find("img")
+                ,bounds = $img[0].getBoundingClientRect()
+                ,bounds_intervals = util.bounding_rect2intervals(bounds)
+                ,$window = $(window)
+                ,win_bounds = [$window.width(), $window.height()]
+                ,win_intervals = [[0, win_bounds[0]], [0, win_bounds[1]]]
+                ,bounds_dist = util._apply(util.interval_dist, 
+                    bounds_intervals, win_intervals)
+                ,bounds_scaled = util._div(bounds_dist, win_bounds)
+            // If the img is on-screen, or pretty close, load hi-res version                
+            if (util.max(bounds_scaled) < 0.1) {
+                var $app = $(el)
+                    ,$img = $app.find("img")
+                    ,$img2 = $img.clone()
+                    ,$container = $img.parent()
+                $img = $img.addClass("loaded").add($img2)
+                $("<div class='lazy_load noclip'>").appendTo($container)
+                    .append($img)
+                $img2.lazy_load($app.data("scaled")).on("lazy_load",
+                    function(ev, el) {
+                        $(el).siblings().css({opacity: 0})
+                    })
+                $app.removeAttr("data-scaled")
+            }
+        })
 
+    }
+    o.on_scroll = function(ev) {
+        o.fix_lazy()
     }
 
     o.get_zoom = function(){
@@ -11,6 +44,8 @@ define(['browser/jquery', 'ui/util'], function($, util) {
 
     o.place_apps = function(layout_coord, expr) {
         // if(util.mobile()) return
+        o.fix_lazy()
+
         var win_dims = [$(window).width(), $(window).height()]
             ,scale_from = win_dims[layout_coord]
             ,s = scale_from / 1000
