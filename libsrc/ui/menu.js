@@ -236,8 +236,9 @@ var menu = function(handle, drawer, options) {
                 + handle.outerHeight();
             //!! HACK for activity when in header
             var open_menus = menu.menus.filter(function(m) { return m.opened; })
-            if (open_menus.length && open_menus[0].handle.parents(".main-header")
-                && ! open_menus[0].handle.is(".overlay"))
+            if (open_menus.length 
+                && open_menus[0].handle.parents(".main-header").length
+                && ! open_menus[0].handle.parents(".overlay").length)
                 css_opts.top = hp.top + opts.offset_y;
         }
         else if(opts.layout == 'bottom' || opts.layout == 'top'){
@@ -318,10 +319,17 @@ var menu = function(handle, drawer, options) {
         .unbind('click').on("click", function(ev) { 
             menu.close_all(); 
         } );
+    if(opts.default_item.length && opts.hover && 
+        ["", "auto"].indexOf(handle.css("cursor")) >= 0) {
+        var old = opts.default_item.css("cursor")
+        if (["", "auto"].indexOf(old) >= 0 && opts.default_item.is("a"))
+            old = "pointer"
+        handle.css("cursor", old)
+    }
     handle.unbind('click.menu').on("click.menu", function(){
         if(opts.default_item.length && opts.hover) {
             menu.close_all();
-            opts.default_item.click();
+            opts.default_item[0].click();
         } else if (o.opened && !opts.hover_close) {
             o.close();
         } else {

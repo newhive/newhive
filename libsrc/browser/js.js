@@ -148,7 +148,7 @@ o.Funcs = function(fn, filter) {
         }
     };
     callback.handlers = o;
-    callback.add = function(fn) { o.push(fn); }
+    callback.add = function(fn) { o.push(fn); return fn; }
     callback.clear = function() { o = []; }
     return callback;
 };
