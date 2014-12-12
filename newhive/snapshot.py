@@ -57,6 +57,7 @@ def start_snapshots(query_and=False):
         exprs = list(get_exprs(query_and))
         print get_exprs(query_and).count()
         if len(exprs) == 0 and not continuous: break
+	time.sleep(1)
         # print exprs
         for expr in exprs:
             # if expr.get('_id') in existing_snapshots:
