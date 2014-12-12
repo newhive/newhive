@@ -71,7 +71,7 @@ def start_snapshots(query_and=False):
             expr.threaded_snapshot()
             # take_snapshot(expr_id)
             # s3_url = upload_snapshot_to_s3(expr_id, thumb_bucket)    
-            while threading.active_count() > expr_limit:
+            while threading.active_count() > expr_limit + threads:
                 print "waiting for %s threads:" % (threading.active_count() - expr_limit)
                 # log sleeps to see if server is being pounded.
                 # log_error(self.db, message = "Too many snapshot threads", critical=False)
