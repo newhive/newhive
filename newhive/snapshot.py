@@ -144,8 +144,4 @@ def clear_snapshots():
         expr.pop('snapshot_id')
         expr.save(updated=False)
 
-<<<<<<< HEAD
 ### END testing ###
-=======
-### END testing ###
->>>>>>> 5e4ed5415b4d03b1029ae4540652a7c08ffc0d6b
