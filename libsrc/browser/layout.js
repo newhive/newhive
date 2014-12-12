@@ -27,7 +27,7 @@ define(['browser/jquery', 'ui/util'], function($, util) {
                     .append($img)
                 $img2.lazy_load($app.data("scaled")).on("lazy_load",
                     function(ev, el) {
-                        $(el).siblings().css({opacity: 0})
+                        $(el).siblings().css({"transition-delay":".5s", opacity: 0})
                     })
                 $app.removeAttr("data-scaled")
             }

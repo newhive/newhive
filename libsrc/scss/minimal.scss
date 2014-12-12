@@ -1,4 +1,5 @@
-@import "compass/css3";
+// @import "compass/css3";
+@import "common";
 
 * { line-height : 1.2em; }
 html, body, input, textarea { font-family : Helvetica, Arial, sans-serif; }
@@ -36,6 +37,9 @@ h1 { font-size : 40px; }
 // TODO: reexamine this, and everything else in this file.
 form { display : inline; }
 
+.notransition {
+    @include build-prefix-values('transition', none !important);
+}
 .lazy_load {
     position: relative;
     overflow: hidden;
@@ -50,8 +54,8 @@ form { display : inline; }
         right: 0;
         opacity: 0;
         // Why does it not work with commas?
-        // @include transition(opacity, 0.5s, linear);
-        @include transition(opacity .5s linear);
+        @include transition(opacity, 0.5s, linear);
+        // @include transition(opacity .5s linear);
         &.loaded {
             opacity: 1;
         }

@@ -42,6 +42,12 @@ define(['browser/jquery'], function(jQuery){
     $.fn.lazy_load = function(url) {
         var $elem = $(this)
         $elem.addClass("loading")
+        if (!$elem.hasClass("notransition")) {
+            $elem.addClass("notransition", true)
+            setTimeout(function() {
+                $elem.removeClass("notransition", true)
+            }, 1)
+        }
         $elem.on("load", function() { asset_loaded(this) })
             .on("error", function() { asset_loaded(this, true) })
         if (url)
