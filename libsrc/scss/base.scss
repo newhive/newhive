@@ -91,9 +91,6 @@ $debug:false;
     margin-top: 7px;
     margin-right: 7px;
 }
-.notransition {
-    @include build-prefix-values('transition', none !important);
-}
 $anim_time: .2s;
 body.transition_test {
     .drawer .menu_item, .drawer .feed_item {
