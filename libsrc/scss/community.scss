@@ -726,7 +726,8 @@ body {
                     padding: 5px;
                     padding-right: 20px;
                     margin: 0;
-                    img.thumb { margin-right: 19px; }
+                    // To get "curated by" to line up with the card title
+                    span { margin-left: 19px; }
                 }
 
                 .user_list {

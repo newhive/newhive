@@ -65,7 +65,7 @@ var debug_ajax = function($) {
     };
 };
 if (0) // to enable ajax debugging
-    debug_ajax(jquery);
+    debug_ajax(jQuery);
 
 // idempotent event binding helpers
 (function($){
