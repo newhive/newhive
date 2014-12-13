@@ -39,6 +39,8 @@
 <div class=
   {<if (and main_view tag_selected (neq tag_selected tag_name))}
     "tag_label tag_unselected"
+  {>}{<elif (and main_view tag_selected (eq tag_selected tag_name))}
+    "tag_label tag_{mod tagnum 16} selected"
   {>}{<else}
     "tag_label tag_{mod tagnum 16}"
   {>}
