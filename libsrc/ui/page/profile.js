@@ -78,7 +78,6 @@ define([
 
     var flip_timer
     var attach_handlers_cat = function() {
-
         var cur_mini = 0, max_mini = -1, min_mini = 0, $slides, $slider
             , card, mini_views
             , opts = context.flags.UI.top_card
@@ -96,7 +95,7 @@ define([
         var mini_mod = function(n) {
             return (n + mini_views.length) % mini_views.length
         }
-        o.scroll_slide = function(duration, callback) {
+        var scroll_slide = function(duration, callback) {
             duration = duration || 0
             var $cur_slide = $(".slider a:nth(" + cur_mini + ")")
             if (!$slides || !$slides.length || !$cur_slide.length)
@@ -128,7 +127,7 @@ define([
                 min_mini = mini_mod(min_mini + 1)
                 if ($slide.length) {
                     cur_mini--
-                    o.scroll_slide()
+                    scroll_slide()
                 }
             }
         }
@@ -143,7 +142,7 @@ define([
                 .css({opacity:card_opacity, "pointer-events": "none"})
                 .bind_once_anon("lazy_load.page",function(ev) {
                     var $el = $(ev.currentTarget)
-                    o.scroll_slide()
+                    scroll_slide()
 
                     if ($el.is(".error") && (errors <= 5)) {
                         return
@@ -170,9 +169,9 @@ define([
             // return
             if (offset === undefined) offset = 1
             load_slide(offset > 0)
-            o.scroll_slide()
+            scroll_slide()
             cur_mini += offset
-            o.scroll_slide(slide_duration, function() {
+            scroll_slide(slide_duration, function() {
                 unload_slide(offset < 0)
             })
         }
@@ -196,15 +195,14 @@ define([
                 load_slide(false)
                 load_slide(true)
             }
-            o.scroll_slide()
+            scroll_slide()
             $(window).bind_once_anon("resize.profile", function(ev) {
-                o.scroll_slide()
+                scroll_slide()
             })
             flip_timer = setInterval(next_slide, flip_time)
         }
         if (context.flags.category_hovers) {
-            $(document).ready(on_ready)
-            $(window).ready(on_ready)
+            js.on_ready(on_ready)
         }
         // TODO: remove after unflagged
         if (!context.flags.UI.dim_top_card_hover) {
