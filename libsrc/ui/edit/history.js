@@ -14,9 +14,9 @@ o.History.init = function(){
     o.saves_pending = function() {
         return group_level + savers_pending
     }
-    o.savers = function() {
-        return savers_pending
-    }
+    // o.savers = function() {
+    //     return savers_pending
+    // }
     // These two methods are used to collapse multiple history actions into one. Example:
     //     env.History.begin()
     //     // code that that creates a lot of history actions

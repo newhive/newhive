@@ -1380,10 +1380,10 @@ class Expr(HasSocial):
         ,['owner', 'updated']
         ,'tags_index'
         ,'text_index'
-        ,'updated'
+        ,('updated', -1)
         ,'random'
         ,'file_id'
-        ,'created'
+        ,('created', -1)
         ,'snapshot_needed'
     ]
     counters = ['owner_views', 'views', 'emails']
@@ -2355,10 +2355,8 @@ class Feed(Entity):
     # for every index that's not currently set.
     # Note currently safe also has to be set, to match indexes created
     # by compose.io index UI, but is not actually wanted at all
-    #indexes = [ ( ('created', 1), {'background': True, 'safe': True} ), ['entity', ('created', -1)], ['initiator', ('created', -1)], ['entity_owner', ('created', -1)] ]
-    # removing created_1 / created_-1 index because I keep having to
-    # change it due to gremlin
     indexes = [
+        ('created', -1),
         ['entity', ('created', -1)],
         ['initiator', ('created', -1)],
         ['entity_owner', ('created', -1)]
