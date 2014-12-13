@@ -11,6 +11,12 @@ o.History.init = function(){
     var o = env.History, group_start, group_level = 0;
     o.current = -1;
 
+    o.saves_pending = function() {
+        return group_level + savers_pending
+    }
+    o.savers = function() {
+        return savers_pending
+    }
     // These two methods are used to collapse multiple history actions into one. Example:
     //     env.History.begin()
     //     // code that that creates a lot of history actions
@@ -87,11 +93,18 @@ o.History.init = function(){
     //     history_point.save();
     // There is also history_point.exec(foo_state) for the case where no user interaction is
     // needed to change the state
+    var savers_pending = 0;
     o.saver = function(getter, setter, name){
-        var o2 = { name: name };
+        var o2 = { name: name }
+            , unsaved = true;
         o2.old_state = getter("history");
+        savers_pending++;
 
         o2.save = function(){
+            if (unsaved) {
+                unsaved = false;
+                savers_pending--;
+            }
             o2.new_state = getter(o2.old_state, "history");
             // don't save noop
             if (u.array_equals(o2.old_state, o2.new_state))
@@ -132,11 +145,17 @@ o.History.init = function(){
             targets = env.Selection.get_targets();
         save_targets.push(targets);
         old_states.push(get_states());
+        savers_pending++
     };
     o.change_end = function(name, opts){
         opts = $.extend({
             collapse: false   // collapse undos with the same name and app list
+            cancel: false
         }, opts)
+        savers_pending--
+        if (opts.cancel)
+            return
+        
         var new_states = get_states()
             ,targets = save_targets.length ? save_targets.pop().slice() : []
             ,start_states = old_states.length ? old_states.pop().slice() : []
