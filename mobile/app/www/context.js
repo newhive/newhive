@@ -1,16 +1,21 @@
 // empty object module for server to put stuff in
 define([
-    'json!ui/routes.json',
-    'json!server/compiled.config.json',
-    
+    'config',
     'ui/routing',
     'browser/js',
     'browser/upload',
     'ui/menu',
     'ui/dialog',
     'ui/util'
-
-], function(api_routes, config, routing, js, upload, menu, dialog, ui_util){
+], function(
+    config,
+    routing,
+    js,
+    upload,
+    menu,
+    dialog,
+    ui_util
+){
     var o = { config: config };
 
     window.asset_loaded = function(el, error) {

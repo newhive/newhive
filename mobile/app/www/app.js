@@ -1,21 +1,27 @@
 define([
     'jquery',
     'config',
-    'sj!templates/cards.html',
-    'sj!templates/expr_card_feed.html',
+    'json!ema_cube.json',
+    'browser/event/hammer',
+    // 'sj!templates/cards.html',
+    // 'sj!templates/expr_card_feed.html',
 ], function(
     $,
     config,
-    cards_template
+    card_data,
+    Hammer
+    // cards_template
 ){
 var self = {}
+window.Hammer = Hammer;
 
 var page_index = 0, cards = [], cards_complete = false,
     cards_loading = false, current_page, next_page, win = $(window),
     page_index_scrollY = 0
 
 // This function requires the $("head meta") tag to be in state
-//  <meta name="viewport" content="user-scalable=1, width=device-width, initial-scale=1">
+// <meta name="viewport" content="user-scalable=1, width=device-width,
+//   initial-scale=1">
 var ideal_aspect = 0
 var fix_scale = function() {
     // zoom level is current-width / device-width
@@ -32,8 +38,21 @@ var fix_scale = function() {
 
 self.init = function(){
     fix_scale()
-    render_page_index()
-    fetch_cards()
+
+    $card_box = $('#cards')
+    $card_box.width(13000)
+    card_data.cards.map(function(c){
+        var c = $('<img>').attr('src', 'http:' + c.snapshot_small)
+        console.log(c)
+        $card_box.append(c)
+    })
+
+    // $card_box.on('touchstart', function(){
+    //     console.log('foo', Hammer)
+    // })
+
+    // render_page_index()
+    // fetch_cards()
 
     // window.addEventListener('message', page_receive, false)
     // TODO-feature: implement scrolling / swiping page-throughs
@@ -47,11 +66,12 @@ self.init = function(){
         StatusBar.overlaysWebView(false)
     })
 
-    window.onorientationchange = function(){
-        var landscape = win.width() > win.height()
-        // $('#content').toggleClass('landscape', landscape)
-        $('#content').css('width', 500 * (landscape ? ideal_aspect : 1) + 'px')
-    }
+    console.log(ema_cube)
+    // window.onorientationchange = function(){
+    //     var landscape = win.width() > win.height()
+    //     // $('#content').toggleClass('landscape', landscape)
+    //     $('#content').css('width', 500 * (landscape ? ideal_aspect : 1) + 'px')
+    // }
 }
 
 function content_url(card){
