@@ -218,9 +218,17 @@ class HiveAssets(Assets):
         # Note: IMPORTANT any time a file that is imported into other scss
         # files is changed (i.e. common.scss is imported into almost every
         # file), the webassets cache must be cleared
+        
+        # TODO: fix for source maps.
+        # Sadly, the latest versions of sass do not work with compass
+        # (Contrary to what compass says on their website)
+        # sudo gem install sass
+        # sudo gem install compass
+        # sudo apt-get install ruby-full
         scss_filter = webassets.filter.get_filter(
             'scss',
             use_compass=True,
+            # sourcemap=True,
             debug_info=config.debug_mode,
             libs=[join(config.src_home, 'libsrc/scss/asset_url.rb')]
         )

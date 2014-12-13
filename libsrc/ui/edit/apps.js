@@ -1203,20 +1203,6 @@ Hive.App = function(init_state, opts) {
     o.state_update.add(function(s) {
         o.state_relative_set(s);
     });
-
-    o.history_helper_relative = function(name){
-        var o2 = { name: name };
-        o2.old_state = o.state_relative();
-        o2.save = function(){
-            o2.new_state = o.state_relative();
-            env.History.save(
-                function(){ o.state_relative_set(o2.old_state) },
-                function(){ o.state_relative_set(o2.new_state) },
-                o2.name
-            );
-        };
-        return o2;
-    };
     /////////////////////////////////////////////////////////////////////////
 
     o.css_class = function(){
@@ -3196,8 +3182,7 @@ Hive.App.has_resize = function(o) {
         o.dims_ref_set()
         resizing = true
         u.reset_sensitivity();
-        // TODO: replace this last helper with the default history one
-        history_point = o.history_helper_relative('resize');
+        env.History.change_start([o])
     };
 
     // Modifies (in-place) an axis-aligned bounding box to fit the given
@@ -3292,7 +3277,7 @@ Hive.App.has_resize = function(o) {
         resizing = false;
         $(".ruler").hidehide();
         if (o.after_resize) skip_history |= o.after_resize();
-        if (!skip_history) history_point.save();
+        env.History.change_end("resize", {cancel: skip_history})
     };
     o.snap_a_point = function(tuple) {
         if(u.should_snap() && !env.no_snap && !o.has_full_bleed()){

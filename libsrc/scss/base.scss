@@ -91,11 +91,17 @@ $debug:false;
     margin-top: 7px;
     margin-right: 7px;
 }
-.notransition {
-    @include build-prefix-values('transition', none !important);
-}
 $anim_time: .2s;
 body.transition_test {
+    .card {
+        @include transition(transform, .1s);
+        &:hover {
+            transform: scale(1.05)
+        }
+    }
+    .tag_label {
+        @include transition(all, $anim_time);
+    }    
     .drawer .menu_item, .drawer .feed_item {
         @include transition(all, $anim_time);
     }

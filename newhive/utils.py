@@ -59,20 +59,19 @@ class Apply(object):
     @staticmethod
     def apply_continue(func, klass, query={}, print_frequency=100, dryrun=False, 
             reset=False, runcount=1):
-        _query = copy.copy(query)
+        ands = [query]
         if not reset:
-            or_clause = { '$or': [
+            ands.append({ '$or': [
                 {'migrated': {'$exists':False}}, 
                 {'migrated': {'$lt': 1}}
-                ] }
-            filter_query(_query, or_clause)
-            dict.update(_query, {'$or': [{'migrated': {'$exists':False}}, 
-                {'migrated': {'$lt': 1}}]})
+            ] })
+            _query = {'$and': ands}
+            print('applying to:', _query)
             Apply.apply_all(func, klass.search(_query), 
                 print_frequency=print_frequency, dryrun=dryrun)
         else:
-            dict.update(_query, {'migrated': {'$gt': 0}})
-            klass._col.update(_query, {'$unset': {'migrated':0}}, multi=True)
+            dict.update(query, {'migrated': {'$gt': 0}})
+            klass._col.update(query, {'$unset': {'migrated':0}}, multi=True)
 
     @staticmethod
     def apply_all(func, cursor, print_frequency=100, dryrun=False):

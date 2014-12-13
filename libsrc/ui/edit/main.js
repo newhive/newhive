@@ -512,7 +512,8 @@ Hive.init = function(exp, site_context, _revert){
     setInterval(function() {
         // Only autosave if something has changed
         var expr = Hive.state()
-        if (Hive.save_safe && !u.deep_equals(last_autosave, expr)) {
+        if (!env.History.saves_pending() && Hive.save_safe && !u.deep_equals(last_autosave, expr)) {
+            // console.log("try save")
             last_autosave = $.extend(true, {}, expr)
             if (Hive.autosave_time == 0) {
                 Hive.autosave_time = 1
