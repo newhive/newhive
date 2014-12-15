@@ -25,10 +25,13 @@ o.History.init = function(){
     o.begin = function(){
         if (! group_level++)
             group_start = o.current + 1 
+        console.log(o.saves_pending())
     };
-    o.group = function(name){
-        if (--group_level)
+    o.group = function(name, opts){
+        if (--group_level) {
+            console.log(o.saves_pending())
             return;
+        }
         var group_length = o.current - group_start + 1;
         if(group_length < 1) return;
         post_change = env.Selection.update;
@@ -99,11 +102,13 @@ o.History.init = function(){
             , unsaved = true;
         o2.old_state = getter("history");
         savers_pending++;
+        console.log(o.saves_pending())
 
         o2.save = function(){
             if (unsaved) {
                 unsaved = false;
                 savers_pending--;
+                console.log(o.saves_pending())
             }
             o2.new_state = getter(o2.old_state, "history");
             // don't save noop
@@ -146,16 +151,18 @@ o.History.init = function(){
         save_targets.push(targets);
         old_states.push(get_states());
         savers_pending++
+        console.log(o.saves_pending())
     };
     o.change_end = function(name, opts){
         opts = $.extend({
             collapse: false   // collapse undos with the same name and app list
-            cancel: false
+            ,cancel: false
         }, opts)
         savers_pending--
+        console.log(o.saves_pending())
         if (opts.cancel)
             return
-        
+
         var new_states = get_states()
             ,targets = save_targets.length ? save_targets.pop().slice() : []
             ,start_states = old_states.length ? old_states.pop().slice() : []
