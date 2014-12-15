@@ -93,12 +93,12 @@ $debug:false;
 }
 $anim_time: .2s;
 body.transition_test {
-    .card {
-        @include transition(transform, .1s);
-        &:hover {
-            transform: scale(1.05)
-        }
-    }
+    // .card {
+    //     @include transition(transform, .1s);
+    //     &:hover {
+    //         transform: scale(1.05)
+    //     }
+    // }
     .tag_label {
         @include transition(all, $anim_time);
     }    
