@@ -467,6 +467,8 @@ define(['browser/js', 'module'],
 			typeof(iteratee) != "object")) return '';
 		var res = ""
 		$.each(iteratee, function(i, v) {
+            // automagically filter out undefined and null from lists
+            if(v === undefined || v === null) return
 			// If iterating through literals, the value of the literal
 			// is passed in the context as the variable "item"
 			if(typeof(v) != "object") {
@@ -525,6 +527,7 @@ define(['browser/js', 'module'],
         //     throw o.render_error('debug break', context,
 		  	   // current_node(context));
 		// possibly add rendering context in invisible div
+		console.error('template debug')
 		return do_debugger ? '' : 
 			'<div>DEBUG inserted</div><div style="display:none">' + '' + '</div>';
 	};
@@ -537,15 +540,21 @@ define(['browser/js', 'module'],
 	context_base.strip_slash = function(context, str){
 		return str.replace(/^\/\//, '')
 	};
+	context_base['list'] = function(context) {
+		return Array.prototype.slice.call(arguments, 1)
+	}
 	// TODO: write as accumulate
 	// {set "k" (concat "you " "are " "awesome")}
+	// {set "v" (concat [1] [2 3] [4])}
 	context_base.concat = function(context){
-		var res = "";
-		for(var i = 1; i < arguments.length; ++i){
-			if (typeof(arguments[i]) == "string")
-				res += arguments[i];
+		if (arguments.length < 2)
+			return ""
+		var res = arguments[1]
+		for(var i = 2; i < arguments.length; ++i){
+			if (typeof(arguments[i]) == typeof(res))
+				res = res.concat(arguments[i])
 		}
-		return res;
+		return res
 	};
 	// Set lhs to the value of rhs
 	// ex: {set "my_var" 3}
@@ -553,8 +562,8 @@ define(['browser/js', 'module'],
 		context[context.length - 1][lhs] = rhs;
 		return '';
 	};
-	context_base.get = function(context, obj, key){
-		return obj[key];
+	context_base.get = function(context, obj, key, def){
+        return ( (typeof obj[key]) == 'undefined' ? def : obj[key] )
 	};
 	context_base.len = function(context, obj){
 		return obj.length;
@@ -582,6 +591,12 @@ define(['browser/js', 'module'],
 	context_base.not = function(context, arg){
 		return ! arg;
 	};
+	context_base.lt = function(context, lhs, rhs){
+		return lhs < rhs;
+	};
+	context_base.gt = function(context, lhs, rhs){
+		return lhs > rhs;
+	};
 	context_base.eq = function(context, lhs, rhs){
 		return lhs == rhs;
 	};
@@ -592,8 +607,14 @@ define(['browser/js', 'module'],
 		var contains = (list.lastIndexOf(item) >= 0);
 		return contains;
 	};
+	context_base['slice'] = function(context, list, start, end){
+		return end ? list.slice(start, end) : list.slice(start)
+	};
 	context_base.cond = function(context, cond, truthy, falsy){
 		return cond ? truthy : falsy;
+	};
+	context_base.floor = function(context, val){
+		return Math.floor(val);
 	};
 
 	context_base.lower = function(context, s){ return s.toLowerCase(); };
@@ -634,6 +655,16 @@ define(['browser/js', 'module'],
 		}
 		return sum;
 	};
+	// TODO: write as accumulate
+	// {set "k" (mul 2 2 2)}
+	context_base.mul = function(context){
+		var prod = 1;
+		for(var i = 1; i < arguments.length; ++i){
+			if (typeof(arguments[i]) == "number")
+				prod *= arguments[i];
+		}
+		return prod;
+	};
 	// {mod 6 3}  {mod "verbatim"}
 	context_base.mod = function(context, x, y){ 
 		if (typeof(x) == "number" && typeof(y) == "number")
@@ -650,10 +681,10 @@ define(['browser/js', 'module'],
 		return n + suffix[i];
 	};
 	context_base.string_to_list = function (context, string){
-	  	var array = string.split("[^\w']+");
-	  	if ( array.length <= 1 ) return [string];
-		else return array;
-	};
+	  	var array = string.split(/\W+/)
+	  	if ( array.length <= 1 ) return [string]
+		else return array
+	}
 
 	return o;
 });
