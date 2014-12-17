@@ -139,6 +139,9 @@ background-color: lightgrey;
         vertical-align: top;
     }
 }
+.menu.drawer.modules {
+    th { min-width: 200px;}
+}
 #menu_shape {
     // width: 150px;
     white-space: normal;

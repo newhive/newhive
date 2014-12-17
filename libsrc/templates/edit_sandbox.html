@@ -358,6 +358,20 @@
   <img class='button run' src='{asset "skin/edit/run.png"}'  title='Run'>
   <img class='button stop' src='{asset "skin/edit/stop.png"}'  title='Stop'>
   <img class='button edit' src='{asset "skin/edit/edit.png"}'  title='Edit'>
+  <div class="menu drawer hide modules"><table> 
+    <tr class="menu_item">
+      <th>name</th>
+      <th>module</th>
+      <th>compiled module &nbsp;<button class="add" title="add module">+</button></th>
+    </tr>
+    <tr class="menu_item template data hide">
+      <td><input type='text' class='name' placeholder='my_module'></input></td>
+      <td><input type='text' class='path' placeholder='code_1'></input></td>
+      <td><input type='text' class='path_view' placeholder='url/compiled.min.js'>
+        <button class="remove" title="remove module">-</button>
+      </input></td>
+    </tr>
+  </table></div>
 
   <img class='button css_classes tip_N'
     src='{asset "skin/edit/css_class.png"}'  title='Change css classes'>

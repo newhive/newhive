@@ -169,7 +169,10 @@ o.Controls = function(app, multiselect, delegate) {
             auto_height: false, offset_y: 5 }, opts))
     };
     o.single = function() {
-        return (env.Selection.count() == 1) ? o.app.sel_app() : false }
+        if (env.Selection.count() == 1)
+            return sel_app //o.app.sel_app()
+        return false
+    }
 
     o.padding = 9;
     o.border_width = 5;

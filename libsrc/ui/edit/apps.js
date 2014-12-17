@@ -1448,6 +1448,8 @@ editor.add_button = function(name, on_run, opts) {
     }
 }
 
+var g_module_attrs = ["name", "path", "path_view"]
+
 Hive.App.Code = function(o){
     o.has_align = false
     o.client_visible = false
@@ -1647,11 +1649,51 @@ Hive.App.Code = function(o){
     }
 
     function controls(o) {
-        var sel = env.Selection
+        var sel = env.Selection, single = o.single()
         find_or_create_button(o, '.run').click(sel.run)
         find_or_create_button(o, '.stop').click(sel.stop)
-        if (o.single() && 'js' == o.single().init_state.code_type)
-            find_or_create_button(o, '.edit').click(sel.edit)
+        if (single && 'js' == o.single().init_state.code_type) {
+            var $edit = find_or_create_button(o, '.edit').click(sel.edit)
+
+            // set up modules menu
+            var $drawer = $("#controls_misc .drawer.modules").clone()
+            var add_row = function(data) {
+                var $row = $drawer.find(".template").clone()
+                $row.showshow().removeClass("template").appendTo($drawer)
+                if (!data) 
+                    return
+                $.map(g_module_attrs, function(attr) {
+                    if (data[attr]) {
+                        $row.find("." + attr).val(data[attr])
+                    }
+                })
+            }
+            $drawer.find(".add").on("click", function() {
+                add_row()
+            })
+            $drawer.delegate(".remove", "click", function() {
+                var $row = $(this).parents("tr")
+                $row.remove()
+            })
+            menu($edit, $drawer.appendTo(o.div.find(".buttons")), {
+                // TODO: does this belong in history?
+                open: function() {
+                    $drawer.find("tr.data:not(.hide)").remove()
+                    $.map(single.module_imports, function(data) {
+                        add_row(data)
+                    })
+                }, close: function() {
+                    single.module_imports = 
+                    $.map($drawer.find("tr.data:not(.hide)"), function(row) {
+                        var data = {}, $row = $(row)
+                        $.map(g_module_attrs, function(attr) {
+                            data[attr] = $row.find("." + attr).val()
+                        })
+                        return [data]
+                    })
+                }
+            })
+        }
         // o.hover_menu(o.div.find('.button.opts'), o.div.find('.drawer.opts'))
         // var showinview = o.div.find('.show_in_view')
         // showinview.prop('checked', o.app.init_state.show_in_view).on(
