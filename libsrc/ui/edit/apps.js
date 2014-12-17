@@ -145,7 +145,7 @@ Hive.Saveable = function(init_state) {
 
     // getter and setter for state which is invisible to history
     o.state = Funcs(function() {
-        var s = $.extend(true, {}, o.init_state, o.history_state())
+        var s = $.extend({}, o.init_state, o.history_state())
         o.state.return_val = s
     })
     o.state_update = Funcs(function(s) {
