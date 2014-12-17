@@ -25,7 +25,7 @@ o.Text = function(o) {
     hive_app.App.has_opacity(o);
     hive_app.App.has_shield(o, {auto: false});
     // for now, having internal and external alignment is too weird.
-    o.has_align = false;  
+    // o.has_align = false;  
 
     // When this app is multiselected, have color act on all foreground text
     o.color = function() { return o.div.find("font").css("color") }
