@@ -106,7 +106,7 @@ body.transition_test {
         @include transition(all, $anim_time);
     }
     // handled with JS
-    .overlay, .overlay > *:not(.drawer), .overlay > span.edit_ui > *:not(.drawer) {
+    .overlay, .overlay > *:not(.drawer), .overlay .handle {
         @include transition(background-color, $anim_time);
     }
     .transition.all {
