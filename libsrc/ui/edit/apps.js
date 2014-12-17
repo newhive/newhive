@@ -228,6 +228,7 @@ env.globals_set.has_sequence = function(state) {
     return $.extend(Hive.has_sequence, state)
 }
 
+
 // This object has a location on canvas
 Hive.has_location = function(o) {
     // TODO: organize all of the location functions
@@ -750,6 +751,10 @@ env.Apps = Hive.Apps = (function(){
             if (new_parent) new_parent.add_child(new_child)
         })
         return copies
+    }
+    o.by_name = function(name) {
+        var id = name_map[name] || name
+        return o.fetch(id)
     }
     o.fetch = function(id){
         return apps[id]
@@ -1506,13 +1511,29 @@ Hive.App.Code = function(o){
     // }
 
     var iter = -1, last_success = -1
-    o.module_name = function(without_error){
-        return "module_" + o.id + "_" + (without_error ? last_success : iter)
+    o.module_name = function(without_error, opts){
+        var requested_iter = without_error ? last_success : iter
+            , opts = $.extend({}, opts)
+        if (opts.force) {// && requested_iter == -1) {
+            insert_code(opts.load)
+            requested_iter = iter
+        } else if (opts.load)
+            opts.load()
+        return "module_" + o.id + "_" + requested_iter
     }
     o.module_imports = []
+    o.add_import = function(name, path) {
+        o.module_imports.push({name:name, path:path})
+    }
     var module_modules = function() {
         return [""].concat($.map(o.module_imports, 
-            function(m) { return "'" + m.path + "'" })).join(",")
+            function(m) {
+                var path = m.path
+                var code_app = Hive.Apps.by_name(path)
+                if (code_app && code_app.module_name)
+                    path = code_app.module_name()
+                return "'" + path + "'" 
+            })).join(",")
     }
     var module_names = function() {
         return [""].concat($.map(o.module_imports, 
@@ -1548,8 +1569,9 @@ Hive.App.Code = function(o){
 
         el[0].onload = function(){
             last_success = iter
-            // TODO-unhack: this should break for scripts that take longer than 100ms to compile
-            setTimeout(load, 100)
+            // TODO-unhack: this should break for scripts that take longer than 
+            // 100ms to compile
+            if (load) setTimeout(load, 100)
         }
         // use a blob for source so syntax errors are properly reported,
         // instead of creating mysterious exception
@@ -1558,8 +1580,27 @@ Hive.App.Code = function(o){
         else el.html(code)
     }
 
-    var animate_go
+    o.ensure_dependencies = function(load) {
+        var dependencies = 1
+            , loaded = function() {
+                if (! --dependencies && load)
+                    load()
+            }
+        $.map(o.module_imports, function(m) {
+            var path = m.path
+            var code_app = Hive.Apps.by_name(path)
+            if (code_app && code_app.module_name) {
+                ++dependencies
+                path = code_app.module_name(true, {force:1, load:loaded})
+            }
+        })
+        loaded()
+    }
     o.run = function() {
+        o.ensure_dependencies(o.run_helper)
+    }
+    var animate_go
+    o.run_helper = function() {
         o.stop();
         insert_code(function(){
             if(!o.is_module()) return

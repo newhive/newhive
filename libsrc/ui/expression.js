@@ -437,6 +437,9 @@ define([
     o.load_code = function(code_src, modules){
         code_srcs.push({src:code_src, modules: modules})
     }
+    o.load_code_url = function(code_url){
+        code_srcs.push({url:code_url})
+    }
 
     o.run_code = function(code_module){
         code_modules.push(code_module)
@@ -490,11 +493,19 @@ define([
             .join(",")
         }
         code_srcs.map(function(src){
-            var script = $('<script>').html(
-                "curl([" + module_paths(src.modules) + "],function("
-                + module_names(src.modules) + "){"
-                + "var self={};" + src.src + ";expr.run_code(self) })"
-            ).addClass('code_module').appendTo('body')
+            if (src.url) {
+                var $script = $('<script>').html(
+                    "curl(['" + src.url + "', 'ui/expression'], " + 
+                        "function(self, expr){ expr.run_code(self) })"
+                )
+            } else {
+                var $script = $('<script>').html(
+                    "curl([" + module_paths(src.modules) + "],function("
+                    + module_names(src.modules) + "){"
+                    + "var self={};" + src.src + ";expr.run_code(self) })"
+                )
+            }
+            $script.addClass('code_module').appendTo('body')
         })
 
         o.autoplay(true)

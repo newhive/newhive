@@ -2078,6 +2078,11 @@ class File(Entity):
         self._file.seek(0)
         return self._file
 
+    def update_file(self, f):
+        # TODO: also do resampling, etc?
+        self._file=f
+        self.store()
+
     def download(self):
         url = self.url
         if url.startswith("//"):
@@ -2098,7 +2103,6 @@ class File(Entity):
         if self['mime'] in ['image/jpeg', 'image/png', 'image/gif']:
             return self.IMAGE
         return self.UNKNOWN
-
     def set_resamples(self):
         imo = Img.open(self.file)
         # format = imo.format
@@ -2226,7 +2230,7 @@ class File(Entity):
         if self.db.config.aws_id:
             self.update(protocol='s3',
                 s3_bucket=self.db.s3.buckets['media'].name,
-                url=self.db.s3.upload_file(self.file, 'media', self.id,
+                url=self.db.s3.upload_file(self.file, 'media', self.file_name,
                     self['name'], self['mime'])
             )
         else:
@@ -2237,10 +2241,21 @@ class File(Entity):
             return abs_url() + 'file/' + owner['name'] + '/' + name
 
     @property
+    def file_name(self):
+        return self.id + self.suffix
+    
+    @property
     def url(self):
-        return self.db.s3.url('media', self.id,
+        return self.db.s3.url('media', self.file_name,
             bucket_name=self.get('s3_bucket'))
 
+    @property
+    def suffix(self):
+        return self.get('suffix', '')
+    @suffix.setter
+    def suffix(self, value):
+        self.update(suffix=value)
+    
     @property
     def url_base(self):
         return self.db.s3.url('media', '',

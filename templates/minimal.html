@@ -16,6 +16,7 @@
 curl({
     // baseUrl: {{ ('/lib/libsrc' if debug else '/lib')|json }},
     baseUrl: {{ ('/lib/libsrc' if debug else '/lib')|json }},
+    paths: {'media' : '{{ media_bucket }}' },
     pluginPath: 'curl/plugin'
 });
   </script>
