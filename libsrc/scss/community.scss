@@ -548,7 +548,7 @@ body {
                 top: 0px;
                 left: 0px;
                 right: 0px;
-                max-height: 104px;
+                max-height: 108px;
                 overflow: hidden;
             }
             &:hover {
@@ -852,12 +852,12 @@ body {
 
     padding: 6px 10px;
     margin: 3px 3px 4px 4px;
-    &.selected {
-        color: black;
-        background-color:$color_selected;
+    // &.selected {
+    //     color: black;
+    //     background-color:$color_selected;
 
-    }
-    &:hover {
+    // }
+    &:hover, &.selected {
         color: white;
         background-color: black;
     }
