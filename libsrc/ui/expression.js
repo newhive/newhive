@@ -409,13 +409,14 @@ define([
         if ($a.attr('target')) return;
         // TODO: Match against internal links and use routing system
 
-        var local_match = new RegExp('^(https?:)?//[\\w-]*.?' +
-                context.config.server_domain)
-            href = $a.attr('href') || $a.attr('xlink:href') || $a.attr('action'),
-            absolute = /(^\w+:)|(^\/\/)/.test(href)
-        if (!href) return
+        var href = $a.attr('href') || $a.attr('xlink:href') || $a.attr('action'),
+            local_match = new RegExp('^(https?:)?//[\\w-]*.?' +
+                context.config.server_domain).test(href),
+            absolute = /(^\w+:)|(^\/\/)/.test(href),
+            internal = /^(#|javascript:)/.test(href)
+        if (!href || internal) return
 
-        if(absolute && !local_match.test(href)) {
+        if(absolute && !local_match) {
             $a.attr('target', '_blank')
         } else {
             $a.attr('target', '_top')

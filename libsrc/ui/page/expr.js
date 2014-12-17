@@ -602,6 +602,7 @@ define([
         $this.hidehide()
         var unhide = function() {
             $this.showshow()
+            // $object.css('opacity', 0)
             $object.stop(true).animate({"opacity":0},
                 {duration:context.flags.expr_overlays_fade_out_duration})
         }
@@ -624,10 +625,12 @@ define([
             if (context.flags.View.page_button_opacity)
                 opacity = context.flags.View.page_button_opacity
         }
-        $object.stop(true).animate(
+        $object //.css('opacity', opacity)
+            .stop(true).animate(
                 {"opacity": opacity},
                 {duration:context.flags.expr_overlays_fade_duration}
-            ).showshow()
+            )
+            .showshow()
             .bind_once("mouseover.hover", function() {
                 clearTimeout(timer)
             })
@@ -640,7 +643,6 @@ define([
         timers.push(timer)
     }
     o.attach_handlers = function(){
-
         $(".page_btn.page_prev").bind_once('click', o.page_prev);
         $(".page_btn.page_next").bind_once('click', o.page_next);
         $('.play_pause').bind_once_anon('click', function(){
@@ -656,17 +658,22 @@ define([
             })
 
             $(".bottom.overlay,.page_btn.overlay")
-                .off("mouseenter").on("mouseenter", function(ev) {
-                    var $this = $(this)
-                    $this.stop(true).animate(
+                .off("mouseenter").on("mouseenter", function(ev){
+                    // $(this).css('opacity', 1)
+                    $(this).stop(true).animate(
                         {"opacity":1},
                         {duration: context.flags.expr_overlays_fade_duration}
-                    ) } )
-                .on("mouseleave", function(ev) { 
+                    )
+                })
+                .on("mouseleave", function(ev) {
+                    // $(this).css('opacity', 0)
                     $(this).animate(
                         {"opacity": $(this).data("opacity")},
                         {duration: context.flags.expr_overlays_fade_out_duration}
-                    ) } )
+                    )
+                })
+            $('.bottom.overlay,.page_btn').css('transition-duration',
+                context.flags.expr_overlays_fade_duration)
         } else {
             $('.page_btn').bind_once_anon('mouseenter', function(event){
                 o.page_btn_animate($(this), "in");
