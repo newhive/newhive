@@ -462,7 +462,7 @@ class Community(Controller):
             sort: default updated
             order: default -1
             col: database collection, default 'expr'
-            special: 'top_tags' or None
+            special: 'top_tags' | 'emails' | 'top_lovers' |  None
         """
         # TODO: document all these args somewhere
         if special == 'top_tags':
