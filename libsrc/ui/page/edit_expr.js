@@ -418,7 +418,7 @@ define([
         return tags
     }
     o.canonical_tags = function(tags_list){
-        const special = ["remixed", "gifwall"]
+        var special = ["remixed", "gifwall"]
 
         // context.flags.modify_special_tags = true; // debug
         tags_list = $.map(tags_list, function(x, i) {
