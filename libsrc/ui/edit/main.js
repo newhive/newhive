@@ -578,7 +578,14 @@ Hive.exit = function(){
 // TODO-feature-html-embed: iterate over each element, and do something
 // reasonable
 Hive.embed_code = function(element) {
-    var c = $(element).val().trim(), app = {}
+    var c = $(element).val().trim()
+    $(element).val('');
+    
+    Hive._embed_code(c)
+}
+// TODO: move globals out of env (This one belongs in "creators" module)
+env.embed_code = Hive._embed_code = function(c) {
+    var app = {}
         ,frame = $('<iframe>').css({width:'100%',height:'100%',border:0})
             .attr('allowFullScreen', true)
         ,args, url, v = "", more_args = "", start = 0
@@ -638,7 +645,6 @@ Hive.embed_code = function(element) {
                 }
             }
             u.new_file(data);
-            $(element).val('');
         }
         // Hive.upload_start();
         $.ajax($('#media_upload').attr('action'), {
@@ -682,7 +688,6 @@ Hive.embed_code = function(element) {
     }
 
     hive_app.new_app(app);
-    $(element).val('');
 }; 
 
 // TODO-feature-autosave: implement 
