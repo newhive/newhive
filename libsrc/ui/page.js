@@ -70,9 +70,7 @@ define([
     var o = {}, expr_page = false, grid_width, controller,
         border_width = 1,
         render_new_cards_func,
-        done_overlays = false,
-        anim_direction; // 0 = up, +/-1 = right/left
-    const anim_duration = 700;
+        done_overlays = false
 
     o.init = function(controller){
         // (function() {
@@ -81,7 +79,6 @@ define([
         //   var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(li, s);
         // })();
 
-        o.anim_direction = 0;
         o.controller = controller;
         $(window).resize(o.resize);
     };
