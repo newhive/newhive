@@ -200,6 +200,36 @@ Hive.init_menus = function() {
         open: function(){ $('#embed_code').get(0).focus() },
         layout_x: 'center' });
     $('#embed_done').click(function() { Hive.embed_code('#embed_code'); embed_menu.close(); });
+    $('#menu_embed .code').click(function() { Hive._embed_code('<script>'); embed_menu.close(); });
+    $('#menu_embed .style').click(function() { Hive._embed_code('<style>'); embed_menu.close(); });
+    // TODO: implement by using a local template, just duplicate it and add.
+    var processing_code = '<script>' + 
+        '// Simple way to attach js code to the canvas is by using a function\n' +
+        'function sketchProc(processing) {\n' + 
+        '   // Override draw function, by default it will be called 60 times per second\n' +
+        '   processing.draw = function() {\n' +
+        '       // TODO: fill in\n' +
+        '   };\n' +
+        '};\n\n' +
+        'self.run = function() {\n' +
+        '   var canvas = $("#canvas_id canvas")[0];\n' +
+        '   // attaching the sketchProc function to the canvas\n' +
+        '   var p = new Processing(canvas, sketchProc);\n' +
+        '}\n</script>';
+    $('#menu_embed .processing').click(function() { 
+        embed_menu.close();
+        var canvas = Hive._embed_code('<canvas style="background-color:#DDD;">')
+        var p_code = processing_code.replace('canvas_id', canvas.id)
+        var code = Hive._embed_code(p_code);
+        code.add_import('p$', 'js!outsrc/processing.min.js')
+        code.load.add(function() {
+            env.Selection.update([code, canvas])
+            var start_pos = env.Selection.min_pos().slice()
+            start_pos = u._sub(start_pos, [300, 300])
+            u.retile({ start_pos: start_pos, columns:1, aspect: 1.61, 
+                width:800, padding:10 })
+        })
+    });
 
     u.hover_menu('.insert_shape', '#menu_shape');
     var default_size = [150, 150]
@@ -580,7 +610,7 @@ Hive.exit = function(){
 Hive.embed_code = function(element) {
     var c = $(element).val().trim()
     $(element).val('');
-    
+
     Hive._embed_code(c)
 }
 // TODO: move globals out of env (This one belongs in "creators" module)
@@ -687,7 +717,7 @@ env.embed_code = Hive._embed_code = function(c) {
         app.content = dom[0].innerHTML
     }
 
-    hive_app.new_app(app);
+    return hive_app.new_app(app);
 }; 
 
 // TODO-feature-autosave: implement 

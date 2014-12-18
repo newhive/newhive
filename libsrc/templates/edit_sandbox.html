@@ -104,12 +104,20 @@
 
 <div id='menu_embed' class='menu drawer embed'>
   <span class='medbold'>Embed</span><br>
-  <div class='description'>{# TODO: ui.embed_code_description #}</div>
+  <div>
+    <div class='description'>{# TODO: ui.embed_code_description #}</div>
     <textarea id='embed_code' class='embed_box'
       placeholder='Paste in your YouTube / Vimeo URL or embed code here.'>{# #}
     </textarea>
     <div style='text-align : center'><input id='embed_done' type='submit'
       class='black_btn upper embed_button' value='Enter'></div>
+  </div>
+  {<if flags.Editor.dev_options}
+    <br><hr>
+    <div class="menu_item code">Code (js)</div>
+    <div class="menu_item stle">Style (css)</div>
+    <div class="menu_item processing">Processing template</div>
+  {>}
 </div>
 
 <div id='menu_shape' class='menu drawer medbold'
