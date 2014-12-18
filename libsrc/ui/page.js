@@ -889,24 +889,26 @@ define([
         // Count of cards which fit to even multiple of columns
         var card_count = expr_cards.length - columns;// - (expr_cards.length % columns);
         expr_cards.each(function(i) {
-            var $el = $(this);
+            var $el = $(this)
+                ,border_style = "1px solid #d1d1d1"
             $el.removeAttr('style');
+
             if (o.column_layout) {
                 if (! $el.parent().hasClass("column_0"))
-                    $el.css("border-left", "1px solid black");
+                    $el.css("border-left", border_style);
                 else
                     $el.css("border-left", "none");
                 if (! $el.is(":first-child"))
-                    $el.css("border-top", "1px solid black");
+                    $el.css("border-top", border_style);
                 else
                     $el.css("border-top", "none");
             } else {
                 if (i < card_count)
-                    $el.css("border-bottom", "1px solid black");
+                    $el.css("border-bottom", border_style);
                 else
                     $el.css("border-bottom", "none");
                 if ((i + 1) % columns != 0 && i + 1 < expr_cards.length)
-                    $el.css("border-right", "1px solid black");
+                    $el.css("border-right", border_style);
                 else
                     $el.css("border-right", "none");
             }
