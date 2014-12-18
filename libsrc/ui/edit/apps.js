@@ -1657,9 +1657,10 @@ Hive.App.Code = function(o){
 
             // set up modules menu
             var $drawer = $("#controls_misc .drawer.modules").clone()
+                ,$table = $drawer.find("table")
             var add_row = function(data) {
                 var $row = $drawer.find(".template").clone()
-                $row.showshow().removeClass("template").appendTo($drawer)
+                $row.showshow().removeClass("template").appendTo($table)
                 if (!data) 
                     return
                 $.map(g_module_attrs, function(attr) {

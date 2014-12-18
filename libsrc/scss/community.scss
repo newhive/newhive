@@ -692,7 +692,7 @@ body {
             width: 50%;
             // min-width: 410px;
             box-sizing: border-box;
-            padding: 7px;
+            // padding: 7px;
 
             &[data-num="0"] {
                 width: 100%;
@@ -712,10 +712,10 @@ body {
                     height: 90px;
                     .title {
                         // font-family: Gibson;
-                        font-size: 36px;
-                        line-height: 35px;
+                        font-size: 39px;
+                        line-height: 38px;
                         max-width: 560px;
-                        max-height: 70px;
+                        max-height: 76px;
                     }
                 }
                 .info {
@@ -727,7 +727,7 @@ body {
                     padding-right: 20px;
                     margin: 0;
                     // To get "curated by" to line up with the card title
-                    span { margin-left: 19px; }
+                    a > span { margin-left: 2px; }
                 }
 
                 .user_list {

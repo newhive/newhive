@@ -166,6 +166,9 @@ site_flags = {
     },'Editor/resize_all': {
         'description':'Show all resizers'
         , 'values':['admins','devs']
+    },'Editor/dev_options': {
+        'description':'Show dropdown under embed for code widgets'
+        , 'values':['newduke']
     },'Editor/merge_minis': {
         'description':'Merge the mini selection borders for groups'
         , 'values':['admins','devs']

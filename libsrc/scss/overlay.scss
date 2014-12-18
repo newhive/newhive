@@ -208,6 +208,11 @@ body:not(.mobile) {
             -webkit-padding-start: 0px;
 
             line-height: 0;
+            height: 42px;
+            @if $debug {
+                background-color: antiquewhite;
+            }
+
             display: inline-block;
             text-align: justify;
             width: 100%;
