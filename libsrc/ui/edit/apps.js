@@ -1571,17 +1571,22 @@ Hive.App.Code = function(o){
         el.attr('type', o.mime).appendTo('#dynamic_group')
 
         // either a module with code content, or a script with url
-        if(o.is_module()) el.removeAttr('src')
+        if(o.is_module()){
+            el.removeAttr('src')
+
+            // TODO-feature consider onload handler for CSS and maintaining
+            // last_success
+            el[0].onload = function(){
+                o.run_module_func("", function(m) {
+                    last_success = iter 
+                }, false, onerr)
+                // TODO-unhack: this should break for scripts that take longer than
+                // 100ms to compile
+                if (onload) setTimeout(onload, 100)
+            }
+        }
         else el.attr('src', o.init_state.url)
 
-        el[0].onload = function(){
-            o.run_module_func("", function(m) {
-                last_success = iter 
-            }, false, onerr)
-            // TODO-unhack: this should break for scripts that take longer than
-            // 100ms to compile
-            if (onload) setTimeout(onload, 100)
-        }
         // use a blob for source so syntax errors are properly reported,
         // instead of creating mysterious exception
         if(o.init_state.code_type == 'js')
@@ -1606,6 +1611,7 @@ Hive.App.Code = function(o){
         loaded()
     }
     o.run = function() {
+        if(!o.is_module()) return insert_code()
         o.ensure_dependencies(o.run_helper)
     }
     var animate_go
