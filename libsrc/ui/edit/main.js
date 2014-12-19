@@ -211,11 +211,16 @@ Hive.init_menus = function() {
         '       // TODO: fill in\n' +
         '   };\n' +
         '};\n\n' +
-        'self.run = function() {\n' +
-        '   var canvas = $("#canvas_id canvas")[0];\n' +
+        'var processing;\nself.run = function() {\n' +
+        '   var $canvas = $("#canvas_id canvas");\n' +
         '   // attaching the sketchProc function to the canvas\n' +
-        '   var p = new Processing(canvas, sketchProc);\n' +
-        '}\n</script>';
+        '   processing = new Processing($canvas[0], sketchProc);\n' +
+        '   processing.size($canvas.width(), $canvas.height());\n' +
+        '};\n\n' +
+        'self.stop = function() {\n' +
+        '    if (processing) processing.noLoop()\n' +
+        '};\n' +
+        '</script>';
     $('#menu_embed .processing').click(function() { 
         embed_menu.close();
         var canvas = Hive._embed_code('<canvas style="background-color:#DDD;">')
