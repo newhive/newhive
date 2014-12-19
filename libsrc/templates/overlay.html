@@ -88,7 +88,7 @@
       {<if user.logged_in} 
         <div class="category_handle item"></div>
       {>}
-      <ul>
+      <div class="ul">
         {<for home.cats "count"}
           <li><a { anchor_attrs "home_cat" "tag_name" item}>
             <div class='category_btn hoverable' data-name={item}>
@@ -100,7 +100,7 @@
           {# Category hover menu #}
           <div class='menu drawer category_hover' 
             data-handle='li .category_btn[data-name={item}]'
-            data-menu-opts='"offset_y":-5'><table>
+            data-menu-opts='"offset_y":0'><table>
             {<defer}
               {<for (get home.categories item) "kount"}
                 {# <a {query_attrs "home_cat" kount "tag_name" item}> #}
@@ -113,7 +113,7 @@
             {>}
           </table></div>
         {>}
-      </ul>
+      </div>
     {>}
   </div>
 </div>
