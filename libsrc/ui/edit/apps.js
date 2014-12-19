@@ -1517,6 +1517,7 @@ Hive.App.Code = function(o){
         var requested_iter = without_error ? last_success : iter
             , opts = $.extend({}, opts)
         if (opts.force) {// && requested_iter == -1) {
+            // TODO: recursively ensure_dependencies in case they haven't run
             insert_code(opts.load)
             requested_iter = iter
         } else if (opts.load)

@@ -90,9 +90,10 @@ class Expr(ModelController):
             except Exception, e:
                 return False
             return ",".join([""] + names)
-        # import ipdb; ipdb.set_trace() #//!!
+
         apps = deque(upd.get('apps',[]))
         while len(apps):
+            # extract files from sketch and code objects
             app = apps.popleft()
             ok = True
             data = None
@@ -100,7 +101,6 @@ class Expr(ModelController):
             file_id = app.get('file_id')
             if app['type'] == 'hive.code' and app['code_type'] == 'js':
                 data = app.get('content')
-                # import ipdb; ipdb.set_trace() #//!!
                 modules = module_modules(app)
                 ok = ok and file_id and (modules != False)
                 if ok:
@@ -116,14 +116,18 @@ class Expr(ModelController):
                 data = base64.decodestring(app.get('content').get('src').split(',',1)[1])
                 name = 'sketch',
                 mime = 'image/png'
+
             if not data:
                 continue
             if not ok:
+                # dependencies not visited
                 apps.append(app)
-            # import ipdb; ipdb.set_trace() #//!!
+
+            # sync files to s3
             f = os.tmpfile()
             f.write(data)
             file_res = None
+            # TODO-feature-versioning goes here
             # If file exists, overwrite it
             if file_id:
                 file_res = self.db.File.fetch(file_res)
