@@ -8,16 +8,17 @@ define(['browser/jquery', 'ui/util'], function($, util) {
         // paginating cards)
         $("*[data-scaled]").each(function(i, el) {
             var $img = $(el).find("img")
-                ,bounds = $img[0].getBoundingClientRect()
-                ,bounds_intervals = util.bounding_rect2intervals(bounds)
-                ,$window = $(window)
-                ,win_bounds = [$window.width(), $window.height()]
-                ,win_intervals = [[0, win_bounds[0]], [0, win_bounds[1]]]
-                ,bounds_dist = util._apply(util.interval_dist, 
-                    bounds_intervals, win_intervals)
-                ,bounds_scaled = util._div(bounds_dist, win_bounds)
+                // only download high res when close to scrolled
+                // ,bounds = $img[0].getBoundingClientRect()
+                // ,bounds_intervals = util.bounding_rect2intervals(bounds)
+                // ,$window = $(window)
+                // ,win_bounds = [$window.width(), $window.height()]
+                // ,win_intervals = [[0, win_bounds[0]], [0, win_bounds[1]]]
+                // ,bounds_dist = util._apply(util.interval_dist, 
+                //     bounds_intervals, win_intervals)
+                // ,bounds_scaled = util._div(bounds_dist, win_bounds)
             // If the img is on-screen, or pretty close, load hi-res version                
-            if (util.max(bounds_scaled) < 0.1) {
+            if (true){ // (util.max(bounds_scaled) < 0.1) {
                 var $app = $(el)
                     ,$img = $app.find("img")
                     ,$img2 = $img.clone()
@@ -34,9 +35,9 @@ define(['browser/jquery', 'ui/util'], function($, util) {
         })
 
     }
-    o.on_scroll = function(ev) {
-        o.fix_lazy()
-    }
+    // o.on_scroll = function(ev) {
+    //     o.fix_lazy()
+    // }
 
     o.get_zoom = function(){
         return window.devicePixelRatio
