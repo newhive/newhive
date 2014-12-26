@@ -71,6 +71,7 @@ o.rotate_about = function(pt, cent, angle) {
     return o._add(cent)(o.rotate(o._sub(pt)(cent), angle));
 }
 
+// TODO: remove duplication from ui/util
 // Return -1 if x < 0, 1 if x > 0, or 0 if x == 0.
 o._sign = function(x) {
     return typeof x === 'number' ? x ? x < 0 ? -1 : 1 : x === x ? 0 : NaN : NaN;
@@ -144,7 +145,7 @@ o.points_rect = function(ps){
 
 // Returns the nonnegative (nonoverlapping) distance btw two intervals.
 o.interval_dist = function(a, b) {
-    c = [a[1] - b[0], a[0] - b[1]];
+    var c = [a[1] - b[0], a[0] - b[1]];
     if (c[0] * c[1] <= 0)
         return 0;
     return Math.min(Math.abs(c[0]), Math.abs(c[1]));

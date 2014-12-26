@@ -388,7 +388,10 @@ class Expr(ModelController):
                 ,app.get('points', []))
             # shouldn't style go into .content, not the .happ as was earlier?
             style = app.get('style', {})
-            css = ';'.join([ k+':'+str(v) for k,v in style.items()])
+            # TODO: fill in this list
+            css_not_for_svg = ['position']
+            css = ';'.join([ k+':'+str(v) for k,v in style.items() if 
+                k not in css_not_for_svg])
             html = (
                   "<svg class='content' xmlns='http://www.w3.org/2000/svg'"
                 + " xmlns:xlink='http://www.w3.org/1999/xlink'"

@@ -40,9 +40,6 @@ site_flags = {
     },'Features/lazy_loading': {
         'description':'Lazy load various client images' #Load low-res images when initially fetching newhives'
         , 'values':['admins', 'devs']
-    },'Features/fade_controls': {
-        'description':'Fade bottom icons in newhive view'
-        , 'values':['admins', 'devs']
 
     # Admin
     },'Admin': { 
@@ -70,6 +67,9 @@ site_flags = {
     # UI    
     },'UI': {
         'description':'Test versions of the UI'
+    },'UI/transition_test': {
+        'description':'CSS transitions across the site'
+        , 'values':['admins=.2']
     },'UI/top_card': {
         'description':'Test versions of top card UI'
     },'UI/top_card/do_fade': {

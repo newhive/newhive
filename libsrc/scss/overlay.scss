@@ -220,6 +220,7 @@ body:not(.mobile) {
             li { 
                 display: inline-block;
                 .active {
+                    font-family: Gibson Semibold;
                     color: white;
                     background-color: black;
                 }
@@ -259,7 +260,7 @@ body:not(.mobile) {
                 text-transform: uppercase;
                 padding: 10px;
                 font-family: Gibson;
-                font-size: 18px;
+                font-size: 17px;
             }
 
             .menu.drawer.category_hover .menu_item {

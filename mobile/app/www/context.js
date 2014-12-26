@@ -1,15 +1,21 @@
 // empty object module for server to put stuff in
 define([
-    'json!ui/routes.json',
-    'json!server/compiled.config.json',
+    'config',
     'ui/routing',
     'browser/js',
     'browser/upload',
     'ui/menu',
     'ui/dialog',
     'ui/util'
-
-], function(api_routes, config, routing, js, upload, menu, dialog, ui_util){
+], function(
+    config,
+    routing,
+    js,
+    upload,
+    menu,
+    dialog,
+    ui_util
+){
     var o = { config: config };
 
     window.asset_loaded = function(el, error) {
@@ -129,7 +135,7 @@ define([
 
     var attrs = function(route_name, args, query_args, is_form, suppress){
         if(!suppress) suppress = [];
-        if (o.referer && !is_form){
+        if (o.embed && !is_form){
             var page_state = o.page_state(route_name, args, query_args)
             if (page_state.page){
                 // slice is to remove the trailing "/"

@@ -102,6 +102,7 @@ define([
             })
         }
         js.on_ready(function() {
+            return
             $("*[data-scaled]").map(function(i, app) {
                 var $app = $(app)
                     ,$img = $app.find("img")
@@ -114,10 +115,11 @@ define([
                     function(ev, el) {
                         $(el).siblings().css({opacity: 0})
                     })
+                $app.removeAttr("data-scaled")
             })
         })
-        $(window).on("scroll", layout.on_scroll)
-            .click(function(){ o.send_top('focus'); });
+        $(window)//.on("scroll", layout.on_scroll)
+            .click(function(){ o.send_top('focus'); })
         //if (0 && util.mobile()) {
         //    $.event.special.swipe.horizontalDistanceThreshold = 200;
         //    $(document).on("swipe", function(ev) {

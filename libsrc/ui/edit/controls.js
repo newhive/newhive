@@ -262,7 +262,7 @@ o.Controls = function(app, multiselect, delegate) {
         //o.c.undo   .css({ top   : -38 - p, right  :  61 - p });
         var help_padding = (context.flags.context_help) ? 36 : 0
         o.c.ne.css({ left: dims[0] - 46 + p - help_padding,
-            top: -42 - p, width: 200 });
+            top: -42 - p, width: 100 });
         // o.c.help   .css({ left: dims[0] - 76 + p, top: -38 - p });
         // o.c.copy   .css({ left: dims[0] - 45 + p, top: -38 - p });
         // o.c.remove .css({ left: dims[0] - 14 + p, top: -38 - p });

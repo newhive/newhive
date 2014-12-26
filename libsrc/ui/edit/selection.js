@@ -51,6 +51,77 @@ o.Selection = function(o) {
         return (!drag_target || drag_target == o) ?
             elements.slice() : [drag_target]; 
     };
+    //////////////////////////////////////////////////////////
+    // Delegates 
+    //////////////////////////////////////////////////////////
+    var delegate_fn = function(fn_name) {
+        return function() {
+            var args = $.makeArray(arguments), res = "undefined"
+                ,from_history = (args.slice(-1)[0] == "history")
+                ,apps = elements.slice();
+            if (from_history) {
+                args.pop();
+                if (args.length) {
+                    args = args[0].slice();
+                    apps = args.shift();
+                }
+            }
+            all_res = apps.map(function(app, i) {
+                if (typeof(app[fn_name]) == "function") {
+                    var applied = args;
+                    if (from_history)
+                        applied = [args[i]];
+                    if (typeof(app[fn_name]) == "function") {
+                        var _res = app[fn_name].apply(null, applied);
+                        if (res == "undefined") res = _res;
+                        if (res != _res) res = undefined;
+                    }
+                    return _res;
+                }
+                return undefined;
+            });
+            if (from_history) {
+                all_res.unshift(apps);
+                return all_res;
+            }
+            return res;
+        }
+    }
+    o.set_standard_delegate = function(fn_name) {
+        o[fn_name] = delegate_fn(fn_name);
+    }
+    var delegates = ["color", "color_set", "opacity", "opacity_set"
+        ,"border_radius", "border_radius_set",
+        ,"stroke_width", "stroke_width_set", "stroke_update", "reframe"
+        ,"blur", "blur_set", "stroke", "stroke_set", 'run', 'edit', 'stop'
+        ,'css_class', 'css_class_set', "border_width", "border_width_set"
+        ,"client_data", "client_data_set"];
+    delegates.map(o.set_standard_delegate)
+    
+    var common_classes
+    o.css_class_sel = function() {
+        var all_classes = o.css_class("history").slice(1)
+            .map(function(klasses) { return klasses.split(" ")})
+        // common_classes = u.intersect.apply(null, all_classes)
+        common_classes = u.union.apply(null, all_classes)
+        return common_classes.join(" ")
+    }
+    o.css_class_sel_set = function(klasses) {
+        klasses = klasses.split(" ")
+        var res, added = u.except(klasses, common_classes)
+            , removed = u.except(common_classes, klasses)
+        res = delegate_fn("css_class_add")(added.join(" "))
+        res = delegate_fn("css_class_remove")(removed.join(" "))
+        common_classes = klasses
+        return res
+    }
+    // Run the delegate {func_set} on the opposite of its current value
+    o.toggle_func = function(func, func_set) {
+        func_set = func_set || func + "_set"
+        var val = delegate_fn(func)()
+        delegate_fn(func_set)(!val)
+    }
+
     o.add_to_collection = false;
     o.is_app_object = false;
     o.has_align = false;
@@ -665,7 +736,13 @@ o.Selection = function(o) {
         }
         var dims = _resize(delta, coords);
     };
+    var get_aspect = delegate_fn("get_aspect");
+    // TODO: use group for aspect/resize/move/etc
     o.get_aspect = function() {
+        // var aspect = get_aspect()
+        // if (aspect != undefined)
+        //     return aspect
+
         if (elements.length == 1 && !elements[0].get_aspect()) {
             return elements[0].get_aspect();
         }
@@ -947,7 +1024,6 @@ o.Selection = function(o) {
         o.stack_end(-1)
     };
     o.stack_shift = function(offset) {
-        env.History.begin();
         var overlaps = u.overlapped_apps(u.region_from_app(o))
             , elements = o.get_stack(), up_offset = -1
         if (offset < 0) {
@@ -955,8 +1031,10 @@ o.Selection = function(o) {
             elements.reverse()
         }
         overlaps = u.except(overlaps, elements)
-        if (overlaps.length == 0)
+        if (overlaps.length == 0) 
             return o.stack_end(offset)
+
+        env.History.begin();
         var z_indexes = $.map(overlaps, function(a) { return a.layer(); })
         z_indexes.sort(js.op['-'])
 
@@ -1160,73 +1238,6 @@ o.Selection = function(o) {
         o.base_controls = o.make_controls.slice();
     }
     setTimeout(o.load, 1);
-    var delegate_fn = function(fn_name) {
-        return function() {
-            var args = $.makeArray(arguments), res = "undefined"
-                ,from_history = (args.slice(-1)[0] == "history")
-                ,apps = elements.slice();
-            if (from_history) {
-                args.pop();
-                if (args.length) {
-                    args = args[0].slice();
-                    apps = args.shift();
-                }
-            }
-            all_res = apps.map(function(app, i) {
-                if (typeof(app[fn_name]) == "function") {
-                    var applied = args;
-                    if (from_history)
-                        applied = [args[i]];
-                    if (typeof(app[fn_name]) == "function") {
-                        var _res = app[fn_name].apply(null, applied);
-                        if (res == "undefined") res = _res;
-                        if (res != _res) res = undefined;
-                    }
-                    return _res;
-                }
-                return undefined;
-            });
-            if (from_history) {
-                all_res.unshift(apps);
-                return all_res;
-            }
-            return res;
-        }
-    }
-    o.set_standard_delegate = function(fn_name) {
-        o[fn_name] = delegate_fn(fn_name);
-    }
-    var delegates = ["color", "color_set", "opacity", "opacity_set"
-        ,"border_radius", "border_radius_set",
-        ,"stroke_width", "stroke_width_set", "stroke_update", "reframe"
-        ,"blur", "blur_set", "stroke", "stroke_set", 'run', 'edit', 'stop'
-        ,'css_class', 'css_class_set', "border_width", "border_width_set"
-        ,"client_data", "client_data_set"];
-    delegates.map(o.set_standard_delegate)
-    
-    var common_classes
-    o.css_class_sel = function() {
-        var all_classes = o.css_class("history").slice(1)
-            .map(function(klasses) { return klasses.split(" ")})
-        // common_classes = u.intersect.apply(null, all_classes)
-        common_classes = u.union.apply(null, all_classes)
-        return common_classes.join(" ")
-    }
-    o.css_class_sel_set = function(klasses) {
-        klasses = klasses.split(" ")
-        var res, added = u.except(klasses, common_classes)
-            , removed = u.except(common_classes, klasses)
-        res = delegate_fn("css_class_add")(added.join(" "))
-        res = delegate_fn("css_class_remove")(removed.join(" "))
-        common_classes = klasses
-        return res
-    }
-    // Run the delegate {func_set} on the opposite of its current value
-    o.toggle_func = function(func, func_set) {
-        func_set = func_set || func + "_set"
-        var val = delegate_fn(func)()
-        delegate_fn(func_set)(!val)
-    }
 
     // prevent selection keyhandler from eating events when nothing is selected
     hive_app.App.has_nudge(o, function(){ return elements.length > 0 })

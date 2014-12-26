@@ -24,7 +24,9 @@
  * THE SOFTWARE.
  * 
  */
-(function ($) {
+define([
+    'browser/jquery'
+    ], function($){
     $.attrFn = $.attrFn || {};
 
     // navigator.userAgent.toLowerCase() isn't reliable for Chrome installs
@@ -825,4 +827,5 @@
         };
     });
 
-})($);
+});
+
