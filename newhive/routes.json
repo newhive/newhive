@@ -1,13 +1,13 @@
 {
-    "empty": "TODO-cleanup: preprocess this file to allow grouping and comments",
+    "//": "TODO-cleanup: preprocess this file to allow grouping and comments",
     
-    "empty": "TODO-cleanup: move the functions around to make more sense",
-    "empty": "TODO-cleanup: move client_method inside page_data",
-    "empty": "TODO: allow tags in routes with is_form, supports_flags",
+    "//": "TODO-cleanup: move the functions around to make more sense",
+    "//": "TODO-cleanup: move client_method inside page_data",
+    "//": "TODO: allow tags in routes with is_form, supports_flags",
 
-    "empty": "-----------------------------------------",
-    "empty": "These routes are content domain",
-    "empty": "-----------------------------------------",
+    "//": "-----------------------------------------",
+    "//": "These routes are content domain",
+    "//": "-----------------------------------------",
 
     "naked_expr_id": {
         "page_route": "/<expr_id>",
@@ -36,9 +36,9 @@
         "precedence": 1
     },
 
-    "empty": "-----------------------------------------",
-    "empty": "These routes are community pages.",
-    "empty": "-----------------------------------------",
+    "//": "-----------------------------------------",
+    "//": "These routes are community pages.",
+    "//": "-----------------------------------------",
 
     "home": {
         "page_route": "/",
@@ -117,8 +117,8 @@
         "client_method": "grid"
     },
 
-    "empty": "-----------------------------------------",
-    "empty": "These routes are (profile) community pages.",
+    "//": "-----------------------------------------",
+    "//": "These routes are (profile) community pages.",
 
     "my_profile": {
         "page_route": "/home/my-profile",
@@ -240,9 +240,9 @@
         "client_method": "grid"
     },
 
-    "empty": "-----------------------------------------",
-    "empty": "These routes are for forms.",
-    "empty": "-----------------------------------------",
+    "//": "-----------------------------------------",
+    "//": "These routes are for forms.",
+    "//": "-----------------------------------------",
 
     "login": {
         "api_route": "/api/user/login",
@@ -347,7 +347,7 @@
         "precedence": -1
     },
     "user_home": {
-        "empty": "redirects to expressions_public (profile) if no home expr",
+        "//": "redirects to expressions_public (profile) if no home expr",
         "page_route": "/<owner_name>",
         "api_route": "/api/expr/view/<owner_name>",
         "controller": "community",
@@ -493,9 +493,9 @@
         "method": "notify_register"
     },
 
-    "empty": "-----------------------------------------",
-    "empty": "Admin.",
-    "empty": "-----------------------------------------",
+    "//": "-----------------------------------------",
+    "//": "Admin.",
+    "//": "-----------------------------------------",
 
     "site_flags": {
         "page_route": "/home/admin/site_flags",
@@ -533,15 +533,15 @@
         "require_login": true
     },
 
-    "empty": "standard outside consumable API endpoints",
+    "//": "standard outside consumable API endpoints",
     "oembed": {
         "api_route": "/api/oembed",
         "controller": "expr",
         "method": "oembed"
     },
 
-    "empty": "----------------------------------------------------",
-    "empty": "Note: this is clientside; there is no server handler",
+    "//": "----------------------------------------------------",
+    "//": "Note: this is clientside; there is no server handler",
     "test_dialogs": {
         "page_route": "/home/admin/test_dialogs",
         "client_method": "test_dialogs"
@@ -550,8 +550,8 @@
         "page_route": "/home/admin/test_assets",
         "client_method": "test_assets"
     },
-    "empty": "-----------------------------------------",
-    "empty": "Dev tools.",
+    "//": "-----------------------------------------",
+    "//": "Dev tools.",
 
     "bugbug": {
         "api_route": "/api/bugbug",
