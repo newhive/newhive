@@ -564,5 +564,8 @@
     },
     "favicon.ico": {
         "page_route": "/favicon.ico"
+    },
+    "//": {
+        "page_route": "/home/empty"
     }
 }
