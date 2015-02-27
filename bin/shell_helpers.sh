@@ -16,16 +16,16 @@ source $NEWHIVE_HOME/bin/git_grep.sh
 
 filter_broken="${filter_broken}|/titanium/|history/history|/jquery-1|/old|/broken|/curl|google_closure.js|/d3/|codemirror.js|jquery-ui|/jquery/jquery|/codemirror/|mobile/[pt]|mobile/app/[^w]|zepto-|jquery.js"
 
-alias a="git_grep -o"
-alias n='a -o -n'
-alias nh='a -o -p "*.html" -n'
-alias ns='a -o -p "*.scss" -n'
-alias np='a -o -p "*.py" -n'
-alias nj='a -o -p "*.js" -n'
-alias ah='a -o -p "*.html"'
-alias as='a -o -p "*.scss"'
-alias ap='a -o -p "*.py"'
-alias aj='a -o -p "*.js"'
+alias gr="git_grep -o"
+alias ng='git_grep -o -n'
+alias nh='git_grep -o -p "*.html" -n'
+alias ns='git_grep -o -p "*.scss" -n'
+alias np='git_grep -o -p "*.py" -n'
+alias nj='git_grep -o -p "*.js" -n'
+alias ah='git_grep -o -p "*.html"'
+alias as='git_grep -o -p "*.scss"'
+alias ap='git_grep -o -p "*.py"'
+alias aj='git_grep -o -p "*.js"'
 alias ad=grep_python_def
 
 alias o='open_nth'
