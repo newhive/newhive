@@ -51,21 +51,22 @@ o.Controls = function(app, multiselect, delegate) {
     // of hardcoded.
     o.append_link_picker = function(d, opts) {
         opts = $.extend({ open: noop, close: noop }, opts);
-        var $drawer = $("<div class='control drawer link'>")
+        var $drawer = $("<div class='control drawer link'>&lt;a href=</div>")
             // ,$cancel_btn = $("<img>").addClass('hoverable')
             //     .attr('src', asset('skin/edit/delete_app.png'))
             //     .attr('title', 'Clear link')
             ,$input = $('<input type="text" placeholder="link">')
-
         d.append($drawer);
+
         // Protect the input in its own frame so it doesn't change the selection
         // of the current frame
         input_frame($input, $drawer, opts);
         // $drawer.append($cancel_btn).css({border: "solid 1px", padding: "3px 6px"});
+        $drawer.append('&gt;')
 
         // set_link is called when input is blurred
         var set_link = function(){
-            var v = normalize_href( $input.val() )
+            var v = normalize_anchor_text( $input.val() )
 
             sel_app.link_set(v);
             env.History.begin()
@@ -130,6 +131,14 @@ o.Controls = function(app, multiselect, delegate) {
         return menu
 
         function normalize_anchor_text(v){
+            var attrs = v.split(' '),
+                link = { href: normalize_href(attrs.shift()) }
+            attrs.map(function(attr){
+                var name_val = attr.split('=')
+                if(name_val.length < 2) return
+                link[nave_val[0]] = name_val[1]
+            })
+            return link
         }
 
         function normalize_href(v){
@@ -431,29 +440,25 @@ o.Controls = function(app, multiselect, delegate) {
 };
 
 var input_frame = function(input, parent, opts){
-    opts = $.extend({width: 200, height: 87}, opts)
+    opts = $.extend({width: 200, height: 44}, opts)
     if (! context.flags.anchor_name)
-        opts.height = 45
+        opts.height = 44
 
     var frame_load = function(){
         frame.contents().find('body')
             .append(input)
-            .css({'margin': 0, 'overflow': 'hidden'});
-    };
+            .css({'margin': 0, 'overflow': 'hidden'})
+    }
     var frame = $('<iframe>').load(frame_load)
         .width(opts.width).height(opts.height)
-        .css({
-            'display': 'inline-block'
-            ,'float': 'left'
-            // ,'margin-top': '5px'
-        });
-    parent.append(frame);
+        .css({'display': 'inline-block', 'vertical-align': 'middle'})
+    parent.append(frame)
     input.css({
         'border': '5px solid hsl(164, 57%, 74%)',
         'width': '100%',
         'padding': '5px',
         'font-size': '17px'
-    });
+    })
 };
 
 return o.Controls;

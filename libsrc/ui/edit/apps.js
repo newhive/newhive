@@ -2147,8 +2147,7 @@ Hive.App.Rectangle_Parent = function(o) {
     Hive.App.has_opacity(o);
     Hive.App.has_border_width(o);
     Hive.App.has_color(o, "stroke");
-    if (context.flags.shape_link)
-        Hive.App.has_link_picker(o);
+    Hive.App.has_link_picker(o);
 
     o.content_element = $("<div class='content drag'>").appendTo(o.div)
 
@@ -2501,8 +2500,7 @@ Hive.App.Polygon = function(o){
             return !c.no_line
         })
     }
-    if (context.flags.shape_link)
-        Hive.App.has_link_picker(o);
+    Hive.App.has_link_picker(o);
 
     if(!points.length)
         points.push.apply(points, [ [0, 0], [50, 100], [100, 0] ])
@@ -2941,19 +2939,13 @@ Hive.registerApp(Hive.App.Audio, 'hive.audio');
 // TODO-refactor: move into app_modifiers
 Hive.App.has_link_picker = function(app) {
     app.link_set = function(v){ 
-        app.init_state.href = v;
-    };
+        app.init_state.anchor = v;
+    }
     app.link = function() {
-        return app.init_state.href;
-    };
-    app.link_name_set = function(v){ 
-        app.init_state.href_name = v;
-    };
-    app.link_name = function() {
-        return app.init_state.href_name || "";
-    };
-    if (!env.Selection.link_set) {
-        ["link", "link_set", "link_name", "link_name_set"].map(function(el,i) {
+        return app.init_state.anchor;
+    }
+    if( !env.Selection.link_set ){
+        ['link', 'link_set'].map(function(el,i) {
             env.Selection.set_standard_delegate(el)
         })
     }
