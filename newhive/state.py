@@ -1717,6 +1717,10 @@ class Expr(HasSocial):
         if ( d.get('apps') or d.get('background') ) and d.get('updated', True):
             d['snapshot_needed'] = True
             d['snapshot_fails'] = 0
+        try:
+            d['remix_value'] = int(d['remix_value'])
+        except ValueError:
+            del d['remix_value']
         super(Expr, self).update(**d)
 
         self.update_owner(old_tags)
@@ -1947,8 +1951,8 @@ class Expr(HasSocial):
             k, v in self.get('analytics', {}).iteritems() ])
         counts['Views'] = self.views
         counts['Comment'] = self.comment_count
-        expr = dfilter(self, ['name', 'title', 'feed', 'created',
-            'updated', 'password', 'container'])
+        expr = dfilter(self, ['name', 'owner_name', 'title', 'feed', 'created',
+            'updated', 'password', 'container', 'remix_value'])
         expr['type'] = "expr"
         dict.update(expr, {
             'tags': self.get('tags_index'),
@@ -1957,7 +1961,7 @@ class Expr(HasSocial):
             'owner': self.owner.client_view(viewer=viewer),
             'counts': counts,
             'url': self.url,
-            'title': self.get('title')
+            'title': self.get('title'),
         })
         if self.get('remix_root'):
             remix_root = self.db.Expr.fetch(self.get('remix_root'))
