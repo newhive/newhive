@@ -30,3 +30,7 @@ server_env = {
     ,'assets': hive_assets
     ,'config': config
 }
+
+jinja_env.globals.update({
+    'media_bucket': db.s3.bucket_url('media')
+})

@@ -10,6 +10,18 @@
     {<if remix}
       <a {anchor_attrs "edit_expr" "id" expr.id}
         class='default menu_item hoverable'>Remix</a>
+      {<if expr.remix_value}
+        <form action="" method="POST">
+          <script
+            src="https://checkout.stripe.com/checkout.js" class="stripe-button"
+            data-key="pk_test_cedS2baGtwNVnzyRbQzWitUB"
+            data-amount="{expr.remix_value}"
+            data-name="Demo Site"
+            data-description="remix {expr.name} by {expr.owner_name} for {expr.remix_value}"
+            data-image="/128x128.png">
+          </script>
+        </form>
+      {>}
     {>}{<else}
       <div class='pointer menu_item hoverable' id='delete_btn'>Delete</div>
       <a {query_attrs "edit_expr" "copy" "id" expr.id}

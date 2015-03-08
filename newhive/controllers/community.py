@@ -397,7 +397,9 @@ class Community(Controller):
         for a in apps:
             # print 'app ', a
             file_id = a.get('file_id') 
-            if file_id and not a.get('url'):
+            # HACKHACK: Autopopulating url is a nonobvious side effect
+            # and it breaks code modules
+            if file_id and a.get('code_type') != 'js':
                 # print (self.db.File.fetch(file_id) or {}).get('url')
                 a['url'] = (self.db.File.fetch(file_id) or {}).get('url')
 
@@ -460,7 +462,7 @@ class Community(Controller):
             sort: default updated
             order: default -1
             col: database collection, default 'expr'
-            special: 'top_tags' or None
+            special: 'top_tags' | 'emails' | 'top_lovers' |  None
         """
         # TODO: document all these args somewhere
         if special == 'top_tags':

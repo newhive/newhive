@@ -139,6 +139,10 @@ background-color: lightgrey;
         vertical-align: top;
     }
 }
+.menu.drawer.modules {
+    th:nth-child(-n+3) { min-width: 200px;}
+    input { width: 100%; }
+}
 #menu_shape {
     // width: 150px;
     white-space: normal;

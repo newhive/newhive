@@ -16,6 +16,7 @@
 curl({
     // baseUrl: {{ ('/lib/libsrc' if debug else '/lib')|json }},
     baseUrl: {{ ('/lib/libsrc' if debug else '/lib')|json }},
+    paths: {'media' : '{{ media_bucket }}' },
     pluginPath: 'curl/plugin'
 });
   </script>
@@ -23,5 +24,5 @@ curl({
   {% block head %}{% endblock %}
 </head>
 <body class='{% block body_class %}{% endblock %}'
-  >{% block body %}{% endblock %}<div id='dynamic_group>'></div></body>
+  >{% block body %}{% endblock %}<div id='dynamic_group'></div></body>
 </html>

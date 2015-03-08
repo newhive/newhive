@@ -1717,6 +1717,10 @@ class Expr(HasSocial):
         if ( d.get('apps') or d.get('background') ) and d.get('updated', True):
             d['snapshot_needed'] = True
             d['snapshot_fails'] = 0
+        try:
+            d['remix_value'] = int(d.get('remix_value'))
+        except:
+            if d.get('remix_value'): del d['remix_value']
         super(Expr, self).update(**d)
 
         self.update_owner(old_tags)
@@ -1947,8 +1951,8 @@ class Expr(HasSocial):
             k, v in self.get('analytics', {}).iteritems() ])
         counts['Views'] = self.views
         counts['Comment'] = self.comment_count
-        expr = dfilter(self, ['name', 'title', 'feed', 'created',
-            'updated', 'password', 'container'])
+        expr = dfilter(self, ['name', 'owner_name', 'title', 'feed', 'created',
+            'updated', 'password', 'container', 'remix_value'])
         expr['type'] = "expr"
         dict.update(expr, {
             'tags': self.get('tags_index'),
@@ -1957,7 +1961,7 @@ class Expr(HasSocial):
             'owner': self.owner.client_view(viewer=viewer),
             'counts': counts,
             'url': self.url,
-            'title': self.get('title')
+            'title': self.get('title'),
         })
         if self.get('remix_root'):
             remix_root = self.db.Expr.fetch(self.get('remix_root'))
@@ -2078,6 +2082,11 @@ class File(Entity):
         self._file.seek(0)
         return self._file
 
+    def update_file(self, f):
+        # TODO: also do resampling, etc?
+        self._file=f
+        self.store()
+
     def download(self):
         url = self.url
         if url.startswith("//"):
@@ -2098,7 +2107,6 @@ class File(Entity):
         if self['mime'] in ['image/jpeg', 'image/png', 'image/gif']:
             return self.IMAGE
         return self.UNKNOWN
-
     def set_resamples(self):
         imo = Img.open(self.file)
         # format = imo.format
@@ -2226,7 +2234,7 @@ class File(Entity):
         if self.db.config.aws_id:
             self.update(protocol='s3',
                 s3_bucket=self.db.s3.buckets['media'].name,
-                url=self.db.s3.upload_file(self.file, 'media', self.id,
+                url=self.db.s3.upload_file(self.file, 'media', self.file_name,
                     self['name'], self['mime'])
             )
         else:
@@ -2237,10 +2245,21 @@ class File(Entity):
             return abs_url() + 'file/' + owner['name'] + '/' + name
 
     @property
+    def file_name(self):
+        return self.id + self.suffix
+    
+    @property
     def url(self):
-        return self.db.s3.url('media', self.id,
+        return self.db.s3.url('media', self.file_name,
             bucket_name=self.get('s3_bucket'))
 
+    @property
+    def suffix(self):
+        return self.get('suffix', '')
+    @suffix.setter
+    def suffix(self, value):
+        self.update(suffix=value)
+    
     @property
     def url_base(self):
         return self.db.s3.url('media', '',
