@@ -231,7 +231,7 @@ class Mailer(object):
             ,'Subject' : self.subject
             }
         if self.bcc and self.initiator:
-            heads.update({'To': heads['To'] + "," + self.initiator.get('email')})
+            heads.update('Bcc', self.initiator.get('email'))
         return heads
 
 
