@@ -532,8 +532,8 @@ define([
         }
         $(".user_action_bar form.follow").unbind('success').on('success', 
             function(event, json) {
-                follow_response($(this), json); 
-        });
+                follow_response($(this), json)
+        })
 
         // Belongs in edit
         $("textarea.about").keypress(function(e) {
