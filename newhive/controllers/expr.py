@@ -459,14 +459,14 @@ class Expr(ModelController):
             css = ';'.join([ k+':'+str(v) for k,v in style.items() if 
                 k not in css_not_for_svg])
             html = (
-                  "<svg class='content' xmlns='http://www.w3.org/2000/svg'"
+                  "<svg xmlns='http://www.w3.org/2000/svg'"
                 + " xmlns:xlink='http://www.w3.org/1999/xlink'"
                 + " viewbox='0 0 %f %f" % tuple(dimensions)
                 + "' style='%s'>" % css
                 + "<filter id='%s_blur'" % app_id 
                 + " filterUnits='userSpaceOnUse'><feGaussianBlur stdDeviation='"
                 + "%f'></filter>" % app.get('blur', 0)
-                + "%s<polygon points='" % link_text[0]
+                + "%s<polygon class='content' points='" % link_text[0]
                 + ' '.join(map(lambda p: "%f %f" % (p[0], p[1]), points))
                 + "' style='filter:url(#%s_blur)'/>%s</svg>" % (
                     app_id, link_text[1])
