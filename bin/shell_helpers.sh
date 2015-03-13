@@ -69,7 +69,7 @@ function psk(){
    fi
 } 
 function newhive_start_dev() {(
-  gcd
+  cd $NEWHIVE_HOME
   ./server.py $*
 )}
 
