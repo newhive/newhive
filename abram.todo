@@ -1,0 +1,21 @@
+Make revenue projections with remix value distribution equation
+  turn into decent looking spreadsheet and math on newhive
+Make revenue projections with simple non-credit flat rate distribution equations
+Block remix from working without paying when remix value is > 0
+  remove menu item from remix menu
+Implement pyramid / tree remix value passing
+test real money
+
+FIX RESET PASSWORD
+
+Before Tumblr meeting: implement default NewHive version of click to play oembed
+  http://newhive.com/cara/tumblr-embeds
+
+test privacy fix on direct email to newhive user
+  figure out why SMTP auth is failing on staging
+
+finish link ui revision
+
+dig up, revive Jordan's code that saves state of Andrew's Flowcam
+
+make editor border pushing only push trailing edge in to viewport
