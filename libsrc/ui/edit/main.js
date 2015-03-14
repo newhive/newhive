@@ -799,14 +799,12 @@ Hive.keydown = function(ev){
 };
 
 Hive.scroll = function(ev){
-    var scrolledX = window.scrollX - env.scrollX
-        ,scrolledY = window.scrollY - env.scrollY
+    var scrolled = u._sub( [window.scrollX, window.scrollY], env.scroll )
         ,has_fixed = false
-    env.scrollX += scrolledX
-    env.scrollY += scrolledY
+    env.scroll = u._add( env.scroll, scrolled )
     env.Apps.all().map(function(app){
         if (app.fixed()) {
-            app.pos_set(u._add(app.pos(), [scrolledX, scrolledY]))
+            app.pos_set(u._add(app.pos(), scrolled))
             has_fixed = true
         }
     })

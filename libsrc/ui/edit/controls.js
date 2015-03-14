@@ -174,64 +174,47 @@ o.Controls = function(app, multiselect, delegate) {
     o.padding = 9;
     o.border_width = 5;
     // pad is the amount space borders need from window edges
-    var pad_ul = [45, 60], pad_br = [45, 127], min_d = [146, 40];
+    var pad_ul = [10, 10], pad_br = [10, 75], min_d = [146, 40]
     if(multiselect){
-        pad_ul = [3, 3];
-        pad_br = [3, 3];
-        min_d = [1, 1];
-        o.padding = 1;
-        if (!env.gifwall) {
-            if (context.flags.Editor.merge_minis) {
-                o.border_width = 3;
-                if (o.multiselect < 0) {
-                    o.padding += 3;
-                }
-            } else {
-                o.border_width = 2;
+        pad_ul = [3, 3]
+        pad_br = [3, 3]
+        min_d = [1, 1]
+        o.padding = 1
+        if( context.flags.Editor.merge_minis ){
+            o.border_width = 3
+            if( o.multiselect < 0 ){
+                o.padding += 3
             }
+        }else {
+            o.border_width = 2
         }
     }
-    // Padding must be at least the border size
-    pad_ul = $.map(pad_ul, function(x) { return Math.max(x, o.border_width) });
-    pad_br = $.map(pad_br, function(x) { return Math.max(x, o.border_width) });
     var pos_dims = function(){
-        // TODO-bugbug-border-push:
-        //    * Can still be pushed off screen with really small apps 
-        //    * Add scroll height when pushed from bottom to prevent
-        //      overlap of controls with app content
-        // TODO-polish-border-push:
-        //    * Maybe make pushed border segments dashed
-        // Maybe ditch border pushing entirely. Not convinced it's worth it
-        var ap = u._add(app.pos(), env.offset), // add zoom offset
-            // win = $(window), wdims = [win.width(), win.height()],
-            wdims = env.win_size,
-            pos = [ Math.max(pad_ul[0] + env.scrollX, ap[0]), 
-                Math.max(pad_ul[1] + env.scrollY, ap[1]) ],
-            ad = app.dims(),
-            dims = [ ap[0] - pos[0] + ad[0], ap[1] - pos[1] + ad[1] ];
-        if(dims[0] + pos[0] > wdims[0] + env.scrollX - pad_br[0])
-            dims[0] = wdims[0] + env.scrollX - pad_br[0] - pos[0];
-        if(dims[1] + pos[1] > wdims[1] + env.scrollY - pad_br[1])
-            dims[1] = wdims[1] + env.scrollY - pad_br[1] - pos[1];
+        // border pushing moves nearest border of off-viewport apps to within
+        // pad_url / pad_br distance form edge
+        var ap = u._add(app.pos(), env.offset) // add zoom offset
+            ,wdims = env.win_size
+            ,ad = app.dims()
 
-        var minned_dims = [ Math.max(min_d[0], dims[0]),
-            Math.max(min_d[1], dims[1]) ];
-        var delta_dir = [ ap[0] < 0 ? 0 : -1, ap[1] < 0 ? 0 : -1 ];
-        if(env.gifwall && !o.multiselect) {
-            pos[1] = Math.max(pad_ul[1], ap[1]);
-            dims[1] = ap[1] - pos[1] + ad[1];
-            minned_dims = dims.slice();
-        }
-        var push_pos = u._mul(.5, delta_dir, u._sub(minned_dims, dims))
-        pos = u._add(pos, push_pos)
-        pos = [ Math.max(pad_ul[0] + env.scrollX, pos[0]), 
-            Math.max(pad_ul[1] + env.scrollY, pos[1]) ],
-        pos = u._sub(pos, env.offset) // remove zoom offset
+        // push down-right if past upper-left
+        if( ap[0] + ad[0] < pad_ul[0] )
+            ap[0] += pad_ul[0] - ap[0] - ad[0]
+        if( ap[1] + ad[1] < pad_ul[1] )
+            ap[1] += pad_ul[1] - ap[1] - ad[1]
 
-        return { pos: pos, dims: minned_dims };
-    };
-    o.pos = function(){ return pos_dims().pos };
-    o.dims = function(){ return pos_dims().dims };
+        // push up-left if past bottom-right
+        if( wdims[0] + env.scroll[0] - ap[0] < pad_br[0] )
+            ap[0] -= pad_br[0] - (wdims[0] + env.scroll[0] - ap[0])
+        // push up-left if past bottom-right
+        if( wdims[1] + env.scroll[1] - ap[1] < pad_br[1] )
+            ap[1] -= pad_br[1] - (wdims[1] + env.scroll[1] - ap[1])
+
+        ad = u._max(min_d, ad)
+
+        return { pos: ap, dims: ad }
+    }
+    o.pos = function(){ return pos_dims().pos }
+    o.dims = function(){ return pos_dims().dims }
 
     o.layout = function() {
         // Fix parent layout if needed
@@ -260,9 +243,7 @@ o.Controls = function(app, multiselect, delegate) {
         if(o.multiselect) return;
 
         //o.c.undo   .css({ top   : -38 - p, right  :  61 - p });
-        var help_padding = (context.flags.context_help) ? 36 : 0
-        o.c.ne.css({ left: dims[0] - 46 + p - help_padding,
-            top: -42 - p, width: 100 });
+        o.c.ne.css({ left: dims[0] - 46 + p, top: -42 - p, width: 100 })
         // o.c.help   .css({ left: dims[0] - 76 + p, top: -38 - p });
         // o.c.copy   .css({ left: dims[0] - 45 + p, top: -38 - p });
         // o.c.remove .css({ left: dims[0] - 14 + p, top: -38 - p });
