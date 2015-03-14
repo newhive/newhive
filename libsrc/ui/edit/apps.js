@@ -978,7 +978,7 @@ Hive.App = function(init_state, opts) {
             o.fit_to(opts)
             // why not use CSS position:fixed?
             if (o.is_fixed()) {
-                o.pos_set(u._add(o.pos(), [env.scrollX, env.scrollY]))
+                o.pos_set(u._add(o.pos(), env.scroll))
             }
         }
     }
@@ -1174,7 +1174,7 @@ Hive.App = function(init_state, opts) {
         if (o.is_fixed())
             pos_dims.position = 
                 u._sub(pos_dims.position, 
-                    u._div([env.scrollX, env.scrollY], env.scale()))
+                    u._div(env.scrollY, env.scale()))
         $.extend(o.history_state.return_val, pos_dims)
     })
     o.state_relative = function(){
@@ -1185,7 +1185,7 @@ Hive.App = function(init_state, opts) {
             _pos = s.position.slice();
             if (o.is_fixed())
                 _pos = u._add(_pos,
-                    u._div([env.scrollX, env.scrollY], env.scale()))
+                    u._div(env.scroll[0], env.scale()))
         }
         if(s.dimensions)
             _dims = s.dimensions.slice();
@@ -3992,7 +3992,7 @@ Hive.App.has_align = function(o) {
                 alignment[coord] = type
 
                 if (canvas) {
-                    var $win = $(window), pos = [env.scrollX, env.scrollY]
+                    var $win = $(window), pos = env.scroll.slice()
                         ,dims = [$win.width(), $win.height()]
                         ,s = env.scale() / env.zoom()
                     aabb = [u._div(pos, s), u._div(u._add(pos, dims), s)]
