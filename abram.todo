@@ -10,11 +10,8 @@ Block remix from working without paying when remix value is > 0
 Implement pyramid / tree remix value passing
 test real money
 
-
 Before Tumblr meeting: implement default NewHive version of click to play oembed
   http://newhive.com/cara/tumblr-embeds
-
-fix comment form from freezing on post
 
 finish link ui revision
 
@@ -27,3 +24,4 @@ make editor border pushing only push trailing edge in to viewport
 figure out why SMTP auth is failing on staging
   test privacy fix on direct email to newhive user
   FIX RESET PASSWORD
+  fix comment form from freezing on post
