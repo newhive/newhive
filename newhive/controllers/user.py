@@ -491,7 +491,7 @@ class User(ModelController):
              'To' : feedback_address
             ,'From' : user_email
             ,'Subject' : 'Feedback from ' + request.requester.get('name') + ' - ' + request.requester.get('fullname', '')
-            ,'Reply-to' : ', '.join([ feedback_address, user_email ])
+            ,'Reply-To' : ', '.join([ feedback_address, user_email ])
             }
         url = url_unquote(request.args.get('url', ''))
         body = (

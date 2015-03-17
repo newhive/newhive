@@ -1,6 +1,6 @@
 import crypt, urllib, time, json, re, pymongo, random
 from cStringIO import StringIO
-from smtplib import SMTP
+from smtplib import SMTP_SSL
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.header import Header
@@ -77,10 +77,7 @@ def _send_mail(headers, body, db, category=None, filters=None, unique_args=None,
     # smtp connection setup and timings
     t0 = time.time()
     if not smtp:
-        smtp = SMTP(config.email_server, config.email_port)
-        if config.email_user and config.email_password:
-            smtp.login(config.email_user, config.email_password)
-        logger.debug('SMTP connection time %d ms', (time.time() - t0) * 1000)
+        smtp = smtp_connect()
 
     # Message header assembly
     msg = MIMEMultipart('alternative')
@@ -142,6 +139,13 @@ def _send_mail(headers, body, db, category=None, filters=None, unique_args=None,
             f.write(body['html'].encode('utf-8'))
             f.close()
 
+def smtp_connect():
+    t0 = time.time()
+    smtp = SMTP_SSL(config.email_server, config.email_port)
+    if config.email_user and config.email_password:
+        smtp.login(config.email_user, config.email_password)
+    logger.debug('SMTP connection time %d ms', (time.time() - t0) * 1000)
+    return smtp
 
 #registry = []
 class MetaMailer(type):
@@ -166,7 +170,6 @@ class Mailer(object):
     initiator = None
     unsubscribable = True
     inline_css = True
-    bcc = False
     template = None
 
     def __init__(self, jinja_env=None, db=None, smtp=None):
@@ -184,15 +187,10 @@ class Mailer(object):
             ,'number': lambda n: '{:,}'.format(n)       # adds ',' thousands separator
             ,'urlencode': lambda s: urllib.quote(s.encode('utf8'))
             })
-        t0 = time.time()
         if smtp:
             self.smtp = smtp
         else:
-            self.smtp = SMTP(config.email_server, config.email_port)
-            if config.email_user and config.email_password:
-                self.smtp.login(config.email_user, config.email_password)
-            logger.debug('SMTP connection time %d ms', (time.time() - t0) * 1000)
-
+            self.smtp = smtp_connect()
 
     def check_subscription(self):
         # check subscription status
@@ -227,11 +225,9 @@ class Mailer(object):
 
     def heads(self):
         heads = {
-             'To' : self.recipient.get('email')
-            ,'Subject' : self.subject
+             'To': self.recipient.get('email')
+            ,'Subject': self.subject
             }
-        if self.bcc and self.initiator:
-            heads.update('Bcc', self.initiator.get('email'))
         return heads
 
 
@@ -477,11 +473,15 @@ class SendMail(Mailer):
     sent_to = ['user']
     template = 'emails/mail'
 
-    def send(self, recipient, initiator, message, bcc=False):
+    def heads(self):
+        heads = super(SendMail, self).heads()
+        heads.update({'Reply-To': self.initiator})
+        return heads
+
+    def send(self, recipient, initiator, message, copy_me):
         self.subject = 'New message from %s' % initiator['name']
         self.recipient = recipient
         self.initiator = initiator
-        self.bcc = bcc
         # user_profile_url = recipient.url
         # user_home_url = re.sub(r'/[^/]*$', '', user_profile_url)
         context = {
@@ -490,6 +490,9 @@ class SendMail(Mailer):
             , 'message' : message
             }
         self.send_mail(context)
+        if copy_me:
+            self.recipient = initiator
+            self.send_mail(context)
 
 class ShareExpr(ExprAction):
 
@@ -505,12 +508,11 @@ class ShareExpr(ExprAction):
     #         heads.update({'To': heads['To'] + "," + self.initiator.get('email')})
     #     return heads
 
-    def send(self, expr, initiator, recipient, message, bcc=False, fullscreen=False):
+    def send(self, expr, initiator, recipient, message, fullscreen=False):
         self.card = expr
         self.initiator = initiator
         self.recipient = recipient
         self.message = message
-        self.bcc = bcc
         context = {}
         if fullscreen: 
             context['expr_url'] = (abs_url(domain=config.content_domain) 
