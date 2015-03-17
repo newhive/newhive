@@ -355,6 +355,7 @@ class Entity(dict):
     def type(self): return self.__class__.__name__
 
     def __init__(self, collection, doc):
+        """ Establish data-model consistency """
         self.id = doc.get('id')
         doc.pop('id', None)  # Prevent id and _id attributes going into MongoDB
         dict.update(self, doc)
@@ -376,8 +377,27 @@ class Entity(dict):
         if not self.id: self.id = str(bson.objectid.ObjectId())
         self['created'] = now()
         self['updated'] = now()
+        self.serialize()
+        self.validate()
         self._col.insert(self, safe=True)
         return self
+
+    def serialize(self, d):
+        """ de-normalize (for indexing) and dereference contents for storage
+            Args:
+                d (dict): partial document for merging into existing
+            Returns:
+                None: destructively updates self
+        """
+        pass
+
+    def validate(self):
+        """ ensure record is consistent with data model """
+        if not ( is_mongo_key(self.id)
+            or is_local_time_stamp(self['created'])
+            or is_local_time_stamp(self['updated'])
+        ):
+            raise ValueError('entity id or timestamps invalid')
 
     def entropy(self, force_update = False):
         if force_update or (not self.get('entropy')):
@@ -400,6 +420,8 @@ class Entity(dict):
         d.setdefault('updated',  now())
         if not d['updated']: del d['updated']
         dict.update(self, d)
+        self.serialize()
+        self.validate()
         return self._col.update({ '_id' : self.id }, { '$set' : d },
             safe=True)
 
@@ -647,7 +669,7 @@ class User(HasSocial):
         def site_user(self):
             return self.named(self.config.site_user)
 
-    def __init__(self, *a, **b):
+    def __init__(self, doc, **b):
         super(User, self).__init__(*a, **b)
         self.logged_in = False
         self.fb_client = None
@@ -679,9 +701,12 @@ class User(HasSocial):
         return self
 
     def update(self, **d):
-        self.build_search(d)
         super(User, self).update(**d)
         return self
+
+    def serialize(self, d):
+        self.build_search(d)
+        super(User, self).update(d)
 
     @property
     def notification_count(self): return self.get('notification_count', 0)
@@ -1389,6 +1414,73 @@ class Expr(HasSocial):
     counters = ['owner_views', 'views', 'emails']
     _owner = None
 
+    def create(self):
+        assert map(self.has_key, ['owner', 'domain', 'name'])
+        self['owner_name'] = self.db.User.fetch(self['owner'])['name']
+        self['random'] = random.random()
+        self['views'] = 0
+        self['snapshot_needed'] = True
+        self.setdefault('title', 'Untitled')
+        self.setdefault('auth', 'public')
+
+        if 'remixed' not in self.get('tags_index', []):
+            self.db.NewExpr.create(self.owner, self)
+        else:
+            parent = self
+            remix_lineage = []
+            while True:
+                parent = self.db.Expr.fetch(parent.get('remix_parent_id'))
+                if not parent: break
+                remix_lineage.append( dfilter( parent, ['_id', 'owner',
+                    'remix_value', 'remix_value_add'] ) )
+            if len(remix_lineage):
+                self.db.Remix.create(self.owner, remixed_expr, 
+                    data={'new_expr':self})
+                self['remix_lineage'] = remix_lineage
+
+        super(Expr, self).create()
+        self.update_owner([])
+        return self
+
+    def update(self, **d):
+        old_tags = self.get('tags_index', [])
+
+        if d.get('auth') == 'public':
+            d['password'] = None
+        # Reset fails if this is a real update
+        if ( d.get('apps') or d.get('background') ) and d.get('updated', True):
+            d['snapshot_needed'] = True
+            d['snapshot_fails'] = 0
+        super(Expr, self).update(**d)
+
+        self.update_owner(old_tags)
+
+    def serialize(self, d):
+        self._collect_files(d)
+        self.build_search(d)
+        super(Expr, self).update(d)
+
+    def validate(self):
+        # """ ensure record is consistent with data model """
+        self['name'] = self['name'][0:80]
+        try:
+            d['remix_value'] = float(d.get('remix_value'))
+        except:
+            if d.get('remix_value'): del d['remix_value']
+        super(Expr, self).validate()
+        pass
+
+    def delete(self):
+        for r in self.db.Feed.search({'entity': self.id}): r.delete()
+
+        res = super(Expr, self).delete()
+
+        old_tags = self.get('tags_index', [])
+        self['tags_index'] = []
+        self.update_owner(old_tags)
+
+        return res
+
     class Collection(Collection):
         ignore_not_meta = { 'apps': 0, 'background': 0, 'text_index': 0,
             'title_index': 0, 'file_id': 0, 'images': 0  }
@@ -1550,9 +1642,8 @@ class Expr(HasSocial):
                 return False
         return True
 
-    #TODO-cleanup: remove after snapshot migration
     def snapshot_name_base(self, size, time):
-        return '_'.join([self.id, time, self.entropy(), size]) + '.jpg' #(".jpg" if (size == "full") else ".png")
+        return '_'.join([self.id, time, self.entropy(), size]) + '.jpg'
 
     def snapshot_name_http(self, size):
         res = self.snapshot_name(size)
@@ -1706,25 +1797,6 @@ class Expr(HasSocial):
         return self._owner
     owner = property(get_owner)
 
-    def update(self, **d):
-        old_tags = self.get('tags_index', [])
-
-        self._collect_files(d)
-        self.build_search(d)
-        if d.get('auth') == 'public':
-            d['password'] = None
-        # Reset fails if this is a real update
-        if ( d.get('apps') or d.get('background') ) and d.get('updated', True):
-            d['snapshot_needed'] = True
-            d['snapshot_fails'] = 0
-        try:
-            d['remix_value'] = int(d.get('remix_value'))
-        except:
-            if d.get('remix_value'): del d['remix_value']
-        super(Expr, self).update(**d)
-
-        self.update_owner(old_tags)
-
     def update_owner(self, old_tags):
         old_tags = set(old_tags)
         self.owner.get_expr_count(force_update=True)
@@ -1793,40 +1865,6 @@ class Expr(HasSocial):
     def _match_id(self, s):
         if not isinstance(s, basestring): return []
         return map(lambda m: m[0], re.findall(r'/\b([0-9a-f]{24})(\b|_)', s))
-
-    def create(self):
-        assert map(self.has_key, ['owner', 'domain', 'name'])
-        self['owner_name'] = self.db.User.fetch(self['owner'])['name']
-        self['name'] = self['name'][0:80]
-        self['random'] = random.random()
-        self['views'] = 0
-        self['snapshot_needed'] = True
-        self.setdefault('title', 'Untitled')
-        self.setdefault('auth', 'public')
-        self._collect_files(self)
-        self.build_search(self)
-        super(Expr, self).create()
-        if 'remixed' not in self.get('tags_index', []):
-            self.db.NewExpr.create(self.owner, self)
-        else:
-            remixed_expr = self.db.Expr.fetch(self['remix_parent_id'])
-            if remixed_expr:
-                self.db.Remix.create(self.owner, remixed_expr, 
-                    data={'new_expr':self})
-
-        self.update_owner([])
-        return self
-
-    def delete(self):
-        for r in self.db.Feed.search({'entity': self.id}): r.delete()
-
-        res = super(Expr, self).delete()
-
-        old_tags = self.get('tags_index', [])
-        self['tags_index'] = []
-        self.update_owner(old_tags)
-
-        return res
 
     def increment_counter(self, counter):
         assert counter in self.counters, "Invalid counter variable.  Allowed counters are " + str(self.counters)
@@ -2032,6 +2070,36 @@ class Expr(HasSocial):
     @property
     def private(self):
         return self['auth'] != 'public'
+
+
+@register
+class Transaction():
+    cname = 'file'
+    class Kind():
+        deposit = 1
+        debit = 2
+        remix_payout = 3
+        remix_cut = 4
+
+    @staticmethod
+    def RemixContext(parent_expr_id, new_expr_id):
+        return { 'action': 1, 'parent_id': parent_expr_id,
+            'new_id': new_expr_id }
+
+    def __init__(self, collection, doc):
+        # super(User, self).__init__(collection, doc)
+        # self.logged_in = False
+        # self.fb_client = None
+        # self.owner = self
+        pass
+
+    class Collection(Collection):
+        def create(self, from_user, to_user, amt, kind, context):
+            data = { 'from_id': from_user, 'to_id': to_user, 'amt': amt,
+                'kind': kind }
+            return super(Transaction.Collection, self).create(data)
+
+    # TODO-polish: validation of some sort
 
 
 def generate_thumb(file, size, format=None):
@@ -2760,6 +2828,15 @@ class Searches(Entity):
 
 
 ## utils
+
+def is_mongo_key(string):
+    return isinstance(string, basestring) and re.match('[0-9a-f]{24}', string)
+
+def is_local_time_stamp(val):
+    """ make sure val is a reasonable time for DB
+    TODO-polish: consider making allowable error-delta for future values """
+    db_epoch = 1302707338 # first record from datetime(2011, 4, 13, 15, 8, 58)
+    return isinstance(val, numbers.Number) and val >= db_epoch
 
 def mk_password(v):
     if not v:

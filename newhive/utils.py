@@ -242,9 +242,13 @@ def format_tags(s):
     return re.sub(r'[_\W]','', s, flags = re.UNICODE)
 
 def normalize_tags(ws):
-    # 1. if 'tags' has comma:  separate out quoted strings, split on all commas and hash, replace space with nothing
-    # 2. if 'tags' does not have comma: separate out quoted strings, split on all spaces and hashes
-    # 3. afterward: convert to lowercase, remove hashes, replace - with nothing, replace _ with nothing. actually just remove non-alphanumeric stuff.
+    # TODO-polish: replace non-alphanumeric with '-', don't change order
+    # 1. If 'tags' has comma: separate out quoted strings, split on all commas
+    #    and hash, replace space with nothing
+    # 2. If 'tags' does not have comma: separate out quoted strings, split on
+    #    all spaces and hashes
+    # 3. Afterward: convert to lowercase, remove hashes, replace 
+    #    remove non-alphanumeric chars.
     l1 = re.findall(r'"(.*?)"',ws,flags=re.UNICODE)
     ws_no_quotes = re.sub(r'"(.*?)"', '', ws, flags=re.UNICODE)
     if ',' in ws:
@@ -410,10 +414,6 @@ def key_map(original, transformation, filter=False):
         return dfilter(output, transformation.values())
     else:
         return output
-
-
-def is_mongo_key(string):
-    return isinstance(string, basestring) and re.match('[0-9a-f]{24}', string)
 
 
 def set_trace(interactive=False):
