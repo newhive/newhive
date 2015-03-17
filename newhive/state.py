@@ -377,27 +377,43 @@ class Entity(dict):
         if not self.id: self.id = str(bson.objectid.ObjectId())
         self['created'] = now()
         self['updated'] = now()
-        self.serialize()
-        self.validate()
+        self.serialize(self)
         self._col.insert(self, safe=True)
         return self
 
     def serialize(self, d):
         """ de-normalize (for indexing) and dereference contents for storage
             Args:
-                d (dict): partial document for merging into existing
+                d (dict): partial document for updating into existing
             Returns:
-                None: destructively updates self
+                None: destructively updates d
         """
-        pass
-
-    def validate(self):
-        """ ensure record is consistent with data model """
         if not ( is_mongo_key(self.id)
             or is_local_time_stamp(self['created'])
             or is_local_time_stamp(self['updated'])
         ):
             raise ValueError('entity id or timestamps invalid')
+
+    def update(self, **d):
+        # TODO: change default of updated
+        # if d.get('updated') is True: d['updated'] = now()
+        # d.setdefault('updated', False)
+        
+        d.setdefault('updated',  now())
+        if not d['updated']: del d['updated']
+        dict.update(self, d)
+        self.serialize(d)
+        return self._col.update({ '_id' : self.id }, { '$set' : d },
+            safe=True)
+
+    def delete(self):
+        res = self._col.remove(spec_or_id=self.id, safe=True)
+        if self.Collection.trashable:
+            self.db.Trash.create(self.cname, self)
+        return res
+
+    def undelete(self, trash=None):
+        pass
 
     def entropy(self, force_update = False):
         if force_update or (not self.get('entropy')):
@@ -411,19 +427,6 @@ class Entity(dict):
 
     def reload(self):
         dict.update(self, self.collection.fetch(self.id))
-
-    def update(self, **d):
-        # TODO: change default of updated
-        # if d.get('updated') is True: d['updated'] = now()
-        # d.setdefault('updated', False)
-        
-        d.setdefault('updated',  now())
-        if not d['updated']: del d['updated']
-        dict.update(self, d)
-        self.serialize()
-        self.validate()
-        return self._col.update({ '_id' : self.id }, { '$set' : d },
-            safe=True)
 
     def update_cmd(self, d, **opts): 
         return self._col.update({ '_id' : self.id }, d, **opts)
@@ -458,15 +461,6 @@ class Entity(dict):
             return self['flags'].get(name, False)
         else:
             return False
-
-    def delete(self):
-        res = self._col.remove(spec_or_id=self.id, safe=True)
-        if self.Collection.trashable:
-            self.db.Trash.create(self.cname, self)
-        return res
-
-    def undelete(self, trash=None):
-        pass
 
     def purge(self):
         res = self._col.remove(spec_or_id=self.id, safe=True)
@@ -655,31 +649,11 @@ class User(HasSocial):
     #    ,notification_count = int
     # )
 
-    class Collection(Collection):
-        def named(self, name): return self.find({'name' : name})
-
-        def find_by_facebook(self, id):
-            return self.find({ 'facebook.id': id,
-                'facebook.disconnected': {'$exists': False} })
-
-        def get_root(self): return self.named('root')
-        root_user = property(get_root)
-
-        @property
-        def site_user(self):
-            return self.named(self.config.site_user)
-
-    def __init__(self, doc, **b):
-        super(User, self).__init__(*a, **b)
+    def __init__(self, collection, doc):
+        super(User, self).__init__(collection, doc)
         self.logged_in = False
         self.fb_client = None
         self.owner = self
-
-    def expr_create(self, d):
-        doc = dict(d)
-        doc.update(owner=self.id)
-        doc.setdefault('name', '')
-        return self.db.Expr.create(doc)
 
     def create(self):
         self['name'] = self['name'].lower()
@@ -700,13 +674,62 @@ class User(HasSocial):
         super(User, self).create()
         return self
 
-    def update(self, **d):
-        super(User, self).update(**d)
-        return self
-
     def serialize(self, d):
         self.build_search(d)
-        super(User, self).update(d)
+        super(User, self).serialize(d)
+
+    def delete(self):
+        # Facebook Disconnect
+        self.facebook_disconnect()
+
+        # Feed Cleanup
+        for feed_item in self.db.Feed.search(
+                {'$or': [{'initiator': self.id}, {'entity': self.id}]}):
+            feed_item.delete()
+
+        # Expressions Cleanup
+        for e in self.expressions:
+            e.delete()
+
+        return super(User, self).delete()
+
+    def undelete(self, trash):
+        # TODO-undelete: reconnect FB?
+        # TODO-undelete: Fix following / followers
+        # TODO-undelete: index record.owner
+        time = trash.get('updated', now()) - 3600
+        for expr in self.db.Trash.search({
+            'record.owner': self.id
+            ,"updated": {"$gt": time}
+            ,'collection': 'expr'
+        }):
+            expr.undelete() 
+        for feed in self.db.Trash.search({
+            '$or': [{'record.initiator': self.id}, {'record.entity': self.id}]
+            ,"updated": {"$gt": time}
+            ,'collection': 'feed'
+        }):
+            feed.undelete()
+
+    class Collection(Collection):
+        def named(self, name): return self.find({'name' : name})
+
+        def find_by_facebook(self, id):
+            return self.find({ 'facebook.id': id,
+                'facebook.disconnected': {'$exists': False} })
+
+        def get_root(self): return self.named('root')
+        root_user = property(get_root)
+
+        @property
+        def site_user(self):
+            return self.named(self.config.site_user)
+
+    def expr_create(self, d):
+        doc = dict(d)
+        doc.update(owner=self.id)
+        doc.setdefault('name', '')
+        return self.db.Expr.create(doc)
 
     @property
     def notification_count(self): return self.get('notification_count', 0)
@@ -1316,39 +1339,6 @@ class User(HasSocial):
         cats = ru.get_cats()
         return cats[1][0:cats[0]]
 
-    def delete(self):
-        # Facebook Disconnect
-        self.facebook_disconnect()
-
-        # Feed Cleanup
-        for feed_item in self.db.Feed.search(
-                {'$or': [{'initiator': self.id}, {'entity': self.id}]}):
-            feed_item.delete()
-
-        # Expressions Cleanup
-        for e in self.expressions:
-            e.delete()
-
-        return super(User, self).delete()
-
-    def undelete(self, trash):
-        # TODO-undelete: reconnect FB?
-        # TODO-undelete: Fix following / followers
-        # TODO-undelete: index record.owner
-        time = trash.get('updated', now()) - 3600
-        for expr in self.db.Trash.search({
-            'record.owner': self.id
-            ,"updated": {"$gt": time}
-            ,'collection': 'expr'
-        }):
-            expr.undelete() 
-        for feed in self.db.Trash.search({
-            '$or': [{'record.initiator': self.id}, {'record.entity': self.id}]
-            ,"updated": {"$gt": time}
-            ,'collection': 'feed'
-        }):
-            feed.undelete()
-
     def has_group(self, group, level=None):
         groups = self.get('groups')
         if isinstance(group, list): return False
@@ -1416,6 +1406,7 @@ class Expr(HasSocial):
 
     def create(self):
         assert map(self.has_key, ['owner', 'domain', 'name'])
+        self['name'] = self['name'][0:80]
         self['owner_name'] = self.db.User.fetch(self['owner'])['name']
         self['random'] = random.random()
         self['views'] = 0
@@ -1445,8 +1436,6 @@ class Expr(HasSocial):
     def update(self, **d):
         old_tags = self.get('tags_index', [])
 
-        if d.get('auth') == 'public':
-            d['password'] = None
         # Reset fails if this is a real update
         if ( d.get('apps') or d.get('background') ) and d.get('updated', True):
             d['snapshot_needed'] = True
@@ -1458,17 +1447,13 @@ class Expr(HasSocial):
     def serialize(self, d):
         self._collect_files(d)
         self.build_search(d)
-        super(Expr, self).update(d)
-
-    def validate(self):
-        # """ ensure record is consistent with data model """
-        self['name'] = self['name'][0:80]
+        if d.get('auth') == 'public':
+            d['password'] = None
         try:
             d['remix_value'] = float(d.get('remix_value'))
         except:
             if d.get('remix_value'): del d['remix_value']
-        super(Expr, self).validate()
-        pass
+        super(Expr, self).serialize(d)
 
     def delete(self):
         for r in self.db.Feed.search({'entity': self.id}): r.delete()
@@ -2073,7 +2058,7 @@ class Expr(HasSocial):
 
 
 @register
-class Transaction():
+class Transaction(Entity):
     cname = 'file'
     class Kind():
         deposit = 1
@@ -2086,12 +2071,12 @@ class Transaction():
         return { 'action': 1, 'parent_id': parent_expr_id,
             'new_id': new_expr_id }
 
-    def __init__(self, collection, doc):
-        # super(User, self).__init__(collection, doc)
-        # self.logged_in = False
-        # self.fb_client = None
-        # self.owner = self
-        pass
+    # def __init__(self, collection, doc):
+    #     super(User, self).__init__(collection, doc)
+    #     self.logged_in = False
+    #     self.fb_client = None
+    #     self.owner = self
+    #     pass
 
     class Collection(Collection):
         def create(self, from_user, to_user, amt, kind, context):
