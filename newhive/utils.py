@@ -134,9 +134,32 @@ def index_of(l, f):
         if f(e): return i
     return -1
 
-
+### BEGIN dict_tools ###
+########################
 def dupdate(d1, d2): return dict(d1.items() + d2.items())
 
+def dfilter(d, keys):
+    """ Accepts dictionary and list of keys, returns a new dictionary
+        with only the keys given """
+    r = {}
+    for k in keys:
+        if k in d: r[k] = d[k]
+    return r
+
+class ImmutableDict(dict):
+    # _HASH = None
+
+    def __new__(klass, *args, **kwargs):
+        # ImmutableDict._HASH = hash(frozenset(args[0].items()))
+        return super(ImmutableDict, klass).__new__(klass, *args, **kwargs)
+
+    # def __hash__(self):
+    #     return self._HASH
+
+    def _readonly(self, *args, **kwards):
+        raise TypeError("Can't touch this immutable dict")
+
+    __delattr__ = __setattr__ = __setitem__ = pop = update = setdefault = clear = popitem = _readonly
 
 def dcast(d, type_schemas, filter=True):
     """ Accepts a dictionary d, and type_schemas -- a list of tuples in these forms:
@@ -159,8 +182,11 @@ def dcast(d, type_schemas, filter=True):
         if key in d: out[key] = type_to(d[key]) if type_to else d[key]
         elif required: raise ValueError('key %s missing in dict' % (key))
     return out
+### END   dict_tools ###
+########################
 
-
+### BEGIN datetime_tools ###
+############################
 def datetime_to_id(d):
     return str(pymongo.objectid.ObjectId.from_datetime(d))
 
@@ -203,6 +229,8 @@ def friendly_date(then):
         else: (t, u) = (dt.days, 'day')
         s = str(t) + ' ' + u + ('s' if t > 1 else '') + ' ago'
     return s
+### END   datetime_tools ###
+############################
 
 def junkstr(length):
     """Creates a random base 62 string"""
@@ -219,15 +247,6 @@ def lget(l, i, *default):
 
 
 def raises(e): raise e
-
-
-def dfilter(d, keys):
-    """ Accepts dictionary and list of keys, returns a new dictionary
-        with only the keys given """
-    r = {}
-    for k in keys:
-        if k in d: r[k] = d[k]
-    return r
 
 
 def normalize(ws):

@@ -31,7 +31,7 @@ from s3 import S3Interface
 from newhive import config
 from newhive.config import abs_url, url_host
 from newhive.utils import (now, junkstr, dfilter, normalize, normalize_tags,
-    tag_string, cached, AbsUrl, log_error, normalize_word, lget)
+    tag_string, cached, AbsUrl, log_error, normalize_word, lget, ImmutableDict)
 from newhive.routes import reserved_words
 from newhive import social_stats
 
@@ -382,9 +382,11 @@ class Entity(dict):
         return self
 
     def serialize(self, d):
-        """ de-normalize (for indexing) and dereference contents for storage
+        """ De-normalize (for indexing) and dereference contents for storage,
+            and ensure consistency with data model before shoving into DB.
             Args:
-                d (dict): partial document for updating into existing
+                d (dict): document to be created or partial doc to be updated
+                    into existing record
             Returns:
                 None: destructively updates d
         """
@@ -2057,34 +2059,76 @@ class Expr(HasSocial):
         return self['auth'] != 'public'
 
 
-@register
-class Transaction(Entity):
-    cname = 'file'
-    class Kind():
-        deposit = 1
-        debit = 2
-        remix_payout = 3
-        remix_cut = 4
+#!!! ABSTRACT BASE CLASS, DO NOT USE DIRECTLY
+class MoneyTransaction(ImmutableDict):
+    """ Once a MoneyTransaction is constructed, the relevant money and data
+    transfers within the NewHive DB have been completed. The resulting record
+    object can no longer be modified, and should be stored for record keeping
+    at all costs. """
+    def __new__(klass, db, local_transfers, **doc):
+        """ Transaction records have a list of local money transfers between
+        user accounts, in addition to key=values describing the context of the
+        Transaction. """
+        doc.update(transfers=local_transfers, created=now())
+        return super(ImmutableDict, klass).__new__(klass, doc)
 
-    @staticmethod
-    def RemixContext(parent_expr_id, new_expr_id):
-        return { 'action': 1, 'parent_id': parent_expr_id,
-            'new_id': new_expr_id }
+def LocalTransfer(from_user, to_user, amt, kind):
+    from_balance = from_user.get(
+    return (from_user, to_user, amt, kind)
 
-    # def __init__(self, collection, doc):
-    #     super(User, self).__init__(collection, doc)
-    #     self.logged_in = False
-    #     self.fb_client = None
-    #     self.owner = self
-    #     pass
+class StripeDeposit(MoneyTransaction):
+    def __new__(klass, user, stripe_user, amt):
+        local_transfers = [] # [LocalTransfer(None,
+        return super(StripeDeposit, klass).__new__(klass, local_transfers,
+            action=1, user=user, stripe_user=stripe_user, amt=amt)
+    # return Context(action=1, user=user, stripe_user_id=stripe_user_id
+
+class SquareDebit(MoneyTransaction):
+    pass
+    # def __new__(klass, user, square_user, amt):
+    #     return super(SquareDebit, klass).__new__(klass, action=2,
+    #         user=user, square_user=square_user, amt=amt)
+
+class Remix(MoneyTransaction):
+    def __new__(klass, new_expr):
+        parent_id = new_expr['remix_parent_id']
+        new_id = new_expr.id
+        remix_lineage = new_expr['remix_lineage']
+        local_transfers = []
+        return super(Remix, klass).__new__(klass, action=3,
+            # parent_id=
+            stripe_user=stripe_user, amt=amt)
+
+class HiveFuelDeposit(MoneyTransaction):
+    pass
+class HiveRevenueDebit(MoneyTransaction):
+    pass
+
+# fallible store for MoneyTransactions that needs to go in proper WORM DB
+#@register
+class MoneyTransactionRecord(Entity):
+    cname = 'money_transaction'
+
+    def create(self):
+        pass
+        # from_user = self.db.User.fetch(self['from_id'])
+        # to_user = self.db.User.fetch(self['to_id'])
+        # super(Transaction, self).create()
+
+    # these things should probably never change or be deleted
+    def update(self): pass
+    def delete(self): pass
+
+    def serialize(self, d):
+        """ ensure we are a MoneyTransaction object """
+        pass
 
     class Collection(Collection):
         def create(self, from_user, to_user, amt, kind, context):
+            """ take MoneyTransaction object, stick it in """
             data = { 'from_id': from_user, 'to_id': to_user, 'amt': amt,
                 'kind': kind }
             return super(Transaction.Collection, self).create(data)
-
-    # TODO-polish: validation of some sort
 
 
 def generate_thumb(file, size, format=None):
@@ -2108,7 +2152,6 @@ def generate_thumb(file, size, format=None):
     output = os.tmpfile()
     imo.save(output, format=format, quality=90)
     return output
-
 
 @register
 class File(Entity):
