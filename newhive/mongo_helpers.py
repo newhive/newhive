@@ -1,9 +1,11 @@
-def mq(**d):
-    return Query(d)
+import re
+
+def mq(*d, **keys):
+    return Query(*d, **keys)
 
 class Query(dict):
-    def __init__(self, d):
-        dict.update(self, d)
+    def __init__(self, *d, **keys):
+        dict.update(self, *d, **keys)
         self.where = self.js
 
     def list_filter(self, key, *arg, **args):
@@ -11,6 +13,7 @@ class Query(dict):
         return self
 
     def is1(self, key, *l):
+        if isinstance(l[0], list): l = l[0]
         return self.addd(key, '$in', l)
 
     def gt(self, key, val):
@@ -37,6 +40,11 @@ class Query(dict):
         self['$where'] = val
         return self
 
+    def re(self, key, regex):
+        return self.add(key, re.compile(regex))
+    def nre(self, key, regex):
+        return self.add(key, { '$not': re.compile(regex) })
+        
     def add(self, key, val):
         self[key] = val
         return self

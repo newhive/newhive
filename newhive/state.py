@@ -265,6 +265,9 @@ class Collection(object):
         return Cursor(self, spec=spec, **opts)
         # can't figure out as_class param, which seems to not be passed an arg
         #return self._col.find(spec=spec, as_class=self.new, **opts)
+    def count(self, *spec):
+        spec = {} if len(spec) == 0 else spec[0]
+        return self.search(spec).count()
 
     def last(self, spec={}, **opts):
         opts.update({'sort' : [('updated', -1)]})
