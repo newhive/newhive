@@ -113,6 +113,10 @@ def threaded_timeout(func, args=(), kwargs={}, timeout_duration=10, default=None
     else:
         return default
 
+def enum(*sequential, **named):
+    enums = dict(zip(sequential, range(len(sequential))), **named)
+    return type('Enum', (), enums)
+    
 def lset(l, i, e, *default):
     default = default[0] if default else [None]
     if i < len(l): l[i] = e
@@ -133,6 +137,7 @@ def index_of(l, f):
     for i, e in enumerate(l):
         if f(e): return i
     return -1
+
 
 ### BEGIN dict_tools ###
 ########################

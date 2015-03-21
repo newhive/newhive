@@ -30,8 +30,9 @@ from s3 import S3Interface
 
 from newhive import config
 from newhive.config import abs_url, url_host
-from newhive.utils import (now, junkstr, dfilter, normalize, normalize_tags,
-    tag_string, cached, AbsUrl, log_error, normalize_word, lget, ImmutableDict)
+from newhive.utils import ( now, junkstr, dfilter, normalize, normalize_tags,
+    tag_string, cached, AbsUrl, log_error, normalize_word, lget, ImmutableDict,
+    enum )
 from newhive.routes import reserved_words
 from newhive import social_stats
 
@@ -2059,9 +2060,9 @@ class Expr(HasSocial):
         return self['auth'] != 'public'
 
 
-#!!! ABSTRACT BASE CLASS, DO NOT USE DIRECTLY
 class MoneyTransaction(ImmutableDict):
-    """ Once a MoneyTransaction is constructed, the relevant money and data
+    """ ABSTRACT BASE CLASS, DO NOT USE DIRECTLY
+    Once a MoneyTransaction is constructed, the relevant money and data
     transfers within the NewHive DB have been completed. The resulting record
     object can no longer be modified, and should be stored for record keeping
     at all costs. """
@@ -2072,9 +2073,23 @@ class MoneyTransaction(ImmutableDict):
         doc.update(transfers=local_transfers, created=now())
         return super(ImmutableDict, klass).__new__(klass, doc)
 
-def LocalTransfer(from_user, to_user, amt, kind):
-    from_balance = from_user.get(
-    return (from_user, to_user, amt, kind)
+DefaultAccount = { 'credit': 0, 'sales': 0 }
+
+class LocalTransfer(tuple):
+    UserDeposit = 1
+    UserDebit = 2
+    Remix = 3
+    UserTransfer = 4
+    # ... HiveDeposit = 5; HiveDebit = 6
+
+    def __new__(klass, from_user, to_user, amt, kind):
+        # begin transaction
+        from_moneys = from_user.get('moneys', DefaultAccount)
+        to_moneys = to_user.get('moneys', DefaultAccount)
+        # end transaction
+        return super(LocalTransfer, klass).__new__(klass, [
+            from_user.id, to_user.id, amt, kind
+        ])
 
 class StripeDeposit(MoneyTransaction):
     def __new__(klass, user, stripe_user, amt):
@@ -2094,10 +2109,15 @@ class Remix(MoneyTransaction):
         parent_id = new_expr['remix_parent_id']
         new_id = new_expr.id
         remix_lineage = new_expr['remix_lineage']
-        local_transfers = []
-        return super(Remix, klass).__new__(klass, action=3,
+        local_transfers = remix_value_distribution(remix_lineage)
+        return super(Remix, klass).__new__(klass, local_transfers, action=3,
             # parent_id=
             stripe_user=stripe_user, amt=amt)
+
+    def remix_value_distribution(remix_lineage):
+        transfers = []
+        # TODO: calculate transfers
+        return transfers
 
 class HiveFuelDeposit(MoneyTransaction):
     pass
