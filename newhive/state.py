@@ -33,6 +33,7 @@ from newhive.config import abs_url, url_host
 from newhive.utils import ( now, junkstr, dfilter, normalize, normalize_tags,
     tag_string, cached, AbsUrl, log_error, normalize_word, lget, ImmutableDict,
     enum )
+from newhive.mongo_helpers import mq
 from newhive.routes import reserved_words
 from newhive import social_stats
 
@@ -404,13 +405,26 @@ class Entity(dict):
         # TODO: change default of updated
         # if d.get('updated') is True: d['updated'] = now()
         # d.setdefault('updated', False)
-        
         d.setdefault('updated',  now())
         if not d['updated']: del d['updated']
         dict.update(self, d)
         self.serialize(d)
         return self._col.update({ '_id' : self.id }, { '$set' : d },
             safe=True)
+
+    def update_if(self, doc, **d):
+        if d.get('updated') == True:
+            d.update('updated', now())
+        doc.update(_id=self.id)
+        result = self._col.update(doc, {'$set': d})
+        if result['n'] > 0:
+            dict.update(self, d)
+        return result
+
+    def unset(self, key):
+        if self.get(key):
+            del self[key]
+        return self._col.update(mq(_id=self.id), { '$unset': {key: 1} })
 
     def delete(self):
         res = self._col.remove(spec_or_id=self.id, safe=True)
@@ -435,7 +449,7 @@ class Entity(dict):
         dict.update(self, self.collection.fetch(self.id))
 
     def update_cmd(self, d, **opts): 
-        return self._col.update({ '_id' : self.id }, d, **opts)
+        return self._col.update({'_id': self.id}, d, **opts)
 
     def inc(self, key, value=1):
         """Increment key counter by value."""
@@ -2072,26 +2086,38 @@ class MoneyTransaction(ImmutableDict):
     def __new__(klass, db, local_transfers, **doc):
         """ Transaction records have a list of local money transfers between
         user accounts, in addition to key=values describing the context of the
-        Transaction. """
+        Transaction.
+        Args:
+            local_transfers ([LocalTransfer]): local transfers
+            **doc: describes context for transfers
+        """
         doc.update(transfers=local_transfers, created=now())
         return super(ImmutableDict, klass).__new__(klass, doc)
 
 DefaultAccount = { 'credit': 0, 'sales': 0 }
 
 class LocalTransfer(tuple):
-    UserDeposit = 1
-    UserDebit = 2
-    Remix = 3
-    UserTransfer = 4
+    Deposit = 1
+    Debit = 2
+    Transfer = 3
     # ... HiveDeposit = 5; HiveDebit = 6
 
-    def __new__(klass, from_user, to_user, amt, kind):
+    def __new__(klass, kind, amt, from_user=None, to_user=None):
+        """ Move money from one user account to another.
+        Args:
+            from (User): from account
+            to (User): to account
+            amt (float): dolar ammount
+            kind (int): must be 1, 2, or 3 - Deposit, Debit, Transfer
+        """
         # begin transaction
-        from_moneys = from_user.get('moneys', DefaultAccount)
+        if kind in [Debit, Transfer]:
+            from_moneys = from_user.get('moneys', DefaultAccount)
+            from_id = from_user.id
         to_moneys = to_user.get('moneys', DefaultAccount)
         # end transaction
         return super(LocalTransfer, klass).__new__(klass, [
-            from_user.id, to_user.id, amt, kind
+            from_user.id, account, to_user.id, account, amt
         ])
 
 class StripeDeposit(MoneyTransaction):
