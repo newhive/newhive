@@ -16,9 +16,6 @@
     },"Features/show_user_guide": {
         "description":"User guide appears in the \"about\" menu"
         ,"values":["devs"]
-    },"Features/merge_recent": {
-        "description":"Community pages don't have \"Network\""
-        , "values":["cara", "fatsycline"]
     },"Features/can_debug": {
         "description":"User receives debug info (like the blue sensitivity debug window in editor)"
         , "values":["devs"]

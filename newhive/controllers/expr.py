@@ -56,7 +56,7 @@ class Expr(ModelController):
         allowed_attributes = [
             'name', 'url', 'title', 'apps', 'dimensions', 'auth', 'password',
             'tags', 'background', 'thumb', 'images', 'remix_parent_id',
-            'remix_value',
+            'value', 'remix_value', 'remix_value_add',
             'container', 'clip_x', 'clip_y', 'layout_coord', 'groups', 'globals'
         ]
         # TODO: fixed expressions, styles, and scripts, need to be done right
@@ -276,6 +276,10 @@ class Expr(ModelController):
         res['id'] = res.id
 
         return self.serve_json(response, res)
+
+    def remix(self, tdata, request, response, **args):
+        # TODO: move remix out of create
+        pass
 
     # the whole editor except the save dialog and upload code goes in sandbox
     def editor_sandbox(self, tdata, request, response, **args):
