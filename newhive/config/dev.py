@@ -1,6 +1,7 @@
 from config_common import *
 
-dev_prefix      = None
+dev_prefix      = 'dev'
+
 snapshot_async = False
 
 # TODO-dev-security: move credentials into non-version-controlled file
