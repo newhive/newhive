@@ -373,7 +373,6 @@ class Entity(dict):
     @property
     def id(self):
         return self['_id']
-
     @id.setter
     def id(self, v):
         self['_id'] = v
@@ -395,11 +394,11 @@ class Entity(dict):
             Returns:
                 None: destructively updates d
         """
-        if not ( is_mongo_key(self.id)
-            or is_local_time_stamp(self['created'])
-            or is_local_time_stamp(self['updated'])
-        ):
-            raise ValueError('entity id or timestamps invalid')
+        # if not ( is_mongo_key(self.id)
+        #     or is_local_time_stamp(self['created'])
+        #     or is_local_time_stamp(self['updated'])
+        # ):
+        #     raise ValueError('entity id or timestamps invalid')
 
     def update(self, **d):
         # TODO: change default of updated
@@ -412,14 +411,18 @@ class Entity(dict):
         return self._col.update({ '_id' : self.id }, { '$set' : d },
             safe=True)
 
-    def update_if(self, doc, **d):
-        if d.get('updated') == True:
-            d.update('updated', now())
-        doc.update(_id=self.id)
-        result = self._col.update(doc, {'$set': d})
+    def update_if(self, cmd, test_doc, updates):
+        if updates.get('updated') == True:
+            updates.update('updated', now())
+        test_doc.update(_id=self.id)
+        result = self._col.update(test_doc, {'$'+cmd: updates})
         if result['n'] > 0:
-            dict.update(self, d)
+            dict.update(self, updates)
         return result
+    def set_if(self, d, u):
+        return self.update_if('set', d, u)
+    def inc_if(self, d, u):
+        return self.update_if('inc', d, u)
 
     def unset(self, key):
         if self.get(key):
@@ -1433,8 +1436,9 @@ class Expr(HasSocial):
         self['snapshot_needed'] = True
         self.setdefault('title', 'Untitled')
         self.setdefault('auth', 'public')
+        super(Expr, self).create()
 
-        if 'remixed' not in self.get('tags_index', []):
+        if not self.get('remix_parent_id'):
             self.db.NewExpr.create(self.owner, self)
         else:
             parent = self
@@ -1443,13 +1447,12 @@ class Expr(HasSocial):
                 parent = self.db.Expr.fetch(parent.get('remix_parent_id'))
                 if not parent: break
                 remix_lineage.append( dfilter( parent, ['_id', 'owner',
-                    'remix_value', 'remix_value_add'] ) )
+                    'value', 'remix_value', 'remix_value_add'] ) )
             if len(remix_lineage):
                 self.db.Remix.create(self.owner, remixed_expr, 
                     data={'new_expr':self})
                 self['remix_lineage'] = remix_lineage
 
-        super(Expr, self).create()
         self.update_owner([])
         return self
 
@@ -2075,109 +2078,6 @@ class Expr(HasSocial):
     @property
     def private(self):
         return self['auth'] != 'public'
-
-
-class MoneyTransaction(ImmutableDict):
-    """ ABSTRACT BASE CLASS, DO NOT USE DIRECTLY
-    Once a MoneyTransaction is constructed, the relevant money and data
-    transfers within the NewHive DB have been completed. The resulting record
-    object can no longer be modified, and should be stored for record keeping
-    at all costs. """
-    def __new__(klass, db, local_transfers, **doc):
-        """ Transaction records have a list of local money transfers between
-        user accounts, in addition to key=values describing the context of the
-        Transaction.
-        Args:
-            local_transfers ([LocalTransfer]): local transfers
-            **doc: describes context for transfers
-        """
-        doc.update(transfers=local_transfers, created=now())
-        return super(ImmutableDict, klass).__new__(klass, doc)
-
-DefaultAccount = { 'credit': 0, 'sales': 0 }
-
-class LocalTransfer(tuple):
-    Deposit = 1
-    Debit = 2
-    Transfer = 3
-    # ... HiveDeposit = 5; HiveDebit = 6
-
-    def __new__(klass, kind, amt, from_user=None, to_user=None):
-        """ Move money from one user account to another.
-        Args:
-            from (User): from account
-            to (User): to account
-            amt (float): dolar ammount
-            kind (int): must be 1, 2, or 3 - Deposit, Debit, Transfer
-        """
-        # begin transaction
-        if kind in [Debit, Transfer]:
-            from_moneys = from_user.get('moneys', DefaultAccount)
-            from_id = from_user.id
-        to_moneys = to_user.get('moneys', DefaultAccount)
-        # end transaction
-        return super(LocalTransfer, klass).__new__(klass, [
-            from_user.id, account, to_user.id, account, amt
-        ])
-
-class StripeDeposit(MoneyTransaction):
-    def __new__(klass, user, stripe_user, amt):
-        local_transfers = [] # [LocalTransfer(None,
-        return super(StripeDeposit, klass).__new__(klass, local_transfers,
-            action=1, user=user, stripe_user=stripe_user, amt=amt)
-    # return Context(action=1, user=user, stripe_user_id=stripe_user_id
-
-class SquareDebit(MoneyTransaction):
-    pass
-    # def __new__(klass, user, square_user, amt):
-    #     return super(SquareDebit, klass).__new__(klass, action=2,
-    #         user=user, square_user=square_user, amt=amt)
-
-class Remix(MoneyTransaction):
-    def __new__(klass, new_expr):
-        parent_id = new_expr['remix_parent_id']
-        new_id = new_expr.id
-        remix_lineage = new_expr['remix_lineage']
-        local_transfers = remix_value_distribution(remix_lineage)
-        return super(Remix, klass).__new__(klass, local_transfers, action=3,
-            # parent_id=
-            stripe_user=stripe_user, amt=amt)
-
-    def remix_value_distribution(remix_lineage):
-        transfers = []
-        # TODO: calculate transfers
-        return transfers
-
-class HiveFuelDeposit(MoneyTransaction):
-    pass
-class HiveRevenueDebit(MoneyTransaction):
-    pass
-
-# fallible store for MoneyTransactions that needs to go in proper WORM DB
-#@register
-class MoneyTransactionRecord(Entity):
-    cname = 'money_transaction'
-
-    def create(self):
-        pass
-        # from_user = self.db.User.fetch(self['from_id'])
-        # to_user = self.db.User.fetch(self['to_id'])
-        # super(Transaction, self).create()
-
-    # these things should probably never change or be deleted
-    def update(self): pass
-    def delete(self): pass
-
-    def serialize(self, d):
-        """ ensure we are a MoneyTransaction object """
-        pass
-
-    class Collection(Collection):
-        def create(self, from_user, to_user, amt, kind, context):
-            """ take MoneyTransaction object, stick it in """
-            data = { 'from_id': from_user, 'to_id': to_user, 'amt': amt,
-                'kind': kind }
-            return super(Transaction.Collection, self).create(data)
 
 
 def generate_thumb(file, size, format=None):

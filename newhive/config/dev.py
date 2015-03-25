@@ -15,6 +15,7 @@ facebook_client_secret = '53168c0305074b8ff82cab217d5043f9'
 email_server    = 'smtp.sendgrid.net'
 email_user      = 'thenewhive'
 email_password  = 'fadty345shd90'
+stripe_id = 'pk_test_cedS2baGtwNVnzyRbQzWitUB'
 stripe_secret = 'sk_test_wdmhfxe3q493tHx0OP6mBZ9T'
 
 s3_buckets = {

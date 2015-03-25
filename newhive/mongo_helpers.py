@@ -18,9 +18,13 @@ class Query(dict):
 
     def gt(self, key, val):
         return self.addd(key, '$gt', val)
+    def gte(self, key, val):
+        return self.addd(key, '$gte', val)
 
     def lt(self, key, val):
         return self.addd(key, '$lt', val)
+    def lte(self, key, val):
+        return self.addd(key, '$lte', val)
 
     def bt(self, key, val1, val2):
         self.gt(key, val1)

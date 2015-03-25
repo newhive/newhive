@@ -20,8 +20,9 @@ fix viewing for passworded newhives
 dig up, revive Jordan's code that saves state of Andrew's Flowcam
 
 make editor border pushing only push trailing edge in to viewport
+fix border pushing for content button controls to add scrolling below
 
-figure out why SMTP auth is failing on staging
-  test privacy fix on direct email to newhive user
-  FIX RESET PASSWORD
-  fix comment form from freezing on post
+# figure out why SMTP auth is failing on staging
+#   test privacy fix on direct email to newhive user
+#   FIX RESET PASSWORD
+#   fix comment form from freezing on post
