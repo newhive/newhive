@@ -12,6 +12,7 @@ define([
     'browser/layout',
     'ui/page/pages',
     'ui/routing',
+    'moneys/stripe_checkout',
 
     'sj!templates/form_overlay.html',
     'sj!templates/password_reset.html',
@@ -52,6 +53,7 @@ define([
     browser_layout,
     pages,
     routing,
+    StripeCheckout,
 
     form_overlay_template,
     password_template,
