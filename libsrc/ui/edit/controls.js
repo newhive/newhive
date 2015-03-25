@@ -174,7 +174,8 @@ o.Controls = function(app, multiselect, delegate) {
     o.padding = 9;
     o.border_width = 5;
     // pad is the amount space borders need from window edges
-    var pad_ul = [10, 10], pad_br = [10, 75], min_d = [146, 40]
+    var pad_ul = [10, 10], pad_br = [10, 75], min_d = [146, 40],
+        edit_btns_padding = 128
     if(multiselect){
         pad_ul = [3, 3]
         pad_br = [3, 3]
@@ -196,18 +197,31 @@ o.Controls = function(app, multiselect, delegate) {
             ,wdims = env.win_size
             ,ad = app.dims()
 
-        // push down-right if past upper-left
+        // if content escapes viewport to the NW, push SE borders back into viewport
         if( ap[0] + ad[0] < pad_ul[0] )
             ap[0] += pad_ul[0] - ap[0] - ad[0]
         if( ap[1] + ad[1] < pad_ul[1] )
             ap[1] += pad_ul[1] - ap[1] - ad[1]
 
-        // push up-left if past bottom-right
+        // if content escapes viewport to the SE, push NW borders back into viewport
         if( wdims[0] + env.scroll[0] - ap[0] < pad_br[0] )
             ap[0] -= pad_br[0] - (wdims[0] + env.scroll[0] - ap[0])
         // push up-left if past bottom-right
         if( wdims[1] + env.scroll[1] - ap[1] < pad_br[1] )
             ap[1] -= pad_br[1] - (wdims[1] + env.scroll[1] - ap[1])
+
+        // if content editing buttons escape viewport to the S, while content is
+        // still visible, push bottom border back up so the buttons can be used
+        // without scrolling. In this case, make sure height is added to the
+        // controls to allow to scroll down such that the buttons do not overlap
+        // the content
+        if( (ap[1] + ad[1] > wdims[1] + env.scroll[1]) &&
+            (ap[1] < wdims[1] + env.scroll[1] - edit_btns_padding)
+        ){
+            var old_ad1 = ad[1]
+            ad[1] = wdims[1] + env.scroll[1] - edit_btns_padding - ap[1]
+            console.log('pushing', old_ad1, 'to', ad[1])
+        }
 
         ad = u._max(min_d, ad)
 
@@ -250,7 +264,7 @@ o.Controls = function(app, multiselect, delegate) {
 
         o.c.stack.css({ left: dims[0] - 46 + p, top: dims[1] + 17 + p });
         o.c.buttons.css({ left: -bw - p - 3, top: dims[1] + p + 14,
-            width: dims[0] - 30 });
+            width: dims[0] - 30, height: edit_btns_padding })
         o.c.top_buttons.css({ left: -bw - p - 3, top: - 43 - p,
             width: dims[0] - 60 });
     };
