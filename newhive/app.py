@@ -80,7 +80,7 @@ def version():
 
 config.version = version()
 
-def split_domain(url):
+def split_domain(domain):
     dev = config.dev_prefix + '.' if config.dev_prefix else ''
     index = max(0, domain.find('.' + dev + config.server_name), 
         domain.find('.' + dev + config.content_domain))

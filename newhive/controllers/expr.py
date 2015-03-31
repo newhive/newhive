@@ -303,7 +303,7 @@ class Expr(ModelController):
         parent_id = request.form.get('expr_id')
         parent = self.db.Expr.fetch(parent_id)
         if not parent:
-            return self.serve_500(exception='missing remix parent: ' + parent_id)
+            return self.serve_500(tdata, 'missing remix parent: ' + parent_id)
 
         # TODO-remix: handle moving ownership of remix list, especially if original is
         # made private or deleted.
