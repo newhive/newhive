@@ -92,7 +92,7 @@ class Expr(ModelController):
         res = self.db.Expr.fetch(expr.id)
         allowed_attributes = [
             'name', 'url', 'title', 'apps', 'dimensions', 'auth', 'password',
-            'tags', 'background', 'thumb', 'images', 'remix_parent_id',
+            'tags', 'background', 'thumb', 'images',
             'value', 'remix_value', 'remix_value_add',
             'container', 'clip_x', 'clip_y', 'layout_coord', 'groups', 'globals'
         ]
@@ -276,35 +276,6 @@ class Expr(ModelController):
             if "draft" in new_tags: new_tags.remove("draft")
             res.update(tags=tag_string(new_tags))
 
-        # Handle remixed expressions
-        if (res and not autosave and
-            upd.get('remix_parent_id') and not upd.get('remix_root')
-        ):
-            # TODO-remix: handle moving ownership of remix list, especially if original is
-            # made private or deleted.
-            parent_id = upd.get('remix_parent_id')
-            remix_upd = {}
-            remix_expr = self.db.Expr.fetch(parent_id)
-            while parent_id:
-                remix_expr = self.db.Expr.fetch(parent_id)
-                parent_id = remix_expr.get('remix_parent_id')
-            remix_owner = remix_expr.owner
-            if (res.get('auth', '') == 'public' or remix_owner == tdata.user.id):
-                remix_upd['remix_root'] = remix_expr.id
-                remix_expr.setdefault('remix_name', remix_expr['name'])
-                remix_expr.setdefault('remix_root', remix_expr.id)
-                remix_expr.update(updated=False, remix_name=remix_expr['remix_name'],
-                    remix_root=remix_expr['remix_root'])
-                remix_name = 're:' + remix_expr['remix_name']
-                # remix_upd['tags'] += " #remixed" # + remix_name
-                res.update(**remix_upd)
-
-                # include self in remix list
-                remix_owner.setdefault('tagged', {})
-                remix_owner['tagged'].setdefault(remix_name, [remix_expr.id])
-                remix_owner['tagged'][remix_name].append(res.id)
-                remix_owner.update(updated=False, tagged=remix_owner['tagged'])
-
         if( not self.config.snapshot_async
             and ( upd.get('apps') or upd.get('background') )
         ): res.threaded_snapshot(retry=120)
@@ -329,6 +300,36 @@ class Expr(ModelController):
         return self.serve_json(response, resp)
     
     def remix(self, tdata, request, response, **args):
+        parent_id = request.form.get('expr_id')
+        parent = self.db.Expr.fetch(parent_id)
+        if not parent:
+            return self.serve_500(exception='missing remix parent: ' + parent_id)
+
+        # TODO-remix: handle moving ownership of remix list, especially if original is
+        # made private or deleted.
+        parent_id = upd.get('remix_parent_id')
+        remix_upd = {}
+        remix_expr = self.db.Expr.fetch(parent_id)
+        while parent_id:
+            remix_expr = self.db.Expr.fetch(parent_id)
+            parent_id = remix_expr.get('remix_parent_id')
+        remix_owner = remix_expr.owner
+        if (res.get('auth', '') == 'public' or remix_owner == tdata.user.id):
+            remix_upd['remix_root'] = remix_expr.id
+            remix_expr.setdefault('remix_name', remix_expr['name'])
+            remix_expr.setdefault('remix_root', remix_expr.id)
+            remix_expr.update(updated=False, remix_name=remix_expr['remix_name'],
+                remix_root=remix_expr['remix_root'])
+            remix_name = 're:' + remix_expr['remix_name']
+            # remix_upd['tags'] += " #remixed" # + remix_name
+            res.update(**remix_upd)
+
+            # include self in remix list
+            remix_owner.setdefault('tagged', {})
+            remix_owner['tagged'].setdefault(remix_name, [remix_expr.id])
+            remix_owner['tagged'][remix_name].append(res.id)
+            remix_owner.update(updated=False, tagged=remix_owner['tagged'])
+
         # TODO: move remix out of create
         pass
 

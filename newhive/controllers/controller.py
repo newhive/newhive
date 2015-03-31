@@ -4,12 +4,14 @@ from collections import namedtuple
 from newhive import auth, config, utils
 from newhive.utils import abs_url, log_error, dfilter
 from copy import deepcopy
-import re
+import re, sys
 
 class TransactionData(utils.FixedAttrs):
     """ One of these is associated with each request cycle to put stuff in
         (that Werkzeug's Request or Response objects don't already handle) """
-    pass
+    def __new__(klass, request=None, response=Response(), user=None, context={}):
+        return super(TransactionData, klass).__new__(klass, request=request,
+            response=response, user=user, context=context)
 
 class Controller(object):
     def __init__(self, db=None, jinja_env=None, assets=None, config=None,
@@ -28,17 +30,41 @@ class Controller(object):
     # Dispatch calls into controller methods of the form:
     # def method(self, tdata, request, response, **args):
     def dispatch(self, handler, request, **args):
-        (tdata, response) = self.pre_process(request)
+        tdata = self.pre_process(request)
         # Redirect to home if route requires login but user not logged in
         if (args.get('require_login') and not tdata.user.logged_in and
             args['route_name'] != 'home'):
-            return self.redirect(response, "/")
+            return self.redirect(tdata.response, "/")
 
-        res = self.pre_dispatch(getattr(self, handler, None), tdata,
-            request, response, **args)
-        if res:
-            return res
-        return getattr(self, handler, None)(tdata, request, response, **args)
+        try:
+            res = self.pre_dispatch(getattr(self, handler, None), tdata,
+                request, tdata.response, **args)
+            if res:
+                return res
+            return getattr(self, handler, None)(tdata, request, tdata.response,
+                **args)
+        except:
+            (blah, exception, traceback) = sys.exc_info()
+            return self.serve_500(tdata, exception=exception,
+                traceback=traceback, json=args.get('json', False))
+
+    def new_transaction(self, request):
+        anon = self.db.User.new({})
+        response = Response()
+        context = dict(
+            user=anon, config=config, debug=config.debug_mode,
+            # Werkzeug form data is an immutable dict, so it must be copied
+            # so fields may be normalized for filling templates in response
+            form=dict(request.form.items()),
+            error={},
+            query=request.args,
+            # not using request.url because its query string is unescaped
+            url=request.base_url + '?' + request.query_string,
+            is_secure=request.is_secure,
+            referer=request.headers.get('referer')
+        )
+        return TransactionData(user=anon, request=request, response=response,
+            context=context)
 
     def pre_process(self, request):
         """ Do necessary stuffs for every request, specifically:
@@ -46,20 +72,8 @@ class Controller(object):
                 * Authenticate request, and if given credentials, set auth cookies
             returns (TransactionData, Response) tuple """
 
-        response = Response()
-        anon = self.db.User.new({})
-        tdata = TransactionData(user=anon, request=request, context=dict(
-            user=anon, config=config, debug=config.debug_mode,
-            # Werkzeug provides form data as immutable dict, so it must be copied
-            # fields may be left alone to mirror the request, or validated and normalized
-            form=dict(request.form.items()), error={},
-            query=request.args,
-            # not using request.url because its query string is unescaped
-            url=request.base_url + '?' + request.query_string,
-            is_secure=request.is_secure, referer=request.headers.get('referer')
-        ))
-
-        authed = auth.authenticate_request(self.db, request, response)
+        tdata = self.new_transaction(request)
+        authed = auth.authenticate_request(self.db, request, tdata.response)
         if type(authed) == self.db.User.entity:
             tdata.user = tdata.context['user'] = authed
         elif isinstance(authed, Exception):
@@ -125,7 +139,7 @@ class Controller(object):
         tdata.context.update(flags=user_flags)
         self.flags = user_flags
 
-        return (tdata, response)
+        return tdata
 
     def empty(self, tdata, request, response, **args):
         tdata.context.update(page_data={}, route_args=args)
@@ -169,21 +183,20 @@ class Controller(object):
         response.status_code = status
         return self.serve_json(response, {'error': status})
 
-    def serve_500(self, request, response, exception=None, traceback=None,
-        status=500, json=True
+    def serve_500(self, tdata, exception=None, traceback=None, status=500,
+        json=True
     ):
         if config.debug_mode:
             raise exception, None, traceback
 
-        log_error(self.db, message=exception, request=request,
-            traceback=traceback, critical=True)
+        log_error(self.db, message=exception, tdata=tdata, traceback=traceback,
+            critical=True)
 
-        response.status_code = status
+        tdata.response.status_code = status
         if json:
-            return self.serve_json(response, {'error': status })
+            return self.serve_json(tdata.response, {'error': exception })
         else:
-            tdata = TransactionData(user=self.db.User.new({}), context={})
-            return self.serve_page(tdata, response, 'pages/exception.html')
+            return self.serve_page(tdata, tdata.response, 'pages/exception.html')
 
     def redirect(self, response, location, permanent=False):
         response.location = str(location)

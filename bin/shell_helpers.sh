@@ -47,11 +47,11 @@ alias og=grep_results
 ############################################
 
 alias nhcd='cd $NEWHIVE_HOME' # go to default repo from outside 
-alias nhcdProduction='cd /var/www/newhive' # go to default production home
+alias nhcdproduction='cd /var/www/newhive' # go to default production home
 
 alias nhRoutes='e $(groot)/newhive/routes.json'
 alias nhconfig='e $(groot)/newhive/config/config.py'
-alias nhconfigCommon='e $(groot)/newhive/config/config_common.py'
+alias nhconfigcommon='e $(groot)/newhive/config/config_common.py'
 
 alias nhstartdev=newhive_start_dev
 alias nhREPL='nhcd; ipython -i bin/server_examples.py'

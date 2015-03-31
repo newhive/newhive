@@ -1,5 +1,4 @@
-import sys, copy
-import re
+import sys, copy, re
 from werkzeug.routing import Map, Rule, RequestRedirect
 from werkzeug import Request, Response, exceptions, url_unquote
 import jinja2
@@ -82,14 +81,12 @@ def version():
 config.version = version()
 
 def split_domain(url):
-    domain = url.replace('thenewhive','newhive')
     dev = config.dev_prefix + '.' if config.dev_prefix else ''
     index = max(0, domain.find('.' + dev + config.server_name), 
         domain.find('.' + dev + config.content_domain))
     prefix = domain[0:index]
     if index > 0: index = index + 1
     site = domain[index:]
-    if prefix == 'www': prefix = ''
     return prefix, site
 
 @Request.application
@@ -140,7 +137,8 @@ def handle(request):
         if err:
             print "Gap in routing table!"
             print request
-            return base_controller.serve_500(request, Response(),
+            return base_controller.serve_500(
+                base_controller.new_transaction(request),
                 exception=e, json=False)
     except RequestRedirect as e:
         # bugbug: what's going on here anyway?
@@ -170,10 +168,10 @@ def handle(request):
             # alias gprof='gprof2dot.py -f pstats stats | dot -Tpng -o output.png;open output.png'
 
     except:
-        import traceback
         (blah, exception, traceback) = sys.exc_info()
-        response = base_controller.serve_500(request, Response(), exception=exception,
-            traceback=traceback, json=False)
+        response = base_controller.serve_500(
+            base_controller.new_transaction(request),
+            exception=exception, traceback=traceback, json=False)
 
     print "time %s ms" % (1000.*(now() - time_start))
     if stats and yappi.is_running():

@@ -3,6 +3,8 @@ live_server     = False
 plain_port      = 80
 ssl_port        = 443
 server_name     = 'newhive.com'
+# dev_prefix is for accessing a particular server with a subdomain while the
+# server behaves as if requests are made from server_name
 dev_prefix      = None
 database_host   = 'localhost'
 database_port   = 27017
