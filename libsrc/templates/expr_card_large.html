@@ -6,7 +6,7 @@
   {|templates/tag_list.html}
 {>}
 {<if (and (eq name "default-instructional") (eq owner.name config.site_user))}
-  <a { query_attrs "create_expr" "new_user=1" } >
+  <a { query_attrs "expr_create" "new_user=1" } >
 {>}{<else}
   <a { query_attrs "view_expr" search_query
     "id" id  "expr_name" name "owner_name" owner.name } >

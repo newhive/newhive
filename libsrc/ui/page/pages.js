@@ -1,7 +1,7 @@
 define([
      './expr'
     ,'./home'
-    ,'./edit_expr'
+    ,'./edit_container'
     ,'./profile'
     ,'./admin'
     ,'./new_account'
@@ -11,7 +11,7 @@ define([
 ], function(
      expr
     ,home
-    ,edit_expr
+    ,edit_container
     ,profile
     ,admin
     ,new_account
@@ -27,8 +27,8 @@ define([
         ,mini: profile
         ,grid: profile
         ,cat: profile
-        ,edit_expr: edit_expr
-        ,create_expr: edit_expr
+        ,edit_container: edit_container
+        ,expr_create: edit_container
         ,admin: admin
         ,new_account: new_account
 

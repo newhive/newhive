@@ -381,7 +381,7 @@ class Community(Controller):
         resp['meta'] = meta
         return resp
 
-    def edit_expr(self, tdata, request, id=None, **args):
+    def expr_edit(self, tdata, request, id=None, **args):
         expr = self.db.Expr.fetch(id)
         if not expr or (
             (not tdata.user.can_view(expr)) and expr.get('password')

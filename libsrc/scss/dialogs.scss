@@ -51,6 +51,36 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
         font-size: 28px;
         margin: 0;
     }
+
+    .the_close_btn {
+        position: absolute;
+        width: 20px; height: 20px;
+        right: -22px; top: -22px;
+        border-radius: 20px;
+        border: solid white 10px;
+        box-shadow: 5px 5px 5px #666666;
+        background-color: white;
+        &:hover {
+            background-color: black;
+            border-color: black;
+            .corner { visibility: hidden; }
+            .icon {
+                background-image: asset_url("skin/nav/delete-hover.png")
+            }
+        }
+        * { position: absolute; }
+        .corner {
+            width: 24px; height: 24px;
+            right: 12px; top: 12px;
+            background-color: white;
+        }
+        .icon {
+            width: 20px; height: 20px;
+            background-image: asset_url("skin/nav/delete.png");
+            background-position: -11px -11px;
+        }
+    }
+
     .success_show {
         height: 180px;
         color: black;
@@ -100,12 +130,6 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
         button[type=cancel] { float: left; }
     }   
 }
-
-.btn_dialog_close, #btn_dialog_close {
-    position: absolute; width: 20px; height: 20px; background-image: asset_url("skin/1/close.png");
-    right:10px; top:5px; z-index : 100; 
-}
-.btn_dialog_close:hover, #btn_dialog_close:hover {background-image: asset_url("skin/1/close-hover.png")}
 
 #dia_rename_expr {
     width: 25em;

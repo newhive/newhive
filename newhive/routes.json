@@ -371,23 +371,29 @@
         "host": "<host>"
     },
 
-    "create_expr": {
+    "expr_create": {
         "page_route": "/home/edit",
-        "client_method": "create_expr",
+        "client_method": "expr_create",
         "require_login": true
     },
-    "edit_expr": {
+    "expr_edit": {
         "page_route": "/home/edit/<id>",
         "api_route": "/api/expr/edit/<id>",
         "controller": "community",
-        "method": "edit_expr",
-        "client_method": "edit_expr",
+        "method": "expr_edit",
+        "client_method": "edit_container",
         "require_login": true
     },
     "expr_save": {
         "api_route": "/api/expr/save",
         "controller": "expr",
         "method": "save"
+    },
+    "expr_remix": {
+        "api_route": "/api/expr/remix/<id>",
+        "controller": "expr",
+        "client_method": "remix",
+        "require_login": true
     },
     "expr_unused_name": {
         "api_route": "/api/expr/unused_name",
@@ -543,11 +549,11 @@
     "//": "----------------------------------------------------",
     "//": "Note: this is clientside; there is no server handler",
     "test_dialogs": {
-        "page_route": "/home/admin/test_dialogs",
+        "page_route": "/home/admin/test/dialogs",
         "client_method": "test_dialogs"
     },
     "test_assets": {
-        "page_route": "/home/admin/test_assets",
+        "page_route": "/home/admin/test/assets",
         "client_method": "test_assets"
     },
     "//": "-----------------------------------------",

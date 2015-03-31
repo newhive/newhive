@@ -16,30 +16,67 @@ def anchor_tag(link, name, xlink=False):
 class Expr(ModelController):
     model_name = 'Expr'
 
-    def delete(self, tdata, request, response, **args):
-        resp = {}
-        expr_id = request.form.get("expr_id")
+    def fetch_naked(self, tdata, request, response, expr_id=None,
+        owner_name=None, expr_name=None, **args
+    ):
+        # Request must come from content_domain, as this serves untrusted content
+        if expr_id:
+            # hack for overlap of /owner_name and /expr_id routes
+            expr_obj = self.db.Expr.fetch(expr_id) or self.db.Expr.named(expr_id, '')
+        else:
+            expr_obj = self.db.Expr.named(owner_name, expr_name)
+        return self.serve_naked(tdata, request, response, expr_obj)
 
-        expr = self.db.Expr.fetch(expr_id)
-        if not expr:
-            resp = { 'error': 'Newhive not found.' }
-            return self.serve_json(response, resp)
+    def expr_custom_domain(self, tdata, request, response, path='', **args):
+        url = request.host + ('/' if path else '') + path
+        expr = self.db.Expr.find({'url': url})
+        tdata.context['domain'] = request.host
+        return self.serve_naked(tdata, request, response, expr)
+
+    def serve_naked(self, tdata, request, response, expr_obj):
+        if not expr_obj:
+            return self.serve_404(tdata, request, response)
+
+        bg = expr_obj.get('background')
+        if bg and bg.get('file_id') and not bg.get('dimensions'):
+            f = self.db.File.fetch(bg.get('file_id'))
+            dimensions = f.get('dimensions')
+            if dimensions:
+                bg['dimensions'] = dimensions
+                expr_obj.update(updated=False, background=bg)
+            else:
+                f.update(resample_time=0)
+        if (expr_obj.get('auth') == 'password'
+            and not expr_obj.cmp_password(request.form.get('password'))
+            and not expr_obj.cmp_password(request.args.get('pw'))):
+            expr_obj = { 'auth': 'password' }
+            expr_client = expr_obj
+        else:
+            expr_client = expr_obj.client_view(mode='page')
+        # TODO: consider allowing analytics for content frame.
+        viewport = [int(x) for x in
+            request.args.get('viewport', '1000x750').split('x')]
+        snapshot_mode = request.args.get('snapshot') is not None
+        tdata.context.update(
+            html = self.expr_to_html(expr_obj, snapshot_mode,
+                viewport=viewport),
+            expr = expr_obj,
+            use_ga = False,
+        )
+
+        body_style = ''
+        if snapshot_mode:
+            body_style = 'overflow: hidden;'
+        if expr_obj.get('clip_x'):
+            body_style = 'overflow-x: hidden;'
+        if expr_obj.get('clip_y'):
+            body_style += 'overflow-y: hidden;'
+        if body_style:
+            tdata.context['css'] = 'body {' + body_style + '}'
+
+        tdata.context.update(expr=expr_obj, expr_client=expr_client)
+        return self.serve_page(tdata, response, 'pages/expr.html')
         
-        expr.delete()
-
-        return self.serve_json(response, resp)
-
-    def unused_name(self, tdata, request, response, **args):
-        """ Returns an unused newhive name matching the base name provided """
-
-        resp = {}
-        name = request.form.get("name") or request.args.get("name","")
-        owner_id = request.form.get("owner_id") or request.args.get("owner_id", "")
-        owner = self.db.User.fetch(owner_id)
-
-        resp['name'] = self.db.Expr.unused_name(owner, name)
-        return self.serve_json(response, resp)
-    
     def save(self, tdata, request, response, **args):
         """ Parses JSON object from POST variable 'exp' and stores it in database.
             If the name (url) does not match record in database, create a new record."""
@@ -277,13 +314,23 @@ class Expr(ModelController):
 
         return self.serve_json(response, res)
 
-    def remix(self, tdata, request, response, **args):
-        # TODO: move remix out of create
-        pass
-
     # the whole editor except the save dialog and upload code goes in sandbox
     def editor_sandbox(self, tdata, request, response, **args):
         return self.serve_page(tdata, response, 'pages/edit_sandbox.html')
+
+    def unused_name(self, tdata, request, response, **args):
+        """ Returns an unused newhive name matching the base name provided """
+        resp = {}
+        name = request.form.get("name") or request.args.get("name","")
+        owner_id = request.form.get("owner_id") or request.args.get("owner_id", "")
+        owner = self.db.User.fetch(owner_id)
+
+        resp['name'] = self.db.Expr.unused_name(owner, name)
+        return self.serve_json(response, resp)
+    
+    def remix(self, tdata, request, response, **args):
+        # TODO: move remix out of create
+        pass
 
     def snapshot(self, tdata, request, response, expr_id, **args):
         expr_obj = self.db.Expr.fetch(expr_id)
@@ -295,6 +342,19 @@ class Expr(ModelController):
             return self.redirect(response, expr_obj.snapshot_name('full'))
 
         return self.serve_404(tdata, request, response)
+
+    def delete(self, tdata, request, response, **args):
+        resp = {}
+        expr_id = request.form.get("expr_id")
+
+        expr = self.db.Expr.fetch(expr_id)
+        if not expr:
+            resp = { 'error': 'Newhive not found.' }
+            return self.serve_json(response, resp)
+        
+        expr.delete()
+
+        return self.serve_json(response, resp)
 
     # def fetch_data(self, tdata, request, response, expr_id=None, **args):
     #     expr = self.db.Expr.fetch(expr_id)
@@ -314,67 +374,6 @@ class Expr(ModelController):
 
     #     return self.serve_json(response, expr)
 
-    def fetch_naked(self, tdata, request, response, expr_id=None,
-        owner_name=None, expr_name=None, **args
-    ):
-        # Request must come from content_domain, as this serves untrusted content
-        if expr_id:
-            # hack for overlap of /owner_name and /expr_id routes
-            expr_obj = self.db.Expr.fetch(expr_id) or self.db.Expr.named(expr_id, '')
-        else:
-            expr_obj = self.db.Expr.named(owner_name, expr_name)
-        return self.serve_naked(tdata, request, response, expr_obj)
-
-    def expr_custom_domain(self, tdata, request, response, path='', **args):
-        url = request.host + ('/' if path else '') + path
-        expr = self.db.Expr.find({'url': url})
-        tdata.context['domain'] = request.host
-        return self.serve_naked(tdata, request, response, expr)
-
-    def serve_naked(self, tdata, request, response, expr_obj):
-        if not expr_obj:
-            return self.serve_404(tdata, request, response)
-
-        bg = expr_obj.get('background')
-        if bg and bg.get('file_id') and not bg.get('dimensions'):
-            f = self.db.File.fetch(bg.get('file_id'))
-            dimensions = f.get('dimensions')
-            if dimensions:
-                bg['dimensions'] = dimensions
-                expr_obj.update(updated=False, background=bg)
-            else:
-                f.update(resample_time=0)
-        if (expr_obj.get('auth') == 'password'
-            and not expr_obj.cmp_password(request.form.get('password'))
-            and not expr_obj.cmp_password(request.args.get('pw'))):
-            expr_obj = { 'auth': 'password' }
-            expr_client = expr_obj
-        else:
-            expr_client = expr_obj.client_view(mode='page')
-        # TODO: consider allowing analytics for content frame.
-        viewport = [int(x) for x in
-            request.args.get('viewport', '1000x750').split('x')]
-        snapshot_mode = request.args.get('snapshot') is not None
-        tdata.context.update(
-            html = self.expr_to_html(expr_obj, snapshot_mode,
-                viewport=viewport),
-            expr = expr_obj,
-            use_ga = False,
-        )
-
-        body_style = ''
-        if snapshot_mode:
-            body_style = 'overflow: hidden;'
-        if expr_obj.get('clip_x'):
-            body_style = 'overflow-x: hidden;'
-        if expr_obj.get('clip_y'):
-            body_style += 'overflow-y: hidden;'
-        if body_style:
-            tdata.context['css'] = 'body {' + body_style + '}'
-
-        tdata.context.update(expr=expr_obj, expr_client=expr_client)
-        return self.serve_page(tdata, response, 'pages/expr.html')
-        
     def expr_to_html(self, exp, snapshot_mode=False, viewport=(1000, 750)):
         """Converts JSON object representing an expression to HTML"""
         if not exp: return ''

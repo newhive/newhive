@@ -54,7 +54,7 @@
            ><input type="submit" value title="Search"
             class='hoverable icon go_search inline'>
           {# Create new page #}
-          <a {anchor_attrs "create_expr"} title='Create newhive'
+          <a {anchor_attrs "expr_create"} title='Create newhive'
             class='needs_login create item btn hoverable'></a>
         </div>
         {<if (and (not user.logged_in) flags.categories)}
@@ -140,7 +140,7 @@
   <div class='play_pause btn item hoverable play hide'><div
     class='icon'></div></div>
   {# Create button #}
-  <a {anchor_attrs "create_expr"} title='Create newhive'
+  <a {anchor_attrs "expr_create"} title='Create newhive'
     class='needs_login create item btn hoverable'></a>
   {# User thumb #}
   <div class='item hide btn expr user_card hoverable'>

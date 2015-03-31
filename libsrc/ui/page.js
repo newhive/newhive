@@ -567,14 +567,14 @@ define([
         
         $(document).bind_once("keydown", keydown);
         // var scroll_handler = function(e) {
-        //     if (c.route_name == "edit_expr")
+        //     if (c.route_name == "expr_edit")
         //         return;
         //     $(".overlay.nav").fadeOut("fast");
         //     if (o.scroll_timeout != undefined)
         //         clearTimeout(o.scroll_timeout);
         //     o.scroll_timeout = setTimeout(function() {
         //         o.scroll_timeout = undefined;
-        //         if (c.route_name != "edit_expr")
+        //         if (c.route_name != "expr_edit")
         //             $(".overlay.nav").stop().fadeIn("fast");
         //     }, 100);
         // }

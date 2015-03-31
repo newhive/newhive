@@ -22,7 +22,7 @@
     {# The click through on button "needs_login" goes to the <a>, so need
       to remove it if not logged in. #}
     <div class="inline">{<if user.logged_in}
-      <a { query_attrs "create_expr" (concat "tags=" tags_search.0) } id='create_form'>
+      <a { query_attrs "expr_create" (concat "tags=" tags_search.0) } id='create_form'>
     {>}
     <button type="submit" class="needs_login teal_btn upper create" value="">
       <span class="plus_button"></span>

@@ -148,11 +148,11 @@
         <input type='hidden' name='action' value='comment'>
         <input type='hidden' name='entity' value='{id}'>
      </form>
-    </div>  
+    </div>
   </div>
  
   {# password dialog for protected expressions #}
-  <div class='dialog' id='dia_expr_password'>
+  <div class='dialog hide' id='dia_expr_password'>
     <h1>This newhive needs a password to be experienced:</h1>
     <div class='error hide'>Password is incorrect</div>
     <form {form_attrs "view_expr"
@@ -168,11 +168,13 @@
       class='password'></form>
   </div>
 
-  <div class='dialog' id='dia_add_funds'>
+  <div class='dialog hide' id='dia_add_funds'>
     <h1>Add funds to your NewHive account to remix and acquire newhives!</h1>
-    <input type='text' name='funds' value='0.00'>
-    <input type='submit' name='Add' style='float:left'>
-    <input type='button' value='Nevermind' style='float:right'>
+    <div class='center'>
+      <div class='spacer'><input type='text' name='funds' value='0.00'
+        size='3' class='amount'></div>
+      <input type='submit' value='Pay with card' class='submit upper teal_btn'>
+    </div>
   </div>
 {>}
 {set "lazy_loading" 0}
