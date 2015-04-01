@@ -139,15 +139,16 @@
     {>}</div>
     {# discussion input #}
     <div id="discussions">
-     <form {form_attrs "comment_create"} method='POST' id='comment_form'>
+      <form {form_attrs "comment_create"} method='POST' id='comment_form'>
         <textarea name='text' placeholder=
           {<if user.logged_in}'Join the conversation.'
           {>}{<else}'Log in to comment...' class="needs_login"
           {>} rows='4'></textarea>
-        <div class="rightify">{<if user.logged_in}<input type='submit' value='Enter' class='submit upper hoverable teal_btn'>{>}</div>
+        <div class="rightify">{<if user.logged_in}<input type='submit'
+          value='Enter' class='submit upper hoverable teal_btn'>{>}</div>
         <input type='hidden' name='action' value='comment'>
         <input type='hidden' name='entity' value='{id}'>
-     </form>
+      </form>
     </div>
   </div>
  
