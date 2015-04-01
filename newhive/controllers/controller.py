@@ -194,7 +194,9 @@ class Controller(object):
 
         tdata.response.status_code = status
         if json:
-            return self.serve_json(tdata.response, {'error': exception })
+            if type(exception) == dict: resp = exception
+            else: resp = {'error': exception }
+            return self.serve_json(tdata.response, resp)
         else:
             return self.serve_page(tdata, tdata.response, 'pages/exception.html')
 

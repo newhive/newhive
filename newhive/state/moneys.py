@@ -22,7 +22,7 @@ class MoneyTransaction(ImmutableDict):
         doc.update(transfers=local_transfers, created=now())
         return super(ImmutableDict, klass).__new__(klass, doc)
 
-DefaulMoneys = { 'credit': 0, 'sales': 0 }
+DefaultMoneys = { 'credit': 0, 'sales': 0 }
 
 class LocalTransfer(tuple):
     """ NOT TO BE USED DIRECTLY. Created by MoneyTransaction classes """
@@ -42,14 +42,14 @@ class LocalTransfer(tuple):
 
         # make sure from and to users actually have accounts:
         from_user.set_if(mq().exists('moneys', False), DefaultMoneys)
-        to_user.set_if(mq().exists('moneys', False), DefaulMoneys)
+        to_user.set_if(mq().exists('moneys', False), DefaultMoneys)
 
         # # begin transaction
         # if kind in [Debit, Transfer]:
         #     from_user.inc_if(mq().gte('moneys.credit', amt
         #     from_moneys = from_user.get('moneys', DefaultMoneys)
         #     from_id = from_user.id
-        # to_moneys = to_user.get('moneys', DefaulMoneys)
+        # to_moneys = to_user.get('moneys', DefaultMoneys)
         # # end transaction
         # return super(LocalTransfer, klass).__new__(klass, [
         #     from_user.id, account, to_user.id, account, amt

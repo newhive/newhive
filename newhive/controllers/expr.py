@@ -76,7 +76,7 @@ class Expr(ModelController):
 
         tdata.context.update(expr=expr_obj, expr_client=expr_client)
         return self.serve_page(tdata, response, 'pages/expr.html')
-        
+
     def save(self, tdata, request, response, **args):
         """ Parses JSON object from POST variable 'exp' and stores it in database.
             If the name (url) does not match record in database, create a new record."""
@@ -303,35 +303,14 @@ class Expr(ModelController):
         parent_id = request.form.get('expr_id')
         parent = self.db.Expr.fetch(parent_id)
         if not parent:
-            return self.serve_500(tdata, 'missing remix parent: ' + parent_id)
-
-        # TODO-remix: handle moving ownership of remix list, especially if original is
-        # made private or deleted.
-        parent_id = upd.get('remix_parent_id')
-        remix_upd = {}
-        remix_expr = self.db.Expr.fetch(parent_id)
-        while parent_id:
-            remix_expr = self.db.Expr.fetch(parent_id)
-            parent_id = remix_expr.get('remix_parent_id')
-        remix_owner = remix_expr.owner
-        if (res.get('auth', '') == 'public' or remix_owner == tdata.user.id):
-            remix_upd['remix_root'] = remix_expr.id
-            remix_expr.setdefault('remix_name', remix_expr['name'])
-            remix_expr.setdefault('remix_root', remix_expr.id)
-            remix_expr.update(updated=False, remix_name=remix_expr['remix_name'],
-                remix_root=remix_expr['remix_root'])
-            remix_name = 're:' + remix_expr['remix_name']
-            # remix_upd['tags'] += " #remixed" # + remix_name
-            res.update(**remix_upd)
-
-            # include self in remix list
-            remix_owner.setdefault('tagged', {})
-            remix_owner['tagged'].setdefault(remix_name, [remix_expr.id])
-            remix_owner['tagged'][remix_name].append(res.id)
-            remix_owner.update(updated=False, tagged=remix_owner['tagged'])
-
-        # TODO: move remix out of create
-        pass
+            return self.serve_500(tdata, 'missing')
+        if 'remix' not in parent.get('tags_index', []):
+            return self.serve_500(tdata, 'not_remixable')
+        if parent.get('remix_value', 0) > tdata.user.get('moneys_sum', 0):
+            return self.serve_json(tdata.response, dict(error='funds'))
+        remixed = tdata.user.expr_remix(parent)
+        return self.serve_json(tdata.response, dict(remixed=True,
+            expr_id=remixed.id, name=remixed['name']))
 
     def snapshot(self, tdata, request, response, expr_id, **args):
         expr_obj = self.db.Expr.fetch(expr_id)
