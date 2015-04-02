@@ -4,7 +4,8 @@ from functools import partial
 from collections import deque
 import urllib
 
-from newhive.utils import dfilter, now, tag_string, is_number_list, URL, lget
+from newhive.utils import (dfilter, now, tag_string, is_number_list, URL, lget,
+    abs_url)
 from newhive.controllers.controller import ModelController
 
 def anchor_tag(link, name, xlink=False):
@@ -34,8 +35,7 @@ class Expr(ModelController):
         return self.serve_naked(tdata, request, response, expr)
 
     def serve_naked(self, tdata, request, response, expr_obj):
-        if not expr_obj:
-            return self.serve_404(tdata, request, response)
+        if not expr_obj: return self.serve_404(tdata)
 
         bg = expr_obj.get('background')
         if bg and bg.get('file_id') and not bg.get('dimensions'):
@@ -75,7 +75,15 @@ class Expr(ModelController):
             tdata.context['css'] = 'body {' + body_style + '}'
 
         tdata.context.update(expr=expr_obj, expr_client=expr_client)
-        return self.serve_page(tdata, response, 'pages/expr.html')
+        return self.serve_page(tdata, 'pages/expr.html')
+
+    def embed(self, tdata, request, response, expr_id=None, **args):
+        expr = self.db.Expr.fetch(expr_id)
+        if not expr: return self.serve_404(tdata)
+        tdata.context.update(expr=expr, embed=True,
+            content_url=abs_url(domain=self.config.content_domain, 
+                secure=tdata.request.is_secure) + expr.id)
+        return self.serve_page(tdata, 'pages/embed.html')
 
     def save(self, tdata, request, response, **args):
         """ Parses JSON object from POST variable 'exp' and stores it in database.
@@ -287,7 +295,7 @@ class Expr(ModelController):
 
     # the whole editor except the save dialog and upload code goes in sandbox
     def editor_sandbox(self, tdata, request, response, **args):
-        return self.serve_page(tdata, response, 'pages/edit_sandbox.html')
+        return self.serve_page(tdata, 'pages/edit_sandbox.html')
 
     def unused_name(self, tdata, request, response, **args):
         """ Returns an unused newhive name matching the base name provided """
@@ -321,7 +329,7 @@ class Expr(ModelController):
         if expr_obj.threaded_snapshot(full_page = True, time_out = 30):
             return self.redirect(response, expr_obj.snapshot_name('full'))
 
-        return self.serve_404(tdata, request, response)
+        return self.serve_404(tdata)
 
     def delete(self, tdata, request, response, **args):
         resp = {}
@@ -503,8 +511,7 @@ class Expr(ModelController):
         user = lget(user_and_page, 0)
         page = lget(user_and_page, 1, '')
         r = self.db.Expr.named(user, page)
-        if not r:
-            return self.serve_404(tdata, request, response)
+        if not r: return self.serve_404(tdata)
         if r['auth'] == 'password':
             return self.serve_forbidden(tdata, request, response, status=401)
             type (required)

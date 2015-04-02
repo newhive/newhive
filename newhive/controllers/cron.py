@@ -24,7 +24,7 @@ class Cron(Controller):
 
         method = getattr(self, method_name)
         if not request.is_secure or not method or (request.args.get('key') != self.key):
-            return self.serve_404(tdata, request, response)
+            return self.serve_404(tdata)
 
         opts_serial = dfilter(request.args, ['delay', 'span'])
         opts = dict((k, int(v)) for k, v in opts_serial.iteritems())

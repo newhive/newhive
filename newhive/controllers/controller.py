@@ -24,7 +24,7 @@ class Controller(object):
         self.asset = self.assets.url
         self.controllers = controllers
 
-    def pre_dispatch(self, func, tdata, request, response, **args):
+    def pre_dispatch(self, func, tdata, **args):
         return False
 
     # Dispatch calls into controller methods of the form:
@@ -37,8 +37,7 @@ class Controller(object):
             return self.redirect(tdata.response, "/")
 
         try:
-            res = self.pre_dispatch(getattr(self, handler, None), tdata,
-                request, tdata.response, **args)
+            res = self.pre_dispatch(getattr(self, handler, None), tdata, **args)
             if res:
                 return res
             return getattr(self, handler, None)(tdata, request, tdata.response,
@@ -141,11 +140,7 @@ class Controller(object):
 
         return tdata
 
-    def empty(self, tdata, request, response, **args):
-        tdata.context.update(page_data={}, route_args=args)
-        return self.serve_loader_page('pages/main.html', tdata, request, response)
-    
-    def render_template(self, tdata, response, template):
+    def render_template(self, tdata, template):
         context = tdata.context
         context.update(template=template)
         context.setdefault('icon', self.asset('skin/1/logo.png'))
@@ -159,29 +154,28 @@ class Controller(object):
     def serve_html(self, response, html):
         return self.serve_data(response, 'text/html; charset=utf-8', html)
 
-    def serve_page(self, tdata, response, template):
-        return self.serve_html(response, self.render_template(tdata, response, template))
-
     def serve_json(self, response, val, as_text = False):
         """ as_text is used when content is received in an <iframe> by the client """
-        return self.serve_data(response, 'text/plain' if as_text else 'application/json', json.dumps(val))
+        return self.serve_data(response,
+            'text/plain' if as_text else 'application/json', json.dumps(val))
         
-    def serve_loader_page(self, template, tdata, request, response):
-        return self.serve_html(response, self.render_template(tdata, response, template))
+    def serve_page(self, tdata, template):
+        return self.serve_html(tdata.response,
+            self.render_template(tdata, template))
 
-    def serve_404(self, tdata, request, response, json=True):
+    def serve_404(self, tdata, error='missing', json=True):
         if config.debug_mode:
             print "404"
             print json
             raise Exception("404", json)
-        response.status_code = 404
-        if json: return self.serve_json(response, {'error': 404 })
-        else: return self.serve_page(tdata, response, 'pages/notfound.html')
+        tdata.response.status_code = 404
+        if json: return self.serve_json(tdata.response, {'error': error })
+        else: return self.serve_page(tdata, 'pages/notfound.html')
 
-    def serve_forbidden(self, tdata, request, response, json=True, status=403):
-        response = Response()
-        response.status_code = status
-        return self.serve_json(response, {'error': status})
+    def serve_forbidden(self, tdata, error='forbidden', json=True, status=403):
+        tdata.response = Response()
+        tdata.response.status_code = status
+        return self.serve_json(tdata.response, {'error': error})
 
     def serve_500(self, tdata, exception=None, traceback=None, status=500,
         json=True
@@ -205,6 +199,10 @@ class Controller(object):
         response.status_code = 301 if permanent else 303
         return response
 
+    def empty(self, tdata, **args):
+        tdata.context.update(page_data={}, route_args=args)
+        return self.serve_page(tdata, 'pages/main.html')
+    
 
 class ModelController(Controller):
     """ Base class for all controllers tied to one of our DB collections """
@@ -223,8 +221,8 @@ class ModelController(Controller):
     def fetch(self, tdata, request, response, id=None):
         """ Fetch a record from any newhive.state model """
         data = self.model.fetch(id)
-        if data is None: self.serve_404(tdata, request, response)
-        return self.serve_json(response, data)
+        if data is None: self.serve_404(tdata)
+        return self.serve_json(tdata.response, data)
 
 def auth_required(controller_method):
     def decorated(self, tdata, *args, **kwargs):

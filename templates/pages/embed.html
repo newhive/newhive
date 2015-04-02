@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <link id='css_minimal' rel='stylesheet' type='text/css' href='{{ asset_bundle('minimal.css')[0] }}'>
+  {% for item in asset_bundle('curl.js') %}
+    <script src='{{ item }}'></script>
+  {% endfor %}
+  {% if not debug %}
+    <script src='//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js'></script>
+  {% endif %}
+  <script>
+curl({
+    // baseUrl: {{ ('/lib/libsrc' if debug else '/lib')|json }},
+    baseUrl: {{ ('/lib/libsrc' if debug else '/lib')|json }},
+    paths: {'media' : '{{ media_bucket }}' },
+    pluginPath: 'curl/plugin'
+});
+  </script>
+  <meta id="viewport" name="viewport">
+  <style>
+body, html { height: 100%; }
+iframe { border: none; width:100%; height:100% }
+  </style>
+</head>
+<body class='{% block body_class %}{% endblock %}'>
+  <div id='dynamic_group'></div>
+  <div id='overlays'></div>
+  <div id='exprs'><iframe id='expr_{{ expr.id }}' src='{{ content_url }}'
+    class='expr' allowfullscreen></iframe></div>
+  {#<script>
+curl(['ui/controller'], function(controller){
+    controller.init({{ route_args|json }});
+});
+  </script>#}
+</body>
+</html>

@@ -10,46 +10,51 @@
     "//": "-----------------------------------------",
 
     "naked_expr_id": {
-        "page_route": "/<expr_id>",
-        "controller": "expr",
-        "method": "fetch_naked",
-        "content_domain": true
-    },
-    "naked_expr_name": {
-        "page_route": "/<owner_name>/<path:expr_name>",
-        "controller": "expr",
-        "method": "fetch_naked",
-        "content_domain": true
-    },
-    "blank_sandbox": {
-        "page_route": "/home/edit",
-        "controller": "expr",
-        "method": "editor_sandbox",
-        "content_domain": true,
-        "precedence": 1
-    },
-    "editor_sandbox": {
-        "page_route": "/home/edit/<expr_id>",
-        "controller": "expr",
-        "method": "editor_sandbox",
-        "content_domain": true,
-        "precedence": 1
-    },
+        "page_route": "/<expr_id>"
+        ,"controller": "expr"
+        ,"method": "fetch_naked"
+        ,"content_domain": true
+    }
+    ,"naked_expr_name": {
+        "page_route": "/<owner_name>/<path:expr_name>"
+        ,"controller": "expr"
+        ,"method": "fetch_naked"
+        ,"content_domain": true
+    }
+    ,"blank_sandbox": {
+        "page_route": "/home/edit"
+        ,"controller": "expr"
+        ,"method": "editor_sandbox"
+        ,"content_domain": true
+        ,"precedence": 1
+    }
+    ,"editor_sandbox": {
+        "page_route": "/home/edit/<expr_id>"
+        ,"controller": "expr"
+        ,"method": "editor_sandbox"
+        ,"content_domain": true
+        ,"precedence": 1
+    }
+    ,"expr_embed": {
+        "page_route": "/e/<expr_id>"
+        ,"controller": "expr"
+        ,"method": "embed"
+    }
 
-    "//": "-----------------------------------------",
-    "//": "These routes are community pages.",
-    "//": "-----------------------------------------",
+    ,"//": "-----------------------------------------"
+    ,"//": "These routes are community pages."
+    ,"//": "-----------------------------------------"
 
-    "home": {
-        "page_route": "/",
-        "api_route": "/api/feed/trending/",
-        "controller": "community",
-        "method": "trending",
-        "client_method": "home",
-        "custom_classes": "nav",
-        "require_login": true
-    },
-    "home_cat": {
+    ,"home": {
+        "page_route": "/"
+        ,"api_route": "/api/feed/trending/"
+        ,"controller": "community"
+        ,"method": "trending"
+        ,"client_method": "home"
+        ,"custom_classes": "nav"
+        ,"require_login": true
+    }
+    ,"home_cat": {
         "page_route": "/home/cat/<tag_name>",
         "api_route": "/api/feed/cat/<tag_name>",
         "controller": "community",
@@ -465,8 +470,8 @@
         "method": "password_recover"
     },
     "password_reset": {
-        "page_route": "/home/community/password_reset",
-        "api_route": "/api/community/password_reset",
+        "page_route": "/home/password_reset",
+        "api_route": "/api/password_reset",
         "controller": "user",
         "method": "password_reset"
     },
