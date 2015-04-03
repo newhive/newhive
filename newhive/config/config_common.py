@@ -41,7 +41,7 @@ cat_hover_count = 6
 str_expression  = 'newhive'
 
 ################################################################
-admins          = ['abram', 'cara', 'zach', 'newduke', 'fatsycline','root','newhive']
+admins          = ['abram', 'zach', 'newhive', 'melissabroder', 'lindsayhoward']
 
 default_email_subscriptions = ['love', 'listen', 'share_expr', 'comment', 'broadcast', 'featured', 'milestone']
 milestones = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000,
