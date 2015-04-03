@@ -498,8 +498,8 @@
     "//": "-----------------------------------------",
 
     "site_flags": {
-        "page_route": "/home/admin/site_flags",
-        "api_route": "/api/admin/site_flags",
+        "page_route": "/home/admin/flags",
+        "api_route": "/api/admin/flags",
         "controller": "admin",
         "method": "site_flags",
         "client_method": "admin",
