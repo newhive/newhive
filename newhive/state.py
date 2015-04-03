@@ -30,8 +30,10 @@ from s3 import S3Interface
 
 from newhive import config
 from newhive.config import abs_url, url_host
-from newhive.utils import (now, junkstr, dfilter, normalize, normalize_tags,
-    tag_string, cached, AbsUrl, log_error, normalize_word, lget)
+from newhive.utils import ( now, junkstr, dfilter, normalize, normalize_tags,
+    tag_string, cached, AbsUrl, log_error, normalize_word, lget, ImmutableDict,
+    enum )
+from newhive.mongo_helpers import mq
 from newhive.routes import reserved_words
 from newhive import social_stats
 
@@ -264,6 +266,9 @@ class Collection(object):
         return Cursor(self, spec=spec, **opts)
         # can't figure out as_class param, which seems to not be passed an arg
         #return self._col.find(spec=spec, as_class=self.new, **opts)
+    def count(self, *spec):
+        spec = {} if len(spec) == 0 else spec[0]
+        return self.search(spec).count()
 
     def last(self, spec={}, **opts):
         opts.update({'sort' : [('updated', -1)]})
@@ -355,6 +360,7 @@ class Entity(dict):
     def type(self): return self.__class__.__name__
 
     def __init__(self, collection, doc):
+        """ Establish data-model consistency """
         self.id = doc.get('id')
         doc.pop('id', None)  # Prevent id and _id attributes going into MongoDB
         dict.update(self, doc)
@@ -367,7 +373,6 @@ class Entity(dict):
     @property
     def id(self):
         return self['_id']
-
     @id.setter
     def id(self, v):
         self['_id'] = v
@@ -376,8 +381,62 @@ class Entity(dict):
         if not self.id: self.id = str(bson.objectid.ObjectId())
         self['created'] = now()
         self['updated'] = now()
+        self.serialize(self)
         self._col.insert(self, safe=True)
         return self
+
+    def serialize(self, d):
+        """ De-normalize (for indexing) and dereference contents for storage,
+            and ensure consistency with data model before shoving into DB.
+            Args:
+                d (dict): document to be created or partial doc to be updated
+                    into existing record
+            Returns:
+                None: destructively updates d
+        """
+        # if not ( is_mongo_key(self.id)
+        #     or is_local_time_stamp(self['created'])
+        #     or is_local_time_stamp(self['updated'])
+        # ):
+        #     raise ValueError('entity id or timestamps invalid')
+
+    def update(self, **d):
+        # TODO: change default of updated
+        # if d.get('updated') is True: d['updated'] = now()
+        # d.setdefault('updated', False)
+        d.setdefault('updated',  now())
+        if not d['updated']: del d['updated']
+        dict.update(self, d)
+        self.serialize(d)
+        return self._col.update({ '_id' : self.id }, { '$set' : d },
+            safe=True)
+
+    def update_if(self, cmd, test_doc, updates):
+        if updates.get('updated') == True:
+            updates.update('updated', now())
+        test_doc.update(_id=self.id)
+        result = self._col.update(test_doc, {'$'+cmd: updates})
+        if result['n'] > 0:
+            dict.update(self, updates)
+        return result
+    def set_if(self, d, u):
+        return self.update_if('set', d, u)
+    def inc_if(self, d, u):
+        return self.update_if('inc', d, u)
+
+    def unset(self, key):
+        if self.get(key):
+            del self[key]
+        return self._col.update(mq(_id=self.id), { '$unset': {key: 1} })
+
+    def delete(self):
+        res = self._col.remove(spec_or_id=self.id, safe=True)
+        if self.Collection.trashable:
+            self.db.Trash.create(self.cname, self)
+        return res
+
+    def undelete(self, trash=None):
+        pass
 
     def entropy(self, force_update = False):
         if force_update or (not self.get('entropy')):
@@ -392,19 +451,8 @@ class Entity(dict):
     def reload(self):
         dict.update(self, self.collection.fetch(self.id))
 
-    def update(self, **d):
-        # TODO: change default of updated
-        # if d.get('updated') is True: d['updated'] = now()
-        # d.setdefault('updated', False)
-        
-        d.setdefault('updated',  now())
-        if not d['updated']: del d['updated']
-        dict.update(self, d)
-        return self._col.update({ '_id' : self.id }, { '$set' : d },
-            safe=True)
-
     def update_cmd(self, d, **opts): 
-        return self._col.update({ '_id' : self.id }, d, **opts)
+        return self._col.update({'_id': self.id}, d, **opts)
 
     def inc(self, key, value=1):
         """Increment key counter by value."""
@@ -436,15 +484,6 @@ class Entity(dict):
             return self['flags'].get(name, False)
         else:
             return False
-
-    def delete(self):
-        res = self._col.remove(spec_or_id=self.id, safe=True)
-        if self.Collection.trashable:
-            self.db.Trash.create(self.cname, self)
-        return res
-
-    def undelete(self, trash=None):
-        pass
 
     def purge(self):
         res = self._col.remove(spec_or_id=self.id, safe=True)
@@ -633,31 +672,11 @@ class User(HasSocial):
     #    ,notification_count = int
     # )
 
-    class Collection(Collection):
-        def named(self, name): return self.find({'name' : name})
-
-        def find_by_facebook(self, id):
-            return self.find({ 'facebook.id': id,
-                'facebook.disconnected': {'$exists': False} })
-
-        def get_root(self): return self.named('root')
-        root_user = property(get_root)
-
-        @property
-        def site_user(self):
-            return self.named(self.config.site_user)
-
-    def __init__(self, *a, **b):
-        super(User, self).__init__(*a, **b)
+    def __init__(self, collection, doc):
+        super(User, self).__init__(collection, doc)
         self.logged_in = False
         self.fb_client = None
         self.owner = self
-
-    def expr_create(self, d):
-        doc = dict(d)
-        doc.update(owner=self.id)
-        doc.setdefault('name', '')
-        return self.db.Expr.create(doc)
 
     def create(self):
         self['name'] = self['name'].lower()
@@ -678,10 +697,62 @@ class User(HasSocial):
         super(User, self).create()
         return self
 
-    def update(self, **d):
+    def serialize(self, d):
         self.build_search(d)
-        super(User, self).update(**d)
-        return self
+        super(User, self).serialize(d)
+
+    def delete(self):
+        # Facebook Disconnect
+        self.facebook_disconnect()
+
+        # Feed Cleanup
+        for feed_item in self.db.Feed.search(
+                {'$or': [{'initiator': self.id}, {'entity': self.id}]}):
+            feed_item.delete()
+
+        # Expressions Cleanup
+        for e in self.expressions:
+            e.delete()
+
+        return super(User, self).delete()
+
+    def undelete(self, trash):
+        # TODO-undelete: reconnect FB?
+        # TODO-undelete: Fix following / followers
+        # TODO-undelete: index record.owner
+        time = trash.get('updated', now()) - 3600
+        for expr in self.db.Trash.search({
+            'record.owner': self.id
+            ,"updated": {"$gt": time}
+            ,'collection': 'expr'
+        }):
+            expr.undelete() 
+        for feed in self.db.Trash.search({
+            '$or': [{'record.initiator': self.id}, {'record.entity': self.id}]
+            ,"updated": {"$gt": time}
+            ,'collection': 'feed'
+        }):
+            feed.undelete()
+
+    class Collection(Collection):
+        def named(self, name): return self.find({'name' : name})
+
+        def find_by_facebook(self, id):
+            return self.find({ 'facebook.id': id,
+                'facebook.disconnected': {'$exists': False} })
+
+        def get_root(self): return self.named('root')
+        root_user = property(get_root)
+
+        @property
+        def site_user(self):
+            return self.named(self.config.site_user)
+
+    def expr_create(self, d):
+        doc = dict(d)
+        doc.update(owner=self.id)
+        doc.setdefault('name', '')
+        return self.db.Expr.create(doc)
 
     @property
     def notification_count(self): return self.get('notification_count', 0)
@@ -1291,39 +1362,6 @@ class User(HasSocial):
         cats = ru.get_cats()
         return cats[1][0:cats[0]]
 
-    def delete(self):
-        # Facebook Disconnect
-        self.facebook_disconnect()
-
-        # Feed Cleanup
-        for feed_item in self.db.Feed.search(
-                {'$or': [{'initiator': self.id}, {'entity': self.id}]}):
-            feed_item.delete()
-
-        # Expressions Cleanup
-        for e in self.expressions:
-            e.delete()
-
-        return super(User, self).delete()
-
-    def undelete(self, trash):
-        # TODO-undelete: reconnect FB?
-        # TODO-undelete: Fix following / followers
-        # TODO-undelete: index record.owner
-        time = trash.get('updated', now()) - 3600
-        for expr in self.db.Trash.search({
-            'record.owner': self.id
-            ,"updated": {"$gt": time}
-            ,'collection': 'expr'
-        }):
-            expr.undelete() 
-        for feed in self.db.Trash.search({
-            '$or': [{'record.initiator': self.id}, {'record.entity': self.id}]
-            ,"updated": {"$gt": time}
-            ,'collection': 'feed'
-        }):
-            feed.undelete()
-
     def has_group(self, group, level=None):
         groups = self.get('groups')
         if isinstance(group, list): return False
@@ -1388,6 +1426,68 @@ class Expr(HasSocial):
     ]
     counters = ['owner_views', 'views', 'emails']
     _owner = None
+
+    def create(self):
+        assert map(self.has_key, ['owner', 'domain', 'name'])
+        self['name'] = self['name'][0:80]
+        self['owner_name'] = self.db.User.fetch(self['owner'])['name']
+        self['random'] = random.random()
+        self['views'] = 0
+        self['snapshot_needed'] = True
+        self.setdefault('title', 'Untitled')
+        self.setdefault('auth', 'public')
+        super(Expr, self).create()
+
+        if not self.get('remix_parent_id'):
+            self.db.NewExpr.create(self.owner, self)
+        else:
+            parent = self
+            remix_lineage = []
+            while True:
+                parent = self.db.Expr.fetch(parent.get('remix_parent_id'))
+                if not parent: break
+                remix_lineage.append( dfilter( parent, ['_id', 'owner',
+                    'value', 'remix_value', 'remix_value_add'] ) )
+            if len(remix_lineage):
+                self.db.Remix.create(self.owner, remixed_expr, 
+                    data={'new_expr':self})
+                self['remix_lineage'] = remix_lineage
+
+        self.update_owner([])
+        return self
+
+    def update(self, **d):
+        old_tags = self.get('tags_index', [])
+
+        # Reset fails if this is a real update
+        if ( d.get('apps') or d.get('background') ) and d.get('updated', True):
+            d['snapshot_needed'] = True
+            d['snapshot_fails'] = 0
+        super(Expr, self).update(**d)
+
+        self.update_owner(old_tags)
+
+    def serialize(self, d):
+        self._collect_files(d)
+        self.build_search(d)
+        if d.get('auth') == 'public':
+            d['password'] = None
+        try:
+            d['remix_value'] = float(d.get('remix_value'))
+        except:
+            if d.get('remix_value'): del d['remix_value']
+        super(Expr, self).serialize(d)
+
+    def delete(self):
+        for r in self.db.Feed.search({'entity': self.id}): r.delete()
+
+        res = super(Expr, self).delete()
+
+        old_tags = self.get('tags_index', [])
+        self['tags_index'] = []
+        self.update_owner(old_tags)
+
+        return res
 
     class Collection(Collection):
         ignore_not_meta = { 'apps': 0, 'background': 0, 'text_index': 0,
@@ -1550,9 +1650,8 @@ class Expr(HasSocial):
                 return False
         return True
 
-    #TODO-cleanup: remove after snapshot migration
     def snapshot_name_base(self, size, time):
-        return '_'.join([self.id, time, self.entropy(), size]) + '.jpg' #(".jpg" if (size == "full") else ".png")
+        return '_'.join([self.id, time, self.entropy(), size]) + '.jpg'
 
     def snapshot_name_http(self, size):
         res = self.snapshot_name(size)
@@ -1706,25 +1805,6 @@ class Expr(HasSocial):
         return self._owner
     owner = property(get_owner)
 
-    def update(self, **d):
-        old_tags = self.get('tags_index', [])
-
-        self._collect_files(d)
-        self.build_search(d)
-        if d.get('auth') == 'public':
-            d['password'] = None
-        # Reset fails if this is a real update
-        if ( d.get('apps') or d.get('background') ) and d.get('updated', True):
-            d['snapshot_needed'] = True
-            d['snapshot_fails'] = 0
-        try:
-            d['remix_value'] = int(d['remix_value'])
-        except ValueError:
-            del d['remix_value']
-        super(Expr, self).update(**d)
-
-        self.update_owner(old_tags)
-
     def update_owner(self, old_tags):
         old_tags = set(old_tags)
         self.owner.get_expr_count(force_update=True)
@@ -1793,40 +1873,6 @@ class Expr(HasSocial):
     def _match_id(self, s):
         if not isinstance(s, basestring): return []
         return map(lambda m: m[0], re.findall(r'/\b([0-9a-f]{24})(\b|_)', s))
-
-    def create(self):
-        assert map(self.has_key, ['owner', 'domain', 'name'])
-        self['owner_name'] = self.db.User.fetch(self['owner'])['name']
-        self['name'] = self['name'][0:80]
-        self['random'] = random.random()
-        self['views'] = 0
-        self['snapshot_needed'] = True
-        self.setdefault('title', 'Untitled')
-        self.setdefault('auth', 'public')
-        self._collect_files(self)
-        self.build_search(self)
-        super(Expr, self).create()
-        if 'remixed' not in self.get('tags_index', []):
-            self.db.NewExpr.create(self.owner, self)
-        else:
-            remixed_expr = self.db.Expr.fetch(self['remix_parent_id'])
-            if remixed_expr:
-                self.db.Remix.create(self.owner, remixed_expr, 
-                    data={'new_expr':self})
-
-        self.update_owner([])
-        return self
-
-    def delete(self):
-        for r in self.db.Feed.search({'entity': self.id}): r.delete()
-
-        res = super(Expr, self).delete()
-
-        old_tags = self.get('tags_index', [])
-        self['tags_index'] = []
-        self.update_owner(old_tags)
-
-        return res
 
     def increment_counter(self, counter):
         assert counter in self.counters, "Invalid counter variable.  Allowed counters are " + str(self.counters)
@@ -2055,7 +2101,6 @@ def generate_thumb(file, size, format=None):
     output = os.tmpfile()
     imo.save(output, format=format, quality=90)
     return output
-
 
 @register
 class File(Entity):
@@ -2760,6 +2805,15 @@ class Searches(Entity):
 
 
 ## utils
+
+def is_mongo_key(string):
+    return isinstance(string, basestring) and re.match('[0-9a-f]{24}', string)
+
+def is_local_time_stamp(val):
+    """ make sure val is a reasonable time for DB
+    TODO-polish: consider making allowable error-delta for future values """
+    db_epoch = 1302707338 # first record from datetime(2011, 4, 13, 15, 8, 58)
+    return isinstance(val, numbers.Number) and val >= db_epoch
 
 def mk_password(v):
     if not v:

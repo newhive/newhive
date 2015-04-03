@@ -118,8 +118,8 @@ define([
                 $app.removeAttr("data-scaled")
             })
         })
-        $(window).on("scroll", layout.on_scroll)
-            .click(function(){ o.send_top('focus'); });
+        $(window)//.on("scroll", layout.on_scroll)
+            .click(function(){ o.send_top('focus'); })
         //if (0 && util.mobile()) {
         //    $.event.special.swipe.horizontalDistanceThreshold = 200;
         //    $(document).on("swipe", function(ev) {

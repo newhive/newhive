@@ -1,18 +1,33 @@
-Make revenue projections with remix value distribution equation
+Remix value
+  clean up remix code, refactor into own API call
+  Finish up accounting code and connect to User.expr_remix
+    Implement pyramid / tree remix value passing
+    test real money
+  Make revenue projections with v1 and v2 distribution
+    collect statistics on page sizes, views, and remix counts from existing pgs
   turn into decent looking spreadsheet and math on newhive
-Block remix from working without paying when remix value is > 0
-  remove menu item from remix menu
-Implement pyramid / tree remix value passing
-test real money
-create user-land code that runs once per remix (for Mile's 
-flag remix value?
+    with simple flat rate 33% v1 distribution
+    with more sophisticated credit based algebra informed v2 distribution
+  # remove menu item from remix menu
+  # Block remix from working without paying when remix value is > 0
 
-Wednesday: implement default NewHive version of click to play oembed
+Before Tumblr meeting: implement default NewHive version of click to play oembed
   http://newhive.com/cara/tumblr-embeds
 
-FIX RESET PASSWORD
+# create user-land code that runs once per remix
 
 test privacy fix on direct email to newhive user
-  figure out why SMTP auth is failing on staging
 
 finish link ui revision
+
+fix viewing for passworded newhives, or remove support for passworded pages
+
+dig up, revive Jordan's code that saves state of Andrew's Flowcam
+
+# make editor border pushing only push trailing edge in to viewport
+# fix border pushing for content button controls to add scrolling below
+
+# figure out why SMTP auth is failing on staging
+#   test privacy fix on direct email to newhive user
+#   FIX RESET PASSWORD
+#   fix comment form from freezing on post

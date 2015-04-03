@@ -56,7 +56,7 @@ class Expr(ModelController):
         allowed_attributes = [
             'name', 'url', 'title', 'apps', 'dimensions', 'auth', 'password',
             'tags', 'background', 'thumb', 'images', 'remix_parent_id',
-            'remix_value',
+            'value', 'remix_value', 'remix_value_add',
             'container', 'clip_x', 'clip_y', 'layout_coord', 'groups', 'globals'
         ]
         # TODO: fixed expressions, styles, and scripts, need to be done right
@@ -277,6 +277,10 @@ class Expr(ModelController):
 
         return self.serve_json(response, res)
 
+    def remix(self, tdata, request, response, **args):
+        # TODO: move remix out of create
+        pass
+
     # the whole editor except the save dialog and upload code goes in sandbox
     def editor_sandbox(self, tdata, request, response, **args):
         return self.serve_page(tdata, response, 'pages/edit_sandbox.html')
@@ -459,14 +463,14 @@ class Expr(ModelController):
             css = ';'.join([ k+':'+str(v) for k,v in style.items() if 
                 k not in css_not_for_svg])
             html = (
-                  "<svg class='content' xmlns='http://www.w3.org/2000/svg'"
+                  "<svg xmlns='http://www.w3.org/2000/svg'"
                 + " xmlns:xlink='http://www.w3.org/1999/xlink'"
                 + " viewbox='0 0 %f %f" % tuple(dimensions)
                 + "' style='%s'>" % css
                 + "<filter id='%s_blur'" % app_id 
                 + " filterUnits='userSpaceOnUse'><feGaussianBlur stdDeviation='"
                 + "%f'></filter>" % app.get('blur', 0)
-                + "%s<polygon points='" % link_text[0]
+                + "%s<polygon class='content' points='" % link_text[0]
                 + ' '.join(map(lambda p: "%f %f" % (p[0], p[1]), points))
                 + "' style='filter:url(#%s_blur)'/>%s</svg>" % (
                     app_id, link_text[1])
