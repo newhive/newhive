@@ -16,7 +16,7 @@ class Community(Controller):
             self.db.Expr.named(owner_name, expr_name) )
         if not expr:
             if args.get('route_name') == 'user_home':
-                return self.redirect(self.response,
+                return self.redirect(tdata.response,
                     abs_url('/' + owner_name + '/profile'))
             return None
         return self.serve_expr(tdata, expr)
@@ -249,6 +249,11 @@ class Community(Controller):
             'cards': cards, 'owner': owner.client_view(),
             'title': 'Your Private Newhives',
         }
+
+    def expressions_random(self, tdata, **args):
+        cards = self.db.Expr.page({}, auth='public', sort='random')
+        return dict(cards=cards, title='Random newhives')
+
 
     def settings_update(self, tdata, owner_name=None, **args):
         """ Doubles as post handler and settings page api route
@@ -510,19 +515,16 @@ class Community(Controller):
         return ""
 
     def pre_dispatch(self, query, tdata, json=False, **kwargs):
-        # "Merged" users see trending
-        self.response = response
-
         # TODO-cleanup: remove this, see #redirect-cleanup Handle redirects
         if kwargs.get('route_name') == 'my_profile':
-            return self.redirect(response, abs_url(
+            return self.redirect(tdata.response, abs_url(
                 '/' + tdata.user['name'] + '/profile' +
                 Community.parse_query(tdata.request.query_string)))
         # TODO-cleanup: remove once old create_account links aren't being used
         if kwargs.get('route_name') == 'old_signup':
             u = AbsUrl('home/signup')
             u.query.update({'key': kwargs.get('key')})
-            return self.redirect(response, str(u))
+            return self.redirect(tdata.response, str(u))
 
         if query is None:
             return self.serve_404(tdata, json=json)
@@ -591,7 +593,7 @@ class Community(Controller):
                 card['feed'] = map(lambda x: x.client_view(), feed)
 
         if json:
-            return self.serve_json(response, page_data)
+            return self.serve_json(tdata.response, page_data)
         else:
             tdata.context.update(page_data=page_data, route_args=kwargs)
             if page_data.get('meta'):

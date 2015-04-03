@@ -30,9 +30,9 @@ from s3 import S3Interface
 
 from newhive import config
 from newhive.config import abs_url, url_host
-from newhive.utils import ( now, junkstr, dfilter, normalize, normalize_tags,
-    tag_string, cached, AbsUrl, log_error, normalize_word, lget, ImmutableDict,
-    enum )
+from newhive.utils import ( now, junkstr, dfilter, normalize_words,
+    normalize_tags, normalize_word, tag_string, cached, AbsUrl, log_error,
+    lget, ImmutableDict, enum )
 from newhive.mongo_helpers import mq
 from newhive.routes import reserved_words
 from newhive import social_stats
@@ -755,12 +755,12 @@ class User(HasSocial):
         return self.db.Expr.create(doc)
 
     def expr_remix(self, parent):
+        # handle accounting for remix value
+        return self.db.Expr.remix(parent)
         # TODO-remix: handle moving ownership of remix list, especially if
         # original is made private or deleted.
-        parent_id = upd.get('remix_parent_id')
-        remix_upd = {}
-        remix_expr = self.db.Expr.fetch(parent_id)
-        while parent_id:
+        ancestor = parent
+        while ancestor.get('remix_parent_id'):
             remix_expr = self.db.Expr.fetch(parent_id)
             parent_id = remix_expr.get('remix_parent_id')
         remix_owner = remix_expr.owner
@@ -1148,7 +1148,7 @@ class User(HasSocial):
     #     self.db.query('#Trending')
 
     def build_search(self, d):
-        d['text_index'] = normalize(
+        d['text_index'] = normalize_words(
             d.get('name', self.get('name', '')) + ' ' +
             d.get('fullname', self.get('fullname', ''))
         )
@@ -1453,32 +1453,37 @@ class Expr(HasSocial):
 
     def create(self):
         assert map(self.has_key, ['owner', 'domain', 'name'])
+        assert self.owner
         self['name'] = self['name'][0:80]
-        self['owner_name'] = self.db.User.fetch(self['owner'])['name']
+        self['owner_name'] = self.owner['name']
         self['random'] = random.random()
         self['views'] = 0
         self['snapshot_needed'] = True
         self.setdefault('title', 'Untitled')
         self.setdefault('auth', 'public')
+
         super(Expr, self).create()
-
-        if not self.get('remix_parent_id'):
-            self.db.NewExpr.create(self.owner, self)
-        else:
-            parent = self
-            remix_lineage = []
-            while True:
-                parent = self.db.Expr.fetch(parent.get('remix_parent_id'))
-                if not parent: break
-                remix_lineage.append( dfilter( parent, ['_id', 'owner',
-                    'value', 'remix_value', 'remix_value_add'] ) )
-            if len(remix_lineage):
-                self.db.Remix.create(self.owner, remixed_expr, 
-                    data={'new_expr':self})
-                self['remix_lineage'] = remix_lineage
-
+        self.db.NewExpr.create(self.owner, self)
         self.update_owner([])
         return self
+
+    def create_remix(self):
+        assert self.remix_parent
+
+        # add parent to lineage snapshot (expr attrs at time of the remix)
+        remix_lineage = self.remix_parent.get('remix_lineage', [])
+        remix_lineage.insert(0, dfilter(self.remix_parent, ['_id', 'owner',
+            'value', 'remix_value', 'remix_value_add'] ) )
+        self['remix_lineage'] = remix_lineage
+
+        # iterate through ancestors to remix root
+        # parent = self.remix_parent
+        # while True:
+        #     parent = self.db.Expr.fetch(parent.get('remix_parent_id'))
+        #     if not parent: break
+                
+        self.db.Remix.create(self.owner, self.remix_parent, data=dict(
+            entity_other_id=self.id))
 
     def update(self, **d):
         old_tags = self.get('tags_index', [])
@@ -1519,6 +1524,11 @@ class Expr(HasSocial):
 
         def named(self, username, name, **opts):
             return self.find({'owner_name': username, 'name': name}, **opts)
+
+        def remix(self, owner, parent_expr):
+            r = self.new({ owner: owner.id, remix_parent_id: parent_expr.id })
+            r.create_remix()
+            return r
 
         def fetch(self, key, keyname='_id', meta=False):
             fields = { 'text_index': 0, 'title_index': 0 }
@@ -1576,7 +1586,7 @@ class Expr(HasSocial):
             # remove random static patterns from random index
             # to make it _really_ random
             if sort == 'random':
-                for r in rs: r.update(random=random.random())
+                for r in rs: r.update(random=random.random(), updated=False)
 
             return rs
 
@@ -1829,6 +1839,12 @@ class Expr(HasSocial):
         return self._owner
     owner = property(get_owner)
 
+    def get_remix_parent(self):
+        if not self._remix_parent:
+            self._remix_parent = self.db.Expr.fetch(self.get('remix_parent_id'))
+        return self._remix_parent
+    remix_parent = property(get_remix_parent)
+
     def update_owner(self, old_tags):
         old_tags = set(old_tags)
         self.owner.get_expr_count(force_update=True)
@@ -1858,7 +1874,7 @@ class Expr(HasSocial):
         tags = d.get('tags', self.get('tags', ''))
         d['tags_index'] = normalize_tags(tags)
 
-        d['title_index'] = normalize(d.get('title', self.get('title', '')))
+        d['title_index'] = normalize_words(d.get('title', self.get('title', '')))
 
         text_index = []
         for a in d.get('apps', []):
@@ -1866,7 +1882,7 @@ class Expr(HasSocial):
                 and a.get('content', '').strip()
             ):
                 text = html.fromstring( a.get('content') ).text_content()
-                text_index.extend( normalize(text) )
+                text_index.extend( normalize_words(text) )
         text_index = list( set( d['tags_index'] + d['title_index'] +
             text_index ) )
         if text_index: d['text_index'] = text_index
@@ -2565,14 +2581,13 @@ class Feed(Entity):
         elif self['class_name'] == 'Remix':
             r['action'] = 'Remix'
             if r.get('entity_other_id'):
-                new_expr = self.db.Expr.fetch(r['entity_other_id'])
-                if new_expr:
-                    r['other_owner_name'] = new_expr.owner['name']
-                    r['other_entity_name'] = new_expr['name']
-                    r['entity_url'] = new_expr.url
+                other_expr = self.db.Expr.fetch(r['entity_other_id'])
+                if other_expr:
+                    r['other_owner_name'] = other_expr.owner['name']
+                    r['other_entity_name'] = other_expr['name']
+                    r['entity_url'] = other_expr.url
 
         return r
-
 
 @register
 class Comment(Feed):
@@ -2597,7 +2612,6 @@ class Comment(Feed):
         return self.initiator.thumb
     thumb = property(get_thumb)
 
-
 @register
 class Star(Feed):
     @property
@@ -2615,7 +2629,6 @@ class Star(Feed):
     def delete(self):
         return super(Star, self).delete()
 
-
 @register
 class Broadcast(Feed):
     action_name = 'broadcast'
@@ -2630,29 +2643,21 @@ class Broadcast(Feed):
 @register
 class Remix(Feed):
     action_name = 'remix'
-
     def create(self):
         # if self.entity['owner'] == self['initiator']:
         #     raise "You mustn't remix your own expression"
-        if not isinstance(self.entity, Expr): raise "You may only remix newhives"
-        # if self.db.Remix.find({ 'initiator': self['initiator'], 'entity': self['entity'] }): return True
-        new_expr = self.get('new_expr')
-        if new_expr:
-            self['entity_other_id'] = new_expr.id
-            del self['new_expr']
+        assert isinstance(self.entity, Expr), "You may only remix newhives"
+        assert self['entity_other_id'], "Missing id for newly remixed newhive"
         res = super(Remix, self).create()
         return res
-
 
 @register
 class InviteNote(Feed):
     action_name = 'gave invites'
 
-
 @register
 class NewExpr(Feed):
     action_name = 'created'
-
 
 @register
 class UpdatedExpr(Feed):
@@ -2666,7 +2671,6 @@ class UpdatedExpr(Feed):
         super(UpdatedExpr, self).create()
         return self
 
-
 @register
 class FriendJoined(Feed):
     def viewable(self, viewer):
@@ -2677,7 +2681,6 @@ class FriendJoined(Feed):
             'entity': self['entity'] }
         ): return True
         return super(FriendJoined, self).create()
-
 
 @register
 class Referral(Entity):

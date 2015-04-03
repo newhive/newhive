@@ -254,7 +254,7 @@ def lget(l, i, *default):
 def raises(e): raise e
 
 
-def normalize(ws):
+def normalize_words(ws):
     return list( OrderedSet( map(normalize_word, filter(
         lambda s: re.match('\w', s, flags=re.UNICODE),
         re.split('\W', ws, flags=re.UNICODE) ) ) ) )
@@ -262,30 +262,20 @@ def normalize(ws):
 def normalize_word(w):
     return w.lower()[0:40]
         
-def format_tags(s):
-    return re.sub(r'[_\W]','', s, flags = re.UNICODE)
+def normalize_tag(s):
+    alphanums = re.sub(r'[_\W]+','-', s, flags = re.UNICODE)
+    return normalize_word( re.sub(r'(^-+)|(-+$)', '', alphanums) )
 
 def normalize_tags(ws):
-    # TODO-polish: replace non-alphanumeric with '-', don't change order
-    # 1. If 'tags' has comma: separate out quoted strings, split on all commas
-    #    and hash, replace space with nothing
-    # 2. If 'tags' does not have comma: separate out quoted strings, split on
-    #    all spaces and hashes
-    # 3. Afterward: convert to lowercase, remove hashes, replace 
-    #    remove non-alphanumeric chars.
-    l1 = re.findall(r'"(.*?)"',ws,flags=re.UNICODE)
-    ws_no_quotes = re.sub(r'"(.*?)"', '', ws, flags=re.UNICODE)
-    if ',' in ws:
-        l2 = re.split(r'[,#]', ws_no_quotes, flags=re.UNICODE)
-    elif '#' in ws:
-        l2 = re.split(r'[#]', ws_no_quotes, flags=re.UNICODE)
-    else:
-        l2 = re.split(r'[\s]', ws_no_quotes, flags=re.UNICODE)
-
-    return list( set( map( normalize_word, filter(
-        None, map(format_tags, l1+l2) ) ) ) )
+    # 1. Group double quoted strings as single tags
+    # 2. split on remaining spaces and ','s, normalize
+    ws2 =  re.sub(r'"(.*?)"', lambda m: ' '+ normalize_tag(m.group(0)) +' ',
+        ws, flags=re.UNICODE)
+    tags = re.split(r'[,\s]', ws2, flags=re.UNICODE)
+    return filter(None, map(normalize_tag, tags))
 
 def tag_string(tags):
+    return " ".join(tags)
     return " ".join([ "#" + x for x in tags ])
 
 def tagList(row):
@@ -430,6 +420,8 @@ def timer(func):
 
 
 def key_map(original, transformation, filter=False):
+    """ rename FOO keys in original dict that are listed in transformation dict
+    to transformation[FOO], optionally filter any keys not in transformation """
     output = copy.copy(original)
     for old, new in transformation.items():
         if output.has_key(old):
