@@ -1,9 +1,11 @@
-def mq(**d):
-    return Query(d)
+import re
+
+def mq(*d, **keys):
+    return Query(*d, **keys)
 
 class Query(dict):
-    def __init__(self, d):
-        dict.update(self, d)
+    def __init__(self, *d, **keys):
+        dict.update(self, *d, **keys)
         self.where = self.js
 
     def list_filter(self, key, *arg, **args):
