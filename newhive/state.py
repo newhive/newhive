@@ -1449,7 +1449,6 @@ class Expr(HasSocial):
         ,'snapshot_needed'
     ]
     counters = ['owner_views', 'views', 'emails']
-    _owner = None
 
     def create(self):
         assert map(self.has_key, ['owner', 'domain', 'name'])
@@ -1833,17 +1832,32 @@ class Expr(HasSocial):
         else: shared_spec = spec
         return super(Expr, self).related_prev(shared_spec, **kwargs)
 
+    _owner = None
     def get_owner(self):
         if not self._owner:
             self._owner = self.db.User.fetch(self.get('owner'))
         return self._owner
     owner = property(get_owner)
 
+    _remix_parent = False
     def get_remix_parent(self):
+        parent_id = self.get('remix_parent_id')
+        if not parent_id: return False
         if not self._remix_parent:
-            self._remix_parent = self.db.Expr.fetch(self.get('remix_parent_id'))
+            self._remix_parent = self.db.Expr.fetch(parent_id)
         return self._remix_parent
     remix_parent = property(get_remix_parent)
+
+    _remixes = False
+    def get_remixes(self, **paging_args):
+        """retrieve remix children as a list"""
+        if self._remixes == False:
+            self._remixes = list(
+                self.db.Expr.search(mq(remix_parent_id=self.id), **paging_args) )
+        return self._remixes
+    def get_remixes_page1(self):
+        return self.get_remixes(limit=20)
+    remixes = property(get_remixes_page1)
 
     def update_owner(self, old_tags):
         old_tags = set(old_tags)
@@ -2028,8 +2042,22 @@ class Expr(HasSocial):
 
     public = property(lambda self: self.get('auth') == "public")
 
-    def client_view(self, mode='card', viewer=None, special={}, activity=0):
-        """ data for expr card, seen in community pages """
+    def client_view(self, mode='card', viewer=None, activity=0,
+        remix_parent_level=1, remix_child_level=0, special={},
+        _remix_child=None, _remix_parent=None
+    ):
+        """
+        Data for expr card, seen in community pages and used in expr_view
+        for social overlay.
+
+        @mode: if 'page', return data for content frame, otherwise card data
+        @viewer: User object who's making the request
+        @activity: include associated Feed items for loves, comments, etc.
+        @remix_parent_level: levels to recurse when retrieving remix parents
+        TODO-remix_trees: implement @remix_child_level
+        @remix_child_level: levels to recurse when retrieving remix children
+        @special: not used, required for heterogenous maps of type Expr + User
+        """
         if mode == 'page':
             return self.client_view_page()
 
@@ -2037,28 +2065,40 @@ class Expr(HasSocial):
             k, v in self.get('analytics', {}).iteritems() ])
         counts['Views'] = self.views
         counts['Comment'] = self.comment_count
-        expr = dfilter(self, ['name', 'owner_name', 'title', 'feed', 'created',
-            'updated', 'password', 'container', 'remix_value'])
+        expr = dfilter(self, [ 'name', 'owner_name', 'title', 'feed', 'created',
+            'updated', 'password', 'container', 'transfer_value', 'remix_value', 
+            'remix_lineage' ])
         expr['type'] = "expr"
-        dict.update(expr, {
-            'tags': self.get('tags_index'),
-            'id': self.id,
-            'thumb': self.get_thumb(),
-            'owner': self.owner.client_view(viewer=viewer),
-            'counts': counts,
-            'url': self.url,
-            'title': self.get('title'),
-        })
-        if self.get('remix_root'):
-            remix_root = self.db.Expr.fetch(self.get('remix_root'))
-            if remix_root:
-                dict.update(expr, { 'remix_root_owner': remix_root.owner['name'],
-                    'remix_root_tag': 're:' + (remix_root.get('remix_name') 
-                        or remix_root['name']) })
+        expr.update(
+            tags=self.get('tags_index')
+            ,id=self.id
+            ,thumb=self.get_thumb()
+            ,owner=self.owner.client_view(viewer=viewer)
+            ,counts=counts
+            ,url=self.url
+            ,title=self.get('title')
+            ,remix_count=len(self.remixes)
+        )
+
+        if self.remix_parent:
+            expr.update(remix_parent=self.remix_parent.client_view(
+                viewer=viewer
+                ,remix_parent_level=remix_parent_level-1
+                ,remix_child_level=0
+                ,_remix_child=self # don't grab other branches at older levels
+                ) )
+        if self.remixes:
+            # TODO-remix_trees: implement @remix_child_level
+            # expr.update(remixes=[ r.client_view(viewer=viewer,
+            #     remix_level=remix_level-1) for r in self.remixes ])
+            pass
+
         if self.auth != 'public':
             expr.update({'auth': self.auth})
+
         expr['snapshot_big'] = self.snapshot_name("big")
         expr['snapshot_small'] = self.snapshot_name("small")
+
         if viewer and viewer.is_admin:
             dict.update(expr, { 'featured': self.is_featured })
 

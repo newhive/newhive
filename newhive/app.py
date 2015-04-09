@@ -4,7 +4,6 @@ from werkzeug import Request, Response, exceptions, url_unquote
 import jinja2
 from newhive.utils import dfilter
 from newhive import state, config
-from newhive.controllers import Controllers
 from newhive.routes import Routes
 import json, urllib
 from newhive.utils import url_host, now
@@ -60,11 +59,8 @@ def get_api_endpoints(api):
 
 # Create an empty, reference dict so all created controllers will have
 # a reference to all controllers upon creation.
-server_env['controllers'] = {}
-api = Controllers(server_env)
-server_env['controllers'].update(api)
-base_controller = api.get('controller')
-rules = get_api_endpoints(api)
+base_controller = server_env['controllers']['controller']
+rules = get_api_endpoints(server_env['controllers'])
 routes = Map(rules, strict_slashes=False, host_matching=True,
     redirect_defaults=False)
 

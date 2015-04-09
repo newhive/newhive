@@ -272,8 +272,8 @@ define(['browser/js', 'module'],
 		}
 	}
 
-	function get_template(context) {
-		return context[2].template;
+	function get_template(context){
+		return get(context, 'template')
 	}
 	function current_node(context) {
 		return get_template(context).current_node
@@ -333,7 +333,7 @@ define(['browser/js', 'module'],
 			} else
 				result = node.value;
 		} else if(node.type == 'path') {
-			result = resolve(context, node.value, node.absolute, node.up_levels);
+			result = resolve(context, node.value, node.absolute, node.up_levels)
 		} else if(node.type == 'function') {
 			result = render_function(context, node, false);
 		} else if(node.type == 'comment') { 
@@ -360,19 +360,20 @@ define(['browser/js', 'module'],
 			if(!data) data = {};
 			if(!(data instanceof Array))
 				data = [data]
-			data.map( function(d) { d.template = template; } )
+			data[0].template = template
 			var stack = [ context_base, user_context ].concat(data);
-			return resolve(stack, ['after_render'], false, 0)(
-				render_node(stack, ast) );
+			return get(stack, 'after_render')( render_node(stack, ast) );
 		}
 		template.ast = ast;
 		template.render_node = ast;
 		template.template_apply = function(stack){
+			stack[stack.length-1].template = template
 			return render_node(stack, ast);
 		};
 		template.template_name = name
 
-		// add template_apply to context for rendering from within a template
+		// set template name to template_apply in context for rendering a
+		// template from within a template
 		set_reference(user_context, name, template.template_apply);
 
 		return template;
@@ -411,7 +412,8 @@ define(['browser/js', 'module'],
 		}
 		return typeof value == 'undefined' ? '' : value;
 	}
-	o.resolve = resolve;
+	o.resolve = resolve
+	function get(context, name){ return resolve(context, [name], false, 0) }
 
 	function path_to_string(path){
 		return ( // careful with semicolon insertion
@@ -519,18 +521,20 @@ define(['browser/js', 'module'],
 	context_base.wrap = function(context, block, open, close){
 		return open + block(context) + close;
 	};
-	context_base['debug'] = function(context, do_debugger){
-		if(typeof do_debugger == "undefined") do_debugger = true;
+	context_base['debug'] = function(context, do_debugger, show_output){
+		if(typeof do_debugger == "undefined") do_debugger = true
 		// NOTE: LEAVE COMMENTED IN COMMIT!
-		// debugger is a 'reserved keyword' according to cram
-		// if(do_debugger) debugger; //!!
-        //     throw o.render_error('debug break', context,
-		  	   // current_node(context));
-		// possibly add rendering context in invisible div
-		console.error('template debug')
-		return do_debugger ? '' : 
-			'<div>DEBUG inserted</div><div style="display:none">' + '' + '</div>';
-	};
+		// debugger is a 'reserved keyword' according to stupid YUI compressor
+		// so you must manually insert breakpoint here
+		// if(do_debugger) debugger;
+		var temp = get_template(context)
+		console.error('STRINGJAY.debug, ' + temp.template_name + ':'
+			+ temp.current_node.line)
+		return (show_output ? '<div>DEBUG_STRINGJAY<div style="display:none">'
+			+ 'debug info goes here'
+			+ '</div></div>'
+		: '')
+	}
 	context_base.e = encode_to_html;
 	// TODO-cleanup-object: add object builder, that takes key value
 	//   association list this will be used for query parameters and whatnot
