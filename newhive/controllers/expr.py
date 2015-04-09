@@ -215,16 +215,19 @@ class Expr(ModelController):
     def editor_sandbox(self, tdata, request, response, **args):
         return self.serve_page(tdata, response, 'pages/edit_sandbox.html')
 
-    def snapshot(self, tdata, request, response, expr_id, **args):
+    def to_image(self, tdata, request, response, expr_id, **args):
         expr_obj = self.db.Expr.fetch(expr_id)
         if expr_obj.private and tdata.user.id != expr_obj.owner.id:
-            return self.serve_json(response,expr_obj)
+	    return self.serve_404(tdata, request, response, json=True)
 
-        # expr_obj.take_full_shot()
         if expr_obj.threaded_snapshot(full_page = True, time_out = 30):
             return self.redirect(response, expr_obj.snapshot_name('full'))
 
-        return self.serve_404(tdata, request, response)
+        return self.serve_500(tdata, 'timeout')
+
+    def snapshot_redirect(self, tdata, request, response, expr_id, **args):
+        expr_obj = self.db.Expr.fetch(expr_id)
+	
 
     # def fetch_data(self, tdata, request, response, expr_id=None, **args):
     #     expr = self.db.Expr.fetch(expr_id)
