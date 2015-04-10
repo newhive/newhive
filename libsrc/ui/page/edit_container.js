@@ -247,7 +247,9 @@ define([
         }
     }
     o.sandbox_send = function(m){
-        $('#editor')[0].contentWindow.postMessage(m, '*') }
+        m = JSON.parse(JSON.stringify(m)) // work around DataCloneError
+        $('#editor')[0].contentWindow.postMessage(m, '*')
+    }
 
     o.edit_expr = function(){
         // pass context from server to editor
