@@ -2,8 +2,8 @@
 NameVirtualHost *:443
 
 <VirtualHost _default_:443>
-    ServerName tnh.me
-	WSGIScriptAlias / /var/www/newhive/newhive/app.py
+    ServerName dev.tnh.me
+	WSGIScriptAlias / /var/www/newhive.dev/newhive/app.py
 	
 	Alias /lib /var/www/newhive/lib
     <Location /lib>
@@ -26,11 +26,10 @@ NameVirtualHost *:443
 	BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown
 </VirtualHost>
 <VirtualHost _default_:443>
-    ServerName newhive.com
-    ServerAlias *.newhive.com
-    ServerAlias thenewhive.com
-    ServerAlias *.thenewhive.com
-	WSGIScriptAlias / /var/www/newhive/newhive/app.py
+    ServerName dev.newhive.com
+    ServerAlias *.dev.newhive.com
+
+	WSGIScriptAlias / /var/www/newhive.dev/newhive/app.py
 
 	Alias /lib /var/www/newhive/lib
     <Location /lib>

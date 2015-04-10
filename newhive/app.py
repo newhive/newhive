@@ -1,5 +1,8 @@
-import sys, copy
-import re
+import sys, os
+parent_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(parent_path)
+
+import re, copy
 from werkzeug.routing import Map, Rule, RequestRedirect
 from werkzeug import Request, Response, exceptions, url_unquote
 import jinja2
@@ -10,7 +13,6 @@ from newhive.routes import Routes
 import json, urllib
 from newhive.utils import url_host, now
 from newhive.server_session import db, server_env, jinja_env
-from os.path import join
 
 # For stats
 import yappi
@@ -18,6 +20,7 @@ import cProfile
 import pstats
 import io
 from newhive.profiling import don, functools, doflags
+
 
 def make_routing_rules(url_pattern, endpoint, on_main_domain=True, defaults={}):
     rules = []
@@ -165,7 +168,7 @@ def handle(request):
             ps.sort_stats('cumulative')
             ps.print_stats(25)
 
-            ps.dump_stats(join(config.src_home, 'stats'))
+            ps.dump_stats(os.path.join(config.src_home, 'stats'))
             # To view stats graphically, use:
             # alias gprof='gprof2dot.py -f pstats stats | dot -Tpng -o output.png;open output.png'
 

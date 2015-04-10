@@ -1,10 +1,5 @@
-WSGIPythonPath /var/www/newhive/
-
 <VirtualHost *:80>
 	WSGIScriptAlias / /var/www/newhive/newhive/app.py
-    <Directory /var/www/newhive>
-        WSGIScriptReloading On
-    </Directory>
 
     Alias /lib /var/www/newhive/lib
     <Location /lib>
