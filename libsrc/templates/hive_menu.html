@@ -24,7 +24,7 @@
 
     {# Username #}
     {<if flags.mobile}
-      <a { anchor_attrs "expressions_public" "owner_name" user.name }
+      <a { anchor_attrs "expressions_feed" "owner_name" user.name }
         class='menu_item hoverable'>
           {user.name|e}
       </a>
@@ -37,7 +37,7 @@
         </a>
       {>}
     {>}{<else}
-      <a id='activity_btn' { anchor_attrs "expressions_public" "owner_name" user.name }
+      <a id='activity_btn' { anchor_attrs "expressions_feed" "owner_name" user.name }
         class='menu_item hoverable'>
         <div class='icon'></div>
         <div class='count'>0</div>

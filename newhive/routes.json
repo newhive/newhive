@@ -47,71 +47,62 @@
 
     ,"home": {
         "page_route": "/"
-        ,"api_route": "/api/feed/trending/"
+        ,"api_route": "/api/feed/featured/"
         ,"controller": "community"
-        ,"method": "trending"
+        ,"method": "hive_featured"
         ,"client_method": "home"
         ,"custom_classes": "nav"
         ,"require_login": true
     }
     ,"home_cat": {
-        "page_route": "/home/cat/<tag_name>",
-        "api_route": "/api/feed/cat/<tag_name>",
-        "controller": "community",
-        "method": "expressions_tag",
-        "client_method": "cat",
-        "_owner_name": "root",
-        "custom_classes": "nav",
-        "include_categories": true
-    },
-    "home_": {
-        "page_route": "/home/cat",
-        "api_route": "/api/feed/cat",
-        "controller": "community",
-        "method": "expressions_tag",
-        "client_method": "cat",
-        "_owner_name": "root",
-        "custom_classes": "nav",
-        "include_categories": true
-    },
-    "trending": {
-        "page_route": "/<username>/profile/trending",
-        "api_route": "/api/feed/trending/<username>",
-        "controller": "community",
-        "method": "trending",
-        "client_method": "profile",
-        "custom_classes": "nav",
-        "require_login": true
-    },
-    "network": {
-        "page_route": "/<username>/profile/recent",
-        "api_route": "/api/feed/recent/<username>",
-        "controller": "community",
-        "method": "network_recent",
-        "client_method": "grid",
-        "custom_classes": "nav",
-        "max_columns": 2,
-        "require_login": true
-    },
+        "page_route": "/home/cat/<tag_name>"
+        ,"api_route": "/api/feed/cat/<tag_name>"
+        ,"controller": "community"
+        ,"method": "expressions_tag"
+        ,"client_method": "cat"
+        ,"_owner_name": "root"
+        ,"custom_classes": "nav"
+        ,"include_categories": true
+    }
+    ,"home_": {
+        "page_route": "/home/cat"
+        ,"api_route": "/api/feed/cat"
+        ,"controller": "community"
+        ,"method": "expressions_tag"
+        ,"client_method": "cat"
+        ,"_owner_name": "root"
+        ,"custom_classes": "nav"
+        ,"include_categories": true
+    }
+    ,"network": {
+        "page_route": "/<username>:Recent"
+        ,"api_route": "/api/feed/recent/<username>"
+        ,"controller": "community"
+        ,"method": "network_recent"
+        ,"client_method": "grid"
+        ,"custom_classes": "nav"
+        ,"max_columns": 2
+        ,"require_login": true
+    }
 
-    "featured": {
-        "page_route": "/home/featured",
-        "api_route": "/api/feed/featured",
-        "controller": "community",
-        "method": "featured",
-        "client_method": "profile",
-        "custom_classes": "nav",
-        "require_login": true
-    },
-    "recent": {
-        "page_route": "/home/recent",
-        "api_route": "/api/feed/recent",
-        "controller": "community",
-        "method": "recent",
-        "client_method": "grid",
-        "custom_classes": "nav",
-        "max_columns": 2,
-        "require_login": true
+    ,"featured": {
+        "page_route": "/home/featured"
+        ,"api_route": "/api/feed/featured"
+        ,"controller": "community"
+        ,"method": "featured"
+        ,"client_method": "profile"
+        ,"custom_classes": "nav"
+        ,"require_login": true
+    }
+    ,"recent": {
+        "page_route": "/home/recent"
+        ,"api_route": "/api/feed/recent"
+        ,"controller": "community"
+        ,"method": "recent"
+        ,"client_method": "grid"
+        ,"custom_classes": "nav"
+        ,"max_columns": 2
+        ,"require_login": true
     }
     ,"search": {
         "page_route": "/s"
@@ -132,69 +123,51 @@
     ,"//": "-----------------------------------------"
     ,"//": "These routes are (profile) community pages."
 
-    ,"my_profile": {
-        "page_route": "/home/my-profile"
-        ,"api_route": "/api/home/my-profile"
+    ,"my_home": {
+        "page_route": "/home/my"
+        ,"api_route": "/api/user/home"
         ,"controller": "community"
         ,"method": "empty"
     }
     ,"following": {
-        "page_route": "/<owner_name>/profile/following",
-        "api_route": "/api/feed/following/<owner_name>",
+        "page_route": "/<owner_name>:Following",
         "controller": "community",
         "method": "following",
         "client_method": "mini"
     },
     "followers": {
-        "page_route": "/<owner_name>/profile/followers",
+        "page_route": "/<owner_name>:Followers",
         "api_route": "/api/feed/followers/<owner_name>",
         "controller": "community",
         "method": "followers",
         "client_method": "mini"
     },
     "loves": {
-        "page_route": "/<owner_name>/profile/loves",
+        "page_route": "/<owner_name>:Love",
         "api_route": "/api/feed/loves/<owner_name>",
         "controller": "community",
         "method": "loves",
         "client_method": "grid"
-    },
-    "expressions_public": {
-        "page_route": "/<owner_name>/profile",
-        "api_route": "/api/profile/all/<owner_name>",
-        "controller": "community",
-        "method": "expressions_public",
-        "client_method": "profile",
-        "include_tags": true
-    },
-    "expressions_public_grid": {
-        "page_route": "/<owner_name>/profile/grid",
-        "api_route": "/api/profile/tag/<owner_name>",
-        "controller": "community",
-        "method": "expressions_tag",
-        "client_method": "grid",
-        "include_tags": true
-    },
-    "expressions_public_grid_tags": {
-        "page_route": "/<owner_name>/profile/grid/<tag_name>",
-        "api_route": "/api/profile/tag/<owner_name>/<tag_name>",
-        "controller": "community",
-        "method": "expressions_tag",
-        "search_query": "@<owner_name> #<tag_name>",
-        "client_method": "grid",
-        "include_tags": true
-    },
-    "expressions_public_tags": {
-        "page_route": "/<owner_name>/tag",
-        "api_route": "/api/profile/tag/<owner_name>",
-        "controller": "community",
-        "method": "expressions_tag",
-        "client_method": "grid",
-        "include_tags": true
-    },
+    }
 
-    "expressions_tag": {
-        "page_route": "/<owner_name>/tag/<tag_name>"
+    ,"expressions_feed": {
+        "page_route": "/<owner_name>:Feed"
+        ,"api_route": "/api/profile/all/<owner_name>"
+        ,"controller": "community"
+        ,"method": "expressions_feed"
+        ,"client_method": "profile"
+        ,"include_tags": true
+    }
+    ,"expressions_all": {
+        "page_route": "/<owner_name>:All"
+        ,"api_route": "/api/profile/tag/<owner_name>"
+        ,"controller": "community"
+        ,"method": "expressions_tag"
+        ,"client_method": "grid"
+        ,"include_tags": true
+    }
+    ,"expressions_tag": {
+        "page_route": "/<owner_name>:<tag_name>"
         ,"api_route": "/api/profile/tag/<owner_name>/<tag_name>"
         ,"controller": "community"
         ,"method": "expressions_tag"
@@ -203,7 +176,7 @@
         ,"include_tags": true
     }
     ,"expressions_tag_private": {
-        "page_route": "/<owner_name>/tag/<tag_name>/<entropy>"
+        "page_route": "/<owner_name>:<tag_name>/<entropy>"
         ,"api_route": "/api/profile/tag/<owner_name>/<tag_name>/<entropy>"
         ,"controller": "community"
         ,"method": "expressions_tag"
@@ -212,11 +185,11 @@
         ,"include_tags": true
         ,"private": true
     }
-    ,"expressions_private": {
-        "page_route": "/<owner_name>/profile/private"
+    ,"expressions_unlisted": {
+        "page_route": "/<owner_name>:Unlisted"
         ,"api_route": "/api/profile/private/<owner_name>"
         ,"controller": "community"
-        ,"method": "expressions_private"
+        ,"method": "expressions_unlisted"
         ,"client_method": "profile_private"
         ,"include_tags": true
         ,"private": true
@@ -359,7 +332,7 @@
         "precedence": -1
     },
     "user_home": {
-        "//": "redirects to expressions_public (profile) if no home expr",
+        "//": "redirects to expressions_feed (profile) if no home expr",
         "page_route": "/<owner_name>",
         "api_route": "/api/expr/view/<owner_name>",
         "controller": "community",
@@ -530,7 +503,7 @@
     },
     "cron": {
         "page_route": "/home/cron/<path:method_name>",
-        "api_route": "/api/home/cron/<path:method_name>",
+        "api_route": "/api/cron/<path:method_name>",
         "controller": "cron",
         "method": "cron"
     },

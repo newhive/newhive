@@ -25,14 +25,8 @@
           "entropy" (get tag_entropy tag_name) "owner_name" owner.name
           "tag_name" tag_name}
       {>}
-      {<elif (or (eq route_name "expressions_tag")
-        (eq route_name "expressions_public_tags"))
-      }
-        {anchor_attrs "expressions_tag" "owner_name" owner.name
-          "tag_name" tag_name}
-      {>}
       {<else}
-        {anchor_attrs "expressions_public_grid_tags" "owner_name" owner.name
+        {anchor_attrs "expressions_tag" "owner_name" owner.name
           "tag_name" tag_name}
       {>}
     {>}

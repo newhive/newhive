@@ -17,7 +17,7 @@ class Community(Controller):
         if not expr:
             if args.get('route_name') == 'user_home':
                 return self.redirect(tdata.response,
-                    abs_url('/' + owner_name + '/profile'))
+                    abs_url('/' + owner_name + ':Feed'))
             return None
         return self.serve_expr(tdata, expr)
 
@@ -94,7 +94,7 @@ class Community(Controller):
         }
 
     # TODO-cleanup: rename to home / the_hive
-    def trending(self, tdata, username=None, db_args={}, **args):
+    def hive_featured(self, tdata, username=None, db_args={}, **args):
         user = self.db.User.named(username)
         if not user:
             user = tdata.user
@@ -232,7 +232,7 @@ class Community(Controller):
             data.update({"tag_entropy": owner.get('tag_entropy', {}).get(tag_name)})
         return data
 
-    def expressions_public(self, tdata, owner_name=None,
+    def expressions_feed(self, tdata, owner_name=None,
         db_args={}, **args
     ):
         owner = self.db.User.named(owner_name)
@@ -240,7 +240,7 @@ class Community(Controller):
         cards = owner.profile(at=db_args.get('at', 0))
         return self.expressions_for(tdata, cards, owner, **db_args)
 
-    def expressions_private(self, tdata, owner_name=None, db_args={}, **args):
+    def expressions_unlisted(self, tdata, owner_name=None, db_args={}, **args):
         owner = self.db.User.named(owner_name)
         if not owner: return None
         spec = {'owner_name': owner_name}
@@ -516,9 +516,9 @@ class Community(Controller):
 
     def pre_dispatch(self, query, tdata, json=False, **kwargs):
         # TODO-cleanup: remove this, see #redirect-cleanup Handle redirects
-        if kwargs.get('route_name') == 'my_profile':
+        if kwargs.get('route_name') == 'my_home':
             return self.redirect(tdata.response, abs_url(
-                '/' + tdata.user['name'] + '/profile' +
+                '/' + tdata.user['name'] + ':Feed' +
                 Community.parse_query(tdata.request.query_string)))
         # TODO-cleanup: remove once old create_account links aren't being used
         if kwargs.get('route_name') == 'old_signup':

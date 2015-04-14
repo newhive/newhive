@@ -650,14 +650,14 @@ define([
         $('#site').empty().append(settings_template(page_data));
 
         $('#user_settings_form button[name=cancel]').click(function(e) {
-            o.controller.open('expressions_public',
+            o.controller.open('expressions_feed',
                 {owner_name: context.user.name });
             return false;
         });
         $('#user_settings_form').on('success', function(e, data){
             if(data.error) alert(data.error);
             else {
-                o.controller.open('expressions_public',
+                o.controller.open('expressions_feed',
                     {owner_name: context.user.name });
             }
         });
@@ -684,14 +684,14 @@ define([
         });
 
         $('#user_update_form button[name=cancel]').click(function(e) {
-            o.controller.open('expressions_public',
+            o.controller.open('expressions_feed',
                 {owner_name: context.user.name });
             return false;
         });
         $('#user_update_form').on('success', function(e, data){
             if(data.error) alert(data.error);
             else {
-                o.controller.open('expressions_public',
+                o.controller.open('expressions_feed',
                     {owner_name: context.user.name });
             }
         });

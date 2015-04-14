@@ -177,11 +177,11 @@ class Controller(object):
         tdata.response.status_code = status
         return self.serve_json(tdata.response, {'error': error})
 
-    def serve_500(self, tdata, exception_or_msg=None, traceback=None,
+    def serve_500(self, tdata, exception=None, traceback=None,
         status=500, json=True, data={}
     ):
-        if type(exception_or_msg) != Exception:
-            exception = Exception(exception_or_msg)
+        if type(exception) != Exception:
+            exception = Exception(exception)
         if config.debug_mode:
             raise exception, None, traceback
 
