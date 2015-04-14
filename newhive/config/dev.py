@@ -1,10 +1,13 @@
 from config_common import *
 
-snapshot_async = False
+server_name     = 'dev.newhive.com'
+content_domain  = 'dev.tnh.me'
 
 # TODO-dev-security: move credentials into non-version-controlled file
-database_host = 'mongodb://dev:2GlebTyo@dev.newhive.com/test'
+database_host = 'localhost'
 database      = 'test'
+
+snapshot_async = False
 
 aws_id     = 'AKIAJSU3W7EYEO4ZZCNA'
 aws_secret = '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'

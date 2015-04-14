@@ -1,0 +1,20 @@
+NameVirtualHost *:80
+
+<VirtualHost *:80>
+    ServerName dev.newhive.com
+    ServerAlias *.dev.newhive.com
+	WSGIScriptAlias / /var/www/newhive.dev/newhive/app.py
+
+    Alias /lib /var/www/newhive.dev/lib
+    <Location /lib>
+        Header Set Access-Control-Allow-Origin *
+        Header Set Cache-Control "max-age=315360000"
+        AddType application/vnd.ms-fontobject .eot
+        AddType application/x-font-woff .woff
+    </Location>
+</VirtualHost>
+
+<VirtualHost *:80>
+    ServerName dev.tnh.me
+	WSGIScriptAlias / /var/www/newhive.dev/newhive/app.py
+</VirtualHost>

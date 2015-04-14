@@ -22,31 +22,6 @@ def dbs(name):
     conf = __import__('newhive.config.' + name, fromlist=['newhive','config'])
     return state.Database(conf)
 
-# returns cursor with expressions at most %days% old which have > 1 fail count
-def recent_snapshot_fails(days=1):
-    return db.Expr.search( mq().bt('snapshot_fails', 5, 12)
-        .gt('updated', now() - days*86400) )
-
-# resets the fail count of given list or cursor of expressions
-# param{run_local}: if True, take the snapshot in the current thread
-def snapshot_reset(exprs, run_local=False):
-    exprs = list(exprs)
-    if len(exprs) == 0: return
-    if isinstance(exprs[0], basestring):
-        exprs = db.Expr.fetch(exprs)
-    for r in exprs:
-        if run_local:
-            r.take_snapshots()
-        else:
-            r.update(updated=False, snapshot_fails=0)
-
-def snapshot_redo_collection(username='zach', redo=False, collection='brokensnapshots', retry=5):
-    rs = db.Expr.fetch(list(set(db.User.named(username)['tagged'][collection])))
-    for a in range(retry):
-        for r in rs:
-            if redo or r.get('snapshot_time', 0) < r.get('updated'):
-                r.take_snapshots()
-
 def show_sizeof(x, level=0, show_deep=0):
     if (level <= show_deep):
         print "\t" * level, x.__class__, sys.getsizeof(x), x
@@ -59,17 +34,16 @@ def show_sizeof(x, level=0, show_deep=0):
             for xx in x:
                 show_sizeof(xx, level + 1, show_deep)
 
-def recent_exprs(within_secs):
-    return db.Expr.search({'updated': {'$gt': now() - within_secs}})
-
-def new_exprs(within_secs):
-    return db.Expr.search({'created': {'$gt': now() - within_secs}})
-
-def new_exprs_weekly(weeks=20):
-    return new_exprs_periodic(periods=weeks, period=7*86400)
-def new_exprs_periodic(periods=20, period=7*86400):
-    expr_counts = [new_exprs(secs).count() for secs in xrange(0, period*periods, period)]
-    return [expr_counts[i + 1] - expr_counts[i] for i in xrange(periods - 1)]
+def query_created_days_ago(d, q={}):
+    return mq(q).bt('created', now() - 86400 * (d + 1), now() - 86400 * d)
+def count_created_days_ago(collection, d, q={}):
+    return collection.count(query_created_days_ago(d, q))
+def expr_count(*a): return count_created_days_ago(db.Expr, *a)
+def user_count(*a): return count_created_days_ago(db.User, *a)
+def follow_count(d, q={}):
+    q.update(mq(class_name='Star', entity_class='User').ne('entity',
+        '4e0fcd5aba28392572000044')) # exclude default newhive follow
+    return count_created_days_ago(db.Feed, d, q)
 
 def name(entity):
     if type(entity) == list:
@@ -115,25 +89,6 @@ def create_user(name):
     # new = db.User.named(name)
     # nd = db.User.named("newduke")
 
-def ids_from_urls(urls):
-    return map(lambda x:db.Expr.with_url(x).id, urls)
-
-def insert_tagged(user, tag, ids):
-    assert type(ids)==list and type(tag)==str
-
-    if not user.has_key('tagged'):
-        user['tagged'] = {}
-    user['tagged'][tag] = ids
-    user.save(updated=False)
-
-# Get a referall URL from a particular user
-def new_referral_link(from_user_name, to_email='', reuse=1):
-    return str(new_referral(
-        from_user_name=from_user_name, to_email=to_email, reuse=reuse).url)
-def new_referral(from_user_name, to_email='', reuse=1):
-    return db.User.named(from_user_name).new_referral(
-        {'to': to_email, 'reuse': reuse})
-
 # Switch a session's user
 # to_user: name of user to switch to
 # from_user: name of logged in user, or supply session_id    
@@ -150,3 +105,30 @@ def export_csv(data, file_name='newhive_query'):
     wr = csv.writer(f, quoting=csv.QUOTE_ALL)
     for row in data:
         wr.writerow(row)
+
+### BEGIN snapshot_wrangling ###
+# returns cursor with expressions at most %days% old which have > 1 fail count
+def recent_snapshot_fails(days=1):
+    return db.Expr.search( mq().bt('snapshot_fails', 5, 12)
+        .gt('updated', now() - days*86400) )
+
+# resets the fail count of given list or cursor of expressions
+# param{run_local}: if True, take the snapshot in the current thread
+def snapshot_reset(exprs, run_local=False):
+    exprs = list(exprs)
+    if len(exprs) == 0: return
+    if isinstance(exprs[0], basestring):
+        exprs = db.Expr.fetch(exprs)
+    for r in exprs:
+        if run_local:
+            r.take_snapshots()
+        else:
+            r.update(updated=False, snapshot_fails=0)
+
+def snapshot_redo_collection(username='zach', redo=False, collection='brokensnapshots', retry=5):
+    rs = db.Expr.fetch(list(set(db.User.named(username)['tagged'][collection])))
+    for a in range(retry):
+        for r in rs:
+            if redo or r.get('snapshot_time', 0) < r.get('updated'):
+                r.take_snapshots()
+### END snapshot_wrangling ###
