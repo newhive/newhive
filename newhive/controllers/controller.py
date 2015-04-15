@@ -201,7 +201,7 @@ class Controller(object):
         response.status_code = 301 if permanent else 303
         return response
 
-    def empty(self, tdata, **args):
+    def empty(self, tdata, request, response, **args):
         tdata.context.update(page_data={}, route_args=args)
         return self.serve_page(tdata, 'pages/main.html')
     

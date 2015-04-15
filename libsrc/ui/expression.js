@@ -17,7 +17,7 @@ define([
     ,'browser/jquery/rotate.js'
 
     // TODO: pull in dynamically
-    ,'js!outsrc/processing.min.js'
+    //,'js!browser/p5.js'
 ], function(
     $
     ,js

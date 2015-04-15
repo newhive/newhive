@@ -1673,8 +1673,6 @@ Hive.App.Code = function(o){
         find_or_create_button(o, '.run').click(sel.run)
         find_or_create_button(o, '.stop').click(sel.stop)
         if (single && 'js' == o.single().init_state.code_type) {
-            var $edit = find_or_create_button(o, '.edit').click(sel.edit)
-
             // set up modules menu
             var $drawer = $("#controls_misc .drawer.modules").clone()
                 ,$table = $drawer.find("table")
@@ -1696,7 +1694,8 @@ Hive.App.Code = function(o){
                 var $row = $(this).parents("tr")
                 $row.remove()
             })
-            menu($edit, $drawer.appendTo(o.div.find(".buttons")), {
+            var $imports = find_or_create_button(o, '.imports').click(sel.edit)
+            menu($imports, $drawer.appendTo(o.div.find(".buttons")), {
                 // TODO: does this belong in history?
                 open: function() {
                     $drawer.find("tr.data:not(.hide)").remove()
