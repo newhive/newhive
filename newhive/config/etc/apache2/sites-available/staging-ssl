@@ -2,10 +2,10 @@
 NameVirtualHost *:443
 
 <VirtualHost _default_:443>
-    ServerName dev.tnh.me
-	WSGIScriptAlias / /var/www/newhive.dev/newhive/app.py
+    ServerName staging.tnh.me
+	WSGIScriptAlias / /var/www/newhive/newhive/app.py
 	
-	Alias /lib /var/www/newhive.dev/lib
+	Alias /lib /var/www/newhive/lib
     <Location /lib>
         Header Set Access-Control-Allow-Origin *
         Header Set Cache-Control "max-age=315360000"
@@ -26,12 +26,12 @@ NameVirtualHost *:443
 	BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown
 </VirtualHost>
 <VirtualHost _default_:443>
-    ServerName dev.newhive.com
-    ServerAlias *.dev.newhive.com
+    ServerName staging.newhive.com
+    ServerAlias *.staging.newhive.com
 
-	WSGIScriptAlias / /var/www/newhive.dev/newhive/app.py
+	WSGIScriptAlias / /var/www/newhive/newhive/app.py
 
-	Alias /lib /var/www/newhive.dev/lib
+	Alias /lib /var/www/newhive/lib
     <Location /lib>
         Header Set Access-Control-Allow-Origin *
         Header Set Cache-Control "max-age=315360000"
