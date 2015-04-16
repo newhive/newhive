@@ -460,13 +460,6 @@ o.Selection = function(o) {
         old_selection = new_selection;
     };
 
-    // We handle our own history
-    o.history_helper_relative = function(name){
-        var o2 = { name: name };
-        o2.save = function(){};
-        return o2;
-    };
-
     var ref_pos, full_apps = [], pushing_apps, pushing_rel_pos,
         prev_selection, coord_full, full;
     o.set_full = function(app) { full = app; };

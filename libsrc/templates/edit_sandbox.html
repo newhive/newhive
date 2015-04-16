@@ -104,12 +104,20 @@
 
 <div id='menu_embed' class='menu drawer embed'>
   <span class='medbold'>Embed</span><br>
-  <div class='description'>{# TODO: ui.embed_code_description #}</div>
+  <div>
+    <div class='description'>{# TODO: ui.embed_code_description #}</div>
     <textarea id='embed_code' class='embed_box'
       placeholder='Paste in your YouTube / Vimeo URL or embed code here.'>{# #}
     </textarea>
     <div style='text-align : center'><input id='embed_done' type='submit'
       class='black_btn upper embed_button' value='Enter'></div>
+  </div>
+  {<if flags.Editor.dev_options}
+    <br><hr>
+    <div class="menu_item code">Code (js)</div>
+    <div class="menu_item stle">Style (css)</div>
+    <div class="menu_item processing">Processing template</div>
+  {>}
 </div>
 
 <div id='menu_shape' class='menu drawer medbold'
@@ -354,6 +362,22 @@
   <img class='button run' src='{asset "skin/edit/run.png"}'  title='Run'>
   <img class='button stop' src='{asset "skin/edit/stop.png"}'  title='Stop'>
   <img class='button edit' src='{asset "skin/edit/edit.png"}'  title='Edit'>
+  {# live edit #}
+  <img class='button liveedit' src='{asset "skin/edit/liveedit.png"}'  title='Live edits'>
+  <div class="menu drawer hide modules"><table> 
+    <tr class="menu_item">
+      <th>name</th>
+      <th>module</th>
+      <th>compiled module</th>
+      <th><button class="add" title="add module">+</button></th>
+    </tr>
+    <tr class="menu_item template data hide">
+      <td><input type='text' class='name' placeholder='my_module'></input></td>
+      <td><input type='text' class='path' placeholder='code_1'></input></td>
+      <td><input type='text' class='path_view' placeholder='url/compiled.min.js'></td>
+      <td class="centered"><button class="remove" title="remove module">-</button></td>
+    </tr>
+  </table></div>
 
   <img class='button css_classes tip_N'
     src='{asset "skin/edit/css_class.png"}'  title='Change css classes'>

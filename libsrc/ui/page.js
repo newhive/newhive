@@ -70,9 +70,7 @@ define([
     var o = {}, expr_page = false, grid_width, controller,
         border_width = 1,
         render_new_cards_func,
-        done_overlays = false,
-        anim_direction; // 0 = up, +/-1 = right/left
-    const anim_duration = 700;
+        done_overlays = false
 
     o.init = function(controller){
         // (function() {
@@ -81,7 +79,6 @@ define([
         //   var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(li, s);
         // })();
 
-        o.anim_direction = 0;
         o.controller = controller;
         $(window).resize(o.resize);
     };
@@ -535,8 +532,8 @@ define([
         }
         $(".user_action_bar form.follow").unbind('success').on('success', 
             function(event, json) {
-                follow_response($(this), json); 
-        });
+                follow_response($(this), json)
+        })
 
         // Belongs in edit
         $("textarea.about").keypress(function(e) {
@@ -892,24 +889,26 @@ define([
         // Count of cards which fit to even multiple of columns
         var card_count = expr_cards.length - columns;// - (expr_cards.length % columns);
         expr_cards.each(function(i) {
-            var $el = $(this);
+            var $el = $(this)
+                ,border_style = "1px solid #d1d1d1"
             $el.removeAttr('style');
+
             if (o.column_layout) {
                 if (! $el.parent().hasClass("column_0"))
-                    $el.css("border-left", "1px solid black");
+                    $el.css("border-left", border_style);
                 else
                     $el.css("border-left", "none");
                 if (! $el.is(":first-child"))
-                    $el.css("border-top", "1px solid black");
+                    $el.css("border-top", border_style);
                 else
                     $el.css("border-top", "none");
             } else {
                 if (i < card_count)
-                    $el.css("border-bottom", "1px solid black");
+                    $el.css("border-bottom", border_style);
                 else
                     $el.css("border-bottom", "none");
                 if ((i + 1) % columns != 0 && i + 1 < expr_cards.length)
-                    $el.css("border-right", "1px solid black");
+                    $el.css("border-right", border_style);
                 else
                     $el.css("border-right", "none");
             }

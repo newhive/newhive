@@ -1,6 +1,7 @@
 import os, json, cgi, base64, re, time
 from pymongo.errors import DuplicateKeyError
 from functools import partial
+from collections import deque
 import urllib
 
 from newhive.utils import dfilter, now, tag_string, is_number_list, URL, lget
@@ -55,6 +56,7 @@ class Expr(ModelController):
         allowed_attributes = [
             'name', 'url', 'title', 'apps', 'dimensions', 'auth', 'password',
             'tags', 'background', 'thumb', 'images', 'remix_parent_id',
+            'remix_value',
             'container', 'clip_x', 'clip_y', 'layout_coord', 'groups', 'globals'
         ]
         # TODO: fixed expressions, styles, and scripts, need to be done right
@@ -66,24 +68,88 @@ class Expr(ModelController):
         if draft and orig_name:
             res['name'] = upd['name']
 
-        # deal with inline base64 encoded images from Sketch app
-        for app in upd.get('apps',[]):
-            if app['type'] != 'hive.sketch': continue
-            data = base64.decodestring(app.get('content').get('src').split(',',1)[1])
+        # Create data and upload to s3
+        # TODO: proper versioning
+        def module_names(app):
+            """ Returns: comma-separated lists of module names """
+            names = [m.get('name') for m in app.get('modules')]
+            return ",".join([""] + names)
+        def module_modules(app):
+            """ Returns: comma-separated lists of module imports """
+            def path(module):
+                path = module.get('path')
+                for app in upd.get('apps', []):
+                    if path == app.get('id') or path == app.get('name'):
+                        path = app.get('file_id')
+                        if not path:
+                            raise "Not found"
+                        path = 'media/' + path
+                        break
+                return path
+            try:
+                names = ["'" + path(m) + "'" for m in app.get('modules')]
+            except Exception, e:
+                return False
+            return ",".join([""] + names)
+
+        apps = deque(upd.get('apps',[]))
+        while len(apps):
+            # extract files from sketch and code objects
+            app = apps.popleft()
+            ok = True
+            data = None
+            suffix = ""
+            file_id = app.get('file_id')
+            if app['type'] == 'hive.code' and app['code_type'] == 'js':
+                data = app.get('content')
+                modules = module_modules(app)
+                ok = ok and file_id and (modules != False)
+                if ok:
+                    # expand to full module code
+                    data = ("define(['browser/jquery'%s], function($%s"
+                        + ") {\nvar self = {}\n%s\nreturn self\n})"
+                    ) % (modules, module_names(app), data)
+                name = "code"
+                mime = "application/javascript"
+                suffix = ".js"
+            elif app['type'] == 'hive.sketch': 
+                # deal with inline base64 encoded images from Sketch app
+                data = base64.decodestring(app.get('content').get('src').split(',',1)[1])
+                name = 'sketch',
+                mime = 'image/png'
+
+            if not data:
+                continue
+            if not ok:
+                # dependencies not visited
+                apps.append(app)
+
+            # sync files to s3
             f = os.tmpfile()
             f.write(data)
-            file_res = self.db.File.create(dict(
-                owner=tdata.user.id,
-                tmp_file=f,
-                name='sketch',
-                mime='image/png'
-            ))
+            file_res = None
+            # TODO-feature-versioning goes here
+            # If file exists, overwrite it
+            if file_id:
+                file_res = self.db.File.fetch(file_res)
+            if file_res:
+                file_res.update_file(f)
+            else:
+                file_res = self.db.File.create(dict(
+                    owner=tdata.user.id
+                    ,tmp_file=f
+                    ,name=name
+                    ,mime=mime
+                    ,suffix=suffix
+                ))
             f.close()
-            app.update({
-                 'type' : 'hive.image'
-                ,'content' : file_res['url']
-                ,'file_id' : file_res.id
-            })
+            app_upd = {'file_id' : file_res.id}
+            if app['type'] == 'hive.code':
+                app_upd.update({'code_url' : file_res.url })
+            elif app['type'] == 'hive.sketch': 
+                app_upd.update({'type' : 'hive.image'
+                    ,'content' : file_res.url })
+            app.update(app_upd)
 
         def record_expr_save(res):
             self.db.ActionLog.create(tdata.user, "new_expression_save",
@@ -414,6 +480,10 @@ class Expr(ModelController):
                 tag = 'script'
                 if app.get('url'):
                     html = "<script src='%s'></script>" % app.get('url')
+                elif app.get('file_id'):
+                    html = ( "<script>curl(['ui/expression'],function(expr){"
+                        + "expr.load_code_url('%s')" % ('media/' + app.get('file_id'))
+                        + "})</script>" )
                 else:
                     html = ( "<script>curl(['ui/expression'],function(expr){"
                         + "expr.load_code(%s,%s)" % (json.dumps(app.get('content')),

@@ -106,6 +106,7 @@ define([
         if(expr.auth == 'password') 
             expr.password = $('#password').val();
         save_tags_changed()
+        expr.remix_value = parseFloat( $('#remix_value').val() ) * 100
         if($('#use_custom_domain').val())
             expr.url = $('#custom_url').val()
         expr.container = {}
@@ -289,7 +290,7 @@ define([
         // TODO: (why?) communicate tags to sandbox
         // canonicalize tags field.
         $("#save_tags").change(save_tags_changed)
-        $(".remix_label input").change(function(e) {
+        $('#save_remixable').change(function(e) {
             if ($(e.target).prop("checked")) {
                 $("#save_tags").val("#remix " + $("#save_tags").val());
                 save_tags_changed()
@@ -302,7 +303,8 @@ define([
                     save_tags_changed()
                 }
             }
-        });
+        })
+
         // save_dialog.opts.open = Hive.unfocus;
         // save_dialog.opts.close = Hive.focus;
 
@@ -360,7 +362,7 @@ define([
                 $('#password_ui').hidehide();
                 $("#save_submit").text("Publish")
             }
-        });
+        })
 
         $('#use_custom_domain').change(function(){
             var use = $('#use_custom_domain').prop('checked')
@@ -399,14 +401,16 @@ define([
 
     var save_tags_changed = function(){
         var el = $('#save_tags')
-        var tags = el.val().trim();
-        var tag_list = o.tag_list(tags);
+        var tags = el.val().trim()
+        var tag_list = o.tag_list(tags)
         tags = o.canonical_tags(tag_list)
-        $("#save_tags").val(tags);
+        $("#save_tags").val(tags)
         expr.tags_index = o.tag_list(tags)
-        var search_tags = " " + tags.toLowerCase() + " ";
-        $(".remix_label input").prop("checked",
-            search_tags.indexOf(" #remix ") >= 0);
+        var search_tags = " " + tags.toLowerCase() + " "
+        $("#save_remixable").prop("checked",
+            search_tags.indexOf(" #remix ") >= 0)
+        $('#remix_value_box').showhide(
+            $('#save_remixable').prop('checked'))
     }
 
     o.tag_list = function(tags) {
@@ -418,7 +422,7 @@ define([
         return tags
     }
     o.canonical_tags = function(tags_list){
-        const special = ["remixed", "gifwall"]
+        var special = ["remixed", "gifwall"]
 
         // context.flags.modify_special_tags = true; // debug
         tags_list = $.map(tags_list, function(x, i) {
