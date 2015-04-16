@@ -12,6 +12,7 @@ define([
     'browser/layout',
     'ui/page/pages',
     'ui/routing',
+    'moneys/stripe_checkout',
 
     'sj!templates/form_overlay.html',
     'sj!templates/password_reset.html',
@@ -52,6 +53,7 @@ define([
     browser_layout,
     pages,
     routing,
+    StripeCheckout,
 
     form_overlay_template,
     password_template,
@@ -565,14 +567,14 @@ define([
         
         $(document).bind_once("keydown", keydown);
         // var scroll_handler = function(e) {
-        //     if (c.route_name == "edit_expr")
+        //     if (c.route_name == "expr_edit")
         //         return;
         //     $(".overlay.nav").fadeOut("fast");
         //     if (o.scroll_timeout != undefined)
         //         clearTimeout(o.scroll_timeout);
         //     o.scroll_timeout = setTimeout(function() {
         //         o.scroll_timeout = undefined;
-        //         if (c.route_name != "edit_expr")
+        //         if (c.route_name != "expr_edit")
         //             $(".overlay.nav").stop().fadeIn("fast");
         //     }, 100);
         // }
@@ -648,14 +650,14 @@ define([
         $('#site').empty().append(settings_template(page_data));
 
         $('#user_settings_form button[name=cancel]').click(function(e) {
-            o.controller.open('expressions_public',
+            o.controller.open('expressions_feed',
                 {owner_name: context.user.name });
             return false;
         });
         $('#user_settings_form').on('success', function(e, data){
             if(data.error) alert(data.error);
             else {
-                o.controller.open('expressions_public',
+                o.controller.open('expressions_feed',
                     {owner_name: context.user.name });
             }
         });
@@ -682,14 +684,14 @@ define([
         });
 
         $('#user_update_form button[name=cancel]').click(function(e) {
-            o.controller.open('expressions_public',
+            o.controller.open('expressions_feed',
                 {owner_name: context.user.name });
             return false;
         });
         $('#user_update_form').on('success', function(e, data){
             if(data.error) alert(data.error);
             else {
-                o.controller.open('expressions_public',
+                o.controller.open('expressions_feed',
                     {owner_name: context.user.name });
             }
         });

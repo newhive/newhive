@@ -15,8 +15,9 @@
       </form>
     {>}
     {# timestamp. should add to other types? #}
-    <a class="byline" {anchor_attrs "expressions_public" "owner_name" initiator_name}
-      class='ellipsis'>by &nbsp;<span class='username'>{initiator_name}</span></a>
+    <a class="byline" class='ellipsis'
+      {anchor_attrs "expressions_feed" "owner_name" initiator_name}
+    >by &nbsp;<span class='username'>{initiator_name}</span></a>
     <div class="timestamp rightalign">{recency_time updated}</div>
   </div>
 </div>

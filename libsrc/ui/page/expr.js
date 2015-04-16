@@ -279,7 +279,7 @@ define([
                 };
             }
             else {
-                var route_args = { route_name: 'expressions_public'
+                var route_args = { route_name: 'expressions_feed'
                     ,owner_name: page_data.expr.owner.name }
                 o.controller.get(route_args.route_name, route_args, set_cards)
                 context.page_data.cards_route = { route_args: route_args }
@@ -771,7 +771,7 @@ define([
 
         $('#dia_delete_ok').each(function(i, e){
             $(e).data('dialog').opts.handler = function(e, data){
-                o.controller.open('expressions_public',
+                o.controller.open('expressions_feed',
                     {'owner_name': context.user.name });
             }
         });

@@ -51,6 +51,36 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
         font-size: 28px;
         margin: 0;
     }
+
+    .the_close_btn {
+        position: absolute;
+        width: 20px; height: 20px;
+        right: -22px; top: -22px;
+        border-radius: 20px;
+        border: solid white 10px;
+        box-shadow: 5px 5px 5px #666666;
+        background-color: white;
+        &:hover {
+            background-color: black;
+            border-color: black;
+            .corner { visibility: hidden; }
+            .icon {
+                background-image: asset_url("skin/nav/delete-hover.png")
+            }
+        }
+        * { position: absolute; }
+        .corner {
+            width: 24px; height: 24px;
+            right: 12px; top: 12px;
+            background-color: white;
+        }
+        .icon {
+            width: 20px; height: 20px;
+            background-image: asset_url("skin/nav/delete.png");
+            background-position: -11px -11px;
+        }
+    }
+
     .success_show {
         height: 180px;
         color: black;
@@ -100,12 +130,6 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
         button[type=cancel] { float: left; }
     }   
 }
-
-.btn_dialog_close, #btn_dialog_close {
-    position: absolute; width: 20px; height: 20px; background-image: asset_url("skin/1/close.png");
-    right:10px; top:5px; z-index : 100; 
-}
-.btn_dialog_close:hover, #btn_dialog_close:hover {background-image: asset_url("skin/1/close-hover.png")}
 
 #dia_rename_expr {
     width: 25em;
@@ -305,145 +329,6 @@ form.login {
     input[type=password] { width: 100%; }
 }
 
-// #dia_facebook_connect {
-//     width: 860px;
-//     .list { font-weight: bold; }
-//     .smallprint {
-//         color: $color_grey_medium;
-//         font-size: 15px;
-//         margin: 20px 0 0 0;
-//     }
-// }
-
-// #dia_facebook_listen {
-//     padding: 20px 10px 20px 20px;
-//     width: auto;
-//     h1 {
-//         display: inline;
-//         font-size: 35px;
-//         font-family: $header_font;
-//         margin-bottom: 15px;
-//     }
-//     img.thumb {
-//         width: 50px;
-//         height: 50px;
-//         &.tnh { display: none; }
-//     }
-//     .friends {
-//         width: 671px;
-//         max-height: 400px;
-//         overflow: auto;
-//     }
-//     .friend {
-//         width: 300px;
-//         padding: 7px;
-//         padding-left: 0;
-//         border: none;
-//         float: left;
-//         margin-right: 20px;
-//         font-size: 16px;
-//         img { 
-//             vertical-align: middle; 
-//             margin-right: 5px;
-//         }
-//     }
-//     .names {
-//         display: inline-block;
-//         vertical-align: middle;
-//         font-weight: bold;
-//         overflow: hidden;
-//         text-overflow: ellipsis;
-//         white-space: nowrap;
-//         width: 193px;
-//     }
-//     .facebook_name {
-//         font-size: 19px;
-//         margin-bottom: 3px;
-//     }
-//     .username {
-//         font-size: 12px;
-//     }
-//     .invite_fb_link {
-//         float: left;
-//         font-weight: bold;
-//         padding-right: 8px;
-//         margin-right: 25px;
-//         cursor: pointer;
-//         img { vertical-align: middle; }
-//         &:hover { 
-//             color: white;
-//             background-color: $color_facebook; 
-//         } 
-//     }
-//     .line2 {
-//         margin-bottom: 22px;
-//         overflow: auto;
-//     }
-//     #listen_to_all {
-//         font-size: 17px;
-//         margin: 0 55px 0 0;
-//         float: right;
-//         background-color: $color_active;
-//         color: white;
-//         &:hover, &.disabled {
-//             background-color: $color_blue;
-//             color: white;
-//         }
-//     }
-
-//     .listen {
-//         width: 37px;
-//         height: 31px;
-//         margin: 10px 0;
-//         float: right;
-//         background: asset_url("skin/1/people_small.png");
-//         @include border-radius(3px);
-//         &:hover {
-//           background: $color_active asset_url("skin/1/people_small-hover.png");
-//         }
-//         &.active {
-//           background: asset_url("skin/1/people_small_active.png");
-//           &:hover {
-//             background: $color_active asset_url("skin/1/people_small_active-hover.png");
-//           }
-//         }
-//     }
-// }
-
-// #dia_fb_connect_landing {
-//   .line { 
-//       clear: both;
-//       @include clearfix;
-//       margin-top: 10px;
-//   }
-//   .button, .fb_icon { float: left; }
-//   .fb_icon { width: 50px; height: 50px; }
-//   $button_width: 280px;
-//   .button_wrapper { width: $button_width; }
-//   .button {
-//       $padding: 15px;
-//       padding: $padding;
-//       margin-left: 5px;
-//       width: $button_width - 56px - 2 * $padding; 
-//       height: 51px - 2*$padding; 
-//       text-align: left;
-//       font-weight: bold;
-//       font-size: 18px;
-//       background-color: $color_facebook;
-//       color: white;
-//       cursor: default;
-//   }
-//   .button_wrapper:hover .button {
-//       background-color: $color_highlight;
-//       color: $color_active;
-//   }
-//   p { margin-bottom: 27px; }
-// }
-
-// #dia_fb_account_duplicate {
-//     width: 640px;
-// }
-
 #dia_save {
     font-family: Gibson;
     font-size: 17px;
@@ -492,6 +377,8 @@ form.login {
     #privacy {
         padding-right: 7px;
     }
+    #menu_privacy .selected { display : none; }
+
     #save_submit {
         clear: both;
         float: right;
@@ -511,7 +398,14 @@ form.login {
         }
     }
 }
-#menu_privacy .selected { display : none; }
+
+#dia_add_funds {
+    .amount_box {
+        font-size: 2em;
+        margin: .5em;
+        input { font-size: inherit; }
+    }
+}
 
 .dialog.add_to_collection {
     .title { margin-bottom: 10px; }

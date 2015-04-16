@@ -4,12 +4,14 @@ from collections import namedtuple
 from newhive import auth, config, utils
 from newhive.utils import abs_url, log_error, dfilter
 from copy import deepcopy
-import re
+import re, sys
 
 class TransactionData(utils.FixedAttrs):
     """ One of these is associated with each request cycle to put stuff in
         (that Werkzeug's Request or Response objects don't already handle) """
-    pass
+    def __new__(klass, request=None, response=Response(), user=None, context={}):
+        return super(TransactionData, klass).__new__(klass, request=request,
+            response=response, user=user, context=context)
 
 class Controller(object):
     def __init__(self, db=None, jinja_env=None, assets=None, config=None,
@@ -22,23 +24,46 @@ class Controller(object):
         self.asset = self.assets.url
         self.controllers = controllers
 
-    def pre_dispatch(self, func, tdata, request, response, **args):
+    def pre_dispatch(self, func, tdata, **args):
         return False
 
     # Dispatch calls into controller methods of the form:
     # def method(self, tdata, request, response, **args):
     def dispatch(self, handler, request, **args):
-        (tdata, response) = self.pre_process(request)
+        tdata = self.pre_process(request)
         # Redirect to home if route requires login but user not logged in
         if (args.get('require_login') and not tdata.user.logged_in and
             args['route_name'] != 'home'):
-            return self.redirect(response, "/")
+            return self.redirect(tdata.response, "/")
 
-        res = self.pre_dispatch(getattr(self, handler, None), tdata,
-            request, response, **args)
-        if res:
-            return res
-        return getattr(self, handler, None)(tdata, request, response, **args)
+        try:
+            res = self.pre_dispatch(getattr(self, handler, None), tdata, **args)
+            if res:
+                return res
+            return getattr(self, handler, None)(tdata, request, tdata.response,
+                **args)
+        except:
+            (blah, exception, traceback) = sys.exc_info()
+            return self.serve_500(tdata, exception=exception,
+                traceback=traceback, json=args.get('json', False))
+
+    def new_transaction(self, request):
+        anon = self.db.User.new({})
+        response = Response()
+        context = dict(
+            user=anon, config=config, debug=config.debug_mode,
+            # Werkzeug form data is an immutable dict, so it must be copied
+            # so fields may be normalized for filling templates in response
+            form=dict(request.form.items()),
+            error={},
+            query=request.args,
+            # not using request.url because its query string is unescaped
+            url=request.base_url + '?' + request.query_string,
+            is_secure=request.is_secure,
+            referer=request.headers.get('referer')
+        )
+        return TransactionData(user=anon, request=request, response=response,
+            context=context)
 
     def pre_process(self, request):
         """ Do necessary stuffs for every request, specifically:
@@ -46,20 +71,8 @@ class Controller(object):
                 * Authenticate request, and if given credentials, set auth cookies
             returns (TransactionData, Response) tuple """
 
-        response = Response()
-        anon = self.db.User.new({})
-        tdata = TransactionData(user=anon, request=request, context=dict(
-            user=anon, config=config, debug=config.debug_mode,
-            # Werkzeug provides form data as immutable dict, so it must be copied
-            # fields may be left alone to mirror the request, or validated and normalized
-            form=dict(request.form.items()), error={},
-            query=request.args,
-            # not using request.url because its query string is unescaped
-            url=request.base_url + '?' + request.query_string,
-            is_secure=request.is_secure, referer=request.headers.get('referer')
-        ))
-
-        authed = auth.authenticate_request(self.db, request, response)
+        tdata = self.new_transaction(request)
+        authed = auth.authenticate_request(self.db, request, tdata.response)
         if type(authed) == self.db.User.entity:
             tdata.user = tdata.context['user'] = authed
         elif isinstance(authed, Exception):
@@ -125,13 +138,9 @@ class Controller(object):
         tdata.context.update(flags=user_flags)
         self.flags = user_flags
 
-        return (tdata, response)
+        return tdata
 
-    def empty(self, tdata, request, response, **args):
-        tdata.context.update(page_data={}, route_args=args)
-        return self.serve_loader_page('pages/main.html', tdata, request, response)
-    
-    def render_template(self, tdata, response, template):
+    def render_template(self, tdata, template):
         context = tdata.context
         context.update(template=template)
         context.setdefault('icon', self.asset('skin/1/logo.png'))
@@ -145,51 +154,57 @@ class Controller(object):
     def serve_html(self, response, html):
         return self.serve_data(response, 'text/html; charset=utf-8', html)
 
-    def serve_page(self, tdata, response, template):
-        return self.serve_html(response, self.render_template(tdata, response, template))
-
     def serve_json(self, response, val, as_text = False):
         """ as_text is used when content is received in an <iframe> by the client """
-        return self.serve_data(response, 'text/plain' if as_text else 'application/json', json.dumps(val))
+        return self.serve_data(response,
+            'text/plain' if as_text else 'application/json', json.dumps(val))
         
-    def serve_loader_page(self, template, tdata, request, response):
-        return self.serve_html(response, self.render_template(tdata, response, template))
+    def serve_page(self, tdata, template):
+        return self.serve_html(tdata.response,
+            self.render_template(tdata, template))
 
-    def serve_404(self, tdata, request, response, json=True):
+    def serve_404(self, tdata, error='missing', json=True):
         if config.debug_mode:
             print "404"
             print json
             raise Exception("404", json)
-        response.status_code = 404
-        if json: return self.serve_json(response, {'error': 404 })
-        else: return self.serve_page(tdata, response, 'pages/notfound.html')
+        tdata.response.status_code = 404
+        if json: return self.serve_json(tdata.response, {'error': error })
+        else: return self.serve_page(tdata, 'pages/notfound.html')
 
-    def serve_forbidden(self, tdata, request, response, json=True, status=403):
-        response = Response()
-        response.status_code = status
-        return self.serve_json(response, {'error': status})
+    def serve_forbidden(self, tdata, error='forbidden', json=True, status=403):
+        tdata.response = Response()
+        tdata.response.status_code = status
+        return self.serve_json(tdata.response, {'error': error})
 
-    def serve_500(self, request, response, exception=None, traceback=None,
-        status=500, json=True
+    def serve_500(self, tdata, exception=None, traceback=None,
+        status=500, json=True, data={}
     ):
+        if type(exception) != Exception:
+            exception = Exception(exception)
         if config.debug_mode:
             raise exception, None, traceback
 
-        log_error(self.db, message=exception, request=request,
-            traceback=traceback, critical=True)
+        log_error(self.db, message=exception, request=tdata.request, traceback=traceback,
+            critical=True)
 
-        response.status_code = status
+        tdata.response.status_code = status
         if json:
-            return self.serve_json(response, {'error': status })
+            resp = dict(error=exception.message)
+            resp.update(data)
+            return self.serve_json(tdata.response, resp)
         else:
-            tdata = TransactionData(user=self.db.User.new({}), context={})
-            return self.serve_page(tdata, response, 'pages/exception.html')
+            return self.serve_page(tdata, tdata.response, 'pages/exception.html')
 
     def redirect(self, response, location, permanent=False):
         response.location = str(location)
         response.status_code = 301 if permanent else 303
         return response
 
+    def empty(self, tdata, request, response, **args):
+        tdata.context.update(page_data={}, route_args=args)
+        return self.serve_page(tdata, 'pages/main.html')
+    
 
 class ModelController(Controller):
     """ Base class for all controllers tied to one of our DB collections """
@@ -208,8 +223,8 @@ class ModelController(Controller):
     def fetch(self, tdata, request, response, id=None):
         """ Fetch a record from any newhive.state model """
         data = self.model.fetch(id)
-        if data is None: self.serve_404(tdata, request, response)
-        return self.serve_json(response, data)
+        if data is None: self.serve_404(tdata)
+        return self.serve_json(tdata.response, data)
 
 def auth_required(controller_method):
     def decorated(self, tdata, *args, **kwargs):

@@ -372,10 +372,10 @@ define([
         if (context.route.include_categories)
             page_data.extra_tags = 
                 page_data.tag_list.slice(page_data.ordered_count);
-        else if (0 <= $.inArray(context.route_name,
-                ["expressions_public_tags","expressions_private",
-                "expressions_tag", "expressions_tag_private"])
-        ) {
+        else if(0 <= $.inArray(context.route_name,
+            ['expressions_all', 'expressions_unlisted',
+                'expressions_tag', 'expressions_tag_private'])
+        ){
             page_data.extra_tags = 
                 page_data.tag_list.slice(page_data.ordered_count);
         }

@@ -3,10 +3,10 @@
 #}
 {<if brief}
   <div class="owner profile brief">
-    <a {anchor_attrs "expressions_public" "owner_name" name}>
+    <a {anchor_attrs "expressions_feed" "owner_name" name}>
       <img src='{thumb_small}' class='thumb'></a>
     {|templates/user_actions.html}
-    <a {anchor_attrs "expressions_public" "owner_name" name}
+    <a {anchor_attrs "expressions_feed" "owner_name" name}
       class='ellipsis'>by &nbsp;<span class='username'>{owner.name}</span></a>
   </div>
 {>}{<else}
@@ -14,15 +14,16 @@
     {<if profile_bg}<div class='background'><img src='{profile_bg}'></div>{>}
     <div class='profile'>
       {<if (not flags.mobile)}
-        <a {anchor_attrs "expressions_public" "owner_name" name}><img src='{thumb_big}' class='thumb'></a>
+        <a {anchor_attrs "expressions_feed" "owner_name" name}><img src='{thumb_big}' class='thumb'></a>
       {>}
       <div class='info'>
         <div class='title_bar'>
           {|templates/user_actions.html}
           {<if flags.mobile}
-            <a {anchor_attrs "expressions_public" "owner_name" name}><img src='{thumb_big}' class='thumb'></a>
+            <a {anchor_attrs "expressions_feed" "owner_name" name}
+              ><img src='{thumb_big}' class='thumb'></a>
           {>}
-          <a {anchor_attrs "expressions_public" "owner_name" name}>
+          <a {anchor_attrs "expressions_feed" "owner_name" name}>
             <div class='title ellipsis fullname'>{fullname|e}</div></a>
         </div>
         {# <div class='subheading text'>{subheading}</div> #}
@@ -30,9 +31,9 @@
         <div class='nav_bar'>
           {# expressions public, count #}
           <a class='nav_button inline exprs' 
-            {# {<if route_name "expressions_public_grid"} on{>} #}
+            {# {<if route_name "expressions_all"} on{>} #}
             title="Newhive grid"
-            { anchor_attrs "expressions_public_grid" "owner_name" owner.name 
+            { anchor_attrs "expressions_all" "owner_name" owner.name 
               "tag_name" ""}>
             <img class="exprs" src='{asset "skin/nav/newhives.png"}'/> 
             {<if expressions}{thousands expressions}{>}</a
@@ -54,13 +55,14 @@
             {# tags #}
             <a class='nav_button inline tags' title="Collections"
                 {<if (or (eq route_name "expressions_tag_private")
-                         (eq route_name "expressions_public_grid_tags"))}
+                         (eq route_name "expressions_tag"))}
                   { anchor_attrs "expressions_tag" "owner_name" owner.name 
                   "tag_name" tag_selected}>
                 {>}{<else}
-                  { anchor_attrs "expressions_public_tags" "owner_name" owner.name }>
+                  { anchor_attrs "expressions_all" "owner_name" owner.name }>
                 {>}
-              <div class="tags icon{<if (or (eq route_name "expressions_public_tags")
+              <div class="tags icon{<if (or
+                (eq route_name "expressions_all")
                 (eq route_name "expressions_tag"))} on{>}"></div></a
             ><div class='spacer inline'></div>
           {>}
@@ -82,15 +84,14 @@
             ><div class='spacer inline'></div>
             {# private (logged in only) #}
             <a class='nav_button inline private' title="Private newhives"
-              {<if (or (eq route_name "expressions_tag")
-                       (eq route_name "expressions_public_grid_tags"))}
-                { anchor_attrs "expressions_tag_private" "owner_name" user.name 
-                "tag_name" tag_selected "entropy" tag_entropy }>
+              {<if (eq route_name "expressions_tag")}
+                { anchor_attrs "expressions_tag_private" "owner_name"
+                  user.name "tag_name" tag_selected "entropy" tag_entropy }>
               {>}{<else}
-                { anchor_attrs "expressions_private" "owner_name" user.name }>
+                { anchor_attrs "expressions_unlisted" "owner_name" user.name }>
               {>}
               <div class='private icon
-                {<if (or (eq route_name "expressions_private")
+                {<if (or (eq route_name "expressions_unlisted")
                     (eq route_name "expressions_tag_private"))} on{>}'></div></a
           {>}
           {# + to category #}

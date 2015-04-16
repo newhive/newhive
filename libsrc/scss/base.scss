@@ -106,6 +106,9 @@ body.transition_test {
         @include transition(all, $anim_time);
     }
     // handled with JS
+    // .overlay, .overlay > *:not(.drawer) {
+    //     @include transition(all, $anim_time);
+    // }
     .overlay, .overlay > *:not(.drawer), .overlay .handle {
         @include transition(background-color, $anim_time);
     }
@@ -267,10 +270,10 @@ img.centered, div.centered {
 }
 
 // Icons
-$icon_class:   logo  plus-minus love       comment       republish       share    views    facebook twitter play     pause;
-$icon_name:    logo  close      love-lg    comment-lg    republish-lg    share-lg views-lg facebook twitter play     pause;
-$icon_name_on: logo  close      love-lg-on comment-lg-on republish-lg-on share-lg views-lg facebook twitter play     pause;
-$panel_hover:  false false      false      false         false           false    false    true     true    true     true;
+$icon_class:   logo  plus-minus love       comment       republish    share views    facebook twitter play     pause;
+$icon_name:    logo  close      love-lg    comment-lg    republish    share views-lg facebook twitter play     pause;
+$icon_name_on: logo  close      love-lg-on comment-lg-on republish-on share views-lg facebook twitter play     pause;
+$panel_hover:  false false      false      false         false        false false    true     true    true     true;
 
 @for $nth from 1 through length($icon_class) {
     $class_name: nth($icon_class, $nth);
@@ -352,7 +355,7 @@ $panel_hover:  false false      false      false         false           false  
     }
     // BUGBUG
     .icon.share {
-        &:hover { background-image: asset_url('skin/nav/share-lg.png'); }
+        &:hover { background-image: asset_url('skin/nav/share.png'); }
     }
     &.plus-minus {
         position: fixed;

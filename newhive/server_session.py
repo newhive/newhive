@@ -9,6 +9,7 @@ from newhive.assets import HiveAssets
 from newhive import state, config
 from newhive.extra_json import extra_json
 from newhive.colors import colors
+from newhive.controllers import Controllers
 
 hive_assets = HiveAssets()
 hive_assets.bundle()
@@ -29,8 +30,12 @@ server_env = {
     ,'jinja_env': jinja_env
     ,'assets': hive_assets
     ,'config': config
+    ,'controllers': {}
 }
 
 jinja_env.globals.update({
     'media_bucket': db.s3.bucket_url('media')
 })
+
+controllers = Controllers(server_env)
+server_env['controllers'].update(controllers)

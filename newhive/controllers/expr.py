@@ -4,7 +4,8 @@ from functools import partial
 from collections import deque
 import urllib
 
-from newhive.utils import dfilter, now, tag_string, is_number_list, URL, lget
+from newhive.utils import (dfilter, now, tag_string, is_number_list, URL, lget,
+    abs_url)
 from newhive.controllers.controller import ModelController
 
 def anchor_tag(link, name, xlink=False):
@@ -16,30 +17,74 @@ def anchor_tag(link, name, xlink=False):
 class Expr(ModelController):
     model_name = 'Expr'
 
-    def delete(self, tdata, request, response, **args):
-        resp = {}
-        expr_id = request.form.get("expr_id")
+    def fetch_naked(self, tdata, request, response, expr_id=None,
+        owner_name=None, expr_name=None, **args
+    ):
+        # Request must come from content_domain, as this serves untrusted content
+        if expr_id:
+            # hack for overlap of /owner_name and /expr_id routes
+            expr_obj = self.db.Expr.fetch(expr_id) or self.db.Expr.named(expr_id, '')
+        else:
+            expr_obj = self.db.Expr.named(owner_name, expr_name)
+        return self.serve_naked(tdata, request, response, expr_obj)
 
+    def expr_custom_domain(self, tdata, request, response, path='', **args):
+        url = request.host + ('/' if path else '') + path
+        expr = self.db.Expr.find({'url': url})
+        tdata.context['domain'] = request.host
+        return self.serve_naked(tdata, request, response, expr)
+
+    def serve_naked(self, tdata, request, response, expr_obj):
+        if not expr_obj: return self.serve_404(tdata)
+
+        bg = expr_obj.get('background')
+        if bg and bg.get('file_id') and not bg.get('dimensions'):
+            f = self.db.File.fetch(bg.get('file_id'))
+            dimensions = f.get('dimensions')
+            if dimensions:
+                bg['dimensions'] = dimensions
+                expr_obj.update(updated=False, background=bg)
+            else:
+                f.update(resample_time=0)
+        if (expr_obj.get('auth') == 'password'
+            and not expr_obj.cmp_password(request.form.get('password'))
+            and not expr_obj.cmp_password(request.args.get('pw'))):
+            expr_obj = { 'auth': 'password' }
+            expr_client = expr_obj
+        else:
+            expr_client = expr_obj.client_view(mode='page')
+        # TODO: consider allowing analytics for content frame.
+        viewport = [int(x) for x in
+            request.args.get('viewport', '1000x750').split('x')]
+        snapshot_mode = request.args.get('snapshot') is not None
+        tdata.context.update(
+            html = self.expr_to_html(expr_obj, snapshot_mode,
+                viewport=viewport),
+            expr = expr_obj,
+            use_ga = False,
+        )
+
+        body_style = ''
+        if snapshot_mode:
+            body_style = 'overflow: hidden;'
+        if expr_obj.get('clip_x'):
+            body_style = 'overflow-x: hidden;'
+        if expr_obj.get('clip_y'):
+            body_style += 'overflow-y: hidden;'
+        if body_style:
+            tdata.context['css'] = 'body {' + body_style + '}'
+
+        tdata.context.update(expr=expr_obj, expr_client=expr_client)
+        return self.serve_page(tdata, 'pages/expr.html')
+
+    def embed(self, tdata, request, response, expr_id=None, **args):
         expr = self.db.Expr.fetch(expr_id)
-        if not expr:
-            resp = { 'error': 'Newhive not found.' }
-            return self.serve_json(response, resp)
-        
-        expr.delete()
+        if not expr: return self.serve_404(tdata)
+        tdata.context.update(expr=expr, embed=True,
+            content_url=abs_url(domain=self.config.content_domain, 
+                secure=tdata.request.is_secure) + expr.id)
+        return self.serve_page(tdata, 'pages/embed.html')
 
-        return self.serve_json(response, resp)
-
-    def unused_name(self, tdata, request, response, **args):
-        """ Returns an unused newhive name matching the base name provided """
-
-        resp = {}
-        name = request.form.get("name") or request.args.get("name","")
-        owner_id = request.form.get("owner_id") or request.args.get("owner_id", "")
-        owner = self.db.User.fetch(owner_id)
-
-        resp['name'] = self.db.Expr.unused_name(owner, name)
-        return self.serve_json(response, resp)
-    
     def save(self, tdata, request, response, **args):
         """ Parses JSON object from POST variable 'exp' and stores it in database.
             If the name (url) does not match record in database, create a new record."""
@@ -55,8 +100,8 @@ class Expr(ModelController):
         res = self.db.Expr.fetch(expr.id)
         allowed_attributes = [
             'name', 'url', 'title', 'apps', 'dimensions', 'auth', 'password',
-            'tags', 'background', 'thumb', 'images', 'remix_parent_id',
-            'remix_value',
+            'tags', 'background', 'thumb', 'images',
+            'value', 'remix_value', 'remix_value_add',
             'container', 'clip_x', 'clip_y', 'layout_coord', 'groups', 'globals'
         ]
         # TODO: fixed expressions, styles, and scripts, need to be done right
@@ -239,35 +284,6 @@ class Expr(ModelController):
             if "draft" in new_tags: new_tags.remove("draft")
             res.update(tags=tag_string(new_tags))
 
-        # Handle remixed expressions
-        if (res and not autosave and
-            upd.get('remix_parent_id') and not upd.get('remix_root')
-        ):
-            # TODO-remix: handle moving ownership of remix list, especially if original is
-            # made private or deleted.
-            parent_id = upd.get('remix_parent_id')
-            remix_upd = {}
-            remix_expr = self.db.Expr.fetch(parent_id)
-            while parent_id:
-                remix_expr = self.db.Expr.fetch(parent_id)
-                parent_id = remix_expr.get('remix_parent_id')
-            remix_owner = remix_expr.owner
-            if (res.get('auth', '') == 'public' or remix_owner == tdata.user.id):
-                remix_upd['remix_root'] = remix_expr.id
-                remix_expr.setdefault('remix_name', remix_expr['name'])
-                remix_expr.setdefault('remix_root', remix_expr.id)
-                remix_expr.update(updated=False, remix_name=remix_expr['remix_name'],
-                    remix_root=remix_expr['remix_root'])
-                remix_name = 're:' + remix_expr['remix_name']
-                # remix_upd['tags'] += " #remixed" # + remix_name
-                res.update(**remix_upd)
-
-                # include self in remix list
-                remix_owner.setdefault('tagged', {})
-                remix_owner['tagged'].setdefault(remix_name, [remix_expr.id])
-                remix_owner['tagged'][remix_name].append(res.id)
-                remix_owner.update(updated=False, tagged=remix_owner['tagged'])
-
         if( not self.config.snapshot_async
             and ( upd.get('apps') or upd.get('background') )
         ): res.threaded_snapshot(retry=120)
@@ -279,7 +295,30 @@ class Expr(ModelController):
 
     # the whole editor except the save dialog and upload code goes in sandbox
     def editor_sandbox(self, tdata, request, response, **args):
-        return self.serve_page(tdata, response, 'pages/edit_sandbox.html')
+        return self.serve_page(tdata, 'pages/edit_sandbox.html')
+
+    def unused_name(self, tdata, request, response, **args):
+        """ Returns an unused newhive name matching the base name provided """
+        resp = {}
+        name = request.form.get("name") or request.args.get("name","")
+        owner_id = request.form.get("owner_id") or request.args.get("owner_id", "")
+        owner = self.db.User.fetch(owner_id)
+
+        resp['name'] = self.db.Expr.unused_name(owner, name)
+        return self.serve_json(response, resp)
+    
+    def remix(self, tdata, request, response, **args):
+        parent_id = request.form.get('expr_id')
+        parent = self.db.Expr.fetch(parent_id)
+        if not parent:
+            return self.serve_500(tdata, 'missing')
+        if 'remix' not in parent.get('tags_index', []):
+            return self.serve_500(tdata, 'not_remixable')
+        if parent.get('remix_value', 0) > tdata.user.get('moneys_sum', 0):
+            return self.serve_json(tdata.response, dict(error='funds'))
+        remixed = tdata.user.expr_remix(parent)
+        return self.serve_json(tdata.response, dict(remixed=True,
+            expr_id=remixed.id, name=remixed['name']))
 
     def to_image(self, tdata, request, response, expr_id, **args):
         expr_obj = self.db.Expr.fetch(expr_id)
@@ -291,10 +330,22 @@ class Expr(ModelController):
 
         return self.serve_500(tdata, 'timeout')
 
+    def delete(self, tdata, request, response, **args):
+        resp = {}
+        expr_id = request.form.get("expr_id")
+
+        expr = self.db.Expr.fetch(expr_id)
+        if not expr:
+            resp = { 'error': 'Newhive not found.' }
+            return self.serve_json(response, resp)
+        
+        expr.delete()
+
+        return self.serve_json(response, resp)
+
     def snapshot_redirect(self, tdata, request, response, expr_id, **args):
         expr_obj = self.db.Expr.fetch(expr_id)
 	
-
     # def fetch_data(self, tdata, request, response, expr_id=None, **args):
     #     expr = self.db.Expr.fetch(expr_id)
     #     if not expr or (
@@ -313,67 +364,6 @@ class Expr(ModelController):
 
     #     return self.serve_json(response, expr)
 
-    def fetch_naked(self, tdata, request, response, expr_id=None,
-        owner_name=None, expr_name=None, **args
-    ):
-        # Request must come from content_domain, as this serves untrusted content
-        if expr_id:
-            # hack for overlap of /owner_name and /expr_id routes
-            expr_obj = self.db.Expr.fetch(expr_id) or self.db.Expr.named(expr_id, '')
-        else:
-            expr_obj = self.db.Expr.named(owner_name, expr_name)
-        return self.serve_naked(tdata, request, response, expr_obj)
-
-    def expr_custom_domain(self, tdata, request, response, path='', **args):
-        url = request.host + ('/' if path else '') + path
-        expr = self.db.Expr.find({'url': url})
-        tdata.context['domain'] = request.host
-        return self.serve_naked(tdata, request, response, expr)
-
-    def serve_naked(self, tdata, request, response, expr_obj):
-        if not expr_obj:
-            return self.serve_404(tdata, request, response)
-
-        bg = expr_obj.get('background')
-        if bg and bg.get('file_id') and not bg.get('dimensions'):
-            f = self.db.File.fetch(bg.get('file_id'))
-            dimensions = f.get('dimensions')
-            if dimensions:
-                bg['dimensions'] = dimensions
-                expr_obj.update(updated=False, background=bg)
-            else:
-                f.update(resample_time=0)
-        if (expr_obj.get('auth') == 'password'
-            and not expr_obj.cmp_password(request.form.get('password'))
-            and not expr_obj.cmp_password(request.args.get('pw'))):
-            expr_obj = { 'auth': 'password' }
-            expr_client = expr_obj
-        else:
-            expr_client = expr_obj.client_view(mode='page')
-        # TODO: consider allowing analytics for content frame.
-        viewport = [int(x) for x in
-            request.args.get('viewport', '1000x750').split('x')]
-        snapshot_mode = request.args.get('snapshot') is not None
-        tdata.context.update(
-            html = self.expr_to_html(expr_obj, snapshot_mode,
-                viewport=viewport),
-            expr = expr_obj,
-            use_ga = False,
-        )
-
-        body_style = ''
-        if snapshot_mode:
-            body_style = 'overflow: hidden;'
-        if expr_obj.get('clip_x'):
-            body_style = 'overflow-x: hidden;'
-        if expr_obj.get('clip_y'):
-            body_style += 'overflow-y: hidden;'
-        if body_style:
-            tdata.context['css'] = 'body {' + body_style + '}'
-
-        tdata.context.update(expr=expr_obj, expr_client=expr_client)
-        return self.serve_page(tdata, response, 'pages/expr.html')
-        
     def expr_to_html(self, exp, snapshot_mode=False, viewport=(1000, 750)):
         """Converts JSON object representing an expression to HTML"""
         if not exp: return ''
@@ -462,14 +452,14 @@ class Expr(ModelController):
             css = ';'.join([ k+':'+str(v) for k,v in style.items() if 
                 k not in css_not_for_svg])
             html = (
-                  "<svg class='content' xmlns='http://www.w3.org/2000/svg'"
+                  "<svg xmlns='http://www.w3.org/2000/svg'"
                 + " xmlns:xlink='http://www.w3.org/1999/xlink'"
                 + " viewbox='0 0 %f %f" % tuple(dimensions)
                 + "' style='%s'>" % css
                 + "<filter id='%s_blur'" % app_id 
                 + " filterUnits='userSpaceOnUse'><feGaussianBlur stdDeviation='"
                 + "%f'></filter>" % app.get('blur', 0)
-                + "%s<polygon points='" % link_text[0]
+                + "%s<polygon class='content' points='" % link_text[0]
                 + ' '.join(map(lambda p: "%f %f" % (p[0], p[1]), points))
                 + "' style='filter:url(#%s_blur)'/>%s</svg>" % (
                     app_id, link_text[1])
@@ -523,8 +513,7 @@ class Expr(ModelController):
         user = lget(user_and_page, 0)
         page = lget(user_and_page, 1, '')
         r = self.db.Expr.named(user, page)
-        if not r:
-            return self.serve_404(tdata, request, response)
+        if not r: return self.serve_404(tdata)
         if r['auth'] == 'password':
             return self.serve_forbidden(tdata, request, response, status=401)
             type (required)

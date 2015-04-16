@@ -1475,26 +1475,22 @@ Hive.App.Code = function(o){
     }
     o.content = function(){ return o.editor.getValue() }
     o.run_module_func = function(module_func, callback, no_err, onerr) {
-        var curl_func = function() {
-            editor.current_code = o;
-            onerr = onerr || noop
-            curl([o.module_name(no_err)], function(module) {
-                if (!module) {
-                    // console.log("Module load error")
-                    onerr()
-                } else {
-                    if (typeof(module[module_func]) == "function")
-                        module[module_func].apply(null, 
-                            Array.prototype.slice.call(arguments, 0));
-
-                    callback && callback(module);
-                }
-                editor.current_code = null;
-            }, function() {
+        editor.current_code = o;
+        onerr = onerr || noop
+        curl([o.module_name(no_err)], function(module){
+            if (!module) {
+                // console.log("Module load error")
                 onerr()
-            })
-        }
-        curl_func()
+            } else {
+                if (typeof(module[module_func]) == "function")
+                    module[module_func].apply()
+
+                callback && callback(module);
+            }
+            editor.current_code = null;
+        }, function(){
+            onerr()
+        })
     }
 
     o.is_module = function(){
@@ -1615,7 +1611,7 @@ Hive.App.Code = function(o){
         o.ensure_dependencies(o.run_helper)
     }
     var animate_go
-    o.run_helper = function() {
+    o.run_helper = function(){
         // o.stop()
         var running_iter = last_success
         insert_code(function(){
@@ -1673,8 +1669,6 @@ Hive.App.Code = function(o){
         find_or_create_button(o, '.run').click(sel.run)
         find_or_create_button(o, '.stop').click(sel.stop)
         if (single && 'js' == o.single().init_state.code_type) {
-            var $edit = find_or_create_button(o, '.edit').click(sel.edit)
-
             // set up modules menu
             var $drawer = $("#controls_misc .drawer.modules").clone()
                 ,$table = $drawer.find("table")
@@ -1696,7 +1690,8 @@ Hive.App.Code = function(o){
                 var $row = $(this).parents("tr")
                 $row.remove()
             })
-            menu($edit, $drawer.appendTo(o.div.find(".buttons")), {
+            var $imports = find_or_create_button(o, '.imports').click(sel.edit)
+            menu($imports, $drawer.appendTo(o.div.find(".buttons")), {
                 // TODO: does this belong in history?
                 open: function() {
                     $drawer.find("tr.data:not(.hide)").remove()

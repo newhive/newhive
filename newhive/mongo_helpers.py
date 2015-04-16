@@ -13,13 +13,18 @@ class Query(dict):
         return self
 
     def is1(self, key, *l):
+        if isinstance(l[0], list): l = l[0]
         return self.addd(key, '$in', l)
 
     def gt(self, key, val):
         return self.addd(key, '$gt', val)
+    def gte(self, key, val):
+        return self.addd(key, '$gte', val)
 
     def lt(self, key, val):
         return self.addd(key, '$lt', val)
+    def lte(self, key, val):
+        return self.addd(key, '$lte', val)
 
     def bt(self, key, val1, val2):
         self.gt(key, val1)
@@ -39,6 +44,11 @@ class Query(dict):
         self['$where'] = val
         return self
 
+    def re(self, key, regex):
+        return self.add(key, re.compile(regex))
+    def nre(self, key, regex):
+        return self.add(key, { '$not': re.compile(regex) })
+        
     def add(self, key, val):
         self[key] = val
         return self

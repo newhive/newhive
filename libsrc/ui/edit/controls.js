@@ -223,7 +223,6 @@ o.Controls = function(app, multiselect, delegate) {
         ){
             var old_ad1 = ad[1]
             ad[1] = wdims[1] + env.scroll[1] - edit_btns_padding - ap[1]
-            console.log('pushing', old_ad1, 'to', ad[1])
         }
 
         ad = u._max(min_d, ad)

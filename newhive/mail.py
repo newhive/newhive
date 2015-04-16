@@ -17,7 +17,6 @@ import newhive.state
 from newhive.config import abs_url
 from newhive.utils import AbsUrl
 from newhive import config, utils
-from newhive.server_session import db, server_env, jinja_env, hive_assets
 import newhive.ui_strings.en as ui
 from newhive.analytics import analytics
 from newhive.manage.ec2 import public_hostname

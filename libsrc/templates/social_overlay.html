@@ -140,24 +140,27 @@
     {>}</div>
     {# discussion input #}
     <div id="discussions">
-     <form {form_attrs "comment_create"} id='comment_form' action='/api/comment/create' method='POST'>
+      <form {form_attrs "comment_create"} method='POST' id='comment_form'>
         <textarea name='text' placeholder=
           {<if user.logged_in}'Join the conversation.'
           {>}{<else}'Log in to comment...' class="needs_login"
           {>} rows='4'></textarea>
-        <div class="rightify">{<if user.logged_in}<input type='submit' value='Enter' class='submit upper hoverable teal_btn'>{>}</div>
+        <div class="rightify">{<if user.logged_in}<input type='submit'
+          value='Enter' class='submit upper hoverable teal_btn'>{>}</div>
         <input type='hidden' name='action' value='comment'>
         <input type='hidden' name='entity' value='{id}'>
       </form>
-    </div>  
+    </div>
+  </div>
  
   {# password dialog for protected expressions #}
-  <div class='dialog' id='dia_expr_password'>
+  <div class='dialog hide' id='dia_expr_password'>
     <h1>This newhive needs a password to be experienced:</h1>
     <div class='error hide'>Password is incorrect</div>
     <form {form_attrs "view_expr"
-      "expr_name" name "owner_name" owner.name "secure" true
-    } method='post' class='site'>
+        "expr_name" name "owner_name" owner.name "secure" true
+      } method='post' class='site'
+    >
       <input type='password' placeholder='Enter password' autofocus
         name='password' class='password'>
       <div class='btns'><input type='submit' value='ENTER' class='submit teal_btn'></div>
@@ -165,6 +168,13 @@
     <form action='{config.secure_content_url}{id}' method='POST' class='content'
       class='expr_password_form'><input type='hidden' name='password'
       class='password'></form>
-  </div> </div>
+  </div>
+
+  <div class='dialog center hide' id='dia_add_funds'>
+    <h1>Add funds to your NewHive account to remix and acquire newhives!</h1>
+    <div class='amount_box'>$ <input type='text' name='funds' value='0.00'
+      size='3' class='amount'></div>
+    <input type='submit' value='Pay with card' class='submit upper teal_btn'>
+  </div>
 {>}
 {set "lazy_loading" 0}
