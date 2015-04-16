@@ -200,8 +200,23 @@ Hive.init_menus = function() {
         open: function(){ $('#embed_code').get(0).focus() },
         layout_x: 'center' });
     $('#embed_done').click(function() { Hive.embed_code('#embed_code'); embed_menu.close(); });
-    $('#menu_embed .code').click(function() { Hive._embed_code('<script>'); embed_menu.close(); });
-    $('#menu_embed .style').click(function() { Hive._embed_code('<style>'); embed_menu.close(); });
+    var js_module = "self.run = function(){"
+        + "\n  console.log('hello NewHive')"
+        + "\n}"
+        + "\nself.stop = function(){"
+        + "\n  // unload event handlers, clean up"
+        + "\n}"
+        + "\n// self.animate = function(){"
+        + "\n// }"
+    $('#menu_embed .code').click(function() {
+        embed_menu.close()
+        hive_app.new_app({ type: 'hive.code', content: js_module,
+            code_type: 'js', position: [50,50], dimensions: [450, 480] })
+    })
+    $('#menu_embed .style').click(function(){
+        embed_menu.close()
+        Hive._embed_code('<style>')
+    })
     // TODO: implement by using a local template, just duplicate it and add.
     var p5_code = "var p5"
         + "\n"
