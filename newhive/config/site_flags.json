@@ -37,6 +37,9 @@
     },"Features/lazy_loading": {
         "description":"Lazy load various client images, sometimes fetching lower res images first"
         , "values":["admins", "devs"]
+    },"Features/remix_value": {
+        "description":"Show 'remix value' input in save dialog"
+        , "values":[]
 
     },"Admin": { 
         "description":"Flags for administering the website"

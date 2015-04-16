@@ -194,7 +194,7 @@ class Controller(object):
             resp.update(data)
             return self.serve_json(tdata.response, resp)
         else:
-            return self.serve_page(tdata, tdata.response, 'pages/exception.html')
+            return self.serve_page(tdata, 'pages/exception.html')
 
     def redirect(self, response, location, permanent=False):
         response.location = str(location)

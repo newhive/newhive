@@ -411,7 +411,7 @@ define([
         var search_tags = " " + tags.toLowerCase() + " "
         $("#save_remixable").prop("checked",
             search_tags.indexOf(" #remix ") >= 0)
-        $('#remix_value_box').showhide(
+        if(context.flags.Features.remix_value) $('#remix_value_box').showhide(
             $('#save_remixable').prop('checked'))
     }
 
