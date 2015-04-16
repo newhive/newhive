@@ -185,7 +185,7 @@ class Controller(object):
         if config.debug_mode:
             raise exception, None, traceback
 
-        log_error(self.db, message=exception, tdata=tdata, traceback=traceback,
+        log_error(self.db, message=exception, request=tdata.request, traceback=traceback,
             critical=True)
 
         tdata.response.status_code = status
