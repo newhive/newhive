@@ -14,10 +14,10 @@
 
   <script>
 curl({
-    // baseUrl: {{ ('/lib/libsrc' if debug else '/lib')|json }},
-    baseUrl: {{ ('/lib/libsrc' if debug else '/lib')|json }},
-    paths: {'media' : '{{ media_bucket }}' },
-    pluginPath: 'curl/plugin'
+    baseUrl: {{ ('/lib/libsrc' if debug else
+        config.abs_url('lib', relative=True))|json }}
+    ,paths: {'media' : '{{ media_bucket }}' }
+    ,pluginPath: 'curl/plugin'
 });
   </script>
 
