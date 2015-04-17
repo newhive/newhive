@@ -114,12 +114,6 @@
     },"Editor/rect_drag_drop": {
         "description":"user can drag images onto rectangles and images"
         , "values":["admins","nd4"]
-    },"Editor/modify_special_tags": {
-        "description":"user can add and remove \"reserved\" tags, e.g., \"#Gifwall\""
-        , "values":["admins","nd4"]
-    },"Editor/show_mini_selection_border": {
-        "description":"always show the focused selection border (vs only when multiselecting)"
-        , "values":["admins","nd4"]
     },"Editor/copy_table": {
         "description":"allow dragging of \"duplicate\" button to create tables of duplicates"
         , "values":["admins","nd4"]

@@ -418,33 +418,13 @@ define([
     o.tag_list = function(tags) {
         tags = tags.split(" ");
         tags = $.map(tags, function(x) {
-            return x.toLowerCase().replace(/[^a-z0-9]/gi,'');
+            return x.toLowerCase().replace(/[^a-z0-9-]/gi, '');
         });
         js.array_delete(tags, '')
         return tags
     }
     o.canonical_tags = function(tags_list){
-        var special = ["remixed", "gifwall"]
-
-        // context.flags.modify_special_tags = true; // debug
-        tags_list = $.map(tags_list, function(x, i) {
-            if (special && special.indexOf(x) >= 0) {
-                x = js.capitalize(x);
-                if (!context.flags.modify_special_tags)
-                    x = "";
-            }
-            return "#" + x;
-        });
-        if (!context.flags.modify_special_tags && special && expr.tags_index)
-            $.map(expr.tags_index, function(x, i) {
-                if (special.indexOf(x) >= 0) {
-                    x = "#" + js.capitalize(x);
-                    tags_list.push(x);
-                }
-            });
-        tags_list = js.array_unique(tags_list)
-        js.array_delete(tags_list, '#')
-        return tags_list.join(" ")
+        return tags_list.join(' ')
     }
 
     return o

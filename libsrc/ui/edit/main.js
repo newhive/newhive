@@ -349,13 +349,6 @@ Hive.init_menus = function() {
 
     $('#media_upload').on('with_files', function(ev, files, file_list){
         // media files are available immediately upon selection
-        if (env.gifwall) {
-            files = files.filter(function(file, i) {
-                var res = (file.mime.slice(0, 6) == 'image/');
-                if (!res) file_list.splice(i, 1);
-                return res;
-            });
-        }
         if (env.click_app) {
             env.click_app.with_files(ev, files, file_list);
             env.click_app = undefined;
@@ -538,17 +531,10 @@ Hive.init = function(exp, site_context, _revert){
 
     $.extend(context, site_context)
     Hive.context = context
-    env.show_css_class = false;
-    env.copy_table = context.flags.copy_table || false;
-    env.gifwall = ($.inArray('gifwall', exp.tags_index) > -1)
-    env.squish_full_bleed = env.gifwall;
-    env.show_mini_selection_border = 
-        env.gifwall || context.flags.show_mini_selection_border;
+    env.show_css_class = false
+    env.copy_table = context.flags.copy_table || false
 
-    if (env.gifwall)
-        $("body").addClass("gifwall");
-    else
-        $("body").addClass("default");
+    $("body").addClass("default");
     context.flags.UI.transition_test && $("body").addClass("transition_test")
     $('body').append(edit_template())
 
@@ -605,24 +591,19 @@ Hive.enter = function(){
 
 Hive.exit = function(){
     env.zoom_set(1);
-    $("body").removeClass("gifwall");
-    $("body").removeClass("default");
     $(document).off('keydown');
-    $('body').off('mousemove mousedown mouseup click');
-};
+    $('body').off('mousemove mousedown mouseup click').removeClass("default")
+}
 
-(function(){
-    var focus_classes;
-
-    Hive.focus = function(){
-        focus_classes = env.apps_e.attr('class');
-        evs.focus();
-    };
-    Hive.unfocus = function(){
-        env.apps_e.attr('class', focus_classes);
-        evs.unfocus();
-    };
-})();
+var focus_classes;
+Hive.focus = function(){
+    focus_classes = env.apps_e.attr('class');
+    evs.focus();
+}
+Hive.unfocus = function(){
+    env.apps_e.attr('class', focus_classes);
+    evs.unfocus();
+}
 
 // Matches youtube and vimeo URLs, any URL pointing to an image, and
 // creates the appropriate App state to be passed to hive_app.new_app.
@@ -787,13 +768,8 @@ Hive.state = function() {
 // BEGIN-Events  //////////////////////////////////////////////////////
 
 Hive.global_highlight = function(showhide) {
-    if (env.gifwall) {
-        $(".prompts .highlight").showhide(showhide);
-        var fn = showhide ? "mouseover" : 'mouseout';
-        $(".prompts .plus_btn").data('hover_showhide')(showhide);
-    } else
-        $(".editor_overlay").showhide(showhide);
-};
+    $(".editor_overlay").showhide(showhide)
+}
 
 // Most general event handlers
 Hive.handler_type = 3;

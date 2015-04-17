@@ -115,7 +115,6 @@ define([
         // TODO: should the HTML render on page load? Or delayed?
         o.expr = page_data.expr;
         o.page_data = page_data;
-        ui_page.form_page_exit()
         no_paging = ("no_paging" in context.query);
 
         $('body').addClass('expr')
@@ -179,7 +178,6 @@ define([
             $('.overlay.panel .remix').hidehide()
             $('.overlay.panel .edit_ui').hidehide()
         }
-        ui_page.form_page_enter()
 
         o.overlay_columns = 0;
         o.wide_overlay = 0;

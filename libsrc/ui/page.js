@@ -317,7 +317,6 @@ define([
             if(context.page && context.page.exit)
                 context.page.exit()
         }
-        o.form_page_exit()
 
         o.preprocess_context();
         o.tags = (expr && (expr.tags_index || expr.tags))
@@ -345,7 +344,6 @@ define([
             o.render_tag_page();
         }
 
-        o.form_page_enter()
         if (new_page && new_page.enter) new_page.enter();
         o.resize();
 
@@ -589,37 +587,6 @@ define([
     o.render_main_tags = function(){
         $("#site>.tag_list_container").replaceWith(
             tags_main_template(context.page_data));
-    }
-
-    o.form_page_enter = function(){
-        // must be idempotent; called twice for expr pagethroughs
-        // TODO: make this work for #Forms beyond "gifwall."
-        var page_data = context.page_data
-        if(o.tags && o.tags.indexOf("gifwall") >= 0)
-            page_data.form_tag = 'gifwall'
-        else return
-
-        // only show the #GIFWALL on an expression page
-        if (page_data.expr) {
-            $("#logo").hidehide();
-            $('.overlay.form').remove()
-            $('#overlays').append(form_overlay_template(page_data));
-        }
-
-        var $create = $("#overlays .create")
-        if (!$create.data("href"))
-            $create.data("href", $create.attr("href"))
-        $create.attr("href", $create.data("href") + "?tags=" + page_data.form_tag)
-    }
-    o.form_page_exit = function(){
-        delete context.page_data.form_tag
-        // Clean up old #Form junk
-        $("#logo").showshow();
-        $('.overlay.form').remove();
-
-        var $create = $("#overlays .create")
-        if ($create.data("href"))
-            $create.attr("href", $create.data("href"))
     }
 
     o.render_tag_page = function(){

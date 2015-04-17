@@ -119,13 +119,13 @@ class User(ModelController):
                 user.remove_category(tag_name)
         else:
             # remove the tag on owned expression
-            if tag_name not in ['remixed', 'Gifwall']:
-                removed = set(old_order) - set(new_order)
-                for expr_id in removed:
-                    expr = self.db.Expr.fetch(expr_id)
-                    if expr and expr.owner.id == user.id:
-                        expr.update(updated=False, tags=re.sub(
-                            ' ?#?' + tag_name + ' ?',' ',expr.get('tags','')).strip())
+            #if tag_name not in ['remixed']:
+            removed = set(old_order) - set(new_order)
+            for expr_id in removed:
+                expr = self.db.Expr.fetch(expr_id)
+                if expr and expr.owner.id == user.id:
+                    expr.update(updated=False, tags=re.sub(
+                        ' ?#?' + tag_name + ' ?',' ',expr.get('tags','')).strip())
             if len(new_order):
                 tagged[tag_name] = new_order
             else:

@@ -230,15 +230,6 @@ class Expr(ModelController):
             if not res['owner'] == tdata.user.id:
                 raise exceptions.Unauthorized('Nice try. You no edit stuff you no own')
 
-            reserved_tags = ["remixed", "gifwall"];
-            # force "#draft" on draft
-            if autosave and draft:
-                reserved_tags += ["draft"]
-            # disallow removal of reserved tags
-            if not self.flags.get('modify_special_tags'):
-                for tag in reserved_tags:
-                    if tag in res.get('tags_index', []):
-                        upd['tags'] += " #" + tag
             if autosave:
                 if draft:
                     upd['auth'] = 'password'
@@ -373,8 +364,6 @@ class Expr(ModelController):
         html_for_app = partial(self.html_for_app, scale=expr_scale,
             snapshot_mode=snapshot_mode)
         app_html = map(html_for_app, exp.get('apps', []))
-        # if exp.has_key('dimensions') and 'gifwall' not in exp.get('tags_index',[]):
-        #     app_html.append("<div id='expr_spacer' class='happ' style='top: {}px;'></div>".format(exp['dimensions'][1]))
         return ''.join(app_html)
 
     def html_for_app(self, app, scale=1, snapshot_mode=False):
