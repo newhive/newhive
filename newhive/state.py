@@ -2067,7 +2067,7 @@ class Expr(HasSocial):
         counts['Comment'] = self.comment_count
         expr = dfilter(self, [ 'name', 'owner_name', 'title', 'feed', 'created',
             'updated', 'password', 'container', 'transfer_value', 'remix_value', 
-            'remix_lineage' ])
+            'remix_lineage', 'layout_coord' ])
         expr['type'] = "expr"
         expr.update(
             tags=self.get('tags_index')
@@ -2078,6 +2078,9 @@ class Expr(HasSocial):
             ,url=self.url
             ,title=self.get('title')
             ,remix_count=len(self.remixes)
+            ,dimensions=self.dimensions
+            ,layout_coord=self.layout_coord
+            ,clip=self.clip
         )
 
         if self.remix_parent:
@@ -2136,6 +2139,26 @@ class Expr(HasSocial):
                 data['type'] = app['type']
                 apps[app_id] = data
         return expr
+
+    @property
+    def dimensions(self):
+        dims = [0,0]
+        dims[self.layout_coord] = 1000
+        for a in self.get('apps', []):
+            a_pos = a.get('position')
+            a_pos = [lget(a_pos, 0, 0) or 0, lget(a_pos, 1, 0) or 0]
+            a_dims = a.get('dimensions')
+            a_dims = [lget(a_dims, 0, 0) or 0, lget(a_dims, 1, 0) or 0]
+            dims = [max(dims[0], a_pos[0] + a_dims[0]),
+                max(dims[1], a_pos[1] + a_dims[1])]
+        if self.get('clip_x') and self.layout_coord == 0: dims[0] = 1000
+        if self.get('clip_y') and self.layout_coord == 1: dims[1] = 1000
+        return dims
+        # return map(lambda n: int(round(n)), dims)
+    @property
+    def clip(self): return [self.get('clip_x', 0), self.get('clip_y', 0)]
+    @property
+    def layout_coord(self): return self.get('layout_coord', 0) or 0
 
     def loves_feed(self, count=-1, at=0):
         return self.activity_feed('Star', count, at)
