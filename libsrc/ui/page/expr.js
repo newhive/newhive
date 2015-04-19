@@ -71,13 +71,24 @@ define([
     }
 
     o.resize = function(){
-        // if (!util.mobile()) {
-            browser_layout.center($('.page_btn.page_prev'), undefined, {'h': false});
-            browser_layout.center($('.page_btn.page_next'), undefined, {'h': false});
-        // }
+        browser_layout.center($('.page_btn.page_prev'), undefined, {'h': false});
+        browser_layout.center($('.page_btn.page_next'), undefined, {'h': false});
 
-        var wide = ($(window).width() >= 1180) ? true : false;
-        var columns = ($(window).width() >= 980) ? 2 : 1;
+        // resize content frame to content size so top frame can scroll
+        // var win_dims = [$(window).width(), $(window).height()]
+        //     ,scale = win_dims[o.expr.layout_coord] * .001
+        //     ,props = ['width', 'height']
+        // if(o.expr.layout_coord) props.reverse()
+        // document.body.style.overflowX =
+        //     (o.expr.clip[0] || o.expr.dimensions[0] == 1000) ? 'hidden' : 'auto'
+        // document.body.style.overflowY =
+        //     (o.expr.clip[1] || o.expr.dimensions[1] == 1000) ? 'hidden' : 'auto'
+        // o.current.css(props[0], '100%')
+        // o.current.css(props[1],
+        //     (scale * o.expr.dimensions[o.expr.layout_coord ? 0 : 1]))
+
+        var wide = (win_dims[0] >= 1180) ? true : false;
+        var columns = (win_dims[0] >= 980) ? 2 : 1;
         if (o.overlay_columns != columns || o.wide_overlay != wide) {
             o.overlay_columns = columns;
             o.wide_overlay = wide;

@@ -2078,9 +2078,9 @@ class Expr(HasSocial):
             ,url=self.url
             ,title=self.get('title')
             ,remix_count=len(self.remixes)
-            ,dimensions=self.dimensions
-            ,layout_coord=self.layout_coord
-            ,clip=self.clip
+            # ,dimensions=self.dimensions
+            # ,layout_coord=self.layout_coord
+            # ,clip=self.clip
         )
 
         if self.remix_parent:

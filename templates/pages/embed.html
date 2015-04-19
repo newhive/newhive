@@ -5,6 +5,7 @@
   <meta id="viewport" name="viewport">
   <style>
 body, html, #exprs { height: 100%; }
+body { overflow: hidden; }
 iframe { border: none; width:100%; height:100% }
   </style>
 </head>
@@ -15,23 +16,23 @@ iframe { border: none; width:100%; height:100% }
     class='expr' allowfullscreen></iframe></div>
 </body>
 <script>
-var frame = document.getElementsByTagName('iframe')[0], expr = {
-    dims: {{ expr.dimensions|json }}
-    ,layout_coord: {{ expr.layout_coord|json }}
-    ,clip: {{ expr.clip|json }}
-}
-window.onresize = function(){
-    var win_dims = [document.body.clientWidth, document.body.clientHeight],
-      scale = win_dims[expr.layout_coord] * .001, props = ['width', 'height']
-    if(expr.layout_coord) props.reverse()
-    document.body.style.overflowX =
-      (expr.clip[0] || expr.dims[0] == 1000) ? 'hidden' : 'auto'
-    document.body.style.overflowY =
-      (expr.clip[1] || expr.dims[1] == 1000) ? 'hidden' : 'auto'
-    frame.style[props[0]] = '100%'
-    frame.style[props[1]] = (scale * expr.dims[expr.layout_coord ? 0 : 1])
-}
-window.onresize()
+// var frame = document.getElementsByTagName('iframe')[0], expr = {
+//     dimensions: {{ expr.dimensions|json }}
+//     ,layout_coord: {{ expr.layout_coord|json }}
+//     ,clip: {{ expr.clip|json }}
+// }
+// window.onresize = function(){
+//     var win_dims = [document.body.clientWidth, document.body.clientHeight],
+//       scale = win_dims[expr.layout_coord] * .001, props = ['width', 'height']
+//     if(expr.layout_coord) props.reverse()
+//     document.body.style.overflowX =
+//       (expr.clip[0] || expr.dimensions[0] == 1000) ? 'hidden' : 'auto'
+//     document.body.style.overflowY =
+//       (expr.clip[1] || expr.dimensions[1] == 1000) ? 'hidden' : 'auto'
+//     frame.style[props[0]] = '100%'
+//     frame.style[props[1]] = (scale * expr.dimensions[expr.layout_coord ? 0 : 1])
+// }
+// window.onresize()
 // curl(['ui/controller'], function(controller){
 //     controller.init({{ route_args|json }});
 // });
