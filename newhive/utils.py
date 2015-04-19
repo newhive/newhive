@@ -113,6 +113,10 @@ def threaded_timeout(func, args=(), kwargs={}, timeout_duration=10, default=None
     else:
         return default
 
+def enum(*sequential, **named):
+    enums = dict(zip(sequential, range(len(sequential))), **named)
+    return type('Enum', (), enums)
+    
 def lset(l, i, e, *default):
     default = default[0] if default else [None]
     if i < len(l): l[i] = e
@@ -135,8 +139,32 @@ def index_of(l, f):
     return -1
 
 
+### BEGIN dict_tools ###
+########################
 def dupdate(d1, d2): return dict(d1.items() + d2.items())
 
+def dfilter(d, keys):
+    """ Accepts dictionary and list of keys, returns a new dictionary
+        with only the keys given """
+    r = {}
+    for k in keys:
+        if k in d: r[k] = d[k]
+    return r
+
+class ImmutableDict(dict):
+    # _HASH = None
+
+    def __new__(klass, *args, **kwargs):
+        # ImmutableDict._HASH = hash(frozenset(args[0].items()))
+        return super(ImmutableDict, klass).__new__(klass, *args, **kwargs)
+
+    # def __hash__(self):
+    #     return self._HASH
+
+    def _readonly(self, *args, **kwards):
+        raise TypeError("Can't touch this immutable dict")
+
+    __delattr__ = __setattr__ = __setitem__ = pop = update = setdefault = clear = popitem = _readonly
 
 def dcast(d, type_schemas, filter=True):
     """ Accepts a dictionary d, and type_schemas -- a list of tuples in these forms:
@@ -159,8 +187,11 @@ def dcast(d, type_schemas, filter=True):
         if key in d: out[key] = type_to(d[key]) if type_to else d[key]
         elif required: raise ValueError('key %s missing in dict' % (key))
     return out
+### END   dict_tools ###
+########################
 
-
+### BEGIN datetime_tools ###
+############################
 def datetime_to_id(d):
     return str(pymongo.objectid.ObjectId.from_datetime(d))
 
@@ -203,6 +234,8 @@ def friendly_date(then):
         else: (t, u) = (dt.days, 'day')
         s = str(t) + ' ' + u + ('s' if t > 1 else '') + ' ago'
     return s
+### END   datetime_tools ###
+############################
 
 def junkstr(length):
     """Creates a random base 62 string"""
@@ -221,16 +254,7 @@ def lget(l, i, *default):
 def raises(e): raise e
 
 
-def dfilter(d, keys):
-    """ Accepts dictionary and list of keys, returns a new dictionary
-        with only the keys given """
-    r = {}
-    for k in keys:
-        if k in d: r[k] = d[k]
-    return r
-
-
-def normalize(ws):
+def normalize_words(ws):
     return list( OrderedSet( map(normalize_word, filter(
         lambda s: re.match('\w', s, flags=re.UNICODE),
         re.split('\W', ws, flags=re.UNICODE) ) ) ) )
@@ -238,26 +262,20 @@ def normalize(ws):
 def normalize_word(w):
     return w.lower()[0:40]
         
-def format_tags(s):
-    return re.sub(r'[_\W]','', s, flags = re.UNICODE)
+def normalize_tag(s):
+    alphanums = re.sub(r'[_\W]+','-', s, flags = re.UNICODE)
+    return normalize_word( re.sub(r'(^-+)|(-+$)', '', alphanums) )
 
 def normalize_tags(ws):
-    # 1. if 'tags' has comma:  separate out quoted strings, split on all commas and hash, replace space with nothing
-    # 2. if 'tags' does not have comma: separate out quoted strings, split on all spaces and hashes
-    # 3. afterward: convert to lowercase, remove hashes, replace - with nothing, replace _ with nothing. actually just remove non-alphanumeric stuff.
-    l1 = re.findall(r'"(.*?)"',ws,flags=re.UNICODE)
-    ws_no_quotes = re.sub(r'"(.*?)"', '', ws, flags=re.UNICODE)
-    if ',' in ws:
-        l2 = re.split(r'[,#]', ws_no_quotes, flags=re.UNICODE)
-    elif '#' in ws:
-        l2 = re.split(r'[#]', ws_no_quotes, flags=re.UNICODE)
-    else:
-        l2 = re.split(r'[\s]', ws_no_quotes, flags=re.UNICODE)
-
-    return list( set( map( normalize_word, filter(
-        None, map(format_tags, l1+l2) ) ) ) )
+    # 1. Group double quoted strings as single tags
+    # 2. split on remaining spaces and ','s, normalize
+    ws2 =  re.sub(r'"(.*?)"', lambda m: ' '+ normalize_tag(m.group(0)) +' ',
+        ws, flags=re.UNICODE)
+    tags = re.split(r'[,\s]', ws2, flags=re.UNICODE)
+    return filter(None, map(normalize_tag, tags))
 
 def tag_string(tags):
+    return " ".join(tags)
     return " ".join([ "#" + x for x in tags ])
 
 def tagList(row):
@@ -402,6 +420,8 @@ def timer(func):
 
 
 def key_map(original, transformation, filter=False):
+    """ rename FOO keys in original dict that are listed in transformation dict
+    to transformation[FOO], optionally filter any keys not in transformation """
     output = copy.copy(original)
     for old, new in transformation.items():
         if output.has_key(old):
@@ -410,10 +430,6 @@ def key_map(original, transformation, filter=False):
         return dfilter(output, transformation.values())
     else:
         return output
-
-
-def is_mongo_key(string):
-    return isinstance(string, basestring) and re.match('[0-9a-f]{24}', string)
 
 
 def set_trace(interactive=False):

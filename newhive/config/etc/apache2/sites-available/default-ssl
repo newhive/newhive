@@ -1,10 +1,8 @@
-WSGIPythonPath /var/www/newhive/
 <IfModule mod_ssl.c>
 NameVirtualHost *:443
 
 <VirtualHost _default_:443>
     ServerName tnh.me
-
 	WSGIScriptAlias / /var/www/newhive/newhive/app.py
 	
 	Alias /lib /var/www/newhive/lib
@@ -32,7 +30,6 @@ NameVirtualHost *:443
     ServerAlias *.newhive.com
     ServerAlias thenewhive.com
     ServerAlias *.thenewhive.com
-
 	WSGIScriptAlias / /var/www/newhive/newhive/app.py
 
 	Alias /lib /var/www/newhive/lib

@@ -14,14 +14,15 @@
 
   <script>
 curl({
-    // baseUrl: {{ ('/lib/libsrc' if debug else '/lib')|json }},
-    baseUrl: {{ ('/lib/libsrc' if debug else '/lib')|json }},
-    pluginPath: 'curl/plugin'
+    baseUrl: {{ ('/lib/libsrc' if debug else
+        config.abs_url('lib', relative=True))|json }}
+    ,paths: {'media' : '{{ media_bucket }}' }
+    ,pluginPath: 'curl/plugin'
 });
   </script>
 
   {% block head %}{% endblock %}
 </head>
 <body class='{% block body_class %}{% endblock %}'
-  >{% block body %}{% endblock %}<div id='dynamic_group>'></div></body>
+  >{% block body %}{% endblock %}<div id='dynamic_group'></div></body>
 </html>

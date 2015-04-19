@@ -1,16 +1,17 @@
-import sys, copy
-import re
+import sys, os
+parent_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(parent_path)
+
+import re, copy
 from werkzeug.routing import Map, Rule, RequestRedirect
 from werkzeug import Request, Response, exceptions, url_unquote
 import jinja2
 from newhive.utils import dfilter
 from newhive import state, config
-from newhive.controllers import Controllers
 from newhive.routes import Routes
 import json, urllib
 from newhive.utils import url_host, now
 from newhive.server_session import db, server_env, jinja_env
-from os.path import join
 
 # For stats
 import yappi
@@ -18,6 +19,7 @@ import cProfile
 import pstats
 import io
 from newhive.profiling import don, functools, doflags
+
 
 def make_routing_rules(url_pattern, endpoint, on_main_domain=True, defaults={}):
     rules = []
@@ -61,11 +63,8 @@ def get_api_endpoints(api):
 
 # Create an empty, reference dict so all created controllers will have
 # a reference to all controllers upon creation.
-server_env['controllers'] = {}
-api = Controllers(server_env)
-server_env['controllers'].update(api)
-base_controller = api.get('controller')
-rules = get_api_endpoints(api)
+base_controller = server_env['controllers']['controller']
+rules = get_api_endpoints(server_env['controllers'])
 routes = Map(rules, strict_slashes=False, host_matching=True,
     redirect_defaults=False)
 
@@ -81,15 +80,13 @@ def version():
 
 config.version = version()
 
-def split_domain(url):
-    domain = url.replace('thenewhive','newhive')
+def split_domain(domain):
     dev = config.dev_prefix + '.' if config.dev_prefix else ''
     index = max(0, domain.find('.' + dev + config.server_name), 
         domain.find('.' + dev + config.content_domain))
     prefix = domain[0:index]
     if index > 0: index = index + 1
     site = domain[index:]
-    if prefix == 'www': prefix = ''
     return prefix, site
 
 @Request.application
@@ -140,7 +137,8 @@ def handle(request):
         if err:
             print "Gap in routing table!"
             print request
-            return base_controller.serve_500(request, Response(),
+            return base_controller.serve_500(
+                base_controller.new_transaction(request),
                 exception=e, json=False)
     except RequestRedirect as e:
         # bugbug: what's going on here anyway?
@@ -165,15 +163,15 @@ def handle(request):
             ps.sort_stats('cumulative')
             ps.print_stats(25)
 
-            ps.dump_stats(join(config.src_home, 'stats'))
+            ps.dump_stats(os.path.join(config.src_home, 'stats'))
             # To view stats graphically, use:
             # alias gprof='gprof2dot.py -f pstats stats | dot -Tpng -o output.png;open output.png'
 
     except:
-        import traceback
         (blah, exception, traceback) = sys.exc_info()
-        response = base_controller.serve_500(request, Response(), exception=exception,
-            traceback=traceback, json=False)
+        response = base_controller.serve_500(
+            base_controller.new_transaction(request),
+            exception=exception, traceback=traceback, json=False)
 
     print "time %s ms" % (1000.*(now() - time_start))
     if stats and yappi.is_running():

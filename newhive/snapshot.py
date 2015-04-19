@@ -87,18 +87,16 @@ def start_snapshots(query_and=False):
 
     # print "need to get %s exprs" % len(expressions_to_snapshot)
     
-def take_snapshot(expr_id):
-    snapshots.take_snapshot(expr_id, "temp_big.png", (715, 430))
-    snapshots.take_snapshot(expr_id, "temp_small.png", (390, 235))
-
-
 ### BEGIN testing ###
 
 def sss():
     snapshots.take_snapshot("4eace6b3ba28392acc000083", "snap_out.png", (715, 430))
     # snapshots.take_snapshot("5034466363dade522e00727f", "snap2_out.png", (715, 430))
-
     # snapshots.take_snapshot("50f737d36d902248910accfe", "snap_out.png", (715, 430))
+
+def take_snapshot(expr_id):
+    snapshots.take_snapshot(expr_id, "temp_big.png", (715, 430))
+    snapshots.take_snapshot(expr_id, "temp_small.png", (390, 235))
 
 def test_snapshot():
     # urls = ["http://tnh.me/50f60b796d902242fd02a754",
@@ -118,30 +116,4 @@ def test_snapshot():
         
     # xvfb.terminate()
     
-def clear_snapshots():
-    # don't use this anymore
-    return False
-    expressions_to_snapshot = db.Expr.search({
-        "$and": [
-            {"snapshot_time": {
-                "$exists": True
-            }}
-            # bugbug    
-            # ,{"owner_name": "abram"}
-        ]
-    })
-    if test:
-        expressions_to_snapshot = db.Expr.search({
-            "$and": [
-                {"snapshot_time": {
-                    "$exists": True
-                }},
-            {"owner_name": "abram"}
-        ] })
-    for expr in expressions_to_snapshot:
-        expr.pop('snapshot_time')
-        db.File.fetch(expr.get('snapshot_id')).purge()
-        expr.pop('snapshot_id')
-        expr.save(updated=False)
-
 ### END testing ###

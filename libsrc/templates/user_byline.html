@@ -5,7 +5,7 @@ curated to include "curated by"
 no_byline to supress byline
 #}
 
-<a {anchor_attrs "expressions_public" "owner_name" owner.name}>
+<a {anchor_attrs "expressions_feed" "owner_name" owner.name}>
   <img class="thumb" src='{owner.thumb_small}'/
     {<if no_byline}title="{owner.name}"{>}>
   {<unless no_byline}

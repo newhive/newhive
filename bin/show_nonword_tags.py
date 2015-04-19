@@ -4,7 +4,7 @@ from collections import Counter
 parent_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(parent_path)
 from newhive import state, config
-from newhive.utils import format_tags
+from newhive.utils import normalize_tags
  
 words = open('/usr/share/dict/words').read().splitlines()
 words = map(lambda x: x.lower().replace("'",""), words)
@@ -18,17 +18,6 @@ def get_counts_without_tag_index(data):
     	tags = row.get('tags','')
         tagCnt.update(normalize_tags(tags))
     return tagCnt
-
-def normalize_tags(ws):
-    l1 = re.findall(r'"(.*?)"',ws,flags=re.UNICODE)
-    ws_no_quotes = re.sub(r'"(.*?)"', '', ws, flags=re.UNICODE)
-    if ',' in ws:
-        l2 = re.split(r'[,#]', ws_no_quotes, flags=re.UNICODE)
-    elif '#' in ws:
-        l2 = re.split(r'[#]', ws_no_quotes, flags=re.UNICODE)
-    else:
-        l2 = re.split(r'[\s]', ws_no_quotes, flags=re.UNICODE)
-    return list(set(filter(None,map(format_tags, l1+l2))))	
 
 tag_counts = get_counts_without_tag_index(exprs)
 

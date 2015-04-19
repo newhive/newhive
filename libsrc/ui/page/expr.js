@@ -71,13 +71,24 @@ define([
     }
 
     o.resize = function(){
-        // if (!util.mobile()) {
-            browser_layout.center($('.page_btn.page_prev'), undefined, {'h': false});
-            browser_layout.center($('.page_btn.page_next'), undefined, {'h': false});
-        // }
+        browser_layout.center($('.page_btn.page_prev'), undefined, {'h': false});
+        browser_layout.center($('.page_btn.page_next'), undefined, {'h': false});
 
-        var wide = ($(window).width() >= 1180) ? true : false;
-        var columns = ($(window).width() >= 980) ? 2 : 1;
+        // resize content frame to content size so top frame can scroll
+        // var win_dims = [$(window).width(), $(window).height()]
+        //     ,scale = win_dims[o.expr.layout_coord] * .001
+        //     ,props = ['width', 'height']
+        // if(o.expr.layout_coord) props.reverse()
+        // document.body.style.overflowX =
+        //     (o.expr.clip[0] || o.expr.dimensions[0] == 1000) ? 'hidden' : 'auto'
+        // document.body.style.overflowY =
+        //     (o.expr.clip[1] || o.expr.dimensions[1] == 1000) ? 'hidden' : 'auto'
+        // o.current.css(props[0], '100%')
+        // o.current.css(props[1],
+        //     (scale * o.expr.dimensions[o.expr.layout_coord ? 0 : 1]))
+
+        var wide = (win_dims[0] >= 1180) ? true : false;
+        var columns = (win_dims[0] >= 980) ? 2 : 1;
         if (o.overlay_columns != columns || o.wide_overlay != wide) {
             o.overlay_columns = columns;
             o.wide_overlay = wide;
@@ -115,7 +126,6 @@ define([
         // TODO: should the HTML render on page load? Or delayed?
         o.expr = page_data.expr;
         o.page_data = page_data;
-        ui_page.form_page_exit()
         no_paging = ("no_paging" in context.query);
 
         $('body').addClass('expr')
@@ -179,7 +189,6 @@ define([
             $('.overlay.panel .remix').hidehide()
             $('.overlay.panel .edit_ui').hidehide()
         }
-        ui_page.form_page_enter()
 
         o.overlay_columns = 0;
         o.wide_overlay = 0;
@@ -279,7 +288,7 @@ define([
                 };
             }
             else {
-                var route_args = { route_name: 'expressions_public'
+                var route_args = { route_name: 'expressions_feed'
                     ,owner_name: page_data.expr.owner.name }
                 o.controller.get(route_args.route_name, route_args, set_cards)
                 context.page_data.cards_route = { route_args: route_args }
@@ -602,6 +611,7 @@ define([
         $this.hidehide()
         var unhide = function() {
             $this.showshow()
+            // $object.css('opacity', 0)
             $object.stop(true).animate({"opacity":0},
                 {duration:context.flags.expr_overlays_fade_out_duration})
         }
@@ -624,10 +634,12 @@ define([
             if (context.flags.View.page_button_opacity)
                 opacity = context.flags.View.page_button_opacity
         }
-        $object.stop(true).animate(
+        $object //.css('opacity', opacity)
+            .stop(true).animate(
                 {"opacity": opacity},
                 {duration:context.flags.expr_overlays_fade_duration}
-            ).showshow()
+            )
+            .showshow()
             .bind_once("mouseover.hover", function() {
                 clearTimeout(timer)
             })
@@ -640,7 +652,6 @@ define([
         timers.push(timer)
     }
     o.attach_handlers = function(){
-
         $(".page_btn.page_prev").bind_once('click', o.page_prev);
         $(".page_btn.page_next").bind_once('click', o.page_next);
         $('.play_pause').bind_once_anon('click', function(){
@@ -656,17 +667,22 @@ define([
             })
 
             $(".bottom.overlay,.page_btn.overlay")
-                .off("mouseenter").on("mouseenter", function(ev) {
-                    var $this = $(this)
-                    $this.stop(true).animate(
+                .off("mouseenter").on("mouseenter", function(ev){
+                    // $(this).css('opacity', 1)
+                    $(this).stop(true).animate(
                         {"opacity":1},
                         {duration: context.flags.expr_overlays_fade_duration}
-                    ) } )
-                .on("mouseleave", function(ev) { 
+                    )
+                })
+                .on("mouseleave", function(ev) {
+                    // $(this).css('opacity', 0)
                     $(this).animate(
                         {"opacity": $(this).data("opacity")},
                         {duration: context.flags.expr_overlays_fade_out_duration}
-                    ) } )
+                    )
+                })
+            $('.bottom.overlay,.page_btn').css('transition-duration',
+                context.flags.expr_overlays_fade_duration)
         } else {
             $('.page_btn').bind_once_anon('mouseenter', function(event){
                 o.page_btn_animate($(this), "in");
@@ -764,7 +780,7 @@ define([
 
         $('#dia_delete_ok').each(function(i, e){
             $(e).data('dialog').opts.handler = function(e, data){
-                o.controller.open('expressions_public',
+                o.controller.open('expressions_feed',
                     {'owner_name': context.user.name });
             }
         });

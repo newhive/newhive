@@ -14,8 +14,7 @@
   {>}
 
   {# search bar appears hear when looking at profile, because no nav bar #}
-  <form class="search_bar{<if owner} hide{>}"
-    method='GET' action='/search' name='search_form'>
+  <form action='/s' class="search_bar{<if owner} hide{>}" method='GET' name='search_form'>
       {#
         <a href='/random' title="View Random Newhive" class='random_link'
          ><div class='hoverable icon random inline'></div></a> 

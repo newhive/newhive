@@ -106,6 +106,7 @@ define([
         if(expr.auth == 'password') 
             expr.password = $('#password').val();
         save_tags_changed()
+        expr.remix_value = parseFloat( $('#remix_value').val() ) * 100
         if($('#use_custom_domain').val())
             expr.url = $('#custom_url').val()
         expr.container = {}
@@ -223,10 +224,7 @@ define([
         if(msg.save_dialog)
             save_dialog.open()
         if(msg.save){
-            expr.background = msg.save.background
-            expr.apps = msg.save.apps
-            expr.groups = msg.save.groups
-            expr.globals = msg.save.globals
+            $.extend(expr, msg.save)
             if (msg.autosave) {
                 if (o.controller.ajax_pending())
                     return
@@ -246,7 +244,9 @@ define([
         }
     }
     o.sandbox_send = function(m){
-        $('#editor')[0].contentWindow.postMessage(m, '*') }
+        m = JSON.parse(JSON.stringify(m)) // work around DataCloneError
+        $('#editor')[0].contentWindow.postMessage(m, '*')
+    }
 
     o.edit_expr = function(){
         // pass context from server to editor
@@ -289,7 +289,7 @@ define([
         // TODO: (why?) communicate tags to sandbox
         // canonicalize tags field.
         $("#save_tags").change(save_tags_changed)
-        $(".remix_label input").change(function(e) {
+        $('#save_remixable').change(function(e) {
             if ($(e.target).prop("checked")) {
                 $("#save_tags").val("#remix " + $("#save_tags").val());
                 save_tags_changed()
@@ -302,7 +302,8 @@ define([
                     save_tags_changed()
                 }
             }
-        });
+        })
+
         // save_dialog.opts.open = Hive.unfocus;
         // save_dialog.opts.close = Hive.focus;
 
@@ -360,7 +361,7 @@ define([
                 $('#password_ui').hidehide();
                 $("#save_submit").text("Publish")
             }
-        });
+        })
 
         $('#use_custom_domain').change(function(){
             var use = $('#use_custom_domain').prop('checked')
@@ -399,46 +400,28 @@ define([
 
     var save_tags_changed = function(){
         var el = $('#save_tags')
-        var tags = el.val().trim();
-        var tag_list = o.tag_list(tags);
+        var tags = el.val().trim()
+        var tag_list = o.tag_list(tags)
         tags = o.canonical_tags(tag_list)
-        $("#save_tags").val(tags);
+        $("#save_tags").val(tags)
         expr.tags_index = o.tag_list(tags)
-        var search_tags = " " + tags.toLowerCase() + " ";
-        $(".remix_label input").prop("checked",
-            search_tags.indexOf(" #remix ") >= 0);
+        var search_tags = " " + tags.toLowerCase() + " "
+        $("#save_remixable").prop("checked",
+            search_tags.indexOf(" #remix ") >= 0)
+        if(context.flags.Features.remix_value) $('#remix_value_box').showhide(
+            $('#save_remixable').prop('checked'))
     }
 
     o.tag_list = function(tags) {
         tags = tags.split(" ");
         tags = $.map(tags, function(x) {
-            return x.toLowerCase().replace(/[^a-z0-9]/gi,'');
+            return x.toLowerCase().replace(/[^a-z0-9-]/gi, '');
         });
         js.array_delete(tags, '')
         return tags
     }
     o.canonical_tags = function(tags_list){
-        const special = ["remixed", "gifwall"]
-
-        // context.flags.modify_special_tags = true; // debug
-        tags_list = $.map(tags_list, function(x, i) {
-            if (special && special.indexOf(x) >= 0) {
-                x = js.capitalize(x);
-                if (!context.flags.modify_special_tags)
-                    x = "";
-            }
-            return "#" + x;
-        });
-        if (!context.flags.modify_special_tags && special && expr.tags_index)
-            $.map(expr.tags_index, function(x, i) {
-                if (special.indexOf(x) >= 0) {
-                    x = "#" + js.capitalize(x);
-                    tags_list.push(x);
-                }
-            });
-        tags_list = js.array_unique(tags_list)
-        js.array_delete(tags_list, '#')
-        return tags_list.join(" ")
+        return tags_list.join(' ')
     }
 
     return o

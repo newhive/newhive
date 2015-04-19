@@ -274,7 +274,7 @@ o.Selection = function(o) {
     // BEGIN-event-handlers
 
     o.is_multi = function(ev){
-        return !env.gifwall && (ev.shiftKey || u.is_ctrl(ev));
+        return (ev.shiftKey || u.is_ctrl(ev))
     }
 
     var app_clicking
@@ -375,10 +375,6 @@ o.Selection = function(o) {
             return;
         }
         // Otherwise, we are changing selection via dragging on the background.
-        if(env.gifwall) {
-            dragging = false;
-            return;
-        }
         selecting = true
         o.offset = [env.apps_e.offset().left, 0]
         u.reset_sensitivity();
@@ -458,13 +454,6 @@ o.Selection = function(o) {
         }
         old_mod = new_mod;
         old_selection = new_selection;
-    };
-
-    // We handle our own history
-    o.history_helper_relative = function(name){
-        var o2 = { name: name };
-        o2.save = function(){};
-        return o2;
     };
 
     var ref_pos, full_apps = [], pushing_apps, pushing_rel_pos,
@@ -587,8 +576,8 @@ o.Selection = function(o) {
                 exclude_ids: excludes,
                 snap_strength: .05,
                 snap_radius: 18,
-                guide_0: !env.gifwall && (!full_apps.length || coord_full == 1),
-                guide_1: !env.gifwall && (!full_apps.length || coord_full == 0),
+                guide_0: !full_apps.length || coord_full == 1,
+                guide_1: !full_apps.length || coord_full == 0,
                 sensitivity: o.sensitivity, });
         } else
             $(".ruler").hidehide();
@@ -861,8 +850,6 @@ o.Selection = function(o) {
             Controls(o, false);
             o.controls.layout();
         }
-        if (env.gifwall && context.flags.show_mini_selection_border && o.controls)
-            o.controls.div.find(".select_border").hidehide();
         if(apps.length == 0) {
             evs.handler_del({handler_type: 0}); 
             if (o.controls) o.controls.remove();

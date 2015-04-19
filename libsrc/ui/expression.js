@@ -17,7 +17,7 @@ define([
     ,'browser/jquery/rotate.js'
 
     // TODO: pull in dynamically
-    ,'js!outsrc/processing.min.js'
+    //,'js!browser/p5.js'
 ], function(
     $
     ,js
@@ -409,13 +409,14 @@ define([
         if ($a.attr('target')) return;
         // TODO: Match against internal links and use routing system
 
-        var local_match = new RegExp('^(https?:)?//[\\w-]*.?' +
-                context.config.server_domain)
-            href = $a.attr('href') || $a.attr('xlink:href') || $a.attr('action'),
-            absolute = /(^\w+:)|(^\/\/)/.test(href)
-        if (!href) return
+        var href = $a.attr('href') || $a.attr('xlink:href') || $a.attr('action'),
+            local_match = new RegExp('^(https?:)?//[\\w-]*.?' +
+                context.config.server_domain).test(href),
+            absolute = /(^\w+:)|(^\/\/)/.test(href),
+            internal = /^(#|javascript:)/.test(href)
+        if (!href || internal) return
 
-        if(absolute && !local_match.test(href)) {
+        if(absolute && !local_match) {
             $a.attr('target', '_blank')
         } else {
             $a.attr('target', '_top')
@@ -436,6 +437,9 @@ define([
     var code_srcs = [], code_modules = [], animate_go
     o.load_code = function(code_src, modules){
         code_srcs.push({src:code_src, modules: modules})
+    }
+    o.load_code_url = function(code_url){
+        code_srcs.push({url:code_url})
     }
 
     o.run_code = function(code_module){
@@ -490,11 +494,19 @@ define([
             .join(",")
         }
         code_srcs.map(function(src){
-            var script = $('<script>').html(
-                "curl([" + module_paths(src.modules) + "],function("
-                + module_names(src.modules) + "){"
-                + "var self={};" + src.src + ";expr.run_code(self) })"
-            ).addClass('code_module').appendTo('body')
+            if (src.url) {
+                var $script = $('<script>').html(
+                    "curl(['" + src.url + "', 'ui/expression'], " + 
+                        "function(self, expr){ expr.run_code(self) })"
+                )
+            } else {
+                var $script = $('<script>').html(
+                    "curl([" + module_paths(src.modules) + "],function("
+                    + module_names(src.modules) + "){"
+                    + "var self={};" + src.src + ";expr.run_code(self) })"
+                )
+            }
+            $script.addClass('code_module').appendTo('body')
         })
 
         o.autoplay(true)
@@ -524,20 +536,20 @@ define([
     // All links in content frame need to target either
     // the top frame (on site) or a new window (off site)
     o.update_targets = function(){
-        // function link_target(i, a) {
-        //     // TODO: change literal to use Hive.content_domain after JS namespace is cleaned up
-        //     var re = new RegExp('^https?://[\\w-]*.?(' + server_name + '|newhiveexpression.com)');
-        //     var a = $(a), href = a.attr('href') || a.attr('action');
-        // 
-        //     // Don't change target if it's already set
-        //     if (a.attr('target')) return;
-        // 
-        //     if(href && href.indexOf('http') === 0 && !re.test(href)) {
-        //         a.attr('target', '_blank');
-        //     } else if (href && href.indexOf('http') === 0 && re.test(href)) {
-        //         a.attr('target', '_top');
-        //     }
-        // }
+        function link_target(i, a) {
+            var re = new RegExp('^(/|https?://' +
+                context.config.server_domain +')')
+            var a = $(a), href = a.attr('href') || a.attr('action');
+        
+            // Don't change target if it's already set
+            if (a.attr('target')) return;
+        
+            if(href && href.indexOf('http') === 0 && !re.test(href)) {
+                a.attr('target', '_blank');
+            } else if (href && href.indexOf('http') === 0 && re.test(href)) {
+                a.attr('target', '_top');
+            }
+        }
         // TODO: Re-enable link targeting  
         return;
         // $('a, form').each(link_target);

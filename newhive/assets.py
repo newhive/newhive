@@ -87,6 +87,7 @@ class Assets(object):
         return self
 
     def url(self, name, abs=False, return_debug=True, http=False):
+        if not name: return self.base_url
         props = self.assets.get(name)
         # TODO: return path of special logging 404 page if asset not found
         if props:
@@ -323,31 +324,6 @@ class HiveAssets(Assets):
         )
         self.assets_env.register('email.css', email_scss, output='../lib/email.css')
         self.final_bundles.append('email.css')
-
-        # self.assets_env.register('admin.js',
-        #     'raphael/raphael.js',
-        #     'raphael/g.raphael.js',
-        #     'raphael/g.pie.js',
-        #     'raphael/g.line.js',
-        #     'browser/jquery/tablesorter.min.js',
-        #     'browser/jquery-ui/jquery-ui-1.10.3.custom.js',
-        #     'd3/d3.js',
-        #     'd3/d3.time.js',
-        #     output='../lib/admin.js'
-        # )
-        # self.final_bundles.append('admin.js')
-
-        admin_scss = webassets.Bundle("scss/chart.scss",
-            filters=scss_filter,
-            output='compiled.admin.css',
-            debug=False
-        )
-        self.assets_env.register(
-            'admin.css',
-            admin_scss,
-            'browser/jquery-ui/jquery-ui-1.10.3.custom.css',
-            output='../lib/admin.css'
-        )
 
     def urls_with_expiry(self):
         urls = self.urls()

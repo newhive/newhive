@@ -12,6 +12,7 @@ define([
     'browser/layout',
     'ui/page/pages',
     'ui/routing',
+    'moneys/stripe_checkout',
 
     'sj!templates/form_overlay.html',
     'sj!templates/password_reset.html',
@@ -52,6 +53,7 @@ define([
     browser_layout,
     pages,
     routing,
+    StripeCheckout,
 
     form_overlay_template,
     password_template,
@@ -70,9 +72,7 @@ define([
     var o = {}, expr_page = false, grid_width, controller,
         border_width = 1,
         render_new_cards_func,
-        done_overlays = false,
-        anim_direction; // 0 = up, +/-1 = right/left
-    const anim_duration = 700;
+        done_overlays = false
 
     o.init = function(controller){
         // (function() {
@@ -81,7 +81,6 @@ define([
         //   var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(li, s);
         // })();
 
-        o.anim_direction = 0;
         o.controller = controller;
         $(window).resize(o.resize);
     };
@@ -318,7 +317,6 @@ define([
             if(context.page && context.page.exit)
                 context.page.exit()
         }
-        o.form_page_exit()
 
         o.preprocess_context();
         o.tags = (expr && (expr.tags_index || expr.tags))
@@ -346,7 +344,6 @@ define([
             o.render_tag_page();
         }
 
-        o.form_page_enter()
         if (new_page && new_page.enter) new_page.enter();
         o.resize();
 
@@ -535,8 +532,8 @@ define([
         }
         $(".user_action_bar form.follow").unbind('success').on('success', 
             function(event, json) {
-                follow_response($(this), json); 
-        });
+                follow_response($(this), json)
+        })
 
         // Belongs in edit
         $("textarea.about").keypress(function(e) {
@@ -568,14 +565,14 @@ define([
         
         $(document).bind_once("keydown", keydown);
         // var scroll_handler = function(e) {
-        //     if (c.route_name == "edit_expr")
+        //     if (c.route_name == "expr_edit")
         //         return;
         //     $(".overlay.nav").fadeOut("fast");
         //     if (o.scroll_timeout != undefined)
         //         clearTimeout(o.scroll_timeout);
         //     o.scroll_timeout = setTimeout(function() {
         //         o.scroll_timeout = undefined;
-        //         if (c.route_name != "edit_expr")
+        //         if (c.route_name != "expr_edit")
         //             $(".overlay.nav").stop().fadeIn("fast");
         //     }, 100);
         // }
@@ -590,37 +587,6 @@ define([
     o.render_main_tags = function(){
         $("#site>.tag_list_container").replaceWith(
             tags_main_template(context.page_data));
-    }
-
-    o.form_page_enter = function(){
-        // must be idempotent; called twice for expr pagethroughs
-        // TODO: make this work for #Forms beyond "gifwall."
-        var page_data = context.page_data
-        if(o.tags && o.tags.indexOf("gifwall") >= 0)
-            page_data.form_tag = 'gifwall'
-        else return
-
-        // only show the #GIFWALL on an expression page
-        if (page_data.expr) {
-            $("#logo").hidehide();
-            $('.overlay.form').remove()
-            $('#overlays').append(form_overlay_template(page_data));
-        }
-
-        var $create = $("#overlays .create")
-        if (!$create.data("href"))
-            $create.data("href", $create.attr("href"))
-        $create.attr("href", $create.data("href") + "?tags=" + page_data.form_tag)
-    }
-    o.form_page_exit = function(){
-        delete context.page_data.form_tag
-        // Clean up old #Form junk
-        $("#logo").showshow();
-        $('.overlay.form').remove();
-
-        var $create = $("#overlays .create")
-        if ($create.data("href"))
-            $create.attr("href", $create.data("href"))
     }
 
     o.render_tag_page = function(){
@@ -651,14 +617,14 @@ define([
         $('#site').empty().append(settings_template(page_data));
 
         $('#user_settings_form button[name=cancel]').click(function(e) {
-            o.controller.open('expressions_public',
+            o.controller.open('expressions_feed',
                 {owner_name: context.user.name });
             return false;
         });
         $('#user_settings_form').on('success', function(e, data){
             if(data.error) alert(data.error);
             else {
-                o.controller.open('expressions_public',
+                o.controller.open('expressions_feed',
                     {owner_name: context.user.name });
             }
         });
@@ -685,14 +651,14 @@ define([
         });
 
         $('#user_update_form button[name=cancel]').click(function(e) {
-            o.controller.open('expressions_public',
+            o.controller.open('expressions_feed',
                 {owner_name: context.user.name });
             return false;
         });
         $('#user_update_form').on('success', function(e, data){
             if(data.error) alert(data.error);
             else {
-                o.controller.open('expressions_public',
+                o.controller.open('expressions_feed',
                     {owner_name: context.user.name });
             }
         });
@@ -892,24 +858,26 @@ define([
         // Count of cards which fit to even multiple of columns
         var card_count = expr_cards.length - columns;// - (expr_cards.length % columns);
         expr_cards.each(function(i) {
-            var $el = $(this);
+            var $el = $(this)
+                ,border_style = "1px solid #d1d1d1"
             $el.removeAttr('style');
+
             if (o.column_layout) {
                 if (! $el.parent().hasClass("column_0"))
-                    $el.css("border-left", "1px solid black");
+                    $el.css("border-left", border_style);
                 else
                     $el.css("border-left", "none");
                 if (! $el.is(":first-child"))
-                    $el.css("border-top", "1px solid black");
+                    $el.css("border-top", border_style);
                 else
                     $el.css("border-top", "none");
             } else {
                 if (i < card_count)
-                    $el.css("border-bottom", "1px solid black");
+                    $el.css("border-bottom", border_style);
                 else
                     $el.css("border-bottom", "none");
                 if ((i + 1) % columns != 0 && i + 1 < expr_cards.length)
-                    $el.css("border-right", "1px solid black");
+                    $el.css("border-right", border_style);
                 else
                     $el.css("border-right", "none");
             }

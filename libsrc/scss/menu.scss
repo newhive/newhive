@@ -84,6 +84,9 @@
     position: fixed;
 }
 
+.menu.drawer tr.menu_item {
+    display: table-row;
+}
 .menu.drawer {
     display: none;
     z-index: $nav_layer + 2;

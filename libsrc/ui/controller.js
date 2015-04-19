@@ -93,7 +93,7 @@ define([
         // detect if in frame
         context.embed = false
         try {
-            if( window.parent == window.top ) context.embed = true
+            if( window != window.top ) context.embed = true
         } catch(e) { context.embed = true }
 
         routing.register_state(route_args);

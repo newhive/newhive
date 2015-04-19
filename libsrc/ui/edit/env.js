@@ -1,13 +1,12 @@
 define([], function(){
 
 var o = {}, env = o
-// o.padding = 10;
-o.show_move_sensitivity = false;
-o.no_snap = false;
-o.show_mini_selection_border = false
-o.copy_table = false;
+// o.padding = 10
+o.show_move_sensitivity = false
+o.no_snap = false
+o.copy_table = false
 
-o.scrollX = o.scrollY = 0;
+o.scroll = [0, 0]
 
 o.globals = {}
 o.globals_set = {}
@@ -62,6 +61,5 @@ o.tiling = {
     ,padding: 10
 }
 
-
-return o;
+return o
 });

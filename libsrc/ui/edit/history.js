@@ -9,6 +9,9 @@ var o = env
 o.History = [];
 o.History.init = function(){
     var o = env.History, group_start, group_level = 0;
+    var debug_history_depth = function() {
+        // console.log(o.saves_pending())
+    }
     o.current = -1;
 
     o.saves_pending = function() {
@@ -25,11 +28,11 @@ o.History.init = function(){
     o.begin = function(){
         if (! group_level++)
             group_start = o.current + 1 
-        console.log(o.saves_pending())
+        debug_history_depth()
     };
     o.group = function(name, opts){
         if (--group_level) {
-            console.log(o.saves_pending())
+            debug_history_depth()
             return;
         }
         var group_length = o.current - group_start + 1;
@@ -102,13 +105,13 @@ o.History.init = function(){
             , unsaved = true;
         o2.old_state = getter("history");
         savers_pending++;
-        console.log(o.saves_pending())
+        debug_history_depth()
 
         o2.save = function(){
             if (unsaved) {
                 unsaved = false;
                 savers_pending--;
-                console.log(o.saves_pending())
+                debug_history_depth()
             }
             o2.new_state = getter(o2.old_state, "history");
             // don't save noop
@@ -151,7 +154,7 @@ o.History.init = function(){
         save_targets.push(targets);
         old_states.push(get_states());
         savers_pending++
-        console.log(o.saves_pending())
+        debug_history_depth()
     };
     o.change_end = function(name, opts){
         opts = $.extend({
@@ -159,7 +162,7 @@ o.History.init = function(){
             ,cancel: false
         }, opts)
         savers_pending--
-        console.log(o.saves_pending())
+        debug_history_depth()
         if (opts.cancel)
             return
 
