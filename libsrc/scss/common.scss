@@ -8,11 +8,6 @@
 $nav_layer: 40;
 $nav_size: 44px;
 
-$left_padding: 30px;
-$right_padding: 12px;
-$left_column_width: 178px;
-$right_column_x: $left_padding + $left_column_width + $right_padding;
-
 @mixin calc-width($w: 100%, $fallback: 100%) {
 	width: $fallback;
     width: -moz-calc(#{$w});

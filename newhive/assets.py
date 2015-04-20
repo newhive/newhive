@@ -303,6 +303,7 @@ class HiveAssets(Assets):
         minimal_scss = webassets.Bundle(
             'scss/minimal.scss',
             'scss/jplayer.scss',
+            'scss/audio_player.scss',
             'scss/fonts.scss',
             filters=scss_filter,
             output='compiled.minimal.css',
