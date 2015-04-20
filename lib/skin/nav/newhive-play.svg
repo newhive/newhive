@@ -1,0 +1,63 @@
+<svg version='1.1' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 224 224'>
+<style>
+  svg { background-image: url('bg-test.jpg'); background-size: 100%; }
+  path { fill: #eee; stroke: #ddd; stroke-width:86;
+    stroke-linejoin: round; opacity: .75; }
+  .out { fill:none; }
+  .bg, .out { stroke-width: 6; stroke: #ddd; stroke-linejoin: miter; }
+  .bg { fill: #fff7f7; stroke: #fdd; }
+  .outout { fill: none; stroke-width: .6; stroke: black; opacity: 1; }
+</style>
+
+<g transform='translate(112, 112)'>
+<path d='M-86.6,-100 L86.6,0 L-86.6,100 z' class='bg'/>
+<path class='outout' d='M-97.5,-101 V101 A11,11,0,0,0,-82,110 L92,9.5
+    A11,11,0,0,0,92,-9.5 L-82,-110 A11,11,0,0,0,-97.5,-101'/>
+
+<g transform='scale(.5)'>
+    <g transform='translate(-86.6,100) scale(.5)'>
+      <g transform='translate(-86.6,100)' class='in'>
+        <path d='M-86.6,-100 L86.6,0 L-86.6,100 z'/>
+        <path d='M-86.6,-100 L86.6,0 L-86.6,100 z' class='out'/>
+      </g>
+      <g transform='translate(-86.6,-100)' class='in'>
+        <path d='M-86.6,-100 L86.6,0 L-86.6,100 z'/>
+        <path d='M-86.6,-100 L86.6,0 L-86.6,100 z' class='out'/>
+      </g>
+      <g transform='translate(86.6,0)' class='in'>
+        <path d='M-86.6,-100 L86.6,0 L-86.6,100 z'/>
+        <path d='M-86.6,-100 L86.6,0 L-86.6,100 z' class='out'/>
+      </g>
+    </g>
+    <g transform='translate(-86.6,-100) scale(.5)'>
+      <g transform='translate(-86.6,100)' class='in'>
+        <path d='M-86.6,-100 L86.6,0 L-86.6,100 z'/>
+        <path d='M-86.6,-100 L86.6,0 L-86.6,100 z' class='out'/>
+      </g>
+      <g transform='translate(-86.6,-100)' class='in'>
+        <path d='M-86.6,-100 L86.6,0 L-86.6,100 z'/>
+        <path d='M-86.6,-100 L86.6,0 L-86.6,100 z' class='out'/>
+      </g>
+      <g transform='translate(86.6,0)' class='in'>
+        <path d='M-86.6,-100 L86.6,0 L-86.6,100 z'/>
+        <path d='M-86.6,-100 L86.6,0 L-86.6,100 z' class='out'/>
+      </g>
+    </g>
+    <g transform='translate(86.6,0) scale(.5)'>
+      <g transform='translate(-86.6,100)' class='in'>
+        <path d='M-86.6,-100 L86.6,0 L-86.6,100 z'/>
+        <path d='M-86.6,-100 L86.6,0 L-86.6,100 z' class='out'/>
+      </g>
+      <g transform='translate(-86.6,-100)' class='in'>
+        <path d='M-86.6,-100 L86.6,0 L-86.6,100 z'/>
+        <path d='M-86.6,-100 L86.6,0 L-86.6,100 z' class='out'/>
+      </g>
+      <g transform='translate(86.6,0)' class='in'>
+        <path d='M-86.6,-100 L86.6,0 L-86.6,100 z'/>
+        <path d='M-86.6,-100 L86.6,0 L-86.6,100 z' class='out'/>
+      </g>
+    </g>
+</g>
+
+</g>
+</svg>
