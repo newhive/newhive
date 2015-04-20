@@ -2,20 +2,79 @@
 <html>
 <head>
   <link id='css_minimal' rel='stylesheet' type='text/css' href='{{ asset_bundle('minimal.css')[0] }}'>
-  <meta id="viewport" name="viewport">
+  <meta id='viewport' name='viewport'>
+  <meta property='og:url' content='{{ expr.url }}'>
   <style>
-body, html, #exprs { height: 100%; }
-body { overflow: hidden; }
-iframe { border: none; width:100%; height:100% }
-.bbar { position: fixed; bottom: 0; height: 60px; opacity: .75;
-  background-color: #ddd; }
+
+body, html, #exprs { height:100%; }
+body { overflow:hidden; }
+iframe { border:none; width:100%; height:100% }
+.hide { display:none; }
+.icon:hover { filter:invert(100%); -webkit-filter:invert(100%); }
+
+.bbar { position:fixed; bottom:0; height:60px; width:100%; transition-property:opacity; transition-duration:1s; opacity:0; }
+.bbar:hover { opacity:1; }
+.bbar.shader { background-color:#fff; opacity:.85; }
+.bbar .icon { height:100%; }
+.bbar .icon:hover { background-color:white; }
+.bbar .right { position:absolute; right:0; top:0;
+  width:120px; height:100%; margin-right:5px; }
+.logo { margin-left:5px; }
+
+#share { position:absolute; margin:auto; left:0; top:0; right:0; bottom:0;
+  width:575px; height:190px; }
+#share .icon { display:inline-block; width:150px; height:150px;
+  border-radius:75px; background-color:black; margin:20px; }
+#share .icon img { width:100px; padding:25px; }
+#share .link { position:absolute; right:0; bottom:0; width:200px;
+  font-size:large; }
   </style>
 </head>
 <body class='{% block body_class %}{% endblock %}'>
   <div id='overlays'>
-    <div class='bbar' style='display:none'></div> 
+    <div class='bbar' id='bbar'>
+      <div class='bbar shader' id='shader'></div>
+      <div class='bbar unshaded'>
+        <a href='{{ expr.url }}'><img class='icon logo' src='{{ "skin/nav/logo.png"|asset_url }}'></a>
+        <div class='right'
+          ><img class='icon share' id='share_btn' src='{{ "skin/nav/share.png"|asset_url }}'
+          ><img class='icon full' id='full' src='{{ "skin/nav/fullscreen.png"|asset_url }}'
+        ></div>
+      </div> 
+    </div>
+    <div id='share' class='hide'
+      ><a href='https://twitter.com/share?url={{ expr.url }}&related=NewHive&text={{ ("\""+expr.title+"\" by "+expr.owner.fullname)|e }}' target='_new' title='Share on twitter'><div class='icon'><img src='{{ "skin/nav/twitter.svg"|asset_url }}'></div></a
+      ><a href='https://www.facebook.com/sharer/sharer.php?u={{ expr.url|e }}'target='_new' title='Share on facebook'><div class='icon'><img src='{{ "skin/nav/fb-f.svg"|asset_url }}'></div></a
+      ><div class='icon' id='link_btn'
+        ><img src='{{ "skin/nav/link.svg"|asset_url }}'
+        ><input readonly type='text' value='{{ expr.url }}' id='link'
+          class='link hide'
+      ></div
+    ></div>
   </div>
   <div id='exprs'><iframe id='expr_{{ expr.id }}' src='{{ content_url }}'
     class='expr' allowfullscreen></iframe></div>
+  <script>
+var full = document.getElementById('full')
+   ,share = document.getElementById('share')
+   ,link = document.getElementById('link')
+   ,link_btn = document.getElementById('link_btn')
+   ,f = document.getElementById('expr_' + {{ expr.id|json }})
+full.onclick = function(){
+  (f.webkitRequestFullscreen || f.mozRequestFullScreen || f.requestFullscreen
+    ).call(f)
+}
+document.getElementById('share_btn').onclick = function(){
+  share.classList.remove('hide') }
+onmessage = function(){ share.classList.add('hide') }
+link_btn.onmouseover = function(){
+  link.classList.remove('hide')
+  link.focus()
+  link.select()
+}
+link_btn.onmouseout = function(){
+  link.classList.add('hide')
+}
+  </script>
 </body>
 </html>

@@ -87,8 +87,9 @@ define([
         // o.current.css(props[1],
         //     (scale * o.expr.dimensions[o.expr.layout_coord ? 0 : 1]))
 
-        var wide = (win_dims[0] >= 1180) ? true : false;
-        var columns = (win_dims[0] >= 980) ? 2 : 1;
+        var win_dims = [$(window).width(), $(window).height()]
+           ,wide = (win_dims[0] >= 1180) ? true : false
+           ,columns = (win_dims[0] >= 980) ? 2 : 1
         if (o.overlay_columns != columns || o.wide_overlay != wide) {
             o.overlay_columns = columns;
             o.wide_overlay = wide;
@@ -1039,10 +1040,10 @@ define([
     // TODO-cleanup: rename all frame message handlers to
     // send_parent / send_child / receive_parent / receive_FOO
     o.handle_message = function(m){
-        if (!o.do_handle_message)
+        if(!o.do_handle_message)
             return
         var msg = m.data;
-        if (msg == "expr_click"){
+        if(msg == 'focus'){
             o.expr_click()
             return
         } else if(msg == 'prev' || msg == 'next') {

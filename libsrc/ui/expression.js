@@ -15,9 +15,6 @@ define([
 
     ,'browser/jquery/jplayer/skin'
     ,'browser/jquery/rotate.js'
-
-    // TODO: pull in dynamically
-    //,'js!browser/p5.js'
 ], function(
     $
     ,js
@@ -88,10 +85,8 @@ define([
             o.show();
 
         window.addEventListener('message', o.expr_receive)
-        $(document).mousemove(check_hover);
-        
         $(document).click(expr_click);
-        // $(document).mouseleave(function(e) { window.setTimeout(clear_hover, 600, e); });
+        $(window).click(function(){ o.send_top('focus') })
 
         if (!util.mobile()) {
             var zoom = layout.get_zoom()
@@ -118,8 +113,6 @@ define([
                 $app.removeAttr("data-scaled")
             })
         })
-        $(window)//.on("scroll", layout.on_scroll)
-            .click(function(){ o.send_top('focus'); })
         //if (0 && util.mobile()) {
         //    $.event.special.swipe.horizontalDistanceThreshold = 200;
         //    $(document).on("swipe", function(ev) {
@@ -266,19 +259,6 @@ define([
     }
     var expr_click = function (ev) {
         o.send_top("expr_click");
-    }
-    // var clear_hover = function (ev) {
-    //     o.send_top("hide_prev"); // $('.page_btn.page_prev').hidehide();
-    //     o.send_top("hide_next"); // $('.page_btn.page_next').hidehide();
-    // }
-    var check_hover = function (ev) {
-        if (ev.clientX < o.margin()) {
-            o.send_top("show_prev"); //$('.page_btn.page_prev').showshow();
-        } else if (ev.clientX > $(window).width() - o.margin()) {
-            o.send_top("show_next"); //$('.page_btn.page_next').showshow();
-        } else {
-            o.send_top("hide"); // $('.page_btn.page_prev').hidehide();
-        }
     }
 
     // autoplay state. play_playing is the intent, so remains true after hide()

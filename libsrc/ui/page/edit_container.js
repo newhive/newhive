@@ -84,7 +84,6 @@ define([
     }
     o.info_submit = function(){
         if(!o.check_url()) return false
-        o.update_expr()
         expr.orig_name = expr.name
         expr.name = $('#save_url').val()
         expr.draft = false
@@ -225,14 +224,13 @@ define([
             save_dialog.open()
         if(msg.save){
             $.extend(expr, msg.save)
-            if (msg.autosave) {
-                if (o.controller.ajax_pending())
-                    return
-                o.update_expr()
+            if(msg.autosave){
+                if(o.controller.ajax_pending()) return
                 // last_autosave_time = (new Date()).getTime()
             }
-
             $('#expr_save input[name=autosave]').val(msg.autosave ? 1 : 0)
+            // old meta from sandbox must be overwritten by new save dialog values
+            o.update_expr()
             $('#expr_save').submit()
         }
         if(msg.ready) o.edit_expr()
@@ -250,8 +248,9 @@ define([
 
     o.edit_expr = function(){
         // pass context from server to editor
-        var edit_context = js.dfilter(context, ['user', 'flags', 'query', 'config'])
-            , revert = $.extend(true, {}, expr)
+        var edit_context = js.dfilter(context,
+              ['user', 'flags', 'query', 'config'])
+           ,revert = $.extend(true, {}, expr)
         // Autosave: restore draft if more recent than save
         if (expr.draft && expr.updated && expr.draft.updated 
             && expr.draft.updated > expr.updated) 
