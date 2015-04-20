@@ -98,7 +98,7 @@ define([
     }
 
     o.update_expr = function(){
-        // expr.name = $('#save_url').val()
+        expr.name = $('#save_url').val()
         expr.title = $('#save_title').val()
         expr.tags = $('#save_tags').val()
         expr.auth = $('#menu_privacy .selected').attr('val');
