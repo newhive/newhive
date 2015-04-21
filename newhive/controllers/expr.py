@@ -530,10 +530,10 @@ class Expr(ModelController):
             )
             if request.args.get('template', 'iframe') == 'iframe':
                 # default click to play view
-                params['viewport'] = '{0}x{1}'.format(*dims)
-                resp.update( html=("<iframe src='{0}?{1}' " +
+                # params['viewport'] = '{0}x{1}'.format(*dims)
+                resp.update( html=("<iframe src='{0}' " +
                     "width='{2}' height='{3}'></iframe>"
-                ).format(r.url, urllib.urlencode(params), *dims) )
+                ).format(abs_url('e/' + r.id), *dims) )
             else:
                 # linked snapshot img
                 target = request.args.get('link_target', '_new')
