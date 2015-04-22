@@ -535,7 +535,7 @@ class Expr(ModelController):
                 # default click to play view
                 # params['viewport'] = '{0}x{1}'.format(*dims)
                 resp.update( html=("<iframe src='{0}' " +
-                    "width='{2}' height='{3}'></iframe>"
+                    "width='{2}' height='{3}' allowfullscreen></iframe>"
                 ).format(abs_url('e/' + r.id), *dims) )
             else:
                 # linked snapshot img
