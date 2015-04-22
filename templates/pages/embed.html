@@ -25,7 +25,7 @@ iframe { border:none; width:100%; height:100% }
 #bbar .shader { background-color:#fff; opacity:.85; }
 #bbar .icon { height:60px; width:60px; }
 #bbar .right { position:absolute; right:0; top:0;
-  width:180px; height:100%; margin-right:5px; }
+  width:180px; height:100%; margin-right:15px; }
 #bbar .logo { margin-left:5px;
   background-image:url('{{ "skin/nav/logo.png"|asset_url }}'); }
 #bbar .logo:hover {
@@ -61,7 +61,7 @@ iframe { border:none; width:100%; height:100% }
     <div id='share' class='hide center'
       ><a href='https://twitter.com/share?url={{ expr.url }}&related=NewHive&text={{ ("\""+expr.title+"\" by "+expr.owner.fullname)|e }}' target='_new' title='Share on twitter'><div class='icon hinv'><img src='{{ "skin/nav/twitter.svg"|asset_url }}'></div></a
       ><a href='https://www.facebook.com/sharer/sharer.php?u={{ expr.url|e }}'target='_new' title='Share on facebook'><div class='icon hinv'><img src='{{ "skin/nav/fb-f.svg"|asset_url }}'></div></a
-      ><div class='icon hinv' id='link_btn'
+      ><div class='icon hinv' id='link_btn' title='Copy link'
         ><img src='{{ "skin/nav/link.svg"|asset_url }}'
         ><input readonly type='text' value='{{ expr.url }}' id='link'
           class='link hide'

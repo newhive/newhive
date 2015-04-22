@@ -61,6 +61,9 @@
     },"View/expr_overlays_fade_out_duration": {
         "description":"How long it takes for overlays on newhives to fade out"
         , "values":["all=400"]
+    },"View/bottom_bar": {
+        "description":"New bottom-bar navigation and click-to-play embed option in embed dialog"
+        , "values":["admins"]
 
     },"UI": {
         "description":"Test versions of the UI"
