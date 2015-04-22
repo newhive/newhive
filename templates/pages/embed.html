@@ -11,16 +11,17 @@ body { overflow:hidden; }
 iframe { border:none; width:100%; height:100% }
 .hide { display:none; }
 .icon { display:inline-block; background-size:100%; }
-.hinv:hover { filter:invert(100%); -webkit-filter:invert(100%); }
+.hinv:hover, #preview:hover .hinv {
+  filter:invert(100%); -webkit-filter:invert(100%); }
 .center { margin:auto; left:0;top:0;right:0;bottom:0; }
 
 .snapshot { width:100%; position:fixed; }
-#play { position:fixed; width:50%; height:50%; margin:auto;
+#play { position:fixed; width:30%; height:30%; margin:auto;
   top:0;right:0;bottom:0;left:0; opacity:.85; }
 
 .bbar { position:fixed; bottom:0; height:60px; width:100%; }
 #bbar { transition-property:opacity; transition-duration:1s; opacity:0; }
-#bbar:hover { opacity: 1; }
+#bbar:hover, #bbar.shaded { opacity: 1; }
 #bbar .shader { background-color:#fff; opacity:.85; }
 #bbar .icon { height:60px; width:60px; }
 #bbar .right { position:absolute; right:0; top:0;
@@ -32,10 +33,10 @@ iframe { border:none; width:100%; height:100% }
   background-color: black; }
 #bbar .hinv:hover { background-color:white; }
 
-#share { position:absolute; width:575px; height:190px; }
-#share .icon { width:150px; height:150px; border-radius:75px;
-  background-color:black; margin:20px; }
-#share .icon img { width:100px; padding:25px; }
+#share { position:absolute; width:525px; height:175px; }
+#share .icon { width:138px; height:138px; border-radius:69px;
+  background-color:black; margin:18px; }
+#share .icon img { width:92px; padding:23px; }
 #share .link { position:absolute; right:0; bottom:0; width:200px;
   font-size:large; }
 
@@ -45,7 +46,7 @@ iframe { border:none; width:100%; height:100% }
   <div id='overlays'>
     <div class='bbar{% if not query.autoplay %} hide{% endif %}' id='bbar'>
       <div class='bbar shader' id='shader'></div>
-      <div class='bbar unshaded'>
+      <div class='bbar'>
         <a href='{{ expr.url }}' class='icon logo'></a>
         <div class='right'
           ><img class='icon hinv' id='share_btn'
@@ -94,11 +95,13 @@ var play_btn = document.getElementById('play')
    ,link_btn = document.getElementById('link_btn')
    ,f = document.getElementById('expr_' + {{ expr.id|json }})
 
-play.onclick = function(){
+preview.onclick = function(){
   preview.classList.add('hide')
   f.setAttribute('src', f.getAttribute('data-src'))
   f.classList.remove('hide')
   bbar.classList.remove('hide')
+  bbar.classList.add('shaded')
+  setTimeout(function(){ bbar.classList.remove('shaded') }, 500)
 }
 pause.onclick = function(){
   f.classList.add('hide')

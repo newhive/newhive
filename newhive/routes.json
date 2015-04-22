@@ -40,6 +40,11 @@
         ,"controller": "expr"
         ,"method": "embed"
     }
+    ,"expr_embed": {
+        "page_route": "/e/<owner_name>/<path:expr_name>"
+        ,"controller": "expr"
+        ,"method": "embed"
+    }
 
     ,"//": "-----------------------------------------"
     ,"//": "These routes are community pages."

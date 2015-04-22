@@ -77,8 +77,11 @@ class Expr(ModelController):
         tdata.context.update(expr=expr_obj, expr_client=expr_client)
         return self.serve_page(tdata, 'pages/expr.html')
 
-    def embed(self, tdata, request, response, expr_id=None, **args):
-        expr = self.db.Expr.fetch(expr_id)
+    def embed(self, tdata, request, response, expr_id=None,
+        owner_name=None, expr_name=None, **args
+    ):
+        expr = ( self.db.Expr.fetch(expr_id) if expr_id else
+            self.db.Expr.named(owner_name, expr_name) )
         if not expr: return self.serve_404(tdata)
         tdata.context.update(expr=expr, embed=True,
             content_url=abs_url(domain=self.config.content_domain, 
