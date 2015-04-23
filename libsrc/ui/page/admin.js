@@ -3,12 +3,12 @@ define([
     ,'sj!templates/site_flags.html'
 ], function(
     context
-    ,site_tags_template
+    ,site_flags_template
 ){
     var o = {};
 
     o.render = function(){
-        $('#site').empty().append(site_tags_template());
+        $('#site').empty().append(site_flags_template());
         var $insert_point = $('.site_flags')
             , _flags = JSON.parse(context.page_data.site_flags)
             , flags = []
@@ -17,6 +17,7 @@ define([
         }
         flags.sort()
         for (var i in flags) {
+            console.log(flags[i])
             var flag = flags[i]
                 ,content = _flags[flag]
                 ,value = content

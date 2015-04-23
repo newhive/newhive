@@ -1,10 +1,9 @@
 {
 
-    "//": "When adding new flags, make comment in issue with flag name!",
-    "//": "FLAG: foo",
-    "//": "And update https://github.com/hivedev/newhive/wiki/Site-flags",
+    "z": "When adding new flags, make comment in issue with flag name!",
+    "z": "FLAG: foo",
+    "z": "And update https://github.com/hivedev/newhive/wiki/Site-flags",
 
-    "//": "Features",
     "Features": { 
         "description":"Flagged features"
     },"Features/show_hive_all": {
@@ -164,9 +163,8 @@
         , "values":["newduke"]
     },"Editor/merge_minis": {
         "description":"Merge the mini selection borders for groups"
-        , "values":["admins","devs"]
-    },
+        ,"values":["admins","devs"]
+    }
     
-    "//": "Old / unused",
-    "logged": ["logged_out"]
+    ,"z": ""
 }
