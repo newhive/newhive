@@ -165,6 +165,7 @@ class HiveAssets(Assets):
         # first grab assets for JavaScript
         self.find('Jplayer.swf', local=True)
         self.find('skin')
+        os.system('mkdir -p libsrc/server')
         self.write_js_assets('libsrc/server/compiled.assets.json')
         self.write_js(config.client_view(), 'libsrc/server/compiled.config.json')
 
@@ -235,11 +236,10 @@ class HiveAssets(Assets):
         )
 
         app_scss = webassets.Bundle('scss/base.scss', "scss/fonts.scss",
-            "scss/dialogs.scss", "scss/community.scss",
+            "scss/dialogs.scss", "scss/community.scss", "scss/expr.scss",
             "scss/settings.scss", "scss/signup_flow.scss", "scss/menu.scss",
             "scss/jplayer.scss", "scss/forms.scss", "scss/overlay.scss",
             "scss/skin.scss", 'scss/edit.scss', 'scss/codemirror.css',
-            "scss/view.scss",
             filters=scss_filter,
             output='compiled.app.css',
             debug=False
