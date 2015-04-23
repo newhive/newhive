@@ -37,15 +37,11 @@
         ,"precedence": 1
     }
     ,"expr_embed": {
-        "page_route": "/e/<expr_id>"
-        ,"controller": "expr"
-        ,"method": "embed"
-        ,"precedence": 1
-    }
-    ,"expr_embed_name": {
         "page_route": "/e/<owner_name>/<path:expr_name>"
+        ,"api_route": "/api/expr/view/<owner_name>/<path:expr_name>"
         ,"controller": "expr"
         ,"method": "embed"
+        ,"client_method": "expr"
         ,"precedence": 1
     }
 
