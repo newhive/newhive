@@ -61,8 +61,8 @@ if __name__ == '__main__':
     parser.add_option("-s", "--secure-port", action="store", type="int", dest="secure_port",
         help='Defaults to -p argument + 1 unless given --ssl-only')
     parser.add_option("--ssl-only", action="store_true", dest="ssl_only", default=False)
-    parser.add_option("--plain-only", action="store_true", dest="plain_only", default=False)
-    parser.add_option("--debug", action="store_true", dest="debug")
+    parser.add_option("-1", "--plain-only", action="store_true", dest="plain_only", default=False)
+    parser.add_option("-d", "--debug", action="store_true", dest="debug")
     parser.add_option("--secure", action="store_true", dest="secure", default=False)
     parser.add_option("--threaded", action="store_true", dest="threaded", default=False)
     (options, args) = parser.parse_args()

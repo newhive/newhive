@@ -14,8 +14,6 @@ fi
 ############################################
 source $NEWHIVE_HOME/bin/git_grep.sh
 
-filter_broken="${filter_broken}|/titanium/|history/history|/jquery-1|/old|/broken|/curl|google_closure.js|/d3/|codemirror.js|jquery-ui|/jquery/jquery|/codemirror/|mobile/[pt]|mobile/app/[^w]|zepto-|jquery.js"
-
 alias gr="git_grep -o"
 alias grh='git_grep -o -p "*.html"'
 alias grs='git_grep -o -p "*.scss"'
