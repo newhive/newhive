@@ -25,7 +25,6 @@ define([
     ,'sj!templates/expr_card_large.html'
     ,'sj!templates/expr_card_mini.html'
     ,'sj!templates/feed_card.html'
-    ,'sj!templates/form_overlay.html'
     ,'sj!templates/home.html'
     ,'sj!templates/icon_count.html'
     ,'sj!templates/login_form.html'

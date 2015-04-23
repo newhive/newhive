@@ -59,7 +59,7 @@
         ,"controller": "community"
         ,"method": "hive_featured"
         ,"client_method": "home"
-        ,"custom_classes": "nav"
+        ,"body_class": "nav"
         ,"require_login": true
     }
     ,"home_cat": {
@@ -69,7 +69,7 @@
         ,"method": "expressions_tag"
         ,"client_method": "cat"
         ,"_owner_name": "root"
-        ,"custom_classes": "nav"
+        ,"body_class": "nav"
         ,"include_categories": true
     }
     ,"home_": {
@@ -79,18 +79,19 @@
         ,"method": "expressions_tag"
         ,"client_method": "cat"
         ,"_owner_name": "root"
-        ,"custom_classes": "nav"
+        ,"body_class": "nav"
         ,"include_categories": true
     }
     ,"network": {
-        "page_route": "/<username>:Recent"
+        "page_route": "/<username>:<any(Recent):special>"
         ,"api_route": "/api/feed/recent/<username>"
         ,"controller": "community"
         ,"method": "network_recent"
         ,"client_method": "grid"
-        ,"custom_classes": "nav"
+        ,"body_class": "nav"
         ,"max_columns": 2
         ,"require_login": true
+        ,"precedence": 1
     }
 
     ,"featured": {
@@ -99,108 +100,115 @@
         ,"controller": "community"
         ,"method": "featured"
         ,"client_method": "profile"
-        ,"custom_classes": "nav"
+        ,"body_class": "nav"
         ,"require_login": true
     }
     ,"recent": {
         "page_route": "/home/recent"
-        ,"api_route": "/api/feed/recent"
-        ,"controller": "community"
-        ,"method": "recent"
-        ,"client_method": "grid"
-        ,"custom_classes": "nav"
-        ,"max_columns": 2
-        ,"require_login": true
+       ,"api_route": "/api/feed/recent"
+       ,"controller": "community"
+       ,"method": "recent"
+       ,"client_method": "grid"
+       ,"body_class": "nav"
+       ,"max_columns": 2
+       ,"require_login": true
     }
-    ,"search": {
+   ,"search": {
         "page_route": "/s"
-        ,"api_route": "/api/search"
-        ,"controller": "community"
-        ,"method": "search"
-        ,"custom_classes": "nav"
-        ,"client_method": "grid"
+       ,"api_route": "/api/search"
+       ,"controller": "community"
+       ,"method": "search"
+       ,"body_class": "nav"
+       ,"client_method": "grid"
     }
-    ,"expressions_random": {
+   ,"expressions_random": {
         "page_route": "/home/random"
-        ,"api_route": "/api/expr/random"
-        ,"controller": "community"
-        ,"method": "expressions_random"
-        ,"client_method": "grid"
+       ,"api_route": "/api/expr/random"
+       ,"controller": "community"
+       ,"method": "expressions_random"
+       ,"client_method": "grid"
     }
 
-    ,"//": "-----------------------------------------"
-    ,"//": "These routes are (profile) community pages."
+   ,"//": "-----------------------------------------"
+   ,"//": "These routes are (profile) community pages."
 
-    ,"my_home": {
+   ,"my_home": {
         "page_route": "/home/my"
-        ,"api_route": "/api/user/home"
-        ,"controller": "community"
-        ,"method": "empty"
+       ,"api_route": "/api/user/home"
+       ,"controller": "community"
+       ,"method": "empty"
     }
-    ,"following": {
-        "page_route": "/<owner_name>:Following",
-        "controller": "community",
-        "method": "following",
-        "client_method": "mini"
-    },
-    "followers": {
-        "page_route": "/<owner_name>:Followers",
-        "api_route": "/api/feed/followers/<owner_name>",
-        "controller": "community",
-        "method": "followers",
-        "client_method": "mini"
-    },
-    "loves": {
-        "page_route": "/<owner_name>:Love",
-        "api_route": "/api/feed/loves/<owner_name>",
-        "controller": "community",
-        "method": "loves",
-        "client_method": "grid"
+   ,"following": {
+        "page_route": "/<owner_name>:<any(Following):special>"
+       ,"api_route": "/api/feed/following/<owner_name>"
+       ,"controller": "community"
+       ,"method": "following"
+       ,"client_method": "mini"
+       ,"precedence": 1
+    }
+   ,"followers": {
+        "page_route": "/<owner_name>:<any(Followers):special>"
+       ,"api_route": "/api/feed/followers/<owner_name>"
+       ,"controller": "community"
+       ,"method": "followers"
+       ,"client_method": "mini"
+       ,"precedence": 1
+    }
+   ,"loves": {
+        "page_route": "/<owner_name>:<any(Love):special>"
+       ,"api_route": "/api/feed/loves/<owner_name>"
+       ,"controller": "community"
+       ,"method": "loves"
+       ,"client_method": "grid"
+       ,"precedence": 1
     }
 
-    ,"expressions_feed": {
-        "page_route": "/<owner_name>:Feed"
-        ,"api_route": "/api/profile/all/<owner_name>"
-        ,"controller": "community"
-        ,"method": "expressions_feed"
-        ,"client_method": "profile"
-        ,"include_tags": true
+   ,"expressions_feed": {
+        "page_route": "/<owner_name>:<any(Feed):special>"
+       ,"api_route": "/api/profile/all/<owner_name>"
+       ,"controller": "community"
+       ,"method": "expressions_feed"
+       ,"client_method": "profile"
+       ,"include_tags": true
+       ,"precedence": 1
     }
-    ,"expressions_all": {
-        "page_route": "/<owner_name>:All"
-        ,"api_route": "/api/profile/tag/<owner_name>"
-        ,"controller": "community"
-        ,"method": "expressions_tag"
-        ,"client_method": "grid"
-        ,"include_tags": true
+   ,"expressions_all": {
+        "page_route": "/<owner_name>:<any(All):special>"
+       ,"api_route": "/api/profile/tag/<owner_name>"
+       ,"controller": "community"
+       ,"method": "expressions_tag"
+       ,"client_method": "grid"
+       ,"include_tags": true
+       ,"precedence": 1
     }
-    ,"expressions_tag": {
+   ,"expressions_unlisted": {
+        "page_route": "/<owner_name>:<any(Unlisted):special>"
+       ,"api_route": "/api/profile/private/<owner_name>"
+       ,"controller": "community"
+       ,"method": "expressions_unlisted"
+       ,"client_method": "profile_private"
+       ,"include_tags": true
+       ,"private": true
+       ,"precedence": 1
+    }
+   ,"expressions_tag": {
         "page_route": "/<owner_name>:<tag_name>"
-        ,"api_route": "/api/profile/tag/<owner_name>/<tag_name>"
-        ,"controller": "community"
-        ,"method": "expressions_tag"
-        ,"search_query": "@<owner_name> #<tag_name>"
-        ,"client_method": "grid"
-        ,"include_tags": true
+       ,"api_route": "/api/profile/tag/<owner_name>/<tag_name>"
+       ,"controller": "community"
+       ,"method": "expressions_tag"
+       ,"search_query": "@<owner_name> #<tag_name>"
+       ,"client_method": "grid"
+       ,"include_tags": true
     }
-    ,"expressions_tag_private": {
+   ,"expressions_tag_private": {
         "page_route": "/<owner_name>:<tag_name>/<entropy>"
-        ,"api_route": "/api/profile/tag/<owner_name>/<tag_name>/<entropy>"
-        ,"controller": "community"
-        ,"method": "expressions_tag"
-        ,"search_query": "@<owner_name> #<tag_name>"
-        ,"client_method": "grid"
-        ,"include_tags": true
-        ,"private": true
-    }
-    ,"expressions_unlisted": {
-        "page_route": "/<owner_name>:Unlisted"
-        ,"api_route": "/api/profile/private/<owner_name>"
-        ,"controller": "community"
-        ,"method": "expressions_unlisted"
-        ,"client_method": "profile_private"
-        ,"include_tags": true
-        ,"private": true
+       ,"api_route": "/api/profile/tag/<owner_name>/<tag_name>/<entropy>"
+       ,"controller": "community"
+       ,"method": "expressions_tag"
+       ,"search_query": "@<owner_name> #<tag_name>"
+       ,"client_method": "grid"
+       ,"include_tags": true
+       ,"private": true
     }
 
     ,"collections_grid_cat": {
@@ -302,7 +310,7 @@
         "api_route": "/api/user/update/<owner_name>",
         "controller": "community",
         "method": "user_update",
-        "client_method": "user_update",
+        "client_method": "profile_edit",
         "require_login": true
     },
     "add_to_collection": {
@@ -366,7 +374,7 @@
 
     "expr_create": {
         "page_route": "/home/edit",
-        "client_method": "expr_create",
+        "client_method": "edit_container",
         "require_login": true
     },
     "expr_edit": {

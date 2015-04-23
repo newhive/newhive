@@ -419,7 +419,7 @@ define([
         var expr_id = page_data.expr_id;
         var expr_curr = $('.expr_visible');
         expr_curr.removeClass('expr_visible');
-        $('#exprs').showshow().addClass('animated');
+        $('#exprs').showshow()
         $('.social_btn').showshow();
 
         var contentFrame = o.get_expr(expr_id);
@@ -567,7 +567,6 @@ define([
 
     var hide_other_exprs = function() {
         var to_hide = $('#exprs .expr').not('.expr_visible,.blank').filter(":visible");
-        $('#exprs').removeClass('animated');
         to_hide.each(function(i, el) {
             $(el).get(0).contentWindow.
                 postMessage({action: 'hide'}, '*');

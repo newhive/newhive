@@ -1,11 +1,10 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <link id='css_minimal' rel='stylesheet' type='text/css' href='{{ asset_bundle('minimal.css')[0] }}'>
-  <meta id='viewport' name='viewport'>
-  <meta property='og:url' content='{{ expr.url }}'>
-  <style>
+{% extends "page.html" %}
 
+{% block meta %}
+  <meta id='viewport' name='viewport'>
+{% endblock meta %}
+{% block head %}
+  <style>
 body, html, #exprs { height:100%; }
 body { overflow:hidden; }
 iframe { border:none; width:100%; height:100% }
@@ -39,10 +38,9 @@ iframe { border:none; width:100%; height:100% }
 #share .icon img { width:92px; padding:23px; }
 #share .link { position:absolute; right:0; bottom:0; width:200px;
   font-size:large; }
-
   </style>
-</head>
-<body class='{% block body_class %}{% endblock %}'>
+{% endblock head %}
+{% block body %}
   <div id='overlays'>
     <div class='bbar{% if not query.autoplay %} hide{% endif %}' id='bbar'>
       <div class='bbar shader' id='shader'></div>
@@ -58,6 +56,7 @@ iframe { border:none; width:100%; height:100% }
         ></div>
       </div> 
     </div>
+    <div id='site'></div>
     <div id='share' class='hide center'
       ><a href='https://twitter.com/share?url={{ expr.url }}&related=NewHive&text={{ ("\""+expr.title+"\" by "+expr.owner.fullname)|e }}' target='_new' title='Share on twitter'><div class='icon hinv'><img src='{{ "skin/nav/twitter.svg"|asset_url }}'></div></a
       ><a href='https://www.facebook.com/sharer/sharer.php?u={{ expr.url|e }}'target='_new' title='Share on facebook'><div class='icon hinv'><img src='{{ "skin/nav/fb-f.svg"|asset_url }}'></div></a
@@ -83,50 +82,51 @@ iframe { border:none; width:100%; height:100% }
       <img id='play' class='hinv' src='{{ "skin/nav/newhive-play.svg"|asset_url }}'>
     </div>
   </div>
+  <script>curl(['ui/controller'], function(controller){
+    controller.init({{ route_args|json }}) })</script>
   <script>
 
-var play_btn = document.getElementById('play')
-   ,preview = document.getElementById('preview')
-   ,bbar = document.getElementById('bbar')
-   ,pause = document.getElementById('pause')
-   ,full = document.getElementById('full')
-   ,share = document.getElementById('share')
-   ,link = document.getElementById('link')
-   ,link_btn = document.getElementById('link_btn')
-   ,f = document.getElementById('expr_' + {{ expr.id|json }})
+  // var play_btn = document.getElementById('play')
+  //    ,preview = document.getElementById('preview')
+  //    ,bbar = document.getElementById('bbar')
+  //    ,pause = document.getElementById('pause')
+  //    ,full = document.getElementById('full')
+  //    ,share = document.getElementById('share')
+  //    ,link = document.getElementById('link')
+  //    ,link_btn = document.getElementById('link_btn')
+  //    ,f = document.getElementById('expr_' + {{ expr.id|json }})
 
-preview.onclick = function(){
-  preview.classList.add('hide')
-  f.setAttribute('src', f.getAttribute('data-src'))
-  f.classList.remove('hide')
-  bbar.classList.remove('hide')
-  bbar.classList.add('shaded')
-  setTimeout(function(){ bbar.classList.remove('shaded') }, 500)
-}
-pause.onclick = function(){
-  f.classList.add('hide')
-  preview.classList.remove('hide')
-  f.setAttribute('src', '')
-  bbar.classList.add('hide')
-}
+  // preview.onclick = function(){
+  //   preview.classList.add('hide')
+  //   f.setAttribute('src', f.getAttribute('data-src'))
+  //   f.classList.remove('hide')
+  //   bbar.classList.remove('hide')
+  //   bbar.classList.add('shaded')
+  //   setTimeout(function(){ bbar.classList.remove('shaded') }, 500)
+  // }
+  // pause.onclick = function(){
+  //   f.classList.add('hide')
+  //   preview.classList.remove('hide')
+  //   f.setAttribute('src', '')
+  //   bbar.classList.add('hide')
+  // }
 
-full.onclick = function(){
-  (f.webkitRequestFullscreen || f.mozRequestFullScreen || f.requestFullscreen
-    ).call(f)
-}
+  // full.onclick = function(){
+  //   (f.webkitRequestFullscreen || f.mozRequestFullScreen || f.requestFullscreen
+  //     ).call(f)
+  // }
 
-document.getElementById('share_btn').onclick = function(){
-  share.classList.remove('hide') }
-onmessage = function(){ share.classList.add('hide') }
-link_btn.onmouseover = function(){
-  link.classList.remove('hide')
-  link.focus()
-  link.select()
-}
-link_btn.onmouseout = function(){
-  link.classList.add('hide')
-}
+  // document.getElementById('share_btn').onclick = function(){
+  //   share.classList.remove('hide') }
+  // onmessage = function(){ share.classList.add('hide') }
+  // link_btn.onmouseover = function(){
+  //   link.classList.remove('hide')
+  //   link.focus()
+  //   link.select()
+  // }
+  // link_btn.onmouseout = function(){
+  //   link.classList.add('hide')
+  // }
 
   </script>
-</body>
-</html>
+{% endblock body %}

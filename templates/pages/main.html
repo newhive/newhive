@@ -37,9 +37,6 @@
       src='{{ page_data.content_url }}'></iframe>
   {% endif %}
   </div>
-  <script>
-curl(['ui/controller'], function(controller){
-    controller.init({{ route_args|json }});
-});
-  </script>
+  <script>curl(['ui/controller'], function(controller){
+    controller.init({{ route_args|json }}) })</script>
 {% endblock %}

@@ -1,17 +1,13 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <link rel='shortcut icon' type='image/png' href='{{ icon }}'>
-  {% block meta %}{% endblock %}
+  {% if icon %}<link rel='shortcut icon' type='image/png' href='{{ icon }}'>{% endif %}
   <link id='css_minimal' rel='stylesheet' type='text/css' href='{{ asset_bundle('minimal.css')[0] }}'>
+  {% block meta %}{% endblock %}
 
   {% for item in asset_bundle('curl.js') %}
     <script src='{{ item }}'></script>
   {% endfor %}
-  {% if not debug %}
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-  {% endif %}
-
   <script>
 curl({
     baseUrl: {{ ('/lib/libsrc' if debug else
@@ -20,7 +16,6 @@ curl({
     ,pluginPath: 'curl/plugin'
 });
   </script>
-
   {% block head %}{% endblock %}
 </head>
 <body class='{% block body_class %}{% endblock %}'

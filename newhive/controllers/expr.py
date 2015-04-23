@@ -84,8 +84,10 @@ class Expr(ModelController):
             self.db.Expr.named(owner_name, expr_name) )
         if not expr: return self.serve_404(tdata)
         tdata.context.update(expr=expr, embed=True,
-            content_url=abs_url(domain=self.config.content_domain, 
-                secure=tdata.request.is_secure) + expr.id)
+            content_url=abs_url(domain=self.config.content_domain,
+                secure=tdata.request.is_secure) + expr.id
+            ,icon=False, route_args=args
+        )
         return self.serve_page(tdata, 'pages/embed.html')
 
     def save(self, tdata, request, response, **args):
