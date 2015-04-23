@@ -51,9 +51,9 @@ define([
     o.substitute_variables = function(route_pattern, routeVars) {
         // hack to deal with any() hack to fix werkzeug route ordering
         // https://github.com/mitsuhiko/werkzeug/issues/727
-        route_pattern =route_pattern.replace(/<any\((\w+)\):\w+>/, '$1')
+        route_pattern = route_pattern.replace(/<any\((\w+)\):\w+>/, '$1')
         for (var routeVar in routeVars){
-            var needle = RegExp('<([^:]+:)?' + routeVar +'>')
+            var needle = RegExp('<([^:<]+:)?' + routeVar +'>')
             route_pattern = route_pattern.replace(needle, routeVars[routeVar])
         }
         return route_pattern
