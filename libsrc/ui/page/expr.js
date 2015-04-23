@@ -204,11 +204,11 @@ define([
             $hovers = $("<div class='hover left'>")
                 .add( $("<div class='hover right'>"))
                 .add( $("<div class='hover bottom'>"))
-                .appendTo($("body"))
+                .appendTo('#overlays')
         }
-    };
+    }
     o.exit = function(){
-        $hovers.remove()
+        $('#overlays .hover').remove()
         $.map(timers, function(timer) {
             clearTimeout(timer)
         })
@@ -226,7 +226,7 @@ define([
         $('.overlay.panel .expr_actions').hidehide()
         $(".overlay.panel .signup").showshow()
         o.do_handle_message = false
-    };
+    }
 
     // Check to see if tags overflows its bounds.
     // If so, create "..." tag with associated menu.
@@ -273,7 +273,7 @@ define([
                 page_data.cards = data.cards 
                 if (o.last_found == -1) {
                     o.last_found = find_card(o.expr.id)
-                    o.page_btn_handle()
+                    // TODO: hide page-next button?
                 }
                 context.page_data.next_cards_at = page_data.cards.length
             }
@@ -512,24 +512,6 @@ define([
         }, o.anim_duration);
         o.allow_animations = false;
 
-        // postMessage only works after the page loads.
-        // So page buttons are always visible during expr loading,
-        // and once expr loads, they behave normally .page_btn.page_btn_load_hack
-        if(!contentFrame.data('loaded') && !no_paging){
-            // bugbug: sometimes this is never followed by a contentFrame.load
-            // console.log('showing');
-            if(!context.flags.View.expr_overlays_fade)
-                $('.page_btn').showshow();
-        }
-        else {
-            // console.log('resetting on show');
-            o.page_btn_handle();
-        }
-        contentFrame.load(function(){
-            // console.log('resetting on load', contentFrame);
-            o.page_btn_handle();
-        });
-
         // password UI and submission
         var password_dia = $('#dia_expr_password');
         var open_passworded_expr = function(password){
@@ -606,16 +588,16 @@ define([
         var $this = $(ev.target)
         do_hover($this.is(".bottom"), $this)
     }        
-    var do_hover = function(bottom, $this) {
-        var $object = $(), timer
-        $this.hidehide()
+    var do_hover = function(bottom, $this){
+        var $object = $(), timer, opacity = 1
         var unhide = function() {
             $this.showshow()
             // $object.css('opacity', 0)
             $object.stop(true).animate({"opacity":0},
                 {duration:context.flags.expr_overlays_fade_out_duration})
         }
-        var opacity = context.flags.expr_overlays_fade
+        $this.hidehide()
+
         if (bottom) {
             $object = $(".overlay.bottom")
         } else {
@@ -625,15 +607,13 @@ define([
                 || context.page_data.cards.length == 1
                 || !context.page_data.expr
                 || no_paging
-            )) {
-                return
-            }
+            )) return
 
-            $object = $this.is(".left") ? 
-                $(".page_btn.page_prev") : $(".page_btn.page_next")
+            $object = $('.page_btn.' + ($this.is('.left') ? 'left' : 'right'))
             if (context.flags.View.page_button_opacity)
                 opacity = context.flags.View.page_button_opacity
         }
+
         $object //.css('opacity', opacity)
             .stop(true).animate(
                 {"opacity": opacity},
@@ -647,7 +627,6 @@ define([
                 timer = setTimeout(unhide, 2000)
                 timers.push(timer)
             })
-            $object.data("opacity", opacity)
         timer = setTimeout(unhide, 2000)
         timers.push(timer)
     }
@@ -660,36 +639,29 @@ define([
         $("#social_plus").bind_once('click', o.social_toggle);
         $("#social_close").bind_once_anon("click", o.social_toggle);
         $(".social_btn").bind_once_anon("click", o.social_toggle);
-        if (context.flags.expr_overlays_fade) {
-            $hovers.bind_once('mouseenter.expr', handle_hover)
-            js.on_ready(function() {
-                do_hover(true,$())
-            })
 
-            $(".bottom.overlay,.page_btn.overlay")
-                .off("mouseenter").on("mouseenter", function(ev){
-                    // $(this).css('opacity', 1)
-                    $(this).stop(true).animate(
-                        {"opacity":1},
-                        {duration: context.flags.expr_overlays_fade_duration}
-                    )
-                })
-                .on("mouseleave", function(ev) {
-                    // $(this).css('opacity', 0)
-                    $(this).animate(
-                        {"opacity": $(this).data("opacity")},
-                        {duration: context.flags.expr_overlays_fade_out_duration}
-                    )
-                })
-            $('.bottom.overlay,.page_btn').css('transition-duration',
-                context.flags.expr_overlays_fade_duration)
-        } else {
-            $('.page_btn').bind_once_anon('mouseenter', function(event){
-                o.page_btn_animate($(this), "in");
-            }).bind_once_anon('mouseleave', function(e) {
-                o.page_btn_animate($(this), "out");
-            });
-        }
+        $hovers.bind_once('mouseenter.expr', handle_hover)
+        js.on_ready(function(){ do_hover('.bottom', $()) })
+        $(".bottom.overlay,.page_btn.overlay")
+            .off("mouseenter").on("mouseenter", function(ev){
+                // $(this).css('opacity', 1)
+                $(this).stop(true).animate(
+                    {"opacity":1},
+                    {duration: context.flags.expr_overlays_fade_duration}
+                )
+            })
+            .on("mouseleave", function(ev) {
+                // $(this).css('opacity', 0)
+                $(this).animate( {"opacity":0},
+                    {duration:context.flags.expr_overlays_fade_out_duration} )
+            })
+        $('.bottom.overlay,.page_btn').css('transition-duration',
+            context.flags.expr_overlays_fade_duration)
+        $(window).on('mousewheel', function(){
+            $('#overlays .bottom,#overlays .left,#overlays .right').hide()
+            setTimeout(function(){ $('#overlays .hover').showshow() }, 2000)
+        })
+
         if ($("#site").children().length && context.page_data.cards_route)
             $(".title_spacer .title").addClass("pointer").unbind('click').click(function() {
                 // clicking the title in social overlay returns to the collection
@@ -782,44 +754,6 @@ define([
             $(e).data('dialog').opts.handler = function(e, data){
                 o.controller.open('expressions_feed',
                     {'owner_name': context.user.name });
-            }
-        });
-    };
-
-    o.page_btn_animate = function (el, into) {
-        var prop = "opacity";
-        var dir = (el.prop("id") == "page_next") ? "" : "-";
-        var orig_value = el.css(prop);
-        if (el.data(prop))
-            orig_value = el.data(prop);
-        else
-            el.data(prop, orig_value);
-
-        el.stop().css("opacity", (into == "in") ? .2 : .5).animate({
-            'opacity': (into == "in") ? 1.0 : orig_value }, {
-            duration: 500,
-            easing: 'swing'
-        });
-        return;
-
-        var prop = "background-position-x";
-        var dir = (el.prop("id") == "page_next") ? "" : "-";
-        var orig_position = el.css(prop);
-        if (el.data(prop))
-            orig_position = el.data(prop);
-        else
-            el.data(prop, orig_position);
-
-        el.stop().animate({
-            'background-position-x': dir + "20px" }, {
-            duration: 150,
-            easing: 'swing',
-            complete: function() {
-                el.animate({
-                    'background-position-x': orig_position }, {
-                    duration: 150,
-                    easing: 'swing'
-                });
             }
         });
     };
@@ -1051,10 +985,8 @@ define([
         } else if(msg == 'play' || msg == 'play_pause') {
             o.play_pause_update(msg == 'play')
             return
-        } else {
-            o.page_btn_handle(msg);
         }
-    };
+    }
 
     o.expr_click = function(){
         if ($('#social_overlay').css('display') != 'none')
@@ -1065,44 +997,6 @@ define([
         $('.overlay.panel .play_pause').showshow().removeClass('play pause').
             addClass(playing ? 'pause' : 'play')
     }
-
-    var page_btn_state = '';
-    o.page_btn_handle = function(msg){
-        if (context.flags.View.expr_overlays_fade)
-            return 
-
-        if(util.mobile())
-            return
-        if (!msg)
-            msg = page_btn_state;
-        // don't render the page buttons if there is nothing to page through!
-        if (!context.from_categories && 
-            (context.page_data.cards == undefined
-            || context.page_data.cards.length == 1
-            || !context.page_data.expr
-            || no_paging
-        )) {
-            msg = 'hide';
-        }
-
-        if (msg == 'show_prev') {
-            $('.page_btn.page_prev').showshow();
-            $('.page_btn.page_next').hidehide();
-        } else if(msg == 'show_next') {
-            $('.page_btn.page_next').showshow();
-            $('.page_btn.page_prev').hidehide();
-        } else if(msg == 'hide') {
-            $('.page_btn').hidehide();
-        }
-
-        // if (o.last_found == 0) {
-        //     $('.page_btn.page_prev').hidehide();
-        // }
-
-        // should reflect whether left or right page_btn should be visible if
-        // page is not loading. See .page_btn.page_btn_load_hack
-        page_btn_state = msg;
-    };
 
     return o;
 });
