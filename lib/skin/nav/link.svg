@@ -1,4 +1,5 @@
-<svg id='link' version='1.1' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 507 507'>
+<svg viewBox='0 0 507 507'
+  version='1.1' xmlns='http://www.w3.org/2000/svg'>
 <g>
   <g>
     <path fill='#fff' d='M480.215,27.191C462.284,9.063,440.371,0,414.473,0c-25.895,0-48.012,8.965-66.34,26.895
