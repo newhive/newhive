@@ -7,7 +7,7 @@
   <style>
 body, html, #exprs { width:100%; height:100%; margin:0; }
 body { overflow:hidden; }
-iframe, svg { border:none; width:100%; height:100% }
+iframe, svg { border:none; width:100%; height:100%; z-index:0; }
 .hide { display:none !important; }
 .icon { display:inline-block; }
 .center { margin:auto; left:0;top:0;right:0;bottom:0; }
@@ -19,20 +19,23 @@ iframe, svg { border:none; width:100%; height:100% }
 .hover.wb:hover path, .hover.wb.hovered path { stroke:white; fill:black; }
 
 .snapshot { width:100%; position:fixed; }
-#play { position:fixed; width:30%; height:30%; margin:auto;
+#play_btn { position:fixed; width:30%; height:30%; margin:auto;
   top:0;right:0;bottom:0;left:0; opacity:.85; }
 
 #bbar .icon.logo { width:50%; }
 #bbar .icon.logo svg { width:60px; }
 
 .bbar { position:fixed; bottom:0; height:60px; width:100%; }
-#bbar { transition-property:opacity; transition-duration:1s; opacity:0; }
+#bbar { transition-property:opacity; transition-duration:1s;
+  opacity:0; z-index:1; }
 #bbar:hover, #bbar.shaded { opacity: 1; }
 #bbar .shader { background-color:#fff; opacity:.85; }
 #bbar .icon { height:60px; width:60px; }
 #bbar img { width:40px; padding:10px; }
 #bbar .right { position:absolute; display:inline-block;
   right:0;top:0; height:100%; }
+
+#preview { z-index:0; }
   </style>
 {% endblock head %}
 {% block body %}
@@ -80,7 +83,7 @@ iframe, svg { border:none; width:100%; height:100% }
       allowfullscreen></iframe>
     <div id='preview' class='{% if query.autoplay %}hide{% endif %}'>
       <img src='{{ expr.snapshot_name('big') }}' class='snapshot center'>
-      <div id='play' class='hover wb icon'
+      <div id='play_btn' class='hover wb icon'
         >{% include 'lib/skin/nav/newhive-play.svg' %}</span>
     </div>
   </div>
@@ -91,7 +94,7 @@ var preview = document.getElementById('preview')
    ,bbar = document.getElementById('bbar')
    ,pause = document.getElementById('pause')
    ,full = document.getElementById('full')
-   ,play = document.getElementById('play')
+   ,play_btn = document.getElementById('play_btn')
    // ,share = document.getElementById('share')
    // ,link = document.getElementById('link')
    // ,link_btn = document.getElementById('link_btn')
@@ -115,18 +118,23 @@ pause.onclick = function(){
 }
 preview.onmouseover = function(){
     bbar.classList.add('shaded')
-    play.classList.add('hovered')
+    play_btn.classList.add('hovered')
 }
 preview.onmouseout = function(){
     bbar.classList.remove('shaded')
-    play.classList.remove('hovered')
+    play_btn.classList.remove('hovered')
 }
-
 full.onclick = function(){
     var b = document.body;
     ( b.webkitRequestFullscreen || b.mozRequestFullScreen ||
       b.requestFullscreen ).call(b)
     if(Array.prototype.indexOf.call(f.classList, 'hide') != -1) play()
+}
+
+window.onmousewheel = function(){
+    document.querySelector('#overlays').classList.add('hide')
+    setTimeout(function(){
+      document.querySelector('#overlays').classList.remove('hide') }, 2000)
 }
 
 {#
