@@ -1,21 +1,26 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  {% if icon %}<link rel='shortcut icon' type='image/png' href='{{ icon }}'>{% endif %}
-  <link id='css_minimal' rel='stylesheet' type='text/css' href='{{ asset_bundle('minimal.css')[0] }}'>
-  {% block meta %}{% endblock %}
+  <link rel='shortcut icon'
+    {% if icon %} type='image/png' href='{{ icon }}'
+    {% else %} type='image/x-icon' href='data:image/x-icon;,'
+    {% endif %}>
+  {% if not barebones %}
+    <link id='css_minimal' rel='stylesheet' type='text/css' href='{{ asset_bundle('minimal.css')[0] }}'>
+    {% block meta %}{% endblock %}
 
-  {% for item in asset_bundle('curl.js') %}
-    <script src='{{ item }}'></script>
-  {% endfor %}
-  <script>
-curl({
-    baseUrl: {{ ('/lib/libsrc' if debug else
-        config.abs_url('lib', relative=True))|json }}
-    ,paths: {'media' : '{{ media_bucket }}' }
-    ,pluginPath: 'curl/plugin'
-});
-  </script>
+    {% for item in asset_bundle('curl.js') %}
+      <script src='{{ item }}'></script>
+    {% endfor %}
+    <script>
+  curl({
+      baseUrl: {{ ('/lib/libsrc' if debug else
+          config.abs_url('lib', relative=True))|json }}
+      ,paths: {'media' : '{{ media_bucket }}' }
+      ,pluginPath: 'curl/plugin'
+  });
+    </script>
+  {% endif %}
   {% block head %}{% endblock %}
 </head>
 <body class='{% block body_class %}{% endblock %}'

@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<svg version='1.1' xmlns='http://www.w3.org/2000/svg' viewBox='-42 -42 185 185'>
+<svg id='pause' version='1.1' xmlns='http://www.w3.org/2000/svg' viewBox='-42 -42 185 185'>
 <g transform='translate(26, 50)'>
   <path fill='#000' d='M-16,-30 V30 A10,10,0,0,0,16,30 L16,-30 A10,10,0,0,0,-16,-30'/>
 </g>

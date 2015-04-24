@@ -85,7 +85,7 @@ class Expr(ModelController):
         tdata.context.update(expr=expr, embed=True,
             content_url=abs_url(domain=self.config.content_domain,
                 secure=tdata.request.is_secure) + expr.id
-            ,icon=False, route_args=args
+            ,icon=False, route_args=args, barebones=True
         )
         return self.serve_page(tdata, 'pages/embed.html')
 

@@ -18,7 +18,7 @@ define([
    ,test_assets
 ){ return {
     expr:expr
-   ,expr_create:edit_container
+   ,edit_container:edit_container
    ,home:profile
    ,profile:profile
    ,profile_private:profile
