@@ -1171,10 +1171,10 @@ class User(HasSocial):
             return 'Passwords must be at least 4 characters long'
         return False
 
-    def get_url(self, path='profile/', relative=False, secure=False):
+    def get_url(self, path=':Feed', relative=False, secure=False):
         if not self.id: return ''
         base = '/' if relative else abs_url(secure=secure)
-        return base + self.get('name', '') + '/' + path
+        return base + self.get('name', '') + path
     url = property(get_url)
 
     def get_thumb(self, size=222):
@@ -1408,6 +1408,14 @@ class User(HasSocial):
         groups = self.get('groups')
         if not groups: return ''
         return ",".join(["%s%s" % item for item in groups.iteritems()])
+
+    @property
+    def display_name(self):
+        txt = '@' + self['name']
+        full = self.get('fullname')
+        if full and full != self['name']:
+            txt = full + ' / ' + txt
+        return txt
 
     @property
     def is_admin(self):

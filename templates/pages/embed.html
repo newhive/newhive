@@ -5,56 +5,54 @@
 {% endblock meta %}
 {% block head %}
   <style>
-body, html, #exprs { height:100%; margin:0; }
+body, html, #exprs { width:100%; height:100%; margin:0; }
 body { overflow:hidden; }
-iframe { border:none; width:100%; height:100% }
-.hide { display:none; }
-.icon { display:inline-block; background-size:100%; }
-.hinv:hover, #preview:hover .hinv {
-  filter:invert(100%); -webkit-filter:invert(100%); }
+iframe, svg { border:none; width:100%; height:100% }
+.hide { display:none !important; }
+.icon { display:inline-block; }
 .center { margin:auto; left:0;top:0;right:0;bottom:0; }
+
+.hover,.hover path { transition-property:background-color fill stroke;
+  transition-duration:1s; }
+.hover.bw:hover path { fill:white; }
+.hover.bw:hover > * { background-color:black; }
+.hover.wb:hover path, .hover.wb.hovered path { stroke:white; fill:black; }
 
 .snapshot { width:100%; position:fixed; }
 #play { position:fixed; width:30%; height:30%; margin:auto;
   top:0;right:0;bottom:0;left:0; opacity:.85; }
+
+#bbar .icon.logo { width:50%; }
+#bbar .icon.logo svg { width:60px; }
 
 .bbar { position:fixed; bottom:0; height:60px; width:100%; }
 #bbar { transition-property:opacity; transition-duration:1s; opacity:0; }
 #bbar:hover, #bbar.shaded { opacity: 1; }
 #bbar .shader { background-color:#fff; opacity:.85; }
 #bbar .icon { height:60px; width:60px; }
+#bbar img { width:40px; padding:10px; }
 #bbar .right { position:absolute; display:inline-block;
   right:0;top:0; height:100%; }
-  /*background-image:url('{{ "skin/nav/logo.png"|asset_url }}'); }*/
-#bbar .logo:hover { background-color:black; }
-#bbar .logo:hover path { fill:white; }
-#bbar .hinv:hover { background-color:white; }
-/*{#
-#share { position:absolute; width:525px; height:175px; }
-#share .icon { width:138px; height:138px; border-radius:69px;
-  background-color:black; margin:18px; }
-#share .icon img { width:92px; padding:23px; }
-#share .link { position:absolute; right:0; bottom:0; width:200px;
-  font-size:large; }
-#}*/
   </style>
 {% endblock head %}
 {% block body %}
   <div id='overlays'>
-    <div class='bbar{% if not query.autoplay %} hide{% endif %}' id='bbar'>
+    <div class='bbar' id='bbar'>
       <div class='bbar shader' id='shader'></div>
       <div class='bbar'>
-        <a href='{{ expr.url }}' class='icon logo' target='_new'>{%
-          include 'lib/skin/nav/logo.svg' %}</a>
+        <a href='{{ expr.url }}' class='icon logo hover bw'
+          title='view on NewHive'
+          target='_new'>{% include 'lib/skin/nav/logo.svg' %}</a>
         <div class='right'
-          {#><img class='icon hinv' id='share_btn'
-            src='{{ "skin/nav/share.png"|asset_url }}'#}
-          ><img class='icon hinv' id='full'
-            src='{{ "skin/nav/fullscreen.png"|asset_url }}'
-          ><img class='icon' id='owner'
-            src='{{ expr.owner.get_thumb(190) }}'
-          >{% include 'lib/skin/nav/pause.svg' %}
-        ></div>
+          ><a id='full' class='icon hover bw' title='full screen'
+            >{% include 'lib/skin/nav/fullscreen.svg' %}</a
+          ><a id='pause'
+            class='icon hover bw{% if not query.autoplay %} hide{% endif %}'
+            title='stop content'>{% include 'lib/skin/nav/pause.svg' %}</a
+          ><a href='{{ expr.owner.url }}' class='icon hover bw'
+            title='{{ expr.owner.display_name }}'
+            target='_new'><img
+              id='owner' src='{{ expr.owner.get_thumb(70) }}'></a></div>
       </div> 
     </div>
     <div id='site'></div>
@@ -75,46 +73,60 @@ iframe { border:none; width:100%; height:100% }
     <iframe id='expr_{{ expr.id }}' data-src='{{ content_url }}'
       {% if query.autoplay %}
         src='{{ content_url }}'
-        class='expr hide'
-      {% else %}
         class='expr'
+      {% else %}
+        class='expr hide'
       {% endif %}
       allowfullscreen></iframe>
     <div id='preview' class='{% if query.autoplay %}hide{% endif %}'>
       <img src='{{ expr.snapshot_name('big') }}' class='snapshot center'>
-      <img id='play' class='hinv' src='{{ "skin/nav/newhive-play.svg"|asset_url }}'>
+      <div id='play' class='hover wb icon'
+        >{% include 'lib/skin/nav/newhive-play.svg' %}</span>
     </div>
   </div>
   <script>
 
-var play_btn = document.getElementById('play')
-   ,preview = document.getElementById('preview')
+var preview = document.getElementById('preview')
+   ,f = document.getElementById('expr_' + {{ expr.id|json }})
    ,bbar = document.getElementById('bbar')
    ,pause = document.getElementById('pause')
    ,full = document.getElementById('full')
+   ,play = document.getElementById('play')
    // ,share = document.getElementById('share')
-   ,link = document.getElementById('link')
-   ,link_btn = document.getElementById('link_btn')
-   ,f = document.getElementById('expr_' + {{ expr.id|json }})
+   // ,link = document.getElementById('link')
+   // ,link_btn = document.getElementById('link_btn')
 
-preview.onclick = function(){
+function play(){
     preview.classList.add('hide')
     f.setAttribute('src', f.getAttribute('data-src'))
     f.classList.remove('hide')
-    bbar.classList.remove('hide')
     bbar.classList.add('shaded')
+    pause.classList.remove('hide')
     setTimeout(function(){ bbar.classList.remove('shaded') }, 500)
 }
+preview.onclick = play
 pause.onclick = function(){
     f.classList.add('hide')
     preview.classList.remove('hide')
-    f.setAttribute('src', '')
-    bbar.classList.add('hide')
+    pause.classList.add('hide')
+    f.setAttribute('src', '');
+    ( document.webkitExitFullscreen || document.mozExitFullScreen ||
+      document.exitFullscreen ).call(document)
+}
+preview.onmouseover = function(){
+    bbar.classList.add('shaded')
+    play.classList.add('hovered')
+}
+preview.onmouseout = function(){
+    bbar.classList.remove('shaded')
+    play.classList.remove('hovered')
 }
 
 full.onclick = function(){
-    (f.webkitRequestFullscreen || f.mozRequestFullScreen || f.requestFullscreen
-      ).call(f)
+    var b = document.body;
+    ( b.webkitRequestFullscreen || b.mozRequestFullScreen ||
+      b.requestFullscreen ).call(b)
+    if(Array.prototype.indexOf.call(f.classList, 'hide') != -1) play()
 }
 
 {#
