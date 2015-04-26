@@ -41,7 +41,6 @@
         ,"api_route": "/api/expr/embed/<expr_id>"
         ,"controller": "expr"
         ,"method": "embed"
-        ,"client_method": "expr"
         ,"precedence": 1
     }
     ,"expr_embed": {
@@ -49,7 +48,6 @@
         ,"api_route": "/api/expr/embed/<owner_name>/<path:expr_name>"
         ,"controller": "expr"
         ,"method": "embed"
-        ,"client_method": "expr"
         ,"precedence": 1
     }
 

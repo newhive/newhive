@@ -3,28 +3,35 @@
   <div class=" title expr">Embed</div>
   <div class= "_2column">
     <div class="right fixed inline select_params">
-      <div class="subheading">Include:</div>
-      <input id = "include_logo" type="checkbox" checked
-        value="include_logo" name="url">
-      <label for ="include_logo">Logo</label><br/><br/>
-      
+      <div class="subheading">Options:</div>
       <input id = "include_collection" type="checkbox" value="include_collection" name="url">
-      <label for ="include_collection">Collection</label><br/><br/>
-      
-      <input id = "include_social" type="checkbox" value="include_social" name="url">
-      <label for ="include_social">Social</label> <br /><br/>
+      <label for="include_collection">Collection</label><br><br>
+      {<if flags.View.new_embed}
+        <label>width: <input type='text' value='100%' size=3
+          class='width mini'></label><br><br>
+        <label>height: <input type='text' value='100%' size=3
+          class='height mini'></label>
+      {>}{<else}
+        <input id='include_social' type='checkbox' value='include_social'
+          name='ur'>
+        <label for=include_social>Social</label><br><br>
+
+        <input id='include_logo' type='checkbox' value='include_logo'
+          name='url' checked>
+        <label for='include_logo'>Logo</label><br><br>
+      {>}
     </div>
 
-    <div class="left fill">
-      <div class="subheading">Interactive Expression:</div>
+    <div class='left fill'>
+      <div class='subheading'>Code:</div>
       <textarea autofocus class='copy embed_code' id='expression_embed_code'
         onclick='this.select()' readonly>
       </textarea>
     </div>
   </div>
   {#
-  <div class="subheading">Expression image link:</div>
-  <textarea class="image_link" onclick='this.select()' readonly
+  <div class='subheading'>Expression image link:</div>
+  <textarea class='image_link' onclick='this.select()' readonly
     >http:{config.server_url}{routing_href "expr_snapshot" "expr_id" id}</textarea>
   #}
 </div>
