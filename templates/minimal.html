@@ -14,12 +14,17 @@
     {% endfor %}
     <script>
   curl({
+      // TODO: use S3 / CDN for extra newhive-specific bundles
+      //   with curl loading and versioning support
       baseUrl: {{ ('/lib/libsrc' if debug else
           config.abs_url('lib', relative=True))|json }}
       ,paths: {'media' : '{{ media_bucket }}' }
       ,pluginPath: 'curl/plugin'
   });
     </script>
+    {% if not debug %}
+      <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+    {% endif %}
   {% endif %}
   {% block head %}{% endblock %}
 </head>

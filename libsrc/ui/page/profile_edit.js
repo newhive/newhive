@@ -7,8 +7,7 @@ define([
     'context',
     'sj!templates/cards.html',
     'sj!templates/user_byline.html',
-    'sj!templates/lazy_mini_expression.html',
-
+    'sj!templates/lazy_mini_expression.html'
 ], function(
     $
    ,profile_edit_template
@@ -19,7 +18,7 @@ define([
    ,cards_template
    ,template_user_byline
    ,template_mini_expr
-) {
+){
     var o = { name: 'profile_edit' }
     o.init = function(controller){ o.controller = controller }
 
