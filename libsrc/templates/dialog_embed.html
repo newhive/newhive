@@ -4,21 +4,23 @@
   <div class= "_2column">
     <div class="right fixed inline select_params">
       <div class="subheading">Options:</div>
-      <input id = "include_collection" type="checkbox" value="include_collection" name="url">
-      <label for="include_collection">Collection</label><br><br>
+      <label for="include_collection">collection: &nbsp;
+        <input id='include_collection' type='checkbox'
+          value='include_collection' name='url'></label><br><br>
       {<if flags.View.new_embed}
+        <label>autoplay: <input type='checkbox' off
+          class='autoplay'></label><br><br>
         <label>width: <input type='text' value='100%' size=3
           class='width mini'></label><br><br>
-        <label>height: <input type='text' value='100%' size=3
+        <label>height: &nbsp;<input type='text' value='100%' size=3
           class='height mini'></label>
       {>}{<else}
-        <input id='include_social' type='checkbox' value='include_social'
-          name='ur'>
-        <label for=include_social>Social</label><br><br>
+        <label>social: <input id='include_social' type='checkbox'
+          value='include_social'></label><br><br>
 
         <input id='include_logo' type='checkbox' value='include_logo'
           name='url' checked>
-        <label for='include_logo'>Logo</label><br><br>
+        <label for='include_logo'>logo</label><br><br>
       {>}
     </div>
 

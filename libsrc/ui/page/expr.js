@@ -702,6 +702,8 @@ define([
                 // TODO: implement proper collection selection
                 if ($("#include_collection").is(":checked"))
                     params.q = context.query.q
+                if($('#dia_embed .autoplay').is(':checked'))
+                    params.autoplay = 1
             }else{
                 var host = context.config.server_url
                     ,link = ''
