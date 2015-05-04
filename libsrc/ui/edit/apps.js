@@ -1217,7 +1217,7 @@ Hive.App = function(init_state, opts) {
 
     // initialize
 
-    o.div = $('<div class="happ drag">').appendTo(env.apps_e).attr('id', o.id);
+    o.div = $('<div class="happ drag">').appendTo(env.apps_e)
     if (o.init_state.client_data) 
         o.div.data(o.init_state.client_data)
     o.css_class_set(o.css_class())
@@ -1228,6 +1228,7 @@ Hive.App = function(init_state, opts) {
     opts.defer_load != undefined && (o.defer_load = opts.defer_load)
     if (o.initialized) throw "load called too soon"
     Hive.has_sequence(o, o.typename())
+    o.div.attr('id', o.name())
 
     o.div.addClass(o.type.tname.replace(".", "_"))
     if (o.content_element && o.init_state.css_state)
