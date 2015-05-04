@@ -685,33 +685,49 @@ define([
             $("#dia_share textarea.dark").val(url)
         }).trigger("change");
 
-        // updates embed links based on selection
-        $("#dia_embed input[type=checkbox]").on("change", function(ev) {
-            var host = context.config.server_url
-                , params = {template: "embed"}
-                , link = ''
-                , embed_url = ''
-                , clean = ''
-            if ($("#include_logo").is(":checked")){
-                clean += " logo"
-            }
-            if ($("#include_collection").is(":checked")){
-                params.q = context.query.q
-                clean += " collection"
-            }
-            if ($("#include_social").is(":checked")){
-                clean += " social"
-            }
-            params.clean = clean ? clean.slice(1) : 't'
+        function css_length(v){
+            if(!parseInt(v)) v = '100%'
+            if(!v.match(/em|ex|%|px|cm|mm|in|pt|pc$/)) v += 'px'
+            return v
+        }
 
-            params = "?" + $.param(params)
-            link = util.urlize(host).replace(/\/$/,"") + 
-                window.location.pathname;
-            embed_url ="<iframe src='" + link + params + "' " +
-                "style='width: 100%; height: 100%' marginwidth='0' " +
-                "marginheight='0' frameborder='0' vspace='0' hspace='0'></iframe>"
-            
-            $('#dia_embed .copy.embed_code').val(embed_url); 
+        // updates embed links based on selection
+        $("#dia_embed input").on("change", function(ev) {
+            var params = {}, width = '100%', height = '100%'
+            if(context.flags.View.new_embed){
+                var link = 'http://'+ c.config.server_domain +'/e/'
+                    + c.page_data.expr.id
+                width = css_length($('#dia_embed .width').val())
+                height = css_length($('#dia_embed .height').val())
+                // TODO: implement proper collection selection
+                if ($("#include_collection").is(":checked"))
+                    params.q = context.query.q
+                if($('#dia_embed .autoplay').is(':checked'))
+                    params.autoplay = 1
+            }else{
+                var host = context.config.server_url
+                    ,link = ''
+                    ,embed_url = ''
+                    ,clean = ''
+                params.template = 'embed'
+                if ($("#include_logo").is(":checked")){
+                    clean += " logo"
+                }
+                if ($("#include_collection").is(":checked")){
+                    params.q = context.query.q
+                    clean += " collection"
+                }
+                if ($("#include_social").is(":checked")){
+                    clean += " social"
+                }
+                params.clean = clean ? clean.slice(1) : 't'
+                link = util.urlize(host).replace(/\/$/,"") +
+                    window.location.pathname;
+            }
+            embed_url ="<iframe src='" + link +"?"+ $.param(params) +"' style='"
+                + "width:"+ width +"; height:"+ height +"; border:none; margin:0'"
+                + " allowfullscreen></iframe>"
+            $('#dia_embed .copy.embed_code').val(embed_url);
         }).trigger("change");
 
         // $('#comment_form').unbind('success').on('success', o.comment_response);
