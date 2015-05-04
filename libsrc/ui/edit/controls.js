@@ -51,60 +51,55 @@ o.Controls = function(app, multiselect, delegate) {
     // of hardcoded.
     o.append_link_picker = function(d, opts) {
         opts = $.extend({ open: noop, close: noop }, opts);
-        var drawer = $("<div class='control drawer link'>");
-        var cancel_btn = $("<img>").addClass('hoverable')
-            .attr('src', asset('skin/edit/delete_app.png'))
-            .attr('title', 'Clear link')
-            // .css('margin', '12px 0 0 5px');
-        var input = $('<input type="text" placeholder="link">')
-            ,input_name = $('<input type="text" placeholder="anchor name">')
-            ,inputs = input.add(input_name)
+        var $drawer = $("<div class='control drawer link'>&lt;a href=</div>")
+            // ,$cancel_btn = $("<img>").addClass('hoverable')
+            //     .attr('src', asset('skin/edit/delete_app.png'))
+            //     .attr('title', 'Clear link')
+            ,$input = $('<input type="text" placeholder="link">')
+        d.append($drawer);
 
-        cancel_btn.css({/*margin: -23px -46px 0px 2px; */margin: "7px -2px 0px 4px"})
-        d.append(drawer);
         // Protect the input in its own frame so it doesn't change the selection
         // of the current frame
-        input_frame(inputs, drawer, opts);
-        drawer.append(cancel_btn).css({border: "solid 1px", padding: "3px 6px"});
+        input_frame($input, $drawer, opts);
+        // $drawer.append($cancel_btn).css({border: "solid 1px", padding: "3px 6px"});
+        $drawer.append('&gt;')
 
         // set_link is called when input is blurred
         var set_link = function(){
-            var v = input.val();
-            if (v.match(/@\w+\.\w{2,}/)) {
-                // Auto-add mailto:
-                if (! v.match(/:/))
-                    v = 'mailto:' + v;
-            } else if (!v.match(/^\//) && !v.match(/\/\//) && v.match(/\w+\.\w{2,}/)) 
-                // TODO: improve URL guessing.  
-                // Auto-add http:// to urls
-                v = 'http://' + v;
+            var v = normalize_anchor_text( $input.val() )
+
             sel_app.link_set(v);
             env.History.begin()
             env.History.saver(sel_app.link, sel_app.link_set, 'link').exec(v);
             // http://stackoverflow.com/questions/566276/what-two-separator-characters-would-work-in-a-url-anchor
             // We allow "?" and "&" to replace query params
-            v = input_name.val().trim().replace(/[^a-zA-Z0-9_.\-&?=]/g,"_")
-            if (sel_app.link_name) {
-                env.History.saver(sel_app.link_name, sel_app.link_name_set, 
-                'link name').exec(v);
-            }
+
+            // Link name set hack
+            // v = input_name.val().trim().replace(/[^a-zA-Z0-9_.\-&?=]/g,"_")
+            // if (sel_app.link_name) {
+            //     env.History.saver(sel_app.link_name, sel_app.link_name_set, 
+            //     'link name').exec(v);
+            // }
+
             env.History.group("link")
-        };
+        }
 
         // Don't have to worry about duplicating handlers because all elements
         // were just created from scratch
-        inputs.on('blur', set_link);
+        $input.on('blur', set_link)
 
-        var m = o.hover_menu(d.find('.button.link'), drawer, {
+        var menu = o.hover_menu(d.find('.button.link'), $drawer, {
             open : function() {
                 var link = sel_app.link();
                 opts.open();
-                input.focus();
-                input.val(link);
-                if (sel_app.link_name)
-                   input_name.val(sel_app.link_name())
+                $input.focus();
+                $input.val(link);
+                
+                // link name fetch
+                // if (sel_app.link_name)
+                //    input_name.val(sel_app.link_name())
              }
-            ,click_persist : input
+            ,click_persist : $input
             ,close : function() {
                 // No need for explicit call to set_link here because it is
                 // handled on blur, and blur is always triggered by one of the
@@ -112,7 +107,7 @@ o.Controls = function(app, multiselect, delegate) {
                 if (opts.field_to_focus) {
                     opts.field_to_focus.focus();
                 }
-                input.blur();
+                $input.blur();
                 opts.close();
             }
             ,auto_close : false
@@ -120,20 +115,50 @@ o.Controls = function(app, multiselect, delegate) {
 
         // timeout needed to get around firefox bug
         var close_on_delay = function(){
-            setTimeout(function(){m.close(true)}, 0);
-        };
-        cancel_btn.click(function() {
-            input.focus();
-            inputs.val('');
-            close_on_delay();
-        });
-        inputs.keypress(function(e) {
+            setTimeout(function(){
+                menu.close(true) }, 0);
+        }
+        // $cancel_btn.click(function(){
+        //     $input.focus()
+        //     $input.val('')
+        //     close_on_delay()
+        // })
+        $input.keypress(function(e){
             if(e.keyCode == 13) {
-                close_on_delay();
+                close_on_delay() }
+        })
+
+        return menu
+
+        function normalize_anchor_text(v){
+            var attrs = v.split(' '),
+                link = { href: normalize_href(attrs.shift()) }
+            attrs.map(function(attr){
+                var name_val = attr.split('=')
+                if(name_val.length < 2) return
+                link[nave_val[0]] = name_val[1]
+            })
+            return link
+        }
+
+        function normalize_href(v){
+            if( v.match(/@\w+\.\w{2,}/) ){ // sorta like an email?
+                // Auto-add mailto:
+                if (! v.match(/:/))
+                    v = 'mailto:' + v;
+            } else if (
+                !v.match(/^\//) // not absolute server path
+                && !v.match(/\/\//) // not protocol relative
+                && v.match(/\w+\.\w{2,}/) // ends with top level domain?
+            ){
+                // TODO: improve URL guessing.
+                // Auto-add http:// to URLs
+                v = 'http://' + v;
             }
-        });
-        return m;
-    };
+
+            return v
+        }
+    }
 
     o.appendControl = function(c) { 
         o.div.append(c);
@@ -409,29 +434,25 @@ o.Controls = function(app, multiselect, delegate) {
 };
 
 var input_frame = function(input, parent, opts){
-    opts = $.extend({width: 200, height: 87}, opts)
+    opts = $.extend({width: 200, height: 44}, opts)
     if (! context.flags.anchor_name)
-        opts.height = 45
+        opts.height = 44
 
     var frame_load = function(){
         frame.contents().find('body')
             .append(input)
-            .css({'margin': 0, 'overflow': 'hidden'});
-    };
+            .css({'margin': 0, 'overflow': 'hidden'})
+    }
     var frame = $('<iframe>').load(frame_load)
         .width(opts.width).height(opts.height)
-        .css({
-            'display': 'inline-block'
-            ,'float': 'left'
-            // ,'margin-top': '5px'
-        });
-    parent.append(frame);
+        .css({'display': 'inline-block', 'vertical-align': 'middle'})
+    parent.append(frame)
     input.css({
         'border': '5px solid hsl(164, 57%, 74%)',
         'width': '100%',
         'padding': '5px',
         'font-size': '17px'
-    });
+    })
 };
 
 return o.Controls;

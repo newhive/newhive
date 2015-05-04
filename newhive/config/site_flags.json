@@ -137,9 +137,6 @@
     },"Editor/css_classes": {
         "description":"Let user edit the css class of an app"
         , "values":["admins","devs"]
-    },"Editor/shape_link": {
-        "description":"Allow links and anchors on shape apps"
-        , "values":["admins","devs"]
     },"Editor/autoplay": {
         "description":"Show the autoplay and autohide controls on audio apps"
         , "values":["admins","devs"]
