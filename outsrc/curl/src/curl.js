@@ -13,7 +13,7 @@
 (function (global) {
 //"use strict"; don't restore this until the config routine is refactored
 	var
-		version = '0.8.10',
+		version = '0.8.11',
 		curlName = 'curl',
 		defineName = 'define',
 		bootScriptAttr = 'data-curl-run',
@@ -49,7 +49,7 @@
 		argsNet,
 		// RegExp's used later, pre-compiled here
 		dontAddExtRx = /\?|\.js\b/,
-		absUrlRx = /^\/|^[^:]+:\/\//,
+		absUrlRx = /^\/|^[^:]+:\/\/|^[A-Za-z]:[\\/]/,
 		findDotsRx = /(\.)(\.?)(?:$|\/([^\.\/]+.*)?)/g,
 		removeCommentsRx = /\/\*[\s\S]*?\*\/|\/\/.*?[\n\r]/g,
 		findRValueRequiresRx = /require\s*\(\s*(["'])(.*?[^\\])\1\s*\)|[^\\]?(["'])/g,
@@ -1271,10 +1271,6 @@
 
 	_curl['version'] = version;
 	_curl['config'] = _config;
-	// for development convenience
-	_curl.expose = function(module_id, name){
-		_curl(module_id, function(m){ global[name] = m });
-	};
 
 	function _define (args) {
 
