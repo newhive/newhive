@@ -51,18 +51,11 @@ o.Controls = function(app, multiselect, delegate) {
     // of hardcoded.
     o.append_link_picker = function(d, opts) {
         opts = $.extend({ open: noop, close: noop }, opts);
-        var $drawer = $("<div class='control drawer link'>&lt;a href=</div>")
-            // ,$cancel_btn = $("<img>").addClass('hoverable')
-            //     .attr('src', asset('skin/edit/delete_app.png'))
-            //     .attr('title', 'Clear link')
+        var $drawer = $('<div>').addClass('control drawer').appendTo(d)
             ,$input = $('<input type="text" placeholder="link">')
-        d.append($drawer);
-
-        // Protect the input in its own frame so it doesn't change the selection
-        // of the current frame
-        input_frame($input, $drawer, opts);
-        // $drawer.append($cancel_btn).css({border: "solid 1px", padding: "3px 6px"});
-        $drawer.append('&gt;')
+            // Protect the input in its own frame so it doesn't change the
+            // selection of the current frame
+        input_frame($input, $drawer, opts)
 
         // set_link is called when input is blurred
         var set_link = function(){
@@ -89,28 +82,17 @@ o.Controls = function(app, multiselect, delegate) {
         $input.on('blur', set_link)
 
         var menu = o.hover_menu(d.find('.button.link'), $drawer, {
-            open : function() {
-                var link = sel_app.link();
-                opts.open();
-                $input.focus();
-                $input.val(link);
-                
-                // link name fetch
-                // if (sel_app.link_name)
-                //    input_name.val(sel_app.link_name())
+            open: function() {
+                opts.open()
+                $input.val( attrs_to_string(sel_app.link()) )
+                $input.focus()
              }
-            ,click_persist : $input
-            ,close : function() {
-                // No need for explicit call to set_link here because it is
-                // handled on blur, and blur is always triggered by one of the
-                // clauses below
-                if (opts.field_to_focus) {
-                    opts.field_to_focus.focus();
-                }
+            ,click_persist: $input
+            ,close: function() {
                 $input.blur();
                 opts.close();
             }
-            ,auto_close : false
+            ,auto_close: false
         });
 
         // timeout needed to get around firefox bug
@@ -118,11 +100,6 @@ o.Controls = function(app, multiselect, delegate) {
             setTimeout(function(){
                 menu.close(true) }, 0);
         }
-        // $cancel_btn.click(function(){
-        //     $input.focus()
-        //     $input.val('')
-        //     close_on_delay()
-        // })
         $input.keypress(function(e){
             if(e.keyCode == 13) {
                 close_on_delay() }
@@ -131,14 +108,21 @@ o.Controls = function(app, multiselect, delegate) {
         return menu
 
         function normalize_anchor_text(v){
-            var attrs = v.split(' '),
-                link = { href: normalize_href(attrs.shift()) }
-            attrs.map(function(attr){
-                var name_val = attr.split('=')
-                if(name_val.length < 2) return
-                link[nave_val[0]] = name_val[1]
-            })
-            return link
+            if(v.match(/^\s*$/)) return false
+            var no_href = v.match(/^\w+\s*=/)
+                ,el = $('<a ' + (no_href ? '' : 'href=') + v +'>')
+                ,attrs = u.attrs(el[0])
+            if(attrs.href) attrs.href = normalize_href(attrs.href)
+            return attrs
+        }
+
+        function attrs_to_string(v){
+            return (v.href ? [v.href] : []).concat( $.map(v, function(v,k){
+                if(k == 'href') return
+                v.replace("'", '&#39;')
+                if(v.match(/ |"/)) v = "'"+ v +"'"
+                return k +'='+ v
+            }) ).join(' ')
         }
 
         function normalize_href(v){
@@ -435,17 +419,15 @@ o.Controls = function(app, multiselect, delegate) {
 
 var input_frame = function(input, parent, opts){
     opts = $.extend({width: 200, height: 44}, opts)
-    if (! context.flags.anchor_name)
-        opts.height = 44
 
     var frame_load = function(){
+        if(!frame[0].contentWindow) return
         frame.contents().find('body')
             .append(input)
             .css({'margin': 0, 'overflow': 'hidden'})
     }
     var frame = $('<iframe>').load(frame_load)
         .width(opts.width).height(opts.height)
-        .css({'display': 'inline-block', 'vertical-align': 'middle'})
     parent.append(frame)
     input.css({
         'border': '5px solid hsl(164, 57%, 74%)',
@@ -453,6 +435,7 @@ var input_frame = function(input, parent, opts){
         'padding': '5px',
         'font-size': '17px'
     })
+    return frame
 };
 
 return o.Controls;

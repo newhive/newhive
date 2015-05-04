@@ -407,7 +407,9 @@ define([
                 // add page path directory to path relative links
                 else href = ( domain + '/' + o.expr.path.replace(/[^\/]*$/, '')
                     + href )
-                $a.attr('href', href)
+                if($a.attr('xlink:href')) $a[0].setAttributeNS(
+                    'http://www.w3.org/1999/xlink', 'href', href)
+                else $a.attr('href', href)
             }
         }
     }
@@ -459,8 +461,6 @@ define([
         if (!util.mobile())
             o.layout()
 
-        o.update_targets();
-
         var module_paths = function(modules) {
             return ["'browser/jquery'","'ui/expression'"]
             .concat($.map(modules, function(p) { 
@@ -511,29 +511,6 @@ define([
         code_modules.map(function(module){ module.stop && module.stop() })
         $('script.code_module').remove()
     };
-
-
-    // All links in content frame need to target either
-    // the top frame (on site) or a new window (off site)
-    o.update_targets = function(){
-        function link_target(i, a) {
-            var re = new RegExp('^(/|https?://' +
-                context.config.server_domain +')')
-            var a = $(a), href = a.attr('href') || a.attr('action');
-        
-            // Don't change target if it's already set
-            if (a.attr('target')) return;
-        
-            if(href && href.indexOf('http') === 0 && !re.test(href)) {
-                a.attr('target', '_blank');
-            } else if (href && href.indexOf('http') === 0 && re.test(href)) {
-                a.attr('target', '_top');
-            }
-        }
-        // TODO: Re-enable link targeting  
-        return;
-        // $('a, form').each(link_target);
-    }
 
     return o
 });

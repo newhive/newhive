@@ -428,6 +428,13 @@ o.polygon = function(sides){
     })
 }
 
+o.attrs = function(node){
+    var atts = {}
+    $.each(node.attributes, function(i,e){
+        atts[e.nodeName] = e.nodeValue })
+    return Object.keys(atts).length ? atts : false
+}
+
 //// BEGIN-editor-refactor belongs in editor specific utils
 // Sort two apps, first by top, then by left
 o.topo_cmp = function(app1, app2) {
