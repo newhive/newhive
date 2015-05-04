@@ -90,6 +90,9 @@ class Expr(ModelController):
         )
         return self.serve_page(tdata, 'pages/embed.html')
 
+    def cards_for_expr(self, expr):
+        pass
+
     def save(self, tdata, request, response, **args):
         """ Parses JSON object from POST variable 'exp' and stores it in database.
             If the name (url) does not match record in database, create a new record."""

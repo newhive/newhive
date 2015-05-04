@@ -1867,6 +1867,10 @@ class Expr(HasSocial):
         return self.get_remixes(limit=20)
     remixes = property(get_remixes_page1)
 
+    @property
+    def tags(self):
+        return self.get('tags_index', [])
+
     def update_owner(self, old_tags):
         old_tags = set(old_tags)
         self.owner.get_expr_count(force_update=True)
