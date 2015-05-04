@@ -51,10 +51,9 @@ alias nhRoutes='e $(groot)/newhive/routes.json'
 alias nhconfig='e $(groot)/newhive/config/config.py'
 alias nhconfigcommon='e $(groot)/newhive/config/config_common.py'
 
-alias nhstartdev=newhive_start_dev
 alias nhREPL='nhcd; ipython -i bin/server_examples.py'
 alias nhkilldev='psk server.py'
-alias nhresetdev='reset; nhcd; nhkilldev; nhstartdev'
+alias nhresetdev='nhcd; nhkilldev; nhstartdev'
 alias nhlogproduction='less +F /var/log/apache2/error.log'
 alias nhShellHelpers='e `groot`/bin/shell_helpers.sh'
 
@@ -66,7 +65,7 @@ function psk(){
        return 1;
    fi
 } 
-function newhive_start_dev() {(
+function nhstartdev() {(
   cd $NEWHIVE_HOME
   ./server.py $*
 )}

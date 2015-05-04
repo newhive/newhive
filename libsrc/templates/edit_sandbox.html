@@ -1,5 +1,3 @@
-<div id="dynamic_group"></div>
-
 <div id="menu_group">
 <div id='dia_edit_bg' class='dialog'>
  <h2>Edit Background</h2>
@@ -118,6 +116,12 @@
     <div style='text-align : center'><input id='embed_done' type='submit'
       class='black_btn upper embed_button' value='Enter'></div>
   </div>
+  {<if flags.Editor.dev_options}
+    <br><hr>
+    <div class="menu_item code">Code (js)</div>
+    <div class="menu_item style">Style (css)</div>
+    <div class="menu_item processing">Processing template</div>
+  {>}
 </div>
 
 <div id='menu_shape' class='menu drawer medbold'
