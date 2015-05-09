@@ -1,4 +1,5 @@
 import re
+from newhive.utils import now
 
 def mq(*d, **keys):
     return Query(*d, **keys)
@@ -61,3 +62,13 @@ class Query(dict):
     @property
     def mnot(self):
         return Query({'$not': self})
+
+    # tired of typing 'now() - 86400 * foo'. 
+    def day(self, key, day1, day2=None):
+        """ Assumes value of key is a timestamp. Converts day1 from
+        days into past to timestamp t and day2 to days past day1 """
+        n = now()
+        t = n - 86400 * day1
+        if day2: self.bt(key, t, t + day2 * 86400)
+        else: self.bt(key, t, t + 86400)
+        return self
