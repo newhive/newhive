@@ -1,5 +1,5 @@
 define([
-    'browser/jquery',
+    'jquery',
     'json!ui/routes.json',
     // 'history/history',
     'json!server/compiled.config.json'

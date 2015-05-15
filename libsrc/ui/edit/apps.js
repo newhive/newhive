@@ -1,6 +1,6 @@
 // "use strict";
 define([
-    'browser/jquery'
+    'jquery'
     ,'browser/js'
     ,'context'
     ,'browser/upload'
@@ -1523,7 +1523,7 @@ Hive.App.Code = function(o){
         // return o.content();
         if( o.init_state.url ) return '' // can't have src and script body
         return ( "define('" + o.module_name() + "', "
-            + "['browser/jquery'" + module_modules() + "], function($"
+            + "['jquery'" + module_modules() + "], function($"
             + module_names() + ") {\n"
             + "var self = {}\n\n"
             + o.content() + "\n\n"

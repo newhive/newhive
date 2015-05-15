@@ -1,5 +1,5 @@
 define([
-    'browser/jquery'
+    'jquery'
     ,'browser/layout'
     ,'ui/util'
 ], function($, layout, util){

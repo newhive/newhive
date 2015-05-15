@@ -3,7 +3,7 @@
    Controls dynamic aspects of new_account page.
  */
 define([
-     'browser/jquery'
+     'jquery'
     ,'context'
     ,'ui/routing'
     ,'browser/js'

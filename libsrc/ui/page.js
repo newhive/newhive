@@ -4,7 +4,7 @@
    Delegates actual rendering to the templates.
  */
 define([
-    'browser/jquery',
+    'jquery',
     'json!ui/routes.json',
     'browser/js',
     'ui/dialog',

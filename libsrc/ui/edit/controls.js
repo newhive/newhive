@@ -1,6 +1,6 @@
 "use strict";
 define([
-    'browser/jquery'
+    'jquery'
     ,'browser/js'
     ,'context'
     ,'ui/util'

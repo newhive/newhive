@@ -1,5 +1,5 @@
 define([
-    'browser/jquery'
+    'jquery'
 ], function($){
     var o = {}, 
 

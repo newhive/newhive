@@ -23,7 +23,7 @@
 (function (root, factory) {
 	if (typeof define === 'function' && define.amd) {
 		// AMD. Register as an anonymous module.
-		define(['browser/jquery'], factory); // jQuery Switch
+		define(['jquery'], factory); // jQuery Switch
 		// define(['zepto'], factory); // Zepto Switch
 	} else {
 		// Browser globals

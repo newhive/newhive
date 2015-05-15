@@ -1,5 +1,5 @@
 define([
-    'browser/jquery',
+    'jquery',
     'sj!templates/profile_edit.html',
 
     'ui/dialog',
