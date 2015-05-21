@@ -225,6 +225,7 @@ define([
         $('.page_btn').hidehide();
         $('.overlay.panel .expr_actions').hidehide()
         $(".overlay.panel .signup").showshow()
+        $(window).off('mousewheel')
         o.do_handle_message = false
     }
 
