@@ -426,15 +426,17 @@ define([
                 search_box.focus()
         })
         // Animate header
-        $(window).bind_once_anon("scroll.page", function(ev) {
-            var scrolled_to = $(this).scrollTop()
-            if (scrolled_to > 1)
-                $(".main-header").addClass("condensed")
-            else
-                $(".main-header").removeClass("condensed")
-            search_flow = ''
-            reflow_nav()
-        })
+        if(!context.user.logged_in){
+            $(window).bind_once_anon("scroll.page", function(ev) {
+                var scrolled_to = $(this).scrollTop()
+                if (scrolled_to > 1)
+                    $(".main-header").addClass("condensed")
+                else
+                    $(".main-header").removeClass("condensed")
+                search_flow = ''
+                reflow_nav()
+            })
+        }
 
         // Add expression to collection
         var add_to_collection = function(category) { return function(e) {

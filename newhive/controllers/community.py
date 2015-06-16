@@ -502,11 +502,16 @@ class Community(Controller):
             'cards': list(res),
         }
 
-    # TODO-cleanup: currently used for redirects. Remove this, make propper
-    # redirect controller
-    #redirect-cleanup
-    def empty(self, tdata, **kwargs):
-        return {}
+    def my_home(self, tdata, **kwargs):
+        return self.redirect(tdata.response, abs_url(
+            '/' + tdata.user['name'] + ':Feed' +
+            Community.parse_query(tdata.request.query_string)))
+    def profile_redirect(self, tdata, owner_name='', **kwargs):
+        return self.redirect(tdata.response, abs_url(
+            '/' + owner_name + (':Feed' if owner_name else '') ))
+    def user_tag_redirect(self, tdata, owner_name='', tag_name='', **kwargs):
+        return self.redirect(tdata.response, abs_url(
+            '/' + owner_name + (':' + tag_name if tag_name else '') ))
 
     @classmethod
     def parse_query(klass, query_string):
@@ -515,17 +520,6 @@ class Community(Controller):
         return ""
 
     def pre_dispatch(self, query, tdata, json=False, **kwargs):
-        # TODO-cleanup: remove this, see #redirect-cleanup Handle redirects
-        if kwargs.get('route_name') == 'my_home':
-            return self.redirect(tdata.response, abs_url(
-                '/' + tdata.user['name'] + ':Feed' +
-                Community.parse_query(tdata.request.query_string)))
-        # TODO-cleanup: remove once old create_account links aren't being used
-        if kwargs.get('route_name') == 'old_signup':
-            u = AbsUrl('home/signup')
-            u.query.update({'key': kwargs.get('key')})
-            return self.redirect(tdata.response, str(u))
-
         if query is None:
             return self.serve_404(tdata, json=json)
         # Handle pagination

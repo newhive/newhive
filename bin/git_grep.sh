@@ -2,7 +2,7 @@
 # Usage: add the following line to your ~/.bashrc
 # source ~/src/newhive/newduke/bin/git_grep.sh
 
-filter_broken="${filter_broken}|/fonts/|/curl|google_closure.js|/d3/|codemirror.js|/codemirror/|/browser/jquery|mobile/[pt]|mobile/app/[^w]|zepto-"
+filter_broken="/fonts/|/curl|google_closure.js|/d3/|codemirror.js|/codemirror/|/browser/jquery|mobile/[pt]|mobile/app/[^w]|zepto-"
 
 function open_file {
     (which e > /dev/null) && e $* || $EDITOR $*
@@ -27,7 +27,7 @@ function git_grep {(
     case_flag='-i'
     if [ $case ]; then case_flag=''; fi
 
-    if [ $search_name ]; then
+    if [ "$search_name" ]; then
         git ls-files "$path_match" | grep_cmd $case_flag $* > ~/.efffiles
         if [ $filter_broken ]; then
             grep_cmd -v $filter_broken ~/.efffiles > ~/.efffiles_temp
@@ -35,12 +35,12 @@ function git_grep {(
         fi
         # echo "git ls-files \"$path_match\" | grep_cmd $case_flag $* > ~/.efffiles"
     else
-        git grep $case_flag -n --no-color $* -- "$path_match" > ~/.efffiles
+        if [ -n "$path_match" ]; then path_match="-- $path_match"; fi
+        git grep $case_flag -n --no-color $* $path_match > ~/.efffiles
         if [ $filter_broken ]; then
             grep_cmd -v $filter_broken ~/.efffiles > ~/.efffiles_temp
             mv -f ~/.efffiles_temp ~/.efffiles
         fi
-        # echo "git grep_cmd $case_flag -n --no-color $* -- \"$path_match\" > ~/.efffiles"
     fi
 
     # list (and number) the matches
