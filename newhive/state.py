@@ -30,8 +30,10 @@ from s3 import S3Interface
 
 from newhive import config
 from newhive.config import abs_url, url_host
-from newhive.utils import (now, junkstr, dfilter, normalize, normalize_tags,
-    tag_string, cached, AbsUrl, log_error, normalize_word, lget)
+from newhive.utils import ( now, junkstr, dfilter, normalize_words,
+    normalize_tags, normalize_word, tag_string, cached, AbsUrl, log_error,
+    lget, ImmutableDict, enum )
+from newhive.mongo_helpers import mq
 from newhive.routes import reserved_words
 from newhive import social_stats
 
@@ -264,6 +266,9 @@ class Collection(object):
         return Cursor(self, spec=spec, **opts)
         # can't figure out as_class param, which seems to not be passed an arg
         #return self._col.find(spec=spec, as_class=self.new, **opts)
+    def count(self, *spec):
+        spec = {} if len(spec) == 0 else spec[0]
+        return self.search(spec).count()
 
     def last(self, spec={}, **opts):
         opts.update({'sort' : [('updated', -1)]})
@@ -355,6 +360,7 @@ class Entity(dict):
     def type(self): return self.__class__.__name__
 
     def __init__(self, collection, doc):
+        """ Establish data-model consistency """
         self.id = doc.get('id')
         doc.pop('id', None)  # Prevent id and _id attributes going into MongoDB
         dict.update(self, doc)
@@ -367,7 +373,6 @@ class Entity(dict):
     @property
     def id(self):
         return self['_id']
-
     @id.setter
     def id(self, v):
         self['_id'] = v
@@ -376,8 +381,62 @@ class Entity(dict):
         if not self.id: self.id = str(bson.objectid.ObjectId())
         self['created'] = now()
         self['updated'] = now()
+        self.serialize(self)
         self._col.insert(self, safe=True)
         return self
+
+    def serialize(self, d):
+        """ De-normalize (for indexing) and dereference contents for storage,
+            and ensure consistency with data model before shoving into DB.
+            Args:
+                d (dict): document to be created or partial doc to be updated
+                    into existing record
+            Returns:
+                None: destructively updates d
+        """
+        # if not ( is_mongo_key(self.id)
+        #     or is_local_time_stamp(self['created'])
+        #     or is_local_time_stamp(self['updated'])
+        # ):
+        #     raise ValueError('entity id or timestamps invalid')
+
+    def update(self, **d):
+        # TODO: change default of updated
+        # if d.get('updated') is True: d['updated'] = now()
+        # d.setdefault('updated', False)
+        d.setdefault('updated',  now())
+        if not d['updated']: del d['updated']
+        dict.update(self, d)
+        self.serialize(d)
+        return self._col.update({ '_id' : self.id }, { '$set' : d },
+            safe=True)
+
+    def update_if(self, cmd, test_doc, updates):
+        if updates.get('updated') == True:
+            updates.update('updated', now())
+        test_doc.update(_id=self.id)
+        result = self._col.update(test_doc, {'$'+cmd: updates})
+        if result['n'] > 0:
+            dict.update(self, updates)
+        return result
+    def set_if(self, d, u):
+        return self.update_if('set', d, u)
+    def inc_if(self, d, u):
+        return self.update_if('inc', d, u)
+
+    def unset(self, key):
+        if self.get(key):
+            del self[key]
+        return self._col.update(mq(_id=self.id), { '$unset': {key: 1} })
+
+    def delete(self):
+        res = self._col.remove(spec_or_id=self.id, safe=True)
+        if self.Collection.trashable:
+            self.db.Trash.create(self.cname, self)
+        return res
+
+    def undelete(self, trash=None):
+        pass
 
     def entropy(self, force_update = False):
         if force_update or (not self.get('entropy')):
@@ -392,19 +451,8 @@ class Entity(dict):
     def reload(self):
         dict.update(self, self.collection.fetch(self.id))
 
-    def update(self, **d):
-        # TODO: change default of updated
-        # if d.get('updated') is True: d['updated'] = now()
-        # d.setdefault('updated', False)
-        
-        d.setdefault('updated',  now())
-        if not d['updated']: del d['updated']
-        dict.update(self, d)
-        return self._col.update({ '_id' : self.id }, { '$set' : d },
-            safe=True)
-
     def update_cmd(self, d, **opts): 
-        return self._col.update({ '_id' : self.id }, d, **opts)
+        return self._col.update({'_id': self.id}, d, **opts)
 
     def inc(self, key, value=1):
         """Increment key counter by value."""
@@ -436,15 +484,6 @@ class Entity(dict):
             return self['flags'].get(name, False)
         else:
             return False
-
-    def delete(self):
-        res = self._col.remove(spec_or_id=self.id, safe=True)
-        if self.Collection.trashable:
-            self.db.Trash.create(self.cname, self)
-        return res
-
-    def undelete(self, trash=None):
-        pass
 
     def purge(self):
         res = self._col.remove(spec_or_id=self.id, safe=True)
@@ -633,31 +672,11 @@ class User(HasSocial):
     #    ,notification_count = int
     # )
 
-    class Collection(Collection):
-        def named(self, name): return self.find({'name' : name})
-
-        def find_by_facebook(self, id):
-            return self.find({ 'facebook.id': id,
-                'facebook.disconnected': {'$exists': False} })
-
-        def get_root(self): return self.named('root')
-        root_user = property(get_root)
-
-        @property
-        def site_user(self):
-            return self.named(self.config.site_user)
-
-    def __init__(self, *a, **b):
-        super(User, self).__init__(*a, **b)
+    def __init__(self, collection, doc):
+        super(User, self).__init__(collection, doc)
         self.logged_in = False
         self.fb_client = None
         self.owner = self
-
-    def expr_create(self, d):
-        doc = dict(d)
-        doc.update(owner=self.id)
-        doc.setdefault('name', '')
-        return self.db.Expr.create(doc)
 
     def create(self):
         self['name'] = self['name'].lower()
@@ -678,10 +697,86 @@ class User(HasSocial):
         super(User, self).create()
         return self
 
-    def update(self, **d):
+    def serialize(self, d):
         self.build_search(d)
-        super(User, self).update(**d)
-        return self
+        super(User, self).serialize(d)
+
+    def delete(self):
+        # Facebook Disconnect
+        self.facebook_disconnect()
+
+        # Feed Cleanup
+        for feed_item in self.db.Feed.search(
+                {'$or': [{'initiator': self.id}, {'entity': self.id}]}):
+            feed_item.delete()
+
+        # Expressions Cleanup
+        for e in self.expressions:
+            e.delete()
+
+        return super(User, self).delete()
+
+    def undelete(self, trash):
+        # TODO-undelete: reconnect FB?
+        # TODO-undelete: Fix following / followers
+        # TODO-undelete: index record.owner
+        time = trash.get('updated', now()) - 3600
+        for expr in self.db.Trash.search({
+            'record.owner': self.id
+            ,"updated": {"$gt": time}
+            ,'collection': 'expr'
+        }):
+            expr.undelete() 
+        for feed in self.db.Trash.search({
+            '$or': [{'record.initiator': self.id}, {'record.entity': self.id}]
+            ,"updated": {"$gt": time}
+            ,'collection': 'feed'
+        }):
+            feed.undelete()
+
+    class Collection(Collection):
+        def named(self, name): return self.find({'name' : name})
+
+        def find_by_facebook(self, id):
+            return self.find({ 'facebook.id': id,
+                'facebook.disconnected': {'$exists': False} })
+
+        def get_root(self): return self.named('root')
+        root_user = property(get_root)
+
+        @property
+        def site_user(self):
+            return self.named(self.config.site_user)
+
+    def expr_create(self, d):
+        doc = dict(d)
+        doc.update(owner=self.id)
+        doc.setdefault('name', '')
+        return self.db.Expr.create(doc)
+
+    def expr_remix(self, parent):
+        # handle accounting for remix value
+        return self.db.Expr.remix(parent)
+        # TODO-remix: handle moving ownership of remix list, especially if
+        # original is made private or deleted.
+        ancestor = parent
+        while ancestor.get('remix_parent_id'):
+            remix_expr = self.db.Expr.fetch(parent_id)
+            parent_id = remix_expr.get('remix_parent_id')
+        remix_owner = remix_expr.owner
+        if (res.get('auth', '') == 'public' or remix_owner == tdata.user.id):
+            remix_upd['remix_root'] = remix_expr.id
+            remix_expr.setdefault('remix_root', remix_expr.id)
+            remix_expr.update(updated=False, remix_root=remix_expr['remix_root'])
+            remix_name = 're:' + remix_expr['name']
+            # remix_upd['tags'] += " #remixed" # + remix_name
+            res.update(**remix_upd)
+
+            # include self in remix list
+            remix_owner.setdefault('tagged', {})
+            remix_owner['tagged'].setdefault(remix_name, [remix_expr.id])
+            remix_owner['tagged'][remix_name].append(res.id)
+            remix_owner.update(updated=False, tagged=remix_owner['tagged'])
 
     @property
     def notification_count(self): return self.get('notification_count', 0)
@@ -1053,7 +1148,7 @@ class User(HasSocial):
     #     self.db.query('#Trending')
 
     def build_search(self, d):
-        d['text_index'] = normalize(
+        d['text_index'] = normalize_words(
             d.get('name', self.get('name', '')) + ' ' +
             d.get('fullname', self.get('fullname', ''))
         )
@@ -1076,10 +1171,10 @@ class User(HasSocial):
             return 'Passwords must be at least 4 characters long'
         return False
 
-    def get_url(self, path='profile/', relative=False, secure=False):
+    def get_url(self, path=':Feed', relative=False, secure=False):
         if not self.id: return ''
         base = '/' if relative else abs_url(secure=secure)
-        return base + self.get('name', '') + '/' + path
+        return base + self.get('name', '') + path
     url = property(get_url)
 
     def get_thumb(self, size=222):
@@ -1291,39 +1386,6 @@ class User(HasSocial):
         cats = ru.get_cats()
         return cats[1][0:cats[0]]
 
-    def delete(self):
-        # Facebook Disconnect
-        self.facebook_disconnect()
-
-        # Feed Cleanup
-        for feed_item in self.db.Feed.search(
-                {'$or': [{'initiator': self.id}, {'entity': self.id}]}):
-            feed_item.delete()
-
-        # Expressions Cleanup
-        for e in self.expressions:
-            e.delete()
-
-        return super(User, self).delete()
-
-    def undelete(self, trash):
-        # TODO-undelete: reconnect FB?
-        # TODO-undelete: Fix following / followers
-        # TODO-undelete: index record.owner
-        time = trash.get('updated', now()) - 3600
-        for expr in self.db.Trash.search({
-            'record.owner': self.id
-            ,"updated": {"$gt": time}
-            ,'collection': 'expr'
-        }):
-            expr.undelete() 
-        for feed in self.db.Trash.search({
-            '$or': [{'record.initiator': self.id}, {'record.entity': self.id}]
-            ,"updated": {"$gt": time}
-            ,'collection': 'feed'
-        }):
-            feed.undelete()
-
     def has_group(self, group, level=None):
         groups = self.get('groups')
         if isinstance(group, list): return False
@@ -1346,6 +1408,14 @@ class User(HasSocial):
         groups = self.get('groups')
         if not groups: return ''
         return ",".join(["%s%s" % item for item in groups.iteritems()])
+
+    @property
+    def display_name(self):
+        txt = '@' + self['name']
+        full = self.get('fullname')
+        if full and full != self['name']:
+            txt = full + ' / ' + txt
+        return txt
 
     @property
     def is_admin(self):
@@ -1387,7 +1457,73 @@ class Expr(HasSocial):
         ,'snapshot_needed'
     ]
     counters = ['owner_views', 'views', 'emails']
-    _owner = None
+
+    def create(self):
+        assert map(self.has_key, ['owner', 'domain', 'name'])
+        assert self.owner
+        self['name'] = self['name'][0:80]
+        self['owner_name'] = self.owner['name']
+        self['random'] = random.random()
+        self['views'] = 0
+        self['snapshot_needed'] = True
+        self.setdefault('title', 'Untitled')
+        self.setdefault('auth', 'public')
+
+        super(Expr, self).create()
+        self.db.NewExpr.create(self.owner, self)
+        self.update_owner([])
+        return self
+
+    def create_remix(self):
+        assert self.remix_parent
+
+        # add parent to lineage snapshot (expr attrs at time of the remix)
+        remix_lineage = self.remix_parent.get('remix_lineage', [])
+        remix_lineage.insert(0, dfilter(self.remix_parent, ['_id', 'owner',
+            'value', 'remix_value', 'remix_value_add'] ) )
+        self['remix_lineage'] = remix_lineage
+
+        # iterate through ancestors to remix root
+        # parent = self.remix_parent
+        # while True:
+        #     parent = self.db.Expr.fetch(parent.get('remix_parent_id'))
+        #     if not parent: break
+                
+        self.db.Remix.create(self.owner, self.remix_parent, data=dict(
+            entity_other_id=self.id))
+
+    def update(self, **d):
+        old_tags = self.get('tags_index', [])
+
+        # Reset fails if this is a real update
+        if ( d.get('apps') or d.get('background') ) and d.get('updated', True):
+            d['snapshot_needed'] = True
+            d['snapshot_fails'] = 0
+        super(Expr, self).update(**d)
+
+        self.update_owner(old_tags)
+
+    def serialize(self, d):
+        self._collect_files(d)
+        self.build_search(d)
+        if d.get('auth') == 'public':
+            d['password'] = None
+        try:
+            d['remix_value'] = float(d.get('remix_value'))
+        except:
+            if d.get('remix_value'): del d['remix_value']
+        super(Expr, self).serialize(d)
+
+    def delete(self):
+        for r in self.db.Feed.search({'entity': self.id}): r.delete()
+
+        res = super(Expr, self).delete()
+
+        old_tags = self.get('tags_index', [])
+        self['tags_index'] = []
+        self.update_owner(old_tags)
+
+        return res
 
     class Collection(Collection):
         ignore_not_meta = { 'apps': 0, 'background': 0, 'text_index': 0,
@@ -1395,6 +1531,11 @@ class Expr(HasSocial):
 
         def named(self, username, name, **opts):
             return self.find({'owner_name': username, 'name': name}, **opts)
+
+        def remix(self, owner, parent_expr):
+            r = self.new({ owner: owner.id, remix_parent_id: parent_expr.id })
+            r.create_remix()
+            return r
 
         def fetch(self, key, keyname='_id', meta=False):
             fields = { 'text_index': 0, 'title_index': 0 }
@@ -1452,7 +1593,7 @@ class Expr(HasSocial):
             # remove random static patterns from random index
             # to make it _really_ random
             if sort == 'random':
-                for r in rs: r.update(random=random.random())
+                for r in rs: r.update(random=random.random(), updated=False)
 
             return rs
 
@@ -1550,9 +1691,8 @@ class Expr(HasSocial):
                 return False
         return True
 
-    #TODO-cleanup: remove after snapshot migration
     def snapshot_name_base(self, size, time):
-        return '_'.join([self.id, time, self.entropy(), size]) + '.jpg' #(".jpg" if (size == "full") else ".png")
+        return '_'.join([self.id, time, self.entropy(), size]) + '.jpg'
 
     def snapshot_name_http(self, size):
         res = self.snapshot_name(size)
@@ -1700,26 +1840,36 @@ class Expr(HasSocial):
         else: shared_spec = spec
         return super(Expr, self).related_prev(shared_spec, **kwargs)
 
+    _owner = None
     def get_owner(self):
         if not self._owner:
             self._owner = self.db.User.fetch(self.get('owner'))
         return self._owner
     owner = property(get_owner)
 
-    def update(self, **d):
-        old_tags = self.get('tags_index', [])
+    _remix_parent = False
+    def get_remix_parent(self):
+        parent_id = self.get('remix_parent_id')
+        if not parent_id: return False
+        if not self._remix_parent:
+            self._remix_parent = self.db.Expr.fetch(parent_id)
+        return self._remix_parent
+    remix_parent = property(get_remix_parent)
 
-        self._collect_files(d)
-        self.build_search(d)
-        if d.get('auth') == 'public':
-            d['password'] = None
-        # Reset fails if this is a real update
-        if ( d.get('apps') or d.get('background') ) and d.get('updated', True):
-            d['snapshot_needed'] = True
-            d['snapshot_fails'] = 0
-        super(Expr, self).update(**d)
+    _remixes = False
+    def get_remixes(self, **paging_args):
+        """retrieve remix children as a list"""
+        if self._remixes == False:
+            self._remixes = list(
+                self.db.Expr.search(mq(remix_parent_id=self.id), **paging_args) )
+        return self._remixes
+    def get_remixes_page1(self):
+        return self.get_remixes(limit=20)
+    remixes = property(get_remixes_page1)
 
-        self.update_owner(old_tags)
+    @property
+    def tags(self):
+        return self.get('tags_index', [])
 
     def update_owner(self, old_tags):
         old_tags = set(old_tags)
@@ -1750,7 +1900,7 @@ class Expr(HasSocial):
         tags = d.get('tags', self.get('tags', ''))
         d['tags_index'] = normalize_tags(tags)
 
-        d['title_index'] = normalize(d.get('title', self.get('title', '')))
+        d['title_index'] = normalize_words(d.get('title', self.get('title', '')))
 
         text_index = []
         for a in d.get('apps', []):
@@ -1758,7 +1908,7 @@ class Expr(HasSocial):
                 and a.get('content', '').strip()
             ):
                 text = html.fromstring( a.get('content') ).text_content()
-                text_index.extend( normalize(text) )
+                text_index.extend( normalize_words(text) )
         text_index = list( set( d['tags_index'] + d['title_index'] +
             text_index ) )
         if text_index: d['text_index'] = text_index
@@ -1789,40 +1939,6 @@ class Expr(HasSocial):
     def _match_id(self, s):
         if not isinstance(s, basestring): return []
         return map(lambda m: m[0], re.findall(r'/\b([0-9a-f]{24})(\b|_)', s))
-
-    def create(self):
-        assert map(self.has_key, ['owner', 'domain', 'name'])
-        self['owner_name'] = self.db.User.fetch(self['owner'])['name']
-        self['name'] = self['name'][0:80]
-        self['random'] = random.random()
-        self['views'] = 0
-        self['snapshot_needed'] = True
-        self.setdefault('title', 'Untitled')
-        self.setdefault('auth', 'public')
-        self._collect_files(self)
-        self.build_search(self)
-        super(Expr, self).create()
-        if 'remixed' not in self.get('tags_index', []):
-            self.db.NewExpr.create(self.owner, self)
-        else:
-            remixed_expr = self.db.Expr.fetch(self['remix_parent_id'])
-            if remixed_expr:
-                self.db.Remix.create(self.owner, remixed_expr, 
-                    data={'new_expr':self})
-
-        self.update_owner([])
-        return self
-
-    def delete(self):
-        for r in self.db.Feed.search({'entity': self.id}): r.delete()
-
-        res = super(Expr, self).delete()
-
-        old_tags = self.get('tags_index', [])
-        self['tags_index'] = []
-        self.update_owner(old_tags)
-
-        return res
 
     def increment_counter(self, counter):
         assert counter in self.counters, "Invalid counter variable.  Allowed counters are " + str(self.counters)
@@ -1938,8 +2054,22 @@ class Expr(HasSocial):
 
     public = property(lambda self: self.get('auth') == "public")
 
-    def client_view(self, mode='card', viewer=None, special={}, activity=0):
-        """ data for expr card, seen in community pages """
+    def client_view(self, mode='card', viewer=None, activity=0,
+        remix_parent_level=1, remix_child_level=0, special={},
+        _remix_child=None, _remix_parent=None
+    ):
+        """
+        Data for expr card, seen in community pages and used in expr_view
+        for social overlay.
+
+        @mode: if 'page', return data for content frame, otherwise card data
+        @viewer: User object who's making the request
+        @activity: include associated Feed items for loves, comments, etc.
+        @remix_parent_level: levels to recurse when retrieving remix parents
+        TODO-remix_trees: implement @remix_child_level
+        @remix_child_level: levels to recurse when retrieving remix children
+        @special: not used, required for heterogenous maps of type Expr + User
+        """
         if mode == 'page':
             return self.client_view_page()
 
@@ -1947,28 +2077,43 @@ class Expr(HasSocial):
             k, v in self.get('analytics', {}).iteritems() ])
         counts['Views'] = self.views
         counts['Comment'] = self.comment_count
-        expr = dfilter(self, ['name', 'title', 'feed', 'created',
-            'updated', 'password', 'container'])
+        expr = dfilter(self, [ 'name', 'owner_name', 'title', 'feed', 'created',
+            'updated', 'password', 'container', 'transfer_value', 'remix_value', 
+            'remix_lineage', 'layout_coord' ])
         expr['type'] = "expr"
-        dict.update(expr, {
-            'tags': self.get('tags_index'),
-            'id': self.id,
-            'thumb': self.get_thumb(),
-            'owner': self.owner.client_view(viewer=viewer),
-            'counts': counts,
-            'url': self.url,
-            'title': self.get('title')
-        })
-        if self.get('remix_root'):
-            remix_root = self.db.Expr.fetch(self.get('remix_root'))
-            if remix_root:
-                dict.update(expr, { 'remix_root_owner': remix_root.owner['name'],
-                    'remix_root_tag': 're:' + (remix_root.get('remix_name') 
-                        or remix_root['name']) })
+        expr.update(
+            tags=self.get('tags_index')
+            ,id=self.id
+            ,thumb=self.get_thumb()
+            ,owner=self.owner.client_view(viewer=viewer)
+            ,counts=counts
+            ,url=self.url
+            ,title=self.get('title')
+            ,remix_count=len(self.remixes)
+            # ,dimensions=self.dimensions
+            # ,layout_coord=self.layout_coord
+            # ,clip=self.clip
+        )
+
+        if self.remix_parent:
+            expr.update(remix_parent=self.remix_parent.client_view(
+                viewer=viewer
+                ,remix_parent_level=remix_parent_level-1
+                ,remix_child_level=0
+                ,_remix_child=self # don't grab other branches at older levels
+                ) )
+        if self.remixes:
+            # TODO-remix_trees: implement @remix_child_level
+            # expr.update(remixes=[ r.client_view(viewer=viewer,
+            #     remix_level=remix_level-1) for r in self.remixes ])
+            pass
+
         if self.auth != 'public':
             expr.update({'auth': self.auth})
+
         expr['snapshot_big'] = self.snapshot_name("big")
         expr['snapshot_small'] = self.snapshot_name("small")
+
         if viewer and viewer.is_admin:
             dict.update(expr, { 'featured': self.is_featured })
 
@@ -2006,6 +2151,26 @@ class Expr(HasSocial):
                 data['type'] = app['type']
                 apps[app_id] = data
         return expr
+
+    @property
+    def dimensions(self):
+        dims = [0,0]
+        dims[self.layout_coord] = 1000
+        for a in self.get('apps', []):
+            a_pos = a.get('position')
+            a_pos = [lget(a_pos, 0, 0) or 0, lget(a_pos, 1, 0) or 0]
+            a_dims = a.get('dimensions')
+            a_dims = [lget(a_dims, 0, 0) or 0, lget(a_dims, 1, 0) or 0]
+            dims = [max(dims[0], a_pos[0] + a_dims[0]),
+                max(dims[1], a_pos[1] + a_dims[1])]
+        if self.get('clip_x') and self.layout_coord == 0: dims[0] = 1000
+        if self.get('clip_y') and self.layout_coord == 1: dims[1] = 1000
+        return dims
+        # return map(lambda n: int(round(n)), dims)
+    @property
+    def clip(self): return [self.get('clip_x', 0), self.get('clip_y', 0)]
+    @property
+    def layout_coord(self): return self.get('layout_coord', 0) or 0
 
     def loves_feed(self, count=-1, at=0):
         return self.activity_feed('Star', count, at)
@@ -2052,7 +2217,6 @@ def generate_thumb(file, size, format=None):
     imo.save(output, format=format, quality=90)
     return output
 
-
 @register
 class File(Entity):
     cname = 'file'
@@ -2078,6 +2242,11 @@ class File(Entity):
         self._file.seek(0)
         return self._file
 
+    def update_file(self, f):
+        # TODO: also do resampling, etc?
+        self._file=f
+        self.store()
+
     def download(self):
         url = self.url
         if url.startswith("//"):
@@ -2098,7 +2267,6 @@ class File(Entity):
         if self['mime'] in ['image/jpeg', 'image/png', 'image/gif']:
             return self.IMAGE
         return self.UNKNOWN
-
     def set_resamples(self):
         imo = Img.open(self.file)
         # format = imo.format
@@ -2226,7 +2394,7 @@ class File(Entity):
         if self.db.config.aws_id:
             self.update(protocol='s3',
                 s3_bucket=self.db.s3.buckets['media'].name,
-                url=self.db.s3.upload_file(self.file, 'media', self.id,
+                url=self.db.s3.upload_file(self.file, 'media', self.file_name,
                     self['name'], self['mime'])
             )
         else:
@@ -2237,10 +2405,21 @@ class File(Entity):
             return abs_url() + 'file/' + owner['name'] + '/' + name
 
     @property
+    def file_name(self):
+        return self.id + self.suffix
+    
+    @property
     def url(self):
-        return self.db.s3.url('media', self.id,
+        return self.db.s3.url('media', self.file_name,
             bucket_name=self.get('s3_bucket'))
 
+    @property
+    def suffix(self):
+        return self.get('suffix', '')
+    @suffix.setter
+    def suffix(self, value):
+        self.update(suffix=value)
+    
     @property
     def url_base(self):
         return self.db.s3.url('media', '',
@@ -2477,14 +2656,13 @@ class Feed(Entity):
         elif self['class_name'] == 'Remix':
             r['action'] = 'Remix'
             if r.get('entity_other_id'):
-                new_expr = self.db.Expr.fetch(r['entity_other_id'])
-                if new_expr:
-                    r['other_owner_name'] = new_expr.owner['name']
-                    r['other_entity_name'] = new_expr['name']
-                    r['entity_url'] = new_expr.url
+                other_expr = self.db.Expr.fetch(r['entity_other_id'])
+                if other_expr:
+                    r['other_owner_name'] = other_expr.owner['name']
+                    r['other_entity_name'] = other_expr['name']
+                    r['entity_url'] = other_expr.url
 
         return r
-
 
 @register
 class Comment(Feed):
@@ -2509,7 +2687,6 @@ class Comment(Feed):
         return self.initiator.thumb
     thumb = property(get_thumb)
 
-
 @register
 class Star(Feed):
     @property
@@ -2527,7 +2704,6 @@ class Star(Feed):
     def delete(self):
         return super(Star, self).delete()
 
-
 @register
 class Broadcast(Feed):
     action_name = 'broadcast'
@@ -2542,29 +2718,21 @@ class Broadcast(Feed):
 @register
 class Remix(Feed):
     action_name = 'remix'
-
     def create(self):
         # if self.entity['owner'] == self['initiator']:
         #     raise "You mustn't remix your own expression"
-        if not isinstance(self.entity, Expr): raise "You may only remix newhives"
-        # if self.db.Remix.find({ 'initiator': self['initiator'], 'entity': self['entity'] }): return True
-        new_expr = self.get('new_expr')
-        if new_expr:
-            self['entity_other_id'] = new_expr.id
-            del self['new_expr']
+        assert isinstance(self.entity, Expr), "You may only remix newhives"
+        assert self['entity_other_id'], "Missing id for newly remixed newhive"
         res = super(Remix, self).create()
         return res
-
 
 @register
 class InviteNote(Feed):
     action_name = 'gave invites'
 
-
 @register
 class NewExpr(Feed):
     action_name = 'created'
-
 
 @register
 class UpdatedExpr(Feed):
@@ -2578,7 +2746,6 @@ class UpdatedExpr(Feed):
         super(UpdatedExpr, self).create()
         return self
 
-
 @register
 class FriendJoined(Feed):
     def viewable(self, viewer):
@@ -2589,7 +2756,6 @@ class FriendJoined(Feed):
             'entity': self['entity'] }
         ): return True
         return super(FriendJoined, self).create()
-
 
 @register
 class Referral(Entity):
@@ -2741,6 +2907,15 @@ class Searches(Entity):
 
 
 ## utils
+
+def is_mongo_key(string):
+    return isinstance(string, basestring) and re.match('[0-9a-f]{24}', string)
+
+def is_local_time_stamp(val):
+    """ make sure val is a reasonable time for DB
+    TODO-polish: consider making allowable error-delta for future values """
+    db_epoch = 1302707338 # first record from datetime(2011, 4, 13, 15, 8, 58)
+    return isinstance(val, numbers.Number) and val >= db_epoch
 
 def mk_password(v):
     if not v:

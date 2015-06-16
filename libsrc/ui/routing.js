@@ -48,12 +48,15 @@ define([
         var state = o.page_state(route_info.route_name, route_info, location.search.slice(1));
         history.pushState(state, null, state.page);
     };
-    o.substitute_variables = function(inStr, routeVars) {
-        for (var routeVar in routeVars) {
-            var needle = RegExp('<(\\w+:)?' + routeVar +'>');
-            inStr = inStr.replace(needle, routeVars[routeVar]);
+    o.substitute_variables = function(route_pattern, routeVars) {
+        // hack to deal with any() hack to fix werkzeug route ordering
+        // https://github.com/mitsuhiko/werkzeug/issues/727
+        route_pattern = route_pattern.replace(/<any\((\w+)\):\w+>/, '$1')
+        for (var routeVar in routeVars){
+            var needle = RegExp('<([^:<]+:)?' + routeVar +'>')
+            route_pattern = route_pattern.replace(needle, routeVars[routeVar])
         }
-        return inStr;
+        return route_pattern
     };
 
     return o;

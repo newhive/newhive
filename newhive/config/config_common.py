@@ -3,6 +3,8 @@ live_server     = False
 plain_port      = 80
 ssl_port        = 443
 server_name     = 'newhive.com'
+# dev_prefix is for accessing a particular server with a subdomain while the
+# server behaves as if requests are made from server_name
 dev_prefix      = None
 database_host   = 'localhost'
 database_port   = 27017
@@ -69,8 +71,6 @@ beta_testers = admins + [
 user_groups = { 'logged_in':set([]), 'logged_out':set(['logged_out']), 'all':set([]), 
     'admins':set(admins), 'beta_testers':set(beta_testers), 'devs':set(devs) }
 
-from site_flags import *
-
 site_user = 'newhive'
 admins.append(site_user)
 
@@ -103,3 +103,7 @@ initial_invite_count = 5
 
 from os.path import dirname, join, normpath, abspath
 src_home = normpath(abspath(join(dirname(__file__), "../..")))
+
+import json
+with open(join(src_home, 'newhive/config/site_flags.json')) as f:
+    site_flags = json.load(f)

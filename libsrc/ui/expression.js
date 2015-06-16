@@ -15,9 +15,6 @@ define([
 
     ,'browser/jquery/jplayer/skin'
     ,'browser/jquery/rotate.js'
-
-    // TODO: pull in dynamically
-    ,'js!outsrc/processing.min.js'
 ], function(
     $
     ,js
@@ -32,15 +29,32 @@ define([
         ,no_embed = false
     o.initialized = false;
 
-    var last_message = '';
+    var top_queue = [], top_ready = false
     o.send_top = function(msg){
-        if(last_message == msg) return;
-        window.parent.postMessage(msg, '*');
-        // These messages are NOT idempotent
-        if (msg != "next" && msg != "prev")
-            last_message = msg;
-    };
-    
+        if(!top_ready) top_queue.push(msg)
+        window.parent.postMessage(msg, '*')
+    }
+    o.expr_receive = function(ev){
+        if(!top_ready){
+            top_ready = true
+            top_queue.map(function(m){ window.parent.postMessage(m, '*') })
+        }
+        var msg = ev.data
+        if( msg.action == 'show' ){
+            function callback(data){
+                $('body').html(data);
+                setTimeout(o.show, 0);
+            };
+            if (msg.password && !$('body').children().length){
+                $.post('', { password: msg.password, partial: true }, callback);
+            } else {
+                o.show();
+            }
+        } 
+        else if( msg.action == 'hide' ) o.hide()
+        else if( msg.action == 'play_toggle' ) o.player_toggle()
+    }
+
     // o.paging_sent = false;
     // o.page = function(direction){
     //     if(o.paging_sent) return;
@@ -88,10 +102,7 @@ define([
             o.show();
 
         window.addEventListener('message', o.expr_receive)
-        $(document).mousemove(check_hover);
-        
-        $(document).click(expr_click);
-        // $(document).mouseleave(function(e) { window.setTimeout(clear_hover, 600, e); });
+        $(window).click(function(){ o.send_top('focus') })
 
         if (!util.mobile()) {
             var zoom = layout.get_zoom()
@@ -118,8 +129,6 @@ define([
                 $app.removeAttr("data-scaled")
             })
         })
-        $(window)//.on("scroll", layout.on_scroll)
-            .click(function(){ o.send_top('focus'); })
         //if (0 && util.mobile()) {
         //    $.event.special.swipe.horizontalDistanceThreshold = 200;
         //    $(document).on("swipe", function(ev) {
@@ -244,46 +253,10 @@ define([
         // })
     }
 
-    o.expr_receive = function(ev){
-        var msg = ev.data
-        if( msg.action == 'show' ){
-            function callback(data){
-                $('body').html(data);
-                setTimeout(o.show, 0);
-            };
-            if (msg.password && !$('body').children().length){
-                $.post('', { password: msg.password, partial: true }, callback);
-            } else {
-                o.show();
-            }
-        } 
-        else if( msg.action == 'hide' ) o.hide()
-        else if( msg.action == 'play_toggle' ) o.autoplay_toggle()
-    }
-
-    o.margin = function () {
-        return $(window).width() / 4;
-    }
-    var expr_click = function (ev) {
-        o.send_top("expr_click");
-    }
-    // var clear_hover = function (ev) {
-    //     o.send_top("hide_prev"); // $('.page_btn.page_prev').hidehide();
-    //     o.send_top("hide_next"); // $('.page_btn.page_next').hidehide();
-    // }
-    var check_hover = function (ev) {
-        if (ev.clientX < o.margin()) {
-            o.send_top("show_prev"); //$('.page_btn.page_prev').showshow();
-        } else if (ev.clientX > $(window).width() - o.margin()) {
-            o.send_top("show_next"); //$('.page_btn.page_next').showshow();
-        } else {
-            o.send_top("hide"); // $('.page_btn.page_prev').hidehide();
-        }
-    }
-
-    // autoplay state. play_playing is the intent, so remains true after hide()
-    var autoplayers = [], autoplay_current = -1, autoplay_playing = false,
-        autoplay_loop = false, player_constructors = [], autoplay_pos = 0
+    // player state. play_playing is the intent to play, so if hide() is called
+    // while true, it remains that way
+    var players = [], player_current = -1, player_playing = false,
+        player_loop = false, player_constructors = [], player_pos = 0
     o.add_player_type = function(constructor){
         player_constructors.push(constructor) }
     o.get_player = function(el){
@@ -294,50 +267,57 @@ define([
         return false // not supported
     }
 
-    var autoplay_no_update = false
-    var autoplay_update = function(i, playing){
+    // if true, don't update player_playing next player_update()
+    var autoplay_no_update = false 
+    var player_update = function(i, playing){
         if(autoplay_no_update){
             autoplay_no_update = false
             return
         }
-        if(playing == autoplay_playing) return
-        autoplay_current = i
-        autoplay_playing = playing
+        if(playing == player_playing) return
+        player_current = i
+        player_playing = playing
         o.send_top(playing ? 'play' : 'play_pause')
     }
-    o.autoplay_pause = function(freeze){
-        var player = autoplayers[autoplay_current]
+    o.player_pause = function(freeze){
+        var player = players[player_current]
         if(!player) return
         if(freeze) autoplay_no_update = true
-        autoplay_pos = player.pause()
+        player_pos = player.pause()
     }
-    o.autoplay = function(resume){
-        if(!autoplayers.length) return
-        if(resume && !autoplay_playing){
+    o.player_play = function(resume){
+        if(!players.length) return
+        if(resume && !player_playing){
             o.send_top('play_pause')
             return
         }
-        if(autoplay_current == -1) autoplay_current = 0
-        var player = autoplayers[autoplay_current]
+        if(player_current == -1) player_current = 0
+        var player = players[player_current]
         if(!player) return
-        player.play(autoplay_pos)
-        autoplay_update(true)
+        player.play(player_pos)
+        player_update(player_current, true)
     }
-    o.autoplay_toggle = function(){
-        if(autoplay_playing) o.autoplay_pause()
-        else o.autoplay()
+    o.player_toggle = function(){
+        if(player_playing) o.player_pause()
+        else o.player_play()
     }
-    o.autoplay_next = function(){
-        autoplay_current++
-        if (autoplay_loop)
-            autoplay_current %= autoplayers.length
-        else if (autoplay_current >= autoplayers.length){
-            autoplay_current = -1
-            autoplay_playing = false
+    o.player_next = function(){
+        player_current++
+        if (player_loop)
+            player_current %= players.length
+        else if (player_current >= players.length){
+            player_current = -1
+            player_playing = false
         }
-        var player = autoplayers[autoplay_current]
+        var player = players[player_current]
         if(!player) return
         player.play()
+    }
+    o.autoplay = function(){
+        if(player_current == -1) player_current = 0
+        // mobile browsers refuse to autoplay
+        if(util.mobile()) player_update(player_current, false)
+        else o.player_play()
     }
 
     o.init_content = function(){
@@ -390,16 +370,16 @@ define([
             .css({width:"",height:""})
 
         // get list of autoplaying apps, sorted top-to-bottom
-        autoplayers = $.map( $(".happ.autoplay").sort(function(a,b) {
+        players = $.map( $(".happ.autoplay").sort(function(a,b) {
             return a.getBoundingClientRect().top - b.getBoundingClientRect().top 
         } ), o.get_player )
-        $.each(autoplayers, function(i, player){
-            player.finish(o.autoplay_next)
+        $.each(players, function(i, player){
+            player.finish(o.player_next)
             player.play_change(function(playing){
-                autoplay_update(i, playing) })
+                player_update(i, playing) })
         })
-        if(autoplayers[0])
-            autoplayers[0].ready(function(){ o.autoplay() })
+        if(players[0])
+            players[0].ready(function(){ o.autoplay() })
 
         if (util.mobile()) o.layout()
     };
@@ -409,13 +389,14 @@ define([
         if ($a.attr('target')) return;
         // TODO: Match against internal links and use routing system
 
-        var local_match = new RegExp('^(https?:)?//[\\w-]*.?' +
-                context.config.server_domain)
-            href = $a.attr('href') || $a.attr('xlink:href') || $a.attr('action'),
-            absolute = /(^\w+:)|(^\/\/)/.test(href)
-        if (!href) return
+        var href = $a.attr('href') || $a.attr('xlink:href') || $a.attr('action'),
+            local_match = new RegExp('^(https?:)?//[\\w-]*.?' +
+                context.config.server_domain).test(href),
+            absolute = /(^\w+:)|(^\/\/)/.test(href),
+            internal = /^(#|javascript:)/.test(href)
+        if (!href || internal) return
 
-        if(absolute && !local_match.test(href)) {
+        if(absolute && !local_match) {
             $a.attr('target', '_blank')
         } else {
             $a.attr('target', '_top')
@@ -436,6 +417,9 @@ define([
     var code_srcs = [], code_modules = [], animate_go
     o.load_code = function(code_src, modules){
         code_srcs.push({src:code_src, modules: modules})
+    }
+    o.load_code_url = function(code_url){
+        code_srcs.push({url:code_url})
     }
 
     o.run_code = function(code_module){
@@ -490,19 +474,27 @@ define([
             .join(",")
         }
         code_srcs.map(function(src){
-            var script = $('<script>').html(
-                "curl([" + module_paths(src.modules) + "],function("
-                + module_names(src.modules) + "){"
-                + "var self={};" + src.src + ";expr.run_code(self) })"
-            ).addClass('code_module').appendTo('body')
+            if (src.url) {
+                var $script = $('<script>').html(
+                    "curl(['" + src.url + "', 'ui/expression'], " + 
+                        "function(self, expr){ expr.run_code(self) })"
+                )
+            } else {
+                var $script = $('<script>').html(
+                    "curl([" + module_paths(src.modules) + "],function("
+                    + module_names(src.modules) + "){"
+                    + "var self={};" + src.src + ";expr.run_code(self) })"
+                )
+            }
+            $script.addClass('code_module').appendTo('body')
         })
 
-        o.autoplay(true)
+        o.player_play(true)
     }
     o.hide = function(){
         visible = false
 
-        o.autoplay_pause(true)
+        o.player_pause(true)
 
         $('.hive_html').each(function(i, div) {
             var $div = $(div);
@@ -524,20 +516,20 @@ define([
     // All links in content frame need to target either
     // the top frame (on site) or a new window (off site)
     o.update_targets = function(){
-        // function link_target(i, a) {
-        //     // TODO: change literal to use Hive.content_domain after JS namespace is cleaned up
-        //     var re = new RegExp('^https?://[\\w-]*.?(' + server_name + '|newhiveexpression.com)');
-        //     var a = $(a), href = a.attr('href') || a.attr('action');
-        // 
-        //     // Don't change target if it's already set
-        //     if (a.attr('target')) return;
-        // 
-        //     if(href && href.indexOf('http') === 0 && !re.test(href)) {
-        //         a.attr('target', '_blank');
-        //     } else if (href && href.indexOf('http') === 0 && re.test(href)) {
-        //         a.attr('target', '_top');
-        //     }
-        // }
+        function link_target(i, a) {
+            var re = new RegExp('^(/|https?://' +
+                context.config.server_domain +')')
+            var a = $(a), href = a.attr('href') || a.attr('action');
+        
+            // Don't change target if it's already set
+            if (a.attr('target')) return;
+        
+            if(href && href.indexOf('http') === 0 && !re.test(href)) {
+                a.attr('target', '_blank');
+            } else if (href && href.indexOf('http') === 0 && re.test(href)) {
+                a.attr('target', '_top');
+            }
+        }
         // TODO: Re-enable link targeting  
         return;
         // $('a, form').each(link_target);

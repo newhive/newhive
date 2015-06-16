@@ -4,7 +4,6 @@ var o = {}, env = o
 // o.padding = 10
 o.show_move_sensitivity = false
 o.no_snap = false
-o.show_mini_selection_border = false
 o.copy_table = false
 
 o.scroll = [0, 0]

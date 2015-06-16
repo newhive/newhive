@@ -29,7 +29,7 @@ install: $(lib_target)
 
 awesomium_sample_hello: $(hello_program) 
 	@echo "Compiling Hello World"
-	g++ -o ./bin/$@ $(hello_program) -lawesomium-1-7
+	g++ -o ./bin/$@ $(hello_program) -lawesomium-1-7 -ludev
 	@echo "Finished compilation."
 
 all: install awesomium_sample_hello

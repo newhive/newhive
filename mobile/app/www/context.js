@@ -269,8 +269,8 @@ define([
             });
         });
 
-        dom.find('form[data-route-name]').each(
-            function(i, el){ form_handler(el, dom) });
+        dom.find('form[data-route-name]').each(function(i, el){
+            form_handler(el, dom) });
 
         dom.find('.menu.drawer[data-handle]').each(function(i, el){
             var selector = $(el).attr('data-handle')

@@ -169,7 +169,10 @@ o.Controls = function(app, multiselect, delegate) {
             auto_height: false, offset_y: 5 }, opts))
     };
     o.single = function() {
-        return (env.Selection.count() == 1) ? o.app.sel_app() : false }
+        if (env.Selection.count() == 1)
+            return sel_app //o.app.sel_app()
+        return false
+    }
 
     o.padding = 9;
     o.border_width = 5;
@@ -220,7 +223,6 @@ o.Controls = function(app, multiselect, delegate) {
         ){
             var old_ad1 = ad[1]
             ad[1] = wdims[1] + env.scroll[1] - edit_btns_padding - ap[1]
-            console.log('pushing', old_ad1, 'to', ad[1])
         }
 
         ad = u._max(min_d, ad)

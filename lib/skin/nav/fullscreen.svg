@@ -1,0 +1,32 @@
+<svg viewBox='-93 -93 507 507'
+  version='1.1' xmlns='http://www.w3.org/2000/svg'>
+<!-- 320x320 -->
+<g>
+    <path fill='#000' d='M15,0 H110 A15,15 0 0 1 110,30 H30 V110
+        A15,15 0 0 1 0,110 V15 A15,15 0 0 1 15,0'/>
+    <g fill='#000' transform='rotate(45 15,15)'>
+        <path d='M15,0 H160 A15,15,0,0,1,160,30 H15 z'/>
+    </g>
+</g>
+<g transform='rotate(90 160 160)'>
+    <path fill='#000' d='M15,0 H110 A15,15 0 0 1 110,30 H30 V110
+        A15,15 0 0 1 0,110 V15 A15,15 0 0 1 15,0'/>
+    <g transform='rotate(45 15,15)'>
+        <path fill='#000' d='M15,0 H160 A15,15,0,0,1,160,30 H15 z'/>
+    </g>
+</g>
+<g transform='rotate(180 160 160)'>
+    <path fill='#000' d='M15,0 H110 A15,15 0 0 1 110,30 H30 V110
+        A15,15 0 0 1 0,110 V15 A15,15 0 0 1 15,0'/>
+    <g transform='rotate(45 15,15)'>
+        <path fill='#000' d='M15,0 H160 A15,15,0,0,1,160,30 H15 z'/>
+    </g>
+</g>
+<g transform='rotate(-90 160 160)'>
+    <path fill='#000' d='M15,0 H110 A15,15 0 0 1 110,30 H30 V110
+        A15,15 0 0 1 0,110 V15 A15,15 0 0 1 15,0'/>
+    <g transform='rotate(45 15,15)'>
+        <path fill='#000' d='M15,0 H160 A15,15,0,0,1,160,30 H15 z'/>
+    </g>
+</g>
+</svg>

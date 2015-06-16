@@ -69,34 +69,13 @@ env.new_app = Hive.new_app = function(s, opts) {
             // }
         }
         a.dims_set(a.dims());
-        if (env.gifwall) {
-            env.History.begin();
-            env.History.save(a._remove, a._unremove, 'create');
-            // move the app into the right place, and push other apps
-            var not_it = env.Apps.all().filter(function(x) { return a.id != x.id; });
-            var height = Math.max(0, u.app_bounds(not_it).bottom);
-            if (opts.insert_at)
-                height = opts.insert_at[1];
-            a.pos_relative_set([0, height]);
-            var aspect = a.get_aspect();
-            Hive.App.has_full_bleed(a);
-            a.dims_relative_set(a.dims_relative(), aspect);
-            delta = a.dims_relative();
-            delta[0] = 0;
-            a.dims_relative_set([1000, 0]);
-            a.resize_start();
-            a.resize(delta);
-            a.resize_end();
-            $("body").scrollTop(a.pos()[1] + a.dims()[1] - 100);
-            env.History.group("create");
-        }
 
         if(!opts.no_select) env.Selection.select(a);
         if(load) load(a);
         env.layout_apps() // in case scrollbar visibility changed
     };
     var app = Hive.App(s, opts);
-    if (!env.gifwall && app.add_to_collection)
+    if(app.add_to_collection)
         env.History.save(app._remove, app._unremove, 'create');
     return app;
 };
@@ -145,7 +124,7 @@ Hive.Saveable = function(init_state) {
 
     // getter and setter for state which is invisible to history
     o.state = Funcs(function() {
-        var s = $.extend(true, {}, o.init_state, o.history_state())
+        var s = $.extend({}, o.init_state, o.history_state())
         o.state.return_val = s
     })
     o.state_update = Funcs(function(s) {
@@ -227,6 +206,7 @@ env.globals.has_sequence = function() {
 env.globals_set.has_sequence = function(state) {
     return $.extend(Hive.has_sequence, state)
 }
+
 
 // This object has a location on canvas
 Hive.has_location = function(o) {
@@ -751,6 +731,10 @@ env.Apps = Hive.Apps = (function(){
         })
         return copies
     }
+    o.by_name = function(name) {
+        var id = name_map[name] || name
+        return o.fetch(id)
+    }
     o.fetch = function(id){
         return apps[id]
     };
@@ -1145,12 +1129,8 @@ Hive.App = function(init_state, opts) {
         opts = $.extend({on: true}, opts);
 
         var $highlight = o.div.find(".highlight");
-        if (0 == $highlight.length) {
-            if (env.gifwall)
-                $highlight = $("<div class='highlight_box hide'\
-                    ><div class='highlight'></div></div>")
-            else
-                $highlight = $("<div class='highlight hide'></div>")
+        if(!$highlight.length){
+            $highlight = $("<div class='highlight hide'></div>")
             $highlight.appendTo(o.content_element || o.div)
         }
         $highlight.showhide(opts.on);
@@ -1441,6 +1421,8 @@ editor.add_button = function(name, on_run, opts) {
     }
 }
 
+var g_module_attrs = ["name", "path", "path_view"]
+
 Hive.App.Code = function(o){
     o.has_align = false
     o.client_visible = false
@@ -1465,23 +1447,23 @@ Hive.App.Code = function(o){
         return ('js' == o.init_state.code_type) ? "code" : "style"
     }
     o.content = function(){ return o.editor.getValue() }
-    o.run_module_func = function(module_func, callback, no_err) {
-        var curl_func = function() {
-            editor.current_code = o;
-            curl([o.module_name(no_err)], function(module) {
-                if (!module) {
-                    console.log("Module load error")
-                } else {
-                    if (typeof(module[module_func]) == "function")
-                        module[module_func].apply(null, 
-                            Array.prototype.slice.call(arguments, 0));
+    o.run_module_func = function(module_func, callback, no_err, onerr) {
+        editor.current_code = o;
+        onerr = onerr || noop
+        curl([o.module_name(no_err)], function(module){
+            if (!module) {
+                // console.log("Module load error")
+                onerr()
+            } else {
+                if (typeof(module[module_func]) == "function")
+                    module[module_func].apply()
 
-                    callback && callback(module);
-                }
-                editor.current_code = null;
-            }, function() {})
-        }
-        curl_func()
+                callback && callback(module);
+            }
+            editor.current_code = null;
+        }, function(){
+            onerr()
+        })
     }
 
     o.is_module = function(){
@@ -1504,13 +1486,30 @@ Hive.App.Code = function(o){
     // }
 
     var iter = -1, last_success = -1
-    o.module_name = function(without_error){
-        return "module_" + o.id + "_" + (without_error ? last_success : iter)
+    o.module_name = function(without_error, opts){
+        var requested_iter = without_error ? last_success : iter
+            , opts = $.extend({}, opts)
+        if (opts.force) {// && requested_iter == -1) {
+            // TODO: recursively ensure_dependencies in case they haven't run
+            insert_code(opts.load)
+            requested_iter = iter
+        } else if (opts.load)
+            opts.load()
+        return "module_" + o.id + "_" + requested_iter
     }
     o.module_imports = []
+    o.add_import = function(name, path) {
+        o.module_imports.push({name:name, path:path})
+    }
     var module_modules = function() {
         return [""].concat($.map(o.module_imports, 
-            function(m) { return "'" + m.path + "'" })).join(",")
+            function(m) {
+                var path = m.path
+                var code_app = Hive.Apps.by_name(path)
+                if (code_app && code_app.module_name)
+                    path = code_app.module_name()
+                return "'" + path + "'" 
+            })).join(",")
     }
     var module_names = function() {
         return [""].concat($.map(o.module_imports, 
@@ -1528,7 +1527,7 @@ Hive.App.Code = function(o){
             + "return self\n})"
         )
     }
-    var insert_code = function(load){
+    var insert_code = function(onload, onerr){
         var code
         iter++
 
@@ -1541,14 +1540,22 @@ Hive.App.Code = function(o){
         el.attr('type', o.mime).appendTo('#dynamic_group')
 
         // either a module with code content, or a script with url
-        if(o.is_module()) el.removeAttr('src')
+        if(o.is_module()){
+            el.removeAttr('src')
+
+            // TODO-feature consider onload handler for CSS and maintaining
+            // last_success
+            el[0].onload = function(){
+                o.run_module_func("", function(m) {
+                    last_success = iter 
+                }, false, onerr)
+                // TODO-unhack: this should break for scripts that take longer than
+                // 100ms to compile
+                if (onload) setTimeout(onload, 100)
+            }
+        }
         else el.attr('src', o.init_state.url)
 
-        el[0].onload = function(){
-            last_success = iter
-            // TODO-unhack: this should break for scripts that take longer than 100ms to compile
-            setTimeout(load, 100)
-        }
         // use a blob for source so syntax errors are properly reported,
         // instead of creating mysterious exception
         if(o.init_state.code_type == 'js')
@@ -1556,12 +1563,39 @@ Hive.App.Code = function(o){
         else el.html(code)
     }
 
-    var animate_go
+    o.ensure_dependencies = function(onload) {
+        var dependencies = 1
+            , loaded = function() {
+                if (! --dependencies && onload)
+                    onload()
+            }
+        $.map(o.module_imports, function(m) {
+            var path = m.path
+            var code_app = Hive.Apps.by_name(path)
+            if (code_app && code_app.module_name) {
+                ++dependencies
+                path = code_app.module_name(true, {force:1, load:loaded})
+            }
+        })
+        loaded()
+    }
     o.run = function() {
-        o.stop();
+        if(!o.is_module()) return insert_code()
+        o.ensure_dependencies(o.run_helper)
+    }
+    var animate_go
+    o.run_helper = function(){
+        // o.stop()
+        var running_iter = last_success
         insert_code(function(){
             if(!o.is_module()) return
             o.run_module_func("run", function(module){
+                if(running_iter != last_success) {
+                    var new_success = last_success
+                    last_success = running_iter
+                    o.stop()
+                    last_success = new_success
+                }
                 if(!module.animate) return
                 var animate_frame = function(){
                     module.animate()
@@ -1586,7 +1620,7 @@ Hive.App.Code = function(o){
     o.edit = function() {
         if (o.created_controls.length == 0) {
             insert_code(function(){
-                o.run_module_func("edit", function() { fixup_controls() })
+                o.run_module_func("edit", function() { fixup_controls() }, true)
             })
         } else {
             var apps = env.Apps.filtered(function(a) { return a.client_visible; })
@@ -1604,11 +1638,51 @@ Hive.App.Code = function(o){
     }
 
     function controls(o) {
-        var sel = env.Selection
+        var sel = env.Selection, single = o.single()
         find_or_create_button(o, '.run').click(sel.run)
         find_or_create_button(o, '.stop').click(sel.stop)
-        if (o.single() && 'js' == o.single().init_state.code_type)
-            find_or_create_button(o, '.edit').click(sel.edit)
+        if (single && 'js' == o.single().init_state.code_type) {
+            // set up modules menu
+            var $drawer = $("#controls_misc .drawer.modules").clone()
+                ,$table = $drawer.find("table")
+            var add_row = function(data) {
+                var $row = $drawer.find(".template").clone()
+                $row.showshow().removeClass("template").appendTo($table)
+                if (!data) 
+                    return
+                $.map(g_module_attrs, function(attr) {
+                    if (data[attr]) {
+                        $row.find("." + attr).val(data[attr])
+                    }
+                })
+            }
+            $drawer.find(".add").on("click", function() {
+                add_row()
+            })
+            $drawer.delegate(".remove", "click", function() {
+                var $row = $(this).parents("tr")
+                $row.remove()
+            })
+            var $imports = find_or_create_button(o, '.imports').click(sel.edit)
+            menu($imports, $drawer.appendTo(o.div.find(".buttons")), {
+                // TODO: does this belong in history?
+                open: function() {
+                    $drawer.find("tr.data:not(.hide)").remove()
+                    $.map(single.module_imports, function(data) {
+                        add_row(data)
+                    })
+                }, close: function() {
+                    single.module_imports = 
+                    $.map($drawer.find("tr.data:not(.hide)"), function(row) {
+                        var data = {}, $row = $(row)
+                        $.map(g_module_attrs, function(attr) {
+                            data[attr] = $row.find("." + attr).val()
+                        })
+                        return [data]
+                    })
+                }
+            })
+        }
         // o.hover_menu(o.div.find('.button.opts'), o.div.find('.drawer.opts'))
         // var showinview = o.div.find('.show_in_view')
         // showinview.prop('checked', o.app.init_state.show_in_view).on(
@@ -1618,6 +1692,7 @@ Hive.App.Code = function(o){
     controls.single_type = true
     o.make_controls.push(memoize('code_buttons', controls))
     Hive.App.has_shield(o)
+    Hive.App.has_live_edit(o)
 
     var fixup_controls = function(controls) {
         controls = controls || env.Selection.controls;
@@ -1667,6 +1742,12 @@ Hive.App.Code = function(o){
     if(mode == 'js') mode = 'javascript'
     o.editor = CodeMirror(o.div[0], { extraKeys: keymap ,mode: mode })
     o.editor.setValue(o.init_state.content || '')
+    o.editor.on("change", function() {
+        if (!o.liveedit())
+            return
+
+        o.run()
+    })
     o.content_element = $(o.editor.getWrapperElement()).addClass('content code')
     // TODO-cleanup: Move to CSS
     o.div.css('background-color','white').css('opacity',.2);
@@ -2864,43 +2945,8 @@ Hive.App.has_nudge = function(o, condition){
             return function(){
                 delta = u._mul(1 / env.scale())(delta);
                 var me = o.elements()[0];
-                if (me && me.has_full_bleed()) {
-                    delta[me.full_coord = 0];
-                    if (env.gifwall && delta[1]) {
-                        // push up/down by an entire full-bleed app.
-                        var apps = $.grep(env.Apps.all(), function(app) {
-                            return app.has_full_bleed();
-                        });
-                        var swap, best_app, invert = u._sign(delta[1]),
-                            my_pos = me.pos_relative(), best = Infinity;
-                        for (var i = 0; i < apps.length; ++i) {
-                            var app = apps[i], 
-                                other_pos = invert * app.pos_relative()[1];
-                            if (other_pos > invert * my_pos[1]
-                                && other_pos < best) {
-                                best_app = app;
-                                best = other_pos;
-                            }
-                        }
-                        if (!best_app)
-                            return;
-                        env.History.change_start([best_app, me]);
-                        if (invert > 0) {
-                            var oth_pos = best_app.pos_relative();
-                            my_pos[1] += best_app.max_pos()[1] - me.max_pos()[1];
-                            oth_pos[1] -= best_app.min_pos()[1] - me.min_pos()[1];
-                            me.pos_relative_set(my_pos);
-                            best_app.pos_relative_set(oth_pos);
-                        } else {
-                            var oth_pos = best_app.pos_relative();
-                            oth_pos[1] -= best_app.max_pos()[1] - me.max_pos()[1];
-                            my_pos[1] += best_app.min_pos()[1] - me.min_pos()[1];
-                            me.pos_relative_set(my_pos);
-                            best_app.pos_relative_set(oth_pos);
-                        }
-                        env.History.change_end("swap");
-                        return;
-                    }
+                if (me && me.has_full_bleed()){
+                    delta[me.full_coord = 0]
                 }
                 if (ev.shiftKey)
                     delta = u._mul(10)(delta);
@@ -3007,8 +3053,7 @@ Hive.App.has_full_bleed = function(o, coord){
     }
     // TODO-cleanup: move to resize_start
     o.before_resize = function(){
-        if (!env.gifwall || !o.has_full_bleed())
-            return;
+        if(!o.has_full_bleed()) return
         o.dims_ref_set();
         // TODO-delete.  Remove junk code. 
         // Verify that resize only comes from selection now
@@ -3019,8 +3064,7 @@ Hive.App.has_full_bleed = function(o, coord){
         });
     };
     o.resize = function(delta, coords){
-        if (!env.gifwall || !o.has_full_bleed())
-            return _resize(delta, coords);
+        if(!o.has_full_bleed()) return _resize(delta, coords)
         var start = o.max_pos()[o.stack_coord];
         _resize(delta, coords);
         var dims = o.dims_relative();
@@ -3029,34 +3073,32 @@ Hive.App.has_full_bleed = function(o, coord){
             o.dims_relative_set(dims);
         }
         var push = o.max_pos()[o.stack_coord] - start;
+
         // Move all apps below my start by delta as well
-        for (var i = push_apps.length - 1; i >= 0; i--) {
+        for (var i = push_apps.length - 1; i >= 0; i--){
             var a = push_apps[i];
             if (a.min_pos()[o.stack_coord] > start - .5) {
                 var pos = a.pos_relative();
                 pos[o.stack_coord] += push;
                 a.pos_relative_set(pos);
             }
-        };
-        if (env.gifwall)
-            env.layout_apps();
+        }
 
         return dims
-    };
+    }
     // TODO-cleanup: move to resize_end
     o.after_resize = function(){
-        if (!env.gifwall || !o.has_full_bleed())
-            return;
+        if(!o.has_full_bleed()) return
         // env.History.change_end();
         // env.History.group("resize");
         env.layout_apps();
         return true;
-    };
+    }
     o.get_aspect = function() {
         if (o.has_full_bleed())
             return false;
         return _get_aspect();
-    };
+    }
     o.pos_relative_set = function(pos) {
         if (o.has_full_bleed()) {
             pos = pos.slice();
@@ -3083,9 +3125,8 @@ Hive.App.has_full_bleed = function(o, coord){
 // NOTE: this adds handlers to o.content_element, so if
 // content_element changes, this modifier needs to be called again.
 Hive.App.has_image_drop = function(o) {
-    if (o.has_image_drop || (!env.gifwall && !context.flags.rect_drag_drop))
-        return o;
-    o.has_image_drop = true;
+    if(o.has_image_drop || !context.flags.rect_drag_drop) return o
+    o.has_image_drop = true
     o.content_element.on('dragenter dragover dragleave drop', function(ev){
         // Handle drop highlighting.
         if (ev.type == "dragenter") {
@@ -3106,15 +3147,6 @@ Hive.App.has_image_drop = function(o) {
     });
 
     var on_files = function(files, file_list){
-        if (env.gifwall) {
-            files = files.filter(function(file, i) {
-                var res = (file.mime.slice(0, 6) == 'image/');
-                if (!res) file_list.splice(i, 1);
-                return res;
-            });
-            u.new_file(files, {}, { insert_at: o.pos_relative() });
-            return;
-        }
         if (files.length == 0)
             return false;
         var load = function(app) {
@@ -3492,6 +3524,9 @@ Hive.App.has_toggle = function(o, toggle_name){
 }
 Hive.App.has_autoplay = function(o){
     return Hive.App.has_toggle(o, "autoplay")
+}
+Hive.App.has_live_edit = function(o){
+    return Hive.App.has_toggle(o, "liveedit")
 }
 Hive.App.has_fixed = function(o){
     var controls = Hive.App.has_toggle(o, "fixed")

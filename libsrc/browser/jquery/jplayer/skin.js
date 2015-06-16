@@ -1,18 +1,14 @@
 define([
     'browser/jquery',
-    'context',
     'ui/util',
-    //// TODO-cleanup: move this shit into templates
-    // 'sj!./basic.html',
-    // 'sj!./minimal.html',
     './jplayer'
-], function(context, util){
+], function($, util){
 
 var asset = util.asset;
 
 $.jPlayer.skin = {
     basic : function(url, index){
-        return '<div class="content drag">' +
+        return '<div class="content">' +
         '<div data-index="' + index + '" id="jquery_jplayer_' + index + '" class="jp-jplayer" data-url="' + url + '"></div>' +
         '<div id="jp_container_' + index + '" class="jp-audio basic">' +
         '  <div class="jp-type-single">' +

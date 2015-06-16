@@ -10,7 +10,7 @@ define(['browser/jquery', 'ui/util'], function($, util) {
             var $img = $(el).find("img")
                 // only download high res when close to scrolled
                 // ,bounds = $img[0].getBoundingClientRect()
-                // ,bounds_intervals = util.bounding_rect2intervals(bounds)
+                // ,bounds_intervals = bounding_rect2intervals(bounds)
                 // ,$window = $(window)
                 // ,win_bounds = [$window.width(), $window.height()]
                 // ,win_intervals = [[0, win_bounds[0]], [0, win_bounds[1]]]
@@ -35,6 +35,10 @@ define(['browser/jquery', 'ui/util'], function($, util) {
         })
 
     }
+    // function bounding_rect2intervals (bounds) {
+    //     return [[bounds.left, bounds.right],
+    //         [bounds.top, bounds.bottom]]
+    // }
     // o.on_scroll = function(ev) {
     //     o.fix_lazy()
     // }

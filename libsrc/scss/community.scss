@@ -3,12 +3,6 @@
 // $debug: true;
 $debug: false;
 
-.network_help {
-    display: inline-block;
-    width: 715px;
-    height: 400px;
-}
-
 // Search bar
 body.mobile .search_bar input[type=text] { width: 380px; }
 .search_bar {
@@ -66,25 +60,7 @@ body.edit #site {
     height:100%;
 }
 
-#exprs {
-    position:absolute; left: 0; bottom: 0;
-    z-index: 1;
-    width:100%; height:100%;
-    display: none;
-    background-color: white;
-
-    // prevent scrollers from momentarily appearing during animation
-    &.animated { overflow:hidden; }
-
-    .expr {
-        width:100%; height:100%; position:absolute; left: 0; top:0;
-        display: block;
-        background-color: white;
-    }
-}
-.vert_spaced {
-    margin: 25px 0px;
-}
+#exprs { display: none; }
 
 .logged_out.header {
     margin-top: 10px;
@@ -409,12 +385,14 @@ body:not(.mobile) .card[data-num="0"] {
         @include transition(opacity, 0.2s, linear);
     }
 }
-body {
+body { // not .expr (TODO: make community class)
     z-index: 0;
     left: 0px; 
     top: 0px;
     // TODO: removeme?
     width: 100%; height: 100%;
+
+    &.expr { overflow: hidden; } // content-frame does the scrolling
 
     .header_title {
         margin-bottom: 31px;
@@ -692,7 +670,7 @@ body {
             width: 50%;
             // min-width: 410px;
             box-sizing: border-box;
-            padding: 7px;
+            // padding: 7px;
 
             &[data-num="0"] {
                 width: 100%;
@@ -712,10 +690,10 @@ body {
                     height: 90px;
                     .title {
                         // font-family: Gibson;
-                        font-size: 36px;
-                        line-height: 35px;
+                        font-size: 39px;
+                        line-height: 38px;
                         max-width: 560px;
-                        max-height: 70px;
+                        max-height: 76px;
                     }
                 }
                 .info {
@@ -727,7 +705,7 @@ body {
                     padding-right: 20px;
                     margin: 0;
                     // To get "curated by" to line up with the card title
-                    span { margin-left: 19px; }
+                    a > span { margin-left: 2px; }
                 }
 
                 .user_list {
@@ -834,6 +812,11 @@ body {
     }
 
     #editor { display: block; width:100%; height:100%; position:fixed; }
+}
+.network_help {
+    display: inline-block;
+    width: 715px;
+    height: 400px;
 }
 
 .tag_label {

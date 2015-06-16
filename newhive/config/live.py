@@ -23,6 +23,8 @@ cloudfront_domains = {
     'media': 'd1v8u1ev1s9e4n.cloudfront.net',
     'asset': 'd26s0ow2ajnmml.cloudfront.net'
 }
+
+stripe_id = 'pk_test_cedS2baGtwNVnzyRbQzWitUB'
  
 facebook_app_id = '153421698080835'
 facebook_client_secret = '53168c0305074b8ff82cab217d5043f9'

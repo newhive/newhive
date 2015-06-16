@@ -1,0 +1,21 @@
+<svg viewBox='0 0 1000 1000'
+  version='1.1' xmlns='http://www.w3.org/2000/svg'>
+<g transform='translate(500, 208)'>
+  <path fill='#f42308' d='M-97,42 A56,42,0,0,1,-97,-42 H97 A56,42,0,0,1,97,42 z'/>
+</g>
+<g transform='translate(500, 325)'>
+  <path fill='#f75d08' d='M-208,42 A56,42,0,0,1,-208,-42 H208 A56,42,0,0,1,208,42 z'/>
+</g>
+<g transform='translate(500, 442)'>
+  <path fill='#ea902f' d='M-319,42 A56,42,0,0,1,-319,-42 H319 A56,42,0,0,1,319,42 z'/>
+</g>
+<g transform='translate(500, 558)'>
+  <path fill='#96aa04' d='M-319,42 A56,42,0,0,1,-319,-42 H319 A56,42,0,0,1,319,42 z'/>
+</g>
+<g transform='translate(500, 675)'>
+  <path fill='#577f79' d='M-208,42 A56,42,0,0,1,-208,-42 H208 A56,42,0,0,1,208,42 z'/>
+</g>
+<g transform='translate(500, 792)'>
+  <path fill='#698394' d='M-97,42 A56,42,0,0,1,-97,-42 H97 A56,42,0,0,1,97,42 z'/>
+</g>
+</svg>

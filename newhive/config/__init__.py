@@ -16,7 +16,7 @@ def url_host(on_main_domain=True, port=None, secure=False):
 # relative=True should be used everywhere possible
 def abs_url(path='', secure=False, domain=None, subdomain=None, relative=False):
     """Returns absolute url for this server, like
-       'https://thenewhive.com:1313/'.
+       'https://lemur.office.newhive.com:1212/'.
        relative=True leaves out protocol """
     domain = domain or server_name
     if domain.find('.' + server_name) > -1:
@@ -53,5 +53,6 @@ def client_view():
             dev_prefix else content_domain),
         content_url=abs_url(domain=content_domain, relative=True),
         secure_content_url=abs_url(domain=content_domain,secure=True),
-        app=False
+        app=False,
+        stripe_id=stripe_id
 	)

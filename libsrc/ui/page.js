@@ -12,15 +12,14 @@ define([
     'browser/layout',
     'ui/page/pages',
     'ui/routing',
+    'moneys/stripe_checkout',
 
-    'sj!templates/form_overlay.html',
     'sj!templates/password_reset.html',
     'sj!templates/collections.html',
     'sj!templates/overlay.html',
     'sj!templates/card_master.html',
     'sj!templates/tags_main.html',
     'sj!templates/home.html',
-    'sj!templates/profile_edit.html',
     'sj!templates/settings.html',
     'sj!templates/user_actions.html',
     'sj!templates/tags_page.html',
@@ -52,15 +51,14 @@ define([
     browser_layout,
     pages,
     routing,
+    StripeCheckout,
 
-    form_overlay_template,
     password_template,
     collections_template,
     overlay_template,
     master_template,
     tags_main_template,
     home_template,
-    profile_edit_template,
     settings_template,
     user_actions_template,
     tags_page_template,
@@ -70,9 +68,7 @@ define([
     var o = {}, expr_page = false, grid_width, controller,
         border_width = 1,
         render_new_cards_func,
-        done_overlays = false,
-        anim_direction; // 0 = up, +/-1 = right/left
-    const anim_duration = 700;
+        done_overlays = false
 
     o.init = function(controller){
         // (function() {
@@ -81,7 +77,6 @@ define([
         //   var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(li, s);
         // })();
 
-        o.anim_direction = 0;
         o.controller = controller;
         $(window).resize(o.resize);
     };
@@ -288,20 +283,20 @@ define([
         }
         $(".overlay.panel").toggleClass("hide", has_nav || $("body").is(".edit"))
     }
-    var custom_classes = ""
-    o.render = function(method, data){
+    var body_classes = ""
+    o.render = function(method){
         var page_data = context.page_data, expr = page_data.expr
         if (!done_overlays)
             init_overlays();
+        
         // set any classes specified by the route
-        var new_classes = context.route.custom_classes // + " " + context.route_name
-        $("body").removeClass(custom_classes).addClass(new_classes)
-        custom_classes = new_classes
+        var new_classes = context.route.body_class // + " " + context.route_name
+        $("body").removeClass(body_classes).addClass(new_classes)
+        body_classes = new_classes
 
         if (page_data.title) $("head title").text(page_data.title);
         o.column_layout = false;
         o.columns = 0;
-        new_page = pages[method];
         expr_page = (method == 'expr');
 
         page_data.layout = method;
@@ -314,11 +309,11 @@ define([
         }
         // WIP: content-request-identity
         // if(context.user.logged_in) o.content_login()
+        new_page = pages[method];
         if(context.page != new_page){
             if(context.page && context.page.exit)
                 context.page.exit()
         }
-        o.form_page_exit()
 
         o.preprocess_context();
         o.tags = (expr && (expr.tags_index || expr.tags))
@@ -346,25 +341,8 @@ define([
             o.render_tag_page();
         }
 
-        o.form_page_enter()
         if (new_page && new_page.enter) new_page.enter();
         o.resize();
-
-        // fix up rounded borders on panel overlay
-        var btns = $('.overlay.panel').find('.btn');
-        btns.removeClass('left right');
-        for(var i = 0, e; (e = btns.eq(i++)).length;){
-            if(e.is(':visible')) {
-                $(e).addClass('left');
-                break;
-            }
-        }
-        for(var i = btns.length - 1, e; (e = btns.eq(i--)).length;){
-            if(e.is(':visible')) {
-                $(e).addClass('right');
-                break;
-            }
-        }
 
         fixup_overlay()
         o.attach_handlers();
@@ -397,24 +375,27 @@ define([
     
     // global keypress handler
     var keydown = function(e) {
-        if (window.event)
-           var key = window.event.keyCode;
-        else if (e)
-           var key = e.which;
-        var keychar = String.fromCharCode(key);
-        if ((e.keyCode == 39 || e.keyCode == 37) &&
-            !(e.metaKey || e.ctrlKey || e.altKey) &&
-            $(e.target).is("body")) {
-            // If paging, go to previous / next expression.
-            if (context.page && context.page.navigate_page) {
-                var speed = (e.shiftKey) ? 2 : 1;
-                context.page.navigate_page((e.keyCode == 39) ? speed : -speed);
-            }
-        } else if (/*$("#search_box").is(":visible") && */
+        var key = e.which
+           ,keychar = String.fromCharCode(key)
+        // TODO: move to content frame
+        // if( (e.keyCode == 39 || e.keyCode == 37)
+        //     && !(e.metaKey || e.ctrlKey || e.altKey)
+        //     && $(e.target).is("body")
+        // ){
+        //     // If paging, go to previous / next expression.
+        //     if (context.page && context.page.navigate_page) {
+        //         var speed = (e.shiftKey) ? 2 : 1;
+        //         context.page.navigate_page((e.keyCode == 39) ? speed : -speed);
+        //     }
+        // }
+
+        // focus search box on typing, should probably create navigation
+        // shortcuts and change this to match only '/'
+        if( /*$("#search_box").is(":visible") &&*/
             ! $(":focus").length && !e.altKey && !(e.ctrlKey || e.metaKey)
             && (( /[A-Z0-9]/.test(keychar) && ! e.shiftKey) ||
-                (/[A-Z23]/.test(keychar) && e.shiftKey))) 
-        {
+                (/[A-Z23]/.test(keychar) && e.shiftKey))
+        ){
             // Wow that was complicated. keychar will be the *unmodified* state,
             // so to check for @, #, it's 2,3 with shift held.
             var $search_bar = 
@@ -445,15 +426,17 @@ define([
                 search_box.focus()
         })
         // Animate header
-        $(window).bind_once_anon("scroll.page", function(ev) {
-            var scrolled_to = $(this).scrollTop()
-            if (scrolled_to > 1)
-                $(".main-header").addClass("condensed")
-            else
-                $(".main-header").removeClass("condensed")
-            search_flow = ''
-            reflow_nav()
-        })
+        if(!context.user.logged_in){
+            $(window).bind_once_anon("scroll.page", function(ev) {
+                var scrolled_to = $(this).scrollTop()
+                if (scrolled_to > 1)
+                    $(".main-header").addClass("condensed")
+                else
+                    $(".main-header").removeClass("condensed")
+                search_flow = ''
+                reflow_nav()
+            })
+        }
 
         // Add expression to collection
         var add_to_collection = function(category) { return function(e) {
@@ -535,18 +518,9 @@ define([
         }
         $(".user_action_bar form.follow").unbind('success').on('success', 
             function(event, json) {
-                follow_response($(this), json); 
-        });
+                follow_response($(this), json)
+        })
 
-        // Belongs in edit
-        $("textarea.about").keypress(function(e) {
-            // Check the keyCode and if the user pressed Enter (code = 13) 
-            // disable it
-            if (event.keyCode == 13) {
-                event.preventDefault();
-            }
-        });
-        
         var dia = $("#dia_confirm_deactivate");
         if (dia.length) dia.data("dialog").opts.handler = 
             function(e, j) {
@@ -566,16 +540,16 @@ define([
         //     $(".search_bar").submit();
         // });
         
-        $(document).bind_once("keydown", keydown);
+        $(document).bind_once('keydown', keydown);
         // var scroll_handler = function(e) {
-        //     if (c.route_name == "edit_expr")
+        //     if (c.route_name == "expr_edit")
         //         return;
         //     $(".overlay.nav").fadeOut("fast");
         //     if (o.scroll_timeout != undefined)
         //         clearTimeout(o.scroll_timeout);
         //     o.scroll_timeout = setTimeout(function() {
         //         o.scroll_timeout = undefined;
-        //         if (c.route_name != "edit_expr")
+        //         if (c.route_name != "expr_edit")
         //             $(".overlay.nav").stop().fadeIn("fast");
         //     }, 100);
         // }
@@ -590,37 +564,6 @@ define([
     o.render_main_tags = function(){
         $("#site>.tag_list_container").replaceWith(
             tags_main_template(context.page_data));
-    }
-
-    o.form_page_enter = function(){
-        // must be idempotent; called twice for expr pagethroughs
-        // TODO: make this work for #Forms beyond "gifwall."
-        var page_data = context.page_data
-        if(o.tags && o.tags.indexOf("gifwall") >= 0)
-            page_data.form_tag = 'gifwall'
-        else return
-
-        // only show the #GIFWALL on an expression page
-        if (page_data.expr) {
-            $("#logo").hidehide();
-            $('.overlay.form').remove()
-            $('#overlays').append(form_overlay_template(page_data));
-        }
-
-        var $create = $("#overlays .create")
-        if (!$create.data("href"))
-            $create.data("href", $create.attr("href"))
-        $create.attr("href", $create.data("href") + "?tags=" + page_data.form_tag)
-    }
-    o.form_page_exit = function(){
-        delete context.page_data.form_tag
-        // Clean up old #Form junk
-        $("#logo").showshow();
-        $('.overlay.form').remove();
-
-        var $create = $("#overlays .create")
-        if ($create.data("href"))
-            $create.attr("href", $create.data("href"))
     }
 
     o.render_tag_page = function(){
@@ -651,14 +594,14 @@ define([
         $('#site').empty().append(settings_template(page_data));
 
         $('#user_settings_form button[name=cancel]').click(function(e) {
-            o.controller.open('expressions_public',
+            o.controller.open('expressions_feed',
                 {owner_name: context.user.name });
             return false;
         });
         $('#user_settings_form').on('success', function(e, data){
             if(data.error) alert(data.error);
             else {
-                o.controller.open('expressions_public',
+                o.controller.open('expressions_feed',
                     {owner_name: context.user.name });
             }
         });
@@ -671,46 +614,6 @@ define([
         });
     };
 
-    // js for profile edit. TODO: add to separate module
-    o.user_update = function(page_data){
-        $('#site').empty().append(profile_edit_template(page_data));
-        
-        $('#thumb_form').on('success',
-            on_file_upload('#profile_thumb', '#thumb_id_input'));
-        $('#bg_form').on('success',
-            on_file_upload('#profile_bg', '#bg_id_input'));
-        // Click-through help text to appropriate handler
-        $(".help_bar").on("click", function(e) {
-            $(this).next().trigger(e); 
-        });
-
-        $('#user_update_form button[name=cancel]').click(function(e) {
-            o.controller.open('expressions_public',
-                {owner_name: context.user.name });
-            return false;
-        });
-        $('#user_update_form').on('success', function(e, data){
-            if(data.error) alert(data.error);
-            else {
-                o.controller.open('expressions_public',
-                    {owner_name: context.user.name });
-            }
-        });
-
-        // on_file_upload returns a handler for server response from a
-        //   file form submission
-        // data from server is list of dicts representing files just uploaded
-        // img src is updated based on data
-        // input (hidden) value is set to URL from data
-        function on_file_upload(img, input){ return function(e, data){
-            if(data.error)
-                alert('Sorry, I did not understand that file as an image.' +
-                'Please try a jpg, png, or if you absolutely must, gif.');
-            var el = $(img), thumb = data[0].thumb_big;
-            el.attr('src', thumb ? thumb : data[0].url);
-            $(input).val(data[0].id);
-        }}
-    };
     o.profile_private = function(page_data){
         // page_data.profile.subheading = 'Private';
         page_data.layout = 'grid';
@@ -892,24 +795,26 @@ define([
         // Count of cards which fit to even multiple of columns
         var card_count = expr_cards.length - columns;// - (expr_cards.length % columns);
         expr_cards.each(function(i) {
-            var $el = $(this);
+            var $el = $(this)
+                ,border_style = "1px solid #d1d1d1"
             $el.removeAttr('style');
+
             if (o.column_layout) {
                 if (! $el.parent().hasClass("column_0"))
-                    $el.css("border-left", "1px solid black");
+                    $el.css("border-left", border_style);
                 else
                     $el.css("border-left", "none");
                 if (! $el.is(":first-child"))
-                    $el.css("border-top", "1px solid black");
+                    $el.css("border-top", border_style);
                 else
                     $el.css("border-top", "none");
             } else {
                 if (i < card_count)
-                    $el.css("border-bottom", "1px solid black");
+                    $el.css("border-bottom", border_style);
                 else
                     $el.css("border-bottom", "none");
                 if ((i + 1) % columns != 0 && i + 1 < expr_cards.length)
-                    $el.css("border-right", "1px solid black");
+                    $el.css("border-right", border_style);
                 else
                     $el.css("border-right", "none");
             }

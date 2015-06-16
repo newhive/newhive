@@ -34,16 +34,14 @@ def show_sizeof(x, level=0, show_deep=0):
             for xx in x:
                 show_sizeof(xx, level + 1, show_deep)
 
-def query_created_days_ago(d, q={}):
-    return mq(q).bt('created', now() - 86400 * (d + 1), now() - 86400 * d)
-def count_created_days_ago(collection, d, q={}):
-    return collection.count(query_created_days_ago(d, q))
-def expr_count(*a): return count_created_days_ago(db.Expr, *a)
-def user_count(*a): return count_created_days_ago(db.User, *a)
+def expr_count(days_ago, days=None, query={}):
+    return db.Expr.count(mq(query).day('created', days_ago, days))
+def user_count(days_ago, days=None, query={}):
+    return db.User.count(mq(query).day('created', days_ago, days))
 def follow_count(d, q={}):
     q.update(mq(class_name='Star', entity_class='User').ne('entity',
         '4e0fcd5aba28392572000044')) # exclude default newhive follow
-    return count_created_days_ago(db.Feed, d, q)
+    return db.Feed.count(mq(q).day('created', d))
 
 def name(entity):
     if type(entity) == list:
@@ -89,13 +87,25 @@ def create_user(name):
     # new = db.User.named(name)
     # nd = db.User.named("newduke")
 
+def get_entity(db_collection, fetch):
+    r = False
+    if isinstance(fetch, db_collection.entity): r = fetch
+    elif state.is_mongo_key(fetch): r = db_collection.fetch(fetch)
+    elif type(fetch) == str: r = db_collection.named(fetch)
+    return r
+
 # Switch a session's user
 # to_user: name of user to switch to
 # from_user: name of logged in user, or supply session_id    
-def switch_user(from_user, to_user, session_id=None):
+def switch_user(from_user, to_user, session_id=None, from_id=None):
+    from_user = get_entity(db.User, from_user)
+    to_user = get_entity(db.User, to_user)
+    if not from_user or not to_user:
+        print('User not found')
+        return False
     session = ( db.Session.fetch(session_id) if session_id else
-        db.Session.last(mq(user=db.User.named(from_user).id)) )
-    session.update(user=db.User.named(to_user).id)
+        db.Session.last(mq(user=from_user.id)) )
+    session.update(user=to_user.id)
 
 import csv
 # expects data to be list of lists

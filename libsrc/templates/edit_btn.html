@@ -6,17 +6,31 @@
 
   {# menu: wrench (edit/remix) #}
   <div id='edit_menu' class='menu drawer' 
-    data-handle='#edit_handle' data-menu-opts='  "layout_x":"right"'>
+    data-handle='#edit_handle' data-menu-opts='"layout_x":"right"'>
     {<if remix}
-      <a {anchor_attrs "edit_expr" "id" expr.id}
-        class='default menu_item hoverable'>Remix</a>
+      <a {anchor_attrs "expr_edit" "id" expr.id}
+        class='default menu_item hoverable'
+      >
+        Remix{<if expr.remix_value} for {show_money expr.remix_value}{>}
+      </a>
+      {#
+        <!--<form action="" method="POST">
+          <script
+            src="https://checkout.stripe.com/checkout.js" class="stripe-button"
+            data-key="pk_test_cedS2baGtwNVnzyRbQzWitUB"
+            data-amount="{expr.remix_value}"
+            data-name="Demo Site"
+            data-description="REMIX {expr.name} by {expr.owner_name} for ${mul expr.remix_value 0.01}">
+          </script>
+        </form>-->
+      #}
     {>}{<else}
       <div class='pointer menu_item hoverable' id='delete_btn'>Delete</div>
-      <a {query_attrs "edit_expr" "copy" "id" expr.id}
+      <a {query_attrs "expr_edit" "copy" "id" expr.id}
         class='menu_item hoverable'>Copy</a>
-      <a {query_attrs "edit_expr" "remix" "id" expr.id}
+      <a {query_attrs "expr_edit" "remix" "id" expr.id}
         class='menu_item remix hoverable hide'>Remix</a>
-      <a {anchor_attrs "edit_expr" "id" expr.id}
+      <a {anchor_attrs "expr_edit" "id" expr.id}
         class='default menu_item hoverable'>Edit</a>
     {>}
   </div>

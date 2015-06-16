@@ -14,8 +14,6 @@ fi
 ############################################
 source $NEWHIVE_HOME/bin/git_grep.sh
 
-filter_broken="${filter_broken}|/titanium/|history/history|/jquery-1|/old|/broken|/curl|google_closure.js|/d3/|codemirror.js|jquery-ui|/jquery/jquery|/codemirror/|mobile/[pt]|mobile/app/[^w]|zepto-|jquery.js"
-
 alias gr="git_grep -o"
 alias grh='git_grep -o -p "*.html"'
 alias grs='git_grep -o -p "*.scss"'
@@ -47,11 +45,11 @@ alias og=grep_results
 ############################################
 
 alias nhcd='cd $NEWHIVE_HOME' # go to default repo from outside 
-alias nhcdProduction='cd /var/www/newhive' # go to default production home
+alias nhcdproduction='cd /var/www/newhive' # go to default production home
 
 alias nhRoutes='e $(groot)/newhive/routes.json'
 alias nhconfig='e $(groot)/newhive/config/config.py'
-alias nhconfigCommon='e $(groot)/newhive/config/config_common.py'
+alias nhconfigcommon='e $(groot)/newhive/config/config_common.py'
 
 alias nhstartdev=newhive_start_dev
 alias nhREPL='nhcd; ipython -i bin/server_examples.py'

@@ -87,6 +87,7 @@ class Assets(object):
         return self
 
     def url(self, name, abs=False, return_debug=True, http=False):
+        if not name: return self.base_url
         props = self.assets.get(name)
         # TODO: return path of special logging 404 page if asset not found
         if props:
@@ -164,6 +165,7 @@ class HiveAssets(Assets):
         # first grab assets for JavaScript
         self.find('Jplayer.swf', local=True)
         self.find('skin')
+        os.system('mkdir -p libsrc/server')
         self.write_js_assets('libsrc/server/compiled.assets.json')
         self.write_js(config.client_view(), 'libsrc/server/compiled.config.json')
 
@@ -234,11 +236,10 @@ class HiveAssets(Assets):
         )
 
         app_scss = webassets.Bundle('scss/base.scss', "scss/fonts.scss",
-            "scss/dialogs.scss", "scss/community.scss",
+            "scss/dialogs.scss", "scss/community.scss", "scss/expr.scss",
             "scss/settings.scss", "scss/signup_flow.scss", "scss/menu.scss",
             "scss/jplayer.scss", "scss/forms.scss", "scss/overlay.scss",
             "scss/skin.scss", 'scss/edit.scss', 'scss/codemirror.css',
-            "scss/view.scss",
             filters=scss_filter,
             output='compiled.app.css',
             debug=False
@@ -302,6 +303,7 @@ class HiveAssets(Assets):
         minimal_scss = webassets.Bundle(
             'scss/minimal.scss',
             'scss/jplayer.scss',
+            'scss/audio_player.scss',
             'scss/fonts.scss',
             filters=scss_filter,
             output='compiled.minimal.css',
@@ -322,31 +324,6 @@ class HiveAssets(Assets):
         )
         self.assets_env.register('email.css', email_scss, output='../lib/email.css')
         self.final_bundles.append('email.css')
-
-        # self.assets_env.register('admin.js',
-        #     'raphael/raphael.js',
-        #     'raphael/g.raphael.js',
-        #     'raphael/g.pie.js',
-        #     'raphael/g.line.js',
-        #     'browser/jquery/tablesorter.min.js',
-        #     'browser/jquery-ui/jquery-ui-1.10.3.custom.js',
-        #     'd3/d3.js',
-        #     'd3/d3.time.js',
-        #     output='../lib/admin.js'
-        # )
-        # self.final_bundles.append('admin.js')
-
-        admin_scss = webassets.Bundle("scss/chart.scss",
-            filters=scss_filter,
-            output='compiled.admin.css',
-            debug=False
-        )
-        self.assets_env.register(
-            'admin.css',
-            admin_scss,
-            'browser/jquery-ui/jquery-ui-1.10.3.custom.css',
-            output='../lib/admin.css'
-        )
 
     def urls_with_expiry(self):
         urls = self.urls()

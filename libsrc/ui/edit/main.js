@@ -200,6 +200,57 @@ Hive.init_menus = function() {
         open: function(){ $('#embed_code').get(0).focus() },
         layout_x: 'center' });
     $('#embed_done').click(function() { Hive.embed_code('#embed_code'); embed_menu.close(); });
+    var js_module = "self.run = function(){"
+        + "\n  console.log('hello NewHive')"
+        + "\n}"
+        + "\nself.stop = function(){"
+        + "\n  // unload event handlers, clean up"
+        + "\n}"
+        + "\n// self.animate = function(){"
+        + "\n// }"
+    $('#menu_embed .code').click(function() {
+        embed_menu.close()
+        hive_app.new_app({ type: 'hive.code', content: js_module,
+            code_type: 'js', position: [50,50], dimensions: [450, 480] })
+    })
+    $('#menu_embed .style').click(function(){
+        embed_menu.close()
+        Hive._embed_code('<style>')
+    })
+    // TODO: implement by using a local template, just duplicate it and add.
+    var p5_code = "var p5"
+        + "\n"
+        + "\nfunction draw(){"
+        + "\n  p5.fill(128)"
+        + "\n  p5.stroke('black')"
+        + "\n  p5.strokeWeight(5)"
+        + "\n  p5.ellipse(p5.width/2, p5.height/2, 65, 65)"
+        + "\n}"
+        + "\nfunction setup(){"
+        + "\n}"
+        + "\n"
+        + "\nself.run = function() {"
+        + "\n  var $box = $('#bg')"
+        + "\n  p5 = new P5(function(){}, $box[0])"
+        + "\n  setup()"
+        + "\n  p5.windowResized = function(){"
+        + "\n    p5.resizeCanvas($box.width(), $box.height())"
+        + "\n  }"
+        + "\n  p5.windowResized()"
+        + "\n  p5.draw = draw"
+        + "\n}"
+        + "\nself.stop = function() {"
+        + "\n  if(p5){"
+        + "\n    p5.noLoop()"
+        + "\n    p5.noCanvas()"
+        + "\n  }"
+        + "\n}"
+    $('#menu_embed .processing').click(function() { 
+        embed_menu.close();
+        var code = hive_app.new_app({ type: 'hive.code', content: p5_code,
+            code_type: 'js', position: [50,50], dimensions: [450, 480] })
+        code.add_import('P5', 'browser/p5')
+    });
 
     u.hover_menu('.insert_shape', '#menu_shape');
     var default_size = [150, 150]
@@ -228,6 +279,7 @@ Hive.init_menus = function() {
             ,'border-style' : 'solid' 
         }
     };
+
     $('#menu_shape .rect').click(function(ev) {
         poly.mode(Hive.template_rect)
         poly.focus()
@@ -297,13 +349,6 @@ Hive.init_menus = function() {
 
     $('#media_upload').on('with_files', function(ev, files, file_list){
         // media files are available immediately upon selection
-        if (env.gifwall) {
-            files = files.filter(function(file, i) {
-                var res = (file.mime.slice(0, 6) == 'image/');
-                if (!res) file_list.splice(i, 1);
-                return res;
-            });
-        }
         if (env.click_app) {
             env.click_app.with_files(ev, files, file_list);
             env.click_app = undefined;
@@ -486,17 +531,10 @@ Hive.init = function(exp, site_context, _revert){
 
     $.extend(context, site_context)
     Hive.context = context
-    env.show_css_class = false;
-    env.copy_table = context.flags.copy_table || false;
-    env.gifwall = ($.inArray('gifwall', exp.tags_index) > -1)
-    env.squish_full_bleed = env.gifwall;
-    env.show_mini_selection_border = 
-        env.gifwall || context.flags.show_mini_selection_border;
+    env.show_css_class = false
+    env.copy_table = context.flags.copy_table || false
 
-    if (env.gifwall)
-        $("body").addClass("gifwall");
-    else
-        $("body").addClass("default");
+    $("body").addClass("default");
     context.flags.UI.transition_test && $("body").addClass("transition_test")
     $('body').append(edit_template())
 
@@ -553,24 +591,19 @@ Hive.enter = function(){
 
 Hive.exit = function(){
     env.zoom_set(1);
-    $("body").removeClass("gifwall");
-    $("body").removeClass("default");
     $(document).off('keydown');
-    $('body').off('mousemove mousedown mouseup click');
-};
+    $('body').off('mousemove mousedown mouseup click').removeClass("default")
+}
 
-(function(){
-    var focus_classes;
-
-    Hive.focus = function(){
-        focus_classes = env.apps_e.attr('class');
-        evs.focus();
-    };
-    Hive.unfocus = function(){
-        env.apps_e.attr('class', focus_classes);
-        evs.unfocus();
-    };
-})();
+var focus_classes;
+Hive.focus = function(){
+    focus_classes = env.apps_e.attr('class');
+    evs.focus();
+}
+Hive.unfocus = function(){
+    env.apps_e.attr('class', focus_classes);
+    evs.unfocus();
+}
 
 // Matches youtube and vimeo URLs, any URL pointing to an image, and
 // creates the appropriate App state to be passed to hive_app.new_app.
@@ -578,7 +611,14 @@ Hive.exit = function(){
 // TODO-feature-html-embed: iterate over each element, and do something
 // reasonable
 Hive.embed_code = function(element) {
-    var c = $(element).val().trim(), app = {}
+    var c = $(element).val().trim()
+    $(element).val('');
+
+    Hive._embed_code(c)
+}
+// TODO: move globals out of env (This one belongs in "creators" module)
+env.embed_code = Hive._embed_code = function(c) {
+    var app = {}
         ,frame = $('<iframe>').css({width:'100%',height:'100%',border:0})
             .attr('allowFullScreen', true)
         ,args, url, v = "", more_args = "", start = 0
@@ -638,7 +678,6 @@ Hive.embed_code = function(element) {
                 }
             }
             u.new_file(data);
-            $(element).val('');
         }
         // Hive.upload_start();
         $.ajax($('#media_upload').attr('action'), {
@@ -681,8 +720,7 @@ Hive.embed_code = function(element) {
         app.content = dom[0].innerHTML
     }
 
-    hive_app.new_app(app);
-    $(element).val('');
+    return hive_app.new_app(app);
 }; 
 
 // TODO-feature-autosave: implement 
@@ -730,13 +768,8 @@ Hive.state = function() {
 // BEGIN-Events  //////////////////////////////////////////////////////
 
 Hive.global_highlight = function(showhide) {
-    if (env.gifwall) {
-        $(".prompts .highlight").showhide(showhide);
-        var fn = showhide ? "mouseover" : 'mouseout';
-        $(".prompts .plus_btn").data('hover_showhide')(showhide);
-    } else
-        $(".editor_overlay").showhide(showhide);
-};
+    $(".editor_overlay").showhide(showhide)
+}
 
 // Most general event handlers
 Hive.handler_type = 3;

@@ -119,13 +119,13 @@ class User(ModelController):
                 user.remove_category(tag_name)
         else:
             # remove the tag on owned expression
-            if tag_name not in ['remixed', 'Gifwall']:
-                removed = set(old_order) - set(new_order)
-                for expr_id in removed:
-                    expr = self.db.Expr.fetch(expr_id)
-                    if expr and expr.owner.id == user.id:
-                        expr.update(updated=False, tags=re.sub(
-                            ' ?#?' + tag_name + ' ?',' ',expr.get('tags','')).strip())
+            #if tag_name not in ['remixed']:
+            removed = set(old_order) - set(new_order)
+            for expr_id in removed:
+                expr = self.db.Expr.fetch(expr_id)
+                if expr and expr.owner.id == user.id:
+                    expr.update(updated=False, tags=re.sub(
+                        ' ?#?' + tag_name + ' ?',' ',expr.get('tags','')).strip())
             if len(new_order):
                 tagged[tag_name] = new_order
             else:
@@ -208,7 +208,7 @@ class User(ModelController):
             for user in users:
                 key = junkstr(16)
                 user.recovery_link = (abs_url(secure=True)
-                    + "home/community/password_reset?key="
+                    + "home/password_reset?key="
                     + key + '&user=' + user.id
                 )
                 user.update(password_recovery = key)
@@ -232,7 +232,7 @@ class User(ModelController):
             resp.update({ 'user_id': user_id, 'name': user['name'], 'key': key })
 
         tdata.context.update(page_data=resp, route_args=args)
-        return self.serve_loader_page('pages/main.html', tdata, request, response)
+        return self.serve_page(tdata, 'pages/main.html')
 
     def deactivate(self, tdata, request, response, **args):
         if request.form.get('deactivate')=='':
@@ -282,7 +282,7 @@ class User(ModelController):
         
         expr = self.db.Expr.fetch(eid)
         if not expr or user['_id'] == None: 
-            return self.serve_404(tdata, request, response)
+            return self.serve_404(tdata)
         text = request.form.get('text')
         if text.strip() == '': return False
 
@@ -324,7 +324,7 @@ class User(ModelController):
 
         entity = self.db.Expr.fetch(eid)
         if not entity: entity = self.db.User.fetch(eid)
-        if not entity: return self.serve_404(request, response)
+        if not entity: return self.serve_404(tdata)
 
         s = self.db.Star.find({'initiator': user.id, 'entity': entity.id})
         if not state:
@@ -343,7 +343,7 @@ class User(ModelController):
         eid = request.form.get('entity')
 
         entity = self.db.Expr.fetch(eid)
-        if not entity: return self.serve_404(request, response)
+        if not entity: return self.serve_404(tdata)
 
         s = self.db.Broadcast.find({ 'initiator': user.id, 'entity': entity.id })
         if not state:
@@ -438,10 +438,10 @@ class User(ModelController):
 
         print (resp, content)
         
-        return self.serve_page(tdata, response, 'pages/streamified_login.html')
+        return self.serve_page(tdata, 'pages/streamified_login.html')
 
     def streamified_test(self, tdata, request, response, **args):
-        return self.serve_page(tdata, response, 'pages/streamified_test.html')
+        return self.serve_page(tdata, 'pages/streamified_test.html')
 
     def request_invite(self, tdata, request, response, **args):
         form = {
@@ -510,14 +510,14 @@ class User(ModelController):
         response.context['success'] = True
 
     # TODO-hookup & test
-    def unsubscribe_form(self, request, response):
+    def unsubscribe_form(self, tdata, request, response):
         email = self.db.MailLog.fetch(request.args.get('email_id'))
         response.context['email'] = email.get('email')
         response.context['initiator'] = self.db.User.fetch(email.get('initiator'))
-        return self.serve_page(response, 'pages/unsubscribe.html')
+        return self.serve_page(tdata, 'pages/unsubscribe.html')
 
     # TODO-hookup & test
-    def unsubscribe(self, request, response):
+    def unsubscribe(self, tdata, request, response, **args):
         email = self.db.MailLog.fetch(request.args.get('email_id'))
         email_addr = email['email']
         unsub = self.db.Unsubscribes.fetch_empty(email_addr, keyname='email')
@@ -535,7 +535,7 @@ class User(ModelController):
         return self.serve_json(response, user_available)
 
     # TODO-hookup & test
-    def confirm_email(self, request, response):
+    def confirm_email(self, tdata, request, response, **args):
         user = self.db.User.fetch(request.args.get('user'))
         email = request.args.get('email')
         if not user:
@@ -546,7 +546,7 @@ class User(ModelController):
             user.flag('confirmed_email')
             user.update(email=email)
             response.context.update({'user': user, 'email': email})
-        return self.serve_page(response, "pages/email_confirmation.html")
+        return self.serve_page(tdata, "pages/email_confirmation.html")
 
     # def newxxxxxxxxxx(self, request, response):
     #     if request.requester.logged_in: return self.redirect(response, request.requester.url)
@@ -589,7 +589,7 @@ class User(ModelController):
     #     else:
     #         response.context['f']['email'] = referral.get('to', '')
 
-    #     return self.serve_page(tdata, response, 'pages/signup.html')
+    #     return self.serve_page(tdata, 'pages/signup.html')
 
     def create(self, tdata, request, response, **args):
         """ Checks if the referral code matches one found in database.

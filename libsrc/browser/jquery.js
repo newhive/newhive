@@ -1,1 +1,1 @@
-jquery-1.9.1.js
+jquery/jquery-1.11.2.js

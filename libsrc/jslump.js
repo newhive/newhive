@@ -68,9 +68,9 @@ define(function (require) {
 		}
 
 		lump([
-			'ui/controller',
-			'curl/plugin/json!server/compiled.config.json',
-			'curl/plugin/sj!templates/form_overlay.html'
+			'ui/controller'
+			,'curl/plugin/json!server/compiled.config.json'
+			// ,'curl/plugin/sj!templates/form_overlay.html'
 		], io, ctx)
 	})
 

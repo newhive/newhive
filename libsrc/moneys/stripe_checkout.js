@@ -1,0 +1,1 @@
+../../outsrc/stripe/checkout.js
