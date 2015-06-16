@@ -102,7 +102,9 @@
     class='menu_item default'>Upload Audio</div>
 </div>
 
-<div id='menu_embed' class='menu drawer embed'>
+<div id='menu_embed' class='menu drawer embed
+  {<if flags.Editor.dev_options} tall{>}'
+>
   {<if flags.Editor.dev_options}
     <div class="menu_item code">JavaScript AMD module</div>
     <div class="menu_item stle">CSS</div>
