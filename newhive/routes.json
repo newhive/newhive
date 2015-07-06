@@ -138,7 +138,7 @@
         "page_route": "/home/my"
        ,"api_route": "/api/user/home"
        ,"controller": "community"
-       ,"method": "empty"
+       ,"method": "my_home"
     }
    ,"following": {
         "page_route": "/<owner_name>:<any(Following):special>"
@@ -165,6 +165,11 @@
        ,"precedence": 1
     }
 
+    ,"profile_redirect": {
+        "page_route": "/<owner_name>/profile"
+       ,"controller": "community"
+       ,"method": "profile_redirect"
+    }
    ,"expressions_feed": {
         "page_route": "/<owner_name>:<any(Feed):special>"
        ,"api_route": "/api/profile/all/<owner_name>"
@@ -192,6 +197,11 @@
        ,"include_tags": true
        ,"private": true
        ,"precedence": 1
+    }
+    ,"user_tag_redirect": {
+        "page_route": "/<owner_name>/tag/<tag_name>"
+        ,"controller": "community"
+        ,"method": "user_tag_redirect"
     }
    ,"expressions_tag": {
         "page_route": "/<owner_name>:<tag_name>"

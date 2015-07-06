@@ -147,7 +147,8 @@ class Assets(object):
     def system(self, *args):
         status = os.system(*args)
         if status != 0:
-            raise Exception('Build command failed: ' + str(args))
+            raise Exception(
+                'Build command failed ('+ str(status) +'): '+ str(args))
 
 
 class HiveAssets(Assets):

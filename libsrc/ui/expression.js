@@ -4,7 +4,7 @@
     via postMessage.
 */
 define([
-    'browser/jquery'
+    'jquery'
     ,'browser/js'
     ,'context'
     ,'browser/layout'
@@ -13,8 +13,8 @@ define([
     ,'ui/media_players'
     ,'analytics'
 
-    ,'browser/jquery/jplayer/skin'
-    ,'browser/jquery/rotate.js'
+    ,'jquery/jplayer/skin'
+    ,'jquery/rotate.js'
 ], function(
     $
     ,js
@@ -462,7 +462,7 @@ define([
             o.layout()
 
         var module_paths = function(modules) {
-            return ["'browser/jquery'","'ui/expression'"]
+            return ["'jquery'","'ui/expression'"]
             .concat($.map(modules, function(p) { 
                 return "'" + (p.path_view || p.path) + "'"
             }))

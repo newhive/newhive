@@ -55,7 +55,7 @@ class Processor(object):
 
 class ImageResampler(Processor):
     def __init__(self, **args):
-        super(ImageScalerRunner, self).__init__(**args)
+        super(ImageResampler, self).__init__(**args)
         # because we are using an extra thread per work thread to set timeout.
         self.thread_limit *= 2
 

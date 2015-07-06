@@ -25,7 +25,7 @@
  * 
  */
 define([
-    'browser/jquery'
+    'jquery'
     ], function($){
     $.attrFn = $.attrFn || {};
 

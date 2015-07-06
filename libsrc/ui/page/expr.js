@@ -1,5 +1,5 @@
 define([
-    'browser/jquery',
+    'jquery',
     'context',
     'browser/js',
     'browser/layout',
@@ -225,6 +225,7 @@ define([
         $('.page_btn').hidehide();
         $('.overlay.panel .expr_actions').hidehide()
         $(".overlay.panel .signup").showshow()
+        $(window).off('mousewheel')
         o.do_handle_message = false
     }
 

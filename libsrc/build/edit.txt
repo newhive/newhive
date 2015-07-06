@@ -1,6 +1,6 @@
 curl
 ui/edit/main
-browser/jquery
+jquery
 browser/js
 ui/menu
 ui/dialog
@@ -17,12 +17,12 @@ ui/edit/selection
 curl/plugin/sj
 ui/edit/text
 ui/edit/history
-browser/jquery/jplayer/skin
-browser/jquery/rotate.js
+jquery/jplayer/skin
+jquery/rotate.js
 curl/plugin/js
 curl/plugin/json
 ui/routing
-browser/jquery/jplayer/jplayer
+jquery/jplayer/jplayer
 curl/plugin/_fetchText
 ui/codemirror/main
 ui/edit/controls

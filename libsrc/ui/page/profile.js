@@ -1,5 +1,5 @@
 define([
-    'browser/jquery',
+    'jquery',
     'browser/js',
     'ui/dialog',
     'ui/util',
@@ -8,7 +8,7 @@ define([
     'sj!templates/user_byline.html',
     'sj!templates/lazy_mini_expression.html',
 
-    'js!browser/jquery/ui/jquery-ui-1.10.3.custom.js'
+    'js!jquery/ui/jquery-ui-1.10.3.custom.js'
 ], function(
     $,
     js,

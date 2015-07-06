@@ -8,7 +8,7 @@
 
 """
 import time, datetime, re, pandas, newhive, pandas, numpy, pytz
-from newhive import state, oauth
+from newhive import state
 from newhive.state import now
 from brownie.datastructures import OrderedDict
 from newhive.utils import datetime_to_int, datetime_to_str, datetime_to_id, local_date, un_camelcase

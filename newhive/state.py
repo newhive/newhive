@@ -9,19 +9,19 @@ from lxml import html
 from wsgiref.handlers import format_date_time
 from itertools import ifilter, islice, izip_longest, chain
 from functools import partial
-import Image as Img
+from PIL import Image as Img
 from PIL import ImageOps
 from bson.code import Code
 from crypt import crypt
-from oauth2client.client import OAuth2Credentials
+#from oauth2client.client import OAuth2Credentials
 # TODO-cleanup?: remove snapshots from webserver?
 import Queue
 import threading
 from subprocess import call
 
 import newhive
-from newhive.oauth import (FacebookClient, FlowExchangeError,
-    AccessTokenCredentialsError)
+#from newhive.oauth import (FacebookClient, FlowExchangeError,
+#    AccessTokenCredentialsError)
 #import pyes
 from collections import Counter
 from snapshots import Snapshots

@@ -7,17 +7,14 @@ Git
     git config --global user.email "xxx@gmail.com"
     git config --global credential.helper cache
     git config --global credential.helper 'cache --timeout=3600'
-    # git clone https://github.com/hivedev/newhive.git
-    git clone -b v2-community https://github.com/hivedev/newhive.git # [new-directory]
+    git clone https://github.com/hivedev/newhive.git
+    #git clone git@github.com:hivedev/newhive.git
 
 Python library dependency dependencies (Ubuntu packages)
-    sudo apt-get install python-pip gfortran libblas-dev liblapack-dev python-dev g++
-    sudo apt-get install build-essential python-dev ipython
+    sudo apt-get install python-pip python-dev node libxml2-dev libxslt-dev ipython
 
 Python library dependencies
-    sudo pip install ez_setup python-gcm
-    pip install PIL --allow-external PIL --allow-unverified PIL
-    sudo pip install werkzeug pymongo boto oauth2 oauth2client paramiko cssutils hsaudiotag lxml webassets urllib3 apiclient httplib2 pytz jinja2 simplejson yuicompressor envoy scipy webkit2png pandas brownie google-api-python-client  statprof yappi beautifulsoup4
+    sudo pip install werkzeug pymongo Pillow boto oauth2 oauth2client webassets pytz pandas brownie jinja2 lxml Pillow python-gcm simplejson cssutils oauth2 apiclient httplib2 google-api-python-client paramiko hsaudiotag yappi
 
 JavaScript dependencies
     sudo apt-get install npm
@@ -34,23 +31,25 @@ JavaScript dependencies
         sudo npm install -g cram@0.7.6
 
 Application dependencies (Ubuntu packages)
-    sudo apt-get install mongodb ruby-sass ruby-compass cutycapt libicu48 imagemagick
+    sudo apt-get install mongodb ruby-sass ruby-compass libicu48 imagemagick
 
-To make Cutycapt:
-    sudo apt-get install subversion libqt4-webkit libqt4-dev g++ xvfb
-    svn co svn://svn.code.sf.net/p/cutycapt/code/ cutycapt
-    cd cutycapt/CutyCapt
-    make clean;qmake;make
-    xvfb-run ./CutyCapt --url=http://www.example.org --out=example.png
+# TODO: replace with awesomium build
+#To make Cutycapt:
+#    sudo apt-get install subversion libqt4-webkit libqt4-dev g++ xvfb
+#    svn co svn://svn.code.sf.net/p/cutycapt/code/ cutycapt
+#    cd cutycapt/CutyCapt
+#    make clean;qmake;make
+#    xvfb-run ./CutyCapt --url=http://www.example.org --out=example.png
 
-Get the db
-    scp dev.newhive.com:/tmp/2014* .
-    tar -xvf 2014*
-    mongorestore --drop -d test --dir tmp/live-newhive
-deal with records that break indexing:
-    mongo
-    db.expr.remove({owner_name: "joebussiere"})
-    db.expr.remove({$where: 'for(i in this.text_index){ if(this.text_index[i].length > 1000) return true } return false'})
+# TODO: for dev only, update with current DB backup info
+#Get the db
+#    scp dev.newhive.com:/tmp/2014* .
+#    tar -xvf 2014*
+#    mongorestore --drop -d test --dir tmp/live-newhive
+#deal with records that break indexing:
+#    mongo
+#    db.expr.remove({owner_name: "joebussiere"})
+#    db.expr.remove({$where: 'for(i in this.text_index){ if(this.text_index[i].length > 1000) return true } return false'})
 
 Set up and run the server
     cd ~/newhive

@@ -1,5 +1,5 @@
 define([
-    'browser/jquery'
+    'jquery'
     ,'sj!templates/audio_player.html',
 ], function(
     $

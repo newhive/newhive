@@ -1,6 +1,6 @@
 // "use strict";
 define([
-    'browser/jquery'
+    'jquery'
     ,'browser/js'
     ,'context'
     ,'browser/upload'
@@ -1146,10 +1146,8 @@ Hive.App = function(init_state, opts) {
             position: _pos.slice(),
             dimensions: _dims.slice()
         }
-        if (o.is_fixed())
-            pos_dims.position = 
-                u._sub(pos_dims.position, 
-                    u._div(env.scrollY, env.scale()))
+        if (o.is_fixed()) pos_dims.position =
+            u._sub(pos_dims.position, u._div(env.scroll[1], env.scale()))
         $.extend(o.history_state.return_val, pos_dims)
     })
     o.state_relative = function(){
@@ -1523,7 +1521,7 @@ Hive.App.Code = function(o){
         // return o.content();
         if( o.init_state.url ) return '' // can't have src and script body
         return ( "define('" + o.module_name() + "', "
-            + "['browser/jquery'" + module_modules() + "], function($"
+            + "['jquery'" + module_modules() + "], function($"
             + module_names() + ") {\n"
             + "var self = {}\n\n"
             + o.content() + "\n\n"

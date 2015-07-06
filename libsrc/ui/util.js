@@ -1,10 +1,10 @@
 define([
-    'browser/jquery',
+    'jquery',
     'json!server/compiled.assets.json',
     'browser/js',
-    'browser/jquery/nh_utils',
-    'browser/jquery/easing',
-    'browser/jquery/event/mobile'
+    'jquery/nh_utils',
+    'jquery/easing',
+    'jquery/event/mobile'
 ], function($, assets, js){
     var o = {};
 
