@@ -1146,10 +1146,8 @@ Hive.App = function(init_state, opts) {
             position: _pos.slice(),
             dimensions: _dims.slice()
         }
-        if (o.is_fixed())
-            pos_dims.position = 
-                u._sub(pos_dims.position, 
-                    u._div(env.scrollY, env.scale()))
+        if (o.is_fixed()) pos_dims.position =
+            u._sub(pos_dims.position, u._div(env.scroll[1], env.scale()))
         $.extend(o.history_state.return_val, pos_dims)
     })
     o.state_relative = function(){

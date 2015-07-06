@@ -249,7 +249,7 @@ Hive.init_menus = function() {
         embed_menu.close();
         var code = hive_app.new_app({ type: 'hive.code', content: p5_code,
             code_type: 'js', position: [50,50], dimensions: [450, 480] })
-        code.add_import('P5', 'browser/p5')
+        code.add_import('P5', 'p5')
     });
 
     u.hover_menu('.insert_shape', '#menu_shape');

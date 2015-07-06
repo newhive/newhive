@@ -34,16 +34,14 @@ def show_sizeof(x, level=0, show_deep=0):
             for xx in x:
                 show_sizeof(xx, level + 1, show_deep)
 
-def query_created_days_ago(d, q={}):
-    return mq(q).bt('created', now() - 86400 * (d + 1), now() - 86400 * d)
-def count_created_days_ago(collection, d, q={}):
-    return collection.count(query_created_days_ago(d, q))
-def expr_count(*a): return count_created_days_ago(db.Expr, *a)
-def user_count(*a): return count_created_days_ago(db.User, *a)
+def expr_count(days_ago, days=None, query={}):
+    return db.Expr.count(mq(query).day('created', days_ago, days))
+def user_count(days_ago, days=None, query={}):
+    return db.User.count(mq(query).day('created', days_ago, days))
 def follow_count(d, q={}):
     q.update(mq(class_name='Star', entity_class='User').ne('entity',
         '4e0fcd5aba28392572000044')) # exclude default newhive follow
-    return count_created_days_ago(db.Feed, d, q)
+    return db.Feed.count(mq(q).day('created', d))
 
 def name(entity):
     if type(entity) == list:
