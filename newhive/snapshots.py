@@ -3,7 +3,6 @@
 # see http://daveelkins.com/2009/04/10/setting-up-headless-xserver-and-cutycapt-on-ubuntu/
 # TODO: Snapshot batching. namely, CutyCapt should be able to take a list of 
 
-import envoy
 import os, urllib
 from os.path import join
 from sys import platform
@@ -93,32 +92,7 @@ class Snapshots(object):
             # 'webkit2png --feature=javascript --display=:99 '+
             #     '--geometry=%s %s --output=%s %s' % (dimensions[0],dimensions[1],out_filename,url))
             return r == 0
-        elif platform == 'darwin':
-            # Mac support is super hacky and unreliable. Mostly just meant for local debugging.
-            # Built to use this webkit2png: https://github.com/paulhammond/webkit2png/blob/master/webkit2png
-            # Make sure delay is set to 1sec so javascript can position apps properly
-            envoy.run('webkit2png -C --clipwidth=%s --clipheight=%s --delay=1 --filename=out %s' % (dimensions[0],dimensions[1],url))
-            # Because the Mac webkit2png insists on giving you foo-clipped.png when you asked for foo, let's just rename it here.
-            if not os.path.exists('out-clipped.png'):
-                # If there's no PNG, webkit2png must have failed silently
-                return False
-            os.rename('out-clipped.png',out_filename)
-            return True
-    def __init__(self):
-        # print "snapshot init!2!!"
-        if platform == 'linux' or platform == 'linux2':
-            pass
-            # Need xvfb running on linux to take snapshots. Check to see if it's currently running
-            # sp = envoy.run('xdpyinfo -display :99')
-            # print sp.status_code
-            # if sp.status_code != 0:
-            # with open(os.devnull, "w") as fnull:
-            #     r = call('xdpyinfo -display :99'.split(" "), stderr=fnull, stdout=fnull)
-            #     # print r
-            #     if r != 0:
-            #         self.ps = Popen("Xvfb :99 -screen scrn 1024x768x24".split(" "), stderr=fnull, stdout=fnull)
-            #         # self.ps = envoy.connect("Xvfb :99 -screen scrn 1024x768x24")
-            # print "snapshots ready"
+
     def __del__(self):
         # print "snapshot del!!!"
         if hasattr(self,'ps'): self.ps.kill()
