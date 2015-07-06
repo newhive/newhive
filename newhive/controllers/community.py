@@ -109,7 +109,7 @@ class Community(Controller):
             user = tdata.user
         return {
             "cards": user.feed_recent(**db_args),
-            "header": ("Recent",), 
+            "header": ("Recent",),
             "title": 'Recent',
         }
 
