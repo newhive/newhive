@@ -227,8 +227,6 @@ class Mailer(object):
              'To': self.recipient.get('email')
             ,'Subject': self.subject
             }
-        if self.bcc and self.initiator:
-            heads.update('Bcc', self.initiator.get('email'))
         return heads
 
 
