@@ -14,7 +14,7 @@ Python library dependency dependencies (Ubuntu packages)
     sudo apt-get install python-pip python-dev node libxml2-dev libxslt-dev ipython
 
 Python library dependencies
-    sudo pip install werkzeug pymongo Pillow boto oauth2 oauth2client webassets pytz pandas brownie jinja2 lxml Pillow python-gcm simplejson cssutils oauth2 apiclient httplib2 google-api-python-client paramiko hsaudiotag yappi
+    sudo pip install werkzeug pymongo Pillow==2.9.0 boto oauth2 oauth2client webassets pytz pandas brownie jinja2 lxml Pillow python-gcm simplejson cssutils oauth2 apiclient httplib2 google-api-python-client paramiko hsaudiotag yappi
 
 JavaScript dependencies
     sudo apt-get install npm
@@ -33,18 +33,13 @@ JavaScript dependencies
 Application dependencies (Ubuntu packages)
     sudo apt-get install mongodb ruby-sass ruby-compass libicu48 imagemagick
 
+# Snapshot system
 # TODO: replace with awesomium build
-#To make Cutycapt:
-#    sudo apt-get install subversion libqt4-webkit libqt4-dev g++ xvfb
-#    svn co svn://svn.code.sf.net/p/cutycapt/code/ cutycapt
-#    cd cutycapt/CutyCapt
-#    make clean;qmake;make
-#    xvfb-run ./CutyCapt --url=http://www.example.org --out=example.png
 
 Get the db
     scp abram@admin-1.newhive.com:/mnt/scratch/backup/*.gz .
     tar -xvf *.gz
-    mongorestore --drop -d test --dir tmp/live-newhive
+    mongorestore --drop -d test --noIndexRestore --dir tmp/live-newhive
 deal with records that break indexing:
     mongo
     db.expr.remove({owner_name: "joebussiere"})
@@ -54,8 +49,8 @@ Set up and run the server
     cd ~/newhive
     echo 'from local import *' > newhive/config/config.py 
     sudo sh -c 'echo 127.0.0.1 site content >> /etc/hosts'
+    cd lib; ln -s ../libsrc/ .; cd ..
     ./server.py
-    
     
 Ok, far easier to clone the working instance, staging.
 From AWS console, EC2 -> instances
