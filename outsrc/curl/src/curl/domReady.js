@@ -101,9 +101,8 @@
 	}
 	else {
 		addEvent = function (node, event) {
-			var onName = 'on' + event;
-			node.attachEvent(onName, checkDOMReady);
-			return function () { node.detachEvent(onName, checkDOMReady); };
+			node.attachEvent('on' + event, checkDOMReady);
+			return function () { node.detachEvent(event, checkDOMReady); };
 		};
 	}
 
