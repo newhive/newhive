@@ -161,7 +161,7 @@ class Expr(ModelController):
                 ok = ok and file_id and (modules != False)
                 if ok:
                     # expand to full module code
-                    data = ("define(['browser/jquery'%s], function($%s"
+                    data = ("define(['jquery'%s], function($%s"
                         + ") {\nvar self = {}\n%s\nreturn self\n})"
                     ) % (modules, module_names(app), data)
                 name = "code"
