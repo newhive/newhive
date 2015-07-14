@@ -53,6 +53,8 @@ define([
         } 
         else if( msg.action == 'hide' ) o.hide()
         else if( msg.action == 'play_toggle' ) o.player_toggle()
+        else if( msg.action == 'page_down' )
+            document.body.scrollTop += $(window).height()
     }
 
     // o.paging_sent = false;
@@ -235,7 +237,7 @@ define([
         //     // by assuming scroll if there's scrolling left in that direction
         //     // and otherwise assuming scroll if delta-Y is greater than delta-X
 
-        //     if( (delta[0] > 0 && document.body.scrollLeft > 0) // left scroll remains
+        //     if( (delta[0] > 0 && docuscrollHeightment.body.scrollLeft > 0) // left scroll remains
         //         || (delta[0] < 0 && (document.body.scrollLeft // right scroll remains
         //             + document.body.clientWidth < document.body.scrollWidth)
         //         )
@@ -490,6 +492,9 @@ define([
         })
 
         o.player_play(true)
+
+        if($(window).height() < document.body.scrollHeight)
+            o.send_top('scrollable')
     }
     o.hide = function(){
         visible = false

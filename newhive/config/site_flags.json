@@ -66,6 +66,9 @@
     },"View/new_embed": {
         "description":"New click-to-play embed code in embed dialog"
         , "values":["admins"]
+    },"View/scroll_prompt": {
+        "description":"Show scroll down button for pages with scrollbar"
+        ,"values":[]
 
     },"UI": {
         "description":"Test versions of the UI"

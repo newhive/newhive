@@ -62,7 +62,7 @@ define([
         // context.is_secure not set until after module instantiation
         o.content_url_base = (context.is_secure ?
                 context.config.secure_content_url : context.config.content_url);
-        window.addEventListener('message', o.handle_message, false);
+        window.addEventListener('message', o.sandbox_receive, false);
     };
 
     o.hide_panel = function(){
@@ -164,6 +164,8 @@ define([
                 o.navigate_page(0); // To cache nearby expressions
         }
 
+        $('.overlay.scroll_down').hidehide()
+
         animate_expr();
 
         o.hide_panel();
@@ -196,10 +198,10 @@ define([
         o.resize();
     }
 
-    o.do_handle_message = false
+    o.do_sandbox_receive = false
     var $hovers = $(), timers = []
     o.enter = function(){
-        o.do_handle_message = true
+        o.do_sandbox_receive = true
         if (context.flags.View.expr_overlays_fade) {
             $hovers = $("<div class='hover left'>")
                 .add( $("<div class='hover right'>"))
@@ -226,7 +228,7 @@ define([
         $('.overlay.panel .expr_actions').hidehide()
         $(".overlay.panel .signup").showshow()
         $(window).off('mousewheel')
-        o.do_handle_message = false
+        o.do_sandbox_receive = false
     }
 
     // Check to see if tags overflows its bounds.
@@ -634,6 +636,8 @@ define([
     o.attach_handlers = function(){
         $(".page_btn.page_prev").bind_once('click', o.page_prev);
         $(".page_btn.page_next").bind_once('click', o.page_next);
+        $('.overlay.scroll_down').bind_once('click', function(){
+            o.send_current({action: 'page_down'}) })
         $('.play_pause').bind_once_anon('click', function(){
             o.send_current({action: 'play_toggle'})
         })
@@ -989,8 +993,8 @@ define([
     // Handles messages from PostMessage (from other frames)
     // TODO-cleanup: rename all frame message handlers to
     // send_parent / send_child / receive_parent / receive_FOO
-    o.handle_message = function(m){
-        if(!o.do_handle_message)
+    o.sandbox_receive = function(m){
+        if(!o.do_sandbox_receive)
             return
         var msg = m.data;
         if(msg == 'focus'){
@@ -1002,7 +1006,8 @@ define([
         } else if(msg == 'play' || msg == 'play_pause') {
             o.play_pause_update(msg == 'play')
             return
-        }
+        } else if(msg == 'scrollable')
+            $('.scroll_down').showshow()
     }
 
     o.expr_click = function(){
