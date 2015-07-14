@@ -459,7 +459,7 @@ define([
             if ($div.html() != '') return;
             $div.html($div.attr('data-content'));
         });
-        
+ 
         if (!util.mobile())
             o.layout()
 
@@ -493,8 +493,16 @@ define([
 
         o.player_play(true)
 
-        if($(window).height() < document.body.scrollHeight)
-            o.send_top('scrollable')
+        function check_height(){
+            var h = $(window).height()
+            if(h < 100){
+                setTimeout(check_height, 50)
+                return
+            }
+            if(h < document.body.scrollHeight)
+                o.send_top('scrollable')
+        }
+        check_height()
     }
     o.hide = function(){
         visible = false
