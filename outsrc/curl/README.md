@@ -1,26 +1,6 @@
 curl (cujoJS resource loader)
 =====================
 
-## Note: curl.js --> RaveJS
-
-We are very excited about [RaveJS](https://github.com/RaveJS), the successor to curl.js.  At its core, rave uses an ES6 Loader, rather than an AMD loader.  However, rave can load many types of modules, *including AMD*.  Therefore, rave will work with your application's AMD modules.  
-
-Rave's most exciting feature, however, is it's ability to eliminate the drudgery of bootstrapping and maintaining modern, modular web applications.  If you've built a non-trivial AMD-based web app, you should be excited about rave, too.  
-
-Rave is definitely the future, so we're putting all of our effort into ensuring that RaveJS is as awesome as it can possibly be.  Watch these RaveJS github projects to stay up to date:
-
-* [RaveJS/rave](https://github.com/RaveJS/rave) - Zero-configuration application bootstrap and development
-* [RaveJS/rave-start](https://github.com/RaveJS/rave-start) - Begin here for the simplest possible startup experience
-* [RaveJS/rave-start-angular](https://github.com/RaveJS/rave-start-angular) - Begin here to create an AngularJS-based application
-* [snichme/rave-start-react](https://github.com/snichme/rave-start-react) - Begin here to create a React-based application
-* [fabricematrat/rave-start-cujo](https://github.com/fabricematrat/rave-start-cujo) - Begin here to create a cujoJS-based application
-
-This means that all development for curl.js and cram.js has stopped. For the foreseeable future, we will continue to respond to issues on github, as well as in the #cujojs room on freenode.  However, keep in mind that there will be no further development, so some issues might not be resolved fully.
-
-If you're as excited as we are about the future, consider helping us improve the [curl-to-rave migration guide](https://github.com/RaveJS/rave/blob/master/docs/migrating-from-curl.md).  There are many ways to architect curl-based applications, so your experience migrating your app from curl to rave is extremely valuable to other curl users.
-
-Also, if you are interested in becoming the lead maintainer of curl.js and/or cram.js, please let us know on #cujojs!
-
 What is curl.js?
 ================
 
@@ -86,18 +66,6 @@ curl.js with jQuery, dojo, or underscore.
 What's New?
 =======
 
-* 0.8.12
-    * Add deprecation notice.
-    * Add links to Rave Starters.
-    * Add a link to the migration guide.
-* 0.8.11
-    * Improve instructions for custom build thanks to @azazel75.
-    * Stop catching (and indirectly squelching) errors in callback functions. Fixes #281.
-    * Add version number at the beginning. Thanks @szepeviktor!
-    * Add note about config options that are not supported in embedded config.
-    * Added img! plugin and test cases.  Thanks @asilvas!
-    * Recognize Windows absolute urls. C:\, e:/, etc. Thanks @doom777!
-    * Update to README.md to correct link to James Burke's site.  Thanks @kryger!
 * 0.8.10
 	* Add moduleType and main properties to bower.json and package.json.
 * 0.8.9
@@ -223,7 +191,7 @@ For a complete description, check out the [wiki](https://github.com/cujojs/curl/
 curl(['main', 'other', 'another' /* etc */], callback, errorback);
 ```
 
-Loads a module named "main" along with two other modules and then executes
+Loads a module named "main" along with two other modules and the executes
 callback, handing it the exported values of the modules as parameters.
 
 * ['main', 'other', 'another']: Module names or plugin-prefixed resource files.
@@ -796,8 +764,6 @@ curl(['my-package/other-module'], callback);
 and will be fetched from the following path:
 
 	path/to/js/path/to/my-package/other-module.js
-
-Note that a package may also contain it's own embedded set of `config` options.  Most, but not all, config options may be specified here.  Specifically, you cannot specify any options that change the path or id of modules, such as `paths`, `packages`, `plugins`, or `'pluginPrefix`.
 
 ----------------------------------------
 

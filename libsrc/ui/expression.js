@@ -53,6 +53,8 @@ define([
         } 
         else if( msg.action == 'hide' ) o.hide()
         else if( msg.action == 'play_toggle' ) o.player_toggle()
+        else if( msg.action == 'page_down' )
+            document.body.scrollTop += $(window).height()
     }
 
     // o.paging_sent = false;
@@ -235,7 +237,7 @@ define([
         //     // by assuming scroll if there's scrolling left in that direction
         //     // and otherwise assuming scroll if delta-Y is greater than delta-X
 
-        //     if( (delta[0] > 0 && document.body.scrollLeft > 0) // left scroll remains
+        //     if( (delta[0] > 0 && docuscrollHeightment.body.scrollLeft > 0) // left scroll remains
         //         || (delta[0] < 0 && (document.body.scrollLeft // right scroll remains
         //             + document.body.clientWidth < document.body.scrollWidth)
         //         )
@@ -457,7 +459,7 @@ define([
             if ($div.html() != '') return;
             $div.html($div.attr('data-content'));
         });
-        
+ 
         if (!util.mobile())
             o.layout()
 
@@ -490,6 +492,17 @@ define([
         })
 
         o.player_play(true)
+
+        function check_height(){
+            var h = $(window).height()
+            if(h < 100){
+                setTimeout(check_height, 50)
+                return
+            }
+            if(h < document.body.scrollHeight)
+                o.send_top('scrollable')
+        }
+        check_height()
     }
     o.hide = function(){
         visible = false

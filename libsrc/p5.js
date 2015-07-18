@@ -1,1 +1,1 @@
-../../outsrc/p5.js
+../outsrc/p5.js

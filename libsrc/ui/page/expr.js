@@ -62,7 +62,7 @@ define([
         // context.is_secure not set until after module instantiation
         o.content_url_base = (context.is_secure ?
                 context.config.secure_content_url : context.config.content_url);
-        window.addEventListener('message', o.handle_message, false);
+        window.addEventListener('message', o.sandbox_receive, false);
     };
 
     o.hide_panel = function(){
@@ -164,6 +164,8 @@ define([
                 o.navigate_page(0); // To cache nearby expressions
         }
 
+        $('.overlay.scroll_down').hidehide().addClass('stay_hidden')
+
         animate_expr();
 
         o.hide_panel();
@@ -196,10 +198,10 @@ define([
         o.resize();
     }
 
-    o.do_handle_message = false
+    o.do_sandbox_receive = false
     var $hovers = $(), timers = []
     o.enter = function(){
-        o.do_handle_message = true
+        o.do_sandbox_receive = true
         if (context.flags.View.expr_overlays_fade) {
             $hovers = $("<div class='hover left'>")
                 .add( $("<div class='hover right'>"))
@@ -226,7 +228,7 @@ define([
         $('.overlay.panel .expr_actions').hidehide()
         $(".overlay.panel .signup").showshow()
         $(window).off('mousewheel')
-        o.do_handle_message = false
+        o.do_sandbox_receive = false
     }
 
     // Check to see if tags overflows its bounds.
@@ -586,34 +588,32 @@ define([
     };
 
     var handle_hover = function(ev) {
-        var $this = $(ev.target)
-        do_hover($this.is(".bottom"), $this)
+        var $handle = $(ev.target)
+        if($handle.is('.bottom'))
+            $object = $('.overlay.bottom')
+        else
+            $object = $('.page_btn.' + ($handle.is('.left') ? 'left' : 'right'))
+        do_hover($object, $handle)
     }        
-    var do_hover = function(bottom, $this){
-        var $object = $(), timer, opacity = 1
+    var do_hover = function($object, $handle, long){
+        var timer, opacity = 1
         var unhide = function() {
-            $this.showshow()
+            $handle.showshow()
             // $object.css('opacity', 0)
             $object.stop(true).animate({"opacity":0},
                 {duration:context.flags.expr_overlays_fade_out_duration})
         }
-        $this.hidehide()
+        $handle.hidehide()
 
-        if (bottom) {
-            $object = $(".overlay.bottom")
-        } else {
+        if( $object.is('.page_btn') &&
             // don't render the page buttons if there is nothing to page through!
-            if (!context.from_categories && 
-                (context.page_data.cards == undefined
+            !context.from_categories && 
+            (context.page_data.cards == undefined
                 || context.page_data.cards.length == 1
                 || !context.page_data.expr
                 || no_paging
-            )) return
-
-            $object = $('.page_btn.' + ($this.is('.left') ? 'left' : 'right'))
-            if (context.flags.View.page_button_opacity)
-                opacity = context.flags.View.page_button_opacity
-        }
+            )
+        ) $object = $object.not('.page_btn')
 
         $object //.css('opacity', opacity)
             .stop(true).animate(
@@ -628,12 +628,14 @@ define([
                 timer = setTimeout(unhide, 2000)
                 timers.push(timer)
             })
-        timer = setTimeout(unhide, 2000)
+        timer = setTimeout(unhide, long ? 4000 : 2000)
         timers.push(timer)
     }
     o.attach_handlers = function(){
         $(".page_btn.page_prev").bind_once('click', o.page_prev);
         $(".page_btn.page_next").bind_once('click', o.page_next);
+        $('.overlay.scroll_down').bind_once('click', function(){
+            o.send_current({action: 'page_down'}) })
         $('.play_pause').bind_once_anon('click', function(){
             o.send_current({action: 'play_toggle'})
         })
@@ -642,7 +644,9 @@ define([
         $(".social_btn").bind_once_anon("click", o.social_toggle);
 
         $hovers.bind_once('mouseenter.expr', handle_hover)
-        js.on_ready(function(){ do_hover('.bottom', $()) })
+        js.on_ready(function(){
+            do_hover($('.overlay.bottom, .overlay.page_btn'), $(), true)
+        })
         $(".bottom.overlay,.page_btn.overlay")
             .off("mouseenter").on("mouseenter", function(ev){
                 // $(this).css('opacity', 1)
@@ -656,8 +660,6 @@ define([
                 $(this).animate( {"opacity":0},
                     {duration:context.flags.expr_overlays_fade_out_duration} )
             })
-        $('.bottom.overlay,.page_btn').css('transition-duration',
-            context.flags.expr_overlays_fade_duration)
         $(window).on('mousewheel', function(){
             $('#overlays .bottom,#overlays .left,#overlays .right').hide()
             setTimeout(function(){ $('#overlays .hover').showshow() }, 2000)
@@ -989,8 +991,8 @@ define([
     // Handles messages from PostMessage (from other frames)
     // TODO-cleanup: rename all frame message handlers to
     // send_parent / send_child / receive_parent / receive_FOO
-    o.handle_message = function(m){
-        if(!o.do_handle_message)
+    o.sandbox_receive = function(m){
+        if(!o.do_sandbox_receive)
             return
         var msg = m.data;
         if(msg == 'focus'){
@@ -1002,7 +1004,9 @@ define([
         } else if(msg == 'play' || msg == 'play_pause') {
             o.play_pause_update(msg == 'play')
             return
-        }
+        } else if(msg == 'scrollable')
+            if(context.flags.View.scroll_prompt)
+                $('.scroll_down').showshow().removeClass('stay_hidden')
     }
 
     o.expr_click = function(){

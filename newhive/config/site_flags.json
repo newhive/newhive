@@ -51,9 +51,6 @@
     },"View/expr_overlays_fade": {
         "description":"Opacity to fade newhive overlay to when hovering nearby"
         , "values":["all=0"]
-    },"View/page_button_opacity": {
-        "description":"Opacity to fade page buttons when hovering nearby"
-        , "values":["all=0.9"]
     },"View/expr_overlays_fade_duration": {
         "description":"How long it takes for overlays on newhives to fade in"
         , "values":["all=200"]
@@ -66,6 +63,9 @@
     },"View/new_embed": {
         "description":"New click-to-play embed code in embed dialog"
         , "values":["admins"]
+    },"View/scroll_prompt": {
+        "description":"Show scroll down button for pages with scrollbar"
+        ,"values":[]
 
     },"UI": {
         "description":"Test versions of the UI"

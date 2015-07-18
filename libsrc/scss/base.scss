@@ -106,9 +106,6 @@ body.transition_test {
     // .overlay, .overlay > *:not(.drawer) {
     //     @include transition(all, $anim_time);
     // }
-    .overlay, .overlay > *:not(.drawer), .overlay .handle {
-        @include transition(background-color, $anim_time);
-    }
     .transition.all {
         @include transition(all, $anim_time);
     }

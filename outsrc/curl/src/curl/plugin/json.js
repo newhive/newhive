@@ -22,12 +22,24 @@ define(/*=='curl/plugin/json',==*/ ['./_fetchText'], function (fetchText) {
 			errback = loaded['error'] || error;
 
 			// create a json evaluator function
-			evaluator = config.strictJSONParse
-				? guard(parseSource, loaded, errback)
-				: guard(evalSource, loaded, errback);
+			if (config.strictJSONParse) {
+				if (!hasJsonParse) error(new Error(missingJsonMsg));
+				evaluator = guard(parseSource, loaded, errback);
+			}
+			else {
+				evaluator = guard(evalSource, loaded, errback);
+			}
 
 			// get the text, then eval it
 			fetchText(require['toUrl'](absId), evaluator, errback);
+
+			function evalSource (source) {
+				loaded(globalEval('(' + source + ')'));
+			}
+
+			function parseSource (source) {
+				return JSON.parse(source);
+			}
 
 		},
 
@@ -39,25 +51,14 @@ define(/*=='curl/plugin/json',==*/ ['./_fetchText'], function (fetchText) {
 		throw ex;
 	}
 
-	function evalSource (source) {
-		return globalEval('(' + source + ')');
-	}
-
-	function parseSource (source) {
-		if (!hasJsonParse) throw new Error(missingJsonMsg);
-		return JSON.parse(source);
-	}
-
 	function guard (evaluator, success, fail) {
 		return function (source) {
-			var value;
 			try {
-				value = evaluator(source);
+				success(evaluator(source));
 			}
 			catch (ex) {
-				return fail(ex);
+				fail(ex);
 			}
-			return success(value);
 		}
 	}
 
