@@ -110,6 +110,9 @@
     
     },"Editor": { 
         "description":"Flags pertaining to the editor"
+    },"Editor/sketch": {
+        "description":"Show sketch button in top level creation menu"
+        , "values":["all"]
     },"Editor/snap_crop": {
         "description":"Allow snapping when shifting crop bounds of cropped images"
         , "values":["admins","nd4"]

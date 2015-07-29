@@ -142,9 +142,10 @@
       <img title="Circle" src='{asset "skin/edit/shapes_icons/circle.png"}'></div
     ><div class='menu_item triangle'>
       <img title="Triangle" src='{asset "skin/edit/shapes_icons/triangle.png"}'></div
-  {>}
+  {>}{<if flags.Editor.sketch}
   ><div class='menu_item sketch'>
     <img title="Sketch" src='{asset "skin/edit/shapes_icons/sketch.png"}'></div
+  {>}
 ></div>
 
 <div id='menu_file' class='menu drawer medbold'>
