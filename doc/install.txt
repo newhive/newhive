@@ -14,7 +14,7 @@ Python library dependency dependencies (Ubuntu packages)
     sudo apt-get install python-pip python-dev node libxml2-dev libxslt-dev ipython
 
 Python library dependencies
-    sudo pip install werkzeug pymongo Pillow==2.9.0 boto oauth2 oauth2client webassets pytz pandas brownie jinja2 lxml Pillow python-gcm simplejson cssutils oauth2 apiclient httplib2 google-api-python-client paramiko hsaudiotag yappi
+    sudo pip install werkzeug pymongo==2.7.2 Pillow==2.9.0 boto oauth2 oauth2client webassets pytz pandas brownie jinja2 lxml Pillow python-gcm simplejson cssutils oauth2 apiclient httplib2 google-api-python-client paramiko hsaudiotag yappi
 
 JavaScript dependencies
     sudo apt-get install npm
