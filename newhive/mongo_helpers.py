@@ -64,11 +64,10 @@ class Query(dict):
         return Query({'$not': self})
 
     # tired of typing 'now() - 86400 * foo'. 
-    def day(self, key, day1, day2=None):
-        """ Assumes value of key is a timestamp. Converts day1 from
-        days into past to timestamp t and day2 to days past day1 """
+    def day(self, key, days_ago, day_span=1):
+        """ Assumes value of key is a timestamp. Converts days_ago from
+        days into past to timestamp t and day_span to days past days_ago """
         n = now()
-        t = n - 86400 * day1
-        if day2: self.bt(key, t, t + day2 * 86400)
-        else: self.bt(key, t, t + 86400)
+        t = n - 86400 * days_ago
+        self.bt(key, t, t + day_span * 86400)
         return self
