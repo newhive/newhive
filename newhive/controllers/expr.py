@@ -150,28 +150,29 @@ class Expr(ModelController):
             # extract files from sketch and code objects
             app = apps.popleft()
             ok = True
-            data = None
+            file_data = None
             suffix = ""
             file_id = app.get('file_id')
             if app['type'] == 'hive.code' and app['code_type'] == 'js':
-                data = app.get('content')
+                file_data = app.get('content')
                 modules = module_modules(app)
                 ok = ok and file_id and (modules != False)
                 if ok:
                     # expand to full module code
-                    data = ("define(['browser/jquery'%s], function($%s"
+                    file_data = ("define(['browser/jquery'%s], function($%s"
                         + ") {\nvar self = {}\n%s\nreturn self\n})"
-                    ) % (modules, module_names(app), data)
+                    ) % (modules, module_names(app), file_data)
                 name = "code"
                 mime = "application/javascript"
                 suffix = ".js"
             elif app['type'] == 'hive.sketch': 
                 # deal with inline base64 encoded images from Sketch app
-                data = base64.decodestring(app.get('content').get('src').split(',',1)[1])
-                name = 'sketch',
+                file_data = base64.decodestring(
+                    app.get('content').get('src').split(',',1)[1])
+                name = 'sketch'
                 mime = 'image/png'
 
-            if not data:
+            if not file_data:
                 continue
             if not ok:
                 # dependencies not visited
@@ -179,7 +180,7 @@ class Expr(ModelController):
 
             # sync files to s3
             f = os.tmpfile()
-            f.write(data)
+            f.write(file_data)
             file_res = None
             # TODO-feature-versioning goes here
             # If file exists, overwrite it

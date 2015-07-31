@@ -2791,8 +2791,9 @@ Hive.App.Sketch = function(o) {
     Hive.App.has_opacity(o);
     Hive.App.has_shield(o);
 
-    o.content_element = $('<iframe>').attr('src', '/lib/harmony_sketch.html')
-        .css({'width':'100%','height':'100%','position':'absolute'});
+    o.content_element = $('<iframe>')
+        .attr('src', '/lib/harmony_sketch.html')
+        .css({'width':'100%', 'height':'100%', 'position':'absolute'});
     o.iframe = o.content_element.get(0);
     o.fill_color = function(hex, rgb) { o.win.COLOR = rgb; }
     o.div.append(o.content_element);
