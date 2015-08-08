@@ -227,6 +227,7 @@ define([
         $('.page_btn').hidehide();
         $('.overlay.panel .expr_actions').hidehide()
         $(".overlay.panel .signup").showshow()
+        $('.overlay.scroll_down').addClass('stay_hidden')
         $(window).off('mousewheel')
         o.do_sandbox_receive = false
     }

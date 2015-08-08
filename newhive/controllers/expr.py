@@ -318,6 +318,7 @@ class Expr(ModelController):
         if parent.get('remix_value', 0) > tdata.user.get('moneys_sum', 0):
             return self.serve_json(tdata.response, dict(error='funds'))
         remixed = tdata.user.expr_remix(parent)
+        remixed['name'] = 'remix/' + parent['owner_name'] +'/'+ remixed['name']
         return self.serve_json(tdata.response, dict(remixed=True,
             expr_id=remixed.id, name=remixed['name']))
 

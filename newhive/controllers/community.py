@@ -17,7 +17,7 @@ class Community(Controller):
         if not expr:
             if args.get('route_name') == 'user_home':
                 return self.redirect(tdata.response,
-                    abs_url('/' + owner_name + ':Feed'))
+                    abs_url('/' + owner_name + '/profile/feed'))
             return None
         return self.serve_expr(tdata, expr)
 
@@ -504,14 +504,14 @@ class Community(Controller):
 
     def my_home(self, tdata, **kwargs):
         return self.redirect(tdata.response, abs_url(
-            '/' + tdata.user['name'] + ':Feed' +
+            '/' + tdata.user['name'] + '/profile/feed' +
             Community.parse_query(tdata.request.query_string)))
     def profile_redirect(self, tdata, owner_name='', **kwargs):
         return self.redirect(tdata.response, abs_url(
-            '/' + owner_name + (':Feed' if owner_name else '') ))
+            '/' + owner_name + ('/profile/feed' if owner_name else '') ))
     def user_tag_redirect(self, tdata, owner_name='', tag_name='', **kwargs):
         return self.redirect(tdata.response, abs_url(
-            '/' + owner_name + (':' + tag_name if tag_name else '') ))
+            '/' + owner_name + ('/collection/' + tag_name if tag_name else '') ))
 
     @classmethod
     def parse_query(klass, query_string):

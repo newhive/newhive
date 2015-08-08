@@ -1171,7 +1171,7 @@ class User(HasSocial):
             return 'Passwords must be at least 4 characters long'
         return False
 
-    def get_url(self, path=':Feed', relative=False, secure=False):
+    def get_url(self, path='/profile/feed', relative=False, secure=False):
         if not self.id: return ''
         base = '/' if relative else abs_url(secure=secure)
         return base + self.get('name', '') + path
@@ -2392,11 +2392,10 @@ class File(Entity):
 
     def store(self):
         if self.db.config.aws_id:
+            s3_url = self.db.s3.upload_file(self.file, 'media', self.file_name,
+                self['name'], self['mime'])
             self.update(protocol='s3',
-                s3_bucket=self.db.s3.buckets['media'].name,
-                url=self.db.s3.upload_file(self.file, 'media', self.file_name,
-                    self['name'], self['mime'])
-            )
+                s3_bucket=self.db.s3.buckets['media'].name, url=s3_url)
         else:
             self['protocol'] = 'file'
             owner = self.db.User.fetch(self['owner'])
