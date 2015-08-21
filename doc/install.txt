@@ -39,7 +39,7 @@ Application dependencies (Ubuntu packages)
 Get the db
     scp abram@admin-1.newhive.com:/mnt/scratch/backup/*.gz .
     tar -xvf *.gz
-    mongorestore --drop -d test --noIndexRestore --dir tmp/live-newhive
+    mongorestore --drop -d test --noIndexRestore --dir tmp/live-newhive5
 deal with records that break indexing:
     mongo
     db.expr.remove({owner_name: "joebussiere"})

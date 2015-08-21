@@ -198,11 +198,8 @@ body.mobile .user_header {
                         background-color: $color_bright_red;
                     }
                 }
-                .icon.tags {
-                    background-image: asset_url('skin/nav/collections.png');
-                    // &.on { 
-                        //background-image: asset_url('skin/nav/collections-on.png'); 
-                    // }
+                .icon.grid {
+                    background-image: asset_url('skin/nav/grid.png');
                 }
                 .icon.cats {
                     background-image: asset_url('skin/nav/collections.png');

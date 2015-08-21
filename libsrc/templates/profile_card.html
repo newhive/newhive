@@ -30,13 +30,12 @@
         <div class='about text'>{profile_about}</div>
         <div class='nav_bar'>
           {# expressions public, count #}
-          <a class='nav_button inline exprs' 
-            {# {<if route_name "expressions_all"} on{>} #}
-            title="Newhive grid"
-            { anchor_attrs "expressions_all" "owner_name" owner.name 
-              "tag_name" ""}>
-            <img class="exprs" src='{asset "skin/nav/newhives.png"}'/> 
-            {<if expressions}{thousands expressions}{>}</a
+          <a class='nav_button inline exprs
+            {<if (eq route_name "expressions_feed")} on{>}'
+            title="feed from {owner.name}"
+            { anchor_attrs "expressions_feed" "owner_name" owner.name 
+              "tag_name" ""}
+          ><img class="exprs" src='{asset "skin/nav/newhives.png"}'/></a
           ><div class='spacer inline'></div>
           {<if (not flags.mobile)}
             {# categories #}
@@ -57,7 +56,7 @@
               title="All newhives by {owner.name}"
               { anchor_attrs "expressions_all" "owner_name" owner.name }
             ><div class="grid icon{<if (eq route_name "expressions_all")} on{>}"
-              ></div></a
+              ></div>{#{<if expressions}{thousands expressions}{>}#}</a
             ><div class='spacer inline'></div>
           {>}
           {# following #}
