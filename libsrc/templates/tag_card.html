@@ -39,9 +39,9 @@
     {<if (and main_view tag_selected (neq tag_selected tag_name))}
       "tag_label tag_unselected"
     {>}{<elif (and main_view tag_selected (eq tag_selected tag_name))}
-      "tag_label tag_{mod tagnum 16} selected"
+      "tag_label selected"
     {>}{<else}
-      "tag_label tag_{mod tagnum 16}"
+      "tag_label"
     {>}
   >{tag_name}</div>
 {<unless suppress_link}</a>{>}

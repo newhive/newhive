@@ -947,8 +947,8 @@ class User(HasSocial):
         for key in ordered_tags:
             del cnt[key]
         # concat the lists and possibly the empty tag_name
-        all_tags = ordered_tags + [x for x,y in cnt.most_common()]
-        return (len(ordered_tags), all_tags)
+        extra_tags = [x for x,y in cnt.most_common()]
+        return (ordered_tags, extra_tags)
 
     def get_tag(self, tag, limit=0, force_update=False):
         tagged = self.get('tagged', {})
@@ -1349,7 +1349,7 @@ class User(HasSocial):
             #!! TODO-perf: remove after we migrate to run on all users
             # self.calculate_tags()
             update = {}
-            (update['tagged_ordered'], update['tagged']) = self.get_tags(True)
+            (update['tag_list'], update['extra_tags']) = self.get_tags(True)
             (cats_ordered, categories) = self.get_cats()
             if len(categories):
                 (update['cats_ordered'], update['categories']) = (cats_ordered, categories)

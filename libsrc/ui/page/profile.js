@@ -24,7 +24,6 @@ define([
         save_immediately = true,
         anim_duration = 400,
         show_tags = true,
-        show_more_tags = false,
         card_deletes = 0
 
     o.init = function(controller){
@@ -225,7 +224,7 @@ define([
         });
         // $(".tags.nav_button").unbind('click').click(show_hide_tags);
         $(".tag_list_container .expander").unbind('click').on('click', function(ev) {
-            toggle_more_tags();
+            o.toggle_more_tags();
         });
 
         win.unbind('scroll', on_scroll_add_page).scroll(on_scroll_add_page);
@@ -311,24 +310,24 @@ define([
             //     items: $("#site .drop_box .tag_label"),
             // });
         }
+
+        $('.tag_list.main .drop_box .tag_btn').on('click', function(){
+            $('.tag_list.main').toggleClass('extra_open')
+        })
         if( allow_tag_reorder() ){
             $("#site .tag_list.main, #site .drop_box").sortable({
                 connectWith: '#site .drop_box, #site .tag_list.main',
                 tolerance: 'pointer',
                 placeholder: 'place_holder',
                 items: $("#site .tag_list.main .tag_label"),
-                // start: function (e, ui) {
-                //     from_main = (ui.item.parent().hasClass("main"));
-                // },
-
                 // sort: function (e, ui) {
                     // (ui.sender ? $(ui.sender) : $(this)).sortable('cancel');
                     // true;
                 // },
-                beforeStop: function (e, ui) {
-                    // if (ui.item.parent().hasClass("main"))
-                    //     (ui.sender ? $(ui.sender) : $(this)).sortable('cancel');
-                },
+                // beforeStop: function (e, ui) {
+                //     if (ui.item.parent().hasClass("main"))
+                //         (ui.sender ? $(ui.sender) : $(this)).sortable('cancel');
+                // },
                 stop: function (e, ui) {
                     // $("form .tag_order .tags").val();
                     var tags = 
@@ -338,11 +337,8 @@ define([
                         val(tags.toArray().join(","));
                     $("form.tag_order").submit().unbind('success').
                         on('success', function(e, json) {
-                            context.page_data.ordered_count = json.tagged_ordered;
-                            context.page_data.tag_list = json.tagged;
-                            o.preprocess_page_data(context.page_data);
+                            $.extend(context.page_data, json)
                             $.extend(context.user, json);
-                            ui_page.preprocess_context();
                             ui_page.render_main_tags();
                             o.attach_handlers();
                         });
@@ -364,23 +360,6 @@ define([
             // $(".tags.icon").removeClass("on");
         }
     }
-    o.preprocess_page_data = function (page_data){
-        page_data.ordered_tags = [] 
-        if (page_data.tag_list)
-            page_data.ordered_tags = 
-                page_data.tag_list.slice(0, page_data.ordered_count);
-        if (context.route.include_categories)
-            page_data.extra_tags = 
-                page_data.tag_list.slice(page_data.ordered_count);
-        else if(0 <= $.inArray(context.route_name,
-            ['expressions_all', 'expressions_unlisted',
-                'expressions_tag', 'expressions_tag_private'])
-        ){
-            page_data.extra_tags = 
-                page_data.tag_list.slice(page_data.ordered_count);
-        }
-        page_data.tag_list = page_data.ordered_tags;
-    };
 
     o.enter = function(){
         o.exit();
@@ -388,14 +367,12 @@ define([
             // $(".network_nav").hidehide();
             show_tags(context.route.include_tags);
         }
-        if (o.show_more_tags) toggle_more_tags();
-        $(".overlay.panel").showshow();
+        $(".overlay.panel").showshow()
 
         o.more_cards = context.page_data.cards
     };
-    var toggle_more_tags = function() {
+    o.toggle_more_tags = function() {
         $(".tag_list.main").toggleClass("expanded");
-        o.show_more_tags = ($(".tag_list.main").hasClass("expanded"));
     }
     o.exit = function(){
         // $(".network_nav").showshow();
