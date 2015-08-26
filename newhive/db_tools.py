@@ -114,7 +114,8 @@ def export_csv(data, file_name='newhive_query'):
     f = open(file_name, 'wb')
     wr = csv.writer(f, quoting=csv.QUOTE_ALL)
     for row in data:
-        wr.writerow(row)
+        ascii_row = [col.encode('ascii', 'ignore') for col in row]
+        wr.writerow(ascii_row)
 
 ### BEGIN snapshot_wrangling ###
 # returns cursor with expressions at most %days% old which have > 1 fail count
