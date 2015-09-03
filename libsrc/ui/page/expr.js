@@ -596,7 +596,7 @@ define([
             $object = $('.page_btn.' + ($handle.is('.left') ? 'left' : 'right'))
         do_hover($object, $handle)
     }        
-    var do_hover = function($object, $handle, long){
+    var do_hover = function($object, $handle, long_time){
         var timer, opacity = 1
         var unhide = function() {
             $handle.showshow()
@@ -629,7 +629,7 @@ define([
                 timer = setTimeout(unhide, 2000)
                 timers.push(timer)
             })
-        timer = setTimeout(unhide, long ? 4000 : 2000)
+        timer = setTimeout(unhide, long_time ? 4000 : 2000)
         timers.push(timer)
     }
     o.attach_handlers = function(){
