@@ -537,7 +537,7 @@
         "api_route": "/api/admin/query",
         "controller": "community",
         "method": "admin_query",
-        "client_method": "profile",
+        "client_method": "grid",
         "require_login": true
     },
     "version": {

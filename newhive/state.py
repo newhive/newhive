@@ -286,21 +286,13 @@ class Collection(object):
             # if page_is_id:
             #     page_start = self.fetch(at)
             #     at = page_start[sort] if page_start else None
-
             # if at and sort:
             #     spec[sort] = { '$lt' if order == -1 else '$gt': at }
-
-            res = self.search(spec, sort=[(sort, order)], filter=filter,
-                skip=at, **args)
-
-            # collapse to limit long list, omitting filtered results
-            res = [r for r in islice(res, limit)]
-            return res
-
+            return list( self.search(spec, sort=[(sort, order)], filter=filter,
+                skip=at, limit=limit, **args) )
         elif isinstance(spec, list):
             # spec = uniq(spec)
             # assert( not at or page_is_id )
-
             try:
                 # start = spec.index(at) if at else -1
                 start = at

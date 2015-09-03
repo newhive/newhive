@@ -404,60 +404,77 @@ class Community(Controller):
             data.update({'tags_search': tags, 'page': 'tag_search', 'viewer': profile})
         return data
 
-    def admin_query(self, tdata, **kwargs):
+    def admin_query(self, tdata, db_args={}, **kwargs):
         if not self.flags.get('admin'):
             return {}
 
+        parse = json.loads
         args = tdata.request.args
-        special = args.get('special', '')
+        out = args.get('out', 'cards')
         collection = collection_of(self.db,
-            args.get('col', 'Expr').capitalize())
-        db_args = dict(
-            spec=json.loads(args.get('q', '{}')),
-            sort=[( args.get('sort', 'updated'),
-                json.loads(args.get('order', '-1'))
-            )],
-            limit=json.loads(args.get('limit', '20')),
+            args.get('collection', 'Expr').capitalize())
+        q = mq(parse(args.get('q', '{}')))
+        if args.get('day'):
+            (time_prop, days_ago, day_span) = args['day'].split(',') 
+            days_ago, day_span = float(days_ago), float(day_span)
+            q.day(time_prop, days_ago, day_span)
+        fields = None
+        if args.get('fields'): fields = args['fields'].split(',')
+        db_args.update(
+            spec=q,
+            sort=args.get('sort', 'created'),
+            order=parse(args.get('order', '-1')),
+            limit=parse(args.get('limit', '0' if fields else '20')),
+            fields=fields
         )
         help = """
-            q: database query, e.g., {"owner_name": "zach"}
-            sort: default updated
-            order: default -1
-            col: database collection, default 'expr'
-            special: 'top_tags' | 'emails' | 'top_lovers' |  None
-        """
-        # TODO: document all these args somewhere
+Query parameters:
+    q: database query, e.g., {"owner_name": "zach"}
+    day: time_property,days_ago,day_span
+    sort: default updated
+    order: default -1
+    fields: prop1,prop2,prop3 (outputs fields in CSV format)
+    collection: 'user' | 'feed' | 'trash' | 'expr' (default)
+    special: 'top_tags' | 'top_lovers' |  None
+    help: ...this...
+
+Examples:
+    Get list of emails from recent signups in the last 14 days
+        /home/admin/query?day=created,14,14&collection=user&fields=email,name,fullname
+    Show users with given email
+        /home/admin/query?q={"email":"a@newhive.com"}&collection=user
+"""
+
+        # Special cases
+        special = args.get('special')
         if special == 'top_tags':
             if tdata.request.args.get('help', False) != False:
                 return { 'text_result': 'limit: default 1000' }
-            db_args.update(limit=json.loads(args.get('limit', '1000')))
+            db_args.update(limit=parse(args.get('limit', '1000')))
             common = self.db.tags_by_frequency(collection=collection, **db_args)
-            return { 'text_result':
+            return { 'data':
                 "\n".join( [x[0] + ": " + str(x[1]) for x in common] ) }
-        elif special == 'emails':
-            db_args['fields'] = {k:True for k in ['name','email','fullname']}
-            db_args.update(limit=json.loads(args.get('limit', '0')))
-            res = self.db.User.search(**db_args)
-            return { 'text_result': '\n'.join( json.dumps(r['fullname']) + ', ' +
-                json.dumps(r['email']) for r in res if validate_email(r['email']) )}
-        if special == 'top_lovers':
+        elif special == 'top_lovers':
             if tdata.request.args.get('help', False) != False:
                 return { 'text_result': 'last_days: default 30' }
-            last_days = json.loads(args.get('last_days', '30'))
+            last_days = parse(args.get('last_days', '30'))
             loves_by_users = Counter()
             for r in self.db.Feed.search( mq(class_name='Star',
                 entity_class='Expr').gt('created', now()-86400*last_days)
             ): loves_by_users[r['initiator_name']] += 1
             resp = json.dumps(loves_by_users.most_common())
             return { 'text_result': re.sub(r'\],', '],\n', resp) }
-        else:
-            if tdata.request.args.get('help', False) != False:
-                return { 'text_result': help }
-            res = collection.search(**db_args)
+        if tdata.request.args.get('help', False) != False:
+            return { 'data': help }
 
-        return {
-            'cards': list(res),
-        }
+        data = {}
+        res = collection.paginate(**db_args)
+        if fields:
+            rows = [[r.get(k, '') for k in fields] for r in res]
+            data['data'] = '\n'.join( [','.join(row) for row in rows] )
+        else:
+            data['cards'] = list(res)
+        return data
 
     def my_home(self, tdata, **kwargs):
         return self.redirect(tdata.response, abs_url(
@@ -508,27 +525,14 @@ class Community(Controller):
                 isinstance(page_data['cards'][0], Entity)):
                 page_data['cards'] = [o.client_view(special=special) for o in page_data['cards']]
 
-            # else:
-            #     # Collate tags into list by most commonly appearing.
-            #     cnt = Counter()
-            #     for card in page_data['cards']:
-            #         for tag in (card.get('tags', []) if card.get('tags') else []):
-            #             cnt[tag] += 1
-            #     if owner and kwargs['route_name'] == 'expressions_tag':
-            #         tagged = owner.get('tagged', {}).keys()
-            #         num_tags = max(len(tagged), 16)
-            #         tagged.extend(page_data['tag_list'])
-            #         page_data['tag_list'] = tagged[:num_tags]
-            #     elif type(page_data.get('tag_list')) != list:
-            #         # TODO: we'll have to have another solution with pagination.
-            #         page_data['tag_list'] = map(lambda x: x[0], cnt.most_common(16))
-            # Fetch feed data
             for card in page_data['cards']:
                 feed = card.get('feed', [])
                 card['feed'] = map(lambda x: x.client_view(), feed)
 
         if json:
             return self.serve_json(tdata.response, page_data)
+        elif page_data.has_key('data'):
+            return self.serve_data(tdata.response, 'text/txt', page_data['data'])
         else:
             tdata.context.update(page_data=page_data, route_args=kwargs)
             if page_data.get('meta'):
