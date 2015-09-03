@@ -71,11 +71,9 @@ o.Selection = function(o) {
                     var applied = args;
                     if (from_history)
                         applied = [args[i]];
-                    if (typeof(app[fn_name]) == "function") {
-                        var _res = app[fn_name].apply(null, applied);
-                        if (res == "undefined") res = _res;
-                        if (res != _res) res = undefined;
-                    }
+                    var _res = app[fn_name].apply(null, applied);
+                    if (res == "undefined") res = _res;
+                    if (res != _res) res = undefined;
                     return _res;
                 }
                 return undefined;

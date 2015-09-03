@@ -57,7 +57,7 @@
 
     ,"home": {
         "page_route": "/"
-        ,"api_route": "/api/feed/featured/"
+        ,"api_route": "/api/feed/featured"
         ,"controller": "community"
         ,"method": "hive_featured"
         ,"client_method": "home"
@@ -96,15 +96,6 @@
         ,"precedence": 1
     }
 
-    ,"featured": {
-        "page_route": "/home/featured"
-        ,"api_route": "/api/feed/featured"
-        ,"controller": "community"
-        ,"method": "featured"
-        ,"client_method": "profile"
-        ,"body_class": "nav"
-        ,"require_login": true
-    }
     ,"recent": {
         "page_route": "/home/recent"
        ,"api_route": "/api/feed/recent"
