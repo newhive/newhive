@@ -326,6 +326,14 @@ class HiveAssets(Assets):
         self.assets_env.register('email.css', email_scss, output='../lib/email.css')
         self.final_bundles.append('email.css')
 
+        self.assets_env.register('external_header', webassets.Bundle(
+            'scss/main_header_standalone.scss',
+            filters=scss_filter,
+            output='compiled.external-header.css',
+            debug=False
+        ) )
+        self.final_bundles.append('external_header')
+
     def urls_with_expiry(self):
         urls = self.urls()
         if self.env.debug:
