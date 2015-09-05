@@ -27,7 +27,7 @@ JavaScript dependencies
         make
         sudo make install
     cram:
-        sudo npm install -g bower@0.9.2nm
+        sudo npm install -g bower@0.9.2
         sudo npm install -g cram@0.7.6
 
 Application dependencies (Ubuntu packages)

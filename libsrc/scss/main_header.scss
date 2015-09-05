@@ -108,7 +108,11 @@ $nav_size: 44px;
     .right .icon {
         margin-right: 5px;
     }
-    .text_btn { margin: 2px 0px 0px 0px; }
+    .text_btn {
+        padding: 12px 10px;
+        box-sizing: border-box;
+        height: $nav_size;
+    }
     .logo, .item, .icon {
         display: inline-block;
     }
@@ -156,7 +160,7 @@ $nav_size: 44px;
     }
     // #search_box is not always inside .search_bar
     #search_box {
-        margin: 0px 0px 0px 4px;
+        margin: 5px 0px 5px 4px;
         width: 250px;
 
         width: 0px;
