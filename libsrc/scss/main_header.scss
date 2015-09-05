@@ -1,3 +1,18 @@
+.hive_logo {
+    display: block;
+    margin-left: 0px;
+    // margin-right: 3px;
+    height: $nav_size;
+    width: $nav_size;
+    left: 20px;
+
+    background-image: asset_url('skin/nav/logo.png');
+    &.active {
+        background-image: asset_url('skin/nav/logo-hover.png');
+        background-color: black;
+    }
+}
+
 body.nav .main-header {
     display: block;
 }
