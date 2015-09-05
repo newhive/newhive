@@ -1,18 +1,25 @@
 @import "compass/utilities";
 @import "compass/css3";
-@import "base";
 @import "colors";
+@import "base";
+
 $debug: false;
 $nav_layer: 1;
-
 @import "main_header";
 
 // misc from other includes
 .menu_item {
     text-transform: uppercase;
-    font-family: Gibson Semibold;
-    font-size: 16px;
+    font-family: Gibson;
+    font-weight: bold;
 }
 
 .main-header { display: block !important; }
+
+.site-content { margin-top: $nav_size; }
+
+.teal_hover:hover, .teal_bg {
+    background-color: $color_selected;
+    color: black;
+}
 
