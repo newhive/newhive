@@ -233,7 +233,7 @@ class HiveAssets(Assets):
         scss_filter = webassets.filter.get_filter(
             'scss',
             use_compass=True,
-            sourcemap=False,
+            #sourcemap=False,
             debug_info=config.debug_mode,
             libs=[join(config.src_home, 'libsrc/scss/asset_url.rb')]
         )
@@ -333,7 +333,7 @@ class HiveAssets(Assets):
             filters=scss_filter,
             output='compiled.external_header.css',
             debug=False
-        ) )
+        ), filters='yui_css', output='../lib/external_header.css')
         self.final_bundles.append('external_header')
 
     def urls_with_expiry(self):
