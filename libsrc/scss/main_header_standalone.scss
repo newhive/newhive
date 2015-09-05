@@ -3,6 +3,16 @@
 @import "base";
 @import "colors";
 $debug: false;
-$nav_layer: 0;
+$nav_layer: 1;
 
 @import "main_header";
+
+// misc from other includes
+.menu_item {
+    text-transform: uppercase;
+    font-family: Gibson Semibold;
+    font-size: 16px;
+}
+
+.main-header { display: block !important; }
+
