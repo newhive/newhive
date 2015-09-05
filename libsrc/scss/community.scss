@@ -327,14 +327,11 @@ body.mobile .user_header {
 
 .tag_list {
     .icon.plus_menu, .icon.delete, .icon.add_queue, .icon.plus_cats {
-        // display:inline-block;
-        width: 44px;
-        height: 44px;
+        display:inline-block;
+        width: 33px;
+        height: 33px;
         vertical-align: middle;
-        margin: -12px 5px 0px -16px;
-    }
-    .icon.plus_menu, .icon.plus_cats, .icon.add_queue {
-        float: left;
+        background-size: 100% 100%;
     }
 }
 .icon.plus_menu, .icon.plus_cats, .icon.add_queue {

@@ -117,7 +117,7 @@ $debug: false;
     // .left {  @include border-radius(11px 0 0 11px); }
     // .left.right {  @include border-radius(11px); }
 
-    .icon, .item {
+    .item {
         height: $nav_size; width: $nav_size;
         background-size: $nav_size $nav_size;
     }
@@ -180,16 +180,6 @@ $debug: false;
     // height: 180px;
     &:hover { background-color: white; }
 
-    .icon.plus_menu, .icon.add_queue, .icon.plus_cats {
-        // position: absolute;
-        // background-color: black;
-        // top: 18px;
-        // right: 27px;
-        margin: -6px 0px 0px 0px;
-        display: inline-block;
-        float: inherit;
-    }
-    // .icon.add_queue { right: 77px; }
     #popup_content {
         max-width: 980px;
         overflow-x: auto;
