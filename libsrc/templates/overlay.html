@@ -2,7 +2,6 @@
 {# TODO: create default for clean_options here. right now it is set it in dialog_embed.html #}
 
 <div class="main-header">
-  <form action='/s' class="search_bar_form" method='GET' name='search_form'>
   <div class="nav_top_row">
 
     {# LEFT content. #}
@@ -18,10 +17,10 @@
           <a { anchor_attrs "expressions_feed" "owner_name" user.name }>
             <div class='text_btn item teal_hover username ellipsis
             {<if route.profile} black_btn{>}'>{user.name}</div></a>
-          <a { anchor_attrs "home"}>
-            <div class='text_btn item teal_hover featured home_cat'>The Hive</div></a>
           <a { anchor_attrs "network"}>
             <div class='text_btn item teal_hover network'>Network</div></a>
+          <a href='//editorial.newhive.com/'>
+            <div class='text_btn item teal_hover recent'>Editorial</div></a>
           {<if flags.show_hive_all}
             <a { anchor_attrs "recent"}>
               <div class='text_btn item teal_hover recent'>All</div></a>
@@ -48,11 +47,14 @@
         {>}
         <div class="middle_block inline search_bar">
           {# Search bar #}
-          <input type="text" id="search_box" placeholder="Search"
-            class="inline focus_expanded{<if (not user.logged_in)} media_shrink{>}"
-            name='q' value='{query.q}'
-           ><input type="submit" value title="Search"
-            class='hoverable icon go_search inline'>
+          <form action='/s' method='GET' name='search_form'
+            class="search_bar_form"
+            ><input type="text" id="search_box" placeholder="Search"
+              name='q' value='{query.q}' class="inline focus_expanded
+              {<if (not user.logged_in)} media_shrink{>}"
+            ><input type="submit" value title="Search"
+              class='hoverable icon go_search inline'>
+          </form>
           {# Create new page #}
           <a {anchor_attrs "expr_create"} title='Create newhive'
             class='needs_login create item btn hoverable'></a>
@@ -64,7 +66,6 @@
     </div>
 
   </div>
-  </form>
   
   {<if (not user.logged_in)}
     {#<div class="hide_condensed blurb upper centered">NewHive is your multimedia publishing platform.</div>#}
