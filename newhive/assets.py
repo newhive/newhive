@@ -211,6 +211,8 @@ class HiveAssets(Assets):
             self.assets_env.url = '/lib/libsrc'
             self.default_local = True
             self.auto_build = True
+        else:
+            self.assets_env.debug = False
 
     def webassets_bundle(self):
         print('Bundling webassets...')
@@ -231,7 +233,7 @@ class HiveAssets(Assets):
         scss_filter = webassets.filter.get_filter(
             'scss',
             use_compass=True,
-            # sourcemap=True,
+            sourcemap=False,
             debug_info=config.debug_mode,
             libs=[join(config.src_home, 'libsrc/scss/asset_url.rb')]
         )
@@ -329,7 +331,7 @@ class HiveAssets(Assets):
         self.assets_env.register('external_header', webassets.Bundle(
             'scss/main_header_standalone.scss',
             filters=scss_filter,
-            output='compiled.external-header.css',
+            output='compiled.external_header.css',
             debug=False
         ) )
         self.final_bundles.append('external_header')
