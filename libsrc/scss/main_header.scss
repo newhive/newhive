@@ -7,7 +7,7 @@
     left: 20px;
 
     background-image: asset_url('skin/nav/logo.png');
-    &.active {
+    &.active, &.on {
         background-image: asset_url('skin/nav/logo-hover.png');
         background-color: black;
     }
