@@ -320,7 +320,7 @@ $nav_size: 44px;
         .blurb { margin: 4px 4px 8px 4px; }
     }
     &.condensed {
-        @include box-shadow(rgba($color_grey_medium, 0.33) 0px 3px 10px);
+        //@include box-shadow(rgba($color_grey_medium, 0.33) 0px 3px 10px);
         .hide_condensed { display: none; }
         // .header {
         //     margin: 22px auto 0px auto;
