@@ -26,7 +26,7 @@ def authenticate_request(db, request, response):
         user.logged_in = True
     # hack for showing profile link on editorial
     if not get_cookie(request, 'name') and user.logged_in:
-        set_cookie(response, 'name', user['name'])
+        set_cookie(response, 'name', user['name'], domain='.newhive.com')
     return user
 
 def handle_login(db, request, response):
