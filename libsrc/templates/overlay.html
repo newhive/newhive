@@ -19,8 +19,9 @@
             {<if route.profile} black_btn{>}'>{user.name}</div></a>
           <a { anchor_attrs "network"}>
             <div class='text_btn item teal_hover network'>Network</div></a>
-          <a href='//blog.newhive.com/'>
+          {<if flags.UI.blog_link}<a href='//blog.newhive.com/'>
             <div class='text_btn item teal_hover recent'>Blog</div></a>
+          {>}
           {<if flags.show_hive_all}
             <a { anchor_attrs "recent"}>
               <div class='text_btn item teal_hover recent'>All</div></a>
@@ -39,8 +40,9 @@
             <a><div class='login_btn text_btn item teal_hover'>Log in</div></a>
             <a {anchor_attrs "signup"}>
               <div class='text_btn item teal_hover'>Sign Up</div></a>
-            <a href='//blog.newhive.com/'>
+            {<if flags.UI.blog_link}<a href='//blog.newhive.com/'>
               <div class='text_btn item teal_hover recent'>Blog</div></a>
+            {>}
             <a {anchor_attrs "view_expr"
               "owner_name" config.site_user "expr_name" "about"}>
               <div class='text_btn item teal_hover about_menu'>About

@@ -26,7 +26,7 @@ def authenticate_request(db, request, response):
         user.logged_in = True
     # hack for showing profile link on editorial
     if not get_cookie(request, 'name') and user.logged_in:
-        set_cookie(response, 'name', user['name'], domain='.newhive.com')
+        set_cookie(response, 'name', user['name'], domain='.'+config.server_name)
     return user
 
 def handle_login(db, request, response):
@@ -88,7 +88,7 @@ def handle_logout(db, user, request, response):
     else:
         rm_cookie(response, 'identity')
         session.delete()
-    rm_cookie(response, 'name')
+    rm_cookie(response, 'name', domain='.'+config.server_name)
     return True # Everything logged out
 
 def password_change(user, request, response, force=False):

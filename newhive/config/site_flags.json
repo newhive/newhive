@@ -107,6 +107,9 @@
     },"UI/mobile_activity": {
         "description":"Show activity menu under logo on mobile"
         , "values":["admins","nd4"]
+    },"UI/blog_link": {
+        "description":"Show blog link in top navigation"
+        , "values":[]
     
     },"Editor": { 
         "description":"Flags pertaining to the editor"

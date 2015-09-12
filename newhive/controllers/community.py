@@ -153,6 +153,52 @@ class Community(Controller):
         tag_name = args.get('tag_name')
         override_unlisted = (tdata.user.get('name') == owner_name)
 
+        if args.get('include_categories'):
+            if tag_name:
+                # TODO: this search should also go through query_echo
+                cards = owner.get_category(tag_name)
+                if cards: cards = cards.get('collections')
+                if not cards: return None 
+                # remove empties
+                cards = [x for x in cards if x]
+                # paginate
+                at = int(db_args.get('at', 0))
+                limit = int(db_args.get('limit', 20))
+                cards = cards[at:at + limit if limit else None]
+                # query_string can indicate which card to sort first, based on
+                # category (not used anymore currently)
+                q = tdata.request.query_string
+                if q:
+                    top_card = 0
+                    try:
+                        top_card = int(q)
+                    except Exception, e:
+                        pass;
+                    if top_card > 0 and top_card <= self.config.cat_hover_count:
+                        temp = cards[top_card]
+                        cards[top_card] = cards[0]
+                        cards[0] = temp
+                # insert client view of collections into cards
+                client_cards = [
+                    collection_client_view(self.db, x, viewer=tdata.user,
+                        override_unlisted=override_unlisted) if x 
+                    else self.missing_expression()
+                    for x in cards
+                ]
+                if at == 0:
+                    client_cards[0] = collection_client_view(self.db, cards[0],
+                        True, viewer=tdata.user,
+                        override_unlisted=override_unlisted)
+                client_cards = [x for x in client_cards if x]
+                res = self.expressions_for(tdata, client_cards, owner, 
+                    no_empty=True, **db_args)
+                res.update({
+                    "tag_selected":tag_name
+                })
+                # TODO: should we have data in route specifically for title?
+                if args.get('_owner_name'):
+                    res['title'] = 'Featured collections'
+                return res
         if tag_name:
             return include_collections( tdata, owner,
                 self._expressions_tag(tdata, owner, tag_name,

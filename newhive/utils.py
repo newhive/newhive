@@ -492,8 +492,8 @@ def set_cookie(response, name, data, secure=False, expires=True, domain=None):
     response.set_cookie(name, value=data, secure=secure, httponly=True,
         domain=domain, expires=expiration)
 def get_cookie(request, name): return request.cookies.get(name, False)
-def rm_cookie(response, name):
-    response.delete_cookie(name)
+def rm_cookie(response, name, domain=None):
+    response.delete_cookie(name, domain=domain)
 
 
 def local_date(offset=0):
