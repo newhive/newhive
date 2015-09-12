@@ -1337,6 +1337,33 @@ Hive.App.Html = function(o) {
     }))
     o.make_controls[o.make_controls.length - 1].single = true;
 
+    o.yt_autoplay = function(){
+        return o.content().match('autoplay=1') != null
+    }
+    o.yt_autoplay_set = function(val){
+        var c = o.content()
+        if(val) o.content_set( c.replace(/\?/, '?autoplay=1&amp;') )
+        else o.content_set( c.replace(/autoplay=1(\&amp;)?/, '') )
+    }
+    o.yt_loop = function(){
+        return o.content().match('loop=1') != null
+    }
+    o.yt_loop_set = function(val){
+        var c = o.content()
+        if(val){
+            var yt_id = c.match(/embed\/(.*?)\?/)[1]
+            o.content_set( c.replace(/\?/, '?loop=1&amp;' + (
+                o.content().match('playlist=') ? '' :
+                    '&amp;playlist=' + yt_id + '&amp;' )
+            ) )
+        }
+        else o.content_set( c.replace(/loop=1(\&amp;)?/, '') )
+    }
+    if(o.init_state.media == 'youtube'){
+        Hive.App.has_toggle(o, "yt_autoplay")
+        Hive.App.has_toggle(o, "yt_loop")
+    }
+
     return o;
 };
 Hive.registerApp(Hive.App.Html, 'hive.html');
@@ -3480,10 +3507,10 @@ Hive.has_scale = function(o){
 
 Hive.App.has_toggle = function(o, toggle_name){
     var history_point, sel = env.Selection, toggle_set = toggle_name + "_set"
-    o[toggle_name] = function() {
+    o[toggle_name] = o[toggle_name] || function() {
         return o.client_data(toggle_name) || false
     }
-    o[toggle_set] = function(v) {
+    o[toggle_set] = o[toggle_set] || function(v) {
         o.client_data_set(toggle_name, v)
         // fixup_controls(sel.controls)
     }
