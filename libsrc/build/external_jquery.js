@@ -1,1 +1,1 @@
-define('browser/jquery', function(){ return window.$ });
+define('jquery', function(){ return window.$ });

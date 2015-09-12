@@ -57,12 +57,8 @@ class User(ModelController):
             return self.serve_json(response, { 'error': 'error'})
 
         update = {}
-        if (request.form.get('categories')):
-            user.update(ordered_cats=tag_order)
-            (update['tagged_ordered'], update['tagged']) = user.get_cats()
-        else:
-            user.update(ordered_tags=tag_order)
-            (update['tagged_ordered'], update['tagged']) = user.get_tags(True)
+        user.update(ordered_tags=tag_order)
+        (update['tag_list'], update['extra_tags']) = user.get_tags(True)
 
         return self.serve_json(response, update)
 

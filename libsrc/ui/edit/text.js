@@ -1,5 +1,5 @@
 define([
-    'browser/jquery'
+    'jquery'
 
     ,'./env'
     ,'./apps'
@@ -91,9 +91,12 @@ o.Text = function(o) {
     });
 
     o.link = function(){
-        return o.rte.get_link(); }
+        var link = o.rte.get_link()
+        return link ? u.attrs(link) : false
+    }
     o.link_set = function(v){
-        o.rte.make_link(v) }
+        o.rte.make_link(v)
+    }
 
     o.calcWidth = function() {
         return o.content_element.width();
@@ -177,11 +180,13 @@ o.Text = function(o) {
         o.addControls($('#controls_text'));
 
         var link_open = function(){
-            var link = app.rte.get_link();
+            app.rte.save_selection()
+        }, link_close = function(){
+            app.rte.restore_selection()
+            app.content_element.focus()
         }
-        o.link_menu = o.append_link_picker(d.find('.buttons'),
-                        {open: link_open, field_to_focus: app.content_element
-                            ,height: 45});
+        o.link_menu = o.append_link_picker(d.find('.buttons'), {
+            open: link_open, close: link_close })
 
         var cmd_buttons = function(query, func) {
             $(query).each(function(i, e) {
@@ -316,28 +321,28 @@ o.goog_rte = function(content_element, app){
 
         // Look for link in parents
         var node = r.startContainer;
-        while(node.parentNode) {
+        while(node != that.field && node.parentNode) {
             node = node.parentNode;
             if (node == that.content_element) return;
             if($(node).is('a')) {
-                r.selectNode(node);   
-                that.select(r);
-                return $(node).attr('href');
+                r.selectNode(node)
+                that.select(r)
+                return node
             }
         }
 
         // Look for the first link that intersects r
         var find_intersecting = function(r) {
             var link = false;
-            $(document).find('a').each(function() {
+            $(that.field).find('a').each(function() {
                 if(!link && rangeIntersectsNode(r, this)) link = this;
             });
             if(link) {
-                r.selectNode(link);
-                that.select(r);
-                return $(link).attr('href');
+                r.selectNode(link)
+                that.select(r)
+                return link
             };
-            return '';
+            return false
         }
         var link = find_intersecting(r);
         if(link) return link;
@@ -359,14 +364,21 @@ o.goog_rte = function(content_element, app){
         return link;
     }
 
-    this.make_link = function(href) {
+    this.make_link = function(attrs) {
         // TODO: don't use browser API directly
-        if (href === ''){
-            document.execCommand('unlink', false);
-        } else {
-            document.execCommand('createlink', false, href);
+        if(!attrs)
+            document.execCommand('unlink', false)
+        else if(typeof attrs == 'object'){
+            var link = that.get_link()
+            if(!link){
+                document.execCommand('createlink', false, 'bug')
+                link = that.get_link()
+            }
+            $(link).attr(attrs)
+            $.each(link.attributes, function(i,e){
+                if(!attrs[e.nodeName]) link.removeAttribute(e.nodeName) })
         }
-    };
+    }
 
     var saved_range;
     this.save_selection = function(){

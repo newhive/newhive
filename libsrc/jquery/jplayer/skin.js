@@ -1,5 +1,5 @@
 define([
-    'browser/jquery',
+    'jquery',
     'ui/util',
     './jplayer'
 ], function($, util){

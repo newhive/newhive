@@ -9,19 +9,19 @@ from lxml import html
 from wsgiref.handlers import format_date_time
 from itertools import ifilter, islice, izip_longest, chain
 from functools import partial
-import Image as Img
+from PIL import Image as Img
 from PIL import ImageOps
 from bson.code import Code
 from crypt import crypt
-from oauth2client.client import OAuth2Credentials
+#from oauth2client.client import OAuth2Credentials
 # TODO-cleanup?: remove snapshots from webserver?
 import Queue
 import threading
 from subprocess import call
 
 import newhive
-from newhive.oauth import (FacebookClient, FlowExchangeError,
-    AccessTokenCredentialsError)
+#from newhive.oauth import (FacebookClient, FlowExchangeError,
+#    AccessTokenCredentialsError)
 #import pyes
 from collections import Counter
 from snapshots import Snapshots
@@ -286,21 +286,13 @@ class Collection(object):
             # if page_is_id:
             #     page_start = self.fetch(at)
             #     at = page_start[sort] if page_start else None
-
             # if at and sort:
             #     spec[sort] = { '$lt' if order == -1 else '$gt': at }
-
-            res = self.search(spec, sort=[(sort, order)], filter=filter,
-                skip=at, **args)
-
-            # collapse to limit long list, omitting filtered results
-            res = [r for r in islice(res, limit)]
-            return res
-
+            return list( self.search(spec, sort=[(sort, order)], filter=filter,
+                skip=at, limit=limit, **args) )
         elif isinstance(spec, list):
             # spec = uniq(spec)
             # assert( not at or page_is_id )
-
             try:
                 # start = spec.index(at) if at else -1
                 start = at
@@ -947,8 +939,8 @@ class User(HasSocial):
         for key in ordered_tags:
             del cnt[key]
         # concat the lists and possibly the empty tag_name
-        all_tags = ordered_tags + [x for x,y in cnt.most_common()]
-        return (len(ordered_tags), all_tags)
+        extra_tags = [x for x,y in cnt.most_common()]
+        return (ordered_tags, extra_tags)
 
     def get_tag(self, tag, limit=0, force_update=False):
         tagged = self.get('tagged', {})
@@ -1171,7 +1163,7 @@ class User(HasSocial):
             return 'Passwords must be at least 4 characters long'
         return False
 
-    def get_url(self, path=':Feed', relative=False, secure=False):
+    def get_url(self, path='/profile/feed', relative=False, secure=False):
         if not self.id: return ''
         base = '/' if relative else abs_url(secure=secure)
         return base + self.get('name', '') + path
@@ -1349,7 +1341,7 @@ class User(HasSocial):
             #!! TODO-perf: remove after we migrate to run on all users
             # self.calculate_tags()
             update = {}
-            (update['tagged_ordered'], update['tagged']) = self.get_tags(True)
+            (update['tag_list'], update['extra_tags']) = self.get_tags(True)
             (cats_ordered, categories) = self.get_cats()
             if len(categories):
                 (update['cats_ordered'], update['categories']) = (cats_ordered, categories)
@@ -2392,11 +2384,10 @@ class File(Entity):
 
     def store(self):
         if self.db.config.aws_id:
+            s3_url = self.db.s3.upload_file(self.file, 'media', self.file_name,
+                self['name'], self['mime'])
             self.update(protocol='s3',
-                s3_bucket=self.db.s3.buckets['media'].name,
-                url=self.db.s3.upload_file(self.file, 'media', self.file_name,
-                    self['name'], self['mime'])
-            )
+                s3_bucket=self.db.s3.buckets['media'].name, url=s3_url)
         else:
             self['protocol'] = 'file'
             owner = self.db.User.fetch(self['owner'])

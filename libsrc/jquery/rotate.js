@@ -5,7 +5,7 @@
  * Made by Wilq32, wilq32@gmail.com, Wroclaw, Poland, 01.2009
  * Website: http://code.google.com/p/jqueryrotate/ 
  */
-define(['browser/jquery'], function(jQuery){
+define(['jquery'], function(jQuery){
 
 (function(g){for(var d,j=document.getElementsByTagName("head")[0].style,h="transformProperty WebkitTransform OTransform msTransform MozTransform".split(" "),e=0;e<h.length;e++)j[h[e]]!==void 0&&(d=h[e]);var i="v"=="\v";jQuery.fn.extend({ImageRotate:function(a){if(!this.Wilq32||!this.Wilq32.PhotoEffect)return a=g.extend(!0,{},a),(new Wilq32.PhotoEffect(this.get(0),a))._rootObj},rotate:function(a){if(!(this.length===0||typeof a=="undefined")){typeof a=="number"&&(a={angle:a});for(var c=
 [],b=0,d=this.length;b<d;b++){var f=this.get(b);typeof f.Wilq32=="undefined"?c.push(g(g(f).ImageRotate(a))):f.Wilq32.PhotoEffect._handleRotation(a)}return c}}});Wilq32=window.Wilq32||{};Wilq32.PhotoEffect=function(){return d?function(a,c){a.Wilq32={PhotoEffect:this};this._img=this._rootObj=this._eventObj=a;this._handleRotation(c)}:function(a,c){this._img=a;this._rootObj=document.createElement("span");this._rootObj.style.display="inline-block";this._rootObj.Wilq32={PhotoEffect:this};a.parentNode.insertBefore(this._rootObj,

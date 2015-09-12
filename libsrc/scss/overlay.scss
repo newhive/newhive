@@ -1,355 +1,13 @@
 // overlay css
 @import "common";
 
-$debug: true;
 $debug: false;
+@import "main_header";
 
 @media print {
     .overlay {
         display: none !important; // overridden by JS
         visibility: hidden;
-    }
-}
-
-body.nav .main-header {
-    display: block;
-}
-
-@media all and (min-width:830px) and (max-width:919px) {
-    .main-header:not(.condensed) .table {
-        .search_bar input[type=text].media_shrink {
-            max-width: 90px;
-        }
-    }
-    .main-header .table {
-        .search_bar input[type=text]:not(.media_shrink) {
-            max-width: 180px;
-        }
-    }
-}
-@media all and (min-width:920px) and (max-width:1000px) {
-    .main-header:not(.condensed) .table {
-        .search_bar input[type=text].media_shrink {
-            max-width: 190px;
-        }
-    }
-}
-@media all and (max-width:610px) {
-    .main-header .username.username { max-width: 115px; }
-}
-
-@media all and (max-width:499px) {
-    .main-header .left .network_nav { display: none; }
-}
-
-$anim_time: 0.15s;
-@if $debug { $anim_time: 1.15s; }
-body:not(.mobile) {
-    #site {
-        @include transition(margin-top, $anim_time, linear);
-    }
-    .main-header {
-        @include transition(all, $anim_time, linear);
-        .header, .logo, .item, .icon, a.splash.container, .cell, .cell>a, 
-        .vcenter_outer, .category_btn {
-            @include transition(all, $anim_time, linear);
-        }
-    }
-    .main-header:not(.narrow){
-        .search_bar {
-            input[type=text] {
-                @include transition(all, $anim_time, linear);
-            }
-        }
-    }
-}
-
-.main-header {
-    display: none;
-    position:fixed;
-    top: 0px;
-    left: 0px;
-    right: 0px;
-    // padding-bottom: 17px;
-
-    z-index: $nav_layer;
-    background-color: white;
-
-    // Debug
-    @if $debug {
-        .left { background-color: antiquewhite; }
-        .right { background-color: aquamarine; }
-    }
-    .nav_top_row .cell {
-        box-sizing: border-box;
-        display: inline-block;
-        padding: 5px;
-        line-height: 0px;
-    }
-    .nav_top_row .right {
-        float: right;
-    }
-    .right .icon {
-        margin-right: 5px;
-    }
-    .text_btn { margin: 2px 0px 0px 0px; }
-    .logo, .item, .icon {
-        display: inline-block;
-    }
-    .network_nav { padding-left: 3px; }
-    .splash.container { width: 100%; overflow: hidden; }
-    img.splash {
-        display: block;
-        margin: auto;
-        height: 80px;
-    }
-    .logo.splash, .right .vcenter_outer.full_height {
-        height: 80px;
-    }
-    .item {
-        font-size: 17px;
-        // @include border-radius(6px);
-    }
-    .blurb {
-        font-size: 19px;
-        margin: 5px 0 15px;
-    }
-    .item.btn {
-        display: inline-block;
-        &:hover, &.active { background-color: black; }
-        height: 44px; width: 44px;
-        background-size: 44px 44px;
-    }
-    .username { max-width: 222px; }
-    .create.item {
-        background-image: asset_url('skin/nav/create.png');
-        &.active { background-image: asset_url('skin/nav/create-hover.png'); }
-    }
-    .search_bar {
-        line-height: 0px;
-        display: inline;
-        .icon.go_search {
-            padding: 0px;
-            background-color: transparent;
-            background-image: asset_url('skin/nav/search.png');
-            // &:hover { 
-            //     background-image: asset_url('skin/nav/search-hover.png');
-            //     // background-color: $color_bright_red;
-            // }
-        }
-    }
-    // #search_box is not always inside .search_bar
-    #search_box {
-        margin: 0px 0px 0px 4px;
-        width: 250px;
-
-        width: 0px;
-        padding: 0px;
-        opacity: 0;
-        display: inline;
-        &.block { position:absolute; clear: both; }
-        &:hover, &:focus {
-            width: 250px;
-            padding: 0 6px;
-            opacity: 1;
-            // show on next line when in narrow mode
-            &.block {
-                position: static;
-                display: block;
-                &.narrow { margin: auto; }
-                &.full { margin: 0px 10px 10px auto; }
-            }
-        }
-    }
-    .category_handle {
-        background-image: asset_url('skin/nav/categories.png');
-        &.active { 
-            background-image: asset_url('skin/nav/categories-on.png'); 
-            background-color: black;
-        }
-        width: 44px;
-        height: 44px;
-        margin: auto;
-    }
-
-    .category_menu {
-        @for $i from 1 through 8 {
-            :nth-of-type( #{$i + 1} ) {
-                .black_btn.menu_item { 
-                    background-color: nth($category_colors, $i); 
-                    border-color: nth($category_colors, $i);
-
-                    &:hover { background-color: $color_selected; }
-                }
-            }
-        }
-    }
-
-    .header {
-        &.clean {
-            display: none
-        }
-
-        .category_handle {
-            display: block;
-        }
-
-        @if $debug { background-color: aqua; }
-        line-height: 0px;
-        margin: 30px auto 0px auto;
-        max-width: 1037px;
-        padding: 0px 54px;
-
-        .ul {
-            -webkit-margin-before: 0em;
-            -webkit-margin-after: 0em;
-            -webkit-margin-start: 0px;
-            -webkit-margin-end: 0px;
-            -webkit-padding-start: 0px;
-
-            line-height: 0;
-            // height: 42px;
-            @if $debug {
-                background-color: antiquewhite;
-            }
-
-            display: inline-block;
-            text-align: justify;
-            width: 100%;
-            // list-style: none;
-            // padding-left: 0;
-            // margin: 0;
-
-            overflow: hidden;
-
-            li { 
-                display: inline-block;
-                height: 38px;
-                .active {
-                    font-family: Gibson Semibold;
-                    color: white;
-                    background-color: black;
-                }
-
-                @for $i from 1 through 8 {
-                    &:nth-of-type( #{$i} ) {
-                        .black_btn { 
-                            border: 1px solid black;
-
-                            &:not(.active) {
-                                color: black;
-                                background-color: white;
-                            }
-                            // &:hover {
-                            //     color: white;
-                            //     background-color: black;
-                            // }
-                            // background-color: nth($category_colors, $i); 
-                            // &:hover { background-color: $color_selected; }
-                        }
-                        .active {
-                            // color: white;
-                            // background-color: black;
-                            background-color: nth($category_colors, $i); 
-                            border-color: nth($category_colors, $i); 
-
-                        }
-                    }
-                }
-            }
-
-            .category_btn {
-                // text-transform: lowercase;
-                // padding: 10px;
-                // font-family: Gibson Semibold;
-                // font-size: 20px;
-                text-transform: uppercase;
-                padding: 10px;
-                font-family: Gibson;
-                font-size: 17px;
-            }
-
-            .menu.drawer.category_hover .menu_item {
-                width: 100%;
-                padding: 4px;
-                box-sizing: border-box;
-                background-color: white;
-            }
-            .menu.drawer.category_hover table {
-                // border-collapse: collapse;
-                padding: 5px;
-                // border-top: 1px solid black;
-            }
-
-            .show_narrow { 
-                display: inline-block;
-                width: 100%; 
-                @media all and (min-width:860px) {
-                    display: none;
-                }
-            }
-
-            &:after {
-                content: '';
-                display: inline-block;
-                width: 100%;
-            }
-        }
-    }
-
-    &.narrow {
-        .blurb { margin: 4px 4px 8px 4px; }
-    }
-    &.condensed {
-        @include box-shadow(rgba($color_grey_medium, 0.33) 0px 3px 10px);
-        .hide_condensed { display: none; }
-        // .header {
-        //     margin: 22px auto 0px auto;
-        // }
-        .logo.splash, .right .vcenter_outer.full_height {
-            height: 44px;
-            // margin: 0;
-        }
-        .splash.container.narrow {
-            width: 48px;
-        }
-        padding-bottom: 0px;
-        .nav_top_row {
-            &>.left.for_logo {
-                width: 206px;
-                &.narrow { width: 48px; }
-            }
-        }
-    }
-}
-
-@media all and (min-width:640px) {
-    .main-header .category_handle.category_handle.category_handle { display: none; } 
-} 
-
-@media all and (max-width:639px) {.main-header .header .ul {
-        display: none;
-    }
-    .main-header .header.logged_out {
-        display: none
-    }
-}
-
-.main-header.split .nav_top_row {
-    &>.cell {
-        width: 100%;
-    }
-    .vcenter_outer.full_height {
-        height: auto;
-        display: inline-block;
-        .vcenter_middle {
-            display: block
-        }
-    }   
-}
-.main-header:not(.condensed) .right .vcenter_outer {
-    @media all and (max-width:975px) {
-        max-width: 400px;
     }
 }
 
@@ -383,6 +41,18 @@ body:not(.mobile) {
     margin-right: -4px;
 }
 
+.overlay.scroll_down {
+    right: 0;
+    margin-right: 50%;
+    .icon {
+        background-image: asset_url('skin/nav/scroll_down.png');
+        &.active {
+            background-image: asset_url('skin/nav/scroll_down-hover.png');
+            background-color: black;
+        }
+    }
+}
+
 .overlay.panel.nav.right {
     .edit_icon {
         background-image: asset_url('skin/nav/edit.png');
@@ -407,9 +77,7 @@ body:not(.mobile) {
     .user_card {
         img {
             background-color: transparent;
-            width: 44px;
-            // width: 36px;
-            // padding: 4px;
+            width: $nav_size;
         }
     }
 
@@ -449,17 +117,18 @@ body:not(.mobile) {
     // .left {  @include border-radius(11px 0 0 11px); }
     // .left.right {  @include border-radius(11px); }
 
+    .item {
+        height: $nav_size; width: $nav_size;
+        background-size: $nav_size $nav_size;
+    }
+
     &.panel {
-        height: 44px;
+        height: $nav_size;
 
         .item {
             position: static;
             display: inline-block;
             &:hover, &.active { background-color: black; }
-        }
-        .icon, .item {
-            height: 44px; width: 44px;
-            background-size: 44px 44px;
         }
 
         .text_btn {
@@ -511,19 +180,7 @@ body:not(.mobile) {
     // height: 180px;
     &:hover { background-color: white; }
 
-    .icon.plus_menu, .icon.add_queue, .icon.plus_cats {
-        // position: absolute;
-        // background-color: black;
-        // top: 18px;
-        // right: 27px;
-        margin: -6px 0px 0px 0px;
-        display: inline-block;
-        float: inherit;
-    }
-    // .icon.add_queue { right: 77px; }
     #popup_content {
-        //position:absolute;
-        //top: 44px;
         max-width: 980px;
         overflow-x: auto;
         margin: auto;
@@ -610,6 +267,7 @@ body:not(.mobile) {
             .icon {
                 width: 60px;
                 height: 60px;
+                background-size: 60px;
             }
             .counts {
                 line-height: 60px;
@@ -651,7 +309,6 @@ $action: love comment republish;
                 // TODO-cleanup: remove calc-width...
                 @include calc-width("100% - 59px");
                 .text {
-                    // min-height: 44px;
                     max-height: inherit;
                     max-width: inherit;
                     display: block;
@@ -689,7 +346,7 @@ $action: love comment republish;
         }
 
         .thumb {
-            width: 44px;
+            width: $nav_size;
             vertical-align: top;
             float: left;
             margin-right: 15px;
@@ -769,20 +426,5 @@ $action: love comment republish;
         textarea {
             width: 100%;
         }
-    }
-}
-
-.hive_logo {
-    display: block;
-    margin-left: 0px;
-    // margin-right: 3px;
-    height: 44px;
-    width: 44px;
-    left: 20px;
-
-    background-image: asset_url('skin/nav/logo.png');
-    &.active {
-        background-image: asset_url('skin/nav/logo-hover.png');
-        background-color: black;
     }
 }
