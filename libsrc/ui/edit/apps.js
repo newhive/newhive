@@ -1220,12 +1220,12 @@ Hive.App = function(init_state, opts) {
         o.div.data(o.init_state.client_data)
     o.css_class_set(o.css_class())
 
+    Hive.has_sequence(o, o.typename())
     o.has_align = o.add_to_collection = o.client_visible = true;
 
     o.type(o); // add type-specific properties
     opts.defer_load != undefined && (o.defer_load = opts.defer_load)
     if (o.initialized) throw "load called too soon"
-    Hive.has_sequence(o, o.typename())
     o.div.attr('id', o.name())
 
     o.div.addClass(o.type.tname.replace(".", "_"))
@@ -1476,22 +1476,13 @@ Hive.App.Code = function(o){
     }
     o.content = function(){ return o.editor.getValue() }
     o.run_module_func = function(module_func, callback, no_err, onerr) {
-        editor.current_code = o;
-        onerr = onerr || noop
-        curl([o.module_name(no_err)], function(module){
-            if (!module) {
-                // console.log("Module load error")
-                onerr()
-            } else {
-                if (typeof(module[module_func]) == "function")
-                    module[module_func].apply()
-
-                callback && callback(module);
-            }
-            editor.current_code = null;
-        }, function(){
-            onerr()
-        })
+        var name = o.name()
+        try {
+            window[name][module_func]()
+        } catch(e) {
+            if(onerr) onerr()
+        }
+        if(callback) callback(window[name])
     }
 
     o.is_module = function(){
@@ -1547,13 +1538,7 @@ Hive.App.Code = function(o){
     var module_code = function() {
         // return o.content();
         if( o.init_state.url ) return '' // can't have src and script body
-        return ( "define('" + o.module_name() + "', "
-            + "['jquery'" + module_modules() + "], function($"
-            + module_names() + ") {\n"
-            + "var self = {}\n\n"
-            + o.content() + "\n\n"
-            + "return self\n})"
-        )
+        return ( "var " + o.name() + " = {}\n" + o.content() )
     }
     var insert_code = function(onload, onerr){
         var code
@@ -1565,7 +1550,7 @@ Hive.App.Code = function(o){
 
         var el = o.code_element =
             o.init_state.code_type == 'css' ? $('<style>') : $('<script>')
-        el.attr('type', o.mime).appendTo('#dynamic_group')
+        el.attr('type', o.mime).html(code)
 
         // either a module with code content, or a script with url
         if(o.is_module()){
@@ -1586,55 +1571,16 @@ Hive.App.Code = function(o){
 
         // use a blob for source so syntax errors are properly reported,
         // instead of creating mysterious exception
-        if(o.init_state.code_type == 'js')
-            el.attr('src', u.string_to_url(code, o.mime))
-        else el.html(code)
+        // if(o.init_state.code_type == 'js')
+        //     el.attr('src', u.string_to_url(code, o.mime))
+        // else el.html(code)
+        el.appendTo('#dynamic_group')
     }
 
-    o.ensure_dependencies = function(onload) {
-        var dependencies = 1
-            , loaded = function() {
-                if (! --dependencies && onload)
-                    onload()
-            }
-        $.map(o.module_imports, function(m) {
-            var path = m.path
-            var code_app = Hive.Apps.by_name(path)
-            if (code_app && code_app.module_name) {
-                ++dependencies
-                path = code_app.module_name(true, {force:1, load:loaded})
-            }
-        })
-        loaded()
-    }
     o.run = function() {
-        if(!o.is_module()) return insert_code()
-        o.ensure_dependencies(o.run_helper)
-    }
-    var animate_go
-    o.run_helper = function(){
-        // o.stop()
-        var running_iter = last_success
-        insert_code(function(){
-            if(!o.is_module()) return
-            o.run_module_func("run", function(module){
-                if(running_iter != last_success) {
-                    var new_success = last_success
-                    last_success = running_iter
-                    o.stop()
-                    last_success = new_success
-                }
-                if(!module.animate) return
-                var animate_frame = function(){
-                    module.animate()
-                    // TODO-compat: if requestAnimationFrame not supported,
-                    // fallback to setTimeout
-                    if(animate_go) requestAnimationFrame(animate_frame)
-                }
-                animate_go = 1
-                animate_frame()
-            })
-        })
+        insert_code(o.is_module() ? function(){
+            o.run_module_func('run')
+        } : noop)
     }
     o.stop = function() {
         if(o.is_module()){
@@ -1765,10 +1711,11 @@ Hive.App.Code = function(o){
     o.mime = mimes[o.init_state.code_type]
     o.code_element = $()
 
-    // o.content_element = $('<textarea>').addClass('content code drag').appendTo(o.div);
     var mode = o.init_state.code_type
     if(mode == 'js') mode = 'javascript'
     o.editor = CodeMirror(o.div[0], { extraKeys: keymap ,mode: mode })
+    var template = o.init_state.template || 'default'
+    o.init_state.content = Hive.App.Code.code_templates[template](o)
     o.editor.setValue(o.init_state.content || '')
     o.editor.on("change", function() {
         if (!o.liveedit())
@@ -1776,13 +1723,57 @@ Hive.App.Code = function(o){
 
         o.run()
     })
-    o.content_element = $(o.editor.getWrapperElement()).addClass('content code')
+    // o.content_element = $(o.editor.getWrapperElement()).addClass('content code')
     // TODO-cleanup: Move to CSS
     o.div.css('background-color','white').css('opacity',.2);
 
     return o;
 }
 Hive.registerApp(Hive.App.Code, 'hive.code')
+Hive.App.Code.code_templates = {
+    'default': function(o){ return (
+        "var " + o.name() + " = (function(self){"
+        +"\nself.run = function(){"
+        +"\n  console.log('hello NewHive')"
+        +"\n}"
+        +"\nself.stop = function(){"
+        +"\n  // unload event handlers, clean up"
+        +"\n}"
+        +"\n// self.animate = function(){"
+        +"\n// }"
+        +"\nreturn self; })({})"
+    ) },
+    'p5': function(o){ return (
+        "var self = window." + o.name() + " = {}"
+        +"\nvar p5"
+        +"\n"
+        +"\nfunction draw(){"
+        +"\n  p5.fill(128)"
+        +"\n  p5.stroke('black')"
+        +"\n  p5.strokeWeight(5)"
+        +"\n  p5.ellipse(p5.width/2, p5.height/2, 65, 65)"
+        +"\n}"
+        +"\nfunction setup(){"
+        +"\n}"
+        +"\n"
+        +"\nself.run = function() {"
+        +"\n  var $box = $('#bg')"
+        +"\n  p5 = new P5(function(){}, $box[0])"
+        +"\n  setup()"
+        +"\n  p5.windowResized = function(){"
+        +"\n    p5.resizeCanvas($box.width(), $box.height())"
+        +"\n  }"
+        +"\n  p5.windowResized()"
+        +"\n  p5.draw = draw"
+        +"\n}"
+        +"\nself.stop = function() {"
+        +"\n  if(p5){"
+        +"\n    p5.noLoop()"
+        +"\n    p5.noCanvas()"
+        +"\n  }"
+        +"\n}"
+    ) }
+}
 
 Hive.App.Image = function(o) {
     o.is_image = true;
