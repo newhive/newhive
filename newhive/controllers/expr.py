@@ -391,8 +391,9 @@ class Expr(ModelController):
         type = app.get('type')
         klass = type.replace('.', '_')
         app_id = app.get('id', 'app_' + str(app['z']))
-        anchor = app.get('anchor')
-        link_name = app.get('href_name')
+        anchor = ( app.get('anchor', {}) or
+            {'href': app.get('href'), 'name': app.get('href_name')} )
+        if not (anchor.get('href') or anchor.get('name')): anchor = None
         if type == 'hive.circle':
             type = 'hive.rectangle'
 
