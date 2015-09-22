@@ -139,8 +139,8 @@ def index_of(l, f):
     return -1
 
 
-### BEGIN dict_tools ###
-########################
+### BEGIN data_tools ###
+
 def dupdate(d1, d2): return dict(d1.items() + d2.items())
 
 def dfilter(d, keys):
@@ -187,11 +187,28 @@ def dcast(d, type_schemas, filter=True):
         if key in d: out[key] = type_to(d[key]) if type_to else d[key]
         elif required: raise ValueError('key %s missing in dict' % (key))
     return out
-### END   dict_tools ###
-########################
+
+def flatten(obj):
+    """ flattens a nested data structure into a list of (value, path) tuples """
+    vals = []
+    def rec(obj, path):
+        def append(k, v):
+            new_path = path + (k,)
+            if hasattr(v, '__iter__'): rec(v, new_path)
+            else: vals.append((v, new_path))
+        try:
+            if hasattr(obj, 'iteritems'):
+                for k,v in obj.iteritems(): append(k,v)
+            else:
+                for k,v in enumerate(obj): append(k,v)
+        except:
+            vals.append((obj, path))
+    rec(obj, ())
+    return vals
+### END data_tools ###
 
 ### BEGIN datetime_tools ###
-############################
+
 def datetime_to_id(d):
     return str(pymongo.objectid.ObjectId.from_datetime(d))
 
@@ -234,8 +251,8 @@ def friendly_date(then):
         else: (t, u) = (dt.days, 'day')
         s = str(t) + ' ' + u + ('s' if t > 1 else '') + ' ago'
     return s
-### END   datetime_tools ###
-############################
+
+### END datetime_tools ###
 
 def junkstr(length):
     """Creates a random base 62 string"""
