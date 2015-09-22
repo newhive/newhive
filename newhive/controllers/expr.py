@@ -14,7 +14,7 @@ def anchor_tag(attrs, content, xlink=False):
         attrs['xlink:href'] = attrs['href']
         del attrs['href']
     return ('<a ' +' '.join([k +"='"+ v.replace("'",'&#39;') +"'"
-        for k,v in attrs.items()]) +'>'+ content +'</a>')
+        for k,v in attrs.items() if v]) +'>'+ content +'</a>')
 
 class Expr(ModelController):
     model_name = 'Expr'
@@ -392,8 +392,9 @@ class Expr(ModelController):
         type = app.get('type')
         klass = type.replace('.', '_')
         app_id = app.get('id', 'app_' + str(app['z']))
-        anchor = app.get('anchor')
-        link_name = app.get('href_name')
+        anchor = ( app.get('anchor', {}) or
+            {'href': app.get('href'), 'name': app.get('href_name')} )
+        if not (anchor.get('href') or anchor.get('name')): anchor = None
         if type == 'hive.circle':
             type = 'hive.rectangle'
 
