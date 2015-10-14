@@ -90,10 +90,33 @@ class Expr(ModelController):
                 secure=tdata.request.is_secure) + expr.id
             ,icon=False, route_args=args, barebones=True
         )
+        tdata.context.update(self.cards_for_expr(tdata, expr))
         return self.serve_page(tdata, 'pages/embed.html')
 
-    def cards_for_expr(self, expr):
-        pass
+    def cards_for_expr(self, tdata, expr):
+        collection = {}
+        expr_ids = []
+        query = tdata.request.args.get('q')
+        if query:
+            query_obj = self.db.parse_query(query)
+            if len(query_obj.get('tags', [])) and query_obj.get('user'):
+                expr_ids = self.db.User.named(query_obj['user']
+                    ).get_tag(query_obj['tags'][0])
+                collection['name'] = query_obj['tags'][0]
+                collection['username'] = query_obj['user']
+            else:
+                cards = self.db.query(query, search_id=expr.id)
+        else:
+            # get implicit collection from expr['tags']
+            collection = expr.primary_collection
+            if collection.get('items'): expr_ids = collection.pop('items')
+
+        at_card = expr_ids.index(expr.id) if expr.id in expr_ids else False
+        cards = [r.client_view() for r in self.db.Expr.search(expr_ids)]
+        page_data = dict(cards=cards, at_card=at_card)
+        if collection: page_data['collection'] = collection
+
+        return page_data
 
     def save(self, tdata, request, response, **args):
         """ Parses JSON object from POST variable 'exp' and stores it in database.
