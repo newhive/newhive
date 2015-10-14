@@ -1863,6 +1863,15 @@ class Expr(HasSocial):
     def tags(self):
         return self.get('tags_index', [])
 
+    @property
+    def primary_collection(self):
+        items = []
+        for cname in self.tags:
+            items = self.owner.get_tag(cname)
+            if len(items) > 1: break
+        return dict(name=cname, username=self['owner_name'], items=items
+            ) if items else {}
+
     def update_owner(self, old_tags):
         old_tags = set(old_tags)
         self.owner.get_expr_count(force_update=True)

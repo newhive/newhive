@@ -220,7 +220,7 @@ class Community(Controller):
             db_args['override_unlisted'] = True
         profile = owner.client_view(viewer=tdata.user)
 
-        result, search = self.db.query_echo("@" + owner['name'] + " #"
+        result = self.db.query("@" + owner['name'] + " #"
             + tag_name, **db_args)
 
         data = {
@@ -429,7 +429,7 @@ class Community(Controller):
             if user and user.get('tag_entropy',{}).get(tags[0], None) == entropy:
                 db_args['override_unlisted'] = True
 
-        result, search = self.db.query_echo(q, id=id, **db_args)
+        result, search = self.db.query_echo(q, search_id=id, **db_args)
         # print('executed search', search)
         # Treat single-word text search as a tag search (show tag page)
         if len(search) == 1 and len(text) == 1:
