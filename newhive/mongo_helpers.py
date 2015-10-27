@@ -9,6 +9,11 @@ class Query(dict):
         dict.update(self, *d, **keys)
         self.where = self.js
 
+    def set_go(self, callback):
+        self.go = callback
+    def __call__(self, **dbargs):
+        return self.go(self, **dbargs)
+
     def list_filter(self, key, *arg, **args):
         self[key] = { '$elemMatch': arg[0] if len(arg) else args }
         return self
