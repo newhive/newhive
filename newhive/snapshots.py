@@ -25,41 +25,25 @@ class Snapshots(object):
     # TODO-cleanup (everything about this)
     def take_snapshot(self,expr_id,out_filename,dimensions=(1024,768),
         full_page=False, password=''):
-        host = utils.url_host(on_main_domain=False,secure=False)
-        # host = "localhost:3737"
-        # url = 'http://' + host + ExpressionSnapshotURI(expr_id)
-        if isinstance(password, basestring) and len(password) > 0:
-            host = utils.url_host(on_main_domain=False,secure=True)
-            url = ( 'http://' + host + '/' + expr_id + '?snapshot&' +
-                urllib.urlencode({'pw': password}) )
-        else:
-            url = 'http://' + host + '/' + expr_id + '?snapshot'
-        # print url
+	secure = isinstance(password, basestring) and len(password) > 0
+	url = ( 'http' +('s' if secure else '')+ '://tnh.me/' + expr_id + '?snapshot' +
+	    (('&' + urllib.urlencode({'pw': password})) if secure else '' ) )
         if platform == 'linux' or platform == 'linux2':
             ratio = 1.0 * dimensions[0] / dimensions[1];
             snap_dimensions = list(dimensions)
             if (snap_dimensions[0] < 1000):
-                snap_dimensions = [ 1000, 1000./dimensions[0]*dimensions[1] ]
-            # cmd = ( ( join(config.src_home, 'bin/CutyCapt/CutyCapt') + 
-            #     ' --delay=10000 --max-wait=90000 --min-width=%s --min-height=%s' +
-            #     ' --plugins=on --url="%s" --out=%s' )
-            #     % (snap_dimensions[0],snap_dimensions[1],url,out_filename) )
-            cmd = ( ( join(config.src_home, 'bin/awesomium_sampler') + 
-                ' "%s" %s %s %s' )
-                % (url,out_filename, snap_dimensions[0],snap_dimensions[1]) )
-            # cmd = ('webkit2png --feature=javascript --display=:99 '+                
-            #     '--geometry=%s %s --output=%s %s' % (dimensions[0],dimensions[1],out_filename,url))
-            # os.environ['DISPLAY'] =':99'
+                snap_dimensions = [ 1000, 1000. / dimensions[0] * dimensions[1] ]
+            cmd = [ 'phantomjs', join(config.src_home, 'bin/snapshot.js'),
+	        url, out_filename, str(snap_dimensions[0]), str(snap_dimensions[1]) ]
             r = 0
             with open(os.devnull, "w") as fnull:
                 # BUGBUG
-                if True:
-                    cmd = 'xvfb-run --auto-servernum --server-args="-screen 0, 1024x768x24" ' + cmd
-                print cmd
-                r = call(cmd, shell=True) #, stderr=fnull, stdout=fnull)
-                # r = envoy.run(cmd, {"DISPLAY":":19"})
+                #if True:
+                #    cmd = 'xvfb-run --auto-servernum --server-args="-screen 0, 1024x768x24" ' + cmd
+                print ' '.join(cmd)
+                r = call(cmd) #, stderr=fnull, stdout=fnull)
                 if r != 0:
-                    print "FAILED: " + cmd
+                    print "FAILED: " + ' '.join(cmd)
                     return False
                 if not full_page:
                     cmd = ('convert -resize %s -background transparent -extent %sx%s %s %s' % (
@@ -69,5 +53,4 @@ class Snapshots(object):
             return r == 0
 
     def __del__(self):
-        # print "snapshot del!!!"
         if hasattr(self,'ps'): self.ps.kill()

@@ -1790,9 +1790,8 @@ class Expr(HasSocial):
 
         old_file = self.get('snapshot_id', False)
         self.update(updated=False, snapshot_time=now(),
-            entropy=self['entropy'], snapshot_id=file_record.id,
-            snapshot_needed=False, snapshot_fail_time=0,
-            snapshot_fails=0
+            snapshot_id=file_record.id, snapshot_needed=False,
+	    snapshot_fail_time=0, snapshot_fails=0
         )
         # Delete old snapshot
         if old_file and old_file != file_record.id:
