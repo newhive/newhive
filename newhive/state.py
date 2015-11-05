@@ -1664,7 +1664,7 @@ class Expr(HasSocial):
             # If requested, keep trying to snapshot, with multiplicative delay,
             # until success.
             while True:
-                result = (expr.take_full_shot() if full_page else expr.take_snapshots())
+                result = (expr.take_full_shot() if full_page else expr.take_snapshot())
                 if result or not retry:
                     return result
                 time.sleep(retry)
@@ -1709,6 +1709,10 @@ class Expr(HasSocial):
             if r[1][0] <= w and r[1][1] <= h], 0)
     def snapshot_dims(self, size='big'):
         return dict(self._snapshot_dims).get(size, False)
+    @property
+    def snapshot_dimlist(self):
+        start = 0 if self.get('snapshot_ultra') else 1
+        return [x[1] for x in self._snapshot_dims[start:]]
 
     # size is one of self._snapshots_dims[r][0]
     def snapshot_name(self, size='big', max_dims=None):
@@ -1755,66 +1759,50 @@ class Expr(HasSocial):
 
     # Note: this takes snapshots in the current thread.
     # For threaded snapshots, use threaded_snapshot()
-    def take_snapshots(self):
-        old_time = self.get('snapshot_time', False)
-
+    def take_snapshot(self):
         snapshotter = Snapshots()
-        snapshot_time = now()
-        dimension_list = [(715, 430, "big"), (390, 235, "small"), (70, 42, 'tiny')]
-        if self.get('snapshot_ultra'):
-            new = [(1600, 960, "ultra")]
-            new.extend(dimension_list)
-            dimension_list = new
-        upload_list = []
-        pw = self.get('password', '')
         self.inc('snapshot_fails')
-        self.update(updated=False, snapshot_fail_time=now())
+        snapshot_time = now()
+        filename = os.tmpnam() + '.jpg'
+        w, h = self.snapshot_dimlist[0]
+        r = snapshotter.take_snapshot(self.id, dimensions=(w,h),
+            out_filename=filename,
+            password=self.get('password', ''))
+        if not r:
+            return False
+        self.save_snapshot(filename, correct_size=True)
+        # clean up local file
+        call(["rm", filename])
 
-        for w, h, size in dimension_list:
-            name = self.snapshot_name_base(size, str(int(snapshot_time)))
-            # TODO-cleanup: This would be cleaner with file pipes instead of filesystem.
-            local = '/tmp/' + name
-            if w == dimension_list[0][0]:
-                r = snapshotter.take_snapshot(self.id, dimensions=(w,h),
-                    out_filename=local, pw=pw)
-                if not r:
-                    return False
-            else:
-                f = open(upload_list[0][0], "r")
-                local = generate_thumb(f, (w, h), 'jpeg')
-            upload_list.append((local,name))
+    def save_snapshot(self, filename, correct_size=False):
+        f = open(filename)
+        file_record = False
+        for w, h in self.snapshot_dimlist:
+            if not correct_size:
+                f = generate_thumb(f, (w, h), 'jpeg')
+            else: correct_size = False
 
-        it = 0
-        for local, name in upload_list:
-            file_data = {'owner': self.owner.id,
-                'tmp_file': (local if it else open(local, 'r')),
+            if not file_record: file_record = self.db.File.create({
+                'owner': self.owner.id, 'tmp_file': f,
                 'name': 'snapshot.jpg', 'mime': 'image/jpeg',
-                'generated_from': self.id, 'generated_from_type': 'Expr'}
-            if not it:
-                file_record = self.db.File.create(file_data)
-                file_record['dimensions'] = ( 
-                    dimension_list[it][0], dimension_list[it][1])
-            else:
-                file_record.set_thumb(
-                    dimension_list[it][0], dimension_list[it][1], file=local,
-                    mime='image/jpeg', autogen=False)
-            it += 1
-        file_record.save()
+                'generated_from': self.id,
+                'generated_from_type': 'Expr',
+                'dimensions': (w, h)
+            })
+            else: file_record.set_thumb(w, h, file=f,
+                mime='image/jpeg', autogen=False)
 
-        # clean up local files, upload them atomically to s3 (on success)
-        # for local, name in upload_list:
-        #     url = self.db.s3.upload_file(local, 'thumb', name, mimetype='image/png')
-        # need to delete local
-        call(["rm", upload_list[0][0]])
-
+        old_file = self.get('snapshot_id', False)
+        self.update(updated=False, snapshot_time=now(),
+            entropy=self['entropy'], snapshot_id=file_record.id,
+            snapshot_needed=False, snapshot_fail_time=0,
+            snapshot_fails=0
+        )
         # Delete old snapshot
-        if old_time and self.get('snapshot_id'):
-            self.db.File.fetch(self.get('snapshot_id')).purge()
+        if old_file and old_file != file_record.id:
+            fr = self.db.File.fetch(old_file)
+            if fr: fr.purge()
 
-        self.update(snapshot_time=snapshot_time, entropy=self['entropy'],
-            snapshot_id=file_record.id, snapshot_needed=False, updated=False)
-        self.reset('snapshot_fails')
-        self.update(updated=False, snapshot_fail_time=0)
         return True
 
     # @property
@@ -1823,7 +1811,7 @@ class Expr(HasSocial):
         if update and (not self.get('snapshot_time')
             or self.get('updated') > self.get('snapshot_time')
         ):
-            self.take_snapshots()
+            self.take_snapshot()
         return self.snapshot_name(size)
 
     def related_next(self, spec={}, **kwargs):
@@ -2281,7 +2269,7 @@ class File(Entity):
         # remove resamples for gifs with offset animation frames,
         # because imagemagick fails to resample them
         ident = os.tmpfile()
-        call (['identify', resample_filename], stdout=ident)
+        call(['identify', resample_filename], stdout=ident)
         ident.seek(0)
         ident_frames = ident.read().strip().split("\n")
         full_frames = [x for x in ident_frames if re.search(r'\+0\+0',x)]
@@ -2315,7 +2303,7 @@ class File(Entity):
             size = (size[0] / factor, size[1] / factor)
             size_rounded = (int(size[0] + .5), int(size[1] + .5))
             size_str = str(size_rounded[0]) + 'x' + str(size_rounded[1])
-            call( resample_cmd(size_str, resample_filename) )
+            call(resample_cmd(size_str, resample_filename))
             resamples.append(size_rounded)
             self.db.s3.upload_file(resample_filename, 'media',
                 self._resample_name(size_rounded[0]), 
