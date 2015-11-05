@@ -1,5 +1,3 @@
-<div id="dynamic_group"></div>
-
 <div id="menu_group">
 <div id='dia_edit_bg' class='dialog'>
  <h2>Edit Background</h2>
@@ -102,7 +100,9 @@
     class='menu_item default'>Upload Audio</div>
 </div>
 
-<div id='menu_embed' class='menu drawer embed'>
+<div id='menu_embed' class='menu drawer embed
+  {<if flags.Editor.dev_options} tall{>}'
+>
   {<if flags.Editor.dev_options}
     <div class="menu_item code">JavaScript AMD module</div>
     <div class="menu_item stle">CSS</div>
@@ -118,6 +118,12 @@
     <div style='text-align : center'><input id='embed_done' type='submit'
       class='black_btn upper embed_button' value='Enter'></div>
   </div>
+  {<if flags.Editor.dev_options}
+    <br><hr>
+    <div class="menu_item code">Code (js)</div>
+    <div class="menu_item style">Style (css)</div>
+    <div class="menu_item processing">Processing template</div>
+  {>}
 </div>
 
 <div id='menu_shape' class='menu drawer medbold'
@@ -131,7 +137,7 @@
       <img title="Star" src='{asset "skin/edit/shapes_icons/star.png"}'></div
     ><div class='menu_item hexagon'>
       <img title="Hexagon" src='{asset "skin/edit/shapes_icons/hexagon.png"}'></div
-    ><br class="noheight"
+    ><br
   {>}
   ><div class='menu_item default rect'>
     <img title="Rectangle" src='{asset "skin/edit/shapes_icons/square.png"}'></div
@@ -140,9 +146,10 @@
       <img title="Circle" src='{asset "skin/edit/shapes_icons/circle.png"}'></div
     ><div class='menu_item triangle'>
       <img title="Triangle" src='{asset "skin/edit/shapes_icons/triangle.png"}'></div
-  {>}
+  {>}{<if flags.Editor.sketch}
   ><div class='menu_item sketch'>
     <img title="Sketch" src='{asset "skin/edit/shapes_icons/sketch.png"}'></div
+  {>}
 ></div>
 
 <div id='menu_file' class='menu drawer medbold'>
@@ -342,8 +349,14 @@
   </div>
 
   {# autoplay #}
-  <img class='button autoplay' src='{asset "skin/edit/autoplay.png"}'  title='Autoplay'>
-  <img class='button autohide' src='{asset "skin/edit/autohide.png"}'  title='Autohide'>
+  <img class='button autoplay' src='{asset "skin/edit/autoplay.png"}'
+    title='Autoplay'>
+  <img class='button yt_autoplay' src='{asset "skin/edit/autoplay.png"}'
+    title='Autoplay'>
+  <img class='button yt_loop' src='{asset "skin/edit/yt_loop.png"}'
+    title='Loop video'>
+  <img class='button autohide' src='{asset "skin/edit/autohide.png"}'
+    title='Autohide'>
   {# lock #}
   <img class='button fixed' src='{asset "skin/edit/lock.png"}'  title='Lock'>
   {# crop #}

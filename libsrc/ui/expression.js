@@ -4,7 +4,7 @@
     via postMessage.
 */
 define([
-    'browser/jquery'
+    'jquery'
     ,'browser/js'
     ,'context'
     ,'browser/layout'
@@ -13,8 +13,8 @@ define([
     ,'ui/media_players'
     ,'analytics'
 
-    ,'browser/jquery/jplayer/skin'
-    ,'browser/jquery/rotate.js'
+    ,'jquery/jplayer/skin'
+    ,'jquery/rotate.js'
 ], function(
     $
     ,js
@@ -53,6 +53,8 @@ define([
         } 
         else if( msg.action == 'hide' ) o.hide()
         else if( msg.action == 'play_toggle' ) o.player_toggle()
+        else if( msg.action == 'page_down' )
+            document.body.scrollTop += $(window).height()
     }
 
     // o.paging_sent = false;
@@ -235,7 +237,7 @@ define([
         //     // by assuming scroll if there's scrolling left in that direction
         //     // and otherwise assuming scroll if delta-Y is greater than delta-X
 
-        //     if( (delta[0] > 0 && document.body.scrollLeft > 0) // left scroll remains
+        //     if( (delta[0] > 0 && docuscrollHeightment.body.scrollLeft > 0) // left scroll remains
         //         || (delta[0] < 0 && (document.body.scrollLeft // right scroll remains
         //             + document.body.clientWidth < document.body.scrollWidth)
         //         )
@@ -407,7 +409,9 @@ define([
                 // add page path directory to path relative links
                 else href = ( domain + '/' + o.expr.path.replace(/[^\/]*$/, '')
                     + href )
-                $a.attr('href', href)
+                if($a.attr('xlink:href')) $a[0].setAttributeNS(
+                    'http://www.w3.org/1999/xlink', 'href', href)
+                else $a.attr('href', href)
             }
         }
     }
@@ -455,14 +459,12 @@ define([
             if ($div.html() != '') return;
             $div.html($div.attr('data-content'));
         });
-        
+ 
         if (!util.mobile())
             o.layout()
 
-        o.update_targets();
-
         var module_paths = function(modules) {
-            return ["'browser/jquery'","'ui/expression'"]
+            return ["'jquery'","'ui/expression'"]
             .concat($.map(modules, function(p) { 
                 return "'" + (p.path_view || p.path) + "'"
             }))
@@ -490,6 +492,17 @@ define([
         })
 
         o.player_play(true)
+
+        function check_height(){
+            var h = $(window).height()
+            if(h < 100){
+                setTimeout(check_height, 50)
+                return
+            }
+            if(h < document.body.scrollHeight)
+                o.send_top('scrollable')
+        }
+        check_height()
     }
     o.hide = function(){
         visible = false
@@ -511,29 +524,6 @@ define([
         code_modules.map(function(module){ module.stop && module.stop() })
         $('script.code_module').remove()
     };
-
-
-    // All links in content frame need to target either
-    // the top frame (on site) or a new window (off site)
-    o.update_targets = function(){
-        function link_target(i, a) {
-            var re = new RegExp('^(/|https?://' +
-                context.config.server_domain +')')
-            var a = $(a), href = a.attr('href') || a.attr('action');
-        
-            // Don't change target if it's already set
-            if (a.attr('target')) return;
-        
-            if(href && href.indexOf('http') === 0 && !re.test(href)) {
-                a.attr('target', '_blank');
-            } else if (href && href.indexOf('http') === 0 && re.test(href)) {
-                a.attr('target', '_top');
-            }
-        }
-        // TODO: Re-enable link targeting  
-        return;
-        // $('a, form').each(link_target);
-    }
 
     return o
 });

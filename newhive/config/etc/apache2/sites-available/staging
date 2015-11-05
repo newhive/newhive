@@ -1,8 +1,8 @@
 NameVirtualHost *:80
 
 <VirtualHost *:80>
-    ServerName staging.newhive.com
-    ServerAlias *.staging.newhive.com
+    #ServerName staging.newhive.com
+    #ServerAlias *.staging.newhive.com
 	WSGIScriptAlias / /var/www/newhive/newhive/app.py
 
     Alias /lib /var/www/newhive/lib
@@ -14,7 +14,8 @@ NameVirtualHost *:80
     </Location>
 </VirtualHost>
 
-<VirtualHost *:80>
-    ServerName staging.tnh.me
-	WSGIScriptAlias / /var/www/newhive/newhive/app.py
-</VirtualHost>
+#<VirtualHost *:80>
+#    ServerName staging.tnh.me
+#	WSGIScriptAlias / /var/www/newhive/newhive/app.py
+#    Alias /lib /var/www/newhive/lib
+#</VirtualHost>

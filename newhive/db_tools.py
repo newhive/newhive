@@ -34,9 +34,9 @@ def show_sizeof(x, level=0, show_deep=0):
             for xx in x:
                 show_sizeof(xx, level + 1, show_deep)
 
-def expr_count(days_ago, days=None, query={}):
+def expr_count(days_ago, days=1, query={}):
     return db.Expr.count(mq(query).day('created', days_ago, days))
-def user_count(days_ago, days=None, query={}):
+def user_count(days_ago, days=1, query={}):
     return db.User.count(mq(query).day('created', days_ago, days))
 def follow_count(d, q={}):
     q.update(mq(class_name='Star', entity_class='User').ne('entity',
@@ -114,7 +114,8 @@ def export_csv(data, file_name='newhive_query'):
     f = open(file_name, 'wb')
     wr = csv.writer(f, quoting=csv.QUOTE_ALL)
     for row in data:
-        wr.writerow(row)
+        ascii_row = [col.encode('ascii', 'ignore') for col in row]
+        wr.writerow(ascii_row)
 
 ### BEGIN snapshot_wrangling ###
 # returns cursor with expressions at most %days% old which have > 1 fail count

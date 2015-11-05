@@ -1,6 +1,6 @@
 // "use strict";
 define([
-    'browser/jquery'
+    'jquery'
     ,'browser/js'
     ,'context'
     ,'browser/upload'
@@ -1146,10 +1146,8 @@ Hive.App = function(init_state, opts) {
             position: _pos.slice(),
             dimensions: _dims.slice()
         }
-        if (o.is_fixed())
-            pos_dims.position = 
-                u._sub(pos_dims.position, 
-                    u._div(env.scrollY, env.scale()))
+        if (o.is_fixed()) pos_dims.position =
+            u._sub(pos_dims.position, u._div(env.scroll[1], env.scale()))
         $.extend(o.history_state.return_val, pos_dims)
     })
     o.state_relative = function(){
@@ -1217,7 +1215,7 @@ Hive.App = function(init_state, opts) {
 
     // initialize
 
-    o.div = $('<div class="happ drag">').appendTo(env.apps_e).attr('id', o.id);
+    o.div = $('<div class="happ drag">').appendTo(env.apps_e)
     if (o.init_state.client_data) 
         o.div.data(o.init_state.client_data)
     o.css_class_set(o.css_class())
@@ -1228,6 +1226,7 @@ Hive.App = function(init_state, opts) {
     opts.defer_load != undefined && (o.defer_load = opts.defer_load)
     if (o.initialized) throw "load called too soon"
     Hive.has_sequence(o, o.typename())
+    o.div.attr('id', o.name())
 
     o.div.addClass(o.type.tname.replace(".", "_"))
     if (o.content_element && o.init_state.css_state)
@@ -1338,6 +1337,33 @@ Hive.App.Html = function(o) {
             Hive.bg_change(o.single().state()) });
     }))
     o.make_controls[o.make_controls.length - 1].single = true;
+
+    o.yt_autoplay = function(){
+        return o.content().match('autoplay=1') != null
+    }
+    o.yt_autoplay_set = function(val){
+        var c = o.content()
+        if(val) o.content_set( c.replace(/\?/, '?autoplay=1&amp;') )
+        else o.content_set( c.replace(/autoplay=1(\&amp;)?/, '') )
+    }
+    o.yt_loop = function(){
+        return o.content().match('loop=1') != null
+    }
+    o.yt_loop_set = function(val){
+        var c = o.content()
+        if(val){
+            var yt_id = c.match(/embed\/(.*?)\?/)[1]
+            o.content_set( c.replace(/\?/, '?loop=1&amp;' + (
+                o.content().match('playlist=') ? '' :
+                    '&amp;playlist=' + yt_id + '&amp;' )
+            ) )
+        }
+        else o.content_set( c.replace(/loop=1(\&amp;)?/, '') )
+    }
+    if(o.init_state.media == 'youtube'){
+        Hive.App.has_toggle(o, "yt_autoplay")
+        Hive.App.has_toggle(o, "yt_loop")
+    }
 
     return o;
 };
@@ -1522,7 +1548,7 @@ Hive.App.Code = function(o){
         // return o.content();
         if( o.init_state.url ) return '' // can't have src and script body
         return ( "define('" + o.module_name() + "', "
-            + "['browser/jquery'" + module_modules() + "], function($"
+            + "['jquery'" + module_modules() + "], function($"
             + module_names() + ") {\n"
             + "var self = {}\n\n"
             + o.content() + "\n\n"
@@ -2117,8 +2143,7 @@ Hive.App.Rectangle_Parent = function(o) {
     Hive.App.has_opacity(o);
     Hive.App.has_border_width(o);
     Hive.App.has_color(o, "stroke");
-    if (context.flags.shape_link)
-        Hive.App.has_link_picker(o);
+    Hive.App.has_link_picker(o);
 
     o.content_element = $("<div class='content drag'>").appendTo(o.div)
 
@@ -2471,8 +2496,7 @@ Hive.App.Polygon = function(o){
             return !c.no_line
         })
     }
-    if (context.flags.shape_link)
-        Hive.App.has_link_picker(o);
+    Hive.App.has_link_picker(o);
 
     if(!points.length)
         points.push.apply(points, [ [0, 0], [50, 100], [100, 0] ])
@@ -2793,8 +2817,9 @@ Hive.App.Sketch = function(o) {
     Hive.App.has_opacity(o);
     Hive.App.has_shield(o);
 
-    o.content_element = $('<iframe>').attr('src', '/lib/harmony_sketch.html')
-        .css({'width':'100%','height':'100%','position':'absolute'});
+    o.content_element = $('<iframe>')
+        .attr('src', '/lib/harmony_sketch.html')
+        .css({'width':'100%', 'height':'100%', 'position':'absolute'});
     o.iframe = o.content_element.get(0);
     o.fill_color = function(hex, rgb) { o.win.COLOR = rgb; }
     o.div.append(o.content_element);
@@ -2911,19 +2936,13 @@ Hive.registerApp(Hive.App.Audio, 'hive.audio');
 // TODO-refactor: move into app_modifiers
 Hive.App.has_link_picker = function(app) {
     app.link_set = function(v){ 
-        app.init_state.href = v;
-    };
+        app.init_state.anchor = v;
+    }
     app.link = function() {
-        return app.init_state.href;
-    };
-    app.link_name_set = function(v){ 
-        app.init_state.href_name = v;
-    };
-    app.link_name = function() {
-        return app.init_state.href_name || "";
-    };
-    if (!env.Selection.link_set) {
-        ["link", "link_set", "link_name", "link_name_set"].map(function(el,i) {
+        return app.init_state.anchor;
+    }
+    if( !env.Selection.link_set ){
+        ['link', 'link_set'].map(function(el,i) {
             env.Selection.set_standard_delegate(el)
         })
     }
@@ -3481,10 +3500,10 @@ Hive.has_scale = function(o){
 
 Hive.App.has_toggle = function(o, toggle_name){
     var history_point, sel = env.Selection, toggle_set = toggle_name + "_set"
-    o[toggle_name] = function() {
+    o[toggle_name] = o[toggle_name] || function() {
         return o.client_data(toggle_name) || false
     }
-    o[toggle_set] = function(v) {
+    o[toggle_set] = o[toggle_set] || function(v) {
         o.client_data_set(toggle_name, v)
         // fixup_controls(sel.controls)
     }

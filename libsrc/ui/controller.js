@@ -1,5 +1,5 @@
 define([
-    'browser/jquery'
+    'jquery'
     ,'browser/js'
 
     ,'ui/page'
@@ -11,7 +11,7 @@ define([
     // ,'history/history'
     ,'ui/routing'
     ,'analytics'
-    // ,'browser/jquery.mobile.custom'
+    // ,'jquery.mobile.custom'
 ], function(
      $
     ,js

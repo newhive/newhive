@@ -139,8 +139,8 @@ def index_of(l, f):
     return -1
 
 
-### BEGIN dict_tools ###
-########################
+### BEGIN data_tools ###
+
 def dupdate(d1, d2): return dict(d1.items() + d2.items())
 
 def dfilter(d, keys):
@@ -152,46 +152,34 @@ def dfilter(d, keys):
     return r
 
 class ImmutableDict(dict):
-    # _HASH = None
-
     def __new__(klass, *args, **kwargs):
         # ImmutableDict._HASH = hash(frozenset(args[0].items()))
         return super(ImmutableDict, klass).__new__(klass, *args, **kwargs)
 
-    # def __hash__(self):
-    #     return self._HASH
-
     def _readonly(self, *args, **kwards):
         raise TypeError("Can't touch this immutable dict")
 
-    __delattr__ = __setattr__ = __setitem__ = pop = update = setdefault = clear = popitem = _readonly
+    __delattr__ = __setattr__ = __setitem__ = pop = update = setdefault \
+        = clear = popitem = _readonly
 
-def dcast(d, type_schemas, filter=True):
-    """ Accepts a dictionary d, and type_schemas -- a list of tuples in these forms:
-            (dictionary_key, type_to) :: (str, type)
-            (dictionary_key, type_to, required) :: (str, type, bool)
-        For each tuple in type_schemas, dcast coerces the dictionary_key in d to the type_to
-            If type_to is None, no coercion is performed
-            If required is True, an exception is thrown if dictionary_key is not in d
-            In the case of a 2 tuple, no exception is thrown
-        returns new dictionary only containing keys found in type_schemas if filter is True
-            otherwise return a copy of d with the keys found in type_schemas coerced
-        throws ValueError
-    """
-    out = {} if filter else dict(d)
-    for schema in type_schemas:
-        key = schema[0]
-        type_to = schema[1]
-        required = lget(schema, 2, False)
+def iteritems(obj):
+    """ gives lists proper iteritems like other maps, and ignores strings """
+    if hasattr(obj, 'iteritems'): return obj.iteritems()
+    elif hasattr(obj, '__iter__'): return enumerate(obj)
 
-        if key in d: out[key] = type_to(d[key]) if type_to else d[key]
-        elif required: raise ValueError('key %s missing in dict' % (key))
-    return out
-### END   dict_tools ###
-########################
+def flatten(obj, path=()):
+    """ flattens a nested data structure into a list of (value, path) tuples """
+    items = iteritems(obj)
+    if not items: return [(path, obj)]
+    return [kv for k,v in items for kv in flatten(v, path + (k,))]
+def flatprint(obj):
+    flat = flatten(obj)
+    for k,v in flat:
+        print '.'.join(map(str, k)) + ': ' + str(v)
+### END data_tools ###
 
 ### BEGIN datetime_tools ###
-############################
+
 def datetime_to_id(d):
     return str(pymongo.objectid.ObjectId.from_datetime(d))
 
@@ -234,8 +222,8 @@ def friendly_date(then):
         else: (t, u) = (dt.days, 'day')
         s = str(t) + ' ' + u + ('s' if t > 1 else '') + ' ago'
     return s
-### END   datetime_tools ###
-############################
+
+### END datetime_tools ###
 
 def junkstr(length):
     """Creates a random base 62 string"""
@@ -486,16 +474,14 @@ def modify_query(url, d):
         return url.get_url()
 
 
-def set_cookie(response, name, data, secure = False, expires = True):
+def set_cookie(response, name, data, secure=False, expires=True, domain=None):
     expiration = None if expires else datetime(2100, 1, 1)
     max_age = 0 if expires else None
-    response.set_cookie(name, value = data, secure = secure, httponly=True,
-        # no longer using subdomains
-        #domain = None if secure else '.' + config.server_name
-        expires = expiration)
+    response.set_cookie(name, value=data, secure=secure, httponly=True,
+        domain=domain, expires=expiration)
 def get_cookie(request, name): return request.cookies.get(name, False)
-def rm_cookie(response, name):
-    response.delete_cookie(name)
+def rm_cookie(response, name, domain=None):
+    response.delete_cookie(name, domain=domain)
 
 
 def local_date(offset=0):

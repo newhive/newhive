@@ -15,13 +15,10 @@
   {set "editable" " editable"}
 {>}
 
-<div class="tag_list_container centered {extra_classes}" data-link-show=".icon.hash">
-  {<if expander}<div class="expander tag_label">...</div>{>}
+<div class='tag_list_container centered {extra_classes}'>
+  {<if expander}<div class='expander tag_label'>...</div>{>}
   
-  <div class="tag_list main inline{<if expanded} expanded{>}" 
-    {<if auto_expander}
-      data-class-toggle='```{".tag_list_container.```{extra_classes}``` .expander":"expanded"}```'
-    {>}>
+  <div class='tag_list main inline{<if expanded} expanded{>}'>
     {<with null "main_view" true}
       {<if extra_tags}
         <div class="drop_box{editable}">
@@ -32,9 +29,9 @@
               {<unless (len tag_list)}
                 <div class="centered layered">
                   {<if (len extra_tags)}
-                    <div class="centered">Drag and drop tags into this box to display them on your profile.</div>
+                    <div class="centered">Drag and drop collections from "..." to always show them.</div>
                   {>}{<else}
-                    <div class="centered">Tag your Newhives to start creating collections.</div>
+                    <div class="centered">Create collections with the "+" button over the cards below, or by listing them the save dialog after editing a newhive.</div>
                   {>}
                 </div>
               {>}
@@ -43,13 +40,19 @@
           {<for tag_list "tagnum"}
             {|templates/tag_card.html}
           {>}
+          <div class='tag_btn hoverable extra handle closed'>
+            <div class='icon closed'>...</div>
+            <div class='icon open'>X</div>
+          </div>
         </div>
         {<if blank_tag}{<with null "item" "" "tagnum" "new"}
           {|templates/tag_card.html}
         {>}{>}
-        {<for extra_tags "tagnum"}
-          {|templates/tag_card.html}
-        {>}
+        <div class='extra_box'>
+          {<for extra_tags "tagnum"}
+            {|templates/tag_card.html}
+          {>}
+        </div>
       {>}{<else}
         {<if blank_tag}{<with null "item" "" "tagnum" "new"}
           {|templates/tag_card.html}

@@ -4,7 +4,7 @@
    Delegates actual rendering to the templates.
  */
 define([
-    'browser/jquery',
+    'jquery',
     'json!ui/routes.json',
     'browser/js',
     'ui/dialog',
@@ -228,20 +228,7 @@ define([
         if (context.route._owner_name) {
             delete context.page_data.owner
         }
-
-        var user = context.user;
-        user.extra_tags = 
-            user.tagged.slice(user.tagged_ordered);
-        user.tag_list = 
-            user.tagged.slice(0, user.tagged_ordered);
-            
-        user.categories = user.categories || []
-        user.cats_ordered = user.cats_ordered || 0
-        user.extra_cats = 
-            user.categories.slice(user.cats_ordered);
-        user.cat_list = 
-            user.categories.slice(0, user.cats_ordered);
-    };
+    }
 
     o.render_new_cards = function(data){
         if (render_new_cards_func)
@@ -256,6 +243,7 @@ define([
     }
     var fixup_overlay = function() {
         // Fix styling for this route
+        $('#logo').toggleClass('on', context.route_name == 'home_cat')
         $(".main-header .network_nav .item").removeClass("black_btn")
         $(".main-header .network_nav .item." + context.route_name)
             .addClass("black_btn")
@@ -318,8 +306,6 @@ define([
         o.preprocess_context();
         o.tags = (expr && (expr.tags_index || expr.tags))
             || page_data.tags_search
-        if (new_page && new_page.preprocess_page_data) 
-            pages[method].preprocess_page_data(page_data);
         if (new_page) {
             context.page = new_page;
             if (new_page.render_new_cards)

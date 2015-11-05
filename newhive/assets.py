@@ -147,7 +147,8 @@ class Assets(object):
     def system(self, *args):
         status = os.system(*args)
         if status != 0:
-            raise Exception('Build command failed: ' + str(args))
+            raise Exception(
+                'Build command failed ('+ str(status) +'): '+ str(args))
 
 
 class HiveAssets(Assets):
@@ -196,6 +197,22 @@ class HiveAssets(Assets):
 
         if not config.debug_mode: self.push_s3()
 
+    def build_header_css(self):
+        self.webassets_init()
+        scss_filter = webassets.filter.get_filter(
+            'scss',
+            use_compass=True,
+            debug_info=config.debug_mode,
+            libs=[join(config.src_home, 'libsrc/scss/asset_url.rb')]
+        )
+        self.assets_env.register('external_header', webassets.Bundle(
+            'scss/main_header_standalone.scss',
+            filters=scss_filter,
+            output='compiled.external_header.css',
+            debug=False
+        ), output='../lib/external_header.css')
+	print self.assets_env['external_header'].urls()
+
     def bundle(self):
         if config.debug_mode: self.build()
         self.find('')
@@ -210,6 +227,8 @@ class HiveAssets(Assets):
             self.assets_env.url = '/lib/libsrc'
             self.default_local = True
             self.auto_build = True
+        else:
+            self.assets_env.debug = False
 
     def webassets_bundle(self):
         print('Bundling webassets...')
@@ -230,10 +249,10 @@ class HiveAssets(Assets):
         scss_filter = webassets.filter.get_filter(
             'scss',
             use_compass=True,
-            # sourcemap=True,
             debug_info=config.debug_mode,
             libs=[join(config.src_home, 'libsrc/scss/asset_url.rb')]
         )
+	css_filter = None if config.debug_mode else 'yui_css'
 
         app_scss = webassets.Bundle('scss/base.scss', "scss/fonts.scss",
             "scss/dialogs.scss", "scss/community.scss", "scss/expr.scss",
@@ -247,7 +266,7 @@ class HiveAssets(Assets):
         self.assets_env.register(
             'app.css',
             app_scss,
-            filters='yui_css',
+            filters=css_filter,
             output='../lib/app.css'
         )
         self.final_bundles.append('app.css')
@@ -263,7 +282,7 @@ class HiveAssets(Assets):
         # self.assets_env.register(
         #     'edit.css',
         #     edit_scss,
-        #     filters='yui_css',
+        #     filters=css_filter,
         #     output='../lib/edit.css'
         # )
         # self.final_bundles.append('edit.css')
@@ -311,7 +330,7 @@ class HiveAssets(Assets):
         )
         self.assets_env.register('minimal.css',
             minimal_scss,
-            filters='yui_css',
+            filters=css_filter,
             output='../lib/minimal.css'
         )
         self.final_bundles.append('minimal.css')
@@ -324,6 +343,14 @@ class HiveAssets(Assets):
         )
         self.assets_env.register('email.css', email_scss, output='../lib/email.css')
         self.final_bundles.append('email.css')
+
+        self.assets_env.register('external_header', webassets.Bundle(
+            'scss/main_header_standalone.scss',
+            filters=scss_filter,
+            output='compiled.external_header.css',
+            debug=False
+        ), filters=css_filter, output='../lib/external_header.css')
+        self.final_bundles.append('external_header')
 
     def urls_with_expiry(self):
         urls = self.urls()

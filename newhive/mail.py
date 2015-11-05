@@ -174,11 +174,11 @@ class Mailer(object):
     def __init__(self, jinja_env=None, db=None, smtp=None):
         self.db = db
         self.jinja_env = jinja_env
-        self.assets = hive_assets
+        self.assets = db.assets
         self.asset = self.assets.url
         # Note, these functions are taken from newhive/old/wsgi.py:56:
         jinja_env.filters.update( {
-            'asset_url': hive_assets.url
+            'asset_url': self.asset
             ,'clean_url': lambda s: re.match('https?://([^?]*)', s).groups()[0]
             ,'html_breaks': lambda s: re.sub('\n', '<br/>', unicode(s))
             ,'large_number': utils.large_number
@@ -227,8 +227,6 @@ class Mailer(object):
              'To': self.recipient.get('email')
             ,'Subject': self.subject
             }
-        if self.bcc and self.initiator:
-            heads.update('Bcc', self.initiator.get('email'))
         return heads
 
 

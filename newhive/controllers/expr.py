@@ -8,11 +8,13 @@ from newhive.utils import (dfilter, now, tag_string, is_number_list, URL, lget,
     abs_url)
 from newhive.controllers.controller import ModelController
 
-def anchor_tag(link, name, xlink=False):
-    xlink = "xlink:" if xlink else ""
-    link = xlink + 'href="' + link + '" ' if link else ''
-    name = xlink + 'name="' + name + '" ' if name else ''
-    return link + name
+def anchor_tag(attrs, content, xlink=False):
+    if not attrs: return content
+    if xlink and attrs.get('href'):
+        attrs['xlink:href'] = attrs['href']
+        del attrs['href']
+    return ('<a ' +' '.join([k +"='"+ v.replace("'",'&#39;') +"'"
+        for k,v in attrs.items()]) +'>'+ content +'</a>')
 
 class Expr(ModelController):
     model_name = 'Expr'
@@ -88,10 +90,33 @@ class Expr(ModelController):
                 secure=tdata.request.is_secure) + expr.id
             ,icon=False, route_args=args, barebones=True
         )
+        tdata.context.update(self.cards_for_expr(tdata, expr))
         return self.serve_page(tdata, 'pages/embed.html')
 
-    def cards_for_expr(self, expr):
-        pass
+    def cards_for_expr(self, tdata, expr):
+        collection = {}
+        expr_ids = []
+        query = tdata.request.args.get('q')
+        if query:
+            query_obj = self.db.parse_query(query)
+            if len(query_obj.get('tags', [])) and query_obj.get('user'):
+                expr_ids = self.db.User.named(query_obj['user']
+                    ).get_tag(query_obj['tags'][0])
+                collection['name'] = query_obj['tags'][0]
+                collection['username'] = query_obj['user']
+            else:
+                cards = self.db.query(query, search_id=expr.id)
+        else:
+            # get implicit collection from expr['tags']
+            collection = expr.primary_collection
+            if collection.get('items'): expr_ids = collection.pop('items')
+
+        at_card = expr_ids.index(expr.id) if expr.id in expr_ids else False
+        cards = [r.client_view() for r in self.db.Expr.search(expr_ids)]
+        page_data = dict(cards=cards, at_card=at_card)
+        if collection: page_data['collection'] = collection
+
+        return page_data
 
     def save(self, tdata, request, response, **args):
         """ Parses JSON object from POST variable 'exp' and stores it in database.
@@ -150,28 +175,29 @@ class Expr(ModelController):
             # extract files from sketch and code objects
             app = apps.popleft()
             ok = True
-            data = None
+            file_data = None
             suffix = ""
             file_id = app.get('file_id')
             if app['type'] == 'hive.code' and app['code_type'] == 'js':
-                data = app.get('content')
+                file_data = app.get('content')
                 modules = module_modules(app)
                 ok = ok and file_id and (modules != False)
                 if ok:
                     # expand to full module code
-                    data = ("define(['browser/jquery'%s], function($%s"
+                    data = ("define(['jquery'%s], function($%s"
                         + ") {\nvar self = {}\n%s\nreturn self\n})"
-                    ) % (modules, module_names(app), data)
+                    ) % (modules, module_names(app), file_data)
                 name = "code"
                 mime = "application/javascript"
                 suffix = ".js"
             elif app['type'] == 'hive.sketch': 
                 # deal with inline base64 encoded images from Sketch app
-                data = base64.decodestring(app.get('content').get('src').split(',',1)[1])
-                name = 'sketch',
+                file_data = base64.decodestring(
+                    app.get('content').get('src').split(',',1)[1])
+                name = 'sketch'
                 mime = 'image/png'
 
-            if not data:
+            if not file_data:
                 continue
             if not ok:
                 # dependencies not visited
@@ -179,7 +205,7 @@ class Expr(ModelController):
 
             # sync files to s3
             f = os.tmpfile()
-            f.write(data)
+            f.write(file_data)
             file_res = None
             # TODO-feature-versioning goes here
             # If file exists, overwrite it
@@ -316,6 +342,7 @@ class Expr(ModelController):
         if parent.get('remix_value', 0) > tdata.user.get('moneys_sum', 0):
             return self.serve_json(tdata.response, dict(error='funds'))
         remixed = tdata.user.expr_remix(parent)
+        remixed['name'] = 'remix/' + parent['owner_name'] +'/'+ remixed['name']
         return self.serve_json(tdata.response, dict(remixed=True,
             expr_id=remixed.id, name=remixed['name']))
 
@@ -388,8 +415,9 @@ class Expr(ModelController):
         type = app.get('type')
         klass = type.replace('.', '_')
         app_id = app.get('id', 'app_' + str(app['z']))
-        link = app.get('href')
-        link_name = app.get('href_name')
+        anchor = ( app.get('anchor', {}) or
+            {'href': app.get('href'), 'name': app.get('href_name')} )
+        if not (anchor.get('href') or anchor.get('name')): anchor = None
         if type == 'hive.circle':
             type = 'hive.rectangle'
 
@@ -436,10 +464,6 @@ class Expr(ModelController):
             encoded_content = cgi.escape(app.get('content',''), quote=True)
             html = '%s' % (app.get('content',''))
         elif type == 'hive.polygon':
-            link_text = ('','')
-            if link or link_name: 
-                link_text = ("<a %s>" % anchor_tag(link, link_name, True),"</a>")
-
             points = filter(lambda point: is_number_list(point, 2)
                 ,app.get('points', []))
             # shouldn't style go into .content, not the .happ as was earlier?
@@ -456,10 +480,13 @@ class Expr(ModelController):
                 + "<filter id='%s_blur'" % app_id 
                 + " filterUnits='userSpaceOnUse'><feGaussianBlur stdDeviation='"
                 + "%f'></filter>" % app.get('blur', 0)
-                + "%s<polygon class='content' points='" % link_text[0]
-                + ' '.join(map(lambda p: "%f %f" % (p[0], p[1]), points))
-                + "' style='filter:url(#%s_blur)'/>%s</svg>" % (
-                    app_id, link_text[1])
+                + anchor_tag(
+                    anchor
+                    ,"<polygon class='content' points='"
+                        + ' '.join(map(lambda p: "%f %f" % (p[0], p[1]), points))
+                        + "' style='filter:url(#%s_blur)'/>" % app_id
+                    ,xlink=True
+                ) + "</svg>"
             )
         elif type == 'hive.code':
             ctype = app.get('code_type', 'js')
@@ -488,8 +515,7 @@ class Expr(ModelController):
             html = "<div class='content'>%s</div>" % content
 
         if type != 'hive.polygon':
-            if link or link_name:
-                html = "<a %s>%s</a>" % (anchor_tag(link, link_name), html)
+            html = anchor_tag(anchor, html)
 
         data = [prop + "=" + str(val) for (prop, val) in data]
         html = "<div class='happ %s %s loading' id='%s' style='%s'%s>%s</div>" % (
@@ -540,7 +566,7 @@ class Expr(ModelController):
                 # default click to play view
                 # params['viewport'] = '{0}x{1}'.format(*dims)
                 resp.update( html=("<iframe src='{0}' " +
-                    "width='{2}' height='{3}' allowfullscreen></iframe>"
+                    "width='{1}' height='{2}' allowfullscreen></iframe>"
                 ).format(abs_url('e/' + r.id), *dims) )
             else:
                 # linked snapshot img

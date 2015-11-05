@@ -198,11 +198,8 @@ body.mobile .user_header {
                         background-color: $color_bright_red;
                     }
                 }
-                .icon.tags {
-                    background-image: asset_url('skin/nav/collections.png');
-                    // &.on { 
-                        //background-image: asset_url('skin/nav/collections-on.png'); 
-                    // }
+                .icon.grid {
+                    background-image: asset_url('skin/nav/grid.png');
                 }
                 .icon.cats {
                     background-image: asset_url('skin/nav/collections.png');
@@ -330,14 +327,11 @@ body.mobile .user_header {
 
 .tag_list {
     .icon.plus_menu, .icon.delete, .icon.add_queue, .icon.plus_cats {
-        // display:inline-block;
-        width: 44px;
-        height: 44px;
+        display:inline-block;
+        width: 33px;
+        height: 33px;
         vertical-align: middle;
-        margin: -12px 5px 0px -16px;
-    }
-    .icon.plus_menu, .icon.plus_cats, .icon.add_queue {
-        float: left;
+        background-size: 100% 100%;
     }
 }
 .icon.plus_menu, .icon.plus_cats, .icon.add_queue {
@@ -409,9 +403,7 @@ body { // not .expr (TODO: make community class)
             color: white;
             background-color: black;
         }
-    }
-    .tag_list {
-        &.main {
+        .tag_list.main {
             text-align: center;
             max-width: 600px;
             min-width: 500px;
@@ -421,25 +413,37 @@ body { // not .expr (TODO: make community class)
                 overflow-y: auto;
                 max-height: 380px;
             }
-            .drop_box {
-                border-bottom: 1px solid black;
-                padding-bottom: 7px;
-                margin-bottom: 5px;
-                &.editable {
-                    position: relative;
-                    z-index: 0;
-                    padding: 7px;
-                    border: 4px dashed $color_selected;
-                    min-height: 39px;
-                    margin-bottom: 10px;
-                    // background-color: #DDD;
+
+            .extra.handle {
+                width: 12px;
+                cursor: default;
+                .closed { display: block; }
+                .open { display: none; }
+            }
+            .extra_box { display: none; }
+            &.extra_open {
+                .extra_box { display: block; }
+                .extra.handle {
+                    height: 31px;
+                    margin-bottom: -7px;
+                    border-bottom: 0;
+                    .open { display: block; }
+                    .closed { display: none; }
                 }
-                .layered {
-                    position:absolute;
-                    top:0; bottom:0; right:0; left:0;
-                    z-index: -1;
-                    // background-color: $color_light_blue;
-                    div { padding: 15px; }
+                .drop_box {
+                    border-bottom: 1px solid black;
+                    padding-bottom: 7px;
+                    margin-bottom: 5px;
+                    &.editable {
+                        position: relative;
+                        z-index: 0;
+                    }
+                    .layered {
+                        position:absolute;
+                        top:0; bottom:0; right:0; left:0;
+                        z-index: -1;
+                        div { padding: 15px; }
+                    }
                 }
             }
         }
@@ -819,7 +823,7 @@ body { // not .expr (TODO: make community class)
     height: 400px;
 }
 
-.tag_label {
+.tag_label, .tag_btn {
     display: inline-block;
     // border-top: 1px solid black;
     // border-left: 1px solid black;

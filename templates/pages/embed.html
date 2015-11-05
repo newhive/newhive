@@ -5,6 +5,7 @@
 {% endblock meta %}
 {% block head %}
   <style>
+
 body, html, #exprs { width:100%; height:100%; margin:0; }
 body { overflow:hidden; }
 iframe, svg { border:none; width:100%; height:100%; z-index:0; }
@@ -15,36 +16,58 @@ iframe, svg { border:none; width:100%; height:100%; z-index:0; }
 .hover,.hover path { transition-property:background-color fill stroke;
   transition-duration:1s; }
 .hover.bw:hover path { fill:white; }
-.hover.bw:hover > * { background-color:black; }
-.hover.wb:hover path, .hover.wb.hovered path { stroke:white; fill:black; }
+.page_btn:hover path { stroke:white; }
+.hover.bw:hover > *, .page_btn:hover > * { background-color:black; }
+#play_btn:hover path, #play_btn.b.hovered path { stroke:black; fill:white; }
 
 .snapshot { width:100%; position:fixed; }
 #play_btn { position:fixed; width:30%; height:30%; margin:auto;
   top:0;right:0;bottom:0;left:0; opacity:.85; }
 
+
+#overlays > *, .bbar { position:fixed; z-index:1; }
+.shades { transition-property:opacity; transition-duration:1s;
+  opacity:0; z-index:1; }
+.shades.shaded, .shades:hover { opacity:1; }
+
+.hoverarea { width:20%; height:100%; }
+.left { left:0 }
+.right { right:0 }
+.page_btn {
+  top:50%;
+  margin-top:-36px;
+  background-color:white;
+  width:60px; height:72px;
+}
+
 #bbar .icon.logo { width:50%; }
 #bbar .icon.logo svg { width:60px; }
 
-.bbar { position:fixed; bottom:0; height:60px; width:100%; }
-#bbar { transition-property:opacity; transition-duration:1s;
-  opacity:0; z-index:1; }
-#bbar:hover, #bbar.shaded { opacity: 1; }
+.bbar { bottom:0; height:60px; width:100%; }
 #bbar .shader { background-color:#fff; opacity:.85; }
 #bbar .icon { height:60px; width:60px; }
 #bbar img { width:40px; padding:10px; }
 #bbar .right { position:absolute; display:inline-block;
   right:0;top:0; height:100%; }
 
+
 #preview { z-index:0; }
   </style>
 {% endblock head %}
 {% block body %}
   <div id='overlays'>
-    <div class='bbar' id='bbar'>
+    <div id='hover_left' class='hoverarea left'></div>
+    <div id='hover_right' class='hoverarea right'></div>
+    <div id='page_left' class='overlay left page_btn page_prev hover shades'
+      >{% include 'lib/skin/nav/page_left.svg' %}</div>
+    <div id='page_right' class='overlay right page_btn page_next hover shades'
+      >{% include 'lib/skin/nav/page_right.svg' %}</div>
+
+    <div class='bbar shades' id='bbar'>
       <div class='bbar shader' id='shader'></div>
       <div class='bbar'>
         <a href='{{ expr.url }}' class='icon logo hover bw'
-          title='view on NewHive'
+          title='view in NewHive'
           target='_new'>{% include 'lib/skin/nav/logo.svg' %}</a>
         <div class='right'
           ><a id='full' class='icon hover bw' title='full screen'
@@ -58,8 +81,8 @@ iframe, svg { border:none; width:100%; height:100%; z-index:0; }
               id='owner' src='{{ expr.owner.get_thumb(70) }}'></a></div>
       </div> 
     </div>
-    <div id='site'></div>
-    {#
+
+    {# keeping it simple; sharing is done from newhive.com view
     <div id='share' class='hide center'
       ><a href='https://twitter.com/share?url={{ expr.url }}&related=NewHive&text={{ ("\""+expr.title+"\" by "+expr.owner.fullname)|e }}' target='_new' title='Share on twitter'><div class='icon hinv'><img src='{{ "skin/nav/twitter.svg"|asset_url }}'></div></a
       ><a href='https://www.facebook.com/sharer/sharer.php?u={{ expr.url|e }}'target='_new' title='Share on facebook'><div class='icon hinv'><img src='{{ "skin/nav/fb-f.svg"|asset_url }}'></div></a
@@ -73,7 +96,7 @@ iframe, svg { border:none; width:100%; height:100%; z-index:0; }
   </div>
 
   <div id='exprs'>
-    <iframe id='expr_{{ expr.id }}' data-src='{{ content_url }}'
+    <iframe id='{{ expr.id }}' data-src='{{ content_url }}'
       {% if query.autoplay %}
         src='{{ content_url }}'
         class='expr'
@@ -81,38 +104,46 @@ iframe, svg { border:none; width:100%; height:100%; z-index:0; }
         class='expr hide'
       {% endif %}
       allowfullscreen></iframe>
+
     <div id='preview' class='{% if query.autoplay %}hide{% endif %}'>
       <img src='{{ expr.snapshot_name('big') }}' class='snapshot center'>
-      <div id='play_btn' class='hover wb icon'
+      <div id='play_btn' class='hover b icon'
         >{% include 'lib/skin/nav/newhive-play.svg' %}</span>
     </div>
   </div>
   <script>
 
 var preview = document.getElementById('preview')
-   ,f = document.getElementById('expr_' + {{ expr.id|json }})
+   ,frame_el = document.getElementById({{ expr.id|json }})
+   ,cards = {{ cards|json }}
+   ,at_card = {{ at_card|json }}
+   ,collection = {{ collection|json }}
    ,bbar = document.getElementById('bbar')
    ,pause = document.getElementById('pause')
    ,full = document.getElementById('full')
    ,play_btn = document.getElementById('play_btn')
+   ,hover_left = document.getElementById('hover_left')
+   ,hover_right = document.getElementById('hover_right')
+   ,page_left = document.getElementById('page_left')
+   ,page_right = document.getElementById('page_right')
    // ,share = document.getElementById('share')
    // ,link = document.getElementById('link')
    // ,link_btn = document.getElementById('link_btn')
 
 function play(){
     preview.classList.add('hide')
-    f.setAttribute('src', f.getAttribute('data-src'))
-    f.classList.remove('hide')
+    frame_el.setAttribute('src', frame_el.getAttribute('data-src'))
+    frame_el.classList.remove('hide')
     bbar.classList.add('shaded')
     pause.classList.remove('hide')
     setTimeout(function(){ bbar.classList.remove('shaded') }, 500)
 }
 preview.onclick = play
 pause.onclick = function(){
-    f.classList.add('hide')
+    frame_el.classList.add('hide')
     preview.classList.remove('hide')
     pause.classList.add('hide')
-    f.setAttribute('src', '');
+    frame_el.setAttribute('src', '');
     ( document.webkitExitFullscreen || document.mozExitFullScreen ||
       document.exitFullscreen ).call(document)
 }
@@ -128,13 +159,25 @@ full.onclick = function(){
     var b = document.body;
     ( b.webkitRequestFullscreen || b.mozRequestFullScreen ||
       b.requestFullscreen ).call(b)
-    if(Array.prototype.indexOf.call(f.classList, 'hide') != -1) play()
+    if(Array.prototype.indexOf.call(frame_el.classList, 'hide') != -1) play()
 }
 
-window.onmousewheel = function(){
-    document.querySelector('#overlays').classList.add('hide')
+function side_hover_over(handle, obj){
+    handle.classList.add('hide')
+    obj.classList.add('shaded')
     setTimeout(function(){
-      document.querySelector('#overlays').classList.remove('hide') }, 2000)
+        handle.classList.remove('hide')
+        obj.classList.remove('shaded')
+    }, 2000)
+}
+hover_left.onmouseover = function(){ side_hover_over(hover_left, page_left) }
+hover_right.onmouseover = function(){ side_hover_over(hover_right, page_right) }
+
+window.onmousewheel = function(){
+    document.getElementById('overlays').classList.add('hide')
+    setTimeout(function(){
+      document.getElementById('overlays').classList.remove('hide')
+    }, 2000)
 }
 
 {#

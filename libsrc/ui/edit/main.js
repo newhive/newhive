@@ -1,7 +1,7 @@
 /* Copyright 2010, A Reflection Of Inc */
 // thenewhive.com client-side expression editor version 0.1
 define([
-    'browser/jquery'
+    'jquery'
     ,'browser/js'
 
     ,'ui/menu'
@@ -22,9 +22,9 @@ define([
     ,'./text'
     ,'./history'
 
-    ,'browser/jquery/jplayer/skin'
-    ,'browser/jquery/rotate.js'
-    ,'js!browser/jquery/event/drag.js'
+    ,'jquery/jplayer/skin'
+    ,'jquery/rotate.js'
+    ,'js!jquery/event/drag.js'
 ], function(
     $
     ,js

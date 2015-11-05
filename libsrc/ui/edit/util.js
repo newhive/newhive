@@ -1,5 +1,5 @@
 define([
-    'browser/jquery'
+    'jquery'
     ,'browser/js'
     
     ,'context'
@@ -426,6 +426,13 @@ o.polygon = function(sides){
         var a = i == 0 ? 0 : Math.PI * 2 / i
         return [Math.cos(a), Math.sin(a)]
     })
+}
+
+o.attrs = function(node){
+    var atts = {}
+    $.each(node.attributes, function(i,e){
+        atts[e.nodeName] = e.nodeValue })
+    return Object.keys(atts).length ? atts : false
 }
 
 //// BEGIN-editor-refactor belongs in editor specific utils

@@ -1,4 +1,4 @@
-define(['browser/jquery', 'ui/util'], function($, util) {
+define(['jquery', 'ui/util'], function($, util) {
     var o = {};
 
     // Fetch expensive resources for objects which are on-screen

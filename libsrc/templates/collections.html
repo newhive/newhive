@@ -1,20 +1,11 @@
 {# UI for collections
   requires: logged in
-  
-  categories: true to list categories instead of collections
-  #}
+#}
 
-{<if categories}
-  {set "tag_type" "Category"}
-  {set "extra_classes" " categories"}
-  {set "tag_list" user.cat_list}
-  {set "extra_tags" user.extra_cats}
-{>}{<else}
-  {set "tag_type" "Collection"}
-  {set "extra_classes" " collections"}
-  {set "tag_list" user.tag_list}
-  {set "extra_tags" user.extra_tags}
-{>}
+{set "tag_type" "Collection"}
+{set "extra_classes" " collections"}
+{set "tag_list" user.tag_list}
+{set "extra_tags" user.extra_tags}
 
 <div class="standard dialog add_to_collection{extra_classes}">
 <form {form_attrs "add_to_collection" "owner_name" user.name} method='post'>
@@ -34,8 +25,6 @@
   {# Tag list #}
   {<with null "tag_list" user.tagged "extra_classes" "dia_tags" "expanded" true
     "suppress_link" true "blank_tag" true "tag_selected" null
-    "extra_tags" extra_tags "tag_list" tag_list }
-    {|templates/tags_main.html}
-  {>}
+  }{|templates/tags_main.html}{>}
 
 </form></div>

@@ -1,8 +1,8 @@
 // jPlayer shenanigans
 define([
-    'browser/jquery',
+    'jquery',
     'ui/util',
-    'browser/jquery/jplayer/skin.js'
+    'jquery/jplayer/skin.js'
 ], function($, util, skin){
 
 init_jplayer = function(){

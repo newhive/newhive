@@ -6,7 +6,7 @@ define(['curl'], function(curl){
         packages: {
             'curl': 'curl'
         },
-        excludes: ['browser/jquery']
+        excludes: ['jquery']
     });
     curl(['ui/edit/main']);
 });

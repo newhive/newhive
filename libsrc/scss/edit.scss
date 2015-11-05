@@ -88,7 +88,8 @@ background-color: lightgrey;
     }
 }
 #menu_embed {
-    width:250px; height: 285px;
+    width:250px; height: 165px;
+    &.tall { height: 285px; }
     .embed_box {
         margin: 4px 0;
         width: 250px;
@@ -328,6 +329,7 @@ background-color: lightgrey;
     .icon {
         display: inline-block;
         width: 59px;
+        height: 44px;
         background-size: 59px 44px;
     }
 

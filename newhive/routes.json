@@ -57,7 +57,7 @@
 
     ,"home": {
         "page_route": "/"
-        ,"api_route": "/api/feed/featured/"
+        ,"api_route": "/api/feed/featured"
         ,"controller": "community"
         ,"method": "hive_featured"
         ,"client_method": "home"
@@ -85,7 +85,7 @@
         ,"include_categories": true
     }
     ,"network": {
-        "page_route": "/<username>:<any(Recent):special>"
+        "page_route": "/<username>/profile/recent"
         ,"api_route": "/api/feed/recent/<username>"
         ,"controller": "community"
         ,"method": "network_recent"
@@ -96,15 +96,6 @@
         ,"precedence": 1
     }
 
-    ,"featured": {
-        "page_route": "/home/featured"
-        ,"api_route": "/api/feed/featured"
-        ,"controller": "community"
-        ,"method": "featured"
-        ,"client_method": "profile"
-        ,"body_class": "nav"
-        ,"require_login": true
-    }
     ,"recent": {
         "page_route": "/home/recent"
        ,"api_route": "/api/feed/recent"
@@ -141,7 +132,7 @@
        ,"method": "my_home"
     }
    ,"following": {
-        "page_route": "/<owner_name>:<any(Following):special>"
+        "page_route": "/<owner_name>/profile/following"
        ,"api_route": "/api/feed/following/<owner_name>"
        ,"controller": "community"
        ,"method": "following"
@@ -149,7 +140,7 @@
        ,"precedence": 1
     }
    ,"followers": {
-        "page_route": "/<owner_name>:<any(Followers):special>"
+        "page_route": "/<owner_name>/profile/followers"
        ,"api_route": "/api/feed/followers/<owner_name>"
        ,"controller": "community"
        ,"method": "followers"
@@ -157,7 +148,7 @@
        ,"precedence": 1
     }
    ,"loves": {
-        "page_route": "/<owner_name>:<any(Love):special>"
+        "page_route": "/<owner_name>/profile/loves"
        ,"api_route": "/api/feed/loves/<owner_name>"
        ,"controller": "community"
        ,"method": "loves"
@@ -171,7 +162,7 @@
        ,"method": "profile_redirect"
     }
    ,"expressions_feed": {
-        "page_route": "/<owner_name>:<any(Feed):special>"
+        "page_route": "/<owner_name>/profile/feed"
        ,"api_route": "/api/profile/all/<owner_name>"
        ,"controller": "community"
        ,"method": "expressions_feed"
@@ -180,7 +171,7 @@
        ,"precedence": 1
     }
    ,"expressions_all": {
-        "page_route": "/<owner_name>:<any(All):special>"
+        "page_route": "/<owner_name>/profile/all"
        ,"api_route": "/api/profile/tag/<owner_name>"
        ,"controller": "community"
        ,"method": "expressions_tag"
@@ -189,7 +180,7 @@
        ,"precedence": 1
     }
    ,"expressions_unlisted": {
-        "page_route": "/<owner_name>:<any(Unlisted):special>"
+        "page_route": "/<owner_name>/profile/unlisted"
        ,"api_route": "/api/profile/private/<owner_name>"
        ,"controller": "community"
        ,"method": "expressions_unlisted"
@@ -204,7 +195,7 @@
         ,"method": "user_tag_redirect"
     }
    ,"expressions_tag": {
-        "page_route": "/<owner_name>:<tag_name>"
+        "page_route": "/<owner_name>/collection/<tag_name>"
        ,"api_route": "/api/profile/tag/<owner_name>/<tag_name>"
        ,"controller": "community"
        ,"method": "expressions_tag"
@@ -213,7 +204,7 @@
        ,"include_tags": true
     }
    ,"expressions_tag_private": {
-        "page_route": "/<owner_name>:<tag_name>/<entropy>"
+        "page_route": "/<owner_name>/collection/<tag_name>/<entropy>"
        ,"api_route": "/api/profile/tag/<owner_name>/<tag_name>/<entropy>"
        ,"controller": "community"
        ,"method": "expressions_tag"
@@ -546,7 +537,7 @@
         "api_route": "/api/admin/query",
         "controller": "community",
         "method": "admin_query",
-        "client_method": "profile",
+        "client_method": "grid",
         "require_login": true
     },
     "version": {
