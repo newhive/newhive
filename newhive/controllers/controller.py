@@ -79,6 +79,9 @@ class Controller(object):
             tdata.context['error']['login'] = True
         tdata.context.update(beta_tester=
             config.debug_mode or tdata.user.get('name') in config.beta_testers)
+        # set 15 minute cache for all logged out requests
+        if not tdata.user.logged_in:
+            tdata.response.headers.add('Cache-Control', 'max-age=180')
 
         # Find flags appropriate to current user
         flags = deepcopy(config.site_flags)

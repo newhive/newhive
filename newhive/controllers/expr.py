@@ -14,7 +14,7 @@ def anchor_tag(attrs, content, xlink=False):
         attrs['xlink:href'] = attrs['href']
         del attrs['href']
     return ('<a ' +' '.join([k +"='"+ v.replace("'",'&#39;') +"'"
-        for k,v in attrs.items()]) +'>'+ content +'</a>')
+        for k,v in attrs.items() if v]) +'>'+ content +'</a>')
 
 class Expr(ModelController):
     model_name = 'Expr'
