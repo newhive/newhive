@@ -216,7 +216,6 @@ def flatten(obj):
             vals.append((obj, path))
     rec(obj, ())
     return vals
->>>>>>> bb52a170a92677fcb127d05bc23ae155e3321a85
 ### END data_tools ###
 
 ### BEGIN datetime_tools ###
