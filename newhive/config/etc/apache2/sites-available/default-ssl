@@ -27,6 +27,12 @@ NameVirtualHost *:443
 
     Alias /allmymovies /var/www/newhive/lib/allmymovies
     Alias /5640b9655ccacf21611599b3 /var/www/newhive/lib/5640b9655ccacf21611599b3
+    <Location /allmymovies>
+        Header set Content-Type "text/html; charset=utf-8"
+    </Location>
+    <Location /5640b9655ccacf21611599b3>
+        Header set Content-Type "text/html; charset=utf-8"
+    </Location>
 </VirtualHost>
 <VirtualHost _default_:443>
     ServerName newhive.com
@@ -57,5 +63,11 @@ NameVirtualHost *:443
 
     Alias /allmymovies /var/www/newhive/lib/allmymovies
     Alias /5640b9655ccacf21611599b3 /var/www/newhive/lib/5640b9655ccacf21611599b3
+    <Location /allmymovies>
+        Header set Content-Type "text/html; charset=utf-8"
+    </Location>
+    <Location /5640b9655ccacf21611599b3>
+        Header set Content-Type "text/html; charset=utf-8"
+    </Location>
 </VirtualHost>
 </IfModule>
