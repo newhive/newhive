@@ -8,4 +8,7 @@
         AddType application/vnd.ms-fontobject .eot
         AddType application/x-font-woff .woff
     </Location>
+
+    Alias /allmymovies /var/www/newhive/lib/allmymovies
+    Alias /5640b9655ccacf21611599b3 /var/www/newhive/lib/5640b9655ccacf21611599b3
 </VirtualHost>
