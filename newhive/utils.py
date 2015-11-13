@@ -176,6 +176,46 @@ def flatprint(obj):
     flat = flatten(obj)
     for k,v in flat:
         print '.'.join(map(str, k)) + ': ' + str(v)
+
+def dcast(d, type_schemas, filter=True):
+    """ Accepts a dictionary d, and type_schemas -- a list of tuples in these forms:
+            (dictionary_key, type_to) :: (str, type)
+            (dictionary_key, type_to, required) :: (str, type, bool)
+        For each tuple in type_schemas, dcast coerces the dictionary_key in d to the type_to
+            If type_to is None, no coercion is performed
+            If required is True, an exception is thrown if dictionary_key is not in d
+            In the case of a 2 tuple, no exception is thrown
+        returns new dictionary only containing keys found in type_schemas if filter is True
+            otherwise return a copy of d with the keys found in type_schemas coerced
+        throws ValueError
+    """
+    out = {} if filter else dict(d)
+    for schema in type_schemas:
+        key = schema[0]
+        type_to = schema[1]
+        required = lget(schema, 2, False)
+
+        if key in d: out[key] = type_to(d[key]) if type_to else d[key]
+        elif required: raise ValueError('key %s missing in dict' % (key))
+    return out
+
+def flatten(obj):
+    """ flattens a nested data structure into a list of (value, path) tuples """
+    vals = []
+    def rec(obj, path):
+        def append(k, v):
+            new_path = path + (k,)
+            if hasattr(v, '__iter__'): rec(v, new_path)
+            else: vals.append((v, new_path))
+        try:
+            if hasattr(obj, 'iteritems'):
+                for k,v in obj.iteritems(): append(k,v)
+            else:
+                for k,v in enumerate(obj): append(k,v)
+        except:
+            vals.append((obj, path))
+    rec(obj, ())
+    return vals
 ### END data_tools ###
 
 ### BEGIN datetime_tools ###
