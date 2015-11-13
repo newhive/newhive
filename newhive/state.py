@@ -55,7 +55,8 @@ class Database:
 
         print('getting db connection')
         self.con = pymongo.MongoClient(host=config.database_host,
-            port=config.database_port, max_pool_size=10)
+            port=config.database_port,
+            max_pool_size=20, waitQueueTimeoutMS=3000)
         self.mdb = self.con[config.database]
 
         self.s3 = S3Interface(config)
