@@ -53,8 +53,9 @@ class Database:
     def __init__(self, config=None, assets=None):
         config = self.config = (config if config else newhive.config)
 
+        print('getting db connection')
         self.con = pymongo.MongoClient(host=config.database_host,
-            port=config.database_port)
+            port=config.database_port, max_pool_size=10)
         self.mdb = self.con[config.database]
 
         self.s3 = S3Interface(config)
