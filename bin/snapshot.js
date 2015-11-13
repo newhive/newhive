@@ -3,11 +3,12 @@ var page = require('webpage').create(),
 
 page.onLoadFinished = function(){
     page.evaluate(function(){
-        setTimeout(function(){ console.log('rendering') }, 6000)
+        setTimeout(function(){ console.log('rendering') }, 10000)
     })
 }
 page.onConsoleMessage = function(v){
     console.log(v)
+    if(v !== 'rendering') return
     page.render(sys.args[2])
     console.log('done')
     phantom.exit(0)

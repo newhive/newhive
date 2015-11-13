@@ -110,7 +110,7 @@ def test_snapshot():
     for expr_id in expr_ids:
         expr = db.Expr.fetch(expr_id)
         print "snapshotting %s" % expr_id
-        expr.take_snapshots()
+        expr.take_snapshot()
         # take_snapshot(expr)
         # print upload_snapshot_to_s3(expr,thumb_bucket)
         

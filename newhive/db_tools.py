@@ -132,7 +132,7 @@ def snapshot_reset(exprs, run_local=False):
         exprs = db.Expr.fetch(exprs)
     for r in exprs:
         if run_local:
-            r.take_snapshots()
+            r.take_snapshot()
         else:
             r.update(updated=False, snapshot_fails=0)
 
@@ -141,5 +141,5 @@ def snapshot_redo_collection(username='zach', redo=False, collection='brokensnap
     for a in range(retry):
         for r in rs:
             if redo or r.get('snapshot_time', 0) < r.get('updated'):
-                r.take_snapshots()
+                r.take_snapshot()
 ### END snapshot_wrangling ###
