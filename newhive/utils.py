@@ -1,5 +1,5 @@
 from __future__ import division
-import time, random, re, base64, copy, pytz, copy #, pandas
+import time, random, re, base64, copy, copy #, pandas, pytz
 from datetime import datetime
 import urlparse
 import werkzeug.urls
