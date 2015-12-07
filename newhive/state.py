@@ -2074,17 +2074,17 @@ class Expr(HasSocial):
             'remix_lineage', 'layout_coord' ])
         expr['type'] = "expr"
         expr.update(
-            tags=self.get('tags_index')
-            ,id=self.id
-            ,thumb=self.get_thumb()
+             id=self.id
             ,owner=self.owner.client_view(viewer=viewer)
-            ,counts=counts
+            ,tags=self.get('tags_index')
+            ,thumb=self.get_thumb()
             ,url=self.url
             ,title=self.get('title')
+            ,dimensions=self.dimensions
+            ,layout_coord=self.layout_coord
+            ,clip=self.clip
             ,remix_count=len(self.remixes)
-            # ,dimensions=self.dimensions
-            # ,layout_coord=self.layout_coord
-            # ,clip=self.clip
+            ,counts=counts
         )
 
         if self.remix_parent:
@@ -2146,6 +2146,8 @@ class Expr(HasSocial):
 
     @property
     def dimensions(self):
+        return self.get('dimensions', self.calc_dimensions())
+    def calc_dimensions(self):
         dims = [0,0]
         dims[self.layout_coord] = 1000
         for a in self.get('apps', []):
