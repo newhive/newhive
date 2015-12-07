@@ -4,7 +4,7 @@ server_name     = 'dev.newhive.com'
 content_domain  = 'dev.tnh.me'
 
 # TODO-dev-security: move credentials into non-version-controlled file
-database_host = 'mongodb://dev:2GlebTyo@dev.newhive.com/test'
+database_host = 'mongodb://dev:2GlebTyo@staging.newhive.com/test'
 database      = 'test'
 
 snapshot_async = False
