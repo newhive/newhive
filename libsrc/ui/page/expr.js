@@ -431,9 +431,10 @@ define([
             contentFrame = o.cache_frames([expr_id], true);
         else
             o.expr_show(contentFrame)
-        if(util.mobile()){
+        if(util.mobile()) contentFrame.on('load', function(){
             // IOS scrolling bug workaround
-            // resize content frame to match sandboxed contents
+            // resize body to match content frame
+            if(contentFrame.height() <= document.body.offsetHeight) return
             var win_dims = [$(window).width(), $(window).height()]
                 ,scale = win_dims[o.expr.layout_coord] * .001
                 ,props = ['width', 'height']
@@ -441,7 +442,7 @@ define([
             $(document.body).css(props[0], '100%')
             $(document.body).css(props[1],
                 (scale * o.expr.dimensions[o.expr.layout_coord ? 0 : 1]))
-        }
+        })
         contentFrame.addClass('expr_visible').removeClass('expr_hidden').showshow()
         $('#exprs .expr').not('.expr_visible').css({'z-index': 0 });
         var found = (o.next_found != -1) ? o.next_found : get_found();
