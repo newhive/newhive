@@ -401,7 +401,7 @@ define([
                 form.trigger('with_files', 
                     [upload.unwrap_file_list(el.files), file_list]);
                 // believe this was required on older browser versions
-                try { el.files = file_list; }
+                try { el.files = file_list } catch(e){}
                 submit_form(form);
                 input.val('');
             });
