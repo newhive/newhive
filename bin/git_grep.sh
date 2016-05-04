@@ -5,7 +5,7 @@
 filter_broken="/fonts/|/curl|google_closure.js|/d3/|codemirror.js|/codemirror/|/browser/jquery|mobile/[pt]|mobile/app/[^w]|zepto-"
 
 function open_file {
-    (which e > /dev/null) && e $* || $EDITOR $*
+    (which e > /dev/null) && e $@ || $EDITOR $@
 }
 alias grep_cmd="grep -E"
 # TODO: comment me
@@ -36,7 +36,7 @@ function git_grep {(
         # echo "git ls-files \"$path_match\" | grep_cmd $case_flag $* > ~/.efffiles"
     else
         if [ -n "$path_match" ]; then path_match="-- $path_match"; fi
-        git grep $case_flag -n --no-color $* $path_match > ~/.efffiles
+        git grep $case_flag -n --no-color $* $path_match | perl -pe 's/^(.*?:\d+):/$1 /' > ~/.efffiles
         if [ $filter_broken ]; then
             grep_cmd -v $filter_broken ~/.efffiles > ~/.efffiles_temp
             mv -f ~/.efffiles_temp ~/.efffiles
