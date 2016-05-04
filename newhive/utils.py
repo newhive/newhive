@@ -524,10 +524,10 @@ def rm_cookie(response, name, domain=None):
     response.delete_cookie(name, domain=domain)
 
 
-#def local_date(offset=0):
-#    tz = pytz.timezone('US/Pacific')
-#    dt = datetime.now(tz)
-#    return dt.date() + pandas.DateOffset(days=offset)
+def local_date(offset=0):
+    tz = pytz.timezone('US/Pacific')
+    dt = datetime.now(tz)
+    return dt.date() + pandas.DateOffset(days=offset)
 
 
 def dates_to_spec(start, end=None, offset=None):
