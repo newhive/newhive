@@ -840,6 +840,7 @@ o.snap_helper = function(my_tuple, opts) {
         guide_0: true,          // show horizontal guide
         guide_1: true,          // show vertical guide
     }, opts );
+    if(!opts.padding) return
     var s = env.scale(),
         exclude_ids = opts.exclude_ids,
         snap_strength = opts.snap_strength,

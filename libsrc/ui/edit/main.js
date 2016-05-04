@@ -60,18 +60,6 @@ Hive.env = env;
 Hive.app = hive_app;
 env.main = Hive
 
-Hive.grid = false;
-Hive.toggle_grid = function() {
-    Hive.grid = ! Hive.grid;
-    var e = $('#btn_grid').get(0);
-    e.src = e.src_d = asset('skin/edit/grid-' + (Hive.grid ? 'on' : 'off') + '.png');
-    $('#grid_guide').css(Hive.grid ?
-          { 'background-image' : "url('" + asset('skin/edit/grid_square.png') + "')",
-              'background-repeat' : 'repeat' }
-        : { 'background-image' : '' }
-    );
-};
-
 Hive.help_selection = function (start) {
     start = ui_util.defalt(start, true)
     var $elems = $("body #happs .happ, #controls .control.buttons > *, .app_btns > *")
@@ -145,16 +133,26 @@ Hive.help_selection = function (start) {
     })
 }
 
+var _grid = false
+Hive.grid_toggle = function() {
+    _grid = ! _grid
+    $('.grid_btn.off').showhide(!_grid)
+    $('.grid_btn.on').showhide(_grid)
+    $('#grid_guide rect')[0].classList[_grid ? 'remove' : 'add']('hide')
+}
+
 Hive.init_menus = function() {
     if (context.flags.context_help) {
         $("#btn_help").bind_once_anon("click", function(ev) {
             Hive.help_selection()
         })
     }
+
     hive_app.App.has_slider_menu(null, ""
         ,env.padding_set, env.padding, null, null
         ,{ min: 0, max: 30, quant: 1
-        , handle:$(".icon.change_padding"), container:$("#dynamic_group")
+        , handle:$('.menu_item.change_padding'), container:$('#dynamic_group')
+        , css_class: 'padding_menu'
         , menu_opts: { 
             layout_x: "submenu"
             ,layout: "left"
@@ -162,6 +160,25 @@ Hive.init_menus = function() {
             ,auto_height: false 
         }
     }).controls()
+
+    $('.grid_btn').click(Hive.grid_toggle);
+    hive_app.App.has_slider_menu(null, ""
+        ,function(s){
+            if(!_grid) Hive.grid_toggle()
+            env.grid_set(s)
+        }
+        ,env.grid, null, null
+        ,{ min: 5, max: 100, quant: 1
+        , handle:$('.menu_item.change_grid'), container:$("#dynamic_group")
+        , css_class: 'grid_menu'
+        , menu_opts: { 
+            layout_x: "submenu"
+            ,layout: "left"
+            ,group: $(".misc.handle").data("menu")
+            ,auto_height: false 
+        }
+    }).controls()
+
     $('#text_default').click(function(e) {
         hive_app.new_app({ type : 'hive.text', content : '' });
     });
@@ -345,7 +362,6 @@ Hive.init_menus = function() {
 
     u.hover_menu('.insert_file', '#menu_file');
 
-    $('#btn_grid').click(Hive.toggle_grid);
 
     $('#media_upload').on('with_files', function(ev, files, file_list){
         // media files are available immediately upon selection
@@ -528,6 +544,7 @@ Hive.init = function(exp, site_context, _revert){
     // Hive.edit_page = page;
     if(!exp.auth) exp.auth = 'public'
     env.scale_set()
+    env.layout_coord = Hive.Exp.layout_coord || 0
 
     $.extend(context, site_context)
     Hive.context = context

@@ -37,14 +37,15 @@
 
 <div class='menu drawer medbold misc_menu hide' data-handle=".handle.misc" 
   data-menu-opts='"layout_x":"center"'>
-  {#<div class='menu_item'>
-    <img id='btn_grid' title="Show grid" src='{asset "skin/edit/grid-off.png"}'>
-  </div>#}
   <div class='menu_item change_zoom icon hoverable'>
     <img title='Zoom' class='hoverable' src='{asset "skin/1/zoom.png"}'>
   </div>
   <div class='menu_item change_padding icon hoverable'>
-    <img title='Universal snapping / padding' class='' src='{asset "skin/edit/padding.png"}'>
+    <img title='object snap space' class='grid_btn' src='{asset "skin/edit/padding.png"}'>
+  </div>
+  <div class='menu_item change_grid default default'>
+    <img title="grid size" class='grid_btn off' src='{asset "skin/edit/grid-off.png"}'>
+    <img title="grid size" class='grid_btn on hide' src='{asset "skin/edit/grid-on.png"}'>
   </div>
 </div>
 <div class="dialog iframe" id="dia_editor_help" data-handle="#btn_help">
@@ -430,7 +431,15 @@
 {# <iframe id="overlay_frame" src="http://google.com"></iframe> #}
 <div id='controls'></div>
 <div id='happs'><div id='bg' class='happfill'><img src='{expr.background.url}'
-  class='hide'><div id='grid_guide'></div></div></div>
+  class='hide'>```<svg id='grid_guide' viewBox='0 0 1000 1000'>
+    <style>* { stroke-width:2; stroke:rgb(220,240,240); }</style>
+    <defs><pattern id='b' x='0' y='0' width='20' height='20'
+      patternUnits='userSpaceOnUse'>
+        <line class='h' x1='0' y1='0' x2='20' y2='0'/>
+        <line class='v' x1='0' y1='0' x2='0' y2='20'/>
+    </pattern></defs>
+    <rect x='0' y='0' width='1000' height='100%' fill='url(#b)' class='hide'/>
+</svg>```</div></div>
 
 <form {form_attrs "file_create"} method='POST' id='media_upload' class='hide'>
   <input readonly type='file' id='media_input' name='files'
