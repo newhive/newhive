@@ -687,7 +687,7 @@ env.embed_code = Hive._embed_code = function(c) {
         };
         var callback = function(data) {
             if( data.error ){
-                if(m = c.match(/^https?:\/\/(.*)(jpg|jpeg|png|gif)$/i)){
+                if(m = c.match(/^https?:\/\/(.*)(jpg|jpeg|png|gif|svg)$/i)){
                     app = { type : 'hive.image', content : c }
                     hive_app.new_app(app);
                 } else {
