@@ -55,8 +55,7 @@ class Database:
 
         print('getting db connection')
         self.con = pymongo.MongoClient(host=config.database_host,
-            port=config.database_port,
-            max_pool_size=20, waitQueueTimeoutMS=3000)
+            port=config.database_port, max_pool_size=20)
         self.mdb = self.con[config.database]
 
         self.s3 = S3Interface(config)
@@ -1745,7 +1744,7 @@ class Expr(HasSocial):
         if self.db.s3.file_exists('thumb', name):
             return True
         # This would be cleaner with file pipes instead of filesystem.
-        local = '/tmp/' + name
+        local = joinpath('/tmp', name)
         r = snapshotter.take_snapshot(self.id, out_filename=local, full_page=True)
         if not r:
             print 'FAIL'
@@ -1766,9 +1765,8 @@ class Expr(HasSocial):
         r = snapshotter.take_snapshot(self.id, dimensions=(w,h),
             out_filename=filename,
             password=self.get('password', ''))
-        if not r:
-            return False
-        self.save_snapshot(filename, correct_size=True)
+        if r:
+	    self.save_snapshot(filename, correct_size=True)
         # clean up local file
         call(["rm", filename])
 
