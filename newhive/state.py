@@ -2215,6 +2215,10 @@ def generate_thumb(file, size, format=None):
 class File(Entity):
     cname = 'file'
     _file = None #temporary fd
+    indexes = [
+         'updated'
+        ,'resample_time'
+    ]
 
     IMAGE, UNKNOWN = range(2)
 
