@@ -51,9 +51,9 @@ alias nhRoutes='e $(groot)/newhive/routes.json'
 alias nhconfig='e $(groot)/newhive/config/config.py'
 alias nhconfigcommon='e $(groot)/newhive/config/config_common.py'
 
-alias nhREPL='nhcd; ipython -i bin/server_examples.py'
+alias nhrepl='nhcd; ipython -i bin/server_examples.py'
 alias nhkilldev='psk server.py'
-alias nhresetdev='nhcd; nhkilldev; nhstartdev'
+alias nhRESETdev='nhcd; nhkilldev; nhstartdev'
 alias nhlogproduction='less +F /var/log/apache2/error.log'
 alias nhShellHelpers='e `groot`/bin/shell_helpers.sh'
 
