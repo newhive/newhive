@@ -243,7 +243,7 @@ define([
     }
     var fixup_overlay = function() {
         // Fix styling for this route
-        $('#logo').toggleClass('on', context.route_name == 'home_cat')
+        //$('#logo').toggleClass('on', context.route_name == 'home_cat')
         $(".main-header .network_nav .item").removeClass("black_btn")
         $(".main-header .network_nav .item." + context.route_name)
             .addClass("black_btn")
