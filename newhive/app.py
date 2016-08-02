@@ -20,7 +20,6 @@ import pstats
 import io
 from newhive.profiling import don, functools, doflags
 
-
 def make_routing_rules(url_pattern, endpoint, on_main_domain=True, defaults={}):
     rules = []
     for secure in (False, True):
@@ -110,10 +109,10 @@ def handle(request):
     # Convert the specified DNS into the shorthand DNS (without search dns)
     # site = re.sub('(.*)\.(office|cos)\.newhive\.com','\g<1>',site) #//!!
     environ['HTTP_HOST'] = site
-    if prefix not in config.live_prefixes:
-        request.environ['HTTP_HOST'] = site
-        if len(environ['PATH_INFO']) <= 1:
-            environ['PATH_INFO'] = prefix
+    if prefix and prefix not in config.live_prefixes:
+        if prefix == 'blog': prefix = 'b'
+        base_controller.redirect(Response(), 'https://' + site + '/' +
+            prefix + environ['PATH_INFO'])
     stats = False
     # stats = True
     if stats:

@@ -55,7 +55,7 @@
     ,"//": "These routes are community pages."
     ,"//": "-----------------------------------------"
 
-    ,"home": {
+    ,"home_redirect": {
         "page_route": "/"
         ,"controller": "community"
         ,"method": "home_redirect"
@@ -67,7 +67,7 @@
         ,"method": "hive_featured"
         ,"client_method": "home"
         ,"body_class": "nav"
-        ,"require_login": true
+        ,"require_login": false
     }
     ,"home_cat": {
         "page_route": "/home/cat/<tag_name>"

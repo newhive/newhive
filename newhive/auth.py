@@ -25,8 +25,6 @@ def authenticate_request(db, request, response):
     if cmp_secret(session, request, response):
         user.logged_in = True
     # hack for showing profile link on editorial
-    if not get_cookie(request, 'name') and user.logged_in:
-        set_cookie(response, 'name', user['name'], domain='.'+config.server_name)
     return user
 
 def handle_login(db, request, response):
@@ -69,6 +67,8 @@ def new_session(db, user, request, response):
     set_secret(session, True, response)
     set_secret(session, False, response)
     set_cookie(response, 'identity', session.id, expires = expires)
+    set_cookie(response, 'name', user['name'], domain='.'+config.server_name, secure=True)
+    set_cookie(response, 'name', user['name'], domain='.'+config.server_name, secure=False)
     user.logged_in = True
     user.update(session = session.id)
     return session

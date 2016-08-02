@@ -6,7 +6,7 @@ NameVirtualHost *:80
 #    DirectoryIndex index.php
 #    Header unset X-Powered-By
 #</Directory>
-#Alias /b /usr/share/wordpress
+Alias /b /usr/share/wordpress
 
 <VirtualHost *:80>
     #ServerName staging.newhive.com
