@@ -1,5 +1,13 @@
 NameVirtualHost *:80
 
+#<Directory /usr/share/wordpress>
+#    AllowOverride All
+#    Options FollowSymLinks
+#    DirectoryIndex index.php
+#    Header unset X-Powered-By
+#</Directory>
+Alias /b /usr/share/wordpress
+
 <VirtualHost *:80>
     #ServerName staging.newhive.com
     #ServerAlias *.staging.newhive.com
@@ -12,6 +20,15 @@ NameVirtualHost *:80
         AddType application/vnd.ms-fontobject .eot
         AddType application/x-font-woff .woff
     </Location>
+
+    #ProxyPass / http://www.googel.com/
+    #<LocationMatch "^/$">
+    #    ProxyPass http://storm.newhive.com/blog/
+    #</LocationMatch>
+    #RewriteRule ^/$ [http://storm.newhive.com/blog/] [P]
+    #ProxyPass /b/ http://storm.newhive.com/blog/
+    #ProxyPassReverse /b/ http://storm.newhive.com/blog/
+    #ProxyPassReverseCookieDomain localhost myhost
 </VirtualHost>
 
 #<VirtualHost *:80>
