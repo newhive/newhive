@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
 
   // Update once more a little longer to allow scripts and plugins
   // to finish loading on the page.
-  int count = 100;
+  int count = 500;
   while (count--) {
     Update(50);
     usleep(50000);
