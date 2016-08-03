@@ -52,8 +52,7 @@ define(['jquery', 'ui/util'], function($, util) {
         o.fix_lazy()
 
         var win_dims = [$(window).width(), $(window).height()]
-            ,scale_from = win_dims[layout_coord]
-            ,s = scale_from / 1000
+            ,s = win_dims[layout_coord] / 1000
         if (util.mobile()) s = .5
         // if (win_dims[1] > win_dims[0] && win_dims[0])
         //     s *= win_dims[1] / win_dims[0]
@@ -200,12 +199,12 @@ define(['jquery', 'ui/util'], function($, util) {
     // TODO-cleanup: merge with very similar logic in img_fill, make
     // wrapper function for getting natural image dims
     o.letterbox = function(dims, parent_dims){
-        var aspect = dims[1] / dims[0], out = parent_dims.slice()
+        var aspect = dims[1] / dims[0], val = parent_dims.slice()
         if( aspect > parent_dims[1] / parent_dims[0] )
-            out[1] = out[0] * aspect
+            val[1] = val[0] * aspect
         else
-            out[0] = out[1] / aspect
-        return out
+            val[0] = val[1] / aspect
+        return val
     }
 
     // TODO: fix this

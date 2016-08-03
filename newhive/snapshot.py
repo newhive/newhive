@@ -32,7 +32,6 @@ def snapshots_pending(time_last=False):
 test = False
 
 expr_limit = 10
-continuous = True
 
 def get_exprs(query_and={}):
     time_last = now() - 10*60 # Don't re-snapshot within 10 minutes
@@ -56,8 +55,8 @@ def start_snapshots(query_and=False):
         threads = threading.active_count()
         exprs = list(get_exprs(query_and))
         print get_exprs(query_and).count()
-        if len(exprs) == 0 and not continuous: break
-        time.sleep(1)
+        #if len(exprs) == 0 and not continuous: break
+        time.sleep(3)
         # print exprs
         for expr in exprs:
             # if expr.get('_id') in existing_snapshots:

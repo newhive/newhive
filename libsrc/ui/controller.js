@@ -81,7 +81,7 @@ define([
 
     };
     o.dispatch = function(route_name, page_data){
-        if(route_name == "home")
+        if(route_name == "featured")
             route_name = "home_cat"
         analytics.track_pageview(route_name)
         context.route_name = route_name;

@@ -9,13 +9,22 @@ class UserBehavior(TaskSet):
         pass
         #self.client.post("/login", {"username":"ellen_key", "password":"education"})
 
-    @task(2)
+    @task(0)
+    def page1(self):
+        self.client.get("/abram")
+
+    @task(1)
     def index(self):
         self.client.get("/")
 
-    @task(1)
-    def page1(self):
-        self.client.get("/allmymovies")
+    @task(2)
+    def index(self):
+        self.client.get("/okoyono/new-hive-virginity?q=blah")
+
+    @task(3)
+    def index(self):
+        self.client.get("/qualiatik/a-f-a-r")
+        
 
 class WebsiteUser(HttpLocust):
     task_set = UserBehavior

@@ -55,8 +55,7 @@ class Database:
 
         print('getting db connection')
         self.con = pymongo.MongoClient(host=config.database_host,
-            port=config.database_port,
-            max_pool_size=20, waitQueueTimeoutMS=3000)
+            port=config.database_port, max_pool_size=20)
         self.mdb = self.con[config.database]
 
         self.s3 = S3Interface(config)
@@ -1745,7 +1744,7 @@ class Expr(HasSocial):
         if self.db.s3.file_exists('thumb', name):
             return True
         # This would be cleaner with file pipes instead of filesystem.
-        local = '/tmp/' + name
+        local = joinpath('/tmp', name)
         r = snapshotter.take_snapshot(self.id, out_filename=local, full_page=True)
         if not r:
             print 'FAIL'
@@ -1766,9 +1765,8 @@ class Expr(HasSocial):
         r = snapshotter.take_snapshot(self.id, dimensions=(w,h),
             out_filename=filename,
             password=self.get('password', ''))
-        if not r:
-            return False
-        self.save_snapshot(filename, correct_size=True)
+        if r:
+	    self.save_snapshot(filename, correct_size=True)
         # clean up local file
         call(["rm", filename])
 
@@ -2076,17 +2074,17 @@ class Expr(HasSocial):
             'remix_lineage', 'layout_coord' ])
         expr['type'] = "expr"
         expr.update(
-            tags=self.get('tags_index')
-            ,id=self.id
-            ,thumb=self.get_thumb()
+             id=self.id
             ,owner=self.owner.client_view(viewer=viewer)
-            ,counts=counts
+            ,tags=self.get('tags_index')
+            ,thumb=self.get_thumb()
             ,url=self.url
             ,title=self.get('title')
+            ,dimensions=self.dimensions
+            ,layout_coord=self.layout_coord
+            ,clip=self.clip
             ,remix_count=len(self.remixes)
-            # ,dimensions=self.dimensions
-            # ,layout_coord=self.layout_coord
-            # ,clip=self.clip
+            ,counts=counts
         )
 
         if self.remix_parent:
@@ -2148,6 +2146,8 @@ class Expr(HasSocial):
 
     @property
     def dimensions(self):
+        return self.get('dimensions', self.calc_dimensions())
+    def calc_dimensions(self):
         dims = [0,0]
         dims[self.layout_coord] = 1000
         for a in self.get('apps', []):
@@ -2215,6 +2215,10 @@ def generate_thumb(file, size, format=None):
 class File(Entity):
     cname = 'file'
     _file = None #temporary fd
+    indexes = [
+         'updated'
+        ,'resample_time'
+    ]
 
     IMAGE, UNKNOWN = range(2)
 
