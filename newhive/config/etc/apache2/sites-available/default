@@ -1,3 +1,10 @@
 <VirtualHost *:80>
     Include sites-available/newhive
 </VirtualHost>
+
+<VirtualHost *:80>
+    ServerName blog.newhive.com
+    #Redirect / https://newhive.com/b/
+    RedirectMatch ^/(.*) https://newhive.com/b/$1
+</VirtualHost>
+

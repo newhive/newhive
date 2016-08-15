@@ -1,14 +1,12 @@
 ServerName newhive.com
-ServerAlias *.newhive.com
+#ServerAlias *.newhive.com
 ServerAlias thenewhive.com
 ServerAlias *.thenewhive.com
 WSGIScriptAlias / /var/www/newhive/newhive/app.py
 
 Alias /lib /var/www/newhive/lib
 
-Redirect / https://newhive.com/b/
-Redirect /b https://newhive.com/b/
-ProxyPass /b/ http://blog.newhive.com/
+ProxyPass /b/ http://blog-1.newhive.com/
 
 <Location /lib>
     Header Set Access-Control-Allow-Origin *
