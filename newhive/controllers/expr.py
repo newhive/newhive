@@ -178,19 +178,19 @@ class Expr(ModelController):
             file_data = None
             suffix = ""
             file_id = app.get('file_id')
-            if app['type'] == 'hive.code' and app['code_type'] == 'js':
-                file_data = app.get('content')
-                modules = module_modules(app)
-                ok = ok and file_id and (modules != False)
-                if ok:
-                    # expand to full module code
-                    data = ("define(['jquery'%s], function($%s"
-                        + ") {\nvar self = {}\n%s\nreturn self\n})"
-                    ) % (modules, module_names(app), file_data)
-                name = "code"
-                mime = "application/javascript"
-                suffix = ".js"
-            elif app['type'] == 'hive.sketch': 
+            #if app['type'] == 'hive.code' and app['code_type'] == 'js':
+            #    file_data = app.get('content')
+            #    modules = module_modules(app)
+            #    ok = ok and file_id and (modules != False)
+            #    if ok:
+            #        # expand to full module code
+            #        data = ("define(['jquery'%s], function($%s"
+            #            + ") {\nvar self = {}\n%s\nreturn self\n})"
+            #        ) % (modules, module_names(app), file_data)
+            #    name = "code"
+            #    mime = "application/javascript"
+            #    suffix = ".js"
+            if app['type'] == 'hive.sketch': 
                 # deal with inline base64 encoded images from Sketch app
                 file_data = base64.decodestring(
                     app.get('content').get('src').split(',',1)[1])
@@ -223,9 +223,9 @@ class Expr(ModelController):
                 ))
             f.close()
             app_upd = {'file_id' : file_res.id}
-            if app['type'] == 'hive.code':
-                app_upd.update({'code_url' : file_res.url })
-            elif app['type'] == 'hive.sketch': 
+            #if app['type'] == 'hive.code':
+            #    app_upd.update({'code_url' : file_res.url })
+            if app['type'] == 'hive.sketch': 
                 app_upd.update({'type' : 'hive.image'
                     ,'content' : file_res.url })
             app.update(app_upd)
