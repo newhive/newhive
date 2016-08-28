@@ -37,19 +37,7 @@ NameVirtualHost *:443
     </Location>
 </VirtualHost>
 <VirtualHost _default_:443>
-    ServerName newhive.com
-    ServerAlias *.newhive.com
-    ServerAlias thenewhive.com
-    ServerAlias *.thenewhive.com
-	WSGIScriptAlias / /var/www/newhive/newhive/app.py
-
-	Alias /lib /var/www/newhive/lib
-    <Location /lib>
-        Header Set Access-Control-Allow-Origin *
-        Header Set Cache-Control "max-age=315360000"
-        AddType application/vnd.ms-fontobject .eot
-        AddType application/x-font-woff .woff
-    </Location>
+    Include sites-available/newhive
 
 	SSLEngine on
 
