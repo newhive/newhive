@@ -13,6 +13,8 @@ NameVirtualHost *:443
         AddType application/x-font-woff .woff
     </Location>
 
+    ProxyPass /b/ http://blog.newhive.com/
+
 	SSLEngine on
 
 	SSLCertificateKeyFile /etc/ssl/private/star_tnh_me.key
