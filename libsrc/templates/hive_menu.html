@@ -7,7 +7,7 @@
     {anchor_attrs "view_expr" 
         "owner_name" page_data.expr.owner.name "expr_name" page_data.expr.name}
   {>}{<else}
-    href='/b/'
+    href='https://newhive.com/b/'
     {# anchor_attrs "home" #}
   {>}
 ></a>
@@ -18,7 +18,7 @@
 <div id='logo_menu' class='menu drawer divided {<if (eq query.template "embed")} stay_hidden{>}' data-handle='#logo'>
   {<if user.logged_in}
     {# Home #}
-    <a href='/b/' {# anchor_attrs "home" #} class='menu_item default hoverable'>Blog</a>
+    <a href='https://newhive.com/b/' {# anchor_attrs "home" #} class='menu_item default hoverable'>Blog</a>
 
     {# Network #}
     <a {anchor_attrs "network" "username" user.name} class='menu_item hoverable'>Network</a>
