@@ -7,7 +7,7 @@ dev_prefix      = None
 debug_mode      = False
 debug_unsecure  = False
 
-database        = 'live-newhive5'
+database        = 'live'
 server_name     = 'newhive.com'
 content_domain  = 'tnh.me'
 
