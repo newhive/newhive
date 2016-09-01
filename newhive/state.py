@@ -76,6 +76,7 @@ class Database:
                 opts.setdefault('background', True)
                 key = map(lambda a: a if isinstance(a, tuple) else (a, 1),
                     [key] if not isinstance(key, list) else key)
+                print 'building', key, opts
                 col._col.ensure_index(key, **opts)
 
     # arg{id}: if not None, ensure this result appears in the feed
