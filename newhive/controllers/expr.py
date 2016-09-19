@@ -40,8 +40,10 @@ class Expr(ModelController):
         if not expr_obj: return self.serve_404(tdata)
 
         # for custom pages using external files
-        if expr_obj.get('index_url'):
-            return self.redirect(response, expr_obj['index_url'])
+        custom_html = expr_obj.get('index_url')
+        if custom_html:
+            custom_html = request.scheme + ':' + re.sub('^.*?//', '//', custom_html)
+            return self.redirect(response, custom_html)
 
         bg = expr_obj.get('background')
         if bg and bg.get('file_id') and not bg.get('dimensions'):
