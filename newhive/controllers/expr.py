@@ -39,6 +39,12 @@ class Expr(ModelController):
     def serve_naked(self, tdata, request, response, expr_obj):
         if not expr_obj: return self.serve_404(tdata)
 
+        # for custom pages using external files
+        custom_html = expr_obj.get('index_url')
+        if custom_html:
+            custom_html = request.scheme + ':' + re.sub('^.*?//', '//', custom_html)
+            return self.redirect(response, custom_html)
+
         bg = expr_obj.get('background')
         if bg and bg.get('file_id') and not bg.get('dimensions'):
             f = self.db.File.fetch(bg.get('file_id'))
