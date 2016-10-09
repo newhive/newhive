@@ -23,18 +23,22 @@ def snapshot_test():
 
 class Snapshots(object):
     # TODO-cleanup (everything about this)
-    def take_snapshot(self,expr_id,out_filename,dimensions=(1024,768),
-        full_page=False, password=''):
+    def take_snapshot(
+        self, expr_id, out_filename, dimensions=(1024,768),
+        full_page=False, password='', host='tnh.me', delay=10000
+    ):
 	secure = isinstance(password, basestring) and len(password) > 0
-	url = ( 'http' +('s' if secure else '')+ '://tnh.me/' + expr_id + '?snapshot' +
-	    (('&' + urllib.urlencode({'pw': password})) if secure else '' ) )
+	url = ( 'http' +('s' if secure else '') +
+            '://' + host + '/' + expr_id + '?snapshot' +
+            (('&' + urllib.urlencode({'pw': password})) if secure else '' ) )
         if platform == 'linux' or platform == 'linux2':
             ratio = 1.0 * dimensions[0] / dimensions[1];
             snap_dimensions = list(dimensions)
             if (snap_dimensions[0] < 1000):
                 snap_dimensions = [ 1000, 1000. / dimensions[0] * dimensions[1] ]
-            cmd = [ 'phantomjs', join(config.src_home, 'bin/snapshot.js'),
-	        url, out_filename, str(snap_dimensions[0]), str(snap_dimensions[1]) ]
+            cmd = [ 'phantomjs', join(config.src_home, 'bin/snapshot.js'), url,
+                out_filename, str(snap_dimensions[0]), str(snap_dimensions[1]),
+                str(delay) ]
             r = 0
             with open(os.devnull, "w") as fnull:
                 # BUGBUG
