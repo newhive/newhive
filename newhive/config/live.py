@@ -1,5 +1,4 @@
 from config_common import *
-from live_secret import *
 
 live_server     = True
 dev_prefix      = None
@@ -31,3 +30,5 @@ facebook_client_secret = '53168c0305074b8ff82cab217d5043f9'
 email_server    = 'email-smtp.us-east-1.amazonaws.com'
 email_user      = 'AKIAJLZKHMANRLNNJYVQ'
 email_port      = 465
+
+from live_secret import *
