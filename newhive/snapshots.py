@@ -25,7 +25,7 @@ class Snapshots(object):
     # TODO-cleanup (everything about this)
     def take_snapshot(
         self, expr_id, out_filename, dimensions=(1024,768),
-        full_page=False, password='', host='tnh.me', delay=10000
+        full_page=False, password='', host='snapshot.tnh.me', delay=10000
     ):
 	secure = isinstance(password, basestring) and len(password) > 0
 	url = ( 'http' +('s' if secure else '') +

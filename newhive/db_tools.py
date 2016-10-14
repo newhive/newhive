@@ -116,6 +116,10 @@ def export_csv(data, file_name='newhive_query'):
     for row in data:
         ascii_row = [col.encode('ascii', 'ignore') for col in row]
         wr.writerow(ascii_row)
+def export_csv_emails():
+    export_csv( [(r['email'], r['fullname']) for r in
+        db.User.search({}, fields=dict(email=1, fullname=1))
+        if r.has_key('email')], '/tmp/email_list' )
 
 ### BEGIN snapshot_wrangling ###
 # returns cursor with expressions at most %days% old which have > 1 fail count
