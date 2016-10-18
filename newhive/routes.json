@@ -36,19 +36,12 @@
         ,"content_domain": true
         ,"precedence": 1
     }
-    ,"expr_embed_id": {
-        "page_route": "/e/<expr_id>"
-        ,"api_route": "/api/expr/embed/<expr_id>"
-        ,"controller": "expr"
-        ,"method": "embed"
-        ,"precedence": 1
-    }
-    ,"expr_embed": {
-        "page_route": "/e/<owner_name>/<path:expr_name>"
-        ,"api_route": "/api/expr/embed/<owner_name>/<path:expr_name>"
-        ,"controller": "expr"
-        ,"method": "embed"
-        ,"precedence": 1
+    ,"ssl_auth": {
+        "page_route": "/9665A5BE5D423C0CC1CA1F0EDDB5FE18.txt"
+        ,"content_domain": true
+        ,"controller": "file"
+        ,"method": "ssl_auth"
+        ,"precedence": 2
     }
 
     ,"//": "-----------------------------------------"
@@ -354,6 +347,20 @@
         "method": "expr",
         "client_method": "expr",
         "precedence": -1
+    },
+    "expr_embed_id": {
+        "page_route": "/e/<expr_id>"
+        ,"api_route": "/api/expr/embed/<expr_id>"
+        ,"controller": "expr"
+        ,"method": "embed"
+        ,"precedence": 1
+    },
+    "expr_embed": {
+        "page_route": "/e/<owner_name>/<path:expr_name>"
+        ,"api_route": "/api/expr/embed/<owner_name>/<path:expr_name>"
+        ,"controller": "expr"
+        ,"method": "embed"
+        ,"precedence": 1
     },
     "user_home": {
         "//": "redirects to expressions_feed (profile) if no home expr",
