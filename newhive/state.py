@@ -1757,7 +1757,7 @@ class Expr(HasSocial):
 
     # Note: this takes snapshots in the current thread.
     # For threaded snapshots, use threaded_snapshot()
-    def take_snapshot(self):
+    def take_snapshot(self, **args):
         snapshotter = Snapshots()
         self.inc('snapshot_fails')
         snapshot_time = now()
@@ -1765,7 +1765,7 @@ class Expr(HasSocial):
         w, h = self.snapshot_dimlist[0]
         r = snapshotter.take_snapshot(self.id, dimensions=(w,h),
             out_filename=filename,
-            password=self.get('password', ''))
+            password=self.get('password', ''), **args)
         if r:
 	    self.save_snapshot(filename, correct_size=True)
         # clean up local file
