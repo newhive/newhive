@@ -59,6 +59,13 @@ class File(ModelController):
         if res: res.delete()
         return True
 
+    def ssl_auth(self, tdata, request, response, **args):
+        return self.serve_data(
+            response,
+            'text/plain',
+            "D4676286C0EFEAAF82BC01A52BF56067D273EDF4\ncomodoca.com",
+        )
+
 def create_file(owner, file, url=None, args={}):
     # Supported mime types.  First try to find exact match to full mime
     # type (e.g. text/html), then default to generic type (e.g. text).
