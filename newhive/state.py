@@ -320,11 +320,15 @@ class Collection(object):
     def page(self, spec, sort='updated', **opts):
         return self.paginate(spec, **opts)
     def mq(self, *spec, **kw_spec):
+        """ shorthand for self.search(mq(...)) """
+        q = mq(*spec, **kw_spec)
+        q.set_go(self.search)
+        return q
+    def mqp(self, *spec, **kw_spec):
         """ shorthand for self.page that takes mq helper args directly """
         q = mq(*spec, **kw_spec)
         q.set_go(self.page)
         return q
-
     def count(self, spec={}): return self.search(spec).count()
     def mqc(self, *spec, **kw_spec):
         q = mq(*spec, **kw_spec)
