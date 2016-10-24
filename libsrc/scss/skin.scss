@@ -1,5 +1,8 @@
+@import "common";
+
 .title.expr, .dialog .title {
-	font-family: Gibson Semibold;
+	font-family: $ui_font_bold;
+    font-weight: bold;
 	font-size: 33px;
 	// letter-spacing: -1px;
 	line-height: 32px;
@@ -9,24 +12,26 @@
     &.small {
         font-size: 33px;
     }
-    font-family: Gibson;
+    font-family: $ui_font;
 	// letter-spacing: -1px;
 }
 .title.fullname {
-	font-family: Gibson;
+	font-family: $ui_font;
 	// letter-spacing: -1px;
 }
 body, form, .form_text {
-    font-family: Gibson;
+    font-family: $ui_font;
     font-size: 17px;
 }
 .username {
-    font-family: Gibson Semibold;
+    font-family: $ui_font_bold;
+    font-weight: bold;
     font-size: 17px;
     //text-transform: uppercase;
 }
 .subheading {
-    font-family: Gibson Semibold;
+    font-family: $ui_font_bold;
+    font-weight: bold;
     font-size: 17px;
     // text-transform: uppercase;
 }
@@ -38,6 +43,7 @@ body, form, .form_text {
     &.disabled {
         color: grey;
     }
-    font-family: Gibson Semibold;
+    font-family: $ui_font_bold;
+    font-weight: bold;
     font-size: 16px;
 }
