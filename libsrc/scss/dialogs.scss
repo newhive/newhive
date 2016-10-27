@@ -10,7 +10,6 @@
 }
 .dialog_shield.fade { background-color:black; opacity:0.33; }
 #menu_shield{ z-index: 3; }
-$header_font: Gibson, Helvetica, Arial, sans-serif;
 
 /* === General === */
 .dialog {
@@ -40,13 +39,13 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
     .line .element { float: left; }
     .line .label {float:left; margin-top: 6px; margin-right:4px;}
     h1 { 
-          font-family: $header_font;
+          font-family: $ui_font;
           font-size: 33px;
           font-weight: normal;
           margin-top: 0;
     }
     h3 {
-        font-family: $header_font;
+        font-family: $ui_font;
         font-weight: normal;
         font-size: 28px;
         margin: 0;
@@ -105,7 +104,7 @@ $header_font: Gibson, Helvetica, Arial, sans-serif;
     // Send me a copy.
     .copy {
         margin-top: 10px;
-        font-family: Gibson;
+        font-family: $ui_font;
         font-size: 17px;
         input { margin-right: 5px; }
     }
@@ -324,7 +323,7 @@ form.login {
 }
 
 #dia_save {
-    font-family: Gibson;
+    font-family: $ui_font;
     font-size: 17px;
 
     .label._2column {
