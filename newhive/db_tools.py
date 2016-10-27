@@ -107,6 +107,16 @@ def switch_user(from_user, to_user, session_id=None, from_id=None):
         db.Session.last(mq(user=from_user.id)) )
     session.update(user=to_user.id)
 
+def rename_user(from_user, to_user):
+    user = (db.User.named(from_user) if type(from_user) == 'string'
+        else from_user)
+    user.update(updated=False, name=to_user)
+    for r in db.Expr.search(mq(owner=user.id)):
+        r.update(updated=False, owner_name=to_user)
+    for r in db.Feed.search(mq(initiator=user.id)):
+        r.update(updated=False, initiator_name=to_user)
+        
+
 import csv
 # expects data to be list of lists
 def export_csv(data, file_name='newhive_query'):
