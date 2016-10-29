@@ -118,7 +118,7 @@ define([
             return
             $("*[data-scaled]").map(function(i, app) {
                 var $app = $(app)
-                    ,$img = $app.find("img")
+                    ,$img = $app.find("img.content")
                     ,$img2 = $img.clone()
                     ,$container = $img.parent()
                 $img = $img.addClass("loaded").add($img2)
