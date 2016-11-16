@@ -154,7 +154,7 @@ o.Funcs = function(fn, filter) {
 };
 
 o.each = function(o, f){
-    for(p in o) f(o[p], p);
+    for(var p in o) f(o[p], p);
 };
 
 o.invert = function (obj) {

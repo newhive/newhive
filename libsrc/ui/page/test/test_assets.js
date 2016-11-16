@@ -4,7 +4,7 @@ define([
     'context'
     ,'ui/util'
 ], function(context, util){
-    o = {}
+    var o = {}
     
     o.render = function(){
         $("body,html").css("background-color", "rgb(84, 113, 175)")

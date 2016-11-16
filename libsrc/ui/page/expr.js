@@ -599,7 +599,7 @@ define([
         $('.social.overlay').hidehide();
     };
 
-    var handle_hover = function(ev) {
+    var $object, handle_hover = function(ev) {
         var $handle = $(ev.target)
         if($handle.is('.bottom'))
             $object = $('.overlay.bottom')
@@ -764,8 +764,8 @@ define([
         })
 
         $(".feed_item").each(function(i, el) {
-            edit_button = $(el).find('button[name=edit]');
-            delete_button = $(el).find('button[name=delete]');
+            var edit_button = $(el).find('button[name=edit]'),
+                delete_button = $(el).find('button[name=delete]')
             if (edit_button.length == 1) {
                 edit_button.bind_once_anon('click', function(event) {
                     o.edit_comment($(el));
@@ -831,7 +831,7 @@ define([
     };
 
     var get_items = function(btn){
-        d = { "love": o.expr.loves,
+        var d = { "love": o.expr.loves,
               "comment": o.expr.comments,
               "republish": o.expr.broadcast  };
         return d[btn] ? d[btn] : [];

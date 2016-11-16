@@ -3331,17 +3331,17 @@ Hive.App.has_resize = function(o) {
         env.History.change_end("resize", {cancel: skip_history})
     };
     o.snap_a_point = function(tuple) {
-        if(u.should_snap() && !env.no_snap && !o.has_full_bleed()){
+        if(u.should_snap() && !env.no_snap){
             var excludes = {};
             excludes[o.id] = true;
-            pos = u.snap_helper(tuple, {
+            return u.snap_helper(tuple, {
                 exclude_ids: excludes,
                 snap_strength: .05,
                 snap_radius: 10, 
                 sensitivity: o.sensitivity / 2, 
             });
         }
-        return pos
+        // return pos
     }
 
     function controls(o) {

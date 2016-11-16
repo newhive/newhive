@@ -130,9 +130,9 @@ define([
                 }
             }
         }
-        var load_slide = function(back, errors) {
+        var pos, load_slide = function(back, errors) {
             if (back) {
-                var pos = max_mini = mini_mod(max_mini + 1)
+                pos = max_mini = mini_mod(max_mini + 1)
             } else {
                 pos = min_mini = mini_mod(min_mini - 1)
             }

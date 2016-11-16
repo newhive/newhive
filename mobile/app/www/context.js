@@ -125,7 +125,7 @@ define([
 
     o.page_state = function(route_name, args, query_args){
         var s = routing.page_state(route_name, args, query_args)
-            server = o.config.server_url.slice(0,-1)
+        //    server = o.config.server_url.slice(0,-1)
         // attempt to make routing work on custom domain,
         // foiled by history API not allowing to change domain
         // s.page = server + s.page
@@ -407,16 +407,16 @@ define([
             });
 
             var input_id = input.attr('id'),
-                drop_selector = input.attr('data-drop-area');
+                drop_selector = input.attr('data-drop-area'),
                 drop_areas = all.find('label[for=' + input_id + ']')
                     .add(drop_selector).add(all.find(drop_selector));
-                upload.drop_target(drop_areas,
-                    function(files, file_list){
-                        form.trigger('with_files', [files, file_list]); },
-                    function(file_records){
-                        form.trigger('success', [file_records]); }
-                );
-        });
+            upload.drop_target(drop_areas,
+                function( files, file_list ){
+                    form.trigger('with_files', [files, file_list]) },
+                function( file_records ){
+                    form.trigger('success', [file_records]) }
+            )
+        })
 
         // make form submission of non-file inputs asynchronous too
         form.on('submit', function(ev){

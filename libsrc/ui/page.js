@@ -297,7 +297,7 @@ define([
         }
         // WIP: content-request-identity
         // if(context.user.logged_in) o.content_login()
-        new_page = pages[method];
+        var new_page = pages[method];
         if(context.page != new_page){
             if(context.page && context.page.exit)
                 context.page.exit()
