@@ -408,134 +408,39 @@ class Expr(ModelController):
         return ''.join(app_html)
 
     def html_for_app(self, app, scale=1, snapshot_mode=False):
-        content = app.get('content', '')
-        more_css = ''
-        data = []
-        dimensions = app.get('dimensions', [100,100])
-        if not is_number_list(dimensions, 2): return ''
+        widget_type = app.get('type')
+        app['klass'] = widget_type.replace('.', '_')
+        app['more_css'] = ''
+        app['data_attrs'] = []
+        app.setdefault('dimensions', [100,100])
+        app.setdefault('id', 'app_' + str(app['z']))
+        app.setdefault('anchor', {
+            'href': app.get('href'), 'name': app.get('href_name') })
+        if type(app['anchor']) != dict or (not
+            (app['anchor'].get('href') or app['anchor'].get('name')
+        )): app['anchor'] = {}
+
+        if not is_number_list(app['dimensions'], 2): return ''
         if not is_number_list(app.get('position', []), 2): return ''
 
         for prop in ['angle', 'scale']:
-            if app.get(prop): data.append(("data-" + prop, app.get(prop)))
-        
-        type = app.get('type')
-        klass = type.replace('.', '_')
-        app_id = app.get('id', 'app_' + str(app['z']))
-        anchor = ( app.get('anchor', {}) or
-            {'href': app.get('href'), 'name': app.get('href_name')} )
-        if not (anchor.get('href') or anchor.get('name')): anchor = None
-        if type == 'hive.circle':
-            type = 'hive.rectangle'
+            if app.get(prop): app['data_attrs'].append(("data-" + prop, app.get(prop)))
 
-        if type != 'hive.rectangle':
+        if widget_type != 'hive.rectangle':
             # rectangles have css as their content; all other apps have extra
             # css in 'css_state'
             c = app.get('css_state', {})
-            more_css = ';'.join([p + ':' + str(c[p]) for p in c])
+            app['more_css'] = ';'.join([p + ':' + str(c[p]) for p in c])
 
-        if type == 'hive.image':
-            url = app.get('url') or content
-            media = self.db.File.fetch(app.get('file_id'))
-            scale_x = app.get('scale_x', 1)
-            if media: 
-                data.append(("data-orig", url))
-                url = media.get_resample(dimensions[0] * scale * scale_x)
-                if not snapshot_mode: #//!! and self.flags.get('lazy_load'):
-                    data.append(("data-scaled", url))
-                    scale /= 8.0 #//!!self.flags.get('lazy_load_scale'):
-                    url = (media.get_static_url() or 
-                        media.get_resample(dimensions[0] * scale * scale_x))
+        html = widget_types.get(widget_type, widget_types['hive.text'])(app)
 
-            html = "<img src='%s'>" % url
-            if scale_x:
-                klass += " crop_box"
-                scale_x *= dimensions[0]
-                css = 'width:%fpx' % (scale_x)
-                offset = app.get('offset')
-                if is_number_list(offset, 2):
-                    offset = [x * scale_x for x in offset]
-                    css = '%s;margin-left:%spx;margin-top:%spx' % (
-                        css, offset[0], offset[1] )
-                html = "<img src='%s' style='%s' class='content'>" % (url, css)
-        elif type == 'hive.sketch':
-            html = "<img src='%s' class='content'>" % content.get('src')
-        elif type == 'hive.rectangle':
-            c = app.get('content', {})
-            container_attrs = ['position']
-            css = ';'.join([p + ':' + str(c[p]) for p in c if p not in container_attrs])
-            more_css = ';'.join([p + ':' + str(c[p]) for p in c if p in container_attrs])
+        if widget_type != 'hive.polygon':
+            html = anchor_tag(app['anchor'], html)
 
-            html = "<div style='%s' class='content'></div>" % css
-        elif type == 'hive.html':
-            #encoded_content = cgi.escape(app.get('content',''), quote=True)
-            if snapshot_mode and app.get('media') == 'youtube':
-                # phantomjs does not support HTML5 video or Flash, so construct
-                # preview manually to prevent YouTube error being rendered
-                yt_id = lget(re.findall(r'[=/]([a-zA-Z0-9]{11})\W',
-                    app.get('content')), 0)
-                html = ( "<img style='width:100%; height:100%;'" +
-                    "src='//i.ytimg.com/vi_webp/%s/maxresdefault.webp'>" % yt_id )
-                html += '<svg style="position:absolute; left:50%; top:50%; width:68px; height:48px; margin-left:-34px; margin-top:-24px;" version="1.1" viewBox="0 0 68 48" width="100%"><path class="ytp-large-play-button-bg" d="m .66,37.62 c 0,0 .66,4.70 2.70,6.77 2.58,2.71 5.98,2.63 7.49,2.91 5.43,.52 23.10,.68 23.12,.68 .00,-1.3e-5 14.29,-0.02 23.81,-0.71 1.32,-0.15 4.22,-0.17 6.81,-2.89 2.03,-2.07 2.70,-6.77 2.70,-6.77 0,0 .67,-5.52 .67,-11.04 l 0,-5.17 c 0,-5.52 -0.67,-11.04 -0.67,-11.04 0,0 -0.66,-4.70 -2.70,-6.77 C 62.03,.86 59.13,.84 57.80,.69 48.28,0 34.00,0 34.00,0 33.97,0 19.69,0 10.18,.69 8.85,.84 5.95,.86 3.36,3.58 1.32,5.65 .66,10.35 .66,10.35 c 0,0 -0.55,4.50 -0.66,9.45 l 0,8.36 c .10,4.94 .66,9.45 .66,9.45 z" fill="#cc181e" fill-opacity="0.81"></path><path d="m 26.96,13.67 18.37,9.62 -18.37,9.55 -0.00,-19.17 z" fill="#fff"></path><path d="M 45.02,23.46 45.32,23.28 26.96,13.67 43.32,24.34 45.02,23.46 z" fill="#ccc"></path></svg>'
-            else:
-                html = app.get('content','')
-        elif type == 'hive.polygon':
-            points = filter(lambda point: is_number_list(point, 2)
-                ,app.get('points', []))
-            # shouldn't style go into .content, not the .happ as was earlier?
-            style = app.get('style', {})
-            # TODO: fill in this list
-            css_not_for_svg = ['position']
-            css = ';'.join([ k+':'+str(v) for k,v in style.items() if 
-                k not in css_not_for_svg])
-            html = (
-                  "<svg xmlns='http://www.w3.org/2000/svg'"
-                + " xmlns:xlink='http://www.w3.org/1999/xlink'"
-                + " viewbox='0 0 %f %f" % tuple(dimensions)
-                + "' style='%s'>" % css
-                + "<filter id='%s_blur'" % app_id 
-                + " filterUnits='userSpaceOnUse'><feGaussianBlur stdDeviation='"
-                + "%f'></filter>" % app.get('blur', 0)
-                + anchor_tag(
-                    anchor
-                    ,"<polygon class='content' points='"
-                        + ' '.join(map(lambda p: "%f %f" % (p[0], p[1]), points))
-                        + "' style='filter:url(#%s_blur)'/>" % app_id
-                    ,xlink=True
-                ) + "</svg>"
-            )
-        elif type == 'hive.code':
-            ctype = app.get('code_type', 'js')
-            if ctype == 'js':
-                tag = 'script'
-                if app.get('url'):
-                    html = "<script src='%s'></script>" % app.get('url')
-                elif app.get('file_id'):
-                    html = ( "<script>curl(['ui/expression'],function(expr){"
-                        + "expr.load_code_url('%s')" % ('media/' + app.get('file_id'))
-                        + "})</script>" )
-                else:
-                    html = ( "<script>curl(['ui/expression'],function(expr){"
-                        + "expr.load_code(%s,%s)" % (json.dumps(app.get('content')),
-                            json.dumps(app.get('modules', [])))
-                        + "})</script>" )
-            if ctype == 'css':
-                tag = 'style'
-                # TODO-code-editor: put style tag in head
-                html =  "<style id='%s'>%s</style>" % (
-                    app_id, app.get('content') )
-            return html
-        elif type == 'hive.text':
-            html = "<div class='content'>%s</div>" % content
-        else:
-            html = "<div class='content'>%s</div>" % content
-
-        if type != 'hive.polygon':
-            html = anchor_tag(anchor, html)
-
-        data = [prop + "=" + str(val) for (prop, val) in data]
+        data_props = [prop + "=" + str(val) for (prop, val) in app['data_attrs']]
         html = "<div class='happ %s %s loading' id='%s' style='%s'%s>%s</div>" % (
-            klass, app.get('css_class', ''), app_id,
-            css_for_app(app) + more_css, " ".join(data), html
+            app['klass'], app.get('css_class', ''), app['id'],
+            css_for_app(app) + app['more_css'], " ".join(data_props), html
         )
 
         return html
@@ -597,16 +502,128 @@ class Expr(ModelController):
 
         return self.serve_json(response, resp)
 
+def widget_image(app):
+    url = app.get('url') or app.get('content','')
+    media = self.db.File.fetch(app.get('file_id'))
+    scale_x = app.get('scale_x', 1)
+    if media: 
+        app['data_attrs'].append(("data-orig", url))
+        url = media.get_resample(app['dimensions'][0] * scale * scale_x)
+        if not snapshot_mode: #//!! and self.flags.get('lazy_load'):
+            app['data_attrs'].append(("data-scaled", url))
+            scale /= 8.0 #//!!self.flags.get('lazy_load_scale'):
+            url = (media.get_static_url() or 
+                media.get_resample(app['dimensions'][0] * scale * scale_x))
+
+    html = "<img src='%s'>" % url
+    if scale_x:
+        app['klass'] += " crop_box"
+        scale_x *= app['dimensions'][0]
+        css = 'width:%fpx' % (scale_x)
+        offset = app.get('offset')
+        if is_number_list(offset, 2):
+            offset = [x * scale_x for x in offset]
+            css = '%s;margin-left:%spx;margin-top:%spx' % (
+                css, offset[0], offset[1] )
+        html = "<img src='%s' style='%s' class='content'>" % (url, css)
+    return html
+
+def widget_rectangle(app): # and widget_circle
+    c = app.get('content', {})
+    container_attrs = ['position']
+    css = ';'.join([p + ':' + str(c[p]) for p in c if p not in container_attrs])
+    more_css = ';'.join([p + ':' + str(c[p]) for p in c if p in container_attrs])
+    return "<div style='%s' class='content'></div>" % css
+    
+def widget_html(app, snapshot_mode=False):
+    #encoded_content = cgi.escape(app.get('content',''), quote=True)
+    if snapshot_mode and app.get('media') == 'youtube':
+        # phantomjs does not support HTML5 video or Flash, so construct
+        # preview manually to prevent YouTube error being rendered
+        yt_id = lget(re.findall(r'[=/]([a-zA-Z0-9]{11})\W',
+            app.get('content')), 0)
+        html = ( "<img style='width:100%; height:100%;'" +
+            "src='//i.ytimg.com/vi_webp/%s/maxresdefault.webp'>" % yt_id )
+        html += '<svg style="position:absolute; left:50%; top:50%; width:68px; height:48px; margin-left:-34px; margin-top:-24px;" version="1.1" viewBox="0 0 68 48" width="100%"><path class="ytp-large-play-button-bg" d="m .66,37.62 c 0,0 .66,4.70 2.70,6.77 2.58,2.71 5.98,2.63 7.49,2.91 5.43,.52 23.10,.68 23.12,.68 .00,-1.3e-5 14.29,-0.02 23.81,-0.71 1.32,-0.15 4.22,-0.17 6.81,-2.89 2.03,-2.07 2.70,-6.77 2.70,-6.77 0,0 .67,-5.52 .67,-11.04 l 0,-5.17 c 0,-5.52 -0.67,-11.04 -0.67,-11.04 0,0 -0.66,-4.70 -2.70,-6.77 C 62.03,.86 59.13,.84 57.80,.69 48.28,0 34.00,0 34.00,0 33.97,0 19.69,0 10.18,.69 8.85,.84 5.95,.86 3.36,3.58 1.32,5.65 .66,10.35 .66,10.35 c 0,0 -0.55,4.50 -0.66,9.45 l 0,8.36 c .10,4.94 .66,9.45 .66,9.45 z" fill="#cc181e" fill-opacity="0.81"></path><path d="m 26.96,13.67 18.37,9.62 -18.37,9.55 -0.00,-19.17 z" fill="#fff"></path><path d="M 45.02,23.46 45.32,23.28 26.96,13.67 43.32,24.34 45.02,23.46 z" fill="#ccc"></path></svg>'
+    else:
+        html = app.get('content','')
+    return html
+
+def widget_code(app):
+    ctype = app.get('code_type', 'js')
+    if ctype == 'js':
+        tag = 'script'
+        if app.get('url'):
+            html = "<script src='%s'></script>" % app.get('url')
+        elif app.get('file_id'):
+            html = ( "<script>curl(['ui/expression'],function(expr){"
+                + "expr.load_code_url('%s')" % ('media/' + app.get('file_id'))
+                + "})</script>" )
+        else:
+            html = ( "<script>curl(['ui/expression'],function(expr){"
+                + "expr.load_code(%s,%s)" % (json.dumps(app.get('content')),
+                    json.dumps(app.get('modules', [])))
+                + "})</script>" )
+    if ctype == 'css':
+        tag = 'style'
+        # TODO-code-editor: put style tag in head
+        html =  "<style id='%s'>%s</style>" % (
+            app['id'], app.get('content') )
+    return html
+
+def widget_polygon(app):
+    points = filter(lambda point: is_number_list(point, 2)
+        ,app.get('points', []))
+    # shouldn't style go into .content, not the .happ as was earlier?
+    style = app.get('style', {})
+    # TODO: fill in this list
+    css_not_for_svg = ['position']
+    css = ';'.join([ k+':'+str(v) for k,v in style.items() if 
+        k not in css_not_for_svg])
+    html = (
+          "<svg xmlns='http://www.w3.org/2000/svg'"
+        + " xmlns:xlink='http://www.w3.org/1999/xlink'"
+        + " viewbox='0 0 %f %f" % tuple(app['dimensions'])
+        + "' style='%s'>" % css
+        + "<filter id='%s_blur'" % app['id'] 
+        + " filterUnits='userSpaceOnUse'><feGaussianBlur stdDeviation='"
+        + "%f'></filter>" % app.get('blur', 0)
+        + anchor_tag(
+            app['anchor']
+            ,"<polygon class='content' points='"
+                + ' '.join(map(lambda p: "%f %f" % (p[0], p[1]), points))
+                + "' style='filter:url(#%s_blur)'/>" % app['id']
+            ,xlink=True
+        ) + "</svg>"
+    )
+    return html
+
+def widget_sketch(app):
+    return "<img src='%s' class='content'>" % app.get('content', {}).get('src', '')
+
+def widget_text(app):
+    return "<div class='content'>%s</div>" % app.get('content')
+
+widget_types = {
+    'hive.image': widget_image,
+    'hive.rectangle': widget_rectangle,
+    'hive.circle': widget_rectangle,
+    'hive.html': widget_html,
+    'hive.code': widget_code,
+    'hive.polygon': widget_polygon,
+    'hive.sketch': widget_sketch,
+    'hive.text': widget_text,
+}
+
 # TODO-bug fix resizing after loading by sending pre-scaled expr
 # Requires client layout_apps() to use scaled expr dimensions
 def css_for_app(app):
-    dimensions = app.get('dimensions', [100,100])
     css = {
             'left': app['position'][0]
             , 'top': app['position'][1]
             , 'z-index': app['z']
-            , 'width': dimensions[0]
-            , 'height': dimensions[1]
+            , 'width': app['dimensions'][0]
+            , 'height': app['dimensions'][1]
             , 'opacity': app.get('opacity', 1)
             , 'font-size': app.get('scale')
             }
