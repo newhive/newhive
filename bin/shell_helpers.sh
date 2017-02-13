@@ -1,30 +1,16 @@
 #! /bin/bash
-# Usage: add the following line to your ~/.bashrc
-# source ~/src/newhive/newduke/bin/shell_helpers.sh
-
-# figure out where we are, using $NEWHIVE_HOME as override:
-if [ -n "$NEWHIVE_HOME" ]; then : ;
-elif [ -L ${BASH_SOURCE[0]} ]; then
-    NEWHIVE_HOME=$( dirname $( readlink -f ${BASH_SOURCE[0]} ) )/..
-else 
-    NEWHIVE_HOME=$( dirname "${BASH_SOURCE[0]}" )/..
-fi
-
-### BEGIN find_files in git repo helpers ###
-############################################
-source $NEWHIVE_HOME/bin/git_grep.sh
 
 alias gr="git_grep -o"
-alias grh='git_grep -o -p "*.html"'
-alias grs='git_grep -o -p "*.scss"'
-alias grp='git_grep -o -p "*.py"'
-alias grj='git_grep -o -p "*.js"'
-alias grpd=grep_python_def
-alias gn='git_grep -o -n'
-alias gnh='git_grep -o -p "*.html" -n'
-alias gns='git_grep -o -p "*.scss" -n'
-alias gnp='git_grep -o -p "*.py" -n'
-alias gnj='git_grep -o -p "*.js" -n'
+alias grh="git_grep -o -p '*.html'"
+alias grs="git_grep -o -p '*.scss'"
+alias grp="git_grep -o -p '*.py'"
+alias grj="git_grep -o -p '*.js'"
+alias grpd="grep_python_def"
+alias gn="git_grep -o -n"
+alias gnh="git_grep -o -p '*.html' -n"
+alias gns="git_grep -o -p '*.scss' -n"
+alias gnp="git_grep -o -p '*.py' -n"
+alias gnj="git_grep -o -p '*.js' -n"
 
 alias o='open_nth'
 alias o1='o 1'
