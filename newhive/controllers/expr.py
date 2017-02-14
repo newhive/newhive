@@ -555,9 +555,9 @@ def widget_code(app):
         tag = 'script'
         url = app.get('url') or app.get('code_url')
         html = "<script src='%s'></script>" % app.get('url') if url else ("<script>\n"
-            "self = window; self.script = scripts.length;" +
+            "self = window; self.script = scripts.length;\n" +
             app.get('content') +
-            "scripts[self.script] = { animate: self.animate, run: self.run, stop: self.stop }"
+            "scripts[self.script] = { animate: self.animate, run: self.run, stop: self.stop }\n</script>"
         )
         # AMD_based_scripts version
         # html = ( "<script>curl(['ui/expression'],function(expr){"

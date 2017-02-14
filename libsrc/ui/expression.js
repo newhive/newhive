@@ -417,7 +417,7 @@ define([
         code_srcs.push({url:code_url})
     }
 
-    // Old AMD_module_based scripts init that doesn't allow debugging or
+    // Old AMD_based_scripts scripts init that doesn't allow debugging or
     // interactive editing in console
     //o.run_code = function(code_module){
     //    code_modules.push(code_module)
@@ -448,33 +448,6 @@ define([
     //    animate_frame()
     //}
     
-    function scripts_init(){ if(typeof window.scripts == 'undefined'){
-      var scripts = windw.scripts = []
-      scripts.animate = function(){
-        var animate = false
-        scripts.map(function(s){
-          if(s.animate && s.animate.go){
-            s.animate()
-            animate = true
-          }
-        })
-        if(animate) window.requestAnimationFrame(scripts.animate)
-      }
-      scripts.start = function(){
-        scripts.map(function(s){
-          s.run()
-          if(s.animate) s.animate.go = true
-        })
-        window.requestAnimationFrame(scripts.animate)
-      }
-      scripts.stop = function(){
-        scripts.map(function(s){
-          s.stop()
-          if(s.animate) s.animate.go = false
-        })
-      }
-    } }
-
     var visible = false
     o.show = function(){
         if(visible) return
@@ -497,7 +470,8 @@ define([
         if (!util.mobile())
             o.layout()
 
-        // Old AMD_module_based module init
+        if(scripts) scripts.start()
+        // Old AMD_based_scripts module init
         //var module_paths = function(modules) {
         //    return ["'jquery'","'ui/expression'"]
         //    .concat($.map(modules, function(p) { 
@@ -520,7 +494,6 @@ define([
         //    )
         //    $script.addClass('code_module').appendTo('body')
         //})
-        scripts.start()
 
         o.player_play(true)
 
@@ -551,9 +524,11 @@ define([
             $(div).jPlayer("pause");
         });
 
-        animate_go = 0
-        code_modules.map(function(module){ module.stop && module.stop() })
-        $('script.code_module').remove()
+        scripts.stop()
+        // AMD_based_scripts
+        //animate_go = 0
+        //code_modules.map(function(module){ module.stop && module.stop() })
+        //$('script.code_module').remove()
     };
 
     return o
