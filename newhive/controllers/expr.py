@@ -553,17 +553,17 @@ def widget_code(app):
     ctype = app.get('code_type', 'js')
     if ctype == 'js':
         tag = 'script'
-        if app.get('url'):
-            html = "<script src='%s'></script>" % app.get('url')
-        elif app.get('file_id'):
-            html = ( "<script>curl(['ui/expression'],function(expr){"
-                + "expr.load_code_url('%s')" % ('media/' + app.get('file_id'))
-                + "})</script>" )
-        else:
-            html = ( "<script>curl(['ui/expression'],function(expr){"
-                + "expr.load_code(%s,%s)" % (json.dumps(app.get('content')),
-                    json.dumps(app.get('modules', [])))
-                + "})</script>" )
+        url = app.get('url') or app.get('code_url')
+        html = "<script src='%s'></script>" % app.get('url') if url else ("<script>\n"
+            "self = window; self.script = scripts.length;" +
+            app.get('content') +
+            "scripts[self.script] = { animate: self.animate, run: self.run, stop: self.stop }"
+        )
+        # AMD_based_scripts version
+        # html = ( "<script>curl(['ui/expression'],function(expr){"
+        #     + "expr.load_code(%s,%s)" % (json.dumps(app.get('content')),
+        #         json.dumps(app.get('modules', [])))
+        #     + "})</script>" )
     if ctype == 'css':
         tag = 'style'
         # TODO-code-editor: put style tag in head
