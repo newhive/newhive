@@ -99,8 +99,7 @@ def password_change(user, request, response, force=False):
     if not force:
         secret = args.get('old_password', False)
         if not user.cmp_password(secret): return False
-    user.set_password(new_password)
-    user.save()
+    user.update(password=new_password)
     return True
 
 secrets = ['plain_secret', 'secure_secret']
