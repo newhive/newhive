@@ -48,13 +48,8 @@
     ,"//": "These routes are community pages."
     ,"//": "-----------------------------------------"
 
-    ,"home_redirect": {
-        "page_route": "/"
-        ,"controller": "community"
-        ,"method": "home_redirect"
-    }
     ,"featured": {
-        "page_route": "/home/featured"
+        "page_route": "/"
         ,"api_route": "/api/feed/featured"
         ,"controller": "community"
         ,"method": "hive_featured"

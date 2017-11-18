@@ -9,7 +9,7 @@
   {# plus menu (Add to category) #}
   <div class="icon plus_cats pointer" title="Add to category">
   </div>
-{>}{<elif (and 0 flags.admin)}
+{>}{<elif flags.admin}
   <form {form_attrs "add_featured_queue"} method="POST">
     <input type="hidden" name="expr_id" value="{id}">
     <button type="submit" class="icon add_queue pointer"

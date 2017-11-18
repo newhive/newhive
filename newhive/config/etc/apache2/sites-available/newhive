@@ -6,8 +6,6 @@ WSGIScriptAlias / /var/www/newhive/newhive/app.py
 
 Alias /lib /var/www/newhive/lib
 
-ProxyPass /b/ http://blog-1.newhive.com/
-
 <Location /lib>
     Header Set Access-Control-Allow-Origin *
     Header Set Cache-Control "max-age=315360000"
@@ -15,11 +13,11 @@ ProxyPass /b/ http://blog-1.newhive.com/
     AddType application/x-font-woff .woff
 </Location>
 
-Alias /allmymovies /var/www/newhive/lib/allmymovies
-Alias /5640b9655ccacf21611599b3 /var/www/newhive/lib/5640b9655ccacf21611599b3
-<Location /allmymovies>
-    Header set Content-Type "text/html; charset=utf-8"
-</Location>
-<Location /5640b9655ccacf21611599b3>
-    Header set Content-Type "text/html; charset=utf-8"
-</Location>
+#Alias /allmymovies /var/www/newhive/lib/allmymovies
+#Alias /5640b9655ccacf21611599b3 /var/www/newhive/lib/5640b9655ccacf21611599b3
+#<Location /allmymovies>
+#    Header set Content-Type "text/html; charset=utf-8"
+#</Location>
+#<Location /5640b9655ccacf21611599b3>
+#    Header set Content-Type "text/html; charset=utf-8"
+#</Location>
