@@ -63,7 +63,7 @@ class File(ModelController):
         return self.serve_data(
             response,
             'text/plain',
-            "D4676286C0EFEAAF82BC01A52BF56067D273EDF4\ncomodoca.com",
+            "CA50037867F98F3E42411D5E61DC426B34D466E19B84E6B61ECAC2E971D9866C comodoca.com 59f7701bdfcb5",
         )
 
 def create_file(owner, file, url=None, args={}):

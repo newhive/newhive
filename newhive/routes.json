@@ -37,7 +37,7 @@
         ,"precedence": 1
     }
     ,"ssl_auth": {
-        "page_route": "/9665A5BE5D423C0CC1CA1F0EDDB5FE18.txt"
+        "page_route": "/.well-known/pki-validation/822AC4E0AA280D205C9CB7EA62B43A3C.txt"
         ,"content_domain": true
         ,"controller": "file"
         ,"method": "ssl_auth"
