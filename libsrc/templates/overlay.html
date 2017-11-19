@@ -8,43 +8,39 @@
     <div class="cell left{<if (not user.logged_in)} for_logo{>}">
       {# LOGGED OUT: #}
       {<if (not user.logged_in)}
-        <a href='/b/' {#anchor_attrs "home"#} class='splash container inline'
+        <a {anchor_attrs "featured"} class='splash container inline'
           ><img class="logo splash" src='{asset "skin/site/logo_text.png"}' 
-          title="Newhive Blog"></a>
+          title="NewHive logo"></a>
+      {>}{<else}
+        {# Main navigation, logged out version in .network_nav below #}
+        <div class='network_nav inline'>
+          <a { anchor_attrs "expressions_feed" "owner_name" user.name }>
+            <div class='text_btn item teal_hover username ellipsis
+            {<if route.profile} black_btn{>}'>{user.name}</div></a>
+          <a { anchor_attrs "network"}>
+            <div class='text_btn item teal_hover network'>Network</div></a>
+          {<if flags.UI.blog_link}<a href='//blog.newhive.com/'>
+            <div class='text_btn item teal_hover recent'>Blog</div></a>
+          {>}
+          {<if flags.show_hive_all}
+            <a { anchor_attrs "recent"}>
+              <div class='text_btn item teal_hover recent'>All</div></a>
+          {>}
+        </div>
       {>}
     </div>
 
     {# RIGHT content. #}
     <div class='cell right centered'>
       {<vcenter (cond user.logged_in "" "full_height")}
-        {<if user.logged_in}
-          {# Main navigation, logged out version in .network_nav below #}
-          <div class='network_nav inline'>
-            <a { anchor_attrs "expressions_feed" "owner_name" user.name }>
-              <div class='text_btn item teal_hover username ellipsis
-              {<if route.profile} black_btn{>}'>{user.name}</div></a>
-            <a { anchor_attrs "network"}>
-              <div class='text_btn item teal_hover network'>Network</div></a>
-            {<if flags.UI.blog_home}<a {anchor_attrs "featured"}>
-              <div class='text_btn item teal_hover home_cat'>Featured</div></a>
-            {>}{<else}<a href='https://newhive.com/b/'>
-              <div class='text_btn item teal_hover'>Blog</div></a>
-            {>}
-            {<if flags.show_hive_all}
-              <a { anchor_attrs "recent"}>
-                <div class='text_btn item teal_hover recent'>All</div></a>
-            {>}
-          </div>
-        {>}{<else}
+        {<if (not user.logged_in)}
           {# Main navigation #}
           <div class='network_nav inline_middle'>
             {# empty <a> for css #}
             <a><div class='login_btn text_btn item teal_hover'>Log in</div></a>
             <a {anchor_attrs "signup"}>
               <div class='text_btn item teal_hover'>Sign Up</div></a>
-            {<if flags.UI.blog_home}<a {anchor_attrs "featured"}>
-              <div class='text_btn item teal_hover recent'>Featured</div></a>
-            {>}{<else}<a href='https://newhive.com/b/'>
+            {<if flags.UI.blog_link}<a href='https://newhive.com/b/'>
               <div class='text_btn item teal_hover recent'>Blog</div></a>
             {>}
             <a {anchor_attrs "view_expr"

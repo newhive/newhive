@@ -110,7 +110,6 @@ def handle(request):
     # site = re.sub('(.*)\.(office|cos)\.newhive\.com','\g<1>',site) #//!!
     environ['HTTP_HOST'] = site
     if prefix and prefix not in config.live_prefixes:
-        if prefix == 'blog': prefix = 'b'
         base_controller.redirect(Response(), 'https://' + site + '/' +
             prefix + environ['PATH_INFO'])
     stats = False
