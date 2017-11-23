@@ -1,9 +1,9 @@
 #!/bin/sh
-BACKUP_DIR=/mnt/scratch/backup/
-DB_HOST='set-545083bed81b4a4cfc00108a/candidate.42.mongolayer.com:10088,candidate.43.mongolayer.com:10161'
+BACKUP_DIR=/data/backup/
+DB_HOST='db.newhive.com'
 DB_USER='live'
-DB_PASSWORD='denjiafijUt1'
-DB='live-newhive5'
+DB_PASSWORD='kobnawIr9'
+DB='live'
 
 cd $BACKUP_DIR
 date=$(date +%Y-%m-%d)
