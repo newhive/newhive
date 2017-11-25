@@ -1,10 +1,10 @@
 from __future__ import division
-import time, random, re, base64, copy, copy #, pandas, pytz
+import time, random, re, base64, copy, pytz, pandas, copy
 from datetime import datetime
 import urlparse
 import werkzeug.urls
 import pymongo
-#import numpy
+import numpy
 import operator
 import json
 import urllib,urllib2
@@ -176,46 +176,6 @@ def flatprint(obj):
     flat = flatten(obj)
     for k,v in flat:
         print '.'.join(map(str, k)) + ': ' + str(v)
-
-def dcast(d, type_schemas, filter=True):
-    """ Accepts a dictionary d, and type_schemas -- a list of tuples in these forms:
-            (dictionary_key, type_to) :: (str, type)
-            (dictionary_key, type_to, required) :: (str, type, bool)
-        For each tuple in type_schemas, dcast coerces the dictionary_key in d to the type_to
-            If type_to is None, no coercion is performed
-            If required is True, an exception is thrown if dictionary_key is not in d
-            In the case of a 2 tuple, no exception is thrown
-        returns new dictionary only containing keys found in type_schemas if filter is True
-            otherwise return a copy of d with the keys found in type_schemas coerced
-        throws ValueError
-    """
-    out = {} if filter else dict(d)
-    for schema in type_schemas:
-        key = schema[0]
-        type_to = schema[1]
-        required = lget(schema, 2, False)
-
-        if key in d: out[key] = type_to(d[key]) if type_to else d[key]
-        elif required: raise ValueError('key %s missing in dict' % (key))
-    return out
-
-def flatten(obj):
-    """ flattens a nested data structure into a list of (value, path) tuples """
-    vals = []
-    def rec(obj, path):
-        def append(k, v):
-            new_path = path + (k,)
-            if hasattr(v, '__iter__'): rec(v, new_path)
-            else: vals.append((v, new_path))
-        try:
-            if hasattr(obj, 'iteritems'):
-                for k,v in obj.iteritems(): append(k,v)
-            else:
-                for k,v in enumerate(obj): append(k,v)
-        except:
-            vals.append((obj, path))
-    rec(obj, ())
-    return vals
 ### END data_tools ###
 
 ### BEGIN datetime_tools ###
@@ -610,26 +570,26 @@ def autocomplete(pre, db, field='tags'):
     return res.facets.tags.terms
 
 
-#def find_similar_tags(tags, db):
-#    exclude = tags + bad_tags
-#    sim = {}
-#    clauses = []
-#
-#    for tag in tags:
-#        clauses.append(pyes.query.TermQuery('tags', tag))
-#
-#    query = pyes.query.BoolQuery(should=clauses).search()
-#    ts = pyes.facets.TermFacet(field='tags', name='tags', size=100, order="count", exclude=exclude)
-#    query.facet.facets.append(ts)
-#    res = db.esdb.conn.search(query, indices=db.esdb.index, doc_types="expr-type")
-#
-#    for row in res.facets.tags.terms:
-#        if row['count'] > 2:
-#            q = pyes.query.TermQuery('tags', row['term'])
-#            freq = db.esdb.conn.search(q, indices=db.esdb.index, doc_types="expr-type").total
-#            sim[row['term']] = row['count']/numpy.sqrt(freq)
-#
-#    return convert_dict_to_sorted_list(sim)
+def find_similar_tags(tags, db):
+    exclude = tags + bad_tags
+    sim = {}
+    clauses = []
+
+    for tag in tags:
+        clauses.append(pyes.query.TermQuery('tags', tag))
+
+    query = pyes.query.BoolQuery(should=clauses).search()
+    ts = pyes.facets.TermFacet(field='tags', name='tags', size=100, order="count", exclude=exclude)
+    query.facet.facets.append(ts)
+    res = db.esdb.conn.search(query, indices=db.esdb.index, doc_types="expr-type")
+
+    for row in res.facets.tags.terms:
+        if row['count'] > 2:
+            q = pyes.query.TermQuery('tags', row['term'])
+            freq = db.esdb.conn.search(q, indices=db.esdb.index, doc_types="expr-type").total
+            sim[row['term']] = row['count']/numpy.sqrt(freq)
+
+    return convert_dict_to_sorted_list(sim)
 
 
 def others_liked(expr, db):
@@ -738,45 +698,46 @@ def get_tag_user_likes(tag, db):
     return res
 
 
-#def find_similar_users(user, db):
-#    # find users who liked expressions that this_user likes
-#
-#    this_user = user['_id']
-#
-#    f1 = pyes.filters.TermFilter('initiator', this_user)
-#    f = pyes.filters.BoolFilter(must=[f1, likes_filter])
-#    fq = pyes.query.FilteredQuery(match_all_query, f)
-#
-#    user_activity = db.esdb.conn.search(fq, indices=db.esdb.index, doc_types="feed-type")
-#
-#    if user_activity.total > 0:
-#        exprs_liked = []
-#        for r in user_activity:
-#            exprs_liked.append(r['entity'])
-#        f1 = pyes.filters.TermsFilter('entity', exprs_liked)
-#        f = pyes.filters.BoolFilter(must=[f1, likes_filter])
-#        query = pyes.query.FilteredQuery(match_all_query, f).search()
-#        ts = pyes.facets.TermFacet(field='initiator_name', name='initiator_name', order="count", size=50, exclude=[user["name"]])
-#        query.facet.facets.append(ts)  # sort by number of likes
-#        other_users = db.esdb.conn.search(query, indices=db.esdb.index, doc_types="feed-type")
-#        res = other_users.facets.initiator_name.terms
-#
-#        sim = {}
-#
-#        for row in res:
-#            if row['count'] > 1:
-#                #  normalize number of common likes by number of total likes that a user has given out
-#                f1 = pyes.filters.TermFilter('initiator_name', row['term'])
-#                f = pyes.filters.BoolFilter(must=[f1, likes_filter])
-#                fq = pyes.query.FilteredQuery(match_all_query, f)
-#                freq = db.esdb.conn.search(fq, indices=db.esdb.index, doc_types="feed-type").total
-#                sim[row['term']] = row['count']/numpy.sqrt(freq)
-#        res_norm = convert_dict_to_sorted_list(sim)
-#
-#    else:
-#        res_norm = []
-#
-#    return res_norm
+def find_similar_users(user, db):
+
+    # find users who liked expressions that this_user likes
+
+    this_user = user['_id']
+
+    f1 = pyes.filters.TermFilter('initiator', this_user)
+    f = pyes.filters.BoolFilter(must=[f1, likes_filter])
+    fq = pyes.query.FilteredQuery(match_all_query, f)
+
+    user_activity = db.esdb.conn.search(fq, indices=db.esdb.index, doc_types="feed-type")
+
+    if user_activity.total > 0:
+        exprs_liked = []
+        for r in user_activity:
+            exprs_liked.append(r['entity'])
+        f1 = pyes.filters.TermsFilter('entity', exprs_liked)
+        f = pyes.filters.BoolFilter(must=[f1, likes_filter])
+        query = pyes.query.FilteredQuery(match_all_query, f).search()
+        ts = pyes.facets.TermFacet(field='initiator_name', name='initiator_name', order="count", size=50, exclude=[user["name"]])
+        query.facet.facets.append(ts)  # sort by number of likes
+        other_users = db.esdb.conn.search(query, indices=db.esdb.index, doc_types="feed-type")
+        res = other_users.facets.initiator_name.terms
+
+        sim = {}
+
+        for row in res:
+            if row['count'] > 1:
+                #  normalize number of common likes by number of total likes that a user has given out
+                f1 = pyes.filters.TermFilter('initiator_name', row['term'])
+                f = pyes.filters.BoolFilter(must=[f1, likes_filter])
+                fq = pyes.query.FilteredQuery(match_all_query, f)
+                freq = db.esdb.conn.search(fq, indices=db.esdb.index, doc_types="feed-type").total
+                sim[row['term']] = row['count']/numpy.sqrt(freq)
+        res_norm = convert_dict_to_sorted_list(sim)
+
+    else:
+        res_norm = []
+
+    return res_norm
 
 
 def convert_dict_to_sorted_list(d, size=5):
