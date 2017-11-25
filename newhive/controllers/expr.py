@@ -423,8 +423,8 @@ class Expr(ModelController):
         if not is_number_list(app['dimensions'], 2): return ''
         if not is_number_list(app.get('position', []), 2): return ''
 
-        for prop in ['angle', 'scale']:
-            if app.get(prop): app['data_attrs'].append(("data-" + prop, app.get(prop)))
+        app['data_attrs'].extend([('data-' + prop, app[prop]) for
+            prop in ['angle', 'scale'] if app.get(prop)])
 
         if widget_type != 'hive.rectangle':
             # rectangles have css as their content; all other apps have extra
@@ -432,7 +432,8 @@ class Expr(ModelController):
             c = app.get('css_state', {})
             app['more_css'] = ';'.join([p + ':' + str(c[p]) for p in c])
 
-        html = widget_types.get(widget_type, widget_types['hive.text'])(app)
+        html = widget_types.get(widget_type, widget_types['hive.text'])(
+            app, snapshot_mode, self.db)
 
         if widget_type != 'hive.polygon':
             html = anchor_tag(app['anchor'], html)
@@ -502,18 +503,17 @@ class Expr(ModelController):
 
         return self.serve_json(response, resp)
 
-def widget_image(app):
-    url = app.get('url') or app.get('content','')
-    media = self.db.File.fetch(app.get('file_id'))
+def widget_image(app, snapshot_mode, db):
+    url = app.get('url') or app.get('content', '')
     scale_x = app.get('scale_x', 1)
+
+    media = db.File.fetch(app.get('file_id'))
     if media: 
         app['data_attrs'].append(("data-orig", url))
-        url = media.get_resample(app['dimensions'][0] * scale * scale_x)
-        if not snapshot_mode: #//!! and self.flags.get('lazy_load'):
-            app['data_attrs'].append(("data-scaled", url))
-            scale /= 8.0 #//!!self.flags.get('lazy_load_scale'):
-            url = (media.get_static_url() or 
-                media.get_resample(app['dimensions'][0] * scale * scale_x))
+        scale = app['dimensions'][0] * scale_x
+        url = media.get_resample(scale / 8)
+        if snapshot_mode:
+            url = media.get_static_url() or media.get_resample(scale)
 
     html = "<img src='%s'>" % url
     if scale_x:
@@ -528,14 +528,14 @@ def widget_image(app):
         html = "<img src='%s' style='%s' class='content'>" % (url, css)
     return html
 
-def widget_rectangle(app): # and widget_circle
+def widget_rectangle(app, *_): # and widget_circle
     c = app.get('content', {})
     container_attrs = ['position']
     css = ';'.join([p + ':' + str(c[p]) for p in c if p not in container_attrs])
     more_css = ';'.join([p + ':' + str(c[p]) for p in c if p in container_attrs])
     return "<div style='%s' class='content'></div>" % css
     
-def widget_html(app, snapshot_mode=False):
+def widget_html(app, snapshot_mode, _):
     #encoded_content = cgi.escape(app.get('content',''), quote=True)
     if snapshot_mode and app.get('media') == 'youtube':
         # phantomjs does not support HTML5 video or Flash, so construct
@@ -549,11 +549,12 @@ def widget_html(app, snapshot_mode=False):
         html = app.get('content','')
     return html
 
-def widget_code(app):
+def widget_code(app, snapshot_mode, db):
     ctype = app.get('code_type', 'js')
     if ctype == 'js':
         tag = 'script'
-        url = app.get('url') or app.get('code_url')
+        media = db.File.fetch(app.get('file_id'))
+        url = media.url if media else app.get('url')
         html = "<script src='%s'></script>" % app.get('url') if url else ("<script>\n"
             "self = window; self.script = scripts.length;\n" +
             app.get('content') +
@@ -571,7 +572,7 @@ def widget_code(app):
             app['id'], app.get('content') )
     return html
 
-def widget_polygon(app):
+def widget_polygon(app, *_):
     points = filter(lambda point: is_number_list(point, 2)
         ,app.get('points', []))
     # shouldn't style go into .content, not the .happ as was earlier?
@@ -598,10 +599,10 @@ def widget_polygon(app):
     )
     return html
 
-def widget_sketch(app):
+def widget_sketch(app, *_):
     return "<img src='%s' class='content'>" % app.get('content', {}).get('src', '')
 
-def widget_text(app):
+def widget_text(app, *_):
     return "<div class='content'>%s</div>" % app.get('content')
 
 widget_types = {
