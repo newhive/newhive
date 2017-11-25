@@ -245,7 +245,8 @@ $nav_size: 44px;
                 display: inline-block;
                 height: 38px;
                 .active {
-                    font-family: Gibson Semibold;
+                    font-family: $ui_font_bold;
+                    font-weight: bold;
                     color: white;
                     background-color: black;
                 }
@@ -278,13 +279,9 @@ $nav_size: 44px;
             }
 
             .category_btn {
-                // text-transform: lowercase;
-                // padding: 10px;
-                // font-family: Gibson Semibold;
-                // font-size: 20px;
                 text-transform: uppercase;
                 padding: 10px;
-                font-family: Gibson;
+                font-family: $ui_font;
                 font-size: 17px;
             }
 

@@ -754,7 +754,7 @@ o.new_file = function(files, opts, app_opts, filter) {
         // audio = { src: file.url }
         // link = { content: $('<a>').attr('href', file.url).text(file.name).outerHTML() }
 
-        if(file.mime.match(/image\/(png|gif|jpeg)/)) app.type = 'hive.image';
+        if(file.mime.match(/image\/(png|gif|jpeg|svg)/)) app.type = 'hive.image';
         else if(file.mime.match(/audio\//)) app.type = 'hive.audio';
         else {
             app.type = 'hive.text';
@@ -840,6 +840,7 @@ o.snap_helper = function(my_tuple, opts) {
         guide_0: true,          // show horizontal guide
         guide_1: true,          // show vertical guide
     }, opts );
+    if(!opts.padding) return
     var s = env.scale(),
         exclude_ids = opts.exclude_ids,
         snap_strength = opts.snap_strength,

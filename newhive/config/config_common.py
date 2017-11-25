@@ -11,7 +11,7 @@ database_port   = 27017
 email_port      = 2525
 media_path      = '/home/domains/thenewhive.com'
 redirect_domains = ['newhive.com', 'thenewhive.com']
-live_prefixes   = ['live-2', 'live-3', 'live-4', 'live-5', 'live-6']
+live_prefixes   = ['live-1', 'live-2', 'live-3', 'live-4', 'live-5', 'live-6']
 
 analytics_db    = 'analytics'
 

@@ -522,6 +522,8 @@ Examples:
             data['cards'] = list(res)
         return data
 
+    def home_redirect(self, tdata, **kwargs):
+        return self.redirect(tdata.response, abs_url('/b/', secure=True))
     def my_home(self, tdata, **kwargs):
         return self.redirect(tdata.response, abs_url(
             '/' + tdata.user['name'] + '/profile/feed' +

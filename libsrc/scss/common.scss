@@ -7,6 +7,8 @@
 // and their submenus, (4, 5, 6) respectively
 $nav_layer: 40;
 $nav_size: 44px;
+$ui_font: Gibson, Helvetica, sans-serif;
+$ui_font_bold: Gibson Semibold, Helvetica, sans-serif;
 
 @mixin calc-width($w: 100%, $fallback: 100%) {
 	width: $fallback;

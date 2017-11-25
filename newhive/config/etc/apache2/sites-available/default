@@ -1,11 +1,9 @@
 <VirtualHost *:80>
-	WSGIScriptAlias / /var/www/newhive/newhive/app.py
+    Include sites-available/newhive
+</VirtualHost>
 
-    Alias /lib /var/www/newhive/lib
-    <Location /lib>
-        Header Set Access-Control-Allow-Origin *
-        Header Set Cache-Control "max-age=315360000"
-        AddType application/vnd.ms-fontobject .eot
-        AddType application/x-font-woff .woff
-    </Location>
+<VirtualHost *:80>
+    ServerName blog.newhive.com
+    #Redirect / https://newhive.com/b/
+    RedirectMatch ^/(.*) https://newhive.com/b/$1
 </VirtualHost>
