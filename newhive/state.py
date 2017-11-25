@@ -1910,9 +1910,7 @@ class Expr(HasSocial):
             text_index ) )
         if text_index: d['text_index'] = text_index
 
-    def _collect_files(self, d, old=True, thumb=True, background=True,
-        apps=True
-    ):
+    def _collect_files(self, d, old=True):
         ids = []
         if old: ids += self.get('file_id', [])
 
