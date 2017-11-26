@@ -2475,8 +2475,11 @@ class File(Entity):
         self.delete_files()
         super(File, self).purge()
 
+    def child_paths(self):
+        return self._resample_names + self._thumb_keys
+
     def delete_files(self):
-        for k in self._thumb_keys + [self.id] + self._resample_names:
+        for k in [self.id] + self.child_paths():
             if self.get('s3_bucket'):
                 try:
                     self.db.s3.delete_file(self['s3_bucket'], self.id)

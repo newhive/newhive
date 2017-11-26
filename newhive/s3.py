@@ -4,6 +4,9 @@ from boto.s3.key import Key as S3Key
 import newhive
 from newhive import config
 import re
+from google.cloud.storage.client import Client
+from base64 import b16decode, b64encode
+
 
 class S3Interface(object):
     def __init__(self, config=None):
@@ -54,3 +57,52 @@ class S3Interface(object):
         return '//' + ( self.config.cloudfront_domains.get(bucket) or (
             (bucket_name or self.config.s3_buckets[bucket])
             + '.s3.amazonaws.com') ) + '/'
+
+
+class GoogleStorage(object):
+    def __init__(self, config=None):
+        self.config = config if config else newhive.config
+
+        # initialize s3 connection
+        if self.config.google_buckets:
+            self.con = Client()
+            self.buckets = {
+                k: self.con.get_bucket(name) for
+                k, name in self.config.google_buckets.items()
+            }
+
+    def upload_file(self, file, bucket_name, path, mime, md5):
+        bucket = self.buckets[bucket_name]
+        remote = bucket.blob(path)
+        remote.content_type = mime
+        remote.cache_control = 'max-age=' + str(86400 * 3650)
+        remote.md5_hash = b64encode(b16decode(md5.upper()))
+
+        if isinstance(file, basestring):
+            remote.upload_from_filename(file)
+        else:
+            file.seek(0)
+            remote.upload_from_file(num_retries=3)
+        return self.url(bucket_name, path)
+
+    def delete_file(self, bucket, path):
+        bucket = self.buckets[bucket]
+        remote = bucket.blob(path)
+        if remote.exists():
+            remote.delete()
+            return True
+        return False
+
+    def file_exists(self, bucket, path):
+        bucket = self.buckets[bucket]
+        remote = bucket.blob(path)
+        return remote.exists()
+
+    def bucket_url(self, bucket='media'):
+        return '//' + self.config.google_buckets[bucket] + '/'
+
+    def url(self, bucket='media', key='', bucket_name=None, http=False, secure=False):
+        url = self.bucket_url(bucket) + key
+        if http: url = 'http' + url
+        if secure: url = 'https' + url
+        return url

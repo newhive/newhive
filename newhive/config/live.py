@@ -16,10 +16,15 @@ s3_buckets = {
     'thumb': 'thumb-newhive',
     'asset': 'live-skin-newhive'
 }
-
 cloudfront_domains = {
     'media': 'd1v8u1ev1s9e4n.cloudfront.net',
     'asset': 'd26s0ow2ajnmml.cloudfront.net'
+}
+
+google_buckets = {
+    'media': 'media.tnh.me',
+    'content': 'tnh.me',
+    'asset': 's.newhive.com'
 }
 
 stripe_id = 'pk_test_cedS2baGtwNVnzyRbQzWitUB'
