@@ -1,4 +1,4 @@
-from dev import *
+from .dev import *
 
 server_name     = 'site'
 content_domain  = 'content'

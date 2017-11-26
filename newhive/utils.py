@@ -57,8 +57,10 @@ class Apply(object):
         Apply.success = []
 
     @staticmethod
-    def apply_continue(func, klass, query={}, print_frequency=100, dryrun=False, 
-            reset=False, runcount=1):
+    def apply_continue(
+        func, klass, query={},
+        print_frequency=100, dryrun=False, reset=False, runcount=1
+    ):
         ands = [query]
         if not reset:
             ands.append({ '$or': [
