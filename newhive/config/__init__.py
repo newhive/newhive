@@ -1,6 +1,6 @@
 import re
-from config_common import *
-from config import *
+from .config_common import *
+from .config import *
 
 def url_host(on_main_domain=True, port=None, secure=False):
     domain = server_name if on_main_domain else content_domain

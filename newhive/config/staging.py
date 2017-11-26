@@ -1,4 +1,4 @@
-from live import *
+from .live import *
 
 dev_prefix = 'staging'
 s3_buckets['asset'] = 'skin-newhive'

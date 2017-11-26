@@ -1,17 +1,26 @@
-import re, pymongo, bson.objectid, random, urllib, urllib2, os, time, json, math
-from pymongo.cursor import Cursor as PymongoCursor
-from ast import literal_eval
-from tempfile import mkstemp
+import re
+import random
+import urllib
+import urllib2
+import os
 from os.path import join as joinpath
+import time
+import json
+import math
 from md5 import md5
 from datetime import datetime
+from ast import literal_eval
+from pymongo.cursor import Cursor as PymongoCursor
+from bson.code import Code
+import bson
+import pymongo
+from tempfile import mkstemp
 from lxml import html
 from wsgiref.handlers import format_date_time
 from itertools import ifilter, islice, izip_longest, chain
 from functools import partial
 from PIL import Image as Img
 from PIL import ImageOps
-from bson.code import Code
 from crypt import crypt
 #from oauth2client.client import OAuth2Credentials
 # TODO-cleanup?: remove snapshots from webserver?
@@ -76,7 +85,7 @@ class Database:
                 opts.setdefault('background', True)
                 key = map(lambda a: a if isinstance(a, tuple) else (a, 1),
                     [key] if not isinstance(key, list) else key)
-                print 'building', key, opts
+                print('building', key, opts)
                 col._col.ensure_index(key, **opts)
 
     # arg{id}: if not None, ensure this result appears in the feed
@@ -262,7 +271,7 @@ class Collection(object):
             return res
         # for DB optimization / debugging
         if False:
-            print spec, opts
+            print(spec, opts)
         return Cursor(self, spec=spec, **opts)
         # can't figure out as_class param, which seems to not be passed an arg
         #return self._col.find(spec=spec, as_class=self.new, **opts)
@@ -1262,7 +1271,7 @@ class User(HasSocial):
                 fbc.delete('https://graph.facebook.com/me/permissions',
                     self.facebook_credentials)
             except (FlowExchangeError, AccessTokenCredentialsError) as e:
-                print e
+                print(e)
             self.facebook_credentials = None
         # WTF? this doesn't actually disconnect you
         #self.update_cmd({'$set': {'facebook.disconnected': True}})
@@ -1539,9 +1548,10 @@ class Expr(HasSocial):
             r.create_remix()
             return r
 
-        def fetch(self, key, keyname='_id', meta=False):
-            fields = { 'text_index': 0, 'title_index': 0 }
-            if meta: fields.update(self.ignore_not_meta)
+        def fetch(self, key, keyname='_id', fields=None, meta=False):
+            if not fields:
+                fields = { 'text_index': 0, 'title_index': 0 }
+                if meta: fields.update(self.ignore_not_meta)
             return super(Expr.Collection, self).fetch(key, keyname, fields=fields)
 
         def popular_tags(self):
@@ -1752,7 +1762,7 @@ class Expr(HasSocial):
         local = joinpath('/tmp', name)
         r = snapshotter.take_snapshot(self.id, out_filename=local, full_page=True)
         if not r:
-            print 'FAIL'
+            print('FAIL')
             return False
 
         url = self.db.s3.upload_file(local, 'thumb', name, mimetype='image/jpg', ttl=30)
@@ -1767,11 +1777,14 @@ class Expr(HasSocial):
         snapshot_time = now()
         filename = os.tmpnam() + '.jpg'
         w, h = self.snapshot_dimlist[0]
-        r = snapshotter.take_snapshot(self.id, dimensions=(w,h),
+        r = snapshotter.take_snapshot(
+            self.id,
+            dimensions=(w,h),
             out_filename=filename,
-            password=self.get('password', ''), **args)
+            password=self.get('password', ''), **args
+        )
         if r:
-	    self.save_snapshot(filename, correct_size=True)
+            self.save_snapshot(filename, correct_size=True)
         # clean up local file
         call(["rm", filename])
 
@@ -1794,9 +1807,10 @@ class Expr(HasSocial):
                 mime='image/jpeg', autogen=False)
 
         old_file = self.get('snapshot_id', False)
-        self.update(updated=False, snapshot_time=now(),
+        self.update(
+            updated=False, snapshot_time=now(),
             snapshot_id=file_record.id, snapshot_needed=False,
-	    snapshot_fail_time=0, snapshot_fails=0
+            snapshot_fail_time=0, snapshot_fails=0
         )
         # Delete old snapshot
         if old_file and old_file != file_record.id:
@@ -2254,10 +2268,10 @@ class File(Entity):
             url = "http:" + url
         try: response = urllib.urlopen(url)
         except:
-            print 'urlopen fail for ' + self.id + ': ' + json.dumps(self.url)
+            print('urlopen fail for ' + self.id + ': ' + json.dumps(self.url))
             return False
         if response.getcode() != 200:
-            print 'http fail ' + str(response.getcode()) + ': ' + self.url
+            print('http fail ' + str(response.getcode()) + ': ' + self.url)
             return False
         self._file = os.tmpfile()
         self._file.write(response.read())
@@ -2325,7 +2339,7 @@ class File(Entity):
         os.remove(resample_filename)
         resamples.reverse()
         self.update(resamples=resamples)
-        print "Resampling finished" #//!!
+        print("Resampling finished") #//!!
 
     def get_static_name(self):
         """ get the URL for a static representation of a video
@@ -2485,7 +2499,7 @@ class File(Entity):
             elif self.get('fs_path'):
                 try: os.remove(self['fs_path'])
                 except:
-                    print 'can not delete missing file: ' + self['fs_path']
+                    print('can not delete missing file: ' + self['fs_path'])
 
     def client_view(self, viewer=None, activity=0):
         r = dfilter(self, ['name', 'mime', 'owner', 'thumbs'])
@@ -2809,7 +2823,7 @@ class Broken(Entity):
 def collection_of(db, collection):
     try:
         return getattr(db, collection.title())
-    except AttributeError, e:
+    except AttributeError as e:
         return None
 
 # def search_trash(db, spec, collection):

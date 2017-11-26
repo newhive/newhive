@@ -1,4 +1,4 @@
-from config_common import *
+from .config_common import *
 
 server_name     = 'dev.newhive.com'
 content_domain  = 'dev.tnh.me'

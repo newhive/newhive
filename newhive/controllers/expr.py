@@ -66,8 +66,7 @@ class Expr(ModelController):
             request.args.get('viewport', '1000x750').split('x')]
         snapshot_mode = request.args.get('snapshot') is not None
         tdata.context.update(
-            html = self.expr_to_html(expr_obj, snapshot_mode,
-                viewport=viewport),
+            html = expr_to_html(expr_obj, snapshot_mode, viewport=viewport),
             expr = expr_obj,
             use_ga = False,
         )
@@ -396,56 +395,6 @@ class Expr(ModelController):
 
     #     return self.serve_json(response, expr)
 
-    def expr_to_html(self, exp, snapshot_mode=False, viewport=(1000, 750)):
-        """Converts JSON object representing an expression to HTML"""
-        if not exp: return ''
-        # scale the objects on this page based on the given viewport
-        expr_scale = float(viewport[exp.get('layout_coord', 0)]) / 1000
-
-        html_for_app = partial(self.html_for_app, scale=expr_scale,
-            snapshot_mode=snapshot_mode)
-        app_html = map(html_for_app, exp.get('apps', []))
-        return ''.join(app_html)
-
-    def html_for_app(self, app, scale=1, snapshot_mode=False):
-        widget_type = app.get('type')
-        app['klass'] = widget_type.replace('.', '_')
-        app['more_css'] = ''
-        app['data_attrs'] = []
-        app.setdefault('dimensions', [100,100])
-        app.setdefault('id', 'app_' + str(app['z']))
-        app.setdefault('anchor', {
-            'href': app.get('href'), 'name': app.get('href_name') })
-        if type(app['anchor']) != dict or (not
-            (app['anchor'].get('href') or app['anchor'].get('name')
-        )): app['anchor'] = {}
-
-        if not is_number_list(app['dimensions'], 2): return ''
-        if not is_number_list(app.get('position', []), 2): return ''
-
-        app['data_attrs'].extend([('data-' + prop, app[prop]) for
-            prop in ['angle', 'scale'] if app.get(prop)])
-
-        if widget_type != 'hive.rectangle':
-            # rectangles have css as their content; all other apps have extra
-            # css in 'css_state'
-            c = app.get('css_state', {})
-            app['more_css'] = ';'.join([p + ':' + str(c[p]) for p in c])
-
-        html = widget_types.get(widget_type, widget_types['hive.text'])(
-            app, snapshot_mode, self.db)
-
-        if widget_type != 'hive.polygon':
-            html = anchor_tag(app['anchor'], html)
-
-        data_props = [prop + "=" + str(val) for (prop, val) in app['data_attrs']]
-        html = "<div class='happ %s %s loading' id='%s' style='%s'%s>%s</div>" % (
-            app['klass'], app.get('css_class', ''), app['id'],
-            css_for_app(app) + app['more_css'], " ".join(data_props), html
-        )
-
-        return html
-
     def oembed(self, tdata, request, response, **args):
         format = request.args.get('format', 'json')
         if format != 'json':
@@ -502,6 +451,56 @@ class Expr(ModelController):
             resp.update(type='link')
 
         return self.serve_json(response, resp)
+
+def expr_to_html(exp, snapshot_mode=False, viewport=(1000, 750)):
+    """Converts JSON object representing an expression to HTML"""
+    if not exp: return ''
+    # scale the objects on this page based on the given viewport
+    expr_scale = float(viewport[exp.get('layout_coord', 0)]) / 1000
+
+    to_html = partial(html_for_app, scale=expr_scale,
+        snapshot_mode=snapshot_mode, db=exp.db)
+    app_html = map(to_html, exp.get('apps', []))
+    return ''.join(app_html)
+
+def html_for_app(app, scale=1, snapshot_mode=False, db=None):
+    widget_type = app.get('type')
+    app['klass'] = widget_type.replace('.', '_')
+    app['more_css'] = ''
+    app['data_attrs'] = []
+    app.setdefault('dimensions', [100,100])
+    app.setdefault('id', 'app_' + str(app['z']))
+    app.setdefault('anchor', {
+        'href': app.get('href'), 'name': app.get('href_name') })
+    if type(app['anchor']) != dict or (not
+        (app['anchor'].get('href') or app['anchor'].get('name')
+    )): app['anchor'] = {}
+
+    if not is_number_list(app['dimensions'], 2): return ''
+    if not is_number_list(app.get('position', []), 2): return ''
+
+    app['data_attrs'].extend([('data-' + prop, app[prop]) for
+        prop in ['angle', 'scale'] if app.get(prop)])
+
+    if widget_type != 'hive.rectangle':
+        # rectangles have css as their content; all other apps have extra
+        # css in 'css_state'
+        c = app.get('css_state', {})
+        app['more_css'] = ';'.join([p + ':' + str(c[p]) for p in c])
+
+    html = widget_types.get(widget_type, widget_types['hive.text'])(
+        app, snapshot_mode, db)
+
+    if widget_type != 'hive.polygon':
+        html = anchor_tag(app['anchor'], html)
+
+    data_props = [prop + "=" + str(val) for (prop, val) in app['data_attrs']]
+    html = "<div class='happ %s %s loading' id='%s' style='%s'%s>%s</div>" % (
+        app['klass'], app.get('css_class', ''), app['id'],
+        css_for_app(app) + app['more_css'], " ".join(data_props), html
+    )
+
+    return html
 
 def widget_image(app, snapshot_mode, db):
     url = app.get('url') or app.get('content', '')

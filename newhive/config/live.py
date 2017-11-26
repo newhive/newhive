@@ -1,4 +1,4 @@
-from config_common import *
+from .config_common import *
 
 live_server     = True
 dev_prefix      = None
