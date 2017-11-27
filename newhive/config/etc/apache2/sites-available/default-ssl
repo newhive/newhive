@@ -13,51 +13,31 @@ NameVirtualHost *:443
         AddType application/x-font-woff .woff
     </Location>
 
-    ProxyPass /b/ http://blog.newhive.com/
-
 	SSLEngine on
 
-	SSLCertificateKeyFile /etc/ssl/private/star_tnh_me.key
-	SSLCertificateFile    /etc/ssl/certs_local/star_tnh_me.crt
-	SSLCACertificateFile  /etc/ssl/certs_local/Comodo_PositiveSSL_CA_bundle_SHA256.txt
+	SSLCertificateKeyFile /etc/ssl/private/star_tnh_me-2017.key
+	SSLCertificateFile    /etc/ssl/certs_local/star_tnh_me-2017.crt
+	SSLCACertificateFile  /etc/ssl/certs_local/star_tnh_me-2017.ca-bundle
 
 	BrowserMatch "MSIE [2-6]" \
 		nokeepalive ssl-unclean-shutdown \
 		downgrade-1.0 force-response-1.0
 	# MSIE 7 and newer should be able to use keepalive
 	BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown
-
-    Alias /allmymovies /home/newhive/lib/allmymovies
-    Alias /5640b9655ccacf21611599b3 /home/newhive/lib/5640b9655ccacf21611599b3
-    <Location /allmymovies>
-        Header set Content-Type "text/html; charset=utf-8"
-    </Location>
-    <Location /5640b9655ccacf21611599b3>
-        Header set Content-Type "text/html; charset=utf-8"
-    </Location>
 </VirtualHost>
 <VirtualHost _default_:443>
     Include sites-available/newhive
 
 	SSLEngine on
 
-	SSLCertificateKeyFile /etc/ssl/private/star_newhive_com.key
-	SSLCertificateFile    /etc/ssl/certs_local/star_newhive_com.crt
-	SSLCACertificateFile  /etc/ssl/certs_local/Comodo_PositiveSSL_CA_bundle_SHA256.txt
+	SSLCertificateKeyFile /etc/ssl/private/star_newhive_com-2017.key
+	SSLCertificateFile    /etc/ssl/certs_local/star_newhive_com-2017.crt
+	SSLCACertificateFile  /etc/ssl/certs_local/star_newhive_com-2017.ca-bundle
 
 	BrowserMatch "MSIE [2-6]" \
 		nokeepalive ssl-unclean-shutdown \
 		downgrade-1.0 force-response-1.0
 	# MSIE 7 and newer should be able to use keepalive
 	BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown
-
-    Alias /allmymovies /home/newhive/lib/allmymovies
-    Alias /5640b9655ccacf21611599b3 /home/newhive/lib/5640b9655ccacf21611599b3
-    <Location /allmymovies>
-        Header set Content-Type "text/html; charset=utf-8"
-    </Location>
-    <Location /5640b9655ccacf21611599b3>
-        Header set Content-Type "text/html; charset=utf-8"
-    </Location>
 </VirtualHost>
 </IfModule>

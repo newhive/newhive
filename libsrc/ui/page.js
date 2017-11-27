@@ -431,8 +431,8 @@ define([
                 , dia = dialogs.data("dialog")
             if (! dia) {
                 $('#site').append(collections_template([
-                    context.page_data
-                    , {categories: category == "categories"}
+                    context.page_data,
+                    {tag_type: category}
                 ]));
                 dia = dialog.create(dialog_selector, {});
                 // var new_tags_autocomplete = false;
