@@ -22,7 +22,9 @@ cloudfront_domains = {
     'asset': 'd26s0ow2ajnmml.cloudfront.net'
 }
 
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/home/ubuntu/google-storage-key.json'
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = (
+    '/home/newhive/newhive/config/google-storage-secret.json'
+)
 google_buckets = {
     'media': 'media.tnh.me',
     'content': 'tnh.me',

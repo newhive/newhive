@@ -1,5 +1,5 @@
 <VirtualHost *:80>
-    DocumentRoot /var/www/newhive/lib/pages
+    DocumentRoot /home/newhive/lib/pages
     ErrorDocument 503 /sys-maintenance.html
 
     RewriteEngine on

@@ -1,3 +1,4 @@
+compiled.*
 /scratch.*
 /lib/*.js
 !/lib/harmony_sketch.js
@@ -5,16 +6,11 @@
 /lib/tmp/*
 /lib/libsrc
 /libsrc/scss/*.css
-compiled.*
 /libsrc/.webassets-cache
 /libsrc/scss/config.rb
 /libsrc/scss/.sass-cache/*
 /libsrc/.cram
-/newhive/config/config.py
-/newhive/config/GA_credentials.dat
-/newhive/config/aws.py
-*.pyc
-*.DS_Store
 /log/*.txt
 test.log
-.pivrc
+*.pyc
+node_modules

@@ -1,19 +1,14 @@
 #! /bin/sh
+HERE=$(pwd)
+export PATH="$PATH:$HERE/node_modules/.bin"
 
-# what is this for?
-PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin::$PATH"
-
-# TODO: if running on AWS, remove this server from load balancer
-
-### Asset building ###
-
-sudo chown www-data:dev -R .
-sudo chmod g+rwX -R .
+#sudo chown www-data:dev -R .
+#sudo chmod g+rwX -R .
 
 if [ "$1" = "clean" ]; then
     echo "cleaning..."
     sudo rm -rf libsrc/.cram libsrc/.webassets-cache
-    find|grep *.pyc|sudo xargs rm
+    find -name '*.pyc'|xargs rm
 fi
 
 # cram sucks and tries to open unreasonable numbers of files
@@ -21,5 +16,3 @@ ulimit -S -n 4000 # hard limit default on Ubuntu seems to 4096
 bin/build_assets.py
 
 sudo service apache2 restart
-# TODO: run automated tests
-# TODO: put this server back into load balancer

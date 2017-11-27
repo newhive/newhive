@@ -3,9 +3,9 @@ NameVirtualHost *:443
 
 <VirtualHost _default_:443>
     ServerName tnh.me
-	WSGIScriptAlias / /var/www/newhive/newhive/app.py
+	WSGIScriptAlias / /home/newhive/newhive/app.py
 	
-	Alias /lib /var/www/newhive/lib
+	Alias /lib /home/newhive/lib
     <Location /lib>
         Header Set Access-Control-Allow-Origin *
         Header Set Cache-Control "max-age=315360000"
@@ -27,8 +27,8 @@ NameVirtualHost *:443
 	# MSIE 7 and newer should be able to use keepalive
 	BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown
 
-    Alias /allmymovies /var/www/newhive/lib/allmymovies
-    Alias /5640b9655ccacf21611599b3 /var/www/newhive/lib/5640b9655ccacf21611599b3
+    Alias /allmymovies /home/newhive/lib/allmymovies
+    Alias /5640b9655ccacf21611599b3 /home/newhive/lib/5640b9655ccacf21611599b3
     <Location /allmymovies>
         Header set Content-Type "text/html; charset=utf-8"
     </Location>
@@ -51,8 +51,8 @@ NameVirtualHost *:443
 	# MSIE 7 and newer should be able to use keepalive
 	BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown
 
-    Alias /allmymovies /var/www/newhive/lib/allmymovies
-    Alias /5640b9655ccacf21611599b3 /var/www/newhive/lib/5640b9655ccacf21611599b3
+    Alias /allmymovies /home/newhive/lib/allmymovies
+    Alias /5640b9655ccacf21611599b3 /home/newhive/lib/5640b9655ccacf21611599b3
     <Location /allmymovies>
         Header set Content-Type "text/html; charset=utf-8"
     </Location>

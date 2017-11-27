@@ -4,9 +4,9 @@ NameVirtualHost *:443
 <VirtualHost _default_:443>
     ServerName staging.tnh.me
 
-	WSGIScriptAlias / /var/www/newhive/newhive/app.py
+	WSGIScriptAlias / /home/newhive/newhive/app.py
 	
-	Alias /lib /var/www/newhive/lib
+	Alias /lib /home/newhive/lib
     <Location /lib>
         Header Set Access-Control-Allow-Origin *
         Header Set Cache-Control "max-age=315360000"

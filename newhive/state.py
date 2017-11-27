@@ -64,7 +64,7 @@ class Database:
 
         print('getting db connection')
         self.con = pymongo.MongoClient(host=config.database_host,
-            port=config.database_port, max_pool_size=20)
+            port=config.database_port, maxPoolSize=20)
         self.mdb = self.con[config.database]
 
         self.s3 = S3Interface(config)
@@ -254,12 +254,12 @@ class Collection(object):
         res = self.find(spec, **opts)
         return res if res else self.new({})
 
-    def find(self, spec, **opts):
-        r = self._col.find_one(spec, **opts)
+    def find(self, spec, fields=None, **opts):
+        r = self._col.find_one(spec, projection=fields, **opts)
         if not r: return None
         return self.new(r)
 
-    def search(self, spec, filter={}, **opts):
+    def search(self, spec, filter={}, fields=None, **opts):
         if isinstance(spec, list):
             items = {}
             res = []
@@ -272,7 +272,7 @@ class Collection(object):
         # for DB optimization / debugging
         if False:
             print(spec, opts)
-        return Cursor(self, spec=spec, **opts)
+        return Cursor(self, filter=spec, projection=fields, **opts)
         # can't figure out as_class param, which seems to not be passed an arg
         #return self._col.find(spec=spec, as_class=self.new, **opts)
 
@@ -479,7 +479,7 @@ class Entity(dict):
         For example {'foo': 2, 'bar': -1, 'baz.qux': 10}"""
         fields = { key: True for (key, v) in d.items() }
         res = self._col.find_and_modify({ '_id' : self.id },
-            {'$inc': d }, fields=fields, new=True)
+            {'$inc': d }, projection=fields, new=True)
         dict.update(self, res)
         # del res['_id']
         return res
