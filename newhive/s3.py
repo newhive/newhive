@@ -71,12 +71,13 @@ class GoogleStorage(object):
                 k, name in self.config.google_buckets.items()
             }
 
-    def upload_file(self, file, bucket_name, path, mime, md5):
+    def upload_file(self, file, bucket_name, path, mime, md5=None):
         bucket = self.buckets[bucket_name]
         remote = bucket.blob(path)
         remote.content_type = mime
         remote.cache_control = 'max-age=' + str(86400 * 3650)
-        remote.md5_hash = b64encode(b16decode(md5.upper()))
+        if md5:
+            remote.md5_hash = b64encode(b16decode(md5.upper()))
 
         if isinstance(file, basestring):
             remote.upload_from_filename(file)

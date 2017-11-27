@@ -1,4 +1,5 @@
 from .config_common import *
+import os
 
 live_server     = True
 dev_prefix      = None
@@ -21,6 +22,7 @@ cloudfront_domains = {
     'asset': 'd26s0ow2ajnmml.cloudfront.net'
 }
 
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/home/ubuntu/google-storage-key.json'
 google_buckets = {
     'media': 'media.tnh.me',
     'content': 'tnh.me',

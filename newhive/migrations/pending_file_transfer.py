@@ -1,23 +1,34 @@
 import os
 from md5 import md5
 import re
-from newhive.utils import Apply
+from newhive.utils import Apply, lget
 from newhive.server_session import db
+from newhive.s3 import GoogleStorage
+from newhive.mongo_helpers import mq
+
+
+def tupdate(t, i, v):
+    return t[:i] + (v,) + t[i+1:]
+
 
 def write_lines(lines, fname):
     with open(fname, 'w') as f:
         f.writelines([l + '\n' for l in lines])
 
+
 def paths_from_files(fs):
     return [p for ps in [[f.id] + f.child_paths() for f in fs] for p in ps]
+
 
 def file_meta(p):
     with open(p) as f:
         csum = md5(f.read()).hexdigest()
     return dict(size=os.stat(p).st_size, md5=csum)
 
+
 def update_md5_and_size(db_file, cache_path):
     db_file.update(**file_meta(cache_path + db_file.id))
+
 
 def replace_url(d, k, path):
     s = d.get(k)
@@ -32,6 +43,7 @@ def replace_url(d, k, path):
         return True
     else:
         return False
+
 
 def fixup_apps(expr):
     apps = expr.get('apps', [])
@@ -68,17 +80,82 @@ def fixup_apps(expr):
 
     return updated
 
+
 def fixup_expr_app_files(expr, dryrun=True):
     updated = fixup_apps(expr)
     if updated and not dryrun:
         expr.update(apps=expr['apps'], updated=False)
     return updated
 
-def file_add_owner(f, dryrun=True):
-    r = f.db.Expr.fetch(dict(file_id=f.id))
-    if r and not dryrun:
-        f.update(owner=r['owner'])
-    return True if r else False
+
+def file_owner():
+    index = {}
+    count = 0
+    for r in db.Expr.search({}, fields=['file_id', 'snapshot_id', 'owner']):
+        fs = r.get('file_id', [])
+        if r.get('snapshot_id'):
+            fs.append(r['snapshot_id'])
+        for f in fs:
+            index[f] = r['owner']
+
+        if not count % 5000:
+            print(count, r.id)
+        count += 1
+    return index
+
+
+def file_add_owner(fs_owner, f, dryrun=True):
+    if f.get('owner'):
+        return False
+    owner = fs_owner.get(f.id)
+    if owner and not dryrun:
+        f.update(owner=owner)
+    return True if owner else False
+
 
 def migrate(**kwargs):
     Apply.apply_continue(fixup_expr_app_files, db.Expr, **kwargs)
+
+
+
+MIME_FIXES = {
+    'gif' : 'image/gif'
+}
+CACHE='/data/media/'
+
+def upload_batch(page=0, limit=None, offset=0, report_freq=500):
+    gs = GoogleStorage()
+
+    fs_paths = os.listdir(CACHE)
+    fs_ids = [s for s in fs_paths if '_' not in s]
+
+    offset = page * limit + offset
+    end = offset + limit if limit else len(fs_paths)
+    fs_ids_slice = fs_ids[offset:end]
+
+    files = { f.id : f for f in db.File.fetch(fs_ids_slice) }
+
+    uploaded = 0
+    for n, fid in enumerate(fs_ids_slice):
+        f = files.get(fid)
+        if not f:
+            print('missing', fid)
+            continue
+
+        path_base = (f.get('owner') or '0') + '/'
+        path =  path_base + f.id
+        if gs.file_exists('media', path):
+            print('exists', fid)
+            continue
+
+        mime = f['mime']
+        mime = MIME_FIXES.get(mime, mime)
+        args = (CACHE + f.id, 'media', path, mime)
+        gs.upload_file(*(args + (f['md5'],)))
+
+        for p in f.child_paths():
+            gs.upload_file(*tupdate(args, 2, path_base + p))
+
+        if not uploaded % report_freq:
+            print(offset + n, fid)
+        uploaded += 1

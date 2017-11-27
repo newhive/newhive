@@ -59,9 +59,14 @@ class Query(dict):
         self[key] = val
         return self
 
-    def addd(self, key, prop, val):
+    def add_to(self, key, prop, val):
         self.setdefault(key, {})
         self[key][prop] = val
+        return self
+
+    def _or(self, *clauses):
+        self.setdefault('$or', [])
+        self['$or'].extend(clauses)
         return self
 
     @property
