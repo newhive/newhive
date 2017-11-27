@@ -2,12 +2,7 @@
   requires: logged in
 #}
 
-{set "tag_type" "Collection"}
-{set "extra_classes" " collections"}
-{set "tag_list" user.tag_list}
-{set "extra_tags" user.extra_tags}
-
-<div class="standard dialog add_to_collection{extra_classes}">
+<div class="standard dialog add_to_collection {tag_type}">
 <form {form_attrs "add_to_collection" "owner_name" user.name} method='post'>
   <input type="hidden" name="tag_name" />
   <input type="hidden" name="expr_id" />

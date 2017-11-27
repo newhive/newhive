@@ -10,13 +10,3 @@ Alias /lib /var/www/newhive/lib
     AddType application/vnd.ms-fontobject .eot
     AddType application/x-font-woff .woff
 </Location>
-
-#Redirect /b https://staging.newhive.com/b/
-#ProxyPass /b/ http://storm.newhive.com/blog/
-Alias /b/ /usr/share/wordpress
-<Directory /usr/share/wordpress>
-    AllowOverride All
-    Options FollowSymLinks
-    DirectoryIndex index.php
-</Directory>
-Header unset X-Powered-By

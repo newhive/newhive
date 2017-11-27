@@ -522,15 +522,15 @@ Examples:
             data['cards'] = list(res)
         return data
 
-    def home_redirect(self, tdata, **kwargs):
-        return self.redirect(tdata.response, abs_url('/b/', secure=True))
     def my_home(self, tdata, **kwargs):
         return self.redirect(tdata.response, abs_url(
             '/' + tdata.user['name'] + '/profile/feed' +
             Community.parse_query(tdata.request.query_string)))
+
     def profile_redirect(self, tdata, owner_name='', **kwargs):
         return self.redirect(tdata.response, abs_url(
             '/' + owner_name + ('/profile/feed' if owner_name else '') ))
+
     def user_tag_redirect(self, tdata, owner_name='', tag_name='', **kwargs):
         return self.redirect(tdata.response, abs_url(
             '/' + owner_name + ('/collection/' + tag_name if tag_name else '') ))
