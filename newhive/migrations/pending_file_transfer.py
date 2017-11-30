@@ -13,7 +13,12 @@ def tupdate(t, i, v):
 
 def write_lines(lines, fname):
     with open(fname, 'w') as f:
-        f.writelines([l + '\n' for l in lines])
+        f.writelines(l + '\n' for l in lines)
+
+
+def read_lines(filename):
+    with open(filename) as f:
+        return [s.strip('\n') for s in f.readlines()]
 
 
 def paths_from_files(fs):
@@ -26,7 +31,7 @@ def file_meta(p):
     return dict(size=os.stat(p).st_size, md5=csum)
 
 
-def update_md5_and_size(db_file, cache_path):
+def file_update_md5_and_size(db_file, cache_path):
     db_file.update(**file_meta(cache_path + db_file.id))
 
 
@@ -117,19 +122,36 @@ def migrate(**kwargs):
     Apply.apply_continue(fixup_expr_app_files, db.Expr, **kwargs)
 
 
+## batch file transfer.
+# To download a batch from a list of URLs:
+#base_path=http://s1-thenewhive.s3.amazonaws.com/ cat ../files-batch1-paths \
+#  | perl -pe '$_ = "'$base_path'" . $_ . " out=" . $_' | aria2c -i - -x 10
 
-MIME_FIXES = {
-    'gif' : 'image/gif'
-}
 CACHE='/data/media/'
 
-def upload_batch(page=0, limit=None, offset=0, report_freq=500):
+MIME_FIXES = {
+    'gif': 'image/gif',
+    'image%2Fgif': 'image/gif',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+}
+
+
+def file_mime_fix(f, dryrun=True):
+    if f.get('mime') in MIME_FIXES:
+        if not dryrun:
+            f.update(mime=MIME_FIXES[f['mime']])
+        return True
+    return False
+
+
+def upload_batch(page=0, limit=None, skip=0, report_freq=500):
     gs = GoogleStorage()
 
     fs_paths = os.listdir(CACHE)
     fs_ids = [s for s in fs_paths if '_' not in s]
 
-    offset = page * limit + offset
+    offset = page * limit + skip
     end = offset + limit if limit else len(fs_paths)
     fs_ids_slice = fs_ids[offset:end]
 
@@ -148,14 +170,20 @@ def upload_batch(page=0, limit=None, offset=0, report_freq=500):
             print('exists', fid)
             continue
 
-        mime = f['mime']
-        mime = MIME_FIXES.get(mime, mime)
-        args = (CACHE + f.id, 'media', path, mime)
-        gs.upload_file(*(args + (f['md5'],)))
+        args = (CACHE + f.id, 'media', path, f['mime'])
+        try:
+            gs.upload_file(*(args + (f['md5'],)))
+        except Exception as e:
+            print('upload failed', f)
+            raise e
 
         for p in f.child_paths():
-            gs.upload_file(*tupdate(args, 2, path_base + p))
+            try:
+                gs.upload_file(*tupdate(args, 2, path_base + p))
+            except Exception as e:
+                print('child upload failed!!', f)
+                raise e
 
         if not uploaded % report_freq:
-            print(offset + n, fid)
+            print(page * limit, '+', skip + n, fid)
         uploaded += 1
