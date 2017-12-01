@@ -36,11 +36,11 @@ def abs_url(path='', secure=False, domain=None, subdomain=None, relative=False):
     )
 
 def client_view():
-	return dict(
+    return dict(
         debug_mode=debug_mode,
         # use_strict=config.use_strict,
         use_ga=live_server,
-	   	#streamified_url=streamified_url,
+        #streamified_url=streamified_url,
         #streamified_client_id=streamified_client_id,
 
         site_user=site_user,
@@ -55,4 +55,4 @@ def client_view():
         secure_content_url=abs_url(domain=content_domain,secure=True),
         app=False,
         stripe_id=stripe_id
-	)
+    )

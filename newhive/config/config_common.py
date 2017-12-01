@@ -1,3 +1,5 @@
+import os
+
 live_server     = False
 
 plain_port      = 80
@@ -30,6 +32,16 @@ cloudfront_domains = {
     'asset': None
 }
 
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = (
+    '/home/newhive/newhive/config/google-storage-secret.json'
+)
+google_buckets = {
+    'media': None,
+    'content': None,
+    'asset': None,
+}
+
+stripe_id = None
 
 ################################################################
 # constants

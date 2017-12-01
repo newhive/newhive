@@ -35,7 +35,7 @@ import newhive
 from collections import Counter
 from snapshots import Snapshots
 
-from s3 import S3Interface
+from s3 import S3Interface, GoogleStorage
 
 from newhive import config
 from newhive.config import abs_url, url_host
@@ -67,7 +67,7 @@ class Database:
             port=config.database_port, maxPoolSize=20)
         self.mdb = self.con[config.database]
 
-        self.s3 = S3Interface(config)
+        self.s3 = GoogleStorage(config)
         self.assets = assets
 
         self.collections = map(
