@@ -31,7 +31,7 @@ def file_meta(p):
     return dict(size=os.stat(p).st_size, md5=csum)
 
 
-def file_update_md5_and_size(db_file, cache_path):
+def file_md5_and_size_update(db_file, cache_path):
     db_file.update(**file_meta(cache_path + db_file.id))
 
 
@@ -134,18 +134,33 @@ MIME_FIXES = {
     'image%2Fgif': 'image/gif',
     'jpg': 'image/jpeg',
     'jpeg': 'image/jpeg',
+    'png': 'image/png',
+    'image': True
 }
 
 
 def file_mime_fix(f, dryrun=True):
-    if f.get('mime') in MIME_FIXES:
+    mime = f.get('mime')
+    if mime in MIME_FIXES:
+        if mime == 'image':
+            name = f.get('name', '').lower()
+            if name.endswith('.jpg'):
+                mime = 'image/jpeg'
+            elif name.endswith('.gif'):
+                mime = 'image/gif'
+            else:
+                return False
+        else:
+            mime = MIME_FIXES[f['mime']]
+
         if not dryrun:
-            f.update(mime=MIME_FIXES[f['mime']])
+            f.update(mime=mime)
+        f['mime'] = mime
         return True
     return False
 
 
-def upload_batch(page=0, limit=None, skip=0, report_freq=500):
+def upload_batch(page=0, limit=None, skip=0, report_freq=500, redo=False, children_only=False):
     gs = GoogleStorage()
 
     fs_paths = os.listdir(CACHE)
@@ -166,20 +181,22 @@ def upload_batch(page=0, limit=None, skip=0, report_freq=500):
 
         path_base = (f.get('owner') or '0') + '/'
         path =  path_base + f.id
-        if gs.file_exists('media', path):
+        if not redo and gs.file_exists('media', path):
             print('exists', fid)
             continue
 
-        args = (CACHE + f.id, 'media', path, f['mime'])
-        try:
-            gs.upload_file(*(args + (f['md5'],)))
-        except Exception as e:
-            print('upload failed', f)
-            raise e
+        args = (CACHE + f.id, 'media', path, f['mime'], f['md5'])
+        if not children_only:
+            try:
+                gs.upload_file(*args)
+            except Exception as e:
+                print('upload failed', f)
+                raise e
 
         for p in f.child_paths():
+            args2 = (CACHE + p, 'media', path_base + p, f['mime'])
             try:
-                gs.upload_file(*tupdate(args, 2, path_base + p))
+                gs.upload_file(*args2)
             except Exception as e:
                 print('child upload failed!!', f)
                 raise e

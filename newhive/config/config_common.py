@@ -1,4 +1,7 @@
 import os
+from os.path import dirname, join, normpath, abspath
+
+src_home = normpath(abspath(join(dirname(__file__), "../..")))
 
 live_server     = False
 
@@ -33,7 +36,7 @@ cloudfront_domains = {
 }
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = (
-    '/home/newhive/newhive/config/google-storage-secret.json'
+    join(src_home, 'newhive/config/google-storage-secret.json')
 )
 google_buckets = {
     'media': None,
@@ -112,9 +115,6 @@ snapshot_async = True
 interactive = False
 
 initial_invite_count = 5
-
-from os.path import dirname, join, normpath, abspath
-src_home = normpath(abspath(join(dirname(__file__), "../..")))
 
 import json
 with open(join(src_home, 'newhive/config/site_flags.json')) as f:
