@@ -393,7 +393,7 @@ class Entity(dict):
         self['created'] = now()
         self['updated'] = now()
         self.serialize(self)
-        self._col.insert(self, safe=True)
+        self._col.insert(self)
         return self
 
     def serialize(self, d):
@@ -419,8 +419,7 @@ class Entity(dict):
         if not d['updated']: del d['updated']
         dict.update(self, d)
         self.serialize(d)
-        return self._col.update({ '_id' : self.id }, { '$set' : d },
-            safe=True)
+        return self._col.update({ '_id' : self.id }, { '$set' : d })
 
     def update_if(self, cmd, test_doc, updates):
         if updates.get('updated') == True:
@@ -441,7 +440,7 @@ class Entity(dict):
         return self._col.update(mq(_id=self.id), { '$unset': {key: 1} })
 
     def delete(self):
-        res = self._col.remove(spec_or_id=self.id, safe=True)
+        res = self._col.remove(spec_or_id=self.id)
         if self.Collection.trashable:
             self.db.Trash.create(self.cname, self)
         return res
@@ -497,7 +496,7 @@ class Entity(dict):
             return False
 
     def purge(self):
-        res = self._col.remove(spec_or_id=self.id, safe=True)
+        res = self._col.remove(spec_or_id=self.id)
         return res
 
 # Common code between User and Expr
