@@ -44,8 +44,8 @@ class Snapshots(object):
                 # BUGBUG
                 #if True:
                 #    cmd = 'xvfb-run --auto-servernum --server-args="-screen 0, 1024x768x24" ' + cmd
-                print ' '.join(cmd)
-                r = call(cmd) #, stderr=fnull, stdout=fnull)
+                print(' '.join(cmd))
+                r = call(cmd, env=dict(QT_QPA_PLATFORM='offscreen'))
                 if r != 0:
                     print "FAILED: " + ' '.join(cmd)
                     return False

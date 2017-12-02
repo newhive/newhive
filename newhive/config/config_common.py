@@ -20,22 +20,10 @@ analytics_db    = 'analytics'
 google_api_key  = 'AIzaSyDwFDcABJN8ldQKGCA2ohiO8kHoFst57X8'
 ssl_ca          = False
 
-aws_id          = False
-aws_secret      = False
-s3_buckets = {
-    'media': None,
-    'system': None,
-    'asset': None,
-}
-cloudfront_domains = {
-    'media': None,
-    'asset': None
-}
-
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = (
     '/home/newhive/newhive/config/google-storage-secret.json'
 )
-google_buckets = {
+buckets = {
     'media': None,
     'content': None,
     'asset': None,

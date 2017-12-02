@@ -18,15 +18,22 @@ class File(ModelController):
         with a JSON list of Hive.App objects.
         """
 
+        owner = self.db.User.fetch(request.form.get('user_id'))
+        if not owner: 
+            return self.error(tdata, 'owner missing')
+
         url = request.form.get('url')
         if url:
             try:
                 file = fetch_url(url)
             except:
-                return {'error': 'remote url download failed'}
+                return self.error(tdata, 'remote url download failed')
             if file.getcode() != 200:
-                return { 'error': 'remote url download failed with status %s'
-                    % file.getcode() }
+                return self.error(
+                    tdata, 
+                    'remote url download failed with status %s' %
+                        file.getcode()
+                )
             files = [file]
             mime = file.mime
         else:
@@ -44,7 +51,7 @@ class File(ModelController):
             if not mime: mime = 'application/octet-stream'
             file.mime = mime
 
-            file_record = create_file(tdata.user, file, url=url, args=request.form)
+            file_record = create_file(owner, file, url=url, args=request.form)
             rv.append(file_record.client_view())
 
         return self.serve_json(response, rv)
@@ -54,7 +61,7 @@ class File(ModelController):
         # return _resize(file_record, request.form)
         pass
 
-    def delete(self, request, response):
+    def delete(self, tdata, request, response):
         res = self.db.File.fetch(request.form.get('id'))
         if res: res.delete()
         return True
@@ -65,6 +72,9 @@ class File(ModelController):
             'text/plain',
             "CA50037867F98F3E42411D5E61DC426B34D466E19B84E6B61ECAC2E971D9866C comodoca.com 59f7701bdfcb5",
         )
+
+    def error(self, tdata, msg):
+        return self.serve_500(tdata, json=True, data={'error': msg})
 
 def create_file(owner, file, url=None, args={}):
     # Supported mime types.  First try to find exact match to full mime

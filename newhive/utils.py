@@ -78,7 +78,7 @@ class Apply(object):
     @staticmethod
     def apply_all(func, cursor, print_frequency=100, dryrun=False):
         """ most likely should not use, use apply_continue wrapper """
-        total = cursor.count()
+        total = len(cursor) if type(cursor) == list else cursor.count()
         initial_success = len(Apply.success)
         print "Running on %s items." % total
         i = 0

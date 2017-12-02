@@ -170,7 +170,7 @@ def upload_batch(page=0, limit=None, skip=0, report_freq=500):
             print('exists', fid)
             continue
 
-        args = (CACHE + f.id, 'media', path, f['mime'])
+        args = (CACHE + f.id, 'media', path, f.get('name'), f['mime'])
         try:
             gs.upload_file(*(args + (f['md5'],)))
         except Exception as e:
@@ -187,3 +187,24 @@ def upload_batch(page=0, limit=None, skip=0, report_freq=500):
         if not uploaded % report_freq:
             print(page * limit, '+', skip + n, fid)
         uploaded += 1
+
+def file_reset_children(f, dryrun=True):
+    updated = False
+    if f.get('resamples'):
+        if not dryrun:
+            f.set_resamples()
+        updated = True
+
+    thumbs = f.get('thumbs', {})
+    if '390x235' in thumbs:
+        updated = True
+        if not dryrun:
+            f.set_thumb(390, 235, redo=True)
+            f.set_thumb(70, 42, redo=True)
+    if '190x190' in thumbs or '222x222' in thumbs:
+        updated = True
+        if not dryrun:
+            f.set_thumb(222, 222, redo=True)
+            f.set_thumb(70, 70, redo=True)
+
+    return updated

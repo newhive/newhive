@@ -64,17 +64,18 @@ class GoogleStorage(object):
         self.config = config if config else newhive.config
 
         # initialize s3 connection
-        if self.config.google_buckets:
+        if self.config.buckets:
             self.con = Client()
             self.buckets = {
                 k: self.con.get_bucket(name) for
-                k, name in self.config.google_buckets.items()
+                k, name in self.config.buckets.items()
             }
 
-    def upload_file(self, file, bucket_name, path, mime, md5=None):
+    def upload_file(self, file, bucket_name, path, name, mimetype, md5=None):
         bucket = self.buckets[bucket_name]
         remote = bucket.blob(path)
-        remote.content_type = mime
+        if mimetype:
+            remote.content_type = mimetype
         remote.cache_control = 'max-age=' + str(86400 * 3650)
         if md5:
             remote.md5_hash = b64encode(b16decode(md5.upper()))
@@ -83,7 +84,7 @@ class GoogleStorage(object):
             remote.upload_from_filename(file)
         else:
             file.seek(0)
-            remote.upload_from_file(num_retries=3)
+            remote.upload_from_file(file, num_retries=3)
         return self.url(bucket_name, path)
 
     def delete_file(self, bucket, path):
@@ -100,7 +101,7 @@ class GoogleStorage(object):
         return remote.exists()
 
     def bucket_url(self, bucket='media'):
-        return '//' + self.config.google_buckets[bucket] + '/'
+        return '//' + self.config.buckets[bucket] + '/'
 
     def url(self, bucket='media', key='', bucket_name=None, http=False, secure=False):
         url = self.bucket_url(bucket) + key

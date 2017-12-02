@@ -1,5 +1,6 @@
 from .live import *
 
+database = 'live'
+database_host = 'mongodb://live:FawvetVoim0@localhost/live'
+
 dev_prefix = 'staging'
-s3_buckets['asset'] = 'skin-newhive'
-cloudfront_domains['asset'] = 'd2u124gq3xwzbx.cloudfront.net'

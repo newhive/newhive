@@ -20,17 +20,17 @@ class Query(dict):
 
     def is1(self, key, *l):
         if isinstance(l[0], list): l = l[0]
-        return self.addd(key, '$in', l)
+        return self.add_to(key, '$in', l)
 
     def gt(self, key, val):
-        return self.addd(key, '$gt', val)
+        return self.add_to(key, '$gt', val)
     def gte(self, key, val):
-        return self.addd(key, '$gte', val)
+        return self.add_to(key, '$gte', val)
 
     def lt(self, key, val):
-        return self.addd(key, '$lt', val)
+        return self.add_to(key, '$lt', val)
     def lte(self, key, val):
-        return self.addd(key, '$lte', val)
+        return self.add_to(key, '$lte', val)
 
     def bt(self, key, val1, val2):
         self.gt(key, val1)
@@ -38,13 +38,13 @@ class Query(dict):
 
     def all(self, key, *l):
         if type( l[0] ) == list: l = l[0]
-        return self.addd(key, '$all', l)
+        return self.add_to(key, '$all', l)
 
     def exists(self, key, existance=True):
-        return self.addd(key, '$exists', existance)
+        return self.add_to(key, '$exists', existance)
 
     def ne(self, key, val):
-        return self.addd(key, '$ne', val)
+        return self.add_to(key, '$ne', val)
 
     def js(self, val):
         self['$where'] = val

@@ -554,10 +554,11 @@ def widget_code(app, snapshot_mode, db):
         tag = 'script'
         media = db.File.fetch(app.get('file_id'))
         url = media.url if media else app.get('url')
-        html = "<script src='%s'></script>" % app.get('url') if url else ("<script>\n"
-            "self = window; self.script = scripts.length;\n" +
-            app.get('content') +
-            "scripts[self.script] = { animate: self.animate, run: self.run, stop: self.stop }\n</script>"
+        html = "<script src='%s'></script>" % app.get('url') if url else (
+            "<script>self = window; self.script = scripts.length;\n" +
+            app.get('content') + ";\n" +
+            "scripts[self.script] = { run: self.run, stop: self.stop, " +
+            "animate: self.animate }</script>"
         )
         # AMD_based_scripts version
         # html = ( "<script>curl(['ui/expression'],function(expr){"

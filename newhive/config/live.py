@@ -21,7 +21,7 @@ cloudfront_domains = {
     'asset': 'd26s0ow2ajnmml.cloudfront.net'
 }
 
-google_buckets = {
+buckets = {
     'media': 'media.tnh.me',
     'content': 'tnh.me',
     'asset': 's.newhive.com'

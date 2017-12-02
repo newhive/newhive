@@ -326,7 +326,7 @@ Hive.init_menus = function() {
 
     u.hover_menu('.insert_file', '#menu_file');
 
-
+    $('form .user_id').attr('value', context.user.id);
     $('#media_upload').on('with_files', function(ev, files, file_list){
         // media files are available immediately upon selection
         if (env.click_app) {
