@@ -354,7 +354,7 @@ class Expr(ModelController):
     def to_image(self, tdata, request, response, expr_id, **args):
         expr_obj = self.db.Expr.fetch(expr_id)
         if expr_obj.private and tdata.user.id != expr_obj.owner.id:
-	    return self.serve_404(tdata, request, response, json=True)
+			return self.serve_404(tdata, request, response, json=True)
 
         if expr_obj.threaded_snapshot(full_page = True, time_out = 30):
             return self.redirect(response, expr_obj.snapshot_name('full'))
@@ -376,7 +376,7 @@ class Expr(ModelController):
 
     def snapshot_redirect(self, tdata, request, response, expr_id, **args):
         expr_obj = self.db.Expr.fetch(expr_id)
-	
+
     # def fetch_data(self, tdata, request, response, expr_id=None, **args):
     #     expr = self.db.Expr.fetch(expr_id)
     #     if not expr or (
@@ -489,7 +489,7 @@ def html_for_app(app, scale=1, snapshot_mode=False, db=None):
         app['more_css'] = ';'.join([p + ':' + str(c[p]) for p in c])
 
     html = widget_types.get(widget_type, widget_types['hive.text'])(
-        app, snapshot_mode, db)
+        app, snapshot_mode, db, scale)
 
     if widget_type != 'hive.polygon':
         html = anchor_tag(app['anchor'], html)
@@ -502,17 +502,21 @@ def html_for_app(app, scale=1, snapshot_mode=False, db=None):
 
     return html
 
-def widget_image(app, snapshot_mode, db):
+def widget_image(app, snapshot_mode, db, scale):
     url = app.get('url') or app.get('content', '')
     scale_x = app.get('scale_x', 1)
 
     media = db.File.fetch(app.get('file_id'))
-    if media: 
+    if media:
         app['data_attrs'].append(("data-orig", url))
-        scale = app['dimensions'][0] * scale_x
-        url = media.get_resample(scale / 8)
-        if snapshot_mode:
-            url = media.get_static_url() or media.get_resample(scale)
+        url = media.get_resample(app['dimensions'][0] * scale * scale_x)
+        if not snapshot_mode: #//!! and self.flags.get('lazy_load'):
+            app['data_attrs'].append(("data-scaled", url))
+            scale /= 8.0 #//!!self.flags.get('lazy_load_scale'):
+            url = (
+                media.get_static_url() or
+                media.get_resample(app['dimensions'][0] * scale * scale_x)
+            )
 
     html = "<img src='%s'>" % url
     if scale_x:
