@@ -24,3 +24,4 @@ yuicompressor
 pyOpenSSL
 google-cloud
 google-cloud-storage
+google-auth-oauthlib
