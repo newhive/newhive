@@ -538,7 +538,7 @@ def widget_rectangle(app, *_): # and widget_circle
     more_css = ';'.join([p + ':' + str(c[p]) for p in c if p in container_attrs])
     return "<div style='%s' class='content'></div>" % css
     
-def widget_html(app, snapshot_mode, _):
+def widget_html(app, snapshot_mode, *_):
     #encoded_content = cgi.escape(app.get('content',''), quote=True)
     if snapshot_mode and app.get('media') == 'youtube':
         # phantomjs does not support HTML5 video or Flash, so construct
@@ -552,7 +552,7 @@ def widget_html(app, snapshot_mode, _):
         html = app.get('content','')
     return html
 
-def widget_code(app, snapshot_mode, db):
+def widget_code(app, snapshot_mode, db, *_):
     ctype = app.get('code_type', 'js')
     if ctype == 'js':
         tag = 'script'
