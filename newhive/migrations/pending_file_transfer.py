@@ -127,7 +127,6 @@ def migrate(**kwargs):
 #base_path=http://s1-thenewhive.s3.amazonaws.com/ cat ../files-batch1-paths \
 #  | perl -pe '$_ = "'$base_path'" . $_ . " out=" . $_' | aria2c -i - -x 10
 
-CACHE='/data/media/'
 
 MIME_FIXES = {
     'gif': 'image/gif',
@@ -160,10 +159,13 @@ def file_mime_fix(f, dryrun=True):
     return False
 
 
-def upload_batch(page=0, limit=None, skip=0, report_freq=500, redo=False, children_only=False):
+def upload_batch(
+    page=0, limit=0, skip=0, cache='/data/media', report_freq=500,
+    redo=False, primary_only=False, children_only=False
+):
     gs = GoogleStorage()
 
-    fs_paths = os.listdir(CACHE)
+    fs_paths = os.listdir(cache)
     fs_ids = [s for s in fs_paths if '_' not in s]
 
     offset = page * limit + skip
@@ -185,7 +187,7 @@ def upload_batch(page=0, limit=None, skip=0, report_freq=500, redo=False, childr
             print('exists', fid)
             continue
 
-        args = (CACHE + f.id, 'media', path, f.get('name'), f['mime'], f['md5'])
+        args = (cache + f.id, 'media', path, f.get('name'), f['mime'], f['md5'])
         if not children_only:
             try:
                 gs.upload_file(*args)
@@ -193,8 +195,11 @@ def upload_batch(page=0, limit=None, skip=0, report_freq=500, redo=False, childr
                 print('upload failed', f)
                 raise e
 
+        if primary_only:
+            continue
         for p in f.child_paths():
-            args2 = (CACHE + p, 'media', path_base + p, f.get('name'), f['mime'])
+            p = re.sub('.*/', '', p)
+            args2 = (cache + p, 'media', path_base + p, f.get('name'), f['mime'])
             try:
                 gs.upload_file(*args2)
             except Exception as e:
@@ -204,6 +209,8 @@ def upload_batch(page=0, limit=None, skip=0, report_freq=500, redo=False, childr
         if not uploaded % report_freq:
             print(page * limit, '+', skip + n, fid)
         uploaded += 1
+    return uploaded
+
 
 def file_reset_children(f, dryrun=True):
     updated = False
