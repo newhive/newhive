@@ -4,7 +4,6 @@ from boto.s3.key import Key as S3Key
 import newhive
 from newhive import config
 import re
-from google.cloud.storage.client import Client
 from base64 import b16decode, b64encode
 
 
@@ -65,11 +64,15 @@ class GoogleStorage(object):
 
         # initialize s3 connection
         if self.config.buckets:
-            self.con = Client()
-            self.buckets = {
-                k: self.con.get_bucket(name) for
-                k, name in self.config.buckets.items()
-            }
+            try:
+                from google.cloud.storage.client import Client
+                self.con = Client()
+                self.buckets = {
+                    k: self.con.get_bucket(name) for
+                    k, name in self.config.buckets.items()
+                }
+            except:
+                print('google.cloud.storage.client failure')
 
     def upload_file(self, file, bucket_name, path, name, mimetype, md5=None):
         bucket = self.buckets[bucket_name]
