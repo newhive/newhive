@@ -713,7 +713,7 @@ class User(HasSocial):
 
     def delete(self):
         # Facebook Disconnect
-        self.facebook_disconnect()
+        #self.facebook_disconnect()
 
         # Feed Cleanup
         for feed_item in self.db.Feed.search(
