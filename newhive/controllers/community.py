@@ -356,6 +356,8 @@ class Community(Controller):
         # ...and grab its expressions.
         # TODO: deal with privacy by doing a mapreduce
         # _db_args = {} if owner_name != tdata.user.get('name') else db_args
+        if 'viewer' in db_args:
+            del db_args['viewer']
         cards = self.db.Expr.fetch(map(lambda en:en['entity'], 
             self.db.Star.page(spec, **db_args)))
         # if owner_name != tdata.user.get('name'):
@@ -391,6 +393,8 @@ class Community(Controller):
         # Get the users starred by owner_name...
         spec = {'initiator_name': owner_name, 'entity_class':'User' }
         # ...and grab its users.
+        if 'viewer' in db_args:
+            del db_args['viewer']
         users = self.db.User.fetch(map(lambda en:en['entity'], 
             self.db.Star.page(spec, **db_args)))
         profile = owner.client_view(viewer=tdata.user)
@@ -522,15 +526,15 @@ Examples:
             data['cards'] = list(res)
         return data
 
-    def home_redirect(self, tdata, **kwargs):
-        return self.redirect(tdata.response, abs_url('/b/', secure=True))
     def my_home(self, tdata, **kwargs):
         return self.redirect(tdata.response, abs_url(
             '/' + tdata.user['name'] + '/profile/feed' +
             Community.parse_query(tdata.request.query_string)))
+
     def profile_redirect(self, tdata, owner_name='', **kwargs):
         return self.redirect(tdata.response, abs_url(
             '/' + owner_name + ('/profile/feed' if owner_name else '') ))
+
     def user_tag_redirect(self, tdata, owner_name='', tag_name='', **kwargs):
         return self.redirect(tdata.response, abs_url(
             '/' + owner_name + ('/collection/' + tag_name if tag_name else '') ))

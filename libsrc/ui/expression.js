@@ -114,11 +114,11 @@ define([
                 zoom = new_zoom
             })
         }
-        js.on_ready(function() {
+        js.on_ready(function(){
             return
             $("*[data-scaled]").map(function(i, app) {
                 var $app = $(app)
-                    ,$img = $app.find("img")
+                    ,$img = $app.find("img.content")
                     ,$img2 = $img.clone()
                     ,$container = $img.parent()
                 $img = $img.addClass("loaded").add($img2)
@@ -131,15 +131,6 @@ define([
                 $app.removeAttr("data-scaled")
             })
         })
-        //if (0 && util.mobile()) {
-        //    $.event.special.swipe.horizontalDistanceThreshold = 200;
-        //    $(document).on("swipe", function(ev) {
-        //        if (ev.swipestart.coords[0] > ev.swipestop.coords[0])
-        //            o.page_next()
-        //        else
-        //            o.page_prev()
-        //    })
-        //}
 
         if(util.mobile()) o.init_mobile()
 
@@ -426,21 +417,37 @@ define([
         code_srcs.push({url:code_url})
     }
 
-    o.run_code = function(code_module){
-        code_modules.push(code_module)
+    // Old AMD_based_scripts scripts init that doesn't allow debugging or
+    // interactive editing in console
+    //o.run_code = function(code_module){
+    //    code_modules.push(code_module)
+    //
+    //    code_module.run && code_module.run({view:true})
+    //    if(!code_module.animate) return
+    //    animate_go = 1
+    //    var animate_frame = function(){
+    //        code_module.animate()
+    //        // TODO-compat: if requestAnimationFrame not supported,
+    //        // fallback to setTimeout
+    //        if(animate_go) requestAnimationFrame(animate_frame)
+    //    }
+    //    animate_frame()
+    //}
+    //o.run_code = function(code_module){
+    //    code_modules.push(code_module)
+    //
+    //    code_module.run && code_module.run({view:true})
+    //    if(!code_module.animate) return
+    //    animate_go = 1
+    //    var animate_frame = function(){
+    //        code_module.animate()
+    //        // TODO-compat: if requestAnimationFrame not supported,
+    //        // fallback to setTimeout
+    //        if(animate_go) requestAnimationFrame(animate_frame)
+    //    }
+    //    animate_frame()
+    //}
     
-        code_module.run && code_module.run({view:true})
-        if(!code_module.animate) return
-        animate_go = 1
-        var animate_frame = function(){
-            code_module.animate()
-            // TODO-compat: if requestAnimationFrame not supported,
-            // fallback to setTimeout
-            if(animate_go) requestAnimationFrame(animate_frame)
-        }
-        animate_frame()
-    }
-
     var visible = false
     o.show = function(){
         if(visible) return
@@ -463,33 +470,30 @@ define([
         if (!util.mobile())
             o.layout()
 
-        var module_paths = function(modules) {
-            return ["'jquery'","'ui/expression'"]
-            .concat($.map(modules, function(p) { 
-                return "'" + (p.path_view || p.path) + "'"
-            }))
-            .join(",")
-        }
-        var module_names = function(modules) {
-            return ['$', 'expr']
-            .concat($.map(modules, function(p) { return p.name }))
-            .join(",")
-        }
-        code_srcs.map(function(src){
-            if (src.url) {
-                var $script = $('<script>').html(
-                    "curl(['" + src.url + "', 'ui/expression'], " + 
-                        "function(self, expr){ expr.run_code(self) })"
-                )
-            } else {
-                var $script = $('<script>').html(
-                    "curl([" + module_paths(src.modules) + "],function("
-                    + module_names(src.modules) + "){"
-                    + "var self={};" + src.src + ";expr.run_code(self) })"
-                )
-            }
-            $script.addClass('code_module').appendTo('body')
-        })
+        if(scripts) scripts.start()
+        // Old AMD_based_scripts module init
+        //var module_paths = function(modules) {
+        //    return ["'jquery'","'ui/expression'"]
+        //    .concat($.map(modules, function(p) { 
+        //        return "'" + (p.path_view || p.path) + "'"
+        //    }))
+        //    .join(",")
+        //}
+        //var module_names = function(modules) {
+        //    return ['$', 'expr']
+        //    .concat($.map(modules, function(p) { return p.name }))
+        //    .join(",")
+        //}
+        //code_srcs.map(function(src){
+        //    $script = (src.url ?  $('<script>').attr('src', src.url) :
+        //        $('<script>').html(
+        //            "curl([" + module_paths(src.modules) + "],function("
+        //            + module_names(src.modules) + "){"
+        //            + "var self={};" + src.src + ";expr.run_code(self) })"
+        //        )
+        //    )
+        //    $script.addClass('code_module').appendTo('body')
+        //})
 
         o.player_play(true)
 
@@ -520,9 +524,11 @@ define([
             $(div).jPlayer("pause");
         });
 
-        animate_go = 0
-        code_modules.map(function(module){ module.stop && module.stop() })
-        $('script.code_module').remove()
+        scripts.stop()
+        // AMD_based_scripts
+        //animate_go = 0
+        //code_modules.map(function(module){ module.stop && module.stop() })
+        //$('script.code_module').remove()
     };
 
     return o

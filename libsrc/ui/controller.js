@@ -28,8 +28,6 @@ define([
 ){
     var o = { back: false }, route;
 
-    // So code modules can use this variable safely
-    editor = undefined
     var ajax_pending = false
     o.ajax_pending = function() { return ajax_pending }
 
@@ -329,11 +327,9 @@ define([
             window.onpageshow = window.onpagehide 
                 = window.onfocus = window.onblur = onchange;
 
-        function onchange (evt) {
-            var v = 'visible', h = 'hidden', visibility = ''
-                evtMap = { 
-                    focus:v, focusin:v, pageshow:v, blur:h, focusout:h, pagehide:h 
-                };
+        function onchange( evt ){
+            var v = 'visible', h = 'hidden', visibility = '', evtMap = { 
+                focus:v, focusin:v, pageshow:v, blur:h, focusout:h, pagehide:h }
 
             evt = evt || window.event;
             if (evt.type in evtMap)

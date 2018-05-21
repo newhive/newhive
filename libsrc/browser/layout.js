@@ -147,15 +147,9 @@ define(['jquery', 'ui/util'], function($, util) {
         // As image is loading, sometimes height can be falsely reported as 0
         if(!curr_dims[0] || !curr_dims[1]) return;
 
-        var w = (inside ? $(inside) : $(window))
-            opts = $.extend({
-                absolute: false,
-                minimum: true,
-                h: true,
-                v: true 
-            }, opts),
-            pos = {}
-        ;
+        var w = (inside ? $(inside) : $(window)), pos = {}
+        opts = $.extend({ absolute: false, minimum: true, h: true,
+            v: true }, opts)
 
         if(opts.h) pos.left = (w.width() - curr_dims[0]) / 2;
         if(opts.v) pos.top = (w.height() - curr_dims[1]) / 2;

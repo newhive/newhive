@@ -531,7 +531,7 @@ o.Selection = function(o) {
             app.pos_relative_set(new_pos);
         }
     };
-    set_full_apps = function() {
+    var set_full_apps = function() {
         full_apps = (drag_target && drag_target != o) ? [drag_target] : elements;
         full_apps = full_apps.filter(function(a) { 
             return a.full_coord != undefined; });
@@ -765,7 +765,7 @@ o.Selection = function(o) {
         u.scroll_to_view(o.max_pos());
         u.scroll_to_view(o.min_pos());
     }
-    mini_controls = []
+    var mini_controls = []
     o.update = function(apps){
         apps = $.grep(apps || elements, function(e){ 
             return ! e.deleted && e.initialized; 

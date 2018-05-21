@@ -1,17 +1,26 @@
-import re, pymongo, bson.objectid, random, urllib, urllib2, os, time, json, math
-from pymongo.cursor import Cursor as PymongoCursor
-from ast import literal_eval
-from tempfile import mkstemp
+import re
+import random
+import urllib
+import urllib2
+import os
 from os.path import join as joinpath
+import time
+import json
+import math
 from md5 import md5
 from datetime import datetime
+from ast import literal_eval
+from pymongo.cursor import Cursor as PymongoCursor
+from bson.code import Code
+import bson
+import pymongo
+from tempfile import mkstemp
 from lxml import html
 from wsgiref.handlers import format_date_time
 from itertools import ifilter, islice, izip_longest, chain
 from functools import partial
 from PIL import Image as Img
 from PIL import ImageOps
-from bson.code import Code
 from crypt import crypt
 #from oauth2client.client import OAuth2Credentials
 # TODO-cleanup?: remove snapshots from webserver?
@@ -26,7 +35,7 @@ import newhive
 from collections import Counter
 from snapshots import Snapshots
 
-from s3 import S3Interface
+from s3 import GoogleStorage
 
 from newhive import config
 from newhive.config import abs_url, url_host
@@ -55,10 +64,10 @@ class Database:
 
         print('getting db connection')
         self.con = pymongo.MongoClient(host=config.database_host,
-            port=config.database_port, max_pool_size=20)
+            port=config.database_port, maxPoolSize=20)
         self.mdb = self.con[config.database]
 
-        self.s3 = S3Interface(config)
+        self.s3 = GoogleStorage(config)
         self.assets = assets
 
         self.collections = map(
@@ -76,7 +85,7 @@ class Database:
                 opts.setdefault('background', True)
                 key = map(lambda a: a if isinstance(a, tuple) else (a, 1),
                     [key] if not isinstance(key, list) else key)
-                print 'building', key, opts
+                print('building', key, opts)
                 col._col.ensure_index(key, **opts)
 
     # arg{id}: if not None, ensure this result appears in the feed
@@ -245,12 +254,12 @@ class Collection(object):
         res = self.find(spec, **opts)
         return res if res else self.new({})
 
-    def find(self, spec, **opts):
-        r = self._col.find_one(spec, **opts)
+    def find(self, spec, fields=None, **opts):
+        r = self._col.find_one(spec, projection=fields, **opts)
         if not r: return None
         return self.new(r)
 
-    def search(self, spec, filter={}, **opts):
+    def search(self, spec, filter={}, fields=None, **opts):
         if isinstance(spec, list):
             items = {}
             res = []
@@ -262,8 +271,8 @@ class Collection(object):
             return res
         # for DB optimization / debugging
         if False:
-            print spec, opts
-        return Cursor(self, spec=spec, **opts)
+            print(spec, opts)
+        return Cursor(self, filter=spec, projection=fields, **opts)
         # can't figure out as_class param, which seems to not be passed an arg
         #return self._col.find(spec=spec, as_class=self.new, **opts)
 
@@ -384,7 +393,7 @@ class Entity(dict):
         self['created'] = now()
         self['updated'] = now()
         self.serialize(self)
-        self._col.insert(self, safe=True)
+        self._col.insert(self)
         return self
 
     def serialize(self, d):
@@ -410,8 +419,7 @@ class Entity(dict):
         if not d['updated']: del d['updated']
         dict.update(self, d)
         self.serialize(d)
-        return self._col.update({ '_id' : self.id }, { '$set' : d },
-            safe=True)
+        return self._col.update({ '_id' : self.id }, { '$set' : d })
 
     def update_if(self, cmd, test_doc, updates):
         if updates.get('updated') == True:
@@ -432,7 +440,7 @@ class Entity(dict):
         return self._col.update(mq(_id=self.id), { '$unset': {key: 1} })
 
     def delete(self):
-        res = self._col.remove(spec_or_id=self.id, safe=True)
+        res = self._col.remove(spec_or_id=self.id)
         if self.Collection.trashable:
             self.db.Trash.create(self.cname, self)
         return res
@@ -470,7 +478,7 @@ class Entity(dict):
         For example {'foo': 2, 'bar': -1, 'baz.qux': 10}"""
         fields = { key: True for (key, v) in d.items() }
         res = self._col.find_and_modify({ '_id' : self.id },
-            {'$inc': d }, fields=fields, new=True)
+            {'$inc': d }, projection=fields, new=True)
         dict.update(self, res)
         # del res['_id']
         return res
@@ -488,7 +496,7 @@ class Entity(dict):
             return False
 
     def purge(self):
-        res = self._col.remove(spec_or_id=self.id, safe=True)
+        res = self._col.remove(spec_or_id=self.id)
         return res
 
 # Common code between User and Expr
@@ -705,7 +713,7 @@ class User(HasSocial):
 
     def delete(self):
         # Facebook Disconnect
-        self.facebook_disconnect()
+        #self.facebook_disconnect()
 
         # Feed Cleanup
         for feed_item in self.db.Feed.search(
@@ -1262,7 +1270,7 @@ class User(HasSocial):
                 fbc.delete('https://graph.facebook.com/me/permissions',
                     self.facebook_credentials)
             except (FlowExchangeError, AccessTokenCredentialsError) as e:
-                print e
+                print(e)
             self.facebook_credentials = None
         # WTF? this doesn't actually disconnect you
         #self.update_cmd({'$set': {'facebook.disconnected': True}})
@@ -1539,9 +1547,10 @@ class Expr(HasSocial):
             r.create_remix()
             return r
 
-        def fetch(self, key, keyname='_id', meta=False):
-            fields = { 'text_index': 0, 'title_index': 0 }
-            if meta: fields.update(self.ignore_not_meta)
+        def fetch(self, key, keyname='_id', fields=None, meta=False):
+            if not fields:
+                fields = { 'text_index': 0, 'title_index': 0 }
+                if meta: fields.update(self.ignore_not_meta)
             return super(Expr.Collection, self).fetch(key, keyname, fields=fields)
 
         def popular_tags(self):
@@ -1752,7 +1761,7 @@ class Expr(HasSocial):
         local = joinpath('/tmp', name)
         r = snapshotter.take_snapshot(self.id, out_filename=local, full_page=True)
         if not r:
-            print 'FAIL'
+            print('FAIL')
             return False
 
         url = self.db.s3.upload_file(local, 'thumb', name, mimetype='image/jpg', ttl=30)
@@ -1767,11 +1776,14 @@ class Expr(HasSocial):
         snapshot_time = now()
         filename = os.tmpnam() + '.jpg'
         w, h = self.snapshot_dimlist[0]
-        r = snapshotter.take_snapshot(self.id, dimensions=(w,h),
+        r = snapshotter.take_snapshot(
+            self.id,
+            dimensions=(w,h),
             out_filename=filename,
-            password=self.get('password', ''), **args)
+            password=self.get('password', ''), **args
+        )
         if r:
-	    self.save_snapshot(filename, correct_size=True)
+            self.save_snapshot(filename, correct_size=True)
         # clean up local file
         call(["rm", filename])
 
@@ -1794,9 +1806,10 @@ class Expr(HasSocial):
                 mime='image/jpeg', autogen=False)
 
         old_file = self.get('snapshot_id', False)
-        self.update(updated=False, snapshot_time=now(),
+        self.update(
+            updated=False, snapshot_time=now(),
             snapshot_id=file_record.id, snapshot_needed=False,
-	    snapshot_fail_time=0, snapshot_fails=0
+            snapshot_fail_time=0, snapshot_fails=0
         )
         # Delete old snapshot
         if old_file and old_file != file_record.id:
@@ -2203,9 +2216,10 @@ def generate_thumb(file, size, format=None):
     t0 = time.time()
     imo = ImageOps.fit(imo, size=size, method=Img.ANTIALIAS, centering=(0.5, 0.5))
     if imo.mode != 'RGB':
-        bg = Img.new("RGBA", imo.size, (255,255,255))
-        imo = imo.convert(mode='RGBA')
-        imo = Img.composite(imo, bg, imo)
+        imo.convert("RGB")
+        #bg = Img.new("RGBA", imo.size, (255,255,255))
+        #imo = imo.convert(mode='RGBA')
+        #imo = Img.composite(imo, bg, imo)
     dt = time.time() - t0
     #print "   final size:   " + str(imo.size),
     #print "   conversion took " + str(dt*1000) + " ms"
@@ -2254,10 +2268,10 @@ class File(Entity):
             url = "http:" + url
         try: response = urllib.urlopen(url)
         except:
-            print 'urlopen fail for ' + self.id + ': ' + json.dumps(self.url)
+            print('urlopen fail for ' + self.id + ': ' + json.dumps(self.url))
             return False
         if response.getcode() != 200:
-            print 'http fail ' + str(response.getcode()) + ': ' + self.url
+            print('http fail ' + str(response.getcode()) + ': ' + self.url)
             return False
         self._file = os.tmpfile()
         self._file.write(response.read())
@@ -2325,7 +2339,7 @@ class File(Entity):
         os.remove(resample_filename)
         resamples.reverse()
         self.update(resamples=resamples)
-        print "Resampling finished" #//!!
+        print("Resampling finished") #//!!
 
     def get_static_name(self):
         """ get the URL for a static representation of a video
@@ -2344,24 +2358,22 @@ class File(Entity):
         for size in resamples:
             if (w and size[0] > w) or (h and size[1] > h):
                 return self.url + '_' + str(int(size[0]))
-                # This was necessary when media assets were on 5 buckets
-                # but resamples were only on one.
-                # return ( self.db.s3.bucket_url('media') + self.id + '_' +
-                #     str(int(size[0])) )
         return self.url
 
     def _resample_name(self, w):
-        return self.id + '_' + str(int(w))
+        return self.file_name + '_' + str(int(w))
     @property
     def _resample_names(self):
         return [self._resample_name(s[0]) for s in self.get('resamples', [])]
 
-    def set_thumb(self, w, h, file=False, mime='image/jpeg', autogen=True):
+    def set_thumb(self, w, h, file=False, mime='image/jpeg', autogen=True, redo=False):
         name = str(w) + 'x' + str(h)
         thumbs = self.get('thumbs', {})
-        if thumbs.get(name): return False
+        if thumbs.get(name) and not redo:
+            return False
 
-        if not file: file = self.file
+        if not file:
+            file = self.file
         if autogen:
             thumb_file = generate_thumb(file, (w,h), format='jpeg')
         else:
@@ -2374,13 +2386,15 @@ class File(Entity):
         return thumb_file
 
     def _thumb_name(self, w, h):
-        return self.id + '_' + str(w) + 'x' + str(h)
+        return self.file_name + '_' + str(w) + 'x' + str(h)
 
     def get_thumb(self, w, h):
         name = str(w) + 'x' + str(h)
-        if not self.get('thumbs', {}).get(name): return False
+        if not self.get('thumbs', {}).get(name):
+            return False
         url = self.url
-        if not url: return False
+        if not url:
+            return False
         return url + '_' + name
 
     def get_default_thumb(self):
@@ -2392,7 +2406,7 @@ class File(Entity):
         return [ self.id + '_' + n for n in self.get('thumbs', {}) ]
 
     def store(self):
-        if self.db.config.aws_id:
+        if self.db.config.buckets.get('media'):
             s3_url = self.db.s3.upload_file(self.file, 'media', self.file_name,
                 self['name'], self['mime'])
             self.update(protocol='s3',
@@ -2402,16 +2416,15 @@ class File(Entity):
             owner = self.db.User.fetch(self['owner'])
             self['fs_path'] = media_path(owner)
             with open(joinpath(self['fs_path'], id), 'w') as f: f.write(file.read())
-            return abs_url() + 'file/' + owner['name'] + '/' + name
+            return abs_url() + 'file/' + self.file_name()
 
     @property
     def file_name(self):
-        return self.id + self.suffix
+        return self['owner'] + '/' + self.id + self.suffix
     
     @property
     def url(self):
-        return self.db.s3.url('media', self.file_name,
-            bucket_name=self.get('s3_bucket'))
+        return self.db.s3.url('media', self.file_name)
 
     @property
     def suffix(self):
@@ -2422,8 +2435,7 @@ class File(Entity):
     
     @property
     def url_base(self):
-        return self.db.s3.url('media', '',
-            bucket_name=self.get('s3_bucket'))
+        return self.db.s3.bucket_url('media')
 
     def create_existing(self):
         super(File, self).create()
@@ -2475,8 +2487,11 @@ class File(Entity):
         self.delete_files()
         super(File, self).purge()
 
+    def child_paths(self):
+        return self._resample_names + self._thumb_keys
+
     def delete_files(self):
-        for k in self._thumb_keys + [self.id] + self._resample_names:
+        for k in [self.id] + self.child_paths():
             if self.get('s3_bucket'):
                 try:
                     self.db.s3.delete_file(self['s3_bucket'], self.id)
@@ -2489,7 +2504,7 @@ class File(Entity):
             elif self.get('fs_path'):
                 try: os.remove(self['fs_path'])
                 except:
-                    print 'can not delete missing file: ' + self['fs_path']
+                    print('can not delete missing file: ' + self['fs_path'])
 
     def client_view(self, viewer=None, activity=0):
         r = dfilter(self, ['name', 'mime', 'owner', 'thumbs'])
@@ -2813,7 +2828,7 @@ class Broken(Entity):
 def collection_of(db, collection):
     try:
         return getattr(db, collection.title())
-    except AttributeError, e:
+    except AttributeError as e:
         return None
 
 # def search_trash(db, spec, collection):

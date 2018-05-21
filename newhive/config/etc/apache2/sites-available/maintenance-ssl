@@ -4,7 +4,7 @@ NameVirtualHost *:443
 <VirtualHost _default_:443>
     ServerName tnh.me
 
-    DocumentRoot /var/www/newhive/lib/pages
+    DocumentRoot /home/newhive/lib/pages
     ErrorDocument 503 /sys-maintenance.html
 
     RewriteEngine on
@@ -29,7 +29,7 @@ NameVirtualHost *:443
     ServerName newhive.com
     ServerAlias *.newhive.com
 
-    DocumentRoot /var/www/newhive/lib/pages
+    DocumentRoot /home/newhive/lib/pages
     ErrorDocument 503 /sys-maintenance.html
 
     RewriteEngine on

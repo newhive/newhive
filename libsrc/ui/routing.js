@@ -35,7 +35,7 @@ define([
 
             // api routes are http://content_domain/foo,
             // https://content_domain/foo, https://server_domain/foo, or /foo
-            prefix = ''
+            var prefix = ''
             if(route.content_domain) prefix = (route.secure ?
                 config.secure_content_url : config.content_url).slice(0,-1)
             else if(route.secure) prefix = config.secure_server.slice(0,-1)

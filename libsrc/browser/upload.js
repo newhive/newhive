@@ -25,6 +25,12 @@ define([
             processData: false
         }, opts);
 
+        if(!(opts.data instanceof FormData)){
+            var fd = new FormData();
+            for(k in opts.data) fd.append(k, opts.data[k]);
+            opts.data = fd
+        }
+
         if(files){
             for(var i = 0; i < files.length; i++){
                 var f = files[i];
@@ -63,7 +69,7 @@ define([
             return redirected.replace(/^.*imgurl=([^&]*)(&.*)?/, '$1');
         }
     ];
-    o.drop_target = function(el, on_files, on_response){
+    o.drop_target = function(el, data, on_files, on_response){
         var on_drop = function(ev){
             var dt = ev.originalEvent.dataTransfer,
                 files = [],
@@ -103,7 +109,7 @@ define([
                 on_files(o.unwrap_file_list(file_list), file_list);
             }
 
-            o.submit(file_list, { success: on_response });
+            o.submit(file_list, { success: on_response, data: data });
 
             return false;
         };

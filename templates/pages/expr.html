@@ -23,10 +23,36 @@
       <a href='//newhive.com'><div class='menu item default'>NewHive</div></a>
     </div>#}
   {% endif %} 
-  {% include 'page_parts/expr_body.html' %}
   <script>
-    curl(['ui/expression'], function(expression) {
-      expression.init({{ expr_client|json }});
-    });
+if(typeof window.scripts == 'undefined'){
+  window.scripts = []
+  var scripts = window.scripts
+  scripts.animate = function(){
+    var animate = false
+    scripts.map(function(s){
+      if(s.animate && s.animate.go){
+        s.animate()
+        animate = true
+      }
+    })
+    if(animate) window.requestAnimationFrame(scripts.animate)
+  }
+  scripts.start = function(){
+    scripts.map(function(s){
+      s.run()
+      if(s.animate) s.animate.go = true
+    })
+    window.requestAnimationFrame(scripts.animate)
+  }
+  scripts.stop = function(){
+    scripts.map(function(s){
+      s.stop()
+      if(s.animate) s.animate.go = false
+    })
+  }
+}
   </script>
+  {% include 'page_parts/expr_body.html' %}
+  <script>curl(['ui/expression'], function(expression) {
+    expression.init({{ expr_client|json }}); });</script>
 {% endblock %}

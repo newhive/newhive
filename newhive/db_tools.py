@@ -24,7 +24,7 @@ def dbs(name):
 
 def show_sizeof(x, level=0, show_deep=0):
     if (level <= show_deep):
-        print "\t" * level, x.__class__, sys.getsizeof(x), x
+        print("\t" * level, x.__class__, sys.getsizeof(x), x)
 
     if hasattr(x, '__iter__'):
         if hasattr(x, 'items'):
@@ -43,30 +43,27 @@ def follow_count(d, q={}):
         '4e0fcd5aba28392572000044')) # exclude default newhive follow
     return db.Feed.count(mq(q).day('created', d))
 
-def name(entity):
+def get_name(entity):
     if type(entity) == list:
-        return names(entity)
+        return map(get_name, entity)
     if type(entity) == state.Cursor:
-        return names(list(entity))
+        return map(get_name, entity)
     if type(entity) in [str, unicode]:
         e = db.Expr.fetch(entity)
         if e:
-            return name(e)
+            return get_name(e)
         e = db.User.fetch(entity)
         if e:
-            return name(e)
+            return get_name(e)
         e = db.Expr.with_url(entity)
         if e:
-            return name(e)
+            return get_name(e)
         return False
 
     res = ''
     if entity.has_key('owner_name'):
         res = entity['owner_name'] + '/'
     return res + entity['name']
-
-def names(entity_list):
-    return map(name, entity_list)
 
 def exprs_with_embeds():
     return db.Expr.search({'apps': {'$elemMatch': {
@@ -107,6 +104,16 @@ def switch_user(from_user, to_user, session_id=None, from_id=None):
         db.Session.last(mq(user=from_user.id)) )
     session.update(user=to_user.id)
 
+def rename_user(from_user, to_user):
+    user = (db.User.named(from_user) if type(from_user) == 'string'
+        else from_user)
+    user.update(updated=False, name=to_user)
+    for r in db.Expr.search(mq(owner=user.id)):
+        r.update(updated=False, owner_name=to_user)
+    for r in db.Feed.search(mq(initiator=user.id)):
+        r.update(updated=False, initiator_name=to_user)
+        
+
 import csv
 # expects data to be list of lists
 def export_csv(data, file_name='newhive_query'):
@@ -121,8 +128,18 @@ def export_csv_emails():
         db.User.search({}, fields=dict(email=1, fullname=1))
         if r.has_key('email')], '/tmp/email_list' )
 
-### BEGIN snapshot_wrangling ###
-# returns cursor with expressions at most %days% old which have > 1 fail count
+def collect_files_size_by_user():
+    return {
+        d['_id'] : d['total_size'] for d in
+        db.mdb.file.aggregate([{'$group': {
+            '_id': "$owner", 'total_size': {'$sum': '$size'}
+        }}])['result']
+    }
+
+## BEGIN:snapshot_wrangling
+
+# returns cursor with expressions at most %days% old
+# which have > 1 fail count
 def recent_snapshot_fails(days=1):
     return db.Expr.search( mq().bt('snapshot_fails', 5, 12)
         .gt('updated', now() - days*86400) )
@@ -146,4 +163,4 @@ def snapshot_redo_collection(username='zach', redo=False, collection='brokensnap
         for r in rs:
             if redo or r.get('snapshot_time', 0) < r.get('updated'):
                 r.take_snapshot()
-### END snapshot_wrangling ###
+## END:snapshot_wrangling

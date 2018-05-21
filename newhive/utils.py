@@ -57,8 +57,10 @@ class Apply(object):
         Apply.success = []
 
     @staticmethod
-    def apply_continue(func, klass, query={}, print_frequency=100, dryrun=False, 
-            reset=False, runcount=1):
+    def apply_continue(
+        func, klass, query={},
+        print_frequency=100, dryrun=False, reset=False, runcount=1
+    ):
         ands = [query]
         if not reset:
             ands.append({ '$or': [
@@ -76,7 +78,7 @@ class Apply(object):
     @staticmethod
     def apply_all(func, cursor, print_frequency=100, dryrun=False):
         """ most likely should not use, use apply_continue wrapper """
-        total = cursor.count()
+        total = len(cursor) if type(cursor) == list else cursor.count()
         initial_success = len(Apply.success)
         print "Running on %s items." % total
         i = 0

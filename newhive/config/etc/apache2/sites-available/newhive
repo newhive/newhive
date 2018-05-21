@@ -2,11 +2,9 @@ ServerName newhive.com
 #ServerAlias *.newhive.com
 ServerAlias thenewhive.com
 ServerAlias *.thenewhive.com
-WSGIScriptAlias / /var/www/newhive/newhive/app.py
+WSGIScriptAlias / /home/newhive/newhive/app.py
 
-Alias /lib /var/www/newhive/lib
-
-ProxyPass /b/ http://blog-1.newhive.com/
+Alias /lib /home/newhive/lib
 
 <Location /lib>
     Header Set Access-Control-Allow-Origin *
@@ -15,11 +13,11 @@ ProxyPass /b/ http://blog-1.newhive.com/
     AddType application/x-font-woff .woff
 </Location>
 
-Alias /allmymovies /var/www/newhive/lib/allmymovies
-Alias /5640b9655ccacf21611599b3 /var/www/newhive/lib/5640b9655ccacf21611599b3
-<Location /allmymovies>
-    Header set Content-Type "text/html; charset=utf-8"
-</Location>
-<Location /5640b9655ccacf21611599b3>
-    Header set Content-Type "text/html; charset=utf-8"
-</Location>
+#Alias /allmymovies /home/newhive/lib/allmymovies
+#Alias /5640b9655ccacf21611599b3 /home/newhive/lib/5640b9655ccacf21611599b3
+#<Location /allmymovies>
+#    Header set Content-Type "text/html; charset=utf-8"
+#</Location>
+#<Location /5640b9655ccacf21611599b3>
+#    Header set Content-Type "text/html; charset=utf-8"
+#</Location>

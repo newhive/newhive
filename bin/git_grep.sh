@@ -19,7 +19,7 @@ function git_grep {(
             -f) force=true;shift;;
             -i) filter_broken="";shift;;
             # -a) all=true;shift;;
-            -p) shift; path_match=$1; shift;;
+            -p) shift; path_match="$1"; shift;;
             *) break 2;
         esac
     done

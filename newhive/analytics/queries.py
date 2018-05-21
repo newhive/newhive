@@ -40,8 +40,7 @@ from functions import dataframe_to_record, record_to_dataframe
 from newhive.analytics.ga import GAQuery, QueryResponse
 import newhive.utils
 from newhive.utils import local_date, dates_to_spec
-#from pandas.datetools import Day
-Day = pandas.datetools.Day
+Day = pandas.tseries.offsets.Day
 
 import logging
 logger = logging.getLogger(__name__)

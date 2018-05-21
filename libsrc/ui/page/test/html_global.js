@@ -47,7 +47,7 @@ define([
     ,'sj!templates/edit_sandbox.html'
     ,'sj!templates/edit_container.html'
 ], function(context){
-    o = {}, templates = Array.prototype.slice.call(arguments, 1)
+    var o = {}, templates = Array.prototype.slice.call(arguments, 1)
     
     o.render = function(){
         var all_divs = $("<div>")

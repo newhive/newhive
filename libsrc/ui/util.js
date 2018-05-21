@@ -142,10 +142,10 @@ define([
             bodyEle.addEventListener(name, handler, true);
         } else if(bodyEle.attachEvent) {
             var _handler = handler
-            handler = function(){
+            var handler = function(){
                 var event = window.event;
                 _handler(event)
-            };
+            }
             document.attachEvent("on" + name, handler)
         }
         return handler

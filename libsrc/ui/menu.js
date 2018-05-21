@@ -188,8 +188,7 @@ var menu = function(handle, drawer, options) {
 
         // calculate menu z_index, ensuring it is at least 40 and at greater 
         // than the handle's z_index
-        $el = handle;
-        var z_index_latch = 0;
+        var $el = handle, z_index_latch = 0;
         while ($el.length && ! (z_index_latch > 0)) {
             var z_index = $el.css("z-index");
             z_index_latch = parseInt(z_index) + 1;
@@ -228,7 +227,7 @@ var menu = function(handle, drawer, options) {
             return
         }
 
-        d_size = drawer[0].getBoundingClientRect();
+        var d_size = drawer[0].getBoundingClientRect();
         // pick top of menu based on if menu would go past bottom of
         // window if below handle, or above top of window if above the handle
         if(opts.layout_x == 'submenu'){

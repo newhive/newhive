@@ -15,7 +15,7 @@ from newhive.utils import datetime_to_int, datetime_to_str, datetime_to_id, loca
 from newhive.analytics.ga import GAClient, GAQuery
 from newhive.analytics import queries
 from newhive.analytics.functions import ga_column_name_to_title
-Day = pandas.datetools.Day
+Day = pandas.tseries.offsets.Day
 
 import logging
 logger = logging.getLogger(__name__)

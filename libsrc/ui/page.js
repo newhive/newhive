@@ -297,7 +297,7 @@ define([
         }
         // WIP: content-request-identity
         // if(context.user.logged_in) o.content_login()
-        new_page = pages[method];
+        var new_page = pages[method];
         if(context.page != new_page){
             if(context.page && context.page.exit)
                 context.page.exit()
@@ -431,8 +431,8 @@ define([
                 , dia = dialogs.data("dialog")
             if (! dia) {
                 $('#site').append(collections_template([
-                    context.page_data
-                    , {categories: category == "categories"}
+                    context.page_data,
+                    {tag_type: category}
                 ]));
                 dia = dialog.create(dialog_selector, {});
                 // var new_tags_autocomplete = false;

@@ -24,7 +24,6 @@ def authenticate_request(db, request, response):
     user.logged_in = False
     if cmp_secret(session, request, response):
         user.logged_in = True
-    # hack for showing profile link on editorial
     return user
 
 def handle_login(db, request, response):
