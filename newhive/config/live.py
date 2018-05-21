@@ -24,7 +24,8 @@ cloudfront_domains = {
 buckets = {
     'media': 'media.tnh.me',
     'content': 'tnh.me',
-    'asset': 's.newhive.com'
+    'asset': 's.newhive.com',
+    'new-content': 'content.tnh.me',
 }
 
 stripe_id = 'pk_test_cedS2baGtwNVnzyRbQzWitUB'

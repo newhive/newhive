@@ -5,6 +5,8 @@ import newhive
 from newhive import config
 import re
 from base64 import b16decode, b64encode
+# TODO: move here, possibly create USE_GOOGLE_STORAGE config?
+#from google.cloud.storage.client import Client
 
 
 class S3Interface(object):
