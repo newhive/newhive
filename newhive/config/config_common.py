@@ -1,3 +1,8 @@
+import os
+from os.path import dirname, join, normpath, abspath
+
+src_home = normpath(abspath(join(dirname(__file__), "../..")))
+
 live_server     = False
 
 plain_port      = 80
@@ -18,18 +23,16 @@ analytics_db    = 'analytics'
 google_api_key  = 'AIzaSyDwFDcABJN8ldQKGCA2ohiO8kHoFst57X8'
 ssl_ca          = False
 
-aws_id          = False
-aws_secret      = False
-s3_buckets = {
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = (
+    join(src_home, 'newhive/config/google-storage-secret.json')
+)
+buckets = {
     'media': None,
-    'system': None,
+    'content': None,
     'asset': None,
 }
-cloudfront_domains = {
-    'media': None,
-    'asset': None
-}
 
+stripe_id = None
 
 ################################################################
 # constants
@@ -100,9 +103,6 @@ snapshot_async = True
 interactive = False
 
 initial_invite_count = 5
-
-from os.path import dirname, join, normpath, abspath
-src_home = normpath(abspath(join(dirname(__file__), "../..")))
 
 import json
 with open(join(src_home, 'newhive/config/site_flags.json')) as f:

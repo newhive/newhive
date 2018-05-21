@@ -31,7 +31,7 @@ def file_meta(p):
     return dict(size=os.stat(p).st_size, md5=csum)
 
 
-def file_update_md5_and_size(db_file, cache_path):
+def file_md5_and_size_update(db_file, cache_path):
     db_file.update(**file_meta(cache_path + db_file.id))
 
 
@@ -127,28 +127,45 @@ def migrate(**kwargs):
 #base_path=http://s1-thenewhive.s3.amazonaws.com/ cat ../files-batch1-paths \
 #  | perl -pe '$_ = "'$base_path'" . $_ . " out=" . $_' | aria2c -i - -x 10
 
-CACHE='/data/media/'
 
 MIME_FIXES = {
     'gif': 'image/gif',
     'image%2Fgif': 'image/gif',
     'jpg': 'image/jpeg',
     'jpeg': 'image/jpeg',
+    'png': 'image/png',
+    'image': True
 }
 
 
 def file_mime_fix(f, dryrun=True):
-    if f.get('mime') in MIME_FIXES:
+    mime = f.get('mime')
+    if mime in MIME_FIXES:
+        if mime == 'image':
+            name = f.get('name', '').lower()
+            if name.endswith('.jpg'):
+                mime = 'image/jpeg'
+            elif name.endswith('.gif'):
+                mime = 'image/gif'
+            else:
+                return False
+        else:
+            mime = MIME_FIXES[f['mime']]
+
         if not dryrun:
-            f.update(mime=MIME_FIXES[f['mime']])
+            f.update(mime=mime)
+        f['mime'] = mime
         return True
     return False
 
 
-def upload_batch(page=0, limit=None, skip=0, report_freq=500):
+def upload_batch(
+    page=0, limit=0, skip=0, cache='/data/media', report_freq=500,
+    redo=False, primary_only=False, children_only=False
+):
     gs = GoogleStorage()
 
-    fs_paths = os.listdir(CACHE)
+    fs_paths = os.listdir(cache)
     fs_ids = [s for s in fs_paths if '_' not in s]
 
     offset = page * limit + skip
@@ -166,20 +183,25 @@ def upload_batch(page=0, limit=None, skip=0, report_freq=500):
 
         path_base = (f.get('owner') or '0') + '/'
         path =  path_base + f.id
-        if gs.file_exists('media', path):
+        if not redo and gs.file_exists('media', path):
             print('exists', fid)
             continue
 
-        args = (CACHE + f.id, 'media', path, f['mime'])
-        try:
-            gs.upload_file(*(args + (f['md5'],)))
-        except Exception as e:
-            print('upload failed', f)
-            raise e
-
-        for p in f.child_paths():
+        args = (cache + f.id, 'media', path, f.get('name'), f['mime'], f['md5'])
+        if not children_only:
             try:
-                gs.upload_file(*tupdate(args, 2, path_base + p))
+                gs.upload_file(*args)
+            except Exception as e:
+                print('upload failed', f)
+                raise e
+
+        if primary_only:
+            continue
+        for p in f.child_paths():
+            p = re.sub('.*/', '', p)
+            args2 = (cache + p, 'media', path_base + p, f.get('name'), f['mime'])
+            try:
+                gs.upload_file(*args2)
             except Exception as e:
                 print('child upload failed!!', f)
                 raise e
@@ -187,3 +209,26 @@ def upload_batch(page=0, limit=None, skip=0, report_freq=500):
         if not uploaded % report_freq:
             print(page * limit, '+', skip + n, fid)
         uploaded += 1
+    return uploaded
+
+
+def file_reset_children(f, dryrun=True):
+    updated = False
+    if f.get('resamples'):
+        if not dryrun:
+            f.set_resamples()
+        updated = True
+
+    thumbs = f.get('thumbs', {})
+    if '390x235' in thumbs:
+        updated = True
+        if not dryrun:
+            f.set_thumb(390, 235, redo=True)
+            f.set_thumb(70, 42, redo=True)
+    if '190x190' in thumbs or '222x222' in thumbs:
+        updated = True
+        if not dryrun:
+            f.set_thumb(222, 222, redo=True)
+            f.set_thumb(70, 70, redo=True)
+
+    return updated

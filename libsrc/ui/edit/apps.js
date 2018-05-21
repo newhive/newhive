@@ -3180,7 +3180,10 @@ Hive.App.has_image_drop = function(o) {
         env.History.group("Image drop");
     };
     o.with_files = function(ev, file, file_list) { on_files(file, file_list)};
-    upload.drop_target(o.content_element, on_files, u.on_media_upload);
+    upload.drop_target(
+        o.content_element, { user_id: context.user.id },
+        on_files, u.on_media_upload
+    );
     return o;
 };
 Hive.App.has_border_radius = function(o) {

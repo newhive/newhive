@@ -86,25 +86,8 @@ def start_snapshots(query_and=False):
 
     # print "need to get %s exprs" % len(expressions_to_snapshot)
     
-### BEGIN testing ###
-
-def sss():
-    snapshots.take_snapshot("4eace6b3ba28392acc000083", "snap_out.png", (715, 430))
-    # snapshots.take_snapshot("5034466363dade522e00727f", "snap2_out.png", (715, 430))
-    # snapshots.take_snapshot("50f737d36d902248910accfe", "snap_out.png", (715, 430))
-
-def take_snapshot(expr_id):
-    snapshots.take_snapshot(expr_id, "temp_big.png", (715, 430))
-    snapshots.take_snapshot(expr_id, "temp_small.png", (390, 235))
 
 def test_snapshot():
-    # urls = ["http://tnh.me/50f60b796d902242fd02a754",
-    #     "http://tnh.me/50f737d36d902248910accfe"]
-    # xvfb = init_xvfb()
-    # for url in urls:
-    #     gen_thumb(url)
-    #     upload_snapshot_to_s3(url.split('/')[-1],thumb_bucket)
-
     expr_ids = ["50f60b796d902242fd02a754", "50f737d36d902248910accfe"]
     for expr_id in expr_ids:
         expr = db.Expr.fetch(expr_id)
@@ -114,5 +97,3 @@ def test_snapshot():
         # print upload_snapshot_to_s3(expr,thumb_bucket)
         
     # xvfb.terminate()
-    
-### END testing ###

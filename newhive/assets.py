@@ -3,7 +3,7 @@ import os, json, time, webassets, webassets.script, re
 from boto.s3.key import Key as S3Key
 from boto.s3.connection import S3Connection
 from newhive import config
-from newhive.s3 import S3Interface
+from newhive.s3 import GoogleStorage as Storage
 from newhive.manage import git
 from newhive.routes import Routes
 from newhive.utils import lget, now, abs_url
@@ -23,19 +23,9 @@ class Assets(object):
         self.default_local = False
 
         # TODO-cleanup: use S3Interface everywhere instead of s3_con
-        if config.aws_id:
-            self.s3_con = S3Connection(config.aws_id, config.aws_secret)
-            self.asset_bucket = self.s3_con.get_bucket(
-                config.s3_buckets.get('asset'))
-
-            cloudfront = config.cloudfront_domains['asset']
-            if cloudfront:
-                self.base_url = '//' + cloudfront + '/'
-            else:
-                bucket_url = (self.asset_bucket.generate_url(0)
-                    if config.aws_id else False)
-                self.base_url = re.sub(r'^https?:', '',
-                    bucket_url[0:bucket_url.index('?')])
+        if config.buckets.get('asset'):
+            self.storage = Storage()
+            self.base_url = self.storage.bucket_url('asset')
         else:
             self.base_url = self.local_base_url
 
@@ -68,21 +58,15 @@ class Assets(object):
         for name, (path, version, local) in self.assets.iteritems():
             if not path or local: continue
             versioned_name = name + '.' + version
-            if not S3Key(self.asset_bucket, versioned_name).exists():
+            if not self.storage.file_exists('asset', versioned_name):
                 print 'uploading: ' + name
-                k = S3Key(self.asset_bucket)
-                k.name = versioned_name
-                # assets expire 10 years from now (we rely on cache busting query string)
-                headers = {
-                    'Cache-Control': 'max-age=' + str(86400 * 3650)
-                }
+                mime = None
                 if re.search(r'\.woff$', name):
-                    headers['Content-Type'] = 'application/x-font-woff'
+                    mime = 'application/x-font-woff'
                 if re.search(r'\.eot$', name):
-                    headers['Content-Type'] = 'application/vnd.ms-fontobject'
-                k.set_contents_from_filename(path, headers=headers)
-                k.make_public()
-        print("Done Syncing to s3")
+                    mime = 'application/vnd.ms-fontobject'
+                self.storage.upload_file(path, 'asset', versioned_name, None, mimetype=mime)
+        print("Done Syncing to " + self.base_url)
 
         return self
 

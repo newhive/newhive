@@ -35,7 +35,7 @@ import newhive
 from collections import Counter
 from snapshots import Snapshots
 
-from s3 import S3Interface
+from s3 import GoogleStorage
 
 from newhive import config
 from newhive.config import abs_url, url_host
@@ -67,7 +67,7 @@ class Database:
             port=config.database_port, maxPoolSize=20)
         self.mdb = self.con[config.database]
 
-        self.s3 = S3Interface(config)
+        self.s3 = GoogleStorage(config)
         self.assets = assets
 
         self.collections = map(
@@ -713,7 +713,7 @@ class User(HasSocial):
 
     def delete(self):
         # Facebook Disconnect
-        self.facebook_disconnect()
+        #self.facebook_disconnect()
 
         # Feed Cleanup
         for feed_item in self.db.Feed.search(
@@ -2216,9 +2216,10 @@ def generate_thumb(file, size, format=None):
     t0 = time.time()
     imo = ImageOps.fit(imo, size=size, method=Img.ANTIALIAS, centering=(0.5, 0.5))
     if imo.mode != 'RGB':
-        bg = Img.new("RGBA", imo.size, (255,255,255))
-        imo = imo.convert(mode='RGBA')
-        imo = Img.composite(imo, bg, imo)
+        imo.convert("RGB")
+        #bg = Img.new("RGBA", imo.size, (255,255,255))
+        #imo = imo.convert(mode='RGBA')
+        #imo = Img.composite(imo, bg, imo)
     dt = time.time() - t0
     #print "   final size:   " + str(imo.size),
     #print "   conversion took " + str(dt*1000) + " ms"
@@ -2360,17 +2361,19 @@ class File(Entity):
         return self.url
 
     def _resample_name(self, w):
-        return self.id + '_' + str(int(w))
+        return self.file_name + '_' + str(int(w))
     @property
     def _resample_names(self):
         return [self._resample_name(s[0]) for s in self.get('resamples', [])]
 
-    def set_thumb(self, w, h, file=False, mime='image/jpeg', autogen=True):
+    def set_thumb(self, w, h, file=False, mime='image/jpeg', autogen=True, redo=False):
         name = str(w) + 'x' + str(h)
         thumbs = self.get('thumbs', {})
-        if thumbs.get(name): return False
+        if thumbs.get(name) and not redo:
+            return False
 
-        if not file: file = self.file
+        if not file:
+            file = self.file
         if autogen:
             thumb_file = generate_thumb(file, (w,h), format='jpeg')
         else:
@@ -2383,13 +2386,15 @@ class File(Entity):
         return thumb_file
 
     def _thumb_name(self, w, h):
-        return self.id + '_' + str(w) + 'x' + str(h)
+        return self.file_name + '_' + str(w) + 'x' + str(h)
 
     def get_thumb(self, w, h):
         name = str(w) + 'x' + str(h)
-        if not self.get('thumbs', {}).get(name): return False
+        if not self.get('thumbs', {}).get(name):
+            return False
         url = self.url
-        if not url: return False
+        if not url:
+            return False
         return url + '_' + name
 
     def get_default_thumb(self):
@@ -2401,7 +2406,7 @@ class File(Entity):
         return [ self.id + '_' + n for n in self.get('thumbs', {}) ]
 
     def store(self):
-        if self.db.config.aws_id:
+        if self.db.config.buckets.get('media'):
             s3_url = self.db.s3.upload_file(self.file, 'media', self.file_name,
                 self['name'], self['mime'])
             self.update(protocol='s3',
@@ -2411,16 +2416,15 @@ class File(Entity):
             owner = self.db.User.fetch(self['owner'])
             self['fs_path'] = media_path(owner)
             with open(joinpath(self['fs_path'], id), 'w') as f: f.write(file.read())
-            return abs_url() + 'file/' + owner['name'] + '/' + name
+            return abs_url() + 'file/' + self.file_name()
 
     @property
     def file_name(self):
-        return self.id + self.suffix
+        return self['owner'] + '/' + self.id + self.suffix
     
     @property
     def url(self):
-        return self.db.s3.url('media', self.file_name,
-            bucket_name=self.get('s3_bucket'))
+        return self.db.s3.url('media', self.file_name)
 
     @property
     def suffix(self):
@@ -2431,8 +2435,7 @@ class File(Entity):
     
     @property
     def url_base(self):
-        return self.db.s3.url('media', '',
-            bucket_name=self.get('s3_bucket'))
+        return self.db.s3.bucket_url('media')
 
     def create_existing(self):
         super(File, self).create()
