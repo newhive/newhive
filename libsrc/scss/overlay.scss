@@ -305,7 +305,7 @@ $action: love comment republish;
         overflow: auto;
         border-top: 1px solid #d1d1d1;
         min-height: 48px;
-        font-family: Gibson;
+        font-family: $ui_font;
         font-size: 16px;
 
         &.comment {
@@ -346,7 +346,8 @@ $action: love comment republish;
         }
 
         .username, .entity_title {
-            font-family: Gibson Semibold;
+            font-family: $ui_font_bold;
+            font-weight: bold;
             text-transform: uppercase;
         }
 

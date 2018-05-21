@@ -138,7 +138,7 @@ body.mobile .user_header {
         .info {
             display: inline-block;
             width: 533px; height: 222px;
-            font-family: Gibson;
+            font-family: $ui_font;
             // letter-spacing: -1px;
             margin: 10px 10px 0px 10px ;
             .title_bar { margin-top: 10px; }
@@ -226,7 +226,7 @@ body.mobile .user_header {
             }
             /* for editing view */
             textarea {
-                font-family: Gibson;
+                font-family: $ui_font;
                 padding: 0;
                 width: 480px;
                 border: none;
@@ -254,9 +254,10 @@ body.mobile .user_header {
 
 // moved out of .feed because it applies to social overlay
 .owner {
-    font-family: Gibson;
+    font-family: $ui_font;
     .username {
-        font-family: Gibson Semibold;
+        font-family: $ui_font;
+        font-weight: bold;
         text-transform: uppercase;
         padding-right: 3px;
     }
@@ -693,7 +694,6 @@ body { // not .expr (TODO: make community class)
                     
                     height: 90px;
                     .title {
-                        // font-family: Gibson;
                         font-size: 39px;
                         line-height: 38px;
                         max-width: 560px;
@@ -835,7 +835,7 @@ body { // not .expr (TODO: make community class)
 
     text-transform: uppercase;
     font-size: 16px;
-    font-family: Gibson;
+    font-family: $ui_font;
 
     padding: 6px 10px;
     margin: 3px 3px 4px 4px;

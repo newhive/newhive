@@ -3820,7 +3820,7 @@ Hive.App.has_slider_menu = function(app, handle_jq, set, init, start, end, opts)
         , clamp:true  // disallow values outside [min, max]
         , clamp_min:true  // disallow values outside [min, max]
         , clamp_max:true  // disallow values outside [min, max]
-
+        , css_class: ''
         , set:set, init:init, start:start, end:end, app:app
     }, opts)
     var o = has_menu(handle_jq, opts)
@@ -3836,12 +3836,13 @@ Hive.App.has_slider_menu = function(app, handle_jq, set, init, start, end, opts)
         update_val()
     }
     o.render = function() {
-        var drawer = $('<div>').addClass('control border drawer slider hide')
+        var drawer = $('<div>').addClass('control border drawer slider hide'
+            ).addClass(opts.css_class)
         range = $("<input type='range' min='0' max='100'>")
-                .appendTo(drawer)
-                .css('vertical-align', 'middle')
+            .appendTo(drawer)
+            .css('vertical-align', 'middle')
         num_input = $("<input type='text' size='3'>")
-                .appendTo(drawer)
+            .appendTo(drawer)
         return drawer
     }
     o.attach_handlers = function() {

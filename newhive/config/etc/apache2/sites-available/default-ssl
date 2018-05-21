@@ -13,6 +13,8 @@ NameVirtualHost *:443
         AddType application/x-font-woff .woff
     </Location>
 
+    ProxyPass /b/ http://blog.newhive.com/
+
 	SSLEngine on
 
 	SSLCertificateKeyFile /etc/ssl/private/star_tnh_me.key
@@ -24,21 +26,18 @@ NameVirtualHost *:443
 		downgrade-1.0 force-response-1.0
 	# MSIE 7 and newer should be able to use keepalive
 	BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown
+
+    Alias /allmymovies /var/www/newhive/lib/allmymovies
+    Alias /5640b9655ccacf21611599b3 /var/www/newhive/lib/5640b9655ccacf21611599b3
+    <Location /allmymovies>
+        Header set Content-Type "text/html; charset=utf-8"
+    </Location>
+    <Location /5640b9655ccacf21611599b3>
+        Header set Content-Type "text/html; charset=utf-8"
+    </Location>
 </VirtualHost>
 <VirtualHost _default_:443>
-    ServerName newhive.com
-    ServerAlias *.newhive.com
-    ServerAlias thenewhive.com
-    ServerAlias *.thenewhive.com
-	WSGIScriptAlias / /var/www/newhive/newhive/app.py
-
-	Alias /lib /var/www/newhive/lib
-    <Location /lib>
-        Header Set Access-Control-Allow-Origin *
-        Header Set Cache-Control "max-age=315360000"
-        AddType application/vnd.ms-fontobject .eot
-        AddType application/x-font-woff .woff
-    </Location>
+    Include sites-available/newhive
 
 	SSLEngine on
 
@@ -51,5 +50,14 @@ NameVirtualHost *:443
 		downgrade-1.0 force-response-1.0
 	# MSIE 7 and newer should be able to use keepalive
 	BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown
+
+    Alias /allmymovies /var/www/newhive/lib/allmymovies
+    Alias /5640b9655ccacf21611599b3 /var/www/newhive/lib/5640b9655ccacf21611599b3
+    <Location /allmymovies>
+        Header set Content-Type "text/html; charset=utf-8"
+    </Location>
+    <Location /5640b9655ccacf21611599b3>
+        Header set Content-Type "text/html; charset=utf-8"
+    </Location>
 </VirtualHost>
 </IfModule>

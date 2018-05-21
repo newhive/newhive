@@ -243,7 +243,7 @@ define([
     }
     var fixup_overlay = function() {
         // Fix styling for this route
-        $('#logo').toggleClass('on', context.route_name == 'home_cat')
+        //$('#logo').toggleClass('on', context.route_name == 'home_cat')
         $(".main-header .network_nav .item").removeClass("black_btn")
         $(".main-header .network_nav .item." + context.route_name)
             .addClass("black_btn")
@@ -412,17 +412,17 @@ define([
                 search_box.focus()
         })
         // Animate header
-        if(!context.user.logged_in){
-            $(window).bind_once_anon("scroll.page", function(ev) {
-                var scrolled_to = $(this).scrollTop()
-                if (scrolled_to > 1)
-                    $(".main-header").addClass("condensed")
-                else
-                    $(".main-header").removeClass("condensed")
-                search_flow = ''
-                reflow_nav()
-            })
-        }
+        //if(!context.user.logged_in){
+        //    $(window).bind_once_anon("scroll.page", function(ev) {
+        //        var scrolled_to = $(this).scrollTop()
+        //        if (scrolled_to > 1)
+        //            $(".main-header").addClass("condensed")
+        //        else
+        //            $(".main-header").removeClass("condensed")
+        //        search_flow = ''
+        //        reflow_nav()
+        //    })
+        //}
 
         // Add expression to collection
         var add_to_collection = function(category) { return function(e) {
