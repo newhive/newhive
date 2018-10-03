@@ -14,15 +14,13 @@ class TransactionData(utils.FixedAttrs):
             response=response, user=user, context=context)
 
 class Controller(object):
-    def __init__(self, db=None, jinja_env=None, assets=None, config=None,
-        controllers=None
-    ):
-        self.config = config
-        self.db = db
-        self.jinja_env = jinja_env
-        self.assets = assets
+    def __init__(self, session):
+        self.session = session
+        self.config = session.config
+        self.db = session.db
+        self.jinja_env = session.jinja_env
+        self.assets = session.assets
         self.asset = self.assets.url
-        self.controllers = controllers
 
     def pre_dispatch(self, func, tdata, **args):
         return False
@@ -143,12 +141,6 @@ class Controller(object):
 
         return tdata
 
-    def render_template(self, tdata, template):
-        context = tdata.context
-        context.update(template=template)
-        context.setdefault('icon', self.asset('skin/1/logo.png'))
-        return self.jinja_env.get_template(template).render(context)
-
     def serve_data(self, response, mime, data):
         response.content_type = mime
         response.data = data
@@ -164,7 +156,7 @@ class Controller(object):
         
     def serve_page(self, tdata, template):
         return self.serve_html(tdata.response,
-            self.render_template(tdata, template))
+            render_template(self.session, tdata.context, template))
 
     def serve_404(self, tdata, error='missing', json=True):
         if config.debug_mode:
@@ -229,9 +221,17 @@ class ModelController(Controller):
         if data is None: self.serve_404(tdata)
         return self.serve_json(tdata.response, data)
 
+
 def auth_required(controller_method):
     def decorated(self, tdata, *args, **kwargs):
         if not tdata.user.logged_in:
             return self.serve_forbidden(tdata, *args)
         return controller_method(self, tdata, *args, **kwargs)
     return decorated
+
+
+def render_template(session, context, template):
+    context.update(template=template)
+    context.setdefault('icon', session.assets.url('skin/1/logo.png'))
+    return session.jinja_env.get_template(template).render(context)
+

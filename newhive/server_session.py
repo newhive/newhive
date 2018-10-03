@@ -9,33 +9,23 @@ from newhive.assets import HiveAssets
 from newhive import state, config
 from newhive.extra_json import extra_json
 from newhive.colors import colors
-from newhive.controllers import Controllers
 
-hive_assets = HiveAssets()
-hive_assets.bundle()
 
-jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.join(config.src_home, 'templates')))
+assets = HiveAssets()
+assets.bundle()
+
+db = state.Database(config, assets)
+
+jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(
+    os.path.join(config.src_home, 'templates')))
 jinja_env.trim_blocks = True
-jinja_env.globals.update(asset_bundle=hive_assets.asset_bundle)
-jinja_env.filters.update({ 'asset_url': hive_assets.url, 'json': extra_json,
+jinja_env.globals.update(asset_bundle=assets.asset_bundle)
+jinja_env.filters.update({ 'asset_url': assets.url, 'json': extra_json,
     'param_esc': quote_plus })
 jinja_env.globals.update({
      'colors': colors
-    ,'asset_bundle': hive_assets.asset_bundle
+    ,'asset_bundle': assets.asset_bundle
 })
-
-db = state.Database(config, hive_assets)
-server_env = {
-     'db': db
-    ,'jinja_env': jinja_env
-    ,'assets': hive_assets
-    ,'config': config
-    ,'controllers': {}
-}
-
 jinja_env.globals.update({
     'media_bucket': db.s3.bucket_url('media')
 })
-
-controllers = Controllers(server_env)
-server_env['controllers'].update(controllers)

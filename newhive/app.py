@@ -11,7 +11,8 @@ from newhive import state, config
 from newhive.routes import Routes
 import json, urllib
 from newhive.utils import url_host, now
-from newhive.server_session import db, server_env, jinja_env
+from newhive import server_session
+from newhive.controllers import Controllers
 
 # For stats
 import yappi
@@ -20,12 +21,14 @@ import pstats
 import io
 from newhive.profiling import don, functools, doflags
 
+
 def make_routing_rules(url_pattern, endpoint, on_main_domain=True, defaults={}):
     rules = []
     for secure in (False, True):
         rules.append(Rule(url_pattern, endpoint=endpoint, defaults=defaults,
             host=url_host(on_main_domain=on_main_domain, secure=secure)))
     return rules
+
 
 def get_api_endpoints(api):
     routes = Routes.get_routes()
@@ -60,12 +63,13 @@ def get_api_endpoints(api):
                 ))
     return rules
 
-# Create an empty, reference dict so all created controllers will have
-# a reference to all controllers upon creation.
-base_controller = server_env['controllers']['controller']
-rules = get_api_endpoints(server_env['controllers'])
+
+controllers = Controllers(server_session)
+base_controller = controllers['controller']
+rules = get_api_endpoints(controllers)
 routes = Map(rules, strict_slashes=False, host_matching=True,
     redirect_defaults=False)
+
 
 # version. Belongs elsewhere?
 def version():
@@ -79,6 +83,7 @@ def version():
 
 config.version = version()
 
+
 def split_domain(domain):
     dev = config.dev_prefix + '.' if config.dev_prefix else ''
     index = max(0, domain.find('.' + dev + config.server_name), 
@@ -87,6 +92,7 @@ def split_domain(domain):
     if index > 0: index = index + 1
     site = domain[index:]
     return prefix, site
+
 
 @Request.application
 def handle(request):
@@ -186,7 +192,9 @@ def handle(request):
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
     return response
 
+
 application = handle
+
 # for interactive debugging in apache. I believe you must use wsgi
 # daemon mode for this to work. Put this in apache site config:
 #   WSGIDaemonProcess site processes=1 threads=1 python-path=/var/www/newhive/
