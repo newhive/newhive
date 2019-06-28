@@ -1,9 +1,9 @@
 #!/bin/sh
 BACKUP_DIR=/data/backup/
-DB_HOST='db.newhive.com'
+DB_HOST='localhost'
 DB_USER='live'
-DB_PASSWORD='kobnawIr9'
 DB='live'
+if [ -n "$1" ]; then DB_PASSWORD=$1; fi
 
 cd $BACKUP_DIR
 date=$(date +%Y-%m-%d)
@@ -13,6 +13,6 @@ mongodump -h $DB_HOST -d $DB -u $DB_USER -p $DB_PASSWORD -o tmp --excludeCollect
 #mongorestore --drop -d test --dir tmp/hive
 fname=${date}_live-db-dump.tar.gz
 tar -zcf $fname tmp/$DB
-s3cmd put $fname s3://backup-thenewhive/$fname
+gsutil cp $fname gs://backup.newhive.com/live-db/
 
 #TODO: create daily, weekly, monthly rotating backups.
