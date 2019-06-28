@@ -1,5 +1,26 @@
 #! /bin/bash
 
+# find NewHive
+NEWHIVE_HOME=/home/newhive
+if [ ! -d $NEWHIVE_HOME ]; then NEWHIVE_HOME=$HOME/newhive; fi 
+
+# aliases
+alias nh=nhrepl #TODO make a cooler top level utility?
+alias nhcd='cd $NEWHIVE_HOME'
+
+alias nhRoutes='e $(groot)/newhive/routes.json'
+alias nhconfig='e $(groot)/newhive/config/config.py'
+alias nhconfigcommon='e $(groot)/newhive/config/config_common.py'
+
+alias nhrepl='nhcd; ipython -i bin/server_examples.py'
+alias nhkilldev='psk server.py'
+alias nhRESETdev='nhcd; nhkilldev; nhstartdev'
+alias nhlogproduction='less +F /var/log/apache2/error.log'
+alias nhShellHelpers='e `groot`/bin/shell_helpers.sh'
+alias nhadmin='ssh -i .ssh/google_compute_engine admin.newhive.com'
+
+
+## BEGIN git_grep
 alias gr="git_grep -o"
 alias grh="git_grep -o -p '*.html'"
 alias grs="git_grep -o -p '*.scss'"
@@ -27,23 +48,10 @@ alias on=rerun_results
 alias oe=filepart_results
 # rerun last list, filtered through grep
 alias og=grep_results
-### END   find_files in git repo helpers ###
-############################################
+## END git_grep
 
-alias nhcd='cd $NEWHIVE_HOME' # go to default repo from outside 
-alias nhcdproduction='cd /var/www/newhive' # go to default production home
 
-alias nhRoutes='e $(groot)/newhive/routes.json'
-alias nhconfig='e $(groot)/newhive/config/config.py'
-alias nhconfigcommon='e $(groot)/newhive/config/config_common.py'
-
-alias nhrepl='nhcd; ipython -i bin/server_examples.py'
-alias nhkilldev='psk server.py'
-alias nhRESETdev='nhcd; nhkilldev; nhstartdev'
-alias nhlogproduction='less +F /var/log/apache2/error.log'
-alias nhShellHelpers='e `groot`/bin/shell_helpers.sh'
-
-# server management
+# server_management
 function psk(){
    if pgrep -f $1; then
        pgrep -f $1 | xargs kill;
@@ -78,8 +86,7 @@ alias mygate="route -n | grep ^0.0.0.0 | awk '{print $2}'"
 alias pinggate='ping `mygate`'
 
 
-### BEGIN git_stuff ###
-#######################
+## BEGIN git_stuff
 alias g='git'
 # git root dir
 # pre-submit checks
@@ -133,5 +140,4 @@ function glog {
     fi
     git log --pretty=oneline|head -$lines
 }
-### END git_stuff ###
-#####################
+## END git_stuff
