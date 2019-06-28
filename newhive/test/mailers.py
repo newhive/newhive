@@ -11,7 +11,7 @@ cat lib/email/* > lib/email/all.html
 # then point your browser to /lib/email/all.html
 
 import unittest, random
-from newhive.server_session import db, server_env, jinja_env, hive_assets
+from newhive.server_session import db, jinja_env, hive_assets
 from newhive import mail, config, state, app
 from newhive.utils import now
 

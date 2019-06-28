@@ -54,5 +54,5 @@ if(typeof window.scripts == 'undefined'){
   </script>
   {% include 'page_parts/expr_body.html' %}
   <script>curl(['ui/expression'], function(expression) {
-    expression.init({{ expr_client|json }}); });</script>
+    expression.init({{ expr|json }}); });</script>
 {% endblock %}

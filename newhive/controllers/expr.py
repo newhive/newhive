@@ -6,7 +6,9 @@ import urllib
 
 from newhive.utils import (dfilter, now, tag_string, is_number_list, URL, lget,
     abs_url)
-from newhive.controllers.controller import ModelController
+from newhive.controllers.controller import ModelController, render_template
+from newhive.server_session import jinja_env
+
 
 def anchor_tag(attrs, content, xlink=False):
     if not attrs: return content
@@ -15,6 +17,7 @@ def anchor_tag(attrs, content, xlink=False):
         del attrs['href']
     return ('<a ' +' '.join([k +"='"+ v.replace("'",'&#39;') +"'"
         for k,v in attrs.items() if v]) +'>'+ content +'</a>')
+
 
 class Expr(ModelController):
     model_name = 'Expr'
@@ -38,51 +41,27 @@ class Expr(ModelController):
 
     def serve_naked(self, tdata, request, response, expr_obj):
         if not expr_obj: return self.serve_404(tdata)
-
         # for custom pages using external files
         custom_html = expr_obj.get('index_url')
         if custom_html:
-            custom_html = request.scheme + ':' + re.sub('^.*?//', '//', custom_html)
+            custom_html = (request.scheme + ':' +
+                re.sub('^.*?//', '//', custom_html))
             return self.redirect(response, custom_html)
 
-        bg = expr_obj.get('background')
-        if bg and bg.get('file_id') and not bg.get('dimensions'):
-            f = self.db.File.fetch(bg.get('file_id'))
-            dimensions = f.get('dimensions')
-            if dimensions:
-                bg['dimensions'] = dimensions
-                expr_obj.update(updated=False, background=bg)
-            else:
-                f.update(resample_time=0)
-        if (expr_obj.get('auth') == 'password'
+        if( expr_obj.get('auth') == 'password'
             and not expr_obj.cmp_password(request.form.get('password'))
-            and not expr_obj.cmp_password(request.args.get('pw'))):
-            expr_obj = { 'auth': 'password' }
-            expr_client = expr_obj
-        else:
-            expr_client = expr_obj.client_view(mode='page')
-        # TODO: consider allowing analytics for content frame.
+            and not expr_obj.cmp_password(request.args.get('pw'))
+        ):
+            return self.serve_forbidden(tdata)
+
+        expr_client = expr_obj.client_view(mode='page')
+
+        snapshot_mode = request.args.get('snapshot') is not None
         viewport = [int(x) for x in
             request.args.get('viewport', '1000x750').split('x')]
-        snapshot_mode = request.args.get('snapshot') is not None
-        tdata.context.update(
-            html = expr_to_html(expr_obj, snapshot_mode, viewport=viewport),
-            expr = expr_obj,
-            use_ga = False,
-        )
 
-        body_style = ''
-        if snapshot_mode:
-            body_style = 'overflow: hidden;'
-        if expr_obj.get('clip_x'):
-            body_style = 'overflow-x: hidden;'
-        if expr_obj.get('clip_y'):
-            body_style += 'overflow-y: hidden;'
-        if body_style:
-            tdata.context['css'] = 'body {' + body_style + '}'
-
-        tdata.context.update(expr=expr_obj, expr_client=expr_client)
-        return self.serve_page(tdata, 'pages/expr.html')
+        html = expr_to_page(self.session, expr_client, snapshot_mode, viewport)
+        return self.serve_html(response, html)
 
     def embed(self, tdata, request, response, owner_name=None, expr_name=None,
         expr_id=None, **args
@@ -452,16 +431,38 @@ class Expr(ModelController):
 
         return self.serve_json(response, resp)
 
-def expr_to_html(exp, snapshot_mode=False, viewport=(1000, 750)):
+
+def expr_to_page(session, expr, snapshot_mode=False, viewport=(1000, 750)):
+    ctx = dict(
+        html=expr_to_content_html(expr, snapshot_mode, viewport=viewport),
+        expr=expr, config=session.config, use_ga=False,
+    )
+
+    body_style = ''
+    if snapshot_mode:
+        body_style = 'overflow: hidden;'
+    if expr.get('clip_x'):
+        body_style = 'overflow-x: hidden;'
+    if expr.get('clip_y'):
+        body_style += 'overflow-y: hidden;'
+    if body_style:
+        ctx['css'] = 'body {' + body_style + '}'
+
+    return render_template(session, ctx, 'pages/expr.html')
+
+
+def expr_to_content_html(expr, snapshot_mode=False, viewport=(1000, 750)):
     """Converts JSON object representing an expression to HTML"""
-    if not exp: return ''
+    if not expr: return ''
+
     # scale the objects on this page based on the given viewport
-    expr_scale = float(viewport[exp.get('layout_coord', 0)]) / 1000
+    expr_scale = float(viewport[expr.get('layout_coord', 0)]) / 1000
 
     to_html = partial(html_for_app, scale=expr_scale,
-        snapshot_mode=snapshot_mode, db=exp.db)
-    app_html = map(to_html, exp.get('apps', []))
+        snapshot_mode=snapshot_mode, db=expr.db)
+    app_html = map(to_html, expr.get('apps', []))
     return ''.join(app_html)
+
 
 def html_for_app(app, scale=1, snapshot_mode=False, db=None):
     widget_type = app.get('type')
@@ -502,6 +503,7 @@ def html_for_app(app, scale=1, snapshot_mode=False, db=None):
 
     return html
 
+
 def widget_image(app, snapshot_mode, db, scale):
     url = app.get('url') or app.get('content', '')
     scale_x = app.get('scale_x', 1)
@@ -531,6 +533,7 @@ def widget_image(app, snapshot_mode, db, scale):
         html = "<img src='%s' style='%s' class='content'>" % (url, css)
     return html
 
+
 def widget_rectangle(app, *_): # and widget_circle
     c = app.get('content', {})
     container_attrs = ['position']
@@ -538,6 +541,7 @@ def widget_rectangle(app, *_): # and widget_circle
     more_css = ';'.join([p + ':' + str(c[p]) for p in c if p in container_attrs])
     return "<div style='%s' class='content'></div>" % css
     
+
 def widget_html(app, snapshot_mode, *_):
     #encoded_content = cgi.escape(app.get('content',''), quote=True)
     if snapshot_mode and app.get('media') == 'youtube':
@@ -551,6 +555,7 @@ def widget_html(app, snapshot_mode, *_):
     else:
         html = app.get('content','')
     return html
+
 
 def widget_code(app, snapshot_mode, db, *_):
     ctype = app.get('code_type', 'js')
@@ -575,6 +580,7 @@ def widget_code(app, snapshot_mode, db, *_):
         html =  "<style id='%s'>%s</style>" % (
             app['id'], app.get('content') )
     return html
+
 
 def widget_polygon(app, *_):
     points = filter(lambda point: is_number_list(point, 2)
@@ -603,11 +609,14 @@ def widget_polygon(app, *_):
     )
     return html
 
+
 def widget_sketch(app, *_):
     return "<img src='%s' class='content'>" % app.get('content', {}).get('src', '')
 
+
 def widget_text(app, *_):
     return "<div class='content'>%s</div>" % app.get('content')
+
 
 widget_types = {
     'hive.image': widget_image,
@@ -619,6 +628,7 @@ widget_types = {
     'hive.sketch': widget_sketch,
     'hive.text': widget_text,
 }
+
 
 # TODO-bug fix resizing after loading by sending pre-scaled expr
 # Requires client layout_apps() to use scaled expr dimensions

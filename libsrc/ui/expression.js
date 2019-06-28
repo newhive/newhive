@@ -313,6 +313,8 @@ define([
         else o.player_play()
     }
 
+    o.audio_player_template = function(ctx){ return '<div style="position: relative; height: 100%; opacity: 0.68;" class="content"><div data-index="'+ctx.id+'" id="jquery_jplayer_'+ctx.id+'" class="jp-jplayer" data-url="'+ctx.url+'"></div><div id="jp_container_'+ctx.id+'" class="jp-audio minimal"><div style="background-color:'+ctx.color+'" class="jp-gui jp-interface"><div style="width: 61px; height: 61px;" class="jp-controls jp-button"><a style="width: 61px; height: 61px;" href="javascript:;" class="jp-play jp-button" tabindex="1"><img style="width: 61px; height: 61px;" src="{play_asset}" class="jp-button"></a><a style="width: 61px; height: 61px;" href="javascript:;" class="jp-pause jp-button" tabindex="1"><img style="width: 61px; height: 61px;" src="{pause_asset}" class="jp-button"></a></div><div class="jp-progress"><div class="jp-seek-wrapper"><div class="jp-seek-bar"><div class="jp-play-bar" style="width: 25%; background-color:{bg_color}"></div></div></div><div class="jp-remaining-time"></div><div class="jp-volume"><div class="jp-volume-buttons"><div class="jp-volume-plus button"><span>+</span></div><div class="jp-volume-minus button"><span>-<span></span></span></div></div><div class="jp-volume-bar"><div class="jp-volume-bar-value"></div></div></div></div></div><div class="jp-no-solution"><span>Update Required</span><a href="http://get.adobe.com/flashplayer/" target="_blank">Flash plugin</a>.</div></div></div>' }
+
     o.init_content = function(){
         if (0) {
             // Scroll the page on drags
